@@ -18,98 +18,13 @@ namespace VirtualClient.Dependencies
 
     [TestFixture]
     [Category("Unit")]
-    public class PostgreSQLInstallationTests
+    public class PostgreSQLServerInstallationTests
     {
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
 
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
-        public void PostgreSQLInstallationThrowsIfDistroNotSupportedForLinux(PlatformID platform, Architecture architecture)
-        {
-            this.SetupDefaultMockBehavior(platform, architecture);
-            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-            {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.SUSE
-            };
-
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mockInfo);
-
-            using (TestPostgreSQLInstallation installation = new TestPostgreSQLInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => installation.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exception.Reason);
-            }
-        }
-
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]
-        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
-        public async Task PostgreSQLInstallationExecutesExpectedInstallationCommands(PlatformID platform, Architecture architecture, string platformArchitecture)
-        {
-            this.SetupDefaultMockBehavior(platform, architecture);
-
-            if (platform == PlatformID.Unix)
-            {
-                LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-                {
-                    OperationSystemFullName = "TestUbuntu",
-                    LinuxDistribution = LinuxDistribution.Ubuntu
-                };
-
-                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
-    .ReturnsAsync(mockInfo);
-            }
-
-            using (TestPostgreSQLInstallation installation = new TestPostgreSQLInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await installation.ExecuteAsync(CancellationToken.None);
-
-                string installScriptPath = this.mockFixture.Combine(this.mockPackage.Path, platformArchitecture, "installServer.py");
-
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"python3 \"{installScriptPath}\""));
-            }
-        }
-
-        [Test]
-        [TestCase(Architecture.X64, "linux-x64")]
-        [TestCase(Architecture.Arm64, "linux-arm64")]
-        [TestCase(Architecture.X64, "win-x64")]
-        [TestCase(Architecture.Arm64, "win-arm64")]
-        public async Task PostgreSQLInstallationUsesTheDefaultCredentialWhenTheServerPasswordIsNotDefinedByTheUser(PlatformID platform, Architecture architecture)
-        {
-            this.SetupDefaultMockBehavior(platform, architecture);
-
-            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-            {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.Ubuntu
-            };
-
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mockInfo);
-
-            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.EndsWith("superuser.txt")))).Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(
-                It.Is<string>(f => f.EndsWith("superuser.txt")),
-                It.IsAny<CancellationToken>())).ReturnsAsync("defaultpwd");
-
-            using (TestPostgreSQLInstallation installation = new TestPostgreSQLInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                // The password is NOT defined.
-                installation.Parameters.Remove(nameof(PostgreSQLInstallation.Password));
-
-                await installation.ExecuteAsync(CancellationToken.None);
-                Assert.AreEqual("defaultpwd", installation.SuperuserPassword);
-            }
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platform, Architecture architecture)
+        [SetUp]
+        public void SetupDefaultMockBehavior(PlatformID platform, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
@@ -129,9 +44,95 @@ namespace VirtualClient.Dependencies
                 It.IsAny<CancellationToken>())).ReturnsAsync("defaultpwd");
         }
 
-        private class TestPostgreSQLInstallation : PostgreSQLInstallation
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public void PostgreSQLServerInstallationThrowsIfDistroNotSupportedForLinux(PlatformID platform, Architecture architecture)
         {
-            public TestPostgreSQLInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            this.SetupDefaultMockBehavior(platform, architecture);
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestUbuntu",
+                LinuxDistribution = LinuxDistribution.SUSE
+            };
+
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockInfo);
+
+            using (TestPostgreSQLServerInstallation installation = new TestPostgreSQLServerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => installation.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exception.Reason);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
+        public async Task PostgreSQLServerInstallationExecutesExpectedInstallationCommands(PlatformID platform, Architecture architecture, string platformArchitecture)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+
+            if (platform == PlatformID.Unix)
+            {
+                LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+                {
+                    OperationSystemFullName = "TestUbuntu",
+                    LinuxDistribution = LinuxDistribution.Ubuntu
+                };
+
+                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+    .ReturnsAsync(mockInfo);
+            }
+
+            using (TestPostgreSQLServerInstallation installation = new TestPostgreSQLServerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await installation.ExecuteAsync(CancellationToken.None);
+
+                string installScriptPath = this.mockFixture.Combine(this.mockPackage.Path, platformArchitecture, "installServer.py");
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"python3 \"{installScriptPath}\""));
+            }
+        }
+
+        [Test]
+        [TestCase(Architecture.X64, "linux-x64")]
+        [TestCase(Architecture.Arm64, "linux-arm64")]
+        [TestCase(Architecture.X64, "win-x64")]
+        [TestCase(Architecture.Arm64, "win-arm64")]
+        public async Task PostgreSQLServerInstallationUsesTheDefaultCredentialWhenTheServerPasswordIsNotDefinedByTheUser(PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestUbuntu",
+                LinuxDistribution = LinuxDistribution.Ubuntu
+            };
+
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockInfo);
+
+            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.EndsWith("superuser.txt")))).Returns(true);
+            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(
+                It.Is<string>(f => f.EndsWith("superuser.txt")),
+                It.IsAny<CancellationToken>())).ReturnsAsync("defaultpwd");
+
+            using (TestPostgreSQLServerInstallation installation = new TestPostgreSQLServerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // The password is NOT defined.
+                installation.Parameters.Remove(nameof(PostgreSQLServerInstallation.Password));
+
+                await installation.ExecuteAsync(CancellationToken.None);
+                Assert.AreEqual("defaultpwd", installation.SuperuserPassword);
+            }
+        }
+
+        private class TestPostgreSQLServerInstallation : PostgreSQLServerInstallation
+        {
+            public TestPostgreSQLServerInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
             }

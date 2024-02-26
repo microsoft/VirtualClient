@@ -23,18 +23,18 @@ namespace VirtualClient.Dependencies
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
-    public class PostgreSQLInstallation : ExecuteCommand
+    public class PostgreSQLServerInstallation : ExecuteCommand
     {
         private ISystemManagement systemManager;
         private IPackageManager packageManager;
         private IStateManager stateManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PostgreSQLInstallation"/> class.
+        /// Initializes a new instance of the <see cref="PostgreSQLServerInstallation"/> class.
         /// </summary>
         /// <param name="dependencies">An enumeration of dependencies that can be used for dependency injection.</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
-        public PostgreSQLInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public PostgreSQLServerInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.systemManager = dependencies.GetService<ISystemManagement>();
@@ -44,27 +44,9 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Parameter defines the password to use for the PostgreSQL accounts that will be used
-        /// to create the DB and to run transactions against it.
-        /// </summary>
-        public string Password
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.Password), out IConvertible password);
-                return password?.ToString();
-            }
-        }
-
-        /// <summary>
         /// The path to the PostgreSQL package for installation.
         /// </summary>
         protected string PackagePath { get; set; }
-
-        /// <summary>
-        /// The password to use for the superuser account.
-        /// </summary>
-        protected string SuperuserPassword { get; set; }
 
         /// <summary>
         /// Initializes PostgreSQL installation requirements.
@@ -107,15 +89,15 @@ namespace VirtualClient.Dependencies
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            InstallationState state = await this.stateManager.GetStateAsync<InstallationState>(nameof(PostgreSQLInstallation), cancellationToken);
+            InstallationState state = await this.stateManager.GetStateAsync<InstallationState>(nameof(PostgreSQLServerInstallation), cancellationToken);
 
             if (state == null)
             {
                 await this.InstallServerAsync(telemetryContext, cancellationToken);
 
                 await this.stateManager.SaveStateAsync(
-                    nameof(PostgreSQLInstallation),
-                    new Item<InstallationState>(nameof(PostgreSQLInstallation), new InstallationState()),
+                    nameof(PostgreSQLServerInstallation),
+                    new Item<InstallationState>(nameof(PostgreSQLServerInstallation), new InstallationState()),
                     cancellationToken);
             }
         }

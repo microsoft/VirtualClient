@@ -17,24 +17,21 @@ namespace VirtualClient.Dependencies
 
     [TestFixture]
     [Category("Unit")]
-    public class PostgreSQLConfigurationTests
+    public class PostgreSQLServerConfigurationTests
     {
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
 
         [SetUp]
-        public void SetupTest()
+        private void SetupDefaultMockBehavior(PlatformID platform, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
-        {
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "postgresql" },
-                { "ServerPassword", "postgres" }
+                { "ServerPassword", "postgres" },
+                {"Port", 5432 }
             };
 
             this.mockPackage = new DependencyPath("postgresql", this.mockFixture.GetPackagePath("postgresql"));
@@ -47,9 +44,40 @@ namespace VirtualClient.Dependencies
                 It.IsAny<CancellationToken>())).ReturnsAsync("defaultpwd");
         }
 
-        private class TestPostgreSQLInstallation : PostgreSQLInstallation
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
+        public async Task PostgreSQLServerConfigurationExecutesExpectedConfigurationCommands(PlatformID platform, Architecture architecture, string platformArchitecture)
         {
-            public TestPostgreSQLInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            this.SetupDefaultMockBehavior(platform, architecture);
+
+            if (platform == PlatformID.Unix)
+            {
+                LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+                {
+                    OperationSystemFullName = "TestUbuntu",
+                    LinuxDistribution = LinuxDistribution.Ubuntu
+                };
+
+                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+    .ReturnsAsync(mockInfo);
+            }
+
+            using (TestPostgreSQLServerConfiguration configuration = new TestPostgreSQLServerConfiguration(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await configuration.ExecuteAsync(CancellationToken.None);
+
+                string configureScriptPath = this.mockFixture.Combine(this.mockPackage.Path, platformArchitecture, "configureServer.py");
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"python3 \"{configureScriptPath}\""));
+            }
+        }
+
+        private class TestPostgreSQLServerConfiguration : PostgreSQLServerConfiguration
+        {
+            public TestPostgreSQLServerConfiguration(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
             }
