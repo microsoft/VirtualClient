@@ -191,7 +191,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.FailFast), this.FailFast);
+                return this.Parameters.GetValue<bool>(nameof(this.FailFast), false);
             }
 
             set
