@@ -26,17 +26,17 @@ namespace VirtualClient.Actions
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
-    public class PostgreSQLExecutor : VirtualClientComponent
+    public class HammerDBExecutor : VirtualClientComponent
     {
         internal const string CreateDBTclName = "createDB.tcl";
         internal const string RunTransactionsTclName = "runTransactions.tcl";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PostgreSQLExecutor"/> class.
+        /// Initializes a new instance of the <see cref="HammerDBExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public PostgreSQLExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public HammerDBExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.SupportedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -144,7 +144,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.ValidatePlatformSupportedAsync(cancellationToken);
-            await PostgreSQLExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
+            await HammerDBExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
 
             this.InitializeApiClients();
 
@@ -205,7 +205,7 @@ namespace VirtualClient.Actions
                             await serverExecutor.ExecuteAsync(serverCancellationToken)
                                 .ConfigureAwait(false);
 
-                            this.Logger.LogMessage($"{nameof(PostgreSQLExecutor)}.ServerExecutionCompleted", telemetryContext);
+                            this.Logger.LogMessage($"{nameof(HammerDBExecutor)}.ServerExecutionCompleted", telemetryContext);
                         }
                     }
 
@@ -217,7 +217,7 @@ namespace VirtualClient.Actions
                             await clientExecutor.ExecuteAsync(serverCancellationToken)
                                 .ConfigureAwait(false);
 
-                            this.Logger.LogMessage($"{nameof(PostgreSQLExecutor)}.ClientExecutionCompleted", telemetryContext);
+                            this.Logger.LogMessage($"{nameof(HammerDBExecutor)}.ClientExecutionCompleted", telemetryContext);
                         }
                     }
                 }
