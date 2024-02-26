@@ -131,11 +131,30 @@ namespace VirtualClient
         /// </summary>
         public string GetLoggedInUserName()
         {
-            string loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+            string loggedInUserName = Environment.UserName;
+            if (string.Equals(loggedInUserName, "root"))
+            {
+                loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
+                {
+                    loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
+                    if (string.IsNullOrEmpty(loggedInUserName))
+                    {
+                        throw new EnvironmentSetupException($"VC_SUDO_USER Environment variable is expected to be set.", ErrorReason.EnvironmentIsInsufficent);
+                    }
+                }
+            }
+
+            // create a dev package and upload it in dev feed. deploy juno services into dev and start experiments in dev in juno. 
+            /*string loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
             if (string.IsNullOrEmpty(loggedInUserName))
             {
-                loggedInUserName = Environment.UserName;
-            }
+                loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+                if (string.IsNullOrEmpty(loggedInUserName))
+                {
+                    loggedInUserName = Environment.UserName;
+                }
+            }*/
 
             return loggedInUserName;
         }
