@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
         {
             this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "8";
             this.fixture.Parameters[nameof(SysbenchConfiguration.RecordCount)] = "1000";
-            this.fixture.Parameters[nameof(SysbenchConfiguration.NumTables)] = "40";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
 
             string[] expectedCommands =
             {

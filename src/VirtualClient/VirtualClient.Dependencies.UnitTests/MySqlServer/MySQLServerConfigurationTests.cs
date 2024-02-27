@@ -325,7 +325,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/distribute-database.py --dbName mysql-test --tableCount 10 --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\"",
+                $"python3 {this.packagePath}/distribute-database.py --dbName mysql-test --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\"",
             };
 
             int commandNumber = 0;

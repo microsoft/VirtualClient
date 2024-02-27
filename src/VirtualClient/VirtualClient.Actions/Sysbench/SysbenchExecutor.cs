@@ -60,28 +60,31 @@ namespace VirtualClient.Actions
         {
             get
             {
-                int numRecords = 1;
-
                 // default formulaic setup of the database
                 // records & threads depend on the core count
-                if (this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible recordCount)
-                    && this.DatabaseScenario == SysbenchScenario.Default)
+
+                CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                int coreCount = cpuInfo.LogicalProcessorCount;
+
+                int recordCountExponent = this.DatabaseScenario == SysbenchScenario.Balanced
+                    ? (int)Math.Log2(coreCount)
+                    : (int)Math.Log2(coreCount) + 2;
+
+                int recordCount = (int)Math.Pow(10, recordCountExponent);
+
+                bool parameterExists = this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible records);
+
+                if (parameterExists)
                 {
-                    numRecords = recordCount.ToInt32(CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-                    int coreCount = cpuInfo.LogicalProcessorCount;
+                    int numRecords = records.ToInt32(CultureInfo.InvariantCulture);
 
-                    int recordCountExponent = this.DatabaseScenario == SysbenchScenario.Balanced
-                        ? (int)Math.Log2(coreCount)
-                        : (int)Math.Log2(coreCount) + 2;
-
-                    numRecords = (int)Math.Pow(10, recordCountExponent);
+                    if (this.DatabaseScenario == SysbenchScenario.Default || numRecords == 1)
+                    {
+                        recordCount = numRecords;
+                    }
                 }
 
-                return numRecords;
+                return recordCount;
             }
         }
 

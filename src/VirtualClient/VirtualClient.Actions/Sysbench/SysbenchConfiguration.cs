@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -49,19 +49,19 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The workload option passed to Sysbench.
         /// </summary>
-        public int NumTables
+        public int TableCount
         {
             get
             {
-                int numTables = 10;
+                int tableCount = 10;
 
-                if (this.Parameters.TryGetValue(nameof(SysbenchConfiguration.NumTables), out IConvertible tables)
+                if (this.Parameters.TryGetValue(nameof(SysbenchConfiguration.TableCount), out IConvertible tables)
                     && this.DatabaseScenario != SysbenchScenario.Balanced)
                 {
-                    numTables = tables.ToInt32(CultureInfo.InvariantCulture);
+                    tableCount = tables.ToInt32(CultureInfo.InvariantCulture);
                 }
 
-                return numTables;
+                return tableCount;
             }
         }
 
@@ -104,45 +104,44 @@ namespace VirtualClient.Actions
             SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
                ?? new SysbenchState();
 
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                await this.PrepareMySQLDatabase(state, telemetryContext, cancellationToken);
-            }
-        }
-
-        private async Task PrepareMySQLDatabase(SysbenchState state, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
             if (!state.DatabasePopulated)
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
                 {
-                    string command = $"python3";
-
-                    string arguments = $"{this.SysbenchPackagePath}/populate-database.py --dbName {this.DatabaseName} " +
-                        $"--tableCount {this.NumTables} --recordCount {this.RecordCount} --threadCount {this.Threads}";
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        command,
-                        arguments,
-                        this.SysbenchPackagePath,
-                        telemetryContext,
-                        cancellationToken))
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-                        }
-                    }
-
-                    if (this.RecordCount > 1)
-                    {
-                        state.DatabasePopulated = true;
-                        await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
+                        await this.PrepareMySQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-            }
 
+                if (this.RecordCount > 1)
+                {
+                    state.DatabasePopulated = true;
+                    await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
+                }
+            }
+        }
+
+        private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string command = $"python3";
+
+            string arguments = $"{this.SysbenchPackagePath}/populate-database.py --dbName {this.DatabaseName} " +
+                $"--tableCount {this.TableCount} --recordCount {this.RecordCount} --threadCount {this.Threads}";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                arguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -44,14 +44,21 @@ namespace VirtualClient.Actions
             {
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
-                    this.SetServerOnline(true);
-
-                    if (this.IsMultiRoleLayout())
+                    try
                     {
-                        using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                        this.SetServerOnline(true);
+
+                        if (this.IsMultiRoleLayout())
                         {
-                            await this.WaitAsync(cancellationToken);
+                            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                            {
+                                await this.WaitAsync(cancellationToken);
+                            }
                         }
+                    }
+                    finally
+                    {
+                        this.SetServerOnline(false);
                     }
                 }
             });

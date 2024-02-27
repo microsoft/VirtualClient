@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies.MySqlServer
@@ -70,7 +70,8 @@ namespace VirtualClient.Dependencies.MySqlServer
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), string.Empty);
+                // and 256G
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
             }
         }
 
@@ -82,17 +83,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.DatabaseName), "vc-mysqldb");
-            }
-        }
-
-        /// <summary>
-        /// Number of tables in the Database
-        /// </summary>
-        public int NumTables
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.NumTables), 10);
             }
         }
 
@@ -247,7 +237,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         {
             string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --tableCount {this.NumTables} --directories \"{innoDbDirs}\"";
+            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\"";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,
@@ -270,13 +260,6 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                string diskFilter = "osdisk:false";
-
-                if (!string.IsNullOrEmpty(this.DiskFilter))
-                {
-                    diskFilter += string.Concat("&", this.DiskFilter);
-                }
-
                 IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
                         .ConfigureAwait(false);
 
@@ -287,7 +270,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                         ErrorReason.WorkloadUnexpectedAnomaly);
                 }
 
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
 
                 if (disksToTest?.Any() != true)
                 {

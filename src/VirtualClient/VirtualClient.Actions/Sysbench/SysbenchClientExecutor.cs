@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -71,24 +71,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The workload option passed to Sysbench.
         /// </summary>
-        public int NumTables
+        public int TableCount
         {
             get
             {
-                int numTables = 10;
+                int tableCount = 10;
 
-                if (this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.NumTables), out IConvertible tables)
+                if (this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tables)
                     && this.DatabaseScenario != SysbenchScenario.Balanced)
                 {
-                    numTables = tables.ToInt32(CultureInfo.InvariantCulture);
+                    tableCount = tables.ToInt32(CultureInfo.InvariantCulture);
                 }
 
                 if (SysbenchClientExecutor.SingleTableWorkloads.Contains(this.Workload, StringComparer.OrdinalIgnoreCase))
                 {
-                    numTables = 1;
+                    tableCount = 1;
                 }
 
-                return numTables;
+                return tableCount;
             }
         }
 
@@ -195,19 +195,19 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            int numTables = this.NumTables;
+            int tableCount = this.TableCount;
 
             if (SysbenchClientExecutor.SingleTableWorkloads.Contains(this.Workload, StringComparer.OrdinalIgnoreCase))
             {
-                numTables = 1;
+                tableCount = 1;
             }
 
             if (this.Scenario == SysbenchScenario.Balanced)
             {
-                numTables = 10;
+                tableCount = 10;
             }
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {this.Threads} --tableCount {numTables} --recordCount {this.RecordCount} ";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {this.Threads} --tableCount {tableCount} --recordCount {this.RecordCount} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
         }
 

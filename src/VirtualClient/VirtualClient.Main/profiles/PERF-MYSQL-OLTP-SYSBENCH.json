@@ -8,52 +8,15 @@
     },
     "Parameters": {
         "DatabaseName": "sbtest",
-        "NumTables": "10",
-        "DatabaseScenario": "Default",
-        "Duration": "00:05:00",
-        "SQLServerPackageName": "mysql-server",
-        "WorkloadGeneratorPackageName": "sysbench"
+        "DatabaseScenario": "Balanced",
+        "Duration": "00:05:00"
     },
     "Actions": [
         {
-            "Type": "SysbenchConfiguration",
-            "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "RecordCount": 1,
-                "NumTables": "$.Parameters.NumTables",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributeMySQLDatabase",
-                "Action": "DistributeDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "NumTables": "$.Parameters.NumTables",
-                "PackageName": "$.Parameters.SQLServerPackageName",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "SysbenchConfiguration",
-            "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "NumTables": "$.Parameters.NumTables",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
-                "Role": "Server"
-            }
-        },
-        {
             "Type": "SysbenchServerExecutor",
             "Parameters": {
-                "Scenario": "StartMySQLServer",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "Scenario": "ExecuteServer",
+                "PackageName": "sysbench",
                 "Role": "Server"
             }
         },
@@ -63,10 +26,9 @@
                 "Scenario": "oltp_read_write",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_read_write",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -76,10 +38,9 @@
                 "Scenario": "oltp_read_only",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_read_only",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -89,10 +50,9 @@
                 "Scenario": "oltp_write_only",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_write_only",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -102,10 +62,9 @@
                 "Scenario": "oltp_delete",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_delete",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -115,10 +74,9 @@
                 "Scenario": "oltp_insert",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_insert",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -128,10 +86,9 @@
                 "Scenario": "oltp_update_index",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_update_index",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -141,10 +98,9 @@
                 "Scenario": "oltp_update_non_index",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_update_non_index",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -154,10 +110,9 @@
                 "Scenario": "select_random_points",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "select_random_points",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         },
@@ -167,10 +122,9 @@
                 "Scenario": "select_random_ranges",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "NumTables": "$.Parameters.NumTables",
                 "Duration": "$.Parameters.Duration",
                 "Workload": "select_random_ranges",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Role": "Client"
             }
         }
@@ -179,14 +133,14 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "FormatServerDisks",
+                "Scenario": "FormatDisks",
                 "Role": "Server"
             }
         },
         {
             "Type": "MountDisks",
             "Parameters": {
-                "Scenario": "MountServerDisks",
+                "Scenario": "CreateMountPoints",
                 "Role": "Server"
             }
         },
@@ -196,7 +150,7 @@
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
                 "BlobName": "mysql-server-8.0.36.zip",
-                "PackageName": "$.Parameters.SQLServerPackageName",
+                "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
             }
@@ -207,7 +161,7 @@
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
                 "BlobName": "sysbench-1.0.20.zip",
-                "PackageName": "$.Parameters.WorkloadGeneratorPackageName",
+                "PackageName": "sysbench",
                 "Extract": true
             }
         },
@@ -223,7 +177,7 @@
             "Parameters": {
                 "Scenario": "InstallMySQLServer",
                 "Action": "InstallServer",
-                "PackageName": "$.Parameters.SQLServerPackageName",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
@@ -232,7 +186,7 @@
             "Parameters": {
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
-                "PackageName": "$.Parameters.SQLServerPackageName",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
@@ -242,7 +196,7 @@
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "$.Parameters.SQLServerPackageName",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
@@ -251,8 +205,39 @@
             "Parameters": {
                 "Scenario": "SetMySQLGlobalVariables",
                 "Action": "SetGlobalVariables",
-                "Variables": "MAX_PREPARED_STMT_COUNT=100000;MAX_CONNECTIONS=1024",
-                "PackageName": "$.Parameters.SQLServerPackageName",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration",
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "RecordCount": 1,
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "DistributeMySQLDatabase",
+                "Action": "DistributeDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration",
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
                 "Role": "Server"
             }
         },
