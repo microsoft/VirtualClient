@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -49,6 +49,7 @@ namespace VirtualClient
             this.Logger = logger ?? NullLogger.Instance;
 
             this.metadataContact = new MetadataContract();
+            this.ExecutionMinimumInterval = profile.MinimumExecutionInterval;
         }
 
         /// <summary>
@@ -723,6 +724,11 @@ namespace VirtualClient
 
                         if (executeComponent)
                         {
+                            if (component.Extensions?.Any() == true)
+                            {
+                                runtimeComponent.Extensions.AddRange(component.Extensions, withReplace: true);
+                            }
+
                             components.Add(runtimeComponent);
                             this.ComponentCreated?.Invoke(this, new ComponentEventArgs(runtimeComponent));
                         }

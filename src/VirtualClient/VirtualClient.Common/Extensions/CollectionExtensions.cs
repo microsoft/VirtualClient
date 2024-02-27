@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Common.Extensions
@@ -13,7 +13,7 @@ namespace VirtualClient.Common.Extensions
     /// </summary>
     public static class CollectionExtensions
     {
-        private static readonly char[] CommonDelimiters = new char[] { ',', ';' };
+        private static readonly string[] CommonDelimiters = new string[] { ",", ";" };
 
         /// <summary>
         /// Extension merges a set of new entries with the existing set of dictionary entries based upon
@@ -166,14 +166,29 @@ namespace VirtualClient.Common.Extensions
         public static bool TryGetCollection<T>(this IDictionary<string, IConvertible> dictionary, string key, out IEnumerable<T> value)
             where T : IConvertible
         {
+            return dictionary.TryGetCollection<T>(key, CollectionExtensions.CommonDelimiters, out value);
+        }
+
+        /// <summary>
+        /// Parses the delimited dictionary entry into a collection of values. The entries can be delimited
+        /// by a comma (,) or a semi-colon (;).
+        /// </summary>
+        /// <param name="dictionary">Dictionary containing the key with a value to parse.</param>
+        /// <param name="key">The key in the dictionary.</param>
+        /// <param name="delimiters">The delimiter(s) to use when splitting the collection values (e.g. ,,,).</param>
+        /// <param name="value">The collection of values found.</param>
+        public static bool TryGetCollection<T>(this IDictionary<string, IConvertible> dictionary, string key, string[] delimiters, out IEnumerable<T> value)
+            where T : IConvertible
+        {
             dictionary.ThrowIfNull(nameof(dictionary));
             key.ThrowIfNullOrWhiteSpace(nameof(key));
+            delimiters.ThrowIfNullOrEmpty(nameof(delimiters));
             value = null;
 
             if (dictionary.TryGetValue(key, out IConvertible delimitedValue))
             {
                 string[] delimitedValues = delimitedValue.ToString().Split(
-                    CollectionExtensions.CommonDelimiters,
+                    delimiters,
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
                 if (delimitedValues?.Any() == true)

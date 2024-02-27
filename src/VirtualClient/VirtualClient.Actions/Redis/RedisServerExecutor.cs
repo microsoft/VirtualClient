@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Packaging;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -14,6 +13,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -76,13 +76,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// True if TLS is enabled.
+        /// True/false whether TLS should be enabled. Default = false.
         /// </summary>
-        public string IsTLSEnabled
+        public bool IsTLSEnabled
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.IsTLSEnabled), "no");
+                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled), false);
             }
         }
 
@@ -153,7 +153,6 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        Console.WriteLine("Disposed");
                         // We MUST stop the server instances from running before VC exits or they will
                         // continue running until explicitly stopped. This is a problem for running Redis
                         // workloads back to back because the requisite ports will be in use already on next
@@ -216,6 +215,7 @@ namespace VirtualClient.Actions
                 catch
                 {
                     this.SetServerOnline(false);
+                    await this.KillServerInstancesAsync(cancellationToken);
                     throw;
                 }
             });
@@ -237,7 +237,7 @@ namespace VirtualClient.Actions
 
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
 
-            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+            if (this.IsTLSEnabled)
             {
                 DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
                 this.RedisResourcesPath = redisResourcesPath.Path;
@@ -257,7 +257,8 @@ namespace VirtualClient.Actions
             if (this.BindToCores && this.ServerInstances > cpuInfo.LogicalProcessorCount)
             {
                 throw new WorkloadException(
-                    $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system.",
+                    $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system " +
+                    $"when binding each of the servers to a logical core/vCPU. Set parameter '{nameof(this.BindToCores)}' = false to allow for additional server instances.",
                     ErrorReason.InvalidProfileDefinition);
             }
         }
@@ -321,16 +322,17 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone();
             return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
             {
-                List<int> ports = new List<int>();
+                List<PortDescription> ports = new List<PortDescription>();
                 for (int i = 0; i < this.ServerInstances; i++)
                 {
-                    ports.Add(this.Port + i);
+                    ports.Add(new PortDescription
+                    {
+                        CpuAffinity = this.BindToCores ? i.ToString() : null,
+                        Port = this.Port
+                    });
                 }
 
-                var state = new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
-                {
-                    [nameof(ServerState.Ports)] = string.Join(",", ports)
-                }));
+                var state = new Item<ServerState>(nameof(ServerState), new ServerState(ports));
 
                 using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(ServerState), state, cancellationToken))
                 {
@@ -378,7 +380,7 @@ namespace VirtualClient.Actions
                             commandArguments = $"-c \"{this.RedisExecutablePath}";
                         }
 
-                        if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+                        if (this.IsTLSEnabled)
                         {
                             commandArguments += $" --tls-port {port} --port 0 --tls-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}   --tls-key-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --tls-ca-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")}";
                         }

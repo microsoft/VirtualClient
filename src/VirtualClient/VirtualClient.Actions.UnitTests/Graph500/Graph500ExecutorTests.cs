@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
             this.fixture.Process.StandardOutput.Append(
-                File.ReadAllText(this.fixture.Combine(this.currentDirectoryPath.Path, @"Examples\Graph500\Graph500ResultsExample.txt")));
+                File.ReadAllText(this.fixture.Combine(this.currentDirectoryPath.Path, "Examples", "Graph500", "Graph500ResultsExample.txt")));
         }
 
         private class TestGraph500Executor : Graph500Executor

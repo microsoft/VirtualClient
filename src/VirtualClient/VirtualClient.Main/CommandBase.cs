@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -323,6 +323,7 @@ namespace VirtualClient
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 ["clientId"] = this.AgentId.ToLowerInvariant(),
+                ["clientInstance"] = Guid.NewGuid().ToString(),
                 ["appVersion"] = extensionsVersion ?? platformVersion,
                 ["appPlatformVersion"] = platformVersion,
                 ["executionArguments"] = SensitiveData.ObscureSecrets(string.Join(" ", args)),

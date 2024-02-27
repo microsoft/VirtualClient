@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
@@ -199,6 +199,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task FormatDisksWillAttemptToFormatOnlyDisksThatHaveNotAlreadyBeenFormatted()
         {
             this.SetupDefaultMockBehaviors();

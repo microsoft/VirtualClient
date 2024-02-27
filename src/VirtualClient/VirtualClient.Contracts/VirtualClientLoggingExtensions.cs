@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -739,7 +739,7 @@ namespace VirtualClient.Contracts
                 { "toolVersion", toolVersion ?? string.Empty },
                 { "toolResults", toolResults ?? string.Empty },
                 { "tags", tags != null ? string.Join(',', tags) : string.Empty },
-                { "metricMetadata", metricMetadata as object ?? string.Empty }
+                { "metadata_metrics", metricMetadata as object ?? string.Empty }
             };
 
             // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
@@ -829,7 +829,7 @@ namespace VirtualClient.Contracts
                         counterContext.Properties["toolName"] = toolName;
                         counterContext.Properties["toolVersion"] = toolVersion;
                         counterContext.Properties["tags"] = counter.Tags != null ? $"{string.Join(",", counter.Tags)}" : string.Empty;
-                        counterContext.Properties["metricMetadata"] = counter.Metadata as object;
+                        counterContext.Properties["metadata_metrics"] = counter.Metadata as object;
 
                         // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
                         // output. To enable a seamless transition, we are supporting the old and the new schema
@@ -987,6 +987,18 @@ namespace VirtualClient.Contracts
                     LogType.Trace,
                     eventContext ?? EventContext.Persisted());
             }
+        }
+
+        /// <summary>
+        /// Extension logs the warning and context.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="message">The message/event name to log.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        public static void LogWarning(this ILogger logger, string message, EventContext eventContext)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            VirtualClientLoggingExtensions.LogMessage(logger, message, LogLevel.Warning, LogType.Trace, eventContext);
         }
 
         /// <summary>

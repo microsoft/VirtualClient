@@ -92,7 +92,7 @@ for using them.
 | [Stress-ng](https://microsoft.github.io/VirtualClient/docs/workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](https://microsoft.github.io/VirtualClient/docs/workloads/superbenchmark/superbenchmark.md) | Machine Learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
 | [Sysbench OLTP w/MySQL](https://microsoft.github.io/VirtualClient/docs/workloads/sysbench-oltp/sysbench-oltp.md) | Relational Database Performance | linux-x64, linux-arm64 | [GPL-2.0 (Sysbench)](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[GPL-2.0 (MySQL)](https://www.mysql.com/about/legal/licensing/oem/) |
-| [Wrathmark Othello](https://microsoft.github.io/VirtualClient/docs/workloads/wrathmark/) | CPU Performance | linux-x64, linux-arm64, win-x64, win-arm64 | [Public Domain](https://github.com/ricomariani/wrath-othello/blob/main/LICENSE.md) |
+
 
 ## Supported System Monitoring Facilities
 The platform supports capturing information from the system in the background while workloads are running. The following list of monitoring facilities are available in the Virtual Client.

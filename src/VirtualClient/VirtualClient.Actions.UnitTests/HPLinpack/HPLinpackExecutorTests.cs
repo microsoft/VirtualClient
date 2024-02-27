@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -158,7 +158,7 @@ namespace VirtualClient.Actions
             this.currentDirectoryPath = new DependencyPath("HPL", currentDirectory);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\HPLinpack\HPLResults.txt");
+            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "HPLinpack", "HPLResults.txt");
             this.rawString = File.ReadAllText(resultsPath);
             this.fixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
                 .Returns(this.rawString);

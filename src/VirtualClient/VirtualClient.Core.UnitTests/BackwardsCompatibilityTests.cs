@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -169,6 +169,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void TryMapProfileHandlesProfilesInPathsOnWindowsPlatforms()
         {
             this.fixture.Setup(PlatformID.Win32NT);

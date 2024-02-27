@@ -1,14 +1,18 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Metadata
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
 
     [TestFixture]
@@ -92,6 +96,7 @@ namespace VirtualClient.Metadata
         [TestCase(MetadataContractCategory.Host, MetadataContract.CategoryHost)]
         [TestCase(MetadataContractCategory.Runtime, MetadataContract.CategoryRuntime)]
         [TestCase(MetadataContractCategory.Scenario, MetadataContract.CategoryScenario)]
+        [TestCase(MetadataContractCategory.ScenarioExtensions, MetadataContract.CategoryScenarioExtensions)]
         public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_1(MetadataContractCategory category, string expectedCategoryName)
         {
             MetadataContract.Persist("AnyProperty", "AnyValue", category);
@@ -109,6 +114,7 @@ namespace VirtualClient.Metadata
         [TestCase(MetadataContractCategory.Host)]
         [TestCase(MetadataContractCategory.Runtime)]
         [TestCase(MetadataContractCategory.Scenario)]
+        [TestCase(MetadataContractCategory.ScenarioExtensions)]
         public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_2(MetadataContractCategory category)
         {
             MetadataContract.Persist("AnyProperty", "AnyValue", category);
@@ -126,6 +132,7 @@ namespace VirtualClient.Metadata
         [TestCase(MetadataContractCategory.Host, MetadataContract.CategoryHost)]
         [TestCase(MetadataContractCategory.Runtime, MetadataContract.CategoryRuntime)]
         [TestCase(MetadataContractCategory.Scenario, MetadataContract.CategoryScenario)]
+        [TestCase(MetadataContractCategory.ScenarioExtensions, MetadataContract.CategoryScenarioExtensions)]
         public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_1(MetadataContractCategory category, string expectedCategoryName)
         {
             MetadataContract contract = new MetadataContract();
@@ -144,6 +151,7 @@ namespace VirtualClient.Metadata
         [TestCase(MetadataContractCategory.Host)]
         [TestCase(MetadataContractCategory.Runtime)]
         [TestCase(MetadataContractCategory.Scenario)]
+        [TestCase(MetadataContractCategory.ScenarioExtensions)]
         public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_2(MetadataContractCategory category)
         {
             MetadataContract contract = new MetadataContract();
@@ -165,6 +173,7 @@ namespace VirtualClient.Metadata
             MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
             MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
             MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
+            MetadataContract.Persist("ScenarioExtension", JObject.Parse("{'any':'extensions'}"), MetadataContractCategory.ScenarioExtensions);
             MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
             contract.Apply(telemetryContext);
 
@@ -187,6 +196,9 @@ namespace VirtualClient.Metadata
             //         "metadata_scenario": {
             //             "scenario": "Scenario01"
             //         },
+            //         "metadata_scenario_ext": {
+            //             "scenarioExtension": {"any":"extensions"}"
+            //         },
             //         "metadata_runtime": {
             //             "runtime": "Version1"
             //         }
@@ -200,6 +212,7 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency\":\"Dependency01\"}"));
             Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host01\"}"));
             Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario_ext\":{\"scenarioExtension\":{\"any\":\"extensions\"}}"));
             Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version1\"}"));
         }
 
@@ -213,6 +226,7 @@ namespace VirtualClient.Metadata
             contract.Add("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
             contract.Add("Host", "Host01", MetadataContractCategory.Host);
             contract.Add("Scenario", "Scenario01", MetadataContractCategory.Scenario);
+            contract.Add("ScenarioExtension", JObject.Parse("{'any':'extensions'}"), MetadataContractCategory.ScenarioExtensions);
             contract.Add("Runtime", "Version1", MetadataContractCategory.Runtime);
             contract.Apply(telemetryContext);
 
@@ -235,6 +249,9 @@ namespace VirtualClient.Metadata
             //         "metadata_scenario": {
             //             "scenario": "Scenario01"
             //         },
+            //         "metadata_scenario_ext": {
+            //             "scenarioExtension": {"any":"extensions"}"
+            //         },
             //         "metadata_runtime": {
             //             "runtime": "Version1"
             //         }
@@ -248,6 +265,7 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency\":\"Dependency01\"}"));
             Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host01\"}"));
             Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario_ext\":{\"scenarioExtension\":{\"any\":\"extensions\"}}"));
             Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version1\"}"));
         }
 
@@ -416,6 +434,56 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host02\"}"));
             Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario02\"}"));
             Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version2\"}"));
+        }
+
+        [Test]
+        [Order(13)]
+        public void ComponentExtensionPropertiesRemainValidJsonWhenAppliedToTheMetadataContract()
+        {
+            // This is the implementation model used in the VirtualClientComponent
+            // base class to add 'extensions' info to the telemetry EventContext.
+            IDictionary<string, JToken> extensions = new Dictionary<string, JToken>
+            {
+                {
+                    "ListExtension",
+                    JToken.FromObject(new List<string> { "String1", "String2" })
+                },
+                {
+                    "DictionaryExtension",
+                    JToken.FromObject(new Dictionary<string, int>
+                    {
+                        ["Key1"] = 1234,
+                        ["Key2"] = 5678
+                    })
+                },
+                {
+                    "ObjectExtension",
+                    JToken.FromObject(new TestClass { Id = "777", Count = 5 })
+                }
+            };
+
+            MetadataContract metadataContract = new MetadataContract();
+            EventContext telemetryContext = new EventContext(Guid.NewGuid());
+
+            foreach (var entry in extensions)
+            {
+                metadataContract.Add(
+                    extensions.Keys.ToDictionary(key => key, entry => extensions[entry] as object),
+                    MetadataContractCategory.ScenarioExtensions,
+                    replace: true);
+            }
+
+            metadataContract.Apply(telemetryContext);
+            string json = telemetryContext.ToJson();
+
+            Assert.IsTrue(json.Contains("\"metadata_scenario_ext\":{\"listExtension\":[\"String1\",\"String2\"],\"dictionaryExtension\":{\"Key1\":1234,\"Key2\":5678},\"objectExtension\":{\"Id\":\"777\",\"Count\":5}}"));
+        }
+
+        private class TestClass
+        {
+            public string Id { get; set; }
+
+            public int Count { get; set; }
         }
     }
 }

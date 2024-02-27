@@ -1,4 +1,4 @@
-﻿# Network Workload Suite Profiles
+# Network Workload Suite Profiles
 The following profiles run customer-representative or benchmarking scenarios using the suite of network workloads (CPS, NTttcp, Latte and SockPerf).
 
 * [Workload Details](./network-suite.md)  

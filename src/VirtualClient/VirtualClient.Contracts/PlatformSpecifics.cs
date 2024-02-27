@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -108,7 +108,8 @@ namespace VirtualClient.Contracts
         public PlatformID Platform { get; }
 
         /// <summary>
-        /// The OS platform (e.g. Windows, Unix).
+        /// The name of the platform + architecture name for the system on which Virtual Client
+        /// is running (e.g. win-x64, win-arm64, linux-x64, linux-arm64).
         /// </summary>
         public string PlatformArchitectureName { get; }
 

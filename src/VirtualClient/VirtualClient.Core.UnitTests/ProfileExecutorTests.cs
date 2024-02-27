@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -41,9 +41,7 @@ namespace VirtualClient
             // project that is at the foundation of all unit + functional tests in the solution.
             this.mockProfile = new ExecutionProfile(
                 description: "Any profile description",
-                iterations: 1,
                 minimumExecutionInterval: null,
-                minimumRequiredExecutionTime: null,
                 actions: new List<ExecutionProfileElement>
                 {
                     new ExecutionProfileElement(

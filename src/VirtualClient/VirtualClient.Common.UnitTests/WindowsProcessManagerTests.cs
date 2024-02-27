@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Common
+namespace VirtualClient.Common
 {
     using NUnit.Framework;
 
@@ -15,6 +15,7 @@
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void WindowsProcessManagerCreatesTheExpectedProcess_1()
         {
             string command = @"C:\users\any\temp\command.exe";
@@ -31,6 +32,7 @@
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void WindowsProcessManagerCreatesTheExpectedProcess_2()
         {
             string command = @"C:\users\any\temp\command.exe";

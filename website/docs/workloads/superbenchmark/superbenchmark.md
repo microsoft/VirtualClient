@@ -1,4 +1,4 @@
-﻿# SuperBenchmark
+# SuperBenchmark
 SuperBench is a validation and profiling tool for AI infrastructure. It highly specializes in GPU performance benchmarking.
 
 * [Micro Benchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/micro-benchmarks)

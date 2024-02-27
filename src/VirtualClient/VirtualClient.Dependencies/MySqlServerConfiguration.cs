@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
@@ -252,6 +252,14 @@ namespace VirtualClient.Dependencies
                         .ConfigureAwait(false);
                 }
             }
+        }
+
+        private Task DistributeDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // https://stackoverflow.com/questions/4511578/innodb-multiple-data-directories
+            // https://dev.mysql.com/worklog/task/?id=8619
+
+            return Task.CompletedTask;
         }
 
         private async Task ExecuteCommandAsync(ProcessManager manager, string command, string arguments, EventContext telemetryContext, CancellationToken cancellationToken)

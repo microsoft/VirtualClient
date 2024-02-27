@@ -1,4 +1,4 @@
-﻿# Install Linux Packages
+# Install Linux Packages
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install dependency packages from a package store. The following section illustrates the
 details for integrating this into the profile. The platform has a goal to supporting all platforms and specifics with relative ease (i.e. it should work out-of-the-box). 
 Installing a package is easy. Installing packages on different platforms and package managers is not. 

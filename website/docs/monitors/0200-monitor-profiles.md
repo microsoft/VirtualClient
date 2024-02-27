@@ -1,4 +1,4 @@
-﻿# Monitor Profiles
+# Monitor Profiles
 The following sections describe the various monitor profiles that are available with the Virtual Client application. Monitor profiles are used to 
 define the background monitors that will run on the system. Monitors are often ran in conjunction with workloads (defined in workload profiles) in
 order to capture performance and reliability information from the system while workloads are running.

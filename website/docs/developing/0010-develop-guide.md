@@ -1,4 +1,4 @@
-﻿# Developer Guide
+# Developer Guide
 Welcome to the Virtual Client development team! The Virtual Client is a .NET 8.0 command line application written in C# that offers both cross-platform and multi-architecture support. As such, the 
 application can run on both Windows and Linux operating systems as well as on hardware with x64 and arm64 architecture CPUs/processors. The following documentation covers details, concepts and 
 practices to consider when doing development work in the Virtual Client source code. The goal is to enable a developer new to the codebase to quickly understand the high level requirements and expectations before 

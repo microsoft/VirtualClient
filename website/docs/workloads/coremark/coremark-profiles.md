@@ -1,4 +1,4 @@
-﻿# CoreMark Workload Profiles
+# CoreMark Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the CoreMark workload.  
 
 * [Workload Details](./coremark.md)  

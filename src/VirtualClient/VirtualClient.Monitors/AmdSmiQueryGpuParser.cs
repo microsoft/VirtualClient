@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Monitors
@@ -6,6 +6,7 @@ namespace VirtualClient.Monitors
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
     using VirtualClient.Contracts;
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
 
@@ -48,6 +49,12 @@ namespace VirtualClient.Monitors
             }
 
             return metrics;
+        }
+
+        /// <inheritdoc/>
+        protected override void Preprocess()
+        {
+            this.PreprocessedText = this.RawText.Replace("\r\n", Environment.NewLine);
         }
     }
 }

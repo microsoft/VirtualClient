@@ -1,4 +1,4 @@
-﻿# VC Packages
+# VC Packages
 The following documentation covers the different package store options available in Virtual Client used for downloading and installing
 dependencies on the system. Virtual Client supports NuGet feeds as well as Azure Blob stores for hosting dependency packages that need
 to be downloaded to the system during the execution of a workload profile. The following sections describes how this works in the Virtual
