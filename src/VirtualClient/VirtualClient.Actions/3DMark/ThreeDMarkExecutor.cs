@@ -46,6 +46,28 @@ namespace VirtualClient.Actions
                 this.Definitions.Add("custom_TSGT2.3dmdef");
                 this.Definitions.Add("custom_TSCT.3dmdef");
             }
+
+            if (this.Scenario == "TimeSpyExtreme")
+            {
+                this.Definitions.Add("custom_TSGT1X.3dmdef");
+                this.Definitions.Add("custom_TSGT2X.3dmdef");
+                this.Definitions.Add("custom_TSCTX.3dmdef");
+            }
+
+            if (this.Scenario == "PCIExpress")
+            {
+                this.Definitions.Add("custom_PCIE.3dmdef");
+            }
+
+            if (this.Scenario == "DirectXRayTracing")
+            {
+                this.Definitions.Add("custom_DXRTFT.3dmdef");
+            }
+
+            if (this.Scenario == "PortRoyal")
+            {
+                this.Definitions.Add("custom_PR.3dmdef");
+            }
         }
 
         /// <summary>
@@ -67,6 +89,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<int>(nameof(ThreeDMarkExecutor.PsExecSession));
+            }
+        }
+
+        /// <summary>
+        /// Whether PsExec is enabled or not
+        /// </summary>
+        public bool PsExecEnabled
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(ThreeDMarkExecutor.PsExecEnabled));
             }
         }
 
@@ -186,14 +219,24 @@ namespace VirtualClient.Actions
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath);
+            string procname;
+            string baseArg;
 
-            string psexec = this.PlatformSpecifics.Combine(this.psexecDir, "PsExec.exe");
-            string baseArg = @$"-s -i {this.PsExecSession} -w {this.psexecDir} -accepteula -nobanner";
+            if (this.PsExecEnabled == true)
+            {
+                procname = this.PlatformSpecifics.Combine(this.psexecDir, "PsExec.exe");
+                baseArg = @$"-s -i {this.PsExecSession} -w {this.psexecDir} -accepteula -nobanner {this.ExecutablePath}";
+            }
+            else
+            {
+                procname = this.ExecutablePath;
+                baseArg = string.Empty;
+            }
 
             return this.Logger.LogMessageAsync($"{nameof(ThreeDMarkExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
                 // Point 3DMark to DLC Path
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --path={this.DLCPath}", this.psexecDir))
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(procname, $"{baseArg} --path={this.DLCPath}", this.psexecDir))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -219,7 +262,7 @@ namespace VirtualClient.Actions
                 }
 
                 // Lisence Registry
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LisenceKey}", this.psexecDir))
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(procname, $"{baseArg} --register={this.LisenceKey}", this.psexecDir))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -244,68 +287,69 @@ namespace VirtualClient.Actions
                     }
                 }
 
+                // Run Workload
                 DateTime startTime = DateTime.UtcNow;
-                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                foreach (string definition in this.Definitions)
                 {
-                    // Run Workload
-                    foreach (string definition in this.Definitions)
+                    this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
+
+                    // Workload execution
+                    string arguments = this.GenerateCommandArguments(definition);
+                    string commandArguments = $"{baseArg} {arguments}";
+
+                    Console.Write(procname + " " + commandArguments);
+
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(procname, commandArguments, this.psexecDir))
                     {
-                        this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
+                        process.RedirectStandardError = true;
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
-                        // Workload execution
-                        string arguments = this.GenerateCommandArguments(definition);
-                        string commandArguments = $"{baseArg} {this.ExecutablePath} {arguments}";
-
-                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
+                        try
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
-                            try
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                                string output = process.StandardError.ToString();
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
-                                if (!cancellationToken.IsCancellationRequested)
-                                {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext);
-                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-
-                                }
                             }
-                            finally
+                        }
+                        finally
+                        {
+                            if (!process.HasExited)
                             {
-                                if (!process.HasExited)
+                                process.Kill();
+                            }
+                        }
+                    }
+
+                    // Result Preparation
+                    string commandArguments2 = $"{baseArg} --in={this.OutFileName} --export=result.xml";
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(procname, commandArguments2, this.psexecDir))
+                    {
+                        this.CleanupTasks.Add(() => process.SafeKill());
+
+                        try
+                        {
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
                                 {
-                                    process.Kill();
+                                    metrics.Add(metric);
                                 }
                             }
                         }
-
-                        // Result Preparation
-                        string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
-                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
+                        finally
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
-
-                            try
+                            if (!process.HasExited)
                             {
-                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                                if (!cancellationToken.IsCancellationRequested)
-                                {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext);
-                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                    foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
-                                    {
-                                        metrics.Add(metric);
-                                    }
-                                }
-                            }
-                            finally
-                            {
-                                if (!process.HasExited)
-                                {
-                                    process.Kill();
-                                }
+                                process.Kill();
                             }
                         }
                     }
@@ -313,9 +357,12 @@ namespace VirtualClient.Actions
 
                 DateTime endTime = DateTime.UtcNow;
 
-                foreach (Metric metric in this.CalculateTimeSpyAggregates(metrics))
+                if (this.Scenario == "TimeSpy" || this.Scenario == "TimeSpyExtreme")
                 {
-                    metrics.Add(metric);
+                    foreach (Metric metric in this.CalculateTimeSpyAggregates(metrics))
+                    {
+                        metrics.Add(metric);
+                    }
                 }
 
                 this.MetadataContract.AddForScenario(
@@ -349,15 +396,15 @@ namespace VirtualClient.Actions
             double tsct = 0;
             foreach (Metric metric in metrics)
             {
-                if (metric.Name == "timespy.graphics.1")
+                if (metric.Name == "timespy.graphics.1 [fps]" || metric.Name == "timespyextreme.graphics.1 [fps]")
                 {
                     tsgt1 = metric.Value;
                 }
-                else if (metric.Name == "timespy.graphics.2")
+                else if (metric.Name == "timespy.graphics.2 [fps]" || metric.Name == "timespyextreme.graphics.2 [fps]")
                 {
                     tsgt2 = metric.Value;
                 }
-                else if (metric.Name == "timespy.cpu")
+                else if (metric.Name == "timespy.cpu [fps]" || metric.Name == "timespyextreme.cpu [fps]")
                 {
                     tsct = metric.Value;
                 }
@@ -382,7 +429,7 @@ namespace VirtualClient.Actions
         /// </summary>
         private string GenerateCommandArguments(string definition)
         {
-            return $"--definition={definition} --out={this.OutFileName}";
+            return $"--definition={definition} --out={this.OutFileName} --systeminfo=off --systeminfomonitor=off --log=log.txt --trace";
         }
 
         /// <summary>

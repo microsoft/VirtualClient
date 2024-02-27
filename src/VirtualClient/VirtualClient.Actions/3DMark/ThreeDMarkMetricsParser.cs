@@ -51,6 +51,32 @@ namespace VirtualClient.Actions
                 {
                     metrics.Add(new Metric("timespy.cpu [fps]", this.ParseXMLTag("TimeSpyPerformanceCpuSection2"), "fps", MetricRelativity.HigherIsBetter));
                 }
+                else if (this.Defintion == "custom_TSGT1X.3dmdef")
+                {
+                    metrics.Add(new Metric("timespyextreme.graphics.1 [fps]", this.ParseXMLTag("TimeSpyExtremeGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Defintion == "custom_TSGT2X.3dmdef")
+                {
+                    metrics.Add(new Metric("timespyextreme.graphics.2 [fps]", this.ParseXMLTag("TimeSpyExtremeGraphicsTest2"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Defintion == "custom_TSCTX.3dmdef")
+                {
+                    metrics.Add(new Metric("timespyextreme.cpu [fps]", this.ParseXMLTag("TimeSpyExtremeCpuSection0"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Defintion == "custom_PCIE.3dmdef")
+                {
+                    metrics.Add(new Metric("pciebandwidth.gpu [GB/s]", this.ParseXMLTag("PciExpressBandwidthPerformance"), "GB/s", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("pcie.gpu [fps]", this.ParseXMLTag("PciExpressFpsPerformance"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Defintion == "custom_DXRTFT.3dmdef")
+                {
+                    metrics.Add(new Metric("dxraytracing.gpu [fps]", this.ParseXMLTag("DirectxRaytracingFtFpsPerformance"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Defintion == "custom_PR.3dmdef")
+                {
+                metrics.Add(new Metric("portroyal.gpu [fps]", this.ParseXMLTag("PortRoyalCustomGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
+                metrics.Add(new Metric("portroyal.finalscore", this.ParseXMLTag("PortRoyalCustomGraphicsScore"), "score", MetricRelativity.HigherIsBetter));
+                }
             }
             catch (Exception exc)
             {
