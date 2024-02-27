@@ -314,14 +314,13 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                if (!cancellationToken.IsCancellationRequested)
+                                if (process.IsErrored())
                                 {
-                                    if (process.IsErrored())
-                                    {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp");
-                                        process.ThrowIfWorkloadFailed();
-                                    }
-
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp");
+                                    process.ThrowIfWorkloadFailed();
+                                }
+                                else
+                                {
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);

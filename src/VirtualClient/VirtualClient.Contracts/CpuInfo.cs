@@ -94,7 +94,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The number of logical processors/vCPUs per physical core/CPU.
         /// </summary>
-        public int LogicalProcessorsPerCoreCount
+        public int LogicalProcessorCountPerPhysicalCore
         {
             get
             {

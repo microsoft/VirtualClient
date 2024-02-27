@@ -216,5 +216,54 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "total latency 9-nines", 159.270, "ms");
             MetricAssert.Exists(metrics, "total latency max", 159.270, "ms");
         }
+
+        [Test]
+        public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\Read8k.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new DiskSpdMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            // cpu metrics
+            MetricAssert.Exists(metrics, "cpu usage 0", 92.79, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 1", 90.26, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage average", 39.69, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 0", 0.44, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 1", 0.36, "percentage");
+            MetricAssert.Exists(metrics, "cpu user average", 0.27, "percentage");
+
+            // Total
+            MetricAssert.Exists(metrics, "total bytes 0", 1927421952, "bytes");
+            MetricAssert.Exists(metrics, "total bytes 1", 2276425728, "bytes");
+            MetricAssert.Exists(metrics, "total bytes total", 162301329408, "bytes");
+            MetricAssert.Exists(metrics, "total io operations 0", 235281, "I/Os");
+            MetricAssert.Exists(metrics, "total io operations 1", 277884, "I/Os");
+            MetricAssert.Exists(metrics, "total throughput 0", 30.63, "MiB/s");
+            MetricAssert.Exists(metrics, "total throughput 1", 36.17, "MiB/s");
+            MetricAssert.Exists(metrics, "total throughput total", 2579.05, "MiB/s");
+
+            // Read
+            MetricAssert.Exists(metrics, "read bytes 0", 0, "bytes");
+            MetricAssert.Exists(metrics, "read bytes 1", 0, "bytes");
+            MetricAssert.Exists(metrics, "read bytes total", 0, "bytes");
+
+            // Write
+            MetricAssert.Exists(metrics, "write bytes 0", 1927421952, "bytes");
+            MetricAssert.Exists(metrics, "write bytes 1", 2276425728, "bytes");
+            MetricAssert.Exists(metrics, "write bytes total", 162301329408, "bytes");
+            MetricAssert.Exists(metrics, "write io operations 0", 235281, "I/Os");
+            MetricAssert.Exists(metrics, "write io operations 1", 277884, "I/Os");
+            MetricAssert.Exists(metrics, "write io operations total", 19812174, "I/Os");
+
+            // latency
+            MetricAssert.Exists(metrics, "total latency min", 0.015, "ms");
+            MetricAssert.Exists(metrics, "total latency 25th", 0.879, "ms");
+            MetricAssert.Exists(metrics, "total latency 50th", 1.52, "ms");
+            MetricAssert.Exists(metrics, "total latency 75th", 2.819, "ms");
+            MetricAssert.Exists(metrics, "total latency 90th", 7.472, "ms");
+        }
     }
 }
