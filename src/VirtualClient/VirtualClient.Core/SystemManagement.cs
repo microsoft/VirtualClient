@@ -145,17 +145,6 @@ namespace VirtualClient
                 }
             }
 
-            // create a dev package and upload it in dev feed. deploy juno services into dev and start experiments in dev in juno. 
-            /*string loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
-            if (string.IsNullOrEmpty(loggedInUserName))
-            {
-                loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
-                if (string.IsNullOrEmpty(loggedInUserName))
-                {
-                    loggedInUserName = Environment.UserName;
-                }
-            }*/
-
             return loggedInUserName;
         }
 
