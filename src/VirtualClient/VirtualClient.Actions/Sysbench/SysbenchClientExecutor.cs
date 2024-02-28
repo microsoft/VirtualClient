@@ -71,49 +71,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The workload option passed to Sysbench.
         /// </summary>
-        public int TableCount
+        public int? TableCount
         {
             get
             {
-                int tableCount = 10;
-
-                if (this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tables)
-                    && this.DatabaseScenario != SysbenchScenario.Balanced)
-                {
-                    tableCount = tables.ToInt32(CultureInfo.InvariantCulture);
-                }
-
-                if (SysbenchClientExecutor.SingleTableWorkloads.Contains(this.Workload, StringComparer.OrdinalIgnoreCase))
-                {
-                    tableCount = 1;
-                }
-
-                return tableCount;
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tableCount);
+                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
         /// Number of threads.
         /// </summary>
-        public int Threads
+        public int? Threads
         {
             get
             {
-                // Sysbench default number of threads
-                int numThreads = 1;
-
-                // default formulaic setup of the database threads depend on the core count
-                if (this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads) && threads != null)
-                {
-                    numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-                    return cpuInfo.LogicalProcessorCount;
-                }
-
-                return numThreads;
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
+                return threads?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -195,19 +170,36 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            int tableCount = this.TableCount;
+            CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+            int coreCount = cpuInfo.LogicalProcessorCount;
+
+            // Adjust tableCount, tableCount, and recordCount if not the configurable options
+
+            int tableCount = this.TableCount.GetValueOrDefault(10);
+
+            int threadCount = this.Threads.GetValueOrDefault(coreCount);
+
+            int recordCountExponent = (this.DatabaseScenario == SysbenchScenario.Balanced)
+                ? (int)Math.Log2(coreCount)
+                : (int)Math.Log2(coreCount) + 2;
+
+            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
+
+            int recordCount = this.RecordCount.GetValueOrDefault(recordEstimate);
+
+            if (this.Scenario != SysbenchScenario.Default)
+            {
+                tableCount = 10;
+                threadCount = coreCount;
+                recordCount = recordEstimate;
+            }
 
             if (SysbenchClientExecutor.SingleTableWorkloads.Contains(this.Workload, StringComparer.OrdinalIgnoreCase))
             {
                 tableCount = 1;
             }
 
-            if (this.Scenario == SysbenchScenario.Balanced)
-            {
-                tableCount = 10;
-            }
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {this.Threads} --tableCount {tableCount} --recordCount {this.RecordCount} ";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
         }
 

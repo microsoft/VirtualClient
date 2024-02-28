@@ -154,9 +154,9 @@ namespace VirtualClient.Actions
 
                     $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.sysbenchPackagePath}",
 
-                    $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1 --threadCount 1",
+                    $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1 --threadCount 8",
                     $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
-                    $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1000 --threadCount 1",
+                    $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1000 --threadCount 8",
 
                     $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300",
                     $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300",

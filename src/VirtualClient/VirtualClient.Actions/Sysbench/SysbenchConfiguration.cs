@@ -9,6 +9,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Xml.Linq;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
@@ -22,6 +23,7 @@ namespace VirtualClient.Actions
     public class SysbenchConfiguration : SysbenchExecutor
     {
         private readonly IStateManager stateManager;
+        private string sysbenchPrepareArguments;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchConfiguration"/> class.
@@ -49,37 +51,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The workload option passed to Sysbench.
         /// </summary>
-        public int TableCount
+        public int? TableCount
         {
             get
             {
-                int tableCount = 10;
-
-                if (this.Parameters.TryGetValue(nameof(SysbenchConfiguration.TableCount), out IConvertible tables)
-                    && this.DatabaseScenario != SysbenchScenario.Balanced)
-                {
-                    tableCount = tables.ToInt32(CultureInfo.InvariantCulture);
-                }
-
-                return tableCount;
+                this.Parameters.TryGetValue(nameof(SysbenchConfiguration.TableCount), out IConvertible tableCount);
+                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
         /// Number of threads.
         /// </summary>
-        public int Threads
+        public int? Threads
         {
             get
             {
-                int numThreads = 1;
-
-                if (this.Parameters.TryGetValue(nameof(SysbenchConfiguration.Threads), out IConvertible threads) && threads != null)
-                {
-                    numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
-                }
-
-                return numThreads;
+                this.Parameters.TryGetValue(nameof(SysbenchConfiguration.Threads), out IConvertible threads);
+                return threads?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -122,16 +111,54 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Performs initialization operations for the executor.
+        /// </summary>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
+            CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+            int coreCount = cpuInfo.LogicalProcessorCount;
+
+            // Adjust tableCount, tableCount, and recordCount if not the Default (configurable) option
+
+            int tableCount = this.TableCount.GetValueOrDefault(10);
+
+            int threadCount = this.Threads.GetValueOrDefault(coreCount);
+
+            int recordCountExponent = this.DatabaseScenario == SysbenchScenario.Balanced
+                ? (int)Math.Log2(coreCount)
+                : (int)Math.Log2(coreCount) + 2;
+
+            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
+
+            int recordCount = this.RecordCount.GetValueOrDefault(recordEstimate);
+
+            if (this.Scenario != SysbenchScenario.Default)
+            {
+                tableCount = 10;
+                threadCount = coreCount;
+
+                // For RecordCount in any scenario, if requesting 1 record, assume it is pre-initialization.
+                // ie. Database will distribute and will run Configure again with a larger recordCount request.
+                // Do not programatically determine RecordCount in this case.
+
+                recordCount = (recordCount == 1) ? 1 : recordEstimate;
+            }
+
+            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+        }
+
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = $"python3";
 
-            string arguments = $"{this.SysbenchPackagePath}/populate-database.py --dbName {this.DatabaseName} " +
-                $"--tableCount {this.TableCount} --recordCount {this.RecordCount} --threadCount {this.Threads}";
+            string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
-                arguments,
+                arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
                 cancellationToken))

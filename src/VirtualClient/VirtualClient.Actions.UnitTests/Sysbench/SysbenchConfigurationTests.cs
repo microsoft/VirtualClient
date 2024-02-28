@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 1",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 8",
             };
 
             int commandNumber = 0;
@@ -119,7 +119,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 1",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 8",
             };
 
             int commandNumber = 0;
@@ -162,14 +162,15 @@ namespace VirtualClient.Actions
         [Test]
         public async Task SysbenchConfigurationUsesDefinedParametersWhenRunningTheWorkload()
         {
-            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "8";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
             this.fixture.Parameters[nameof(SysbenchConfiguration.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Default";
 
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 40 --recordCount 1000 --threadCount 8",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 40 --recordCount 1000 --threadCount 16",
             };
 
             int commandNumber = 0;

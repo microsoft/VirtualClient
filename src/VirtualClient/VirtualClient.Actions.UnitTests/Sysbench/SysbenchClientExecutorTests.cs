@@ -131,6 +131,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Threads)] = "64";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.TableCount)] = "40";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Default";
 
             string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 64 --tableCount 40 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;

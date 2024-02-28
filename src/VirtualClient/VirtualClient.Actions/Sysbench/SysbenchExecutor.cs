@@ -42,6 +42,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The database name option passed to Sysbench.
+        /// </summary>
+        public string DatabaseName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.DatabaseName), "sbtest");
+            }
+        }
+
+        /// <summary>
         /// Parameter defines the scenario to use for the MySQL user accounts used
         /// to create the DB and run transactions against it.
         /// </summary>
@@ -56,46 +67,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of records per table.
         /// </summary>
-        public int RecordCount
+        public int? RecordCount
         {
             get
             {
-                // default formulaic setup of the database
-                // records & threads depend on the core count
-
-                CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-                int coreCount = cpuInfo.LogicalProcessorCount;
-
-                int recordCountExponent = this.DatabaseScenario == SysbenchScenario.Balanced
-                    ? (int)Math.Log2(coreCount)
-                    : (int)Math.Log2(coreCount) + 2;
-
-                int recordCount = (int)Math.Pow(10, recordCountExponent);
-
-                bool parameterExists = this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible records);
-
-                if (parameterExists)
-                {
-                    int numRecords = records.ToInt32(CultureInfo.InvariantCulture);
-
-                    if (this.DatabaseScenario == SysbenchScenario.Default || numRecords == 1)
-                    {
-                        recordCount = numRecords;
-                    }
-                }
-
-                return recordCount;
-            }
-        }
-
-        /// <summary>
-        /// The database name option passed to Sysbench.
-        /// </summary>
-        public string DatabaseName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.DatabaseName), "sbtest");
+                this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible records);
+                return records?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
