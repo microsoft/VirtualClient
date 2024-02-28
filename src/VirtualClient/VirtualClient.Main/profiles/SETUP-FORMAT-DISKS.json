@@ -1,0 +1,21 @@
+{
+    "Description": "Enables the disks on the system to be partitioned and formatted.",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "Windows,Linux"
+    },
+    "Parameters": {
+        "Force": true,
+        "DiskFilter": "OSDisk:false"
+    },
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Force": "$.Parameters.Force"
+            }
+        }
+    ]
+}

@@ -338,6 +338,7 @@ namespace VirtualClient
                         })));
 
                     DateTime? nextRoundOfExecution = null;
+                    bool isFirstAction = true;
 
                     while (!cancellationToken.IsCancellationRequested && !timing.IsTimedOut)
                     {
@@ -392,23 +393,34 @@ namespace VirtualClient
                                 // forward with the next action.
                                 for (int i = 0; i < this.ProfileActions.Count(); i++)
                                 {
+                                    // Note:
+                                    // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
+                                    // application itself exits to ensure all telemetry is captured before reboot.
+                                    if (VirtualClientRuntime.IsRebootRequested)
+                                    {
+                                        break;
+                                    }
+
+                                    if (timing.IsTimedOut)
+                                    {
+                                        break;
+                                    }
+
+                                    if (!isFirstAction && nextRoundOfExecution != null)
+                                    {
+                                        while (!timing.IsTimedOut && DateTime.UtcNow < nextRoundOfExecution)
+                                        {
+                                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken)
+                                                .ConfigureAwait(false);
+                                        }
+                                    }
+
+                                    isFirstAction = false;
+
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
                                         try
                                         {
-                                            // Note:
-                                            // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
-                                            // application itself exits to ensure all telemetry is captured before reboot.
-                                            if (VirtualClientRuntime.IsRebootRequested)
-                                            {
-                                                break;
-                                            }
-
-                                            if (timing.IsTimedOut)
-                                            {
-                                                break;
-                                            }
-
                                             // The context persisted here will be picked up by the individual component. This allows
                                             // the telemetry for each round of execution of components to be correlated together while
                                             // also being correlated with each round of profile actions processing.
@@ -456,15 +468,6 @@ namespace VirtualClient
                                                 "major version as the application.",
                                                 exc,
                                                 ErrorReason.ExtensionAssemblyInvalid);
-                                        }
-                                    }
-
-                                    if (!cancellationToken.IsCancellationRequested && !timing.IsTimedOut && nextRoundOfExecution != null)
-                                    {
-                                        while (!cancellationToken.IsCancellationRequested && !timing.IsTimedOut && DateTime.UtcNow < nextRoundOfExecution)
-                                        {
-                                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken)
-                                                .ConfigureAwait(false);
                                         }
                                     }
                                 }
