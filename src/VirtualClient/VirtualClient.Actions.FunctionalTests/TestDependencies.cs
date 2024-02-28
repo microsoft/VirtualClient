@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Actions
 {
+    using System;
     using System.IO;
     using System.Reflection;
     using Microsoft.Extensions.DependencyInjection;
@@ -49,7 +50,8 @@ namespace VirtualClient.Actions
             {
                 ExecuteActions = !dependenciesOnly,
                 ExecuteDependencies = true,
-                ExecuteMonitors = !dependenciesOnly
+                ExecuteMonitors = !dependenciesOnly,
+                ExitWait = TimeSpan.Zero
             };
 
             return profileExecutor;
