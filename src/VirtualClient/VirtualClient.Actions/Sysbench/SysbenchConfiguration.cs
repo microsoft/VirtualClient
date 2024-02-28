@@ -33,55 +33,8 @@ namespace VirtualClient.Actions
         public SysbenchConfiguration(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            this.ClientFlowRetryPolicy = Policy.Handle<Exception>().RetryAsync(3);
             this.stateManager = this.Dependencies.GetService<IStateManager>();
         }
-
-        /// <summary>
-        /// Disk filter specified
-        /// </summary>
-        public string DiskFilter
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchConfiguration.DiskFilter), string.Empty);
-            }
-        }
-
-        /// <summary>
-        /// The workload option passed to Sysbench.
-        /// </summary>
-        public int? TableCount
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(SysbenchConfiguration.TableCount), out IConvertible tableCount);
-                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
-            }
-        }
-
-        /// <summary>
-        /// Number of threads.
-        /// </summary>
-        public int? Threads
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(SysbenchConfiguration.Threads), out IConvertible threads);
-                return threads?.ToInt32(CultureInfo.InvariantCulture);
-            }
-        }
-
-        /// <summary>
-        /// The retry policy to apply to the client-side execution workflow.
-        /// </summary>
-        protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
-
-        /// <summary>
-        /// The timespan at which the client will poll the server for responses before
-        /// timing out.
-        /// </summary>
-        protected TimeSpan PollingTimeout { get; set; }
 
         /// <summary>
         /// Executes the workload.
@@ -118,34 +71,9 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-            int coreCount = cpuInfo.LogicalProcessorCount;
-
-            // Adjust tableCount, tableCount, and recordCount if not the Default (configurable) option
-
-            int tableCount = this.TableCount.GetValueOrDefault(10);
-
-            int threadCount = this.Threads.GetValueOrDefault(coreCount);
-
-            int recordCountExponent = this.DatabaseScenario == SysbenchScenario.Balanced
-                ? (int)Math.Log2(coreCount)
-                : (int)Math.Log2(coreCount) + 2;
-
-            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
-
-            int recordCount = this.RecordCount.GetValueOrDefault(recordEstimate);
-
-            if (this.Scenario != SysbenchScenario.Default)
-            {
-                tableCount = 10;
-                threadCount = coreCount;
-
-                // For RecordCount in any scenario, if requesting 1 record, assume it is pre-initialization.
-                // ie. Database will distribute and will run Configure again with a larger recordCount request.
-                // Do not programatically determine RecordCount in this case.
-
-                recordCount = (recordCount == 1) ? 1 : recordEstimate;
-            }
+            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.Scenario, this.Threads);
+            int recordCount = GetRecordCount(this.SystemManager, this.Scenario, this.RecordCount);
 
             this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
         }

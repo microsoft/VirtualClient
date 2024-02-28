@@ -87,7 +87,7 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 10";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Threads)] = "64";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.TableCount)] = "40";
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Default";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Configure";
 
             string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 64 --tableCount 40 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
@@ -219,7 +219,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "InMemory";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 10";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

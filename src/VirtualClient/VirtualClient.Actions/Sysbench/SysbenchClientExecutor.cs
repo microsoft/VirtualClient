@@ -25,12 +25,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchClientExecutor : SysbenchExecutor
     {
-        private static readonly string[] SingleTableWorkloads =
-        {
-            "select_random_points",
-            "select_random_ranges"
-        };
-
         private string sysbenchExecutionArguments;
         private string sysbenchLoggingArguments;
 
@@ -54,41 +48,6 @@ namespace VirtualClient.Actions
             get
             { 
                 return this.Parameters.GetTimeSpanValue(nameof(SysbenchClientExecutor.Duration), TimeSpan.FromMinutes(5));
-            }
-        }
-
-        /// <summary>
-        /// The workload option passed to Sysbench.
-        /// </summary>
-        public string Workload
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.Workload));
-            }
-        }
-
-        /// <summary>
-        /// The workload option passed to Sysbench.
-        /// </summary>
-        public int? TableCount
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tableCount);
-                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
-            }
-        }
-
-        /// <summary>
-        /// Number of threads.
-        /// </summary>
-        public int? Threads
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
-                return threads?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -170,34 +129,11 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-            int coreCount = cpuInfo.LogicalProcessorCount;
+            // Adjust tableCount, tableCount, and recordCount if not the configurable scenario
 
-            // Adjust tableCount, tableCount, and recordCount if not the configurable options
-
-            int tableCount = this.TableCount.GetValueOrDefault(10);
-
-            int threadCount = this.Threads.GetValueOrDefault(coreCount);
-
-            int recordCountExponent = (this.DatabaseScenario == SysbenchScenario.Balanced)
-                ? (int)Math.Log2(coreCount)
-                : (int)Math.Log2(coreCount) + 2;
-
-            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
-
-            int recordCount = this.RecordCount.GetValueOrDefault(recordEstimate);
-
-            if (this.Scenario != SysbenchScenario.Default)
-            {
-                tableCount = 10;
-                threadCount = coreCount;
-                recordCount = recordEstimate;
-            }
-
-            if (SysbenchClientExecutor.SingleTableWorkloads.Contains(this.Workload, StringComparer.OrdinalIgnoreCase))
-            {
-                tableCount = 1;
-            }
+            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.Scenario, this.Threads);
+            int recordCount = GetRecordCount(this.SystemManager, this.Scenario, this.RecordCount);
 
             this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";

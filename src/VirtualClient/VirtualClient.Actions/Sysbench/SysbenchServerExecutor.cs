@@ -25,13 +25,7 @@ namespace VirtualClient.Actions
         public SysbenchServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.StateManager = this.Dependencies.GetService<IStateManager>();
         }
-
-        /// <summary>
-        /// Provides access to the local state management facilities.
-        /// </summary>
-        protected IStateManager StateManager { get; }
 
         /// <summary>
         /// Executes server side of workload.

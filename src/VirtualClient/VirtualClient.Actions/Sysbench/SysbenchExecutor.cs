@@ -11,6 +11,9 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics.Distributions;
+    using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -22,7 +25,22 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchExecutor : VirtualClientComponent
     {
+        /// <summary>
+        /// Default table count for a Sysbench run.
+        /// </summary>
+        public const int DefaultTableCount = 10;
+
+        /// <summary>
+        /// Default table count for a 'select' workload type
+        /// </summary>
+        public const int SelectWorkloadDefaultTableCount = 1;
+
         private readonly IStateManager stateManager;
+        private static readonly string[] SelectWorkloads =
+        {
+            "select_random_points",
+            "select_random_ranges"
+        };
 
         /// <summary>
         /// Constructor for <see cref="SysbenchExecutor"/>
@@ -33,7 +51,6 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.stateManager = this.SystemManager.StateManager;
-            // Supported roles for this client/server workload.
             this.SupportedRoles = new List<string>
             {
                 ClientRole.Client,
@@ -60,7 +77,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), SysbenchScenario.Default);
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), SysbenchScenario.Balanced);
             }
         }
 
@@ -73,6 +90,42 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible records);
                 return records?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// The workload option passed to Sysbench.
+        /// </summary>
+        public int? TableCount
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tableCount);
+                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// Number of threads.
+        /// </summary>
+        public int? Threads
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
+                return threads?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// The workload option passed to Sysbench.
+        /// </summary>
+        public string Workload
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Workload), out IConvertible workload);
+                return workload?.ToString();
             }
         }
 
@@ -93,11 +146,6 @@ namespace VirtualClient.Actions
         protected string ServerIpAddress { get; set; }
 
         /// <summary>
-        /// Server IpAddress on which the client runs.
-        /// </summary>
-        protected string ClientIpAddress { get; set; }
-
-        /// <summary>
         /// Sysbench package location
         /// </summary>
         protected string SysbenchPackagePath { get; set; }
@@ -106,6 +154,68 @@ namespace VirtualClient.Actions
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
+
+        /// <summary>
+        /// Method to determine the table count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetTableCount(string databaseScenario, int? tables, string? workload)
+        {
+            int tableCount = tables.GetValueOrDefault(DefaultTableCount);
+
+            // if not using the configurable scenario, must use 10 tables
+            // if using a workload that must use only 1 table, table count adjusted as such 
+
+            tableCount = (databaseScenario == SysbenchScenario.Configure) ? tableCount : DefaultTableCount;
+            tableCount = (SelectWorkloads.Contains(workload, StringComparer.OrdinalIgnoreCase)) ? SelectWorkloadDefaultTableCount : tableCount;
+
+            return tableCount;
+        }
+
+        /// <summary>
+        /// Method to determine the record count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetRecordCount(ISystemManagement systemManagement, string databaseScenario, int? records)
+        {
+            CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+            int coreCount = cpuInfo.LogicalProcessorCount;
+
+            // record count calcuated for default use is 10^n where n = core count
+            // for the in memory scenario, it is n+2
+
+            int recordCountExponent = (databaseScenario != SysbenchScenario.InMemory)
+                ? (int)Math.Log2(coreCount)
+                : (int)Math.Log2(coreCount) + 2;
+
+            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
+
+            int recordCount = records.GetValueOrDefault(recordEstimate);
+
+            // record count specified in profile if it is the configurable scenario
+            // if the record count specified is 1, assume it's pre-initialization, and do not use estimate
+
+            recordCount = (databaseScenario == SysbenchScenario.Configure || recordCount == 1) ? recordCount : recordEstimate;
+
+            return recordCount;
+        }
+
+        /// <summary>
+        /// Method to determine the record count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetThreadCount(ISystemManagement systemManagement, string databaseScenario, int? threads)
+        {
+            CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+            int coreCount = cpuInfo.LogicalProcessorCount;
+
+            // number of threads defaults to core count
+
+            int threadCount = threads.GetValueOrDefault(coreCount);
+            threadCount = (databaseScenario == SysbenchScenario.Configure) ? threadCount : coreCount;
+
+            return threadCount;
+        }
 
         /// <summary>
         /// Executes the Sysbench workload.
@@ -165,11 +275,6 @@ namespace VirtualClient.Actions
                     this.ServerIpAddress = serverIPAddress.ToString();
                     this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, serverIPAddress);
                     this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
-
-                    ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
-                    IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
-
-                    this.ClientIpAddress = clientIPAddress.ToString();
                 }
             }
         }
@@ -298,7 +403,7 @@ namespace VirtualClient.Actions
 
             public const string InMemory = nameof(InMemory);
 
-            public const string Default = nameof(Default);
+            public const string Configure = nameof(Configure);
         }
     }
 }
