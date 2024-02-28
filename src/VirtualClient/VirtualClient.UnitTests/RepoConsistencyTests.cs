@@ -18,7 +18,7 @@ namespace VirtualClient
     using VirtualClient.Contracts;
 
     [TestFixture]
-    [Category("UnitTests")]
+    [Category("Unit")]
     public class RepoConsistencyTests
     {
         /// <summary>
