@@ -612,7 +612,7 @@ namespace VirtualClient
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.InstallDependencies")?.Select(i => i.Item3 as EventContext);
+                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.InstallDependenciesStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(events);
                 Assert.IsNotEmpty(events);
                 Assert.IsTrue(events.Count() == 1);
@@ -664,7 +664,7 @@ namespace VirtualClient
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteMonitors")?.Select(i => i.Item3 as EventContext);
+                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteMonitorsStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(events);
                 Assert.IsNotEmpty(events);
                 Assert.IsTrue(events.Count() == 1);
