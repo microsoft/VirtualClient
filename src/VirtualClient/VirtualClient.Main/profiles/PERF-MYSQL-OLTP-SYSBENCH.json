@@ -13,27 +13,15 @@
     },
     "Actions": [
         {
-            "Type": "SysbenchOLTPServerExecutor",
+            "Type": "SysbenchServerExecutor",
             "Parameters": {
-                "Scenario": "mysql_server",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Scenario": "ExecuteServer",
+                "PackageName": "sysbench",
                 "Role": "Server"
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
-            "Parameters": {
-                "Scenario": "Populate Database",
-                "PopulateDatabase": true,
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Workload": "oltp_common",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_write",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -45,7 +33,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_only",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -57,7 +45,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_write_only",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -69,7 +57,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_delete",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -81,7 +69,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_insert",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -93,7 +81,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_index",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -105,7 +93,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_non_index",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -117,7 +105,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_points",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -129,7 +117,7 @@
             }
         },
         {
-            "Type": "SysbenchOLTPClientExecutor",
+            "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_ranges",
                 "DatabaseName": "$.Parameters.DatabaseName",
@@ -145,27 +133,51 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "FormatDatabaseDisks",
+                "Scenario": "FormatDisks",
                 "Role": "Server"
             }
         },
         {
-            "Type": "LinuxPackageInstallation",
+            "Type": "MountDisks",
             "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages": "make, automake, libtool, pkg-config, mysql-client",
-                "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
-                "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
-                "Packages-Yum": "libaio-devel, mariadb-devel, openssl-devel",
-                "Packages-Zypper": "libaio-dev, libmysqlclient-devel, openssl-devel",
-                "Role": "Client"
+                "Scenario": "CreateMountPoints",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadMySqlServerPackage",
+                "BlobContainer": "packages",
+                "BlobName": "mysql-server-8.0.36.zip",
+                "PackageName": "mysql-server",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadSysbenchPackage",
+                "BlobContainer": "packages",
+                "BlobName": "sysbench-1.0.20.zip",
+                "PackageName": "sysbench",
+                "Extract": true
             }
         },
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages": "mysql-server",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "MySQLServerInstallation",
+            "Parameters": {
+                "Scenario": "InstallMySQLServer",
+                "Action": "InstallServer",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
@@ -173,8 +185,8 @@
             "Type": "MySQLServerConfiguration",
             "Parameters": {
                 "Scenario": "ConfigureMySQLServer",
-                "Action": "StartServer",
-                "DatabaseName": "$.Parameters.DatabaseName",
+                "Action": "ConfigureServer",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
@@ -184,43 +196,49 @@
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "ConfigureMySQLDatabase",
-                "Action": "RaisedStatementCount",
-                "DatabaseName": "$.Parameters.DatabaseName",
+                "Scenario": "SetMySQLGlobalVariables",
+                "Action": "SetGlobalVariables",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "ConfigureMySQLServer",
-                "Action": "ConfigureNetwork",
+                "Scenario": "PopulateMySQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "ConfigureMySQLDatabase",
-                "Action": "CreateUser",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "GitRepoClone",
-            "Parameters": {
-                "Scenario": "CloneSysbenchRepo",
-                "RepoUri": "https://github.com/akopytov/sysbench.git",
+                "RecordCount": 1,
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
-                "Role": "Client"
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "DistributeMySQLDatabase",
+                "Action": "DistributeDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration",
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Role": "Server"
             }
         },
         {
