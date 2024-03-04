@@ -140,7 +140,7 @@ namespace VirtualClient
                     loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
                     if (string.IsNullOrEmpty(loggedInUserName))
                     {
-                        throw new EnvironmentSetupException($"'USER' Environment variable is root and 'SUDO_USER' Environment variable is either root or null." +
+                        throw new EnvironmentSetupException($"'USER' Environment variable is set to root and 'SUDO_USER' Environment variable is either root or null." +
                             "The required environment variable 'VC_SUDO_USER' is expected to be set to a valid non-empty value." +
                             "Please ensure that the necessary environment variables are configured properly for the execution environment.", ErrorReason.EnvironmentIsInsufficent);
                     }
