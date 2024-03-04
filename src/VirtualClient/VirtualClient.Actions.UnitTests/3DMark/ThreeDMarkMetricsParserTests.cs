@@ -19,45 +19,37 @@ namespace VirtualClient.Actions
     public class ThreeDMarkMetricsParserTests
     {
         [Test]
-        public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSGT1()
+        public void ThreeDMarkMetricsParserTestsCorrectly_Timespy()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsgt1.xml");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "exampleTimespyResult.xml");
             string rawText = File.ReadAllText(outputPath);
 
-            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSGT1.3dmdef");
+            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "timespy");
             IList<Metric> metrics = testParser.Parse();
 
-            Assert.AreEqual(1, metrics.Count);
-            MetricAssert.Exists(metrics, "timespy.graphics.1 [fps]", 59.65, "fps");
+            Assert.AreEqual(6, metrics.Count);
+            MetricAssert.Exists(metrics, "graphics1", 44.16, "fps");
+            MetricAssert.Exists(metrics, "graphics2", 35.35, "fps");
+            MetricAssert.Exists(metrics, "cpu2", 31.33, "fps");
+
+            // Aggregates
+            MetricAssert.Exists(metrics, "graphicsScore", 6436, "score");
+            MetricAssert.Exists(metrics, "cpuScore", 9325, "score");
+            MetricAssert.Exists(metrics, "3dMarkScore", 1/(0.15/9325 + 0.85/6436), "score");
         }
 
-        [Test]
-        public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSGT2()
+        public void ThreeDMarkMetricsParserTestsCorrectly_TimespyExtreme()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsgt2.xml");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "exampleTimespyExtremeResult.xml");
             string rawText = File.ReadAllText(outputPath);
 
-            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSGT2.3dmdef");
+            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "timespy_extreme");
             IList<Metric> metrics = testParser.Parse();
-
-            Assert.AreEqual(1, metrics.Count);
-            MetricAssert.Exists(metrics, "timespy.graphics.2 [fps]", 58.10, "fps");
-        }
-
-        [Test]
-        public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSCT()
-        {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsct.xml");
-            string rawText = File.ReadAllText(outputPath);
-
-            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSCT.3dmdef");
-            IList<Metric> metrics = testParser.Parse();
-
-            Assert.AreEqual(1, metrics.Count);
-            MetricAssert.Exists(metrics, "timespy.cpu [fps]", 28.50, "fps");
+            MetricAssert.Exists(metrics, "graphicsScore", 3213, "score");
+            MetricAssert.Exists(metrics, "cpuScore", 6660, "score");
+            MetricAssert.Exists(metrics, "3dMarkScore", 1 / (0.15 / 6660 + 0.85 / 3213), "score");
         }
 
     }

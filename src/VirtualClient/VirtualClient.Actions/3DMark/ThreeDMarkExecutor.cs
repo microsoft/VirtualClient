@@ -26,7 +26,6 @@ namespace VirtualClient.Actions
     {
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
-        private string psexecDir;
 
         /// <summary>
         /// ConstructorD
@@ -123,7 +122,7 @@ namespace VirtualClient.Actions
 
             this.ThreeDMarkExecutablePath = this.PlatformSpecifics.Combine(this.ThreeDMarkPackage.Path, "3DMark", "3DMarkCmd.exe");
             this.PsExecExecutablePath = this.PlatformSpecifics.Combine(this.PsExecPackage.Path, "PsExec.exe");
-            this.DLCPath = this.PlatformSpecifics.Combine(this.ThreeDMarkPackage.Path, "DLC", "3DMark");
+            this.DLCPath = this.PlatformSpecifics.Combine(this.ThreeDMarkPackage.Path, "DLC", "3dmark");
         }
 
         /// <summary>
@@ -163,32 +162,32 @@ namespace VirtualClient.Actions
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                string outFileName, resultfileName, definitionFileName;
+                string definitionFileName, outFileName, resultFileName, logFileName;
+                long nowToUnixTimeSeconds;
                 EventContext workloadContext, resultContext;
 
                 // run 3dmark benchmarks
                 foreach (string benchmark in this.Benchmarks)
                 {
-                    outFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
-                    resultfileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.xml";
-
+                    nowToUnixTimeSeconds = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    outFileName = $"{nowToUnixTimeSeconds}.out";
+                    resultFileName = $"{nowToUnixTimeSeconds}.xml";
+                    logFileName = this.PlatformSpecifics.Combine(this.ThreeDMarkPackage.Path, "3dMark", $"{nowToUnixTimeSeconds}.log");
                     definitionFileName = $"custom_{benchmark.ToLower()}.3dmdef";
 
-                    workloadCommandArg = $"{baseArg} --definition={definitionFileName} --out={outFileName} --systeminfo=off --systeminfomonitor=off --log=log.txt --trace";
-
+                    workloadCommandArg = $"{baseArg} --definition={definitionFileName} --out={outFileName} --log={logFileName} --debug-log --trace";
                     workloadContext = telemetryContext.AddContext("commandArguments", commandArg);
-                    IProcessProxy workloadProcess;
-                    using (workloadProcess = await this.ExecuteCommandAsync(executablePath, commandArg, workingDir, workloadContext, cancellationToken).ConfigureAwait(false))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(executablePath, workloadCommandArg, workingDir, workloadContext, cancellationToken).ConfigureAwait(false))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(workloadProcess, telemetryContext);
-                            workloadProcess.ThrowIfWorkloadFailed();
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
                         }
                     }
 
                     // result preparation
-                    commandArg = $"{baseArg} --in={outFileName} --export={resultfileName}";
+                    commandArg = $"{baseArg} --in={outFileName} --export={resultFileName}";
                     resultContext = telemetryContext.AddContext("commandArguments", commandArg);
                     using (IProcessProxy process = await this.ExecuteCommandAsync(executablePath, commandArg, workingDir, resultContext, cancellationToken).ConfigureAwait(false))
                     {
@@ -196,7 +195,7 @@ namespace VirtualClient.Actions
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext);
                             process.ThrowIfWorkloadFailed();
-                            this.CaptureMetrics(workloadProcess, workloadCommandArg, workloadContext, benchmark, outFileName);
+                            this.CaptureMetrics(process, workloadCommandArg, workloadContext, benchmark, resultFileName);
                         }
                     }
 
@@ -225,23 +224,22 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, string scenario, string outFileName)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, string scenario, string resultFileName)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
-                    string resultsFilePath = this.PlatformSpecifics.Combine(this.ThreeDMarkPackage.Path, "3DMark", outFileName);
+                    this.MetadataContract.AddForScenario(
+                        scenario,
+                        commandArguments,
+                        toolVersion: this.ThreeDMarkPackage.Version);
+                    this.MetadataContract.Apply(telemetryContext);
+
+                    string resultsFilePath = this.PlatformSpecifics.Combine(this.ThreeDMarkPackage.Path, "3DMark", resultFileName);
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
                     ThreeDMarkMetricsParser resultsParser = new ThreeDMarkMetricsParser(resultsContent, scenario);
                     IList<Metric> metrics = resultsParser.Parse();
-
-                    this.MetadataContract.AddForScenario(
-                        scenario,
-                        workloadProcess.FullCommand(),
-                        toolVersion: this.ThreeDMarkPackage.Version);
-
-                    this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
                         this.PackageName,
@@ -259,7 +257,7 @@ namespace VirtualClient.Actions
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
 
-                    this.Logger.LogMessage($"{nameof(ThreeDMarkExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    this.Logger.LogMessage($"{nameof(ThreeDMarkExecutor)}.WorkloadOutputParsingFailed", LogLevel.Error, relatedContext);
                 }
             }
         }
