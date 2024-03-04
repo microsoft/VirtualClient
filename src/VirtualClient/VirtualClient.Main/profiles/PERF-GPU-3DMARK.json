@@ -7,7 +7,7 @@
   },
   "Parameters": {
     "LicenseKey": "",
-    "Benchmarks": "directxraytracing,pciexpress,portroyal,timespy,timespy_extreme",
+    "Benchmarks": "timespy",
     "PsExecSession": -1
   },
   "Actions": [
@@ -29,7 +29,7 @@
       "Parameters": {
         "Scenario": "InstallPsToolsPackage",
         "BlobContainer": "packages",
-        "BlobName": "pstools.2.51.zip",
+        "BlobName": "pstools-2.51.zip",
         "PackageName": "pstools",
         "Extract": true
       }

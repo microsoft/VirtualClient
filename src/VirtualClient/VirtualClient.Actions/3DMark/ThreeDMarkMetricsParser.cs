@@ -74,8 +74,13 @@ namespace VirtualClient.Actions
                 }
                 else if (this.Benchmark.ToLower() == "portroyal")
                 {
-                    metrics.Add(new Metric("portroyal.gpu [fps]", this.ParseXMLTag("PortRoyalCustomGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
-                    metrics.Add(new Metric("portroyal.finalscore", this.ParseXMLTag("PortRoyalCustomGraphicsScore"), "score", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphics1", this.ParseXMLTag("PortRoyalCustomGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphicsScore", this.ParseXMLTag("PortRoyalCustomGraphicsScore"), "score", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Benchmark.ToLower() == "speedway")
+                {
+                    metrics.Add(new Metric("graphics", this.ParseXMLTag("SpeedWayCustomGraphicsTest"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphicsScore", this.ParseXMLTag("SpeedWayCustomGraphicsScore"), "score", MetricRelativity.HigherIsBetter));
                 }
             }
             catch (Exception exc)
