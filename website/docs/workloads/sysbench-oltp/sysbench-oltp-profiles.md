@@ -47,45 +47,89 @@ idea. The name of the client must match the name of the system or the value of t
 ```
 
 ## Balanced/In Memory Scenario Support
-In addition to the standard configuration, Virtual Client offers two tuned scenarios to run the SysbenchOLTP workload under: Balanced and In-Memory.
+In addition to the standard configuration, Virtual Client offers two tuned scenarios to run the SysbenchOLTP workload under: Balanced and In-Memory. A database scenario can be selected by denoting it in the profile, under both the MySQLConfiguration Dependency and the SysbenchConfiguration Action.
 
 * **Balanced**: The database size is about twice as big as the memory/RAM on the system. Half of the database will fit in memory, and half will fit on disk.
   Target CPU usage is about 40-60% with somewhat heavy disk I/O usage. The configuration supports 1-4 additional data disks, and the database will be
-  distributed among the disks as proportionately as possible.
+  distributed among the disks as proportionately as possible. The default is 1 thread and 10^vCPU number of records.
 * **In-Memory**: The database size is just about the size of the memory/RAM on the system. Target CPU usage is about 80-90%, with a significant amount of disk
   I/O usage.
 
-A database scenario can be selected by denoting it in the profile. Note that the DatabaseScenario option is required in both the SysbenchOLTPServerExecutor and the SysbenchOLTPClientExecutor for the Balanced Scenario -- there is preparation needed on both the client and the server to configure the balanced scenario. For the In Memory scenario, it simply needs to be denoted on the SysbenchOLTPServerExecutor.
-
-It is highly recommended to use the default thread and record count values when utilizing one of these scenarios. For the Balanced Scenario, the default is 1 thread and 10^vCPU number of records. For the In Memory Scenario, the presets are listed below, under 'Profile Parameters'.
-
 ``` bash
 {
-  "Type": "SysbenchOLTPServerExecutor",
-  "Parameters": 
-  {
-      "Scenario": "mysql_server",
-      "DatabaseScenario": "Balanced",
-      "Role": "Server"
-  }
-},
-{
-  "Type": "SysbenchOLTPClientExecutor",
+  "Type": "SysbenchConfiguration",
   "Parameters": 
   {
     "Scenario": "oltp_read_write_T8_TB16_REC500",
     "DatabaseName": "sbtest",
     "DatabaseScenario": "Balanced",
-    "Role": "Client",
     "Threads": "8",
     "NumTables": "16",
     "RecordCount": "500",
-    "DurationSecs": "00:20:00",
+    "Duration": "00:20:00",
     "Workload": "oltp_read_write",
     "PackageName": "sysbench"
+    "Role": "Server",
   }
 },
 ```
+
+## Profile Components
+There are a lot of moving parts to this workload that allows for both out-of-box and configurable scenarios. Here are the key components to be aware of.
+
+### Dependencies
+
+* **FormatDisks and MountDisks**: Format any unformatted disks on the server, then mount any unmounted disks.
+* **DependencyPackageInstallation**: On all VMs, download the sysbench package; on the server-side, also download the mysql-server package.
+* **LinuxPackageInstallation**: Download the python3 package to execute the python scripts provided for installation and configuration of the packages.
+* **MySQLServerInstallation and MySQLConfiguration**: Runs python scripts to install and configure the MySQL server (ie. set up network, database, variables, and users).
+* **ApiServer**: Starts the API server for Client-Server workloads.
+
+### Actions
+
+* **SysbenchConfiguration**: Populates the MySQL database using the Sysbench tool. Note that the default Sysbench settings does not populate a database on the data disks, but on the OS disk. Thus, the recommended profile format is as follows. The below setup creates N tables in the database with one record each. Only then can MySQL equally distribute the database onto different data disks mounted on the system, as it copies the tables and their schemas into new tables. From there, Sysbench can add additional records to further populate the database tables. Once populated, VC persists the state, and it will not drop or recreate tables.
+
+``` bash
+{
+  "Type": "SysbenchConfiguration",
+  "Parameters": 
+  {
+    "Scenario": "PopulateMySQLDatabase",
+    "DatabaseName": "sbtest",
+    "RecordCount": 1,
+    "NumTables": 10,
+    "PackageName": "sysbench",
+    "Role": "Server"
+  }
+},
+{
+  "Type": "MySQLServerConfiguration",
+  "Parameters": 
+  {
+    "Scenario": "DistributeMySQLDatabase",
+    "Action": "DistributeDatabase",
+    "DatabaseName": "sbtest",
+    "NumTables": 10,
+    "PackageName": "mysql-server",
+    "Role": "Server"
+  }
+},
+{
+  "Type": "SysbenchConfiguration",
+  "Parameters": 
+  {
+    "Scenario": "PopulateMySQLDatabase",
+    "DatabaseName": "sbtest",
+    "NumTables": 10,
+    "RecordCount": 10000,
+    "PackageName": "sysbench",
+    "Role": "Server"
+  }
+}
+```
+
+* **SysbenchClientExecutor**: Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from SysbenchConfiguration -- though a database of 10 tables with 10,000 records each can be created, a workload can be run on 5 tables for 1000 records if desired. VC does not support dropping and recreating a new database or table configuration within the same profile or system.
+* **SysbenchServerExecutor**: Sets the server online for client interaction.
 
 ## PERF-MYSQL-SYSBENCH-OLTP.json
 Runs a system-intensive workload using the Sysbench Benchmark to test the bandwidth of CPU, Memory, and Disk I/O.
@@ -122,7 +166,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores.
 
 * **Usage Examples**
   The following section provides a few basic examples of how to use the workload profile.

@@ -536,6 +536,11 @@ namespace VirtualClient
         Flatcar,
 
         /// <summary>
+        /// Fedora
+        /// </summary>
+        Fedora,
+
+        /// <summary>
         /// MSFT internal CentOS based distro Mariner
         /// </summary>
         Mariner

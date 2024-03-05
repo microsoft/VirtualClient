@@ -47,6 +47,20 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// True if the disks should be formatted regardless of their current
+        /// state.
+        /// </summary>
+        public bool Force
+        {
+            get
+            {
+                // DO NOT CHANGE THE DEFAULT. It should ALWAYS be false. Parallel disk initialization on
+                // Windows does not work well because of the limitations of DiskPart.
+                return this.Parameters.GetValue<bool>(nameof(this.Force), false);
+            }
+        }
+
+        /// <summary>
         /// True to initialize + format the target disks in-parallel. Default = false.
         /// </summary>
         public bool InitializeDisksInParallel
@@ -86,12 +100,21 @@ namespace VirtualClient.Dependencies
 
             this.Logger.LogMessage($"{nameof(FormatDisks)}.Disks", LogLevel.Information, telemetryContext.Clone().AddContext("disks", systemDisks));
 
-            if (systemDisks?.Any(disk => !disk.Volumes.Any()) == true)
+            IEnumerable<Disk> disksToFormat = null;
+            if (this.Force)
+            {
+                disksToFormat = systemDisks.Where(disk => !disk.IsOperatingSystem());
+            }
+            else
             {
                 // Only disks that do not have any partitions/volumes are formatted. Disks that already have a file system
                 // are left alone. The operating system disk is never formatted. There should never be a case where it is not already
                 // formatted, but we put a check in place to be 100% sure.
-                IEnumerable<Disk> disksToFormat = systemDisks.Where(disk => !disk.Volumes.Any() && !disk.IsOperatingSystem());
+                disksToFormat = systemDisks.Where(disk => !disk.Volumes.Any() && !disk.IsOperatingSystem());
+            }
+
+            if (disksToFormat?.Any() == true)
+            {
                 this.Logger.LogMessage($"{nameof(FormatDisks)}.DisksToFormat", LogLevel.Information, telemetryContext.Clone().AddContext("disks", disksToFormat));
                 disksToFormat.OrderBy(d => d.Index).ToList().ForEach(disk => this.Logger.LogTraceMessage($"Format: {$"Disk Index={disk.Index}"}"));
 

@@ -145,6 +145,60 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [TestCase(PlatformID.Unix, FileSystemType.Ext4)]
+        [TestCase(PlatformID.Win32NT, FileSystemType.Ntfs)]
+        public async Task FormatDisksWillFormatExpectedDisksRegardlessOfStateWhenTheForceParameterIsUsed_Scenario1(PlatformID platform, FileSystemType expectedFileSystemType)
+        {
+            this.mockFixture.Setup(platform);
+
+            // Scenario:
+            // The disks are NOT already partitioned/formatted. We re-partition and format them anyway.
+            this.disks = this.mockFixture.CreateDisks(platform, false);
+            this.SetupDefaultMockBehaviors();
+
+            this.mockFixture.Parameters["Force"] = true;
+            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                diskFormatter.WaitTime = TimeSpan.Zero;
+                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                   It.IsAny<Disk>(),
+                   It.IsAny<PartitionType>(),
+                   expectedFileSystemType,
+                   It.IsAny<CancellationToken>()),
+                   Times.Exactly(this.disks.Count(disk => !disk.IsOperatingSystem())));
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, FileSystemType.Ext4)]
+        [TestCase(PlatformID.Win32NT, FileSystemType.Ntfs)]
+        public async Task FormatDisksWillFormatExpectedDisksRegardlessOfStateWhenTheForceParameterIsUsed_Scenario2(PlatformID platform, FileSystemType expectedFileSystemType)
+        {
+            this.mockFixture.Setup(platform);
+
+            // Scenario:
+            // The disks are already partitioned/formatted. We re-partition and format them.
+            this.disks = this.mockFixture.CreateDisks(platform, true);
+            this.SetupDefaultMockBehaviors();
+
+            this.mockFixture.Parameters["Force"] = true;
+            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                diskFormatter.WaitTime = TimeSpan.Zero;
+                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                   It.IsAny<Disk>(),
+                   It.IsAny<PartitionType>(),
+                   expectedFileSystemType,
+                   It.IsAny<CancellationToken>()),
+                   Times.Exactly(this.disks.Count(disk => !disk.IsOperatingSystem())));
+            }
+        }
+
+        [Test]
         public async Task FormatDisksExcludesNonFormattableDevices()
         {
             this.mockFixture.Setup(PlatformID.Unix);

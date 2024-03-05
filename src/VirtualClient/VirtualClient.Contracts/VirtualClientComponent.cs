@@ -89,8 +89,6 @@ namespace VirtualClient.Contracts
 
             if (dependencies.TryGetService<EnvironmentLayout>(out EnvironmentLayout layout))
             {
-                this.Layout = layout;
-
                 if (this.Roles?.Any() != true)
                 {
                     // Backwards Compatibility:
@@ -191,7 +189,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.FailFast), this.FailFast);
+                return this.Parameters.GetValue<bool>(nameof(this.FailFast), false);
             }
 
             set
@@ -203,7 +201,14 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.
         /// </summary>
-        public EnvironmentLayout Layout { get; }
+        public EnvironmentLayout Layout
+        {
+            get
+            {
+                this.Dependencies.TryGetService<EnvironmentLayout>(out EnvironmentLayout layout);
+                return layout;
+            }
+        }
 
         /// <summary>
         /// The Logger for this component
@@ -646,7 +651,7 @@ namespace VirtualClient.Contracts
 
                         await this.CleanupAsync(telemetryContext, cancellationToken);
 
-                    }, displayErrors: true);
+                    });
                 }
             }
             catch

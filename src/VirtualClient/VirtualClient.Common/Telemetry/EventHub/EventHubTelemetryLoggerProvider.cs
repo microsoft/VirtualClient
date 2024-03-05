@@ -15,6 +15,7 @@ namespace VirtualClient.Common.Telemetry
     public sealed class EventHubTelemetryLoggerProvider : ILoggerProvider
     {
         private EventHubTelemetryChannel telemetryChannel;
+        private LogLevel minumumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventHubTelemetryLoggerProvider"/> class.
@@ -22,10 +23,12 @@ namespace VirtualClient.Common.Telemetry
         /// <param name="channel">
         /// The telemetry channel used to handle buffering events for transmission to the Azure Event Hub.
         /// </param>
-        public EventHubTelemetryLoggerProvider(EventHubTelemetryChannel channel)
+        /// <param name="level">The minimum logging severity level.</param>
+        public EventHubTelemetryLoggerProvider(EventHubTelemetryChannel channel, LogLevel level)
         {
             channel.ThrowIfNull(nameof(channel));
             this.telemetryChannel = channel;
+            this.minumumLogLevel = level;
         }
 
         /// <summary>
@@ -39,7 +42,7 @@ namespace VirtualClient.Common.Telemetry
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            return new EventHubTelemetryLogger(this.telemetryChannel);
+            return new EventHubTelemetryLogger(this.telemetryChannel, this.minumumLogLevel);
         }
 
         /// <summary>

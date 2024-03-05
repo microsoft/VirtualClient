@@ -51,7 +51,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("stress-ng", StringComparison.OrdinalIgnoreCase))
+                if (arguments.StartsWith("stress-ng", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_StressNg.txt"));
                 }
@@ -61,7 +61,8 @@ namespace VirtualClient.Actions
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                executor.ExecutionMinimumInterval = TimeSpan.Zero;
+                await executor.ExecuteAsync(ProfileTiming.Iterations(2), CancellationToken.None).ConfigureAwait(false);
 
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
@@ -81,8 +82,14 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.Directory.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.File.ReadAllText(It.IsAny<string>())).Returns(TestDependencies.GetResourceFileContents("Results_StressNg.txt"));
+            this.mockFixture.SetupFile(
+                $"{this.mockFixture.GetPackagePath("stressNg")}/vcStressNg.yaml",
+                System.Text.Encoding.UTF8.GetBytes(TestDependencies.GetResourceFileContents("Results_StressNg.txt")));
+
+            ////this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.Directory.Exists(It.IsAny<string>())).Returns(true);
+            ////this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.File.Exists(It.Is<string>(file => file.EndsWith("yaml")))).Returns(true);
+            ////this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            ////    .ReturnsAsync(TestDependencies.GetResourceFileContents("Results_StressNg.txt"));
         }
     }
 }

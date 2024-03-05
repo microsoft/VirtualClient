@@ -117,10 +117,9 @@ namespace VirtualClient.Actions
             this.fixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
                 .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
                 {
-                    string sourceFileName = Path.GetFileName(sourcePath);
                     if (Regex.IsMatch(
                         destinitionPath, 
-                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}_.*{sourceFileName}"))
+                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}"))
                     {
                         destinitionPathCorrect = true;
                     }
@@ -151,10 +150,9 @@ namespace VirtualClient.Actions
             this.fixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
                 .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
                 {
-                    string sourceFileName = Path.GetFileName(sourcePath);
                     if (Regex.IsMatch(
                         destinitionPath, 
-                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}_.*{sourceFileName}"))
+                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}"))
                     {
                         destinitionPathCorrect = true;
                     }
