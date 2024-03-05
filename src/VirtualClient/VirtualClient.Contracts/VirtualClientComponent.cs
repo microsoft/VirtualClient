@@ -651,7 +651,7 @@ namespace VirtualClient.Contracts
 
                         await this.CleanupAsync(telemetryContext, cancellationToken);
 
-                    }, displayErrors: true);
+                    });
                 }
             }
             catch

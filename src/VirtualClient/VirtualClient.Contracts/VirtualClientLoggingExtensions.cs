@@ -10,6 +10,7 @@ namespace VirtualClient.Contracts
     using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -354,6 +355,28 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Extension logs error data to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="errorMessage">The error message to use.</param>
+        /// <param name="error">The error to log.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="level">The severity level of the message/event (e.g. Information, Error).</param>
+        public static void LogErrorMessage(this ILogger logger, string errorMessage, Exception error, EventContext eventContext, LogLevel level = LogLevel.Error)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            eventContext.ThrowIfNull(nameof(eventContext));
+            errorMessage.ThrowIfNullOrWhiteSpace(nameof(errorMessage));
+
+            if (error != null)
+            {
+                EventContext errorContext = eventContext.Clone();
+                errorContext.AddError(error, withCallStack: true, maxCallStackLength: 6000);
+                VirtualClientLoggingExtensions.LogMessage(logger, errorMessage, level, LogType.Error, errorContext);
+            }
+        }
+
+        /// <summary>
         /// Executes whenever an operation within the context of the component succeeds. This is used for example 
         /// to write custom telemetry and metrics associated with individual operations within the component.
         /// </summary>
@@ -554,8 +577,20 @@ namespace VirtualClient.Contracts
         /// <param name="message">The message/event name to log.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="body">The logic/method body to execute in between the message logging.</param>
-        /// <param name="displayErrors">True if the full information for any errors that occur should be displayed on the console.</param>
-        public static Task LogMessageAsync(this ILogger logger, string message, EventContext eventContext, Func<Task> body, bool displayErrors = false)
+        public static Task LogMessageAsync(this ILogger logger, string message, EventContext eventContext, Func<Task> body)
+        {
+            return VirtualClientLoggingExtensions.LogMessageAsync(logger, message, LogLevel.Information, eventContext, body);
+        }
+
+        /// <summary>
+        /// Extension logs standard Start/Stop/Error events for the method logic.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="message">The message/event name to log.</param>
+        /// <param name="level">The logging/severity level of the message context.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="body">The logic/method body to execute in between the message logging.</param>
+        public static Task LogMessageAsync(this ILogger logger, string message, LogLevel level, EventContext eventContext, Func<Task> body)
         {
             logger.ThrowIfNull(nameof(logger));
             message.ThrowIfNullOrWhiteSpace(nameof(message));
@@ -567,7 +602,7 @@ namespace VirtualClient.Contracts
                 return 0;
             };
 
-            return VirtualClientLoggingExtensions.LogMessageAsync(logger, message, eventContext, wrapper, displayErrors);
+            return VirtualClientLoggingExtensions.LogMessageAsync(logger, message, level, eventContext, wrapper);
         }
 
         /// <summary>
@@ -577,8 +612,20 @@ namespace VirtualClient.Contracts
         /// <param name="message">The message/event name to log.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="body">The logic/method body to execute in between the message logging.</param>
-        /// <param name="displayErrors">True if the full information for any errors that occur should be displayed on the console.</param>
-        public static async Task<TResult> LogMessageAsync<TResult>(this ILogger logger, string message, EventContext eventContext, Func<Task<TResult>> body, bool displayErrors = false)
+        public static Task<TResult> LogMessageAsync<TResult>(this ILogger logger, string message, EventContext eventContext, Func<Task<TResult>> body)
+        {
+            return VirtualClientLoggingExtensions.LogMessageAsync(logger, message, LogLevel.Information, eventContext, body);
+        }
+
+        /// <summary>
+        /// Extension logs standard Start/Stop/Error events for the method logic.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="message">The message/event name to log.</param>
+        /// <param name="level">The logging/severity level of the message context.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="body">The logic/method body to execute in between the message logging.</param>
+        public static async Task<TResult> LogMessageAsync<TResult>(this ILogger logger, string message, LogLevel level, EventContext eventContext, Func<Task<TResult>> body)
         {
             logger.ThrowIfNull(nameof(logger));
             eventContext.ThrowIfNull(nameof(eventContext));
@@ -588,7 +635,7 @@ namespace VirtualClient.Contracts
 
             try
             {
-                VirtualClientLoggingExtensions.LogMessage(logger, $"{message}Start", LogLevel.Information, eventContext);
+                VirtualClientLoggingExtensions.LogMessage(logger, $"{message}Start", level, eventContext);
                 result = await body().ConfigureAwait(false);
             }
             catch (OperationCanceledException)
@@ -597,11 +644,6 @@ namespace VirtualClient.Contracts
             }
             catch (Exception exc)
             {
-                if (displayErrors)
-                {
-                    // Console.WriteLine(exc.ToDisplayFriendlyString(withCallStack: true));
-                }
-
                 EventContext errorContext = eventContext.Clone();
                 errorContext.AddError(exc, withCallStack: true, maxCallStackLength: 6000);
                 VirtualClientLoggingExtensions.LogMessage(logger, $"{message}Error", LogLevel.Error, errorContext);
@@ -611,7 +653,7 @@ namespace VirtualClient.Contracts
             {
                 executionTime.Stop();
                 eventContext.DurationMs = executionTime.ElapsedMilliseconds;
-                VirtualClientLoggingExtensions.LogMessage(logger, $"{message}Stop", LogLevel.Information, eventContext);
+                VirtualClientLoggingExtensions.LogMessage(logger, $"{message}Stop", level, eventContext);
             }
 
             return result;
@@ -970,6 +1012,26 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Extension logs the debug information and context.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="message">The message/event name to log.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        public static void LogDebugMessage(this ILogger logger, string message, EventContext eventContext = null)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            if (message != null)
+            {
+                VirtualClientLoggingExtensions.LogMessage(
+                    logger,
+                    message,
+                    LogLevel.Debug,
+                    LogType.Trace,
+                    eventContext ?? EventContext.Persisted());
+            }
+        }
+
+        /// <summary>
         /// Extension logs the trace information and context.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
@@ -987,18 +1049,6 @@ namespace VirtualClient.Contracts
                     LogType.Trace,
                     eventContext ?? EventContext.Persisted());
             }
-        }
-
-        /// <summary>
-        /// Extension logs the warning and context.
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="message">The message/event name to log.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        public static void LogWarning(this ILogger logger, string message, EventContext eventContext)
-        {
-            logger.ThrowIfNull(nameof(logger));
-            VirtualClientLoggingExtensions.LogMessage(logger, message, LogLevel.Warning, LogType.Trace, eventContext);
         }
 
         /// <summary>

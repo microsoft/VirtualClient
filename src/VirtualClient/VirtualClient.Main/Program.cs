@@ -223,6 +223,9 @@ namespace VirtualClient
                 // --layoutPath
                 OptionFactory.CreateLayoutPathOption(required: false),
 
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
 
@@ -262,6 +265,9 @@ namespace VirtualClient
 
                 // --ipaddress
                 OptionFactory.CreateIPAddressOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
@@ -305,6 +311,9 @@ namespace VirtualClient
 
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
@@ -380,7 +389,7 @@ namespace VirtualClient
             {
                 FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
                 PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                loggerProviders.AddRange(DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings));
+                loggerProviders.AddRange(DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings, LogLevel.Trace));
             }
 
             Program.Logger = new LoggerFactory(loggerProviders).CreateLogger("VirtualClient");

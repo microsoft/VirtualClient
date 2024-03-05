@@ -44,35 +44,30 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes the workload.
+        /// Executes the Python script.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string pythonVerb = "python";
-            if (this.UsePython3)
-            {
-                pythonVerb = "python3";
-            }
-
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    pythonVerb,
-                    $"{this.ExecutablePath} {this.CommandLine}",
-                    this.WorkloadPackage.Path,
-                    telemetryContext,
-                    cancellationToken,
-                    false))
+                string command = "python";
+                if (this.UsePython3)
+                {
+                    command = "python3";
+                }
+
+                string commandArguments = $"{this.ExecutablePath} {this.CommandLine}";
+
+                telemetryContext
+                   .AddContext(nameof(command), command)
+                   .AddContext(nameof(commandArguments), commandArguments);
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkloadPackage.Path, telemetryContext, cancellationToken, false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName, logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName);
                         process.ThrowIfWorkloadFailed();
-
-                        if (!string.IsNullOrWhiteSpace(process.StandardError.ToString()))
-                        {
-                            this.Logger.LogWarning($"StandardError: {process.StandardError}", telemetryContext);
-                        }
 
                         await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                         await this.CaptureLogsAsync(cancellationToken);

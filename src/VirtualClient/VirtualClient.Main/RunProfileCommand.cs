@@ -132,6 +132,9 @@ namespace VirtualClient
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
                 this.SetGlobalTelemetryProperties(profileNames, dependencies);
 
+                EventContext telemetryContext = EventContext.Persisted();
+                logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", telemetryContext);
+
                 // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
                 // the 'packages' directory already).
                 await this.InitializePackagesAsync(packageManager, cancellationToken)
@@ -146,6 +149,8 @@ namespace VirtualClient
 
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
                 ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
+
+                this.LogContextToConsole(dependencies);
 
                 IEnumerable<string> effectiveProfiles = await this.InitializeProfilesAsync(dependencies, cancellationToken)
                     .ConfigureAwait(false);
@@ -371,6 +376,7 @@ namespace VirtualClient
         /// </summary>
         protected async Task<ExecutionProfile> InitializeProfileAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
         {
+            List<string> allProfiles = new List<string>();
             ExecutionProfile profile = await this.ReadExecutionProfileAsync(profiles.First(), dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -532,8 +538,6 @@ namespace VirtualClient
                         .ConfigureAwait(false);
 
                     layout = layoutContent.FromJson<EnvironmentLayout>();
-
-                    logger.LogTraceMessage($"Environment Layout: {layoutFullPath}", EventContext.Persisted().AddContext("layout", layout));
                 }
             }
 
@@ -550,11 +554,9 @@ namespace VirtualClient
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
-                ILogger logger = dependencies.GetService<ILogger>();
-                
-                logger.LogTraceMessage($"Execution Profile: {Path.GetFileNameWithoutExtension(path)}");
+                ConsoleLogger.Default.LogMessage($"Execution Profile: {Path.GetFileNameWithoutExtension(path)}", EventContext.Persisted());
 
+                IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
                 string profileContent = (await fileSystem.File.ReadAllTextAsync(path)).Trim();
 
                 // JSON profile content will always start with a '{' character
@@ -725,15 +727,30 @@ namespace VirtualClient
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             ILogger logger = dependencies.GetService<ILogger>();
 
-            logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", EventContext.Persisted());
-            logger.LogTraceMessage($"Experiment ID: {this.ExperimentId}");
-            logger.LogTraceMessage($"Agent ID: {this.AgentId}");
-            logger.LogTraceMessage($"Log To File: {VirtualClientComponent.LogToFile}");
+            EventContext telemetryContext = EventContext.Persisted();
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
             ExecutionProfile profile = await this.InitializeProfileAsync(profiles, dependencies, cancellationToken)
                 .ConfigureAwait(false);
+
+            telemetryContext.AddContext("executionProfileActions", profile.Actions?.Select(d => new
+            {
+                type = d.Type,
+                parameters = d.Parameters?.ObscureSecrets()
+            }));
+
+            telemetryContext.AddContext("executionProfileDependencies", profile.Dependencies?.Select(d => new
+            {
+                type = d.Type,
+                parameters = d.Parameters?.ObscureSecrets()
+            }));
+
+            telemetryContext.AddContext("executionProfileMonitors", profile.Monitors?.Select(d => new
+            {
+                type = d.Type,
+                parameters = d.Parameters?.ObscureSecrets()
+            }));
 
             this.SetGlobalTelemetryProperties(profile);
 
@@ -749,7 +766,10 @@ namespace VirtualClient
             if (environmentLayout != null)
             {
                 dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
+                telemetryContext.AddContext("layout", environmentLayout);
             }
+
+            logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
 
             // Only dependencies defined in the profile will be considered.
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
@@ -782,15 +802,30 @@ namespace VirtualClient
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             ILogger logger = dependencies.GetService<ILogger>();
 
-            logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", EventContext.Persisted());
-            logger.LogTraceMessage($"Experiment ID: {this.ExperimentId}");
-            logger.LogTraceMessage($"Agent ID: {this.AgentId}");
-            logger.LogTraceMessage($"Log To File: {VirtualClientComponent.LogToFile}");
+            EventContext telemetryContext = EventContext.Persisted();
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
             ExecutionProfile profile = await this.InitializeProfileAsync(profiles, dependencies, cancellationToken)
                 .ConfigureAwait(false);
+
+            telemetryContext.AddContext("executionProfileActions", profile.Actions?.Select(d => new
+            {
+                type = d.Type,
+                parameters = d.Parameters?.ObscureSecrets()
+            }));
+
+            telemetryContext.AddContext("executionProfileDependencies", profile.Dependencies?.Select(d => new
+            {
+                type = d.Type,
+                parameters = d.Parameters?.ObscureSecrets()
+            }));
+
+            telemetryContext.AddContext("executionProfileMonitors", profile.Monitors?.Select(d => new
+            {
+                type = d.Type,
+                parameters = d.Parameters?.ObscureSecrets()
+            }));
 
             if (this.Timeout?.Duration != null && profile.Metadata?.TryGetValue("MinimumRequiredExecutionTime", out IConvertible minimumExecutionTime) == true)
             {
@@ -801,8 +836,6 @@ namespace VirtualClient
                         $"which is longer than the duration/timeout supplied on the command line '{this.Timeout.Duration}'. Increase the duration/timeout of the command line to " +
                         $"a length of time that is longer than the minimum required execution time.");
                 }
-
-                logger.LogTraceMessage($"Duration: {this.Timeout.Duration}");
             }
 
             this.SetGlobalTelemetryProperties(profile);
@@ -819,8 +852,10 @@ namespace VirtualClient
             if (environmentLayout != null)
             {
                 dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
+                telemetryContext.AddContext("layout", environmentLayout);
             }
 
+            logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
             this.Validate(dependencies, profile);
 
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
@@ -878,6 +913,45 @@ namespace VirtualClient
             {
                 await packageManager.InstallExtensionsAsync(extensions, cancellationToken)
                     .ConfigureAwait(false);
+            }
+        }
+
+        private void LogContextToConsole(IServiceCollection dependencies)
+        {
+            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+
+            EventContext telemetryContext = EventContext.Persisted();
+            ConsoleLogger.Default.LogMessage($"Experiment ID: {this.ExperimentId}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Agent ID: {this.AgentId}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Log To File: {VirtualClientComponent.LogToFile}", telemetryContext);
+
+            if (!string.IsNullOrWhiteSpace(this.LayoutPath))
+            {
+                string layoutFullPath = platformSpecifics.StandardizePath(Path.GetFullPath(this.LayoutPath));
+                ConsoleLogger.Default.LogMessage($"Environment Layout: {layoutFullPath}", telemetryContext);
+            }
+
+            if (this.Timeout?.Duration != null)
+            {
+                switch (this.Timeout.LevelOfDeterminism)
+                {
+                    case DeterminismScope.AllActions:
+                        ConsoleLogger.Default.LogMessage($"Duration: {this.Timeout.Duration},deterministic*", telemetryContext);
+                        break;
+
+                    case DeterminismScope.IndividualAction:
+                        ConsoleLogger.Default.LogMessage($"Duration: {this.Timeout.Duration},deterministic", telemetryContext);
+                        break;
+
+                    default:
+                        ConsoleLogger.Default.LogMessage($"Duration: {this.Timeout.Duration}", telemetryContext);
+                        break;
+                }
+            }
+
+            if (this.Iterations?.ProfileIterations != null)
+            {
+                ConsoleLogger.Default.LogMessage($"Iterations: {this.Iterations.ProfileIterations}", telemetryContext);
             }
         }
 
