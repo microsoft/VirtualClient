@@ -52,7 +52,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.MountPointPrefix), "mountPoint");
+                return this.Parameters.GetValue<string>(nameof(this.MountPointPrefix), "mnt_vc");
             }
         }
 
@@ -135,8 +135,8 @@ namespace VirtualClient.Dependencies
                 // mount every volume that doesn't have an accessPath.
                 foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
                 {
-                    string newMountPoint = $"{this.MountPointPrefix}{counter++}";
-                    
+                    string newMountPoint = this.PlatformSpecifics.Combine(this.PlatformSpecifics.CurrentDirectory, $"{this.MountPointPrefix}_{counter++}");
+
                     if (!systemManager.FileSystem.Directory.Exists(newMountPoint))
                     {
                         systemManager.FileSystem.Directory.CreateDirectory(newMountPoint).Create();

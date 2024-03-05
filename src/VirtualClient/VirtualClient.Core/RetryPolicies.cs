@@ -19,6 +19,11 @@ namespace VirtualClient
         public static IAsyncPolicy FileDelete { get; } = Policy.Handle<IOException>().WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries));
 
         /// <summary>
+        /// Common retry policy for file access and operations.
+        /// </summary>
+        public static IAsyncPolicy FileOperations { get; } = Policy.Handle<IOException>().WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries));
+
+        /// <summary>
         /// Common retry policy for state updates via the <see cref="StateManager"/>.
         /// </summary>
         public static IAsyncPolicy StateUpdate { get; } = Policy.Handle<Exception>(exc =>

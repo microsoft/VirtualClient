@@ -61,6 +61,7 @@ namespace VirtualClient.Common.Telemetry
         };
 
         private Logger logger;
+        private LogLevel minumumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerilogFileLogger"/> class.
@@ -69,10 +70,12 @@ namespace VirtualClient.Common.Telemetry
         /// Configuration settings that will be supplied to the Serilog logger
         /// used by the <see cref="ILogger"/> instance.
         /// </param>
-        public SerilogFileLogger(LoggerConfiguration configuration)
+        /// <param name="level">The minimum logging severity level.</param>
+        public SerilogFileLogger(LoggerConfiguration configuration, LogLevel level)
         {
             configuration.ThrowIfNull(nameof(configuration));
             this.logger = configuration.CreateLogger();
+            this.minumumLogLevel = level;
         }
 
         /// <inheritdoc />
@@ -84,12 +87,17 @@ namespace VirtualClient.Common.Telemetry
         /// <inheritdoc />
         public bool IsEnabled(LogLevel logLevel)
         {
-            return true;
+            return logLevel >= this.minumumLogLevel;
         }
 
         /// <inheritdoc />
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
+            if (!this.IsEnabled(logLevel))
+            {
+                return;
+            }
+
             if (SerilogFileLogger.LevelMappings.TryGetValue(logLevel, out LogEventLevel level))
             {
                 string eventMessage = null;

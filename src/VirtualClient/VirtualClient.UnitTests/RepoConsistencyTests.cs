@@ -98,6 +98,7 @@ namespace VirtualClient
             directoryPath = Path.Combine(currentDirectory.FullName);
             fileList = new DirectoryInfo(directoryPath)
                 .GetFiles("*.md", SearchOption.AllDirectories)
+                .Where(file => !file.FullName.Contains("node_modules"))
                 .Where(file =>
                 {
                     using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
@@ -116,7 +117,7 @@ namespace VirtualClient
                 }).ToList();
 
             Assert.AreEqual(0, fileList.Count, $"You have *.md files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
-                $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
+                $"You can manually convert them or use the integration test(s) in VirtualClient.IntegrationTests.RepoConsistencyTests.");
         }
     }
 }

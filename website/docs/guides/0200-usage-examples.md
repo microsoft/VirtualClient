@@ -99,8 +99,8 @@ Note that the Virtual Client does have a set of explicit expectations for how th
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{EventHubConnectionString}"
 ```
 
-## Scenario: Uploading Monitoring Information to a Content Store
-Certain monitors that exist in the Virtual Client allow the user to upload information or files produced by the monitor (e.g. Azure Profiler .bin files) to
+## Scenario: Upload Log Files to a Content Store
+Most components in the Virtual Client allow the user to upload information or files produced by the execution of workloads and monitors to
 a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
 on monitor profiles below for additional details on which profiles support this.
 
@@ -111,20 +111,30 @@ on monitor profiles below for additional details on which profiles support this.
 VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
 ```
 
-## Scenario: Running the Azure Profiler in the Background and Uploading .bin Files to a Content Store
-The Virtual Client supports the use of the Azure Profiler for capturing profiles on the system. The profiler can be ran in 2 modes: interval-based and on-demand.
-The Azure Profiler monitor is a part of the default monitoring profile and can be easily enabled by supplying a few parameters on the command line.
-In order to enable file uploads, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
-on monitor profiles below for additional details on which profiles support this.
-
-* [Blob Store Support](./0600-integration-blob-storage.md)
-* [Monitor Profiles](../monitors/0200-monitor-profiles.md)
+## Scenario: Change the Amount of Operational Trace Telemetry Emitted
+Virtual Client emits quite a bit of operational traces while running in order to provide good information to the user. There are times when this
+amount of information is not desirable. The logging level (or severity) can be changed on the command line. The default logging level is 'Information'.
 
 ```
-# Profiling on an interval in the background.
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
+# Emit traces for 'Warning' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Warning
 
-# Profiling on-demand when signalled by the workload. Note that NOT all profiles support on-demand profiling. 
-# Look for a ProfilingMode global parameter in the profile to determine if it is supported.
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=OnDemand
+# Emit traces for 'Error' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Error
+
+# Emit traces for 'Critical' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Critical
+```
+
+Correspondingly, there are times when more operational traces are desirable (e.g. for debugging scenarios). The default logging level is 'Information'.
+
+```
+# Emit all traces (...the most verbose option)
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Trace
+
+# Emit traces for 'Debug' level and above.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Debug
+
+# Emit traces for 'Information' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
 ```

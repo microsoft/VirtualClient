@@ -12,7 +12,7 @@ namespace VirtualClient
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Identity.Client;
+    using Microsoft.Extensions.Logging;
     using NUnit.Framework;
 
     [TestFixture]
@@ -20,8 +20,10 @@ namespace VirtualClient
     public class OptionFactoryTests
     {
         [Test]
+        [TestCase("--agent-id")]
         [TestCase("--agentId")]
         [TestCase("--agentid")]
+        [TestCase("--client-id")]
         [TestCase("--clientId")]
         [TestCase("--clientid")]
         [TestCase("--client")]
@@ -148,6 +150,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--content-store")]
         [TestCase("--contentStore")]
         [TestCase("--contentstore")]
         [TestCase("--content")]
@@ -179,6 +182,8 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--content-path-template")]
+        [TestCase("--content-path")]
         [TestCase("--contentPathTemplate")]
         [TestCase("--contentpathtemplate")]
         [TestCase("--contentPath")]
@@ -202,8 +207,10 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--event-hub-connection-string")]
         [TestCase("--eventHubConnectionString")]
         [TestCase("--eventhubconnectionstring")]
+        [TestCase("--event-hub")]
         [TestCase("--eventHub")]
         [TestCase("--eventhub")]
         [TestCase("--eh")]
@@ -215,6 +222,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--experiment-id")]
         [TestCase("--experimentId")]
         [TestCase("--experimentid")]
         [TestCase("--experiment")]
@@ -259,6 +267,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--ip-address")]
         [TestCase("--ipAddress")]
         [TestCase("--ipaddress")]
         [TestCase("--ip")]
@@ -310,6 +319,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--layout-path")]
         [TestCase("--layoutPath")]
         [TestCase("--layoutpath")]
         [TestCase("--layout")]
@@ -322,8 +332,43 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--logToFile")]
-        [TestCase("--logtofile")]
+        [TestCase("--log-level")]
+        [TestCase("--ll")]
+        public void LogLevelOptionSupportsExpectedAliases(string alias)
+        {
+            foreach (LogLevel level in Enum.GetValues<LogLevel>())
+            {
+                int expectedLevel = (int)level;
+                Option option = OptionFactory.CreateLogLevelOption();
+                ParseResult result = option.Parse($"{alias}={expectedLevel}");
+    
+                Assert.IsFalse(result.Errors.Any());
+                Assert.AreEqual(expectedLevel, int.Parse(result.Tokens.ElementAt(1).Value));
+            }
+        }
+
+        [Test]
+        public void LogLevelOptionSupportsStringRepresentationsOfTheLogLevelEnumeration()
+        {
+            foreach (LogLevel level in Enum.GetValues<LogLevel>())
+            {
+                Option option = OptionFactory.CreateLogLevelOption();
+                ParseResult result = option.Parse($"--log-level={level}");
+
+                Assert.IsFalse(result.Errors.Any());
+                Assert.AreEqual(level.ToString(), result.Tokens.ElementAt(1).Value);
+            }
+        }
+
+        [Test]
+        public void LogLevelOptionThrowsOnAnInvalidValue()
+        {
+            Option option = OptionFactory.CreateLogLevelOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"--log-level=100"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--log-level=VeryVerbose"));
+        }
+
+        [Test]
         [TestCase("--log-to-file")]
         [TestCase("--ltf")]
         public void LogToFileFlagSupportsExpectedAliases(string alias)
@@ -382,6 +427,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--package-store")]
         [TestCase("--packageStore")]
         [TestCase("--packagestore")]
         [TestCase("--packages")]
