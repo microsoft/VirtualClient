@@ -7,16 +7,15 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Dependencies.MySqlServer;
 
     /// <summary>
     /// Provides functionality for installing specific version of PostgreSQL.
@@ -25,8 +24,6 @@ namespace VirtualClient.Dependencies
     [WindowsCompatible]
     public class PostgreSQLServerInstallation : ExecuteCommand
     {
-        private ISystemManagement systemManager;
-        private IPackageManager packageManager;
         private IStateManager stateManager;
 
         /// <summary>
@@ -37,16 +34,37 @@ namespace VirtualClient.Dependencies
         public PostgreSQLServerInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            this.systemManager = dependencies.GetService<ISystemManagement>();
-            this.systemManager.ThrowIfNull(nameof(this.systemManager));
-            this.packageManager = this.systemManager.PackageManager;
-            this.stateManager = this.systemManager.StateManager;
+            this.SystemManager = dependencies.GetService<ISystemManagement>();
+            this.SystemManager.ThrowIfNull(nameof(this.SystemManager));
+            this.stateManager = this.SystemManager.StateManager;
         }
 
         /// <summary>
-        /// The path to the PostgreSQL package for installation.
+        /// The specifed action that controls the execution of the dependency.
         /// </summary>
-        protected string PackagePath { get; set; }
+        public string Action
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.Action));
+            }
+        }
+
+        /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public bool SkipInitialize
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.SkipInitialize), false);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the interface to interacting with the underlying system.
+        /// </summary>
+        protected ISystemManagement SystemManager { get; }
 
         /// <summary>
         /// Initializes PostgreSQL installation requirements.
@@ -63,7 +81,7 @@ namespace VirtualClient.Dependencies
 
             if (this.Platform == PlatformID.Unix)
             {
-                LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
+                LinuxDistributionInfo distroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken);
 
                 switch (distroInfo.LinuxDistribution)
                 {
@@ -77,9 +95,6 @@ namespace VirtualClient.Dependencies
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }
-
-            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-            this.PackagePath = package.Path;
         }
 
         /// <summary>
@@ -89,65 +104,73 @@ namespace VirtualClient.Dependencies
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            InstallationState state = await this.stateManager.GetStateAsync<InstallationState>(nameof(PostgreSQLServerInstallation), cancellationToken);
+            ProcessManager manager = this.SystemManager.ProcessManager;
+            string stateId = $"{nameof(MySQLServerInstallation)}-{this.Action}-action-success";
+            InstallationState installationState = await this.stateManager.GetStateAsync<InstallationState>($"{nameof(InstallationState)}", cancellationToken)
+                .ConfigureAwait(false);
 
-            if (state == null)
+            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+            workloadPackage.ThrowIfNull(this.PackageName);
+
+            telemetryContext.AddContext(nameof(installationState), installationState);
+
+            if (installationState == null && !this.SkipInitialize)
             {
-                await this.InstallServerAsync(telemetryContext, cancellationToken);
-
-                await this.stateManager.SaveStateAsync(
-                    nameof(PostgreSQLServerInstallation),
-                    new Item<InstallationState>(nameof(PostgreSQLServerInstallation), new InstallationState()),
-                    cancellationToken);
-            }
-        }
-
-        private async Task InstallServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string installationScript = this.Combine(this.PackagePath, "installServer.py");
-
-            string command = "python3";
-            string commandArguments = installationScript;
-            string workingDirectory = this.Combine(this.PackagePath);
-
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("command", command)
-                .AddContext("commandArguments", commandArguments)
-                .AddContext("workingDirectory", workingDirectory);
-
-            await this.systemManager.MakeFileExecutableAsync(installationScript, this.Platform, cancellationToken);
-
-            await this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, relatedContext, cancellationToken, runElevated: true))
+                switch (this.Action)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
-                        process.ThrowIfDependencyInstallationFailed();
-                    }
+                    case InstallationAction.InstallServer:
+                        await this.InstallPostgreSQLServerAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+                        await this.stateManager.SaveStateAsync(stateId, new InstallationState(this.Action), cancellationToken);
+                        break;
                 }
-            });
+            }
         }
 
-        internal class InstallationState : State
+        private async Task InstallPostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            string packageDirectory = package.Path;
+
+            string arguments = $"{packageDirectory}/installServer.py";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    "python3",
+                    arguments,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerInstallation", logToFile: true);
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Supported MySQL Server installation actions.
+        /// </summary>
+        internal class InstallationAction
         {
             /// <summary>
-            /// Initializes a new instance of the <see cref="InstallationState"/> object.
+            /// Setup the required configurations of the SQL Server.
             /// </summary>
-            public InstallationState()
-                : base()
+            public const string InstallServer = nameof(InstallServer);
+
+        }
+
+        internal class InstallationState
+        {
+            [JsonConstructor]
+            public InstallationState(string action)
             {
+                this.Action = action;
             }
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="InstallationState"/> object.
-            /// </summary>
-            [JsonConstructor]
-            public InstallationState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
+            [JsonProperty("action")]
+            public string Action { get; }
         }
     }
 }
