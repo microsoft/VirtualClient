@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
@@ -20,6 +21,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.SysbenchExecutor;
 
     /// <summary>
     /// PostgreSQL Executor
@@ -28,8 +30,14 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class HammerDBExecutor : VirtualClientComponent
     {
+        /// <summary>
+        /// Default table count for a Sysbench run.
+        /// </summary>
+        public const int DefaultTableCount = 10;
+
         internal const string CreateDBTclName = "createDB.tcl";
         internal const string RunTransactionsTclName = "runTransactions.tcl";
+        private readonly IStateManager stateManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBExecutor"/> class.
@@ -45,19 +53,7 @@ namespace VirtualClient.Actions
                 ClientRole.Server
             };
 
-            this.SystemManagement = dependencies.GetService<ISystemManagement>();
-            this.FileSystem = this.Dependencies.GetService<IFileSystem>();
-        }
-
-        /// <summary>
-        /// Defines the name of the benchmark (e.g. tpcc).
-        /// </summary>
-        public string Benchmark
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.Benchmark));
-            }
+            this.stateManager = this.SystemManager.StateManager;
         }
 
         /// <summary>
@@ -72,13 +68,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the name of the HammerDB package.
+        /// Parameter defines the scenario to use for the PostgreSQL user accounts used
+        /// to create the DB and run transactions against it.
         /// </summary>
-        public string HammerDBPackageName
+        public string DatabaseScenario
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.HammerDBPackageName));
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), HammerDBScenario.Balanced);
             }
         }
 
@@ -94,10 +91,52 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Client used to communicate with the locally self-hosted instance of the
-        /// Virtual Client API.
+        /// Number of records per table.
         /// </summary>
-        protected IApiClient LocalApiClient { get; set; }
+        public int? RecordCount
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible records);
+                return records?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// The table count passed to HammerDB.
+        /// </summary>
+        public int? TableCount
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tableCount);
+                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// Number of threads.
+        /// </summary>
+        public int? Threads
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
+                return threads?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// The workload option passed to Sysbench.
+        /// </summary>
+        public string Workload
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Workload), out IConvertible workload);
+                return workload?.ToString();
+            }
+        }
 
         /// <summary>
         /// Client used to communicate with the hosted instance of the
@@ -106,50 +145,106 @@ namespace VirtualClient.Actions
         protected IApiClient ServerApiClient { get; set; }
 
         /// <summary>
-        /// The file path where Hammer DB package is downloaded.
-        /// </summary>
-        protected string HammerDBPackagePath { get; set; }
-
-        /// <summary>
-        /// Poatgresql Workload package path.
-        /// </summary>
-        protected string PostgreSqlPackagePath { get; set; }
-
-        /// <summary>
-        /// Workload package path.
-        /// </summary>
-        protected string PostgreSqlInstallationPath { get; set; }
-
-        /// <summary>
         /// Server's Cancellation Token Source.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// Enables file system interactions.
+        /// Server IpAddress on which MySQL Server runs.
         /// </summary>
-        protected IFileSystem FileSystem { get; }
+        protected string ServerIpAddress { get; set; }
 
         /// <summary>
-        /// The role of the current Virtual Client instance. Supported roles = Client or Server
+        /// The file path where Hammer DB package is downloaded.
         /// </summary>
-        protected string Role { get; private set; }
+        protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
         /// Provides methods for managing system requirements.
         /// </summary>
-        protected ISystemManagement SystemManagement { get; }
+        protected ISystemManagement SystemManager { get; }
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// Method to determine the table count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetTableCount(string databaseScenario, int? tables)
+        {
+            int tableCount = tables.GetValueOrDefault(DefaultTableCount);
+
+            // if not using the configurable scenario, must use 10 tables
+            // if using a workload that must use only 1 table, table count adjusted as such 
+
+            tableCount = (databaseScenario == SysbenchScenario.Configure) ? tableCount : DefaultTableCount;
+            return tableCount;
+        }
+
+        /// <summary>
+        /// Method to determine the record count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetRecordCount(ISystemManagement systemManagement, string databaseScenario, int? records)
+        {
+            CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+            int coreCount = cpuInfo.LogicalProcessorCount;
+
+            // record count calcuated for default use is 10^n where n = core count
+            // for the in memory scenario, it is n+2
+
+            int recordCountExponent = (databaseScenario != SysbenchScenario.InMemory)
+                ? (int)Math.Log2(coreCount)
+                : (int)Math.Log2(coreCount) + 2;
+
+            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
+
+            int recordCount = records.GetValueOrDefault(recordEstimate);
+
+            // record count specified in profile if it is the configurable scenario
+            // if the record count specified is 1, assume it's pre-initialization, and do not use estimate
+
+            recordCount = (databaseScenario == SysbenchScenario.Configure || recordCount == 1) ? recordCount : recordEstimate;
+
+            return recordCount;
+        }
+
+        /// <summary>
+        /// Method to determine the thread count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetThreadCount(ISystemManagement systemManagement, string databaseScenario, int? threads)
+        {
+            CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+            int coreCount = cpuInfo.LogicalProcessorCount;
+
+            // number of threads defaults to core count
+
+            int threadCount = threads.GetValueOrDefault(coreCount);
+            threadCount = (databaseScenario == SysbenchScenario.Configure) ? threadCount : coreCount;
+
+            return threadCount;
+        }
+
+        /// <inheritdoc/>
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <inheritdoc/>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.ValidatePlatformSupportedAsync(cancellationToken);
-            await HammerDBExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
+            await this.CheckDistroSupportAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            this.InitializeApiClients();
+            await HammerDBExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManager.FirewallManager, cancellationToken);
 
-            DependencyPath postgreSqlPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-            DependencyPath hammerDBPackage = await this.GetPlatformSpecificPackageAsync(this.HammerDBPackageName, cancellationToken);
+            DependencyPath hammerDBPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+            this.HammerDBPackagePath = hammerDBPackage.Path;
+
+            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+
+            this.InitializeApiClients(cancellationToken);
 
             // The *.vcpkg definition is expected to contain definitions specific to each platform/architecture
             // where the PostgreSQL application is installed.
@@ -162,7 +257,7 @@ namespace VirtualClient.Actions
             //   "installationPath-windows-arm64": "C:\\Program Files\\PostgreSQL\\14",
             // }
             string metadataKey = $"{PackageMetadata.InstallationPath}-{this.PlatformArchitectureName}";
-            if (!postgreSqlPackage.Metadata.TryGetValue(metadataKey, out IConvertible installationPath))
+            if (!hammerDBPackage.Metadata.TryGetValue(metadataKey, out IConvertible installationPath))
             {
                 throw new WorkloadException(
                     $"Missing installation path. The '{this.PackageName}' package registration is missing the required '{metadataKey}' " +
@@ -170,82 +265,78 @@ namespace VirtualClient.Actions
                     ErrorReason.DependencyNotFound);
             }
 
-            this.HammerDBPackagePath = hammerDBPackage.Path;
-            this.PostgreSqlPackagePath = postgreSqlPackage.Path;
-            this.PostgreSqlInstallationPath = installationPath.ToString();
-
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance clientInstance = this.GetLayoutClientInstance();
                 string layoutIPAddress = clientInstance.IPAddress;
-                this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-                this.Role = clientInstance.Role;
-                this.ThrowIfRoleNotSupported(this.Role);
+                this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
+                this.ThrowIfRoleNotSupported(clientInstance.Role);
             }
         }
 
-        /// <inheritdoc/>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <summary>
+        /// Initializes API client.
+        /// </summary>
+        protected void InitializeApiClients(CancellationToken cancellationToken)
         {
-            bool isMultiRole = this.IsMultiRoleLayout();
-
-            using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            if (!cancellationToken.IsCancellationRequested)
             {
-                try
+                IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
+
+                if (!this.IsMultiRoleLayout())
                 {
-                    CancellationToken serverCancellationToken = this.ServerCancellationSource.Token;
-
-                    await this.InitializeExecutablesAsync(cancellationToken);
-
-                    if (!isMultiRole || this.IsInRole(ClientRole.Server))
-                    {
-                        using (var serverExecutor = this.CreateServerExecutor())
-                        {
-                            await serverExecutor.ExecuteAsync(serverCancellationToken)
-                                .ConfigureAwait(false);
-
-                            this.Logger.LogMessage($"{nameof(HammerDBExecutor)}.ServerExecutionCompleted", telemetryContext);
-                        }
-                    }
-
-                    if (!isMultiRole || this.IsInRole(ClientRole.Client))
-                    {
-                        // After database creation completes. Runs threads querying database.
-                        using (var clientExecutor = this.CreateClientExecutor())
-                        {
-                            await clientExecutor.ExecuteAsync(serverCancellationToken)
-                                .ConfigureAwait(false);
-
-                            this.Logger.LogMessage($"{nameof(HammerDBExecutor)}.ClientExecutionCompleted", telemetryContext);
-                        }
-                    }
+                    this.ServerIpAddress = IPAddress.Loopback.ToString();
+                    this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
                 }
-                catch (OperationCanceledException)
+                else
                 {
-                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+                    ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                    IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+                    this.ServerIpAddress = serverIPAddress.ToString();
+                    this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, serverIPAddress);
+                    this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
                 }
             }
         }
 
         /// <summary>
-        /// Logs the list of results provide
+        /// Initializes the workload executables on the system (e.g. attributes them as executable).
         /// </summary>
-        protected void CaptureMetrics(IEnumerable<Metric> results, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected async Task InitializeExecutablesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (results != null)
+            // store state with initialization status & record/table counts, if does not exist already
+
+            HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
+                ?? new HammerDBState();
+
+            if (!state.HammerDBInitialized)
             {
-                this.Logger.LogMetrics(
-                    "PostgreSQL-HammerDB",
-                    "TPC-C" + this.Scenario,
-                    startTime,
-                    endTime,
-                    results.ToList(),
-                    null,
-                    null,
-                    this.Tags,
-                    telemetryContext);
+                LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                string distribution = distributionInfo.LinuxDistribution.ToString();
+
+                string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py";
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    "python3",
+                    arguments,
+                    this.HammerDBPackagePath,
+                    telemetryContext,
+                    cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDBExecutor", logToFile: true);
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                    }
+                }
+
+                state.HammerDBInitialized = true;
             }
+
+            await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
         }
 
         /// <summary>
@@ -260,92 +351,10 @@ namespace VirtualClient.Actions
 
             if (!isSupported)
             {
-                this.Logger.LogNotSupported("PostgreSQL", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                this.Logger.LogNotSupported("HammerDB", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
 
             return isSupported;
-        }
-
-        /// <summary>
-        /// Creates PostgreSQL server instance.
-        /// </summary>
-        /// <returns></returns>
-        protected virtual VirtualClientComponent CreateServerExecutor()
-        {
-            return new PostgreSQLServerExecutor(this.Dependencies, this.Parameters);
-        }
-
-        /// <summary>
-        /// Creates PostgreSQL client instance.
-        /// </summary>
-        protected virtual VirtualClientComponent CreateClientExecutor()
-        {
-            return new PostgreSQLClientExecutor(this.Dependencies, this.Parameters);
-        }
-
-        /// <summary>
-        /// Initializes the workload executables on the system (e.g. attributes them as executable).
-        /// </summary>
-        protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                // https://stackoverflow.com/questions/40779757/connect-postgresql-to-hammerdb
-
-                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
-
-                await this.SystemManagement.MakeFileExecutableAsync(
-                    this.Combine(this.HammerDBPackagePath, "hammerdbcli"),
-                    this.Platform,
-                    cancellationToken);
-
-                await this.SystemManagement.MakeFilesExecutableAsync(
-                    this.Combine(this.HammerDBPackagePath, "bin"),
-                    this.Platform,
-                    cancellationToken);
-
-                await this.SystemManagement.MakeFileExecutableAsync(
-                    this.Combine(this.PostgreSqlPackagePath, "ubuntu", "configure.sh"),
-                    this.Platform,
-                    cancellationToken);
-
-                await this.SystemManagement.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "inmemory.sh"),
-                    this.Platform,
-                    cancellationToken);
-
-                await this.SystemManagement.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balanced.sh"),
-                    this.Platform,
-                    cancellationToken);
-
-                // The path to the PostgreSQL 'bin' folder is expected to exist in the PATH environment variable
-                // for the HammerDB toolset to work correctly.
-                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.PostgreSqlInstallationPath, "bin"), append: true);
-
-                // The path to the HammerDB 'bin' folder is expected to exist in the PATH environment variable
-                // for the HammerDB toolset to work correctly.
-                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.HammerDBPackagePath, "bin"), append: true);
-
-                // Add the path to the HammerDB 'lib' folder to the LD_LIBRARY_PATH variable so that the *.so files can
-                // be found.
-                this.SetEnvironmentVariable(EnvironmentVariable.LD_LIBRARY_PATH, this.Combine(this.HammerDBPackagePath, "lib"), append: true);
-            }
-        }
-
-        /// <summary>
-        /// Validates the component can be executed.
-        /// </summary>
-        protected override void Validate()
-        {
-            base.Validate();
-            if (this.CpuArchitecture != Architecture.X64)
-            {
-                throw new WorkloadException(
-                    $"The current architecture '{this.CpuArchitecture}' is not supported for running the HammerDB workload " +
-                    $"against a PostgreSQL server.",
-                    ErrorReason.PlatformNotSupported);
-            }
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
@@ -362,186 +371,76 @@ namespace VirtualClient.Actions
                 cancellationToken);
         }
 
-        private void InitializeApiClients()
-        {
-            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-            this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
-            bool isSingleVM = !this.IsMultiRoleLayout();
-
-            if (isSingleVM)
-            {
-                this.ServerApiClient = this.LocalApiClient;
-            }
-            else
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverInstance);
-                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
-            }
-        }
-
-        private async Task ValidatePlatformSupportedAsync(CancellationToken cancellationToken)
+        private async Task CheckDistroSupportAsync(CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)
             {
-                LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+                var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-                switch (distroInfo.LinuxDistribution)
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                        break;
-
-                    default:
-                        throw new WorkloadException(
-                            $"The PostgreSQL benchmark workload is not supported by the Virtual Client on the current Linux distro " +
-                            $"'{distroInfo.LinuxDistribution}' through Virtual Client.",
+                    switch (linuxDistributionInfo.LinuxDistribution)
+                    {
+                        case LinuxDistribution.Ubuntu:
+                        case LinuxDistribution.Debian:
+                            break;
+                        default:
+                            throw new WorkloadException(
+                            $"The PostgreSQL TPCC workload is not supported on the current Linux distro - " +
+                            $"{linuxDistributionInfo.LinuxDistribution}. Supported distros include:" +
+                            $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)}," +
+                            $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
                             ErrorReason.LinuxDistributionNotSupported);
+                    }
+                }
+            }
+        }
+
+        internal class HammerDBState : State
+        {
+            public HammerDBState(IDictionary<string, IConvertible> properties = null)
+                : base(properties)
+            {
+            }
+
+            public bool HammerDBInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(HammerDBState.HammerDBInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(HammerDBState.HammerDBInitialized)] = value;
+                }
+            }
+
+            public bool DatabasePopulated
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabasePopulated), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
                 }
             }
         }
 
         /// <summary>
-        /// State information provided by the server role executor.
+        /// Defines the HammerDB scenario.
         /// </summary>
-        internal class PostgreSQLServerState : State
+        internal class HammerDBScenario
         {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="PostgreSQLServerState"/> object.
-            /// </summary>
-            public PostgreSQLServerState()
-                : base()
-            {
-                this.DatabaseInitialized = false;
-                this.WarehouseCount = -1;
-                this.UserCount = -1;
-                this.BalancedScenarioInitialized = false;
-                this.InMemoryScenarioInitialized = false;
-            }
+            public const string Balanced = nameof(Balanced);
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="PostgreSQLServerState"/> object.
-            /// </summary>
-            [JsonConstructor]
-            public PostgreSQLServerState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
+            public const string InMemory = nameof(InMemory);
 
-            /// <summary>
-            /// True if the PostgreSQL database was created.
-            /// </summary>
-            public bool DatabaseInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(this.DatabaseInitialized));
-                }
-
-                set
-                {
-                    this[nameof(this.DatabaseInitialized)] = value;
-                }
-            }
-
-            /// <summary>
-            /// The number of virtual users to use for running parallel OLTP operations against the database
-            /// as part of the TPC-C operations.
-            /// </summary>
-            public int UserCount
-            {
-                get
-                {
-                    return this.Properties.GetValue<int>(nameof(this.UserCount));
-                }
-
-                set
-                {
-                    this[nameof(this.UserCount)] = value;
-                }
-            }
-
-            /// <summary>
-            /// Password to use for accessing the PostgreSQL server and target database.
-            /// </summary>
-            public string Password
-            {
-                get
-                {
-                    return this.Properties.GetValue<string>(nameof(this.Password));
-                }
-
-                set
-                {
-                    this[nameof(this.Password)] = value;
-                }
-            }
-
-            /// <summary>
-            /// Username to use for accessing the PostgreSQL server and target database.
-            /// </summary>
-            public string UserName
-            {
-                get
-                {
-                    return this.Properties.GetValue<string>(nameof(this.UserName));
-                }
-
-                set
-                {
-                    this[nameof(this.UserName)] = value;
-                }
-            }
-
-            /// <summary>
-            /// The number of warehouses to create as part of the TPC-C operations.
-            /// </summary>
-            public int WarehouseCount
-            {
-                get
-                {
-                    return this.Properties.GetValue<int>(nameof(this.WarehouseCount));
-                }
-
-                set
-                {
-                    this[nameof(this.WarehouseCount)] = value;
-                }
-            }
-
-            /// <summary>
-            /// True if the balanced scenario has been initialized.
-            /// </summary>
-            public bool BalancedScenarioInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(this.BalancedScenarioInitialized));
-                }
-
-                set
-                {
-                    this[nameof(this.BalancedScenarioInitialized)] = value;
-                }
-            }
-
-            /// <summary>
-            /// True if the in-memory scenario has been initialized.
-            /// </summary>
-            public bool InMemoryScenarioInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(this.InMemoryScenarioInitialized));
-                }
-
-                set
-                {
-                    this[nameof(this.InMemoryScenarioInitialized)] = value;
-                }
-            }
+            public const string Configure = nameof(Configure);
         }
     }
 }
