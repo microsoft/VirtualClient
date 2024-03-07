@@ -186,9 +186,9 @@ namespace VirtualClient.Actions
         protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
-        /// Provides methods for managing system requirements.
+        /// An interface that can be used to communicate with the underlying system.
         /// </summary>
-        protected ISystemManagement SystemManager { get; }
+        protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
 
         /// <inheritdoc/>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
