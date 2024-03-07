@@ -26,7 +26,6 @@ namespace VirtualClient.Actions
     public class HammerDBClientExecutor : HammerDBExecutor
     {
         private string hammerDBExecutionArguments;
-        private string hammerDBLoggingArguments;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBClientExecutor"/> class.
@@ -159,7 +158,7 @@ namespace VirtualClient.Actions
                             process.ExitTime,
                             metrics,
                             null,
-                            scenarioArguments: this.hammerDBLoggingArguments,
+                            null,
                             this.Tags,
                             telemetryContext);
                     }
