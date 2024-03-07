@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.SysbenchExecutor;
+    using static VirtualClient.Actions.HammerDBExecutor;
 
     /// <summary>
     /// PostgreSQL Executor
@@ -147,19 +147,19 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Threads), out IConvertible threads);
                 return threads?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
-        /// The workload option passed to Sysbench.
+        /// The workload option passed to HammerDB.
         /// </summary>
         public string Workload
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Workload), out IConvertible workload);
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Workload), out IConvertible workload);
                 return workload?.ToString();
             }
         }

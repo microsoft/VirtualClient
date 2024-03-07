@@ -23,11 +23,11 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.SysbenchExecutor;
+    using static VirtualClient.Actions.HammerDBExecutor;
 
     [TestFixture]
     [Category("Unit")]
-    public class SysbenchClientExecutorTests
+    public class HammerDBClientExecutorTests
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
@@ -40,17 +40,17 @@ namespace VirtualClient.Actions
         {
             this.fixture = new MockFixture();
             this.fixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("sysbench"));
+            this.mockPackage = new DependencyPath("HammerDB", this.fixture.PlatformSpecifics.GetPackagePath("HammerDB"));
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.mockPackagePath = this.mockPackage.Path;
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(SysbenchClientExecutor.DatabaseName), "sbtest" },
-                { nameof(SysbenchClientExecutor.Duration), "00:00:10" },
-                { nameof(SysbenchClientExecutor.Workload), "oltp_read_write" },
-                { nameof(SysbenchClientExecutor.PackageName), "sysbench" },
-                { nameof(SysbenchClientExecutor.Scenario), "oltp_read_write_testing" }
+                { nameof(HammerDBClientExecutor.DatabaseName), "sbtest" },
+                { nameof(HammerDBClientExecutor.Duration), "00:00:10" },
+                { nameof(HammerDBClientExecutor.Workload), "oltp_read_write" },
+                { nameof(HammerDBClientExecutor.PackageName), "HammerDB" },
+                { nameof(HammerDBClientExecutor.Scenario), "oltp_read_write_testing" }
             };
 
             string agentId = $"{Environment.MachineName}";
@@ -70,9 +70,9 @@ namespace VirtualClient.Actions
                     return this.fixture.ApiClient.Object;
                 });
 
-            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new HammerDBExecutor.HammerDBState()
             {
-                SysbenchInitialized = true
+                HammerDBInitialized = true
             }));
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
@@ -83,7 +83,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchClientExecutorRunsTheExpectedWorkloadCommand()
+        public async Task HammerDBClientExecutorRunsTheExpectedWorkloadCommand()
         {
             SetupDefaultBehavior();
 
@@ -111,27 +111,25 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
             };
 
-            using (TestSysbenchClientExecutor SysbenchExecutor = new TestSysbenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBClientExecutor HammerDBExecutor = new TestHammerDBClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
         }
 
         [Test]
-        public async Task SysbenchClientExecutorUsesDefinedParametersWhenRunningTheWorkload()
+        public async Task HammerDBClientExecutorUsesDefinedParametersWhenRunningTheWorkload()
         {
             SetupDefaultBehavior();
 
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.Threads)] = "64";
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.RecordCount)] = "1000";
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.TableCount)] = "40";
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Configure";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Threads)] = "64";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Scenario)] = "Configure";
 
             string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 64 --tableCount 40 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
@@ -157,24 +155,24 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
             };
 
-            using (TestSysbenchClientExecutor SysbenchExecutor = new TestSysbenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBClientExecutor HammerDBExecutor = new TestHammerDBClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
         }
 
         [Test]
-        public async Task SysbenchClientExecutorRunsTheExpectedBalancedScenario()
+        public async Task HammerDBClientExecutorRunsTheExpectedBalancedScenario()
         {
             SetupDefaultBehavior();
 
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Balanced";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.DatabaseScenario)] = "Balanced";
 
             string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
@@ -200,24 +198,24 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
             };
 
-            using (TestSysbenchClientExecutor SysbenchExecutor = new TestSysbenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBClientExecutor HammerDBExecutor = new TestHammerDBClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
         }
 
         [Test]
-        public async Task SysbenchClientExecutorRunsInMemoryScenario()
+        public async Task HammerDBClientExecutorRunsInMemoryScenario()
         {
             SetupDefaultBehavior();
 
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "InMemory";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.DatabaseScenario)] = "InMemory";
 
             string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
@@ -243,21 +241,21 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
             };
 
-            using (TestSysbenchClientExecutor SysbenchExecutor = new TestSysbenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBClientExecutor HammerDBExecutor = new TestHammerDBClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
         }
 
-        private class TestSysbenchClientExecutor : SysbenchClientExecutor
+        private class TestHammerDBClientExecutor : HammerDBClientExecutor
         {
-            public TestSysbenchClientExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
+            public TestHammerDBClientExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
                 : base(services, parameters)
             {
             }

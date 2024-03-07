@@ -23,11 +23,11 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.SysbenchExecutor;
+    using static VirtualClient.Actions.HammerDBExecutor;
 
     [TestFixture]
     [Category("Unit")]
-    public class SysbenchConfigurationTests
+    public class HammerDBConfigurationTests
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
@@ -40,16 +40,16 @@ namespace VirtualClient.Actions
             this.fixture.Setup(PlatformID.Unix);
             this.fixture.SetupMocks();
 
-            this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("sysbench"));
+            this.mockPackage = new DependencyPath("HammerDB", this.fixture.PlatformSpecifics.GetPackagePath("HammerDB"));
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.mockPackagePath = this.mockPackage.Path;
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(SysbenchConfiguration.DatabaseName), "sbtest" },
-                { nameof(SysbenchConfiguration.PackageName), "sysbench" },
-                { nameof(SysbenchConfiguration.Scenario), "populate_database" }
+                { nameof(HammerDBConfiguration.DatabaseName), "sbtest" },
+                { nameof(HammerDBConfiguration.PackageName), "HammerDB" },
+                { nameof(HammerDBConfiguration.Scenario), "populate_database" }
             };
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
@@ -57,19 +57,19 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchConfigurationSkipsSysbenchInitialization()
+        public async Task HammerDBConfigurationSkipsHammerDBInitialization()
         {
-            SysbenchState expectedState = new SysbenchState(new Dictionary<string, IConvertible>
+            HammerDBState expectedState = new HammerDBState(new Dictionary<string, IConvertible>
             {
-                [nameof(SysbenchState.SysbenchInitialized)] = true,
+                [nameof(HammerDBState.HammerDBInitialized)] = true,
             });
 
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(HammerDBState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
 
-            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new HammerDBExecutor.HammerDBState()
             {
-                SysbenchInitialized = true
+                HammerDBInitialized = true
             }));
 
             string[] expectedCommands =
@@ -107,14 +107,14 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBConfiguration HammerDBExecutor = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
         }
 
         [Test]
-        public async Task SysbenchConfigurationPreparesDatabase()
+        public async Task HammerDBConfigurationPreparesDatabase()
         {
             string[] expectedCommands =
             {
@@ -153,19 +153,17 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBConfiguration HammerDBExecutor = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
         }
 
         [Test]
-        public async Task SysbenchConfigurationUsesDefinedParametersWhenRunningTheWorkload()
+        public async Task HammerDBConfigurationUsesDefinedParametersWhenRunningTheWorkload()
         {
-            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
-            this.fixture.Parameters[nameof(SysbenchConfiguration.RecordCount)] = "1000";
-            this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Configure";
+            this.fixture.Parameters[nameof(HammerDBConfiguration.Threads)] = "16";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Scenario)] = "Configure";
 
             string[] expectedCommands =
             {
@@ -203,16 +201,16 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBConfiguration HammerDBExecutor = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
         }
 
         [Test]
-        public async Task SysbenchConfigurationSkipsDatabasePopulationWhenInitialized()
+        public async Task HammerDBConfigurationSkipsDatabasePopulationWhenInitialized()
         {
-            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new HammerDBExecutor.HammerDBState()
             {
                 DatabasePopulated = true
             }));
@@ -253,15 +251,15 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBConfiguration HammerDBExecutor = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await HammerDBExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
         }
 
-        private class TestSysbenchConfiguration : SysbenchConfiguration
+        private class TestHammerDBConfiguration : HammerDBConfiguration
         {
-            public TestSysbenchConfiguration(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
+            public TestHammerDBConfiguration(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
                 : base(services, parameters)
             {
             }

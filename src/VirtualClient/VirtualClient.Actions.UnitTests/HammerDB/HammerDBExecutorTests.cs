@@ -37,12 +37,27 @@ namespace VirtualClient.Actions
         private string mockPackagePath;
 
         [SetUp]
-        public void SetupDefaultMockBehavior()
+        public void SetUpTests()
         {
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("hammerdb", this.fixture.PlatformSpecifics.GetPackagePath("hammerdb"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+
+            this.mockPackagePath = this.mockPackage.Path;
+            this.scriptPath = this.fixture.PlatformSpecifics.GetScriptPath("hammerdb");
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            {
+                new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
+                new ClientInstance($"{Environment.MachineName}-Client", "1.2.3.5", "Client")
+            });
+
+            this.fixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
         }
 
         [Test]
-        public void HammerDBOLTPExecutorThrowsOnUnsupportedDistroAsync()
+        public void HammerDBPExecutorThrowsOnUnsupportedDistroAsync()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -51,33 +66,12 @@ namespace VirtualClient.Actions
             };
             this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            using (TestHammerDBExecutor HammerDBOLTPExecutor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBExecutor HammerDBExecutor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => HammerDBOLTPExecutor.ExecuteAsync(CancellationToken.None));
+                    () => HammerDBExecutor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exception.Reason);
             }
-        }
-
-        public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
-        {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(platform, architecture);
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { "PackageName", "postgresql" },
-                { "ServerPassword", "postgresqlpassword" },
-                { "Port", 5432 }
-            };
-
-            this.mockPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.packagePath = this.fixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
-
-            IEnumerable<Disk> disks;
-            disks = this.fixture.CreateDisks(platform, true);
-            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
         private class TestHammerDBExecutor : HammerDBExecutor

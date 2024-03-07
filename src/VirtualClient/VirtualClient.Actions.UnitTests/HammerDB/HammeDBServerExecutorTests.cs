@@ -22,11 +22,11 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.SysbenchExecutor;
+    using static VirtualClient.Actions.HammerDBExecutor;
 
     [TestFixture]
     [Category("Unit")]
-    public class SysbenchServerExecutorTests
+    public class HammerDBServerExecutorTests
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
@@ -46,21 +46,21 @@ namespace VirtualClient.Actions
             string agentId = $"{Environment.MachineName}-Server";
             this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("sysbench"));
+            this.mockPackage = new DependencyPath("HammerDB", this.fixture.PlatformSpecifics.GetPackagePath("HammerDB"));
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.fixture.Parameters["PackageName"] = "sysbench";
+            this.fixture.Parameters["PackageName"] = "HammerDB";
         }
 
         [Test]
-        public async Task SysbenchServerExecutorSkipsSysbenchInitializationWhenInitialized()
+        public async Task HammerDBServerExecutorSkipsHammerDBInitializationWhenInitialized()
         {
-            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new HammerDBExecutor.HammerDBState()
             {
-                SysbenchInitialized = true
+                HammerDBInitialized = true
             }));
 
             int commandsExecuted = 0;
@@ -88,17 +88,17 @@ namespace VirtualClient.Actions
             cancellationTokenSource.CancelAfter(1500);
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
-            using (TestSysbenchServerExecutor SysbenchExecutor = new TestSysbenchServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestHammerDBServerExecutor HammerDBExecutor = new TestHammerDBServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                await HammerDBExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
 
             Assert.AreEqual(0, commandsExecuted);
         }
 
-        private class TestSysbenchServerExecutor : SysbenchServerExecutor
+        private class TestHammerDBServerExecutor : HammerDBServerExecutor
         {
-            public TestSysbenchServerExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
+            public TestHammerDBServerExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
                 : base(services, parameters)
             {
             }

@@ -16,15 +16,15 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class SysbenchMetricsParserTests
+    public class HammerDBMetricsParserTests
     {
-        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench");
+        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB");
 
         [Test]
-        public void SysbenchParserParsesCorrectly()
+        public void HammerDBParserParsesCorrectly()
         {
-            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "SysbenchExample.txt"));
-            SysbenchMetricsParser parser = new SysbenchMetricsParser(rawText);
+            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "HammerDBExample.txt"));
+            HammerDBMetricsParser parser = new HammerDBMetricsParser(rawText);
 
             IList<Metric> metrics = parser.Parse();
             Assert.AreEqual(17, metrics.Count);
