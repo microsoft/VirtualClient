@@ -132,7 +132,7 @@ namespace VirtualClient.Dependencies
             DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             string packageDirectory = package.Path;
 
-            string arguments = $"{packageDirectory}/installServer.py";
+            string arguments = $"{packageDirectory}/install-server.py";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     "python3",

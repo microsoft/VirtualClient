@@ -19,29 +19,12 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class PostgreSQLServerConfigurationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
 
         [SetUp]
-        private void SetupDefaultMockBehavior(PlatformID platform, Architecture architecture)
+        public void SetupDefaultMockBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { "PackageName", "postgresql" },
-                { "ServerPassword", "postgres" },
-                {"Port", 5432 }
-            };
-
-            this.mockPackage = new DependencyPath("postgresql", this.mockFixture.GetPackagePath("postgresql"));
-            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-
-            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.EndsWith("superuser.txt")))).Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(
-                It.Is<string>(f => f.EndsWith("superuser.txt")),
-                It.IsAny<CancellationToken>())).ReturnsAsync("defaultpwd");
         }
 
         [Test]
@@ -51,7 +34,7 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
         public async Task PostgreSQLServerConfigurationExecutesExpectedConfigurationCommands(PlatformID platform, Architecture architecture, string platformArchitecture)
         {
-            this.SetupDefaultMockBehavior(platform, architecture);
+            this.SetupDefaultBehavior(platform, architecture);
 
             if (platform == PlatformID.Unix)
             {
@@ -61,18 +44,34 @@ namespace VirtualClient.Dependencies
                     LinuxDistribution = LinuxDistribution.Ubuntu
                 };
 
-                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+                this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
     .ReturnsAsync(mockInfo);
             }
 
-            using (TestPostgreSQLServerConfiguration configuration = new TestPostgreSQLServerConfiguration(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestPostgreSQLServerConfiguration configuration = new TestPostgreSQLServerConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await configuration.ExecuteAsync(CancellationToken.None);
 
-                string configureScriptPath = this.mockFixture.Combine(this.mockPackage.Path, platformArchitecture, "configureServer.py");
+                string configureScriptPath = this.fixture.Combine(this.mockPackage.Path, platformArchitecture, "configureServer.py");
 
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"python3 \"{configureScriptPath}\""));
+                Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted($"python3 \"{configureScriptPath}\""));
             }
+        }
+
+        public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
+        {
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform, architecture);
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { "PackageName", "postgresql" },
+                { "ServerPassword", "postgres" },
+                { "Port", 5432 }
+            };
+
+            this.mockPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
+            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
         }
 
         private class TestPostgreSQLServerConfiguration : PostgreSQLServerConfiguration
@@ -81,8 +80,6 @@ namespace VirtualClient.Dependencies
                 : base(dependencies, parameters)
             {
             }
-
-            public new string SuperuserPassword => base.SuperuserPassword;
 
             public new Task InitializeAsync(EventContext context, CancellationToken cancellationToken)
             {
