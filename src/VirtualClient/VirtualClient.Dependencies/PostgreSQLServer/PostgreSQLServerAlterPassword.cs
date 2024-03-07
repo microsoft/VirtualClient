@@ -44,14 +44,13 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Parameter defines the password of the superuser for the PostgreSQL Server.
+        /// Parameter defines the SuperUser Password for PostgreSQL Server.
         /// </summary>
-        public string Password
+        public int SuperUserPassword
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.Password), out IConvertible password);
-                return password?.ToString();
+                return this.ExperimentId.GetHashCode();
             }
         }
 
@@ -97,7 +96,7 @@ namespace VirtualClient.Dependencies
             string alterPasswordScript = this.Combine(this.PackagePath, "alterPassword.py");
 
             string command = "python3";
-            string commandArguments = $"{alterPasswordScript} --password {this.Password}";
+            string commandArguments = $"{alterPasswordScript} --password {this.SuperUserPassword}";
             string workingDirectory = this.Combine(this.PackagePath);
 
             EventContext relatedContext = telemetryContext.Clone()
