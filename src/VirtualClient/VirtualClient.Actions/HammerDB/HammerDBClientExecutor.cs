@@ -129,14 +129,7 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            // Adjust tableCount, tableCount, and recordCount if not the configurable scenario
-
-            int tableCount = GetTableCount(this.Scenario, this.TableCount);
-            int threadCount = GetThreadCount(this.SystemManager, this.Scenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.Scenario, this.RecordCount);
-
-            this.hammerDBLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
-            this.hammerDBExecutionArguments = this.hammerDBExecutionArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
+            this.hammerDBExecutionArguments = $"--runTransactionsTCLFilePath {this.RunTransactionsTclName}";
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)

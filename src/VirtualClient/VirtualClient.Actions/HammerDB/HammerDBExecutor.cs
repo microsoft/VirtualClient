@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
@@ -30,13 +31,6 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class HammerDBExecutor : VirtualClientComponent
     {
-        /// <summary>
-        /// Default table count for a Sysbench run.
-        /// </summary>
-        public const int DefaultTableCount = 10;
-
-        internal const string CreateDBTclName = "createDB.tcl";
-        internal const string RunTransactionsTclName = "runTransactions.tcl";
         private readonly IStateManager stateManager;
 
         /// <summary>
@@ -54,6 +48,28 @@ namespace VirtualClient.Actions
             };
 
             this.stateManager = this.SystemManager.StateManager;
+        }
+
+        /// <summary>
+        /// Defines the name of the createDB TCL file.
+        /// </summary>
+        public string CreateDBTclName
+        {
+            get
+            {
+                return "createDB.tcl";
+            }
+        }
+
+        /// <summary>
+        /// Defines the name of the runTransactions TCL file.
+        /// </summary>
+        public string RunTransactionsTclName
+        {
+            get
+            {
+                return "runTransactions.tcl";
+            }
         }
 
         /// <summary>
@@ -80,6 +96,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Parameter defines the SuperUser Password for PostgreSQL Server.
+        /// </summary>
+        public int SuperUserPassword
+        {
+            get
+            {
+                return this.ExperimentId.GetHashCode();
+            }
+        }
+
+        /// <summary>
         /// Parameter defines the port number on which the PostgreSQL server will run on.
         /// </summary>
         public int Port
@@ -91,26 +118,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of records per table.
+        /// Parameter defines the number of virtual users.
         /// </summary>
-        public int? RecordCount
+        public int VirtualUsers
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible records);
-                return records?.ToInt32(CultureInfo.InvariantCulture);
+                return this.Parameters.GetValue<int>(nameof(this.VirtualUsers));
             }
         }
 
         /// <summary>
-        /// The table count passed to HammerDB.
+        /// The warehouse count passed to HammerDB.
         /// </summary>
-        public int? TableCount
+        public int? WarehouseCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.TableCount), out IConvertible tableCount);
-                return tableCount?.ToInt32(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(HammerDBExecutor.WarehouseCount), out IConvertible warehouseCount);
+                return warehouseCount?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -163,67 +189,6 @@ namespace VirtualClient.Actions
         /// Provides methods for managing system requirements.
         /// </summary>
         protected ISystemManagement SystemManager { get; }
-
-        /// <inheritdoc/>
-        /// <summary>
-        /// Method to determine the table count for the given run.
-        /// </summary>
-        /// <returns></returns>
-        public static int GetTableCount(string databaseScenario, int? tables)
-        {
-            int tableCount = tables.GetValueOrDefault(DefaultTableCount);
-
-            // if not using the configurable scenario, must use 10 tables
-            // if using a workload that must use only 1 table, table count adjusted as such 
-
-            tableCount = (databaseScenario == SysbenchScenario.Configure) ? tableCount : DefaultTableCount;
-            return tableCount;
-        }
-
-        /// <summary>
-        /// Method to determine the record count for the given run.
-        /// </summary>
-        /// <returns></returns>
-        public static int GetRecordCount(ISystemManagement systemManagement, string databaseScenario, int? records)
-        {
-            CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-            int coreCount = cpuInfo.LogicalProcessorCount;
-
-            // record count calcuated for default use is 10^n where n = core count
-            // for the in memory scenario, it is n+2
-
-            int recordCountExponent = (databaseScenario != SysbenchScenario.InMemory)
-                ? (int)Math.Log2(coreCount)
-                : (int)Math.Log2(coreCount) + 2;
-
-            int recordEstimate = (int)Math.Pow(10, recordCountExponent);
-
-            int recordCount = records.GetValueOrDefault(recordEstimate);
-
-            // record count specified in profile if it is the configurable scenario
-            // if the record count specified is 1, assume it's pre-initialization, and do not use estimate
-
-            recordCount = (databaseScenario == SysbenchScenario.Configure || recordCount == 1) ? recordCount : recordEstimate;
-
-            return recordCount;
-        }
-
-        /// <summary>
-        /// Method to determine the thread count for the given run.
-        /// </summary>
-        /// <returns></returns>
-        public static int GetThreadCount(ISystemManagement systemManagement, string databaseScenario, int? threads)
-        {
-            CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-            int coreCount = cpuInfo.LogicalProcessorCount;
-
-            // number of threads defaults to core count
-
-            int threadCount = threads.GetValueOrDefault(coreCount);
-            threadCount = (databaseScenario == SysbenchScenario.Configure) ? threadCount : coreCount;
-
-            return threadCount;
-        }
 
         /// <inheritdoc/>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -317,7 +282,8 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
                 string distribution = distributionInfo.LinuxDistribution.ToString();
 
-                string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py";
+                string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --createDBTCLPath {this.CreateDBTclName} --port {this.Port}" +
+                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --databaseName {this.DatabaseName}";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
                     "python3",

@@ -55,12 +55,8 @@ namespace VirtualClient.Actions
                         await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-
-                if (this.RecordCount > 1)
-                {
-                    state.DatabasePopulated = true;
-                    await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
-                }
+                state.DatabasePopulated = true;
+                await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
             }
         }
 
@@ -71,11 +67,7 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            int tableCount = GetTableCount(this.Scenario, this.TableCount);
-            int threadCount = GetThreadCount(this.SystemManager, this.Scenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.Scenario, this.RecordCount);
-
-            this.hammerDBPrepareArguments = $"--dbName {this.DatabaseName} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            this.hammerDBPrepareArguments = $"--databaseName {this.DatabaseName} --createDBTCLPath {this.CreateDBTclName}";
         }
 
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
