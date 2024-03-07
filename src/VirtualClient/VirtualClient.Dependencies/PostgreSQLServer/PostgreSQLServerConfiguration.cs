@@ -94,7 +94,7 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigureServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string configurationScript = this.Combine(this.PackagePath, "configureServer.py");
+            string configurationScript = this.Combine(this.PackagePath, "configure-server.py");
 
             string command = "python3";
             string commandArguments = $"{configurationScript} --port {this.Port}";
