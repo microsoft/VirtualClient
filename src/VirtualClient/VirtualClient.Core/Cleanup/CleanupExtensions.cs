@@ -29,13 +29,16 @@ namespace VirtualClient.Cleanup
         public static async Task CleanLogsDirectoryAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken, DateTime? retentionDate = null)
         {
             IFileSystem fileSystem = systemManagement.FileSystem;
-            string directoryPath = systemManagement.PlatformSpecifics.GetLogsPath();
+            string logsDirectory = systemManagement.PlatformSpecifics.GetLogsPath();
 
-            IEnumerable<string> logFiles = fileSystem.Directory.EnumerateFiles(directoryPath, "*.*", SearchOption.AllDirectories);
-            await CleanupExtensions.DeleteFilesAsync(fileSystem, logFiles, retentionDate, cancellationToken);
+            if (fileSystem.Directory.Exists(logsDirectory))
+            {
+                IEnumerable<string> logFiles = fileSystem.Directory.EnumerateFiles(logsDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteFilesAsync(fileSystem, logFiles, retentionDate, cancellationToken);
 
-            IEnumerable<string> logDirectories = fileSystem.Directory.EnumerateDirectories(directoryPath, "*.*", SearchOption.AllDirectories);
-            await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, logDirectories, retentionDate, cancellationToken);
+                IEnumerable<string> logDirectories = fileSystem.Directory.EnumerateDirectories(logsDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, logDirectories, retentionDate, cancellationToken);
+            }
         }
 
         /// <summary>
@@ -49,25 +52,28 @@ namespace VirtualClient.Cleanup
             IFileSystem fileSystem = systemManagement.FileSystem;
             string packagesDirectory = systemManagement.PlatformSpecifics.GetPackagePath();
 
-            IEnumerable<string> packageRegistrations = fileSystem.Directory.EnumerateFiles(packagesDirectory, "*.vcpkgreg", System.IO.SearchOption.AllDirectories);
-
-            if (packageRegistrations?.Any() == true)
+            if (fileSystem.Directory.Exists(packagesDirectory))
             {
-                foreach (string file in packageRegistrations)
+                IEnumerable<string> packageRegistrations = fileSystem.Directory.EnumerateFiles(packagesDirectory, "*.vcpkgreg", System.IO.SearchOption.AllDirectories);
+
+                if (packageRegistrations?.Any() == true)
                 {
-                    DependencyPath packageInfo = (await fileSystem.File.ReadAllTextAsync(file)).FromJson<DependencyPath>();
-                    bool isBuiltIn = packageInfo.Metadata.GetValue<bool>("built-in", false);
-
-                    if (!isBuiltIn)
+                    foreach (string file in packageRegistrations)
                     {
-                        if (fileSystem.Directory.Exists(packageInfo.Path) && packageInfo.Path.StartsWith(packagesDirectory))
-                        {
-                            IEnumerable<string> packageFiles = fileSystem.Directory.EnumerateFiles(packageInfo.Path, "*.*", System.IO.SearchOption.AllDirectories);
-                            await CleanupExtensions.DeleteFilesAsync(fileSystem, packageFiles, null, cancellationToken);
-                            await fileSystem.Directory.DeleteAsync(packageInfo.Path, true);
-                        }
+                        DependencyPath packageInfo = (await fileSystem.File.ReadAllTextAsync(file)).FromJson<DependencyPath>();
+                        bool isBuiltIn = packageInfo.Metadata.GetValue<bool>("built-in", false);
 
-                        await fileSystem.File.DeleteAsync(file);
+                        if (!isBuiltIn)
+                        {
+                            if (fileSystem.Directory.Exists(packageInfo.Path) && packageInfo.Path.StartsWith(packagesDirectory))
+                            {
+                                IEnumerable<string> packageFiles = fileSystem.Directory.EnumerateFiles(packageInfo.Path, "*.*", System.IO.SearchOption.AllDirectories);
+                                await CleanupExtensions.DeleteFilesAsync(fileSystem, packageFiles, null, cancellationToken);
+                                await fileSystem.Directory.DeleteAsync(packageInfo.Path, true);
+                            }
+
+                            await fileSystem.File.DeleteAsync(file);
+                        }
                     }
                 }
             }
@@ -81,13 +87,16 @@ namespace VirtualClient.Cleanup
         public static async Task CleanStateDirectoryAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken)
         {
             IFileSystem fileSystem = systemManagement.FileSystem;
-            string directoryPath = systemManagement.PlatformSpecifics.GetStatePath();
+            string stateDirectory = systemManagement.PlatformSpecifics.GetStatePath();
 
-            IEnumerable<string> stateFiles = fileSystem.Directory.EnumerateFiles(directoryPath, "*.*", SearchOption.AllDirectories);
-            await CleanupExtensions.DeleteFilesAsync(fileSystem, stateFiles, null, cancellationToken);
+            if (fileSystem.Directory.Exists(stateDirectory))
+            {
+                IEnumerable<string> stateFiles = fileSystem.Directory.EnumerateFiles(stateDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteFilesAsync(fileSystem, stateFiles, null, cancellationToken);
 
-            IEnumerable<string> stateDirectories = fileSystem.Directory.EnumerateDirectories(directoryPath, "*.*", SearchOption.AllDirectories);
-            await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, stateDirectories, null, cancellationToken);
+                IEnumerable<string> stateDirectories = fileSystem.Directory.EnumerateDirectories(stateDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, stateDirectories, null, cancellationToken);
+            }
         }
 
         private static async Task DeleteDirectoriesAsync(IFileSystem fileSystem, IEnumerable<string> directories, DateTime? retentionDate, CancellationToken cancellationToken)

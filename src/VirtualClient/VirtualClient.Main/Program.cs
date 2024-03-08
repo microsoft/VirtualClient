@@ -230,7 +230,7 @@ namespace VirtualClient
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
                 // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false, LogLevel.Information),
+                OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
