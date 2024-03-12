@@ -31,108 +31,108 @@
             }
         }
     ],
-    "Dependencies": [
-        {
-            "Type": "FormatDisks",
-            "Parameters": {
-                "Scenario": "FormatDisks",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MountDisks",
-            "Parameters": {
-                "Scenario": "CreateMountPoints",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "DownloadPoatgreSQLServerPackage",
-                "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.zip",
-                "PackageName": "postgresql-server",
-                "Extract": true,
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "DownloadHammerDBPackage",
-                "BlobContainer": "packages",
-                "BlobName": "hammerdb.4.7.0.zip",
-                "PackageName": "hammerdb",
-                "Extract": true
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages": "python3"
-            }
-        },
-        {
-            "Type": "PostgreSQLServerInstallation",
-            "Parameters": {
-                "Scenario": "InstallPostgreSQLServer",
-                "Action": "InstallServer",
-                "PackageName": "postgresql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "PostgreSQLServerConfiguration",
-          "Parameters": {
-            "Scenario": "ConfigurePostgreSQLServer",
-            "Action": "ConfigureServer",
-            "PackageName": "postgresql-server",
-            "Role": "Server",
-            "Port": "$.Parameters.Port"
-          }
-        },
-        {
-            "Type": "PostgreSQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "CreatePostgreSQLDatabase",
-                "Action": "SetupDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "postgresql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "HammerDBConfiguration",
-          "Parameters": {
-            "Scenario": "PopulatePostgreSQLDatabase",
-            "DatabaseName": "$.Parameters.DatabaseName",
-            "RecordCount": 1,
-            "PackageName": "hammerdb",
-            "Port": "$.Parameters.Port",
-            "VirtualUsers": "$.Parameters.VirtualUsers",
-            "WarehouseCount": "$.Parameters.WarehouseCount",
+  "Dependencies": [
+    {
+      "Type": "FormatDisks",
+      "Parameters": {
+        "Scenario": "FormatDisks",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "MountDisks",
+      "Parameters": {
+        "Scenario": "CreateMountPoints",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "DownloadPoatgreSQLServerPackage",
+        "BlobContainer": "packages",
+        "BlobName": "postgresql.14.0.0.zip",
+        "PackageName": "postgresql-server",
+        "Extract": true,
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "DownloadHammerDBPackage",
+        "BlobContainer": "packages",
+        "BlobName": "hammerdb.4.7.0.zip",
+        "PackageName": "hammerdb",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
+        "Packages": "python3"
+      }
+    },
+    {
+      "Type": "PostgreSQLServerInstallation",
+      "Parameters": {
+        "Scenario": "InstallPostgreSQLServer",
+        "Action": "InstallServer",
+        "PackageName": "postgresql-server",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "PostgreSQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "ConfigurePostgreSQLServer",
+        "Action": "ConfigureServer",
+        "PackageName": "postgresql-server",
+        "Role": "Server",
+        "Port": "$.Parameters.Port"
+      }
+    },
+    {
+      "Type": "PostgreSQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "CreatePostgreSQLDatabase",
+        "Action": "SetupDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "PackageName": "postgresql-server",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "PostgreSQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "DistributePostgreSQLDatabase",
+        "Action": "DistributeDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "PackageName": "postgresql-server",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "HammerDBConfiguration",
+      "Parameters": {
+        "Scenario": "PopulatePostgreSQLDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "RecordCount": 1,
+        "PackageName": "hammerdb",
+        "Port": "$.Parameters.Port",
+        "VirtualUsers": "$.Parameters.VirtualUsers",
+        "WarehouseCount": "$.Parameters.WarehouseCount",
 
-            "Role": "Server"
-          }
-        },
-        {
-            "Type": "PostgreSQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributePostgreSQLDatabase",
-                "Action": "DistributeDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "postgresql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "ApiServer",
-            "Parameters": {
-                "Scenario": "StartAPIServer",
-                "Role": "Server"
-            }
-        }
-    ]
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer",
+        "Role": "Server"
+      }
+    }
+  ]
 }
