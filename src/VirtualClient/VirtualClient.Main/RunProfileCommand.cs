@@ -104,6 +104,7 @@ namespace VirtualClient
             int exitCode = 0;
             ILogger logger = null;
             IPackageManager packageManager = null;
+            ISystemManagement systemManagement = null;
             IServiceCollection dependencies = null;
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
@@ -123,6 +124,12 @@ namespace VirtualClient
                 dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
+                systemManagement = dependencies.GetService<ISystemManagement>();
+
+                if (this.IsCleanRequested)
+                {
+                    await this.CleanAsync(systemManagement, cancellationToken, logger);
+                }
 
                 if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
                 {
