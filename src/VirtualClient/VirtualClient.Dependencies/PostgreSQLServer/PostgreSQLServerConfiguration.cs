@@ -161,8 +161,8 @@ namespace VirtualClient.Dependencies
                             await this.ConfigurePostgreSQLServerAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
-                        case ConfigurationAction.CreateDatabase:
-                            await this.CreatePostgreSQLServerDatabaseAsync(telemetryContext, cancellationToken)
+                        case ConfigurationAction.SetupDatabase:
+                            await this.SetupPostgreSQLServerDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
                         case ConfigurationAction.DistributeDatabase:
@@ -201,7 +201,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task CreatePostgreSQLServerDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task SetupPostgreSQLServerDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --password {this.SuperUserPassword}";
 
@@ -302,7 +302,7 @@ namespace VirtualClient.Dependencies
             /// <summary>
             /// Creates Database on PostgreSQL server and Users on Server and any Clients.
             /// </summary>
-            public const string CreateDatabase = nameof(CreateDatabase);
+            public const string SetupDatabase = nameof(SetupDatabase);
 
             /// <summary>
             /// Distributes existing database to disks on the system

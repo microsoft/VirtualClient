@@ -24,9 +24,7 @@
             "Type": "HammerDBClientExecutor",
             "Parameters": {
                 "Scenario": "tpcc",
-                "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
                 "Workload": "tpcc",
                 "PackageName": "hammerdb",
                 "Role": "Client"
@@ -87,18 +85,19 @@
         },
         {
             "Type": "PostgreSQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "ConfigurePostgreSQLServer",
-                "Action": "ConfigureServer",
-                "PackageName": "postgresql-server",
-                "Role": "Server"
-            }
+          "Parameters": {
+            "Scenario": "ConfigurePostgreSQLServer",
+            "Action": "ConfigureServer",
+            "PackageName": "postgresql-server",
+            "Role": "Server",
+            "Port": "$.Parameters.Port"
+          }
         },
         {
             "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
                 "Scenario": "CreatePostgreSQLDatabase",
-                "Action": "CreateDatabase",
+                "Action": "SetupDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "postgresql-server",
                 "Role": "Server"
@@ -106,14 +105,17 @@
         },
         {
             "Type": "HammerDBConfiguration",
-            "Parameters": {
-                "Scenario": "PopulatePostgreSQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "RecordCount": 1,
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "PackageName": "hammerdb",
-                "Role": "Server"
-            }
+          "Parameters": {
+            "Scenario": "PopulatePostgreSQLDatabase",
+            "DatabaseName": "$.Parameters.DatabaseName",
+            "RecordCount": 1,
+            "PackageName": "hammerdb",
+            "Port": "$.Parameters.Port",
+            "VirtualUsers": "$.Parameters.VirtualUsers",
+            "WarehouseCount": "$.Parameters.WarehouseCount",
+
+            "Role": "Server"
+          }
         },
         {
             "Type": "PostgreSQLServerConfiguration",
