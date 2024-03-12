@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -32,32 +33,18 @@ namespace VirtualClient.Actions
         private DependencyPath mockPackage;
 
         [SetUp]
-        public void SetupDefaultBehavior()
+        public void SetupDefaultMockBehavior()
         {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(PlatformID.Unix);
-
-            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
-            {
-                new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
-                new ClientInstance($"{Environment.MachineName}-Client", "1.2.3.5", "Client")
-            });
-
-            string agentId = $"{Environment.MachineName}-Server";
-            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
-
-            this.mockPackage = new DependencyPath("HammerDB", this.fixture.PlatformSpecifics.GetPackagePath("HammerDB"));
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
-
-            this.fixture.Parameters["PackageName"] = "HammerDB";
         }
 
         [Test]
-        public async Task HammerDBServerExecutorSkipsHammerDBInitializationWhenInitialized()
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public async Task HammerDBServerExecutorSkipsHammerDBInitializationWhenInitialized(PlatformID platform, Architecture architecture)
         {
+            this.SetupDefaultBehavior(platform, architecture);
             this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new HammerDBExecutor.HammerDBState()
             {
                 HammerDBInitialized = true
@@ -94,6 +81,30 @@ namespace VirtualClient.Actions
             }
 
             Assert.AreEqual(0, commandsExecuted);
+        }
+
+        public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
+        {
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform, architecture);
+
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            {
+                new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
+                new ClientInstance($"{Environment.MachineName}-Client", "1.2.3.5", "Client")
+            });
+
+            string agentId = $"{Environment.MachineName}-Server";
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+
+            this.mockPackage = new DependencyPath("hammerdb", this.fixture.PlatformSpecifics.GetPackagePath("hammerdb"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            this.fixture.Parameters["PackageName"] = "hammerdb";
+            this.fixture.Parameters["Port"] = 5432;
         }
 
         private class TestHammerDBServerExecutor : HammerDBServerExecutor

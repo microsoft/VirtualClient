@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
 namespace VirtualClient.Actions
 {
+    using VirtualClient.Common.Contracts;
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -10,9 +9,8 @@ namespace VirtualClient.Actions
     using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
-    using NUnit.Framework;
-    using VirtualClient;
     using VirtualClient.Contracts;
+    using VirtualClient.Actions;
 
     [TestFixture]
     [Category("Unit")]
@@ -21,30 +19,29 @@ namespace VirtualClient.Actions
         private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB");
 
         [Test]
-        public void HammerDBParserParsesCorrectly()
+        public void HammerDBParserVerifyMetrics()
         {
             string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "HammerDBExample.txt"));
-            HammerDBMetricsParser parser = new HammerDBMetricsParser(rawText);
+            PostgreSQLMetricsParser testParser = new PostgreSQLMetricsParser(rawText);
+            IList<Metric> metrics = testParser.Parse();
 
-            IList<Metric> metrics = parser.Parse();
-            Assert.AreEqual(17, metrics.Count);
-            MetricAssert.Exists(metrics, "# read queries", 5039772, "");
-            MetricAssert.Exists(metrics, "# write queries", 259534, "");
-            MetricAssert.Exists(metrics, "# other queries", 1284992, "");
-            MetricAssert.Exists(metrics, "# transactions", 257521, "");
-            MetricAssert.Exists(metrics, "transactions/sec", 143.01, "transactions/sec");
-            MetricAssert.Exists(metrics, "# queries", 6584298, "");
-            MetricAssert.Exists(metrics, "queries/sec", 3657.94, "queries/sec");
-            MetricAssert.Exists(metrics, "# ignored errors", 0, "");
-            MetricAssert.Exists(metrics, "ignored errors/sec", 0.00, "ignored errors/sec");
-            MetricAssert.Exists(metrics, "# reconnects", 0, "");
-            MetricAssert.Exists(metrics, "reconnects/sec", 0.00, "reconnects/sec");
-            MetricAssert.Exists(metrics, "elapsed time", 1800.0319, "seconds");
-            MetricAssert.Exists(metrics, "latency min", 7.39, "milliseconds");
-            MetricAssert.Exists(metrics, "latency avg", 28.97, "milliseconds");
-            MetricAssert.Exists(metrics, "latency max", 720.22, "milliseconds");
-            MetricAssert.Exists(metrics, "latency p95", 68.05, "milliseconds");
-            MetricAssert.Exists(metrics, "latency sum", 7458385.25, "milliseconds");
+            Assert.AreEqual(4, metrics.Count);
+            MetricAssert.Exists(metrics, "Transactions/min", 26163);
+            MetricAssert.Exists(metrics, "Transactions/sec", 436.05);
+            MetricAssert.Exists(metrics, "Operations/min", 11400);
+            MetricAssert.Exists(metrics, "Operations/sec", 190);
+        }
+
+        [Test]
+        public void PostgreSQLParserThrowIfInvalidOutputFormat()
+        {
+            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "HammerDBIncorrectResultsExample.txt"));
+            PostgreSQLMetricsParser testParser = new PostgreSQLMetricsParser(rawText);
+            testParser = new PostgreSQLMetricsParser(rawText);
+            IList<Metric> metrics = testParser.Parse();
+
+            WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => testParser.Parse());
+            Assert.AreEqual(ErrorReason.InvalidResults, exception.Reason);
         }
     }
 }

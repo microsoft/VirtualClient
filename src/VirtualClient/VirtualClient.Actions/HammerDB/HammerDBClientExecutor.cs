@@ -177,11 +177,11 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string command = "python3";
-                    string script = $"{this.HammerDBPackagePath}/run-workload.py ";
+                    string script = $"{this.HammerDBPackagePath}/run-workload.py";
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command, 
-                        script + this.hammerDBExecutionArguments, 
+                        script + " " + this.hammerDBExecutionArguments, 
                         this.HammerDBPackagePath, 
                         telemetryContext, 
                         cancellationToken))

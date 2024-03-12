@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -34,31 +35,18 @@ namespace VirtualClient.Actions
         private string mockPackagePath;
 
         [SetUp]
-        public void SetupDefaultBehavior()
+        public void SetupDefaultMockBehavior()
         {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(PlatformID.Unix);
-            this.fixture.SetupMocks();
-
-            this.mockPackage = new DependencyPath("HammerDB", this.fixture.PlatformSpecifics.GetPackagePath("HammerDB"));
-
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.mockPackagePath = this.mockPackage.Path;
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(HammerDBConfiguration.DatabaseName), "sbtest" },
-                { nameof(HammerDBConfiguration.PackageName), "HammerDB" },
-                { nameof(HammerDBConfiguration.Scenario), "populate_database" }
-            };
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
         }
 
         [Test]
-        public async Task HammerDBConfigurationSkipsHammerDBInitialization()
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public async Task HammerDBConfigurationSkipsHammerDBInitialization(PlatformID platform, Architecture architecture)
         {
+            this.SetupDefaultBehavior(platform, architecture);
             HammerDBState expectedState = new HammerDBState(new Dictionary<string, IConvertible>
             {
                 [nameof(HammerDBState.HammerDBInitialized)] = true,
@@ -73,8 +61,8 @@ namespace VirtualClient.Actions
             }));
 
             string[] expectedCommands =
-            {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1000 --threadCount 8",
+             {
+                $"python3 {this.mockPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl"
             };
 
             int commandNumber = 0;
@@ -114,12 +102,18 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task HammerDBConfigurationPreparesDatabase()
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public async Task HammerDBConfigurationPreparesDatabase(PlatformID platform, Architecture architecture)
         {
+            this.SetupDefaultBehavior(platform, architecture);
+            int password = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters).SuperUserPassword;
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1000 --threadCount 8",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password {password} --databaseName hammerdbtest",
+                $"python3 {this.mockPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl",
             };
 
             int commandNumber = 0;
@@ -160,64 +154,22 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task HammerDBConfigurationUsesDefinedParametersWhenRunningTheWorkload()
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public async Task HammerDBConfigurationSkipsDatabasePopulationWhenInitialized(PlatformID platform, Architecture architecture)
         {
-            this.fixture.Parameters[nameof(HammerDBConfiguration.Threads)] = "16";
-            this.fixture.Parameters[nameof(HammerDBClientExecutor.Scenario)] = "Configure";
-
-            string[] expectedCommands =
-            {
-                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 40 --recordCount 1000 --threadCount 16",
-            };
-
-            int commandNumber = 0;
-            bool commandExecuted = false;
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                string expectedCommand = expectedCommands[commandNumber];
-
-                if (expectedCommand == $"{exe} {arguments}")
-                {
-                    commandExecuted = true;
-                }
-
-                Assert.IsTrue(commandExecuted);
-                commandExecuted = false;
-                commandNumber += 1;
-
-                InMemoryProcess process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-
-                return process;
-            };
-
-            using (TestHammerDBConfiguration HammerDBExecutor = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
-            }
-        }
-
-        [Test]
-        public async Task HammerDBConfigurationSkipsDatabasePopulationWhenInitialized()
-        {
+            this.SetupDefaultBehavior(platform, architecture);
             this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new HammerDBExecutor.HammerDBState()
             {
                 DatabasePopulated = true
             }));
 
+            int password = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters).SuperUserPassword;
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password {password} --databaseName hammerdbtest"
             };
 
             int commandNumber = 0;
@@ -255,6 +207,33 @@ namespace VirtualClient.Actions
             {
                 await HammerDBExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
+        }
+
+        public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
+        {
+             this.fixture = new MockFixture();
+             this.fixture.Setup(platform, architecture);
+             this.fixture.SetupMocks();
+
+            this.mockPackage = new DependencyPath("HammerDB", this.fixture.PlatformSpecifics.GetPackagePath("HammerDB"));
+
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.mockPackagePath = this.mockPackage.Path;
+
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(HammerDBConfiguration.DatabaseName), "hammerdbtest" },
+                { nameof(HammerDBConfiguration.PackageName), "HammerDB" },
+                { nameof(HammerDBConfiguration.Scenario), "populate_database" }
+            };
+
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            this.fixture.Parameters["Port"] = 5432;
+            this.fixture.Parameters["VirtualUsers"] = 1;
+            this.fixture.Parameters["warehouseCount"] = 1;
+            this.fixture.Parameters["ServerPassword"] = "postgresqlpassword";
         }
 
         private class TestHammerDBConfiguration : HammerDBConfiguration

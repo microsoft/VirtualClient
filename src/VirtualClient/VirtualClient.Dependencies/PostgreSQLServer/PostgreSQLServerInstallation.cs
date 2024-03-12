@@ -62,6 +62,11 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Workload package path.
+        /// </summary>
+        protected string PostgreSqlInstallationPath { get; set; }
+
+        /// <summary>
         /// Retrieves the interface to interacting with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager { get; }
@@ -95,6 +100,35 @@ namespace VirtualClient.Dependencies
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }
+
+            DependencyPath postgreSQLPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+            postgreSQLPackage.ThrowIfNull(this.PackageName);
+
+            // The *.vcpkg definition is expected to contain definitions specific to each platform/architecture
+            // where the PostgreSQL application is installed.
+            // 
+            // e.g.
+            // "metadata": {
+            //   "installationPath-linux-x64": "/etc/postgresql/14/main",
+            //   "installationPath-linux-arm64": "/etc/postgresql/14/main",
+            //   "installationPath-windows-x64": "C:\\Program Files\\PostgreSQL\\14",
+            //   "installationPath-windows-arm64": "C:\\Program Files\\PostgreSQL\\14",
+            // }
+            string metadataKey = $"{PackageMetadata.InstallationPath}-{this.PlatformArchitectureName}";
+            if (!postgreSQLPackage.Metadata.TryGetValue(metadataKey, out IConvertible installationPath))
+            {
+                throw new WorkloadException(
+                    $"Missing installation path. The '{this.PackageName}' package registration is missing the required '{metadataKey}' " +
+                    $"metadata definition. This is required in order to execute PostgreSQL operations from the location where the software is installed.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            this.PostgreSqlInstallationPath = installationPath.ToString();
+
+            // The path to the PostgreSQL 'bin' folder is expected to exist in the PATH environment variable
+            // for the HammerDB toolset to work correctly.
+            this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.PostgreSqlInstallationPath, "bin"), append: true);
+            
         }
 
         /// <summary>
@@ -108,9 +142,6 @@ namespace VirtualClient.Dependencies
             string stateId = $"{nameof(MySQLServerInstallation)}-{this.Action}-action-success";
             InstallationState installationState = await this.stateManager.GetStateAsync<InstallationState>($"{nameof(InstallationState)}", cancellationToken)
                 .ConfigureAwait(false);
-
-            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
-            workloadPackage.ThrowIfNull(this.PackageName);
 
             telemetryContext.AddContext(nameof(installationState), installationState);
 

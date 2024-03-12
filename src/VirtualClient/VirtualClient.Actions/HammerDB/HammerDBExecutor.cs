@@ -211,25 +211,6 @@ namespace VirtualClient.Actions
 
             this.InitializeApiClients(cancellationToken);
 
-            // The *.vcpkg definition is expected to contain definitions specific to each platform/architecture
-            // where the PostgreSQL application is installed.
-            // 
-            // e.g.
-            // "metadata": {
-            //   "installationPath-linux-x64": "/etc/postgresql/14/main",
-            //   "installationPath-linux-arm64": "/etc/postgresql/14/main",
-            //   "installationPath-windows-x64": "C:\\Program Files\\PostgreSQL\\14",
-            //   "installationPath-windows-arm64": "C:\\Program Files\\PostgreSQL\\14",
-            // }
-            string metadataKey = $"{PackageMetadata.InstallationPath}-{this.PlatformArchitectureName}";
-            if (!hammerDBPackage.Metadata.TryGetValue(metadataKey, out IConvertible installationPath))
-            {
-                throw new WorkloadException(
-                    $"Missing installation path. The '{this.PackageName}' package registration is missing the required '{metadataKey}' " +
-                    $"metadata definition. This is required in order to execute PostgreSQL operations from the location where the software is installed.",
-                    ErrorReason.DependencyNotFound);
-            }
-
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance clientInstance = this.GetLayoutClientInstance();
@@ -300,6 +281,14 @@ namespace VirtualClient.Actions
                 }
 
                 state.HammerDBInitialized = true;
+
+                // The path to the HammerDB 'bin' folder is expected to exist in the PATH environment variable
+                // for the HammerDB toolset to work correctly.
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.HammerDBPackagePath, "bin"), append: true);
+
+                // Add the path to the HammerDB 'lib' folder to the LD_LIBRARY_PATH variable so that the *.so files can
+                // be found.
+                this.SetEnvironmentVariable(EnvironmentVariable.LD_LIBRARY_PATH, this.Combine(this.HammerDBPackagePath, "lib"), append: true);
             }
 
             await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
