@@ -1,0 +1,136 @@
+{
+    "Description": "HammerDB PostgrSQL TPCC Database Server Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "04:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DatabaseName": "hammerdbtest",
+        "DatabaseScenario": "Balanced",
+        "Duration": "00:05:00"
+    },
+    "Actions": [
+        {
+            "Type": "HammerDBServerExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteServer",
+                "PackageName": "hammerdb",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "HammerDBClientExecutor",
+            "Parameters": {
+                "Scenario": "tpcc",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "tpcc",
+                "PackageName": "hammerdb",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadPoatgreSQLServerPackage",
+                "BlobContainer": "packages",
+                "BlobName": "postgresql.14.0.0.zip",
+                "PackageName": "postgresql-server",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadHammerDBPackage",
+                "BlobContainer": "packages",
+                "BlobName": "hammerdb.4.7.0.zip",
+                "PackageName": "hammerdb",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerInstallation",
+            "Parameters": {
+                "Scenario": "InstallPostgreSQLServer",
+                "Action": "InstallServer",
+                "PackageName": "postgresql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigurePostgreSQLServer",
+                "Action": "ConfigureServer",
+                "PackageName": "postgresql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "CreatePostgreSQLDatabase",
+                "Action": "CreateDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "postgresql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "HammerDBConfiguration",
+            "Parameters": {
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "RecordCount": 1,
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "hammerdb",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "DistributePostgreSQLDatabase",
+                "Action": "DistributeDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "postgresql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}
