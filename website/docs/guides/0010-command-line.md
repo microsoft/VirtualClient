@@ -11,6 +11,7 @@ on the system.
 | --ps, --packages, --packageStore=\<authtoken\>                 | Yes/No   | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store from which workload and dependency packages can be downloaded. This is required for most workloads because the workload binary/script packages are not typically packaged with the Virtual Client application itself. Contact the VC Team to get a SAS URI for your team. See [Azure Storage Account Integration](./0600-integration-blob-storage.md). |
 | --a, --agentId, --clientId=\<id\>                              | No       | string/text                  | An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
 | --port, --api-port=\<port>                                     | No       | integer                      | The port to use for hosting the Virtual Client REST API service for profiles that allow multi-system, client/server operations (e.g. networking). Additionally, a port may be defined for each role associated with the profile operations using the format \{Port}/\{Role} with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
+| --clean=\<target,target...\>                                   | No       | string                       | Instructs the application to perform an initial clean before continuing to remove pre-existing files/content created by the application from the file system. This can include log files, packages previously downloaded and state management files. This option can be used as a flag (e.g. --clean) as well to clean all file content. Valid target resources include: logs, packages, state, all (e.g. --clean=logs, --clean=packages). Multiple resources can be comma-delimited (e.g. --clean=logs,packages). To perform a full reset of the application state, use the option as a flag (e.g. --clean). This effectively sets the application back to a "first run" state. |
 | --cs, --content, --contentStore=\<authtoken\>                  | No       | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store where files/content can be uploaded as part of background monitoring processes. Contact the VC Team to get a SAS URI for your team. See [Azure Storage Account Integration](./0600-integration-blob-storage.md). |
 | --cp, --contentPath, --contentPathTemplate=\<folderPattern\>   | No       | string/text                  | The content path format/structure to use when uploading content to target storage resources. When not defined the 'Default' structure is used. Default: "\{experimentId}/\{agentId}/\{toolName}/\{role}/\{scenario}" |
 | --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\>  | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Azure Event Hub Integration](./0610-integration-event-hub.md). |
@@ -18,6 +19,7 @@ on the system.
 | --ff, --fail-fast                                              | No       |                              | Flag indicates that the application should exit immediately on first/any errors regardless of their severity. This applies to 'Actions' in the profile only. 'Dependencies' are ALWAYS implemented to fail fast. 'Monitors' are generally implemented to handle transient issues and to keep running/trying in the background.  |
 | --lp, --layoutPath=\<path\>                                    | No       | string/path                  | A path to a environment layout file that provides additional metadata about the system/hardware on which the Virtual Client will run and information required to support client/server advanced topologies. See [Client/Server Support](./0020-client-server.md). |
 | --ll, --log-level                                              | No       | integer/string               | Defines the logging severity level for traces output. Values map to the [Microsoft.Extensions.Logging.LogLevel](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loglevel?view=dotnet-plat-ext-8.0) enumeration. Valid values include: Trace (0), Debug (1), Information (2), Warning (3), Error (4), Critical (5). Note that this option affects ONLY trace logs and is designed to allow the user to control the amount of operational telemetry emitted by VC. It does not affect metrics or event logging nor any non-telemetry logging. Default = Information (2). |
+| --lr, --log-retention=\<mins_or_timespan\>                     | No       | timespan or integer          | Defines the log retention period. This is a timespan or length of time (in minutes) to apply to cleaning up/deleting existing log files (e.g. 2880, 02.00:00:00). Log files with creation times older than the retention period will be deleted. |
 | --ltf, --log-to-file, --logtofile                              | No       |                              | Flag indicates that the output of processes executed by the Virtual Client should be written to log files in the logs directory. |
 | --mt, --metadata=\<key=value,,,key=value...\>                  | No       | string/text                  | Metadata to include with all logs/telemetry output from the Virtual Client. <br/><br/>Each metadata entry should be akey value pair separated by ",,," delimiters (e.g. property1=value1,,,property2=value2). |
 | --pm, --parameters=\<key=value,,,key=value...\>                | No       | string/text                  | Parameters or overrides to pass to the execution profiles that can modify aspects of their operation. <br/><br/>Each instruction should be a key value pair separated by ",,," delimiters (e.g. instruction1=value1,,,instruction2=value2). |
@@ -26,44 +28,52 @@ on the system.
 | --s, --system=\<executionSystem\>                              | No       | string/text                  | The execution system/platform in which Virtual Client is running (e.g. Azure). |
 | --t, --timeout=\<mins_or_timespan\>,deterministic<br/>--timeout=\<mins_or_timespan\>,deterministic\*  | No | timespan or integer | Specifies a timespan or the length of time (in minutes) that the Virtual Client should run before timing out and exiting (e.g. 1440, 01.00:00:00). The user can additionally provide an extra instruction to indicate the application should wait for deterministic completions.<br/><br/>Use the '**deterministic**' instruction to indicate the application should wait for the current action/workload to complete before timing out (e.g. --timeout=1440,deterministic).<br/><br/>Use the '**deterministic***' instruction to indicate the application should wait for all actions/workloads in the profile to complete before timing out (e.g. --timeout=1440,deterministic*).<br/><br/> Note that this option cannot be used with the --iterations option.<br/><br/>If neither the --timeout nor --iterations option are supplied, the Virtual Client will run non-stop until manually terminated.   |
 | --i, --iterations=\<count\>                                    | No       | integer                      | Defines the number of iterations/rounds of all actions in the profile to execute before exiting.<br/><br/> Note that this option cannot be used with the --timeout option.  |
-| --wt, --exit-wait, --flush-wait=\<mins_or_timespan>             | No       | timespan or integer          | Specifies a timespan or the length of time (in minutes) that the Virtual Client should wait for workload and monitor processes to complete and for telemetry to be fully flushed before exiting (e.g. 60, 01:00:00). This is useful for scenarios where Event Hub resources are used to ensure that all telemetry is uploaded successfully before exit. Default = 30 mins. |
+| --wt, --exit-wait, --flush-wait=\<mins_or_timespan>            | No       | timespan or integer          | Specifies a timespan or the length of time (in minutes) that the Virtual Client should wait for workload and monitor processes to complete and for telemetry to be fully flushed before exiting (e.g. 60, 01:00:00). This is useful for scenarios where Event Hub resources are used to ensure that all telemetry is uploaded successfully before exit. Default = 30 mins. |
 | --dependencies                                                 | No       |                              | Flag indicates that only the dependencies defined in the profile should be executed/installed. |
 | --debug                                                        | No       |                              | If this flag is set, verbose logging will be output to the console.  |
 | -?, -h, --help                                                 | No       |                              | Show help information. |
 | --ver                                                          | No       |                              | Show application version information. |
 
+See the [Usage Examples](./0200-usage-examples.md) documentation for additional examples.
+
 ```bash
- # Run a workload profile
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
+# Run a workload profile
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
 
- # Include specific metadata in the telemetry output by the application.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+# Include specific metadata in the telemetry output by the application.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
- # Include experiment/run IDs and agent IDs as correlation identifiers in addition to metadata output by the application.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --clientId=cluster01,eb3fc2d9-157b-4efc-b39c-a454a0779a5b,VCTest4-01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+# Include experiment/run IDs and agent IDs as correlation identifiers in addition to metadata output by the application.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --clientId=cluster01,eb3fc2d9-157b-4efc-b39c-a454a0779a5b,VCTest4-01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
- # Upload telemetry output to a target Event Hub namespace.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{AccessPolicy}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+# Upload telemetry output to a target Event Hub namespace.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{AccessPolicy}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
- # Use the 'deterministic' instruction to ensure that an action/workload running is allowed
- # to complete before timing out.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180,deterministic --packages="{BlobStoreConnectionString|SAS URI}"
+# Use the 'deterministic' instruction to ensure that an action/workload running is allowed
+# to complete before timing out.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180,deterministic --packages="{BlobStoreConnectionString|SAS URI}"
 
- # Use the 'deterministic*' instruction to ensure that all profile actions/workloads are allowed
- # to complete before timing out.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180,deterministic* --packages="{BlobStoreConnectionString|SAS URI}"
+# Use the 'deterministic*' instruction to ensure that all profile actions/workloads are allowed
+# to complete before timing out.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180,deterministic* --packages="{BlobStoreConnectionString|SAS URI}"
 
- # Run the actions in a profile a certain number of iterations/rounds before exiting.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --iterations=3 --packages="{BlobStoreConnectionString|SAS URI}"
+# Run the actions in a profile a certain number of iterations/rounds before exiting.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --iterations=3 --packages="{BlobStoreConnectionString|SAS URI}"
 
- # Install just the dependencies defined in the profile (but do not run the actions or monitors).
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
+# Install just the dependencies defined in the profile (but do not run the actions or monitors).
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
 
- # Log the output of workload, monitor and dependency processes to the logs directory on the file system.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
+# Log the output of workload, monitor and dependency processes to the logs directory on the file system.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
 
- # Reduce the amount of traces/operational telemetry emitted by the application.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
+# Reduce the amount of traces/operational telemetry emitted by the application.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
+
+# Clean up existing log files before execution.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs
+
+# Clean up existing log files beyond a retention period (e.g. remove log files older than 2 days).
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=02.00:00:00
 ```
 
 ## Subcommands

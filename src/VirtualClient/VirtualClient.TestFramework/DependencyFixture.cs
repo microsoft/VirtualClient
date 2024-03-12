@@ -222,11 +222,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid log file path.
+        /// </summary>
+        public string GetLogsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetLogsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid default packages path.
         /// </summary>
         public string GetPackagePath(params string[] pathSegments)
         {
             return this.PlatformSpecifics.GetPackagePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid state file path.
+        /// </summary>
+        public string GetStatePath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetStatePath(pathSegments);
         }
 
         /// <summary>

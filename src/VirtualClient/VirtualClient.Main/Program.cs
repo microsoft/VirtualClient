@@ -190,6 +190,9 @@ namespace VirtualClient
                 // --api-port
                 OptionFactory.CreateApiPortOption(required: false),
 
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
                 // --contentStore
                 OptionFactory.CreateContentStoreOption(required: false),
 
@@ -226,6 +229,9 @@ namespace VirtualClient
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
 
@@ -257,8 +263,13 @@ namespace VirtualClient
                 "runapi",
                 "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
             {
+                // OPTIONAL
+                // -------------------------------------------------------------------
                 // --api-port
                 OptionFactory.CreateApiPortOption(required: false),
+
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
 
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
@@ -268,6 +279,9 @@ namespace VirtualClient
 
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
@@ -297,6 +311,9 @@ namespace VirtualClient
                 // --agentId
                 OptionFactory.CreateAgentIdOption(required: false, Environment.MachineName),
 
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
@@ -314,6 +331,9 @@ namespace VirtualClient
 
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
@@ -333,7 +353,19 @@ namespace VirtualClient
 
             Command runResetCommand = new Command(
                 "reset",
-                "Resets the state of the Virtual Client for a 'first run' scenario.");
+                "Resets the state of the Virtual Client for a 'first run' scenario.")
+            {
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false)
+            };
 
             runResetCommand.AddAlias("Reset");
             runResetCommand.AddAlias("Clean");

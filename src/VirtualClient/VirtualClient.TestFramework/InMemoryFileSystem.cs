@@ -198,9 +198,16 @@ namespace VirtualClient
         {
             string normalizedSearchPattern = searchPattern ?? "*.*";
 
-            // We are converting a normal search pattern that may contain wildcards '*' and
-            // periods to a regular expression form (e.g. *.txt -> .*\.txt)
-            return normalizedSearchPattern.Replace("*", ".*").Replace(".", "\\.");
+            if (normalizedSearchPattern == "*.*")
+            {
+                return ".";
+            }
+            else
+            {
+                // We are converting a normal search pattern that may contain wildcards '*' and
+                // periods to a regular expression form (e.g. *.txt -> .*\.txt)
+                return normalizedSearchPattern.Replace("*", ".*").Replace(".", "\\.");
+            }
         }
 
         internal InMemoryDirectory AddOrGetDirectory(string path)
