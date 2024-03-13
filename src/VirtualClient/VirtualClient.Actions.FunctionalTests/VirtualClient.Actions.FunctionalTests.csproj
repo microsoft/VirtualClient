@@ -217,6 +217,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-2.json" Link="Profiles\PERF-NETWORK-2.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+      <Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json" Link="Profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-SPECCPU-FPRATE.json" Link="Profiles\PERF-SPECCPU-FPRATE.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>

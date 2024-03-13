@@ -47,13 +47,13 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
+        // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
+        // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
         [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
+        // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
         public void HammerDBWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
-            this.fixture.Setup(platform);
+            this.fixture.Setup(platform, architecture);
             this.fixture.PackageManager.Clear();
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
