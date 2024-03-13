@@ -101,9 +101,17 @@ namespace VirtualClient
 
                             if (errorMessages?.Any() == true)
                             {
-                                message =
-                                    $"{Environment.NewLine}{string.Join(' ', errorMessages)}" +
-                                    $"{Environment.NewLine}{Environment.NewLine}{errorCallstack?.ToString()}{Environment.NewLine}";
+                                string effectiveCallstack = errorCallstack?.ToString();
+                                if (!string.IsNullOrWhiteSpace(effectiveCallstack))
+                                {
+                                    message =
+                                        $"{string.Join(' ', errorMessages)}" +
+                                        $"{Environment.NewLine}{Environment.NewLine}{effectiveCallstack}{Environment.NewLine}";
+                                }
+                                else
+                                {
+                                    message = $"{string.Join(' ', errorMessages)}";
+                                }
                             }
                         }
                         else
@@ -154,7 +162,7 @@ namespace VirtualClient
         /// <returns>if log level is above minimum log level currently set for this ILogger</returns>
         public bool IsEnabled(LogLevel logLevel)
         {
-            return (logLevel >= this.MinimumLogLevel) ? true : false;
+            return logLevel >= this.MinimumLogLevel;
         }
 
         /// <summary>

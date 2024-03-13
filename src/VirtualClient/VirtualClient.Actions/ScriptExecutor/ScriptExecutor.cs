@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -91,6 +92,11 @@ namespace VirtualClient.Actions
         public string ExecutablePath { get; set; }
 
         /// <summary>
+        /// A retry policy to apply to file access/move operations.
+        /// </summary>
+        public IAsyncPolicy FileOperationsRetryPolicy { get; set; } = RetryPolicies.FileOperations;
+
+        /// <summary>
         /// The path to the workload package.
         /// </summary>
         protected DependencyPath WorkloadPackage { get; set; }
@@ -125,23 +131,19 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    this.ExecutablePath,
-                    this.CommandLine,
-                    this.WorkloadPackage.Path,
-                    telemetryContext,
-                    cancellationToken,
-                    false))
+                string command = this.ExecutablePath;
+                string commandArguments = SensitiveData.ObscureSecrets(this.CommandLine);
+
+                telemetryContext
+                    .AddContext(nameof(command), command)
+                    .AddContext(nameof(commandArguments), commandArguments);
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkloadPackage.Path, telemetryContext, cancellationToken, false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName, logToFile: true);
                         process.ThrowIfWorkloadFailed();
-
-                        if (!string.IsNullOrWhiteSpace(process.StandardError.ToString()))
-                        {
-                            this.Logger.LogWarning($"StandardError: {process.StandardError}", telemetryContext);
-                        }
 
                         await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                         await this.CaptureLogsAsync(cancellationToken);
@@ -164,28 +166,34 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
+                telemetryContext.AddContext(nameof(metricsFilePath), metricsFilePath);
+                bool metricsFileFound = false;
 
-                if (this.fileSystem.File.Exists(metricsFilePath))
+                try
                 {
-                    string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
+                    if (this.fileSystem.File.Exists(metricsFilePath))
+                    {
+                        metricsFileFound = true;
+                        string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
 
-                    JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
-                    IList<Metric> workloadMetrics = parser.Parse();
+                        JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
+                        IList<Metric> workloadMetrics = parser.Parse();
 
-                    this.Logger.LogMetrics(
-                        this.ToolName,
-                        this.Scenario,
-                        process.StartTime,
-                        process.ExitTime,
-                        workloadMetrics,
-                        null,
-                        process.FullCommand(),
-                        this.Tags,
-                        telemetryContext);
+                        this.Logger.LogMetrics(
+                            this.ToolName,
+                            this.MetricScenario ?? this.Scenario,
+                            process.StartTime,
+                            process.ExitTime,
+                            workloadMetrics,
+                            null,
+                            process.FullCommand(),
+                            this.Tags,
+                            telemetryContext);
+                    }
                 }
-                else
+                finally
                 {
-                    this.Logger.LogWarning($"The {metricsFilePath} was not found on the system. No parsed metrics captured for {this.ToolName}.", telemetryContext);
+                    telemetryContext.AddContext(nameof(metricsFileFound), metricsFileFound);
                 }
             }
         }
@@ -198,7 +206,10 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task CaptureLogsAsync(CancellationToken cancellationToken)
         {
-            string destinitionLogsDir = this.Combine(this.PlatformSpecifics.LogsDirectory, this.ToolName.ToLower(), $"{this.Scenario.ToLower()}_{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}");
+            // e.g.
+            // /logs/anytool/executecustomscript1
+            // /logs/anytool/executecustomscript2
+            string destinitionLogsDir = this.PlatformSpecifics.GetLogsPath(this.ToolName.ToLower(), (this.Scenario ?? "customscript").ToLower());
             if (!this.fileSystem.Directory.Exists(destinitionLogsDir))
             {
                 this.fileSystem.Directory.CreateDirectory(destinitionLogsDir);
@@ -213,14 +224,14 @@ namespace VirtualClient.Actions
                 {
                     foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
                     {
-                        this.UploadAndMoveFileToCentralLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
+                        this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
                     }
                 }
 
                 // Check for Matching FileNames
                 foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.WorkloadPackage.Path, logPath, SearchOption.AllDirectories))
                 {
-                    await this.UploadAndMoveFileToCentralLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
+                    await this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
                 }
             }
 
@@ -228,14 +239,14 @@ namespace VirtualClient.Actions
             string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
             if (this.fileSystem.File.Exists(metricsFilePath))
             {
-                await this.UploadAndMoveFileToCentralLogsDirectory(metricsFilePath, destinitionLogsDir, cancellationToken);
+                await this.RequestUploadAndMoveToLogsDirectory(metricsFilePath, destinitionLogsDir, cancellationToken);
             }
         }
 
         /// <summary>
-        /// Upload Logs to Blob Storage
+        /// Requests a file upload.
         /// </summary>
-        protected Task UploadLogAsync(IBlobManager blobManager, string logPath, CancellationToken cancellationToken)
+        protected Task RequestUpload(string logPath)
         {
             FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
                 new FileContext(
@@ -249,23 +260,30 @@ namespace VirtualClient.Actions
                     null,
                     this.Roles?.FirstOrDefault()));
 
-            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: false);
+            return this.RequestFileUploadAsync(descriptor);
         }
 
         /// <summary>
         /// Move the log files to central logs directory and Upload to Content Store
         /// </summary>
-        protected async Task UploadAndMoveFileToCentralLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
+        protected async Task RequestUploadAndMoveToLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
         {
             if (this.TryGetContentStoreManager(out IBlobManager blobManager))
             {
-                await this.UploadLogAsync(blobManager, sourcePath, cancellationToken);
+                await this.RequestUpload(sourcePath);
             }
 
-            string fileName = Path.GetFileName(sourcePath);
+            await (this.FileOperationsRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(() =>
+            {
+                // e.g.
+                // /logs/anytool/executecustomscript1/2023-06-27T21-13-12-51001Z-CustomScript.sh
+                // /logs/anytool/executecustomscript1/2023-06-27T21-15-36-12018Z-CustomScript.sh
+                string fileName = Path.GetFileName(sourcePath);
+                string destinitionPath = this.Combine(destinitionDirectory, BlobDescriptor.SanitizeBlobPath($"{DateTime.UtcNow.ToString("o").Replace('.', '-')}-{fileName}"));
+                this.fileSystem.File.Move(sourcePath, destinitionPath, true);
 
-            string destinitionPath = this.Combine(destinitionDirectory, fileName);
-            this.fileSystem.File.Move(sourcePath, destinitionPath, true);
+                return Task.CompletedTask;
+            });
         }
     }
 }

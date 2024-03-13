@@ -202,7 +202,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                 .AddContext("packageDirectories", packageDirectories);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.DiscoverExtensions", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.DiscoverExtensions", LogLevel.Trace, telemetryContext, async () =>
             {
                 this.semaphore.WaitOne();
 
@@ -272,7 +272,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                 .AddContext("packageDirectories", packageDirectories);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.DiscoverPackages", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.DiscoverPackages", LogLevel.Trace, telemetryContext, async () =>
             {
                 this.semaphore.WaitOne();
 
@@ -346,7 +346,7 @@ namespace VirtualClient
                 .AddContext("archiveFilePath", archiveFilePath)
                 .AddContext("destinationPath", destinationPath);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.ExtractPackage", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.ExtractPackage", LogLevel.Trace, telemetryContext, async () =>
             {
                 if (!this.FileSystem.File.Exists(archiveFilePath))
                 {
@@ -374,7 +374,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                 .AddContext("packageName", packageName);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.GetPackage", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.GetPackage", LogLevel.Trace, telemetryContext, async () =>
             {
                 this.semaphore.WaitOne();
 
@@ -413,7 +413,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                 .AddContext("packageDirectories", packageDirectories);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InitializePackages", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InitializePackages", LogLevel.Trace, telemetryContext, async () =>
             {
                 // Note on the tuple structure:
                 // {filePath},{fileExtension},{archiveType}
@@ -511,7 +511,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                 .AddContext("description", description.ObscureSecrets());
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InstallDependencyPackage", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InstallDependencyPackage", LogLevel.Trace, telemetryContext, async () =>
             {
                 description.Validate(nameof(description.Name), nameof(description.PackageName));
 
@@ -628,7 +628,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                 .AddContext("extensions", package);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InstallExtensions", telemetryContext, () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InstallExtensions", LogLevel.Trace, telemetryContext, () =>
             {
                 DependencyPath platformSpecificPackage = this.PlatformSpecifics.ToPlatformSpecificPath(
                     package,
@@ -703,7 +703,7 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted()
                .AddContext("package", package);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.RegisterPackage", telemetryContext, () =>
+            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.RegisterPackage", LogLevel.Trace, telemetryContext, () =>
             {
                 return this.StateManager.SaveStateAsync(package.Name, JObject.FromObject(package), cancellationToken);
             });
@@ -856,8 +856,6 @@ namespace VirtualClient
             // To extract a .tar file, we use -xzf
             // To extract a .tar.gz, .tgz or .tar.gzip file, we use -xzvf
             string arguments = archiveFilepath.EndsWith(".tar") ? "-xzf" : "-xzvf";
-
-            Console.WriteLine($"Extract Command: tar {arguments} {archiveFilepath} -C {destinationPath}");
 
             // -x: extract -z: pass through gzip before un-tarring -f archive file -C destination
             using (IProcessProxy process = manager.CreateProcess("tar", $"{arguments} {archiveFilepath} -C {destinationPath}"))

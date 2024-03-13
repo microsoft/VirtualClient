@@ -131,7 +131,7 @@ namespace VirtualClient
 
             List<DiskVolume> volumes = new List<DiskVolume>();
 
-            if (withVolume)
+            if (withVolume || os)
             {
                 volumes = new List<DiskVolume>() { FixtureExtensions.CreateDiskVolume(devicePath, platform, os) };
             }

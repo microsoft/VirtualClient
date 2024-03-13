@@ -1,6 +1,0 @@
-﻿{
-    "name": "deathstarbench",
-    "description": "Toolsets for executing the DeathStarBench Docker Swarm workloads (e.g. SocialNetwork, MediaMicroservices, HotelReservation) on the system.",
-    "version": "2",
-    "metadata": { }
-}

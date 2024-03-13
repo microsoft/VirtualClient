@@ -16,22 +16,9 @@ VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{Bl
 
 # On Linux
 ./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
-```
 
-## Scenario: Running a Simple Monitor
-Virtual Client offers certain profiles which are designed to run monitors in the background. Monitors often run in the background to capture
-information and measurements from the system on which the Virtual Client is running. This is useful when running a workload on the system at the
-same time. However, monitors can be run alone and without any workloads if desirable.
-
-```
-# Run a default monitor profile. The default monitor profile captures performance counters
-# from the system.
-#
-# On Windows
-VirtualClient.exe --profile=MONITORS-DEFAULT.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
-
-# On Linux
-./VirtualClient --profile=MONITORS-DEFAULT.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
+# Run the workload profile for a single iteration.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --iterations=1 --packages="{BlobStoreConnectionString|SAS URI}"
 ```
 
 ## Scenario: Running a Client Server Workload
@@ -87,6 +74,38 @@ VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStor
 ./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
 ```
 
+## Scenario: Instruct the Appliction to Perform an Initial Cleanup
+Virtual Client writes various types of content to the file system. Some common types of content include log files, package downloads and
+files used to represent state for managing repeat operations/idempotency. Over time the count and size of the file content on the file
+system can grow to where it becomes desirable to cleanup some of the files. For example, a user might want to cleanup up the log files
+in order to minimize the overall size of the log content on the file system (...no one wants to run a drive out of space). Additionally,
+a user might want to perform a "reset" to force Virtual Client to treat a given profile as a "first run" again. In this scenario, the
+user would want to cleanup the local state files. The following examples show how to perform an initial cleanup on the system.
+
+```
+# Perform a full clean. This will remove ALL log files/directories, any packages previously downloaded minus
+# those that are "built-in" or part of the Virtual Client package itself and any state files previously written.
+# This essentially resets Virtual Client back to the state it was in before the first run on the system.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=all
+
+# Clean specific target resources.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=packages
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=state
+
+# Clean multiple specific target resources all together.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs,state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs,packages,state
+
+# Apply a log retention period to the log files. This will cause log files older than the period to
+# be removed but will preserve any remaining. Note that this is the same as --clean=logs --log-retention=02.00:00:00.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=02.00:00:00
+
+# Log retentions can be in 'minutes' as well (e.g. 2800 minutes = 2 days). Note that this is the same as --clean=logs --log-retention=2880.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=2880
+```
+
 ## Scenario: Upload Metrics and Logs to an Event Hub
 The Virtual Client supports the ability to upload metrics, counters, logs etc... to an [Azure Event Hub](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_092bba0f3fec11eb8ce6dbef46f6464a:G:s&ef_id=092bba0f3fec11eb8ce6dbef46f6464a:G:s&msclkid=092bba0f3fec11eb8ce6dbef46f6464a).
 Event Hubs are a highly-scalable messaging platform in the Azure Cloud that can be integrated out-of-the-box with other big-data platforms such as Azure Data Explorer (ADX/Kusto).
@@ -99,8 +118,8 @@ Note that the Virtual Client does have a set of explicit expectations for how th
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{EventHubConnectionString}"
 ```
 
-## Scenario: Uploading Monitoring Information to a Content Store
-Certain monitors that exist in the Virtual Client allow the user to upload information or files produced by the monitor (e.g. Azure Profiler .bin files) to
+## Scenario: Upload Log Files to a Content Store
+Most components in the Virtual Client allow the user to upload information or files produced by the execution of workloads and monitors to
 a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
 on monitor profiles below for additional details on which profiles support this.
 
@@ -111,20 +130,30 @@ on monitor profiles below for additional details on which profiles support this.
 VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
 ```
 
-## Scenario: Running the Azure Profiler in the Background and Uploading .bin Files to a Content Store
-The Virtual Client supports the use of the Azure Profiler for capturing profiles on the system. The profiler can be ran in 2 modes: interval-based and on-demand.
-The Azure Profiler monitor is a part of the default monitoring profile and can be easily enabled by supplying a few parameters on the command line.
-In order to enable file uploads, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
-on monitor profiles below for additional details on which profiles support this.
-
-* [Blob Store Support](./0600-integration-blob-storage.md)
-* [Monitor Profiles](../monitors/0200-monitor-profiles.md)
+## Scenario: Change the Amount of Operational Trace Telemetry Emitted
+Virtual Client emits quite a bit of operational traces while running in order to provide good information to the user. There are times when this
+amount of information is not desirable. The logging level (or severity) can be changed on the command line. The default logging level is 'Information'.
 
 ```
-# Profiling on an interval in the background.
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
+# Emit traces for 'Warning' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Warning
 
-# Profiling on-demand when signalled by the workload. Note that NOT all profiles support on-demand profiling. 
-# Look for a ProfilingMode global parameter in the profile to determine if it is supported.
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=OnDemand
+# Emit traces for 'Error' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Error
+
+# Emit traces for 'Critical' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Critical
+```
+
+Correspondingly, there are times when more operational traces are desirable (e.g. for debugging scenarios). The default logging level is 'Information'.
+
+```
+# Emit all traces (...the most verbose option)
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Trace
+
+# Emit traces for 'Debug' level and above.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Debug
+
+# Emit traces for 'Information' level and above only.
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
 ```
