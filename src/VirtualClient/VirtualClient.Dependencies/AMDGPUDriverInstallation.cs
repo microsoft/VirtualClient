@@ -413,9 +413,9 @@ namespace VirtualClient.Dependencies
 
         private async Task ReportAMDDriverVersionWindows(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IProcessProxy process = await this.ExecuteCommandAsync("powershell", "amdsmi static|findstr /isp DRIVER_VERSION", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-    .ConfigureAwait(false);
+            IProcessProxy process = await this.ExecuteCommandAsync("powershell", "amdsmi static|findstr /isp DRIVER_VERSION", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
             string output = process.StandardOutput.ToString();
+
             if (!string.IsNullOrEmpty(output))
             {
                 string driverVersion = process.StandardOutput.ToString().Split(":", StringSplitOptions.TrimEntries)[1];
