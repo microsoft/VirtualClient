@@ -369,6 +369,8 @@ namespace VirtualClient.Dependencies
                         throw new NotSupportedException($"GpuModel '{this.GpuModel}' is not supported.");
                     }
             }
+
+            await this.ReportAMDDriverVersionWindows(telemetryContext, cancellationToken);
         }
 
         private async Task InstallAMDGPUDriverOnMi25(string driverPackagePath, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -406,6 +408,19 @@ namespace VirtualClient.Dependencies
             {
                 await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait(false);
                 process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+            }
+        }
+
+        private async Task ReportAMDDriverVersionWindows(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            IProcessProxy process = await this.ExecuteCommandAsync("powershell", "amdsmi static|findstr /isp DRIVER_VERSION", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+    .ConfigureAwait(false);
+            string output = process.StandardOutput.ToString();
+            if (!string.IsNullOrEmpty(output))
+            {
+                string driverVersion = process.StandardOutput.ToString().Split(":", StringSplitOptions.TrimEntries)[1];
+
+                this.Logger.LogSystemEvents($"AMD driver {driverVersion} detected", new Dictionary<string, object> { { "DriverVersion", driverVersion } }, telemetryContext);
             }
         }
     }
