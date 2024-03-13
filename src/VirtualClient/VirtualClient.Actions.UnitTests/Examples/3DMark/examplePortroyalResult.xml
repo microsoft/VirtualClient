@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<benchmark>
+    <results>
+        <result>
+            <name/>
+            <description/>
+            <passIndex>-1</passIndex>
+            <sourceId>1709948809.out</sourceId>
+            <PortRoyalCustomGraphicsScore>9375</PortRoyalCustomGraphicsScore>
+            <benchmarkRunId>6594a7b9-5a66-4668-bbce-47d08d1d0ae3</benchmarkRunId>
+        </result>
+        <result>
+            <name/>
+            <description/>
+            <passIndex>0</passIndex>
+            <sourceId>1709948809.out</sourceId>
+            <PortRoyalCustom3DMarkScoreForPass>0</PortRoyalCustom3DMarkScoreForPass>
+            <PortRoyalCustomGraphicsScoreForPass>9375</PortRoyalCustomGraphicsScoreForPass>
+            <PortRoyalCustomGraphicsTest1>43.41</PortRoyalCustomGraphicsTest1>
+            <benchmarkRunId>6594a7b9-5a66-4668-bbce-47d08d1d0ae3</benchmarkRunId>
+        </result>
+    </results>
+</benchmark>

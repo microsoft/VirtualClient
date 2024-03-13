@@ -39,6 +39,7 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "3dMarkScore", 1/(0.15/9325 + 0.85/6436), "score");
         }
 
+        [Test]
         public void ThreeDMarkMetricsParserTestsCorrectly_TimespyExtreme()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -50,6 +51,19 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "graphicsScore", 3213, "score");
             MetricAssert.Exists(metrics, "cpuScore", 6660, "score");
             MetricAssert.Exists(metrics, "3dMarkScore", 1 / (0.15 / 6660 + 0.85 / 3213), "score");
+        }
+
+        [Test]
+        public void ThreeDMarkMetricsParserTestsCorrectly_PCIExpress()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "examplePCIExpressResult.xml");
+            string rawText = File.ReadAllText(outputPath);
+
+            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "pciexpress");
+            IList<Metric> metrics = testParser.Parse();
+            MetricAssert.Exists(metrics, "pciebandwidth", 25.28, "GB/s");
+            MetricAssert.Exists(metrics, "pciefps", 26.52, "fps");
         }
 
     }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<benchmark>
+    <results>
+        <result>
+            <name/>
+            <description/>
+            <passIndex>-1</passIndex>
+            <sourceId>1709948733.out</sourceId>
+            <PciExpressBandwidthCustom>25.28</PciExpressBandwidthCustom>
+            <PciExpressFpsCustom>26.52</PciExpressFpsCustom>
+            <benchmarkRunId>830f4931-de9f-4cf5-be6a-60232d5dd1db</benchmarkRunId>
+        </result>
+        <result>
+            <name/>
+            <description/>
+            <passIndex>0</passIndex>
+            <sourceId>1709948733.out</sourceId>
+            <PciExpressFpsPerformance>26.52</PciExpressFpsPerformance>
+            <PciExpressBandwidthPerformance>25.28</PciExpressBandwidthPerformance>
+            <benchmarkRunId>830f4931-de9f-4cf5-be6a-60232d5dd1db</benchmarkRunId>
+        </result>
+    </results>
+</benchmark>
