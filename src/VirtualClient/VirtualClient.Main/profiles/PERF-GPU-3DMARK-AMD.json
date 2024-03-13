@@ -7,17 +7,19 @@
   },
   "Parameters": {
     "GpuModel": "v620",
-    "LisenceKey": ""
+    "LicenseKey": "",
+    "Benchmarks": "timespy",
+    "PsExecSession": -1
   },
   "Actions": [
     {
       "Type": "ThreeDMarkExecutor",
       "Parameters": {
-        "Scenario": "timespy",
-        "LisenceKey": "$Parameters.LicenseKey",
+        "Benchmarks": "$.Parameters.Benchmarks",
+        "LicenseKey": "$.Parameters.LicenseKey",
+        "PsExecSession": "$.Parameters.PsExecSession",
         "PackageName": "3dmark",
         "PsExecPackageName": "pstools",
-        "PsExecSession": 2,
         "Tags": "GPU,3DMark,Gaming"
       }
     }
@@ -56,7 +58,7 @@
       "Parameters": {
         "Scenario": "Install3DMarkWorkloadPackage",
         "BlobContainer": "packages",
-        "BlobName": "3dmark.zip",
+        "BlobName": "3dmark-2.28.8217.zip",
         "PackageName": "3dmark",
         "Extract": true
       }
