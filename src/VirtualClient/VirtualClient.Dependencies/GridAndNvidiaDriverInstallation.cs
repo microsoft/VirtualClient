@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,22 +16,20 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
-    internal class GridDriverInstallation : VirtualClientComponent
+    internal class GridAndNvidiaDriverInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManager;
-        private IStateManager stateManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GridDriverInstallation"/> class.
+        /// Initializes a new instance of the <see cref="GridAndNvidiaDriverInstallation"/> class.
         /// </summary>
         /// <param name="dependencies">An enumeration of dependencies that can be used for dependency injection.</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
-        public GridDriverInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public GridAndNvidiaDriverInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManager = dependencies.GetService<ISystemManagement>();
-            this.stateManager = this.systemManager.StateManager;
         }
 
         /// <summary>
@@ -40,12 +39,12 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(GridDriverInstallation.DriverVersion), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(GridAndNvidiaDriverInstallation.DriverVersion), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(GridDriverInstallation.DriverVersion)] = value;
+                this.Parameters[nameof(GridAndNvidiaDriverInstallation.DriverVersion)] = value;
             }
         }
 
@@ -56,12 +55,28 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(GridDriverInstallation.AzureRepository), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(GridAndNvidiaDriverInstallation.AzureRepository), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(GridDriverInstallation.AzureRepository)] = value;
+                this.Parameters[nameof(GridAndNvidiaDriverInstallation.AzureRepository)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The forward link to install Grid driver
+        /// </summary>
+        public string ForwardLink
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(GridAndNvidiaDriverInstallation.ForwardLink), string.Empty);
+            }
+
+            set
+            {
+                this.Parameters[nameof(GridAndNvidiaDriverInstallation.ForwardLink)] = value;
             }
         }
 
@@ -76,10 +91,10 @@ namespace VirtualClient.Dependencies
                 {
                     case PlatformID.Unix:
                     case PlatformID.Win32NT:
-                        return this.Parameters.GetValue<bool>(nameof(GridDriverInstallation.RebootRequired), false);
+                        return this.Parameters.GetValue<bool>(nameof(GridAndNvidiaDriverInstallation.RebootRequired), false);
 
                     default:
-                        return this.Parameters.GetValue<bool>(nameof(GridDriverInstallation.RebootRequired), true);
+                        return this.Parameters.GetValue<bool>(nameof(GridAndNvidiaDriverInstallation.RebootRequired), true);
                 }
             }
         }
@@ -127,17 +142,18 @@ namespace VirtualClient.Dependencies
 
                     await this.InstallGridDriverAsync(linuxDistributionInfo, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
-
-                    isDriverInstalled = await this.CheckIfDriverInstalledAsync(telemetryContext, cancellationToken);
-
-                    if (isDriverInstalled == false)
-                    {
-                        throw new DependencyException("Failed to install GRID driver");
-                    }
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
-                    throw new DependencyException("GRID driver installation is not supported on Windows");
+                    await this.InstallGridDriverOnWindowsAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                isDriverInstalled = await this.CheckIfDriverInstalledAsync(telemetryContext, cancellationToken);
+
+                if (isDriverInstalled == false)
+                {
+                    throw new DependencyException("Failed to install GRID driver");
                 }
 
                 VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
@@ -148,13 +164,23 @@ namespace VirtualClient.Dependencies
 
         private async Task<bool> CheckIfDriverInstalledAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "nvidia-smi -q | grep \"\"Driver Version\"\"";
-            string bashCommand = $"bash -c \"{command}\"";
+            string unixCommand = "nvidia-smi -q | grep \"\"Driver Version\"\"";
+
+            string executeCommand = this.Platform == PlatformID.Unix ? $"bash -c \"{unixCommand}\"" : "C:\\Windows\\System32\\nvidia-smi.exe";
 
             try
             {
-                string output = await this.ExecuteCommandAsync(bashCommand, null, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+                string output = await this.ExecuteCommandAsync(executeCommand, null, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                string pattern = @"Driver Version\s*:\s*(\d+\.\d+(?:\.\d+)?)";
+                Match match = Regex.Match(output, pattern);
+
+                if (match.Success)
+                {
+                    string driverVersion = match.Groups[1].Value;
+                    this.Logger.LogSystemEvents($"NVIDIA driver {driverVersion} detected", new Dictionary<string, object> { { "DriverVersion", driverVersion } }, telemetryContext);
+                }
 
                 return output.Contains(this.DriverVersion);
             }
@@ -216,35 +242,65 @@ namespace VirtualClient.Dependencies
         {
             List<string> commands = new List<string>();
 
-            string osDistribution = string.Empty;
-            string osVersion = string.Empty;
-
-            switch (linuxDistributionInfo.LinuxDistribution)
+            if (string.IsNullOrEmpty(this.ForwardLink))
             {
-                case LinuxDistribution.Ubuntu:
-                    string[] parts = Regex.Split(linuxDistributionInfo.OperationSystemFullName, "[ .]");
-                    osDistribution = "Ubuntu";
-                    osVersion = parts[1] + ".x";
-                    break;
-                case LinuxDistribution.CentOS7:
-                case LinuxDistribution.RHEL7:
-                    osDistribution = "RHEL/CentOS";
-                    osVersion = "7.x";
-                    break;
-                case LinuxDistribution.CentOS8:
-                case LinuxDistribution.RHEL8:
-                    osDistribution = "RHEL/CentOS";
-                    osVersion = "8.x";
-                    break;
+                if (string.IsNullOrEmpty(this.AzureRepository))
+                {
+                    throw new DependencyException("Failed to find Linux local run file.");
+                }
+
+                string osDistribution = string.Empty;
+                string osVersion = string.Empty;
+
+                switch (linuxDistributionInfo.LinuxDistribution)
+                {
+                    case LinuxDistribution.Ubuntu:
+                        string[] parts = Regex.Split(linuxDistributionInfo.OperationSystemFullName, "[ .]");
+                        osDistribution = "Ubuntu";
+                        osVersion = parts[1] + ".x";
+                        break;
+                    case LinuxDistribution.CentOS7:
+                    case LinuxDistribution.RHEL7:
+                        osDistribution = "RHEL/CentOS";
+                        osVersion = "7.x";
+                        break;
+                    case LinuxDistribution.CentOS8:
+                    case LinuxDistribution.RHEL8:
+                        osDistribution = "RHEL/CentOS";
+                        osVersion = "8.x";
+                        break;
+                }
+
+                string curlCommand = $"curl -s {this.AzureRepository} | jq -r '.OS[] | select(.Name == \"\"Linux\"\") | .Version[] | select(.Name == \"\"{osDistribution}\"\" and .Version == \"\"{osVersion}\"\") | .Driver[] | select(.Type == \"\"GRID\"\") | .Version[] | select(.Num == \"\"{this.DriverVersion}\"\") | .FwLink'";
+
+                commands.Add($"bash -c \"wget -O NVIDIA-Linux-x86_64-grid.run $({curlCommand})\"");
+            }
+            else
+            {
+                commands.Add($"wget -O NVIDIA-Linux-x86_64-grid.run {this.ForwardLink}");
             }
 
-            string curlCommand = $"curl -s {this.AzureRepository} | jq -r '.OS[] | select(.Name == \"\"Linux\"\") | .Version[] | select(.Name == \"\"{osDistribution}\"\" and .Version == \"\"{osVersion}\"\") | .Driver[] | select(.Type == \"\"GRID\"\") | .Version[] | select(.Num == \"\"{this.DriverVersion}\"\") | .FwLink'";
-
-            commands.Add($"bash -c \"wget -O NVIDIA-Linux-x86_64-grid.run $({curlCommand})\"");
             commands.Add("chmod +x NVIDIA-Linux-x86_64-grid.run");
             commands.Add("sudo ./NVIDIA-Linux-x86_64-grid.run");
 
             return commands;
+        }
+
+        private async Task InstallGridDriverOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(this.ForwardLink))
+            {
+                throw new DependencyException("Failed to driver installation forward link.");
+            }
+
+            Uri uri = new Uri(this.ForwardLink);
+            string filename = Path.GetFileName(uri.LocalPath);
+
+            await this.ExecuteCommandAsync("C:\\Windows\\system32\\curl.exe", $"-o {filename} {this.ForwardLink}", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+            await this.ExecuteCommandAsync(filename, "-y -s", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private Task<string> ExecuteCommandAsync(string commandLine, string commandLineArgs, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
