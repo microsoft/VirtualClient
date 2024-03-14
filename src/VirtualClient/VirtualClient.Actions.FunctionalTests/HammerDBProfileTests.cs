@@ -27,9 +27,10 @@ namespace VirtualClient.Actions
         private string mySQLPackagePath;
 
         [OneTimeSetUp]
-        public void SetupFixture()
+        public void SetupFixture(PlatformID platform, Architecture architecture)
         {
             this.fixture = new DependencyFixture();
+            this.fixture.Setup(platform, architecture);
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
@@ -53,7 +54,6 @@ namespace VirtualClient.Actions
         // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
         public void HammerDBWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
-            this.fixture.Setup(platform, architecture);
             this.fixture.PackageManager.Clear();
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -106,7 +106,6 @@ namespace VirtualClient.Actions
         [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
-            this.fixture.Setup(platform);
             this.fixture.SetupDisks(withUnformatted: true);
 
             this.hammerdbPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("hammerdb");
@@ -227,7 +226,7 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands(bool singleVM)
         {
-            int password = this.fixture.SystemManagement.Object.ExperimentId.GetHashCode();
+            int password = this.fixture.ExperimentId;
 
             if (singleVM) 
             {
