@@ -16,22 +16,9 @@ VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{Bl
 
 # On Linux
 ./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
-```
 
-## Scenario: Running a Simple Monitor
-Virtual Client offers certain profiles which are designed to run monitors in the background. Monitors often run in the background to capture
-information and measurements from the system on which the Virtual Client is running. This is useful when running a workload on the system at the
-same time. However, monitors can be run alone and without any workloads if desirable.
-
-```
-# Run a default monitor profile. The default monitor profile captures performance counters
-# from the system.
-#
-# On Windows
-VirtualClient.exe --profile=MONITORS-DEFAULT.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
-
-# On Linux
-./VirtualClient --profile=MONITORS-DEFAULT.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
+# Run the workload profile for a single iteration.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --iterations=1 --packages="{BlobStoreConnectionString|SAS URI}"
 ```
 
 ## Scenario: Running a Client Server Workload
@@ -85,6 +72,38 @@ VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStor
 
 # On Linux
 ./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
+```
+
+## Scenario: Instruct the Appliction to Perform an Initial Cleanup
+Virtual Client writes various types of content to the file system. Some common types of content include log files, package downloads and
+files used to represent state for managing repeat operations/idempotency. Over time the count and size of the file content on the file
+system can grow to where it becomes desirable to cleanup some of the files. For example, a user might want to cleanup up the log files
+in order to minimize the overall size of the log content on the file system (...no one wants to run a drive out of space). Additionally,
+a user might want to perform a "reset" to force Virtual Client to treat a given profile as a "first run" again. In this scenario, the
+user would want to cleanup the local state files. The following examples show how to perform an initial cleanup on the system.
+
+```
+# Perform a full clean. This will remove ALL log files/directories, any packages previously downloaded minus
+# those that are "built-in" or part of the Virtual Client package itself and any state files previously written.
+# This essentially resets Virtual Client back to the state it was in before the first run on the system.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=all
+
+# Clean specific target resources.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=packages
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=state
+
+# Clean multiple specific target resources all together.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs,state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs,packages,state
+
+# Apply a log retention period to the log files. This will cause log files older than the period to
+# be removed but will preserve any remaining. Note that this is the same as --clean=logs --log-retention=02.00:00:00.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=02.00:00:00
+
+# Log retentions can be in 'minutes' as well (e.g. 2800 minutes = 2 days). Note that this is the same as --clean=logs --log-retention=2880.
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=2880
 ```
 
 ## Scenario: Upload Metrics and Logs to an Event Hub

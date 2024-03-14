@@ -14,6 +14,7 @@ namespace VirtualClient
     using System.Net;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -88,6 +89,55 @@ namespace VirtualClient
                 ArgumentHelpName = "port",
                 AllowMultipleArgumentsPerToken = false
             };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option indicates a clean/reset should be performed and defines the targets
+        /// (e.g. logs, state, packages, all).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCleanOption(bool required = true, object defaultValue = null)
+        {
+            Option<IList<string>> option = new Option<IList<string>>(
+                new string[] { "--clean" },
+                new ParseArgument<IList<string>>(result => OptionFactory.ParseDelimitedValues(result)))
+            {
+                Name = "CleanTargets",
+                Description = "Indicates a clean/reset should be performed and defines the targets. Valid targets are: logs, state, packages, all. Multiple targets can be defined comma-delimited (e.g. logs,state,packages).",
+                ArgumentHelpName = "targets",
+                AllowMultipleArgumentsPerToken = false,
+                Arity = new ArgumentArity(0, 10000)
+            };
+
+            option.AddValidator(result =>
+            {
+                if (result.Tokens?.Any() == true)
+                {
+                    IList<string> targets = OptionFactory.ParseDelimitedValues(result.Tokens[0].Value);
+
+                    IList<string> validTargets = new List<string>
+                    {
+                        CleanTargets.All,
+                        CleanTargets.Logs,
+                        CleanTargets.Packages,
+                        CleanTargets.State
+                    };
+
+                    IEnumerable<string> otherTargets = targets.Except(validTargets);
+                    if (otherTargets?.Any() == true)
+                    {
+                        throw new ArgumentException(
+                            $"Unsupported clean targets: {string.Join(", ", otherTargets)}. Valid targets include the following: {string.Join(", ", validTargets)}");
+                    }
+                }
+
+                return string.Empty;
+            });
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
@@ -398,6 +448,31 @@ namespace VirtualClient
 
                 return string.Empty;
             });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the retention period to preserve log files on the system. When used on the
+        /// command line, log files older than the retention period will be cleaned up.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLogRetentionOption(bool required = true, object defaultValue = null)
+        {
+            Option<TimeSpan> option = new Option<TimeSpan>(
+                new string[] { "--log-retention", "--lr" },
+                new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
+            {
+                Name = "LogRetention",
+                Description = 
+                    "Defines the retention period to preserve log files on the system. Log files older than the retention period will be deleted." +
+                    "This can be a valid timespan (e.g. 10.00:00:00) or a simple numeric value representing total minutes (e.g. 14400).",
+                ArgumentHelpName = "timespan",
+                AllowMultipleArgumentsPerToken = false
+            };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
@@ -798,6 +873,60 @@ namespace VirtualClient
             OptionFactory.SetOptionRequirements(option, required);
 
             return option;
+        }
+
+        ////private static IEnumerable<string> ParseCleanTargets(ArgumentResult parsedResult)
+        ////{
+        ////    CleanTargets targets = null;
+
+        ////    bool cleanLogs = false;
+        ////    bool cleanPackages = false;
+        ////    bool cleanState = false;
+
+        ////    IList<string> commandLineTargets = OptionFactory.ParseDelimitedValues(parsedResult);
+
+        ////    if (!commandLineTargets.Any() || commandLineTargets.Contains("all", StringComparer.OrdinalIgnoreCase))
+        ////    {
+        ////        cleanLogs = true;
+        ////        cleanPackages = true;
+        ////        cleanState = true;
+        ////    }
+        ////    else
+        ////    {
+        ////        cleanLogs = commandLineTargets.Contains("logs", StringComparer.OrdinalIgnoreCase);
+        ////        cleanPackages = commandLineTargets.Contains("packages", StringComparer.OrdinalIgnoreCase);
+        ////        cleanState = commandLineTargets.Contains("state", StringComparer.OrdinalIgnoreCase);
+        ////    }
+
+        ////    if (cleanLogs || cleanPackages || cleanState)
+        ////    {
+        ////        targets = new CleanTargets(cleanLogs, cleanPackages, cleanState);
+        ////    }
+
+        ////    // return targets;
+        ////    return null;
+        ////}
+
+        private static IList<string> ParseDelimitedValues(string parsedResult)
+        {
+            // Example Format:
+            // --name=package1.zip,package2.zip
+
+            List<string> values = new List<string>();
+            if (!string.IsNullOrWhiteSpace(parsedResult))
+            {
+                string[] delimitedValues = parsedResult.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                if (delimitedValues?.Any() == true)
+                {
+                    foreach (string value in delimitedValues)
+                    {
+                        values.Add(value.Trim());
+                    }
+                }
+            }
+
+            return values;
         }
 
         private static IList<string> ParseDelimitedValues(ArgumentResult parsedResult)

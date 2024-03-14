@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics;
     using System.IO;
     using System.IO.Abstractions;
@@ -18,6 +19,7 @@ namespace VirtualClient
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using VirtualClient.Cleanup;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -52,10 +54,9 @@ namespace VirtualClient
         public IDictionary<string, int> ApiPorts { get; set; }
 
         /// <summary>
-        /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
-        /// or downloaded from the proxy endpoint.
+        /// A set of target resources to clean (e.g. logs, packages, state, all).
         /// </summary>
-        public Uri ProxyApiUri { get; set; }
+        public IList<string> CleanTargets { get; set; }
 
         /// <summary>
         /// Blob store to use for uploading Virtual Client content/monitoring files.
@@ -97,9 +98,27 @@ namespace VirtualClient
         public DateTime ExitWaitTimeout { get; set; }
 
         /// <summary>
+        /// True if a request to perform clean operations was requested on the
+        /// command line.
+        /// </summary>
+        public bool IsCleanRequested
+        {
+            get
+            {
+                return this.CleanTargets != null || this.LogRetention != null;
+            }
+        }
+
+        /// <summary>
         /// The logging level for the application (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).
         /// </summary>
         public LogLevel LoggingLevel { get; set; } = LogLevel.Information;
+
+        /// <summary>
+        /// The retention period to keep log files. If not defined, log files will be left on
+        /// the system indefinitely.
+        /// </summary>
+        public TimeSpan? LogRetention { get; set; }
 
         /// <summary>
         /// True if the output of processes executed should be logged to files in
@@ -124,6 +143,12 @@ namespace VirtualClient
         public DependencyStore PackageStore { get; set; }
 
         /// <summary>
+        /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
+        /// or downloaded from the proxy endpoint.
+        /// </summary>
+        public Uri ProxyApiUri { get; set; }
+
+        /// <summary>
         /// Issues a request to the OS to reboot.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies for requesting a reboot.</param>
@@ -140,6 +165,96 @@ namespace VirtualClient
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
         public abstract Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource);
+
+        /// <summary>
+        /// Executes clean/reset operations within the Virtual Client application folder. This is used to 
+        /// cleanup resources such as the "logs", "packages" and "state" directories.
+        /// </summary>
+        /// <param name="systemManagement">Provides system management functions required to execute the clean operations.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="logger"></param>
+        protected async Task CleanAsync(ISystemManagement systemManagement, CancellationToken cancellationToken, ILogger logger = null)
+        {
+            VirtualClient.Contracts.CleanTargets targets = null;
+            DateTime? logRetentionDate = null;
+
+            if (this.LogRetention != null)
+            {
+                logRetentionDate = DateTime.UtcNow.Subtract(this.LogRetention.Value);
+            }
+
+            if (this.CleanTargets != null)
+            {
+                if (this.CleanTargets?.Any() != true)
+                {
+                    // --clean used as a flag
+                    targets = VirtualClient.Contracts.CleanTargets.Create();
+                }
+                else
+                {
+                    targets = VirtualClient.Contracts.CleanTargets.Create(this.CleanTargets);
+                }
+
+                Type commandType = this.GetType();
+                EventContext telemetryContext = EventContext.Persisted();
+
+                telemetryContext.AddContext("cleanTargets", this.CleanTargets);
+
+                if (this.LogRetention != null)
+                {
+                    telemetryContext.AddContext("logRetention", this.LogRetention);
+                }
+
+                if (targets.CleanLogs)
+                {
+                    try
+                    {
+                        await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
+                        {
+                            await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
+                        });
+                    }
+                    catch
+                    {
+                        // Best effort.
+                    }
+                }
+
+                if (targets.CleanPackages)
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanPackages", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanPackagesDirectoryAsync(cancellationToken);
+                    });
+                }
+
+                if (targets.CleanState)
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanState", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanStateDirectoryAsync(cancellationToken);
+                    });
+                }
+            }
+            else if (logRetentionDate != null)
+            {
+                Type commandType = this.GetType();
+                EventContext telemetryContext = EventContext.Persisted()
+                    .AddContext("logRetention", this.LogRetention);
+
+                try
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
+                    });
+                }
+                catch
+                {
+                    // Best effort.
+                }
+            }
+        }
 
         /// <summary>
         /// Returns assembly version information for the application.

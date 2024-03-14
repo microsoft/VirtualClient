@@ -206,6 +206,39 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Standardizes/normalizes the path based upon the platform/OS ensuring
+        /// a valid path is 
+        /// </summary>
+        /// <param name="platform">The platform for which to standardize the path.</param>
+        /// <param name="path">The path to standardize.</param>
+        /// <returns>A path standardized for the OS platform.</returns>
+        public static string StandardizePath(PlatformID platform, string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+
+            string standardizedPath = path?.Trim();
+            if ((platform == PlatformID.Unix && standardizedPath == "/") || (platform == PlatformID.Win32NT && standardizedPath == @"\"))
+            {
+                return standardizedPath;
+            }
+
+            standardizedPath = path.TrimEnd('\\', '/');
+            if (platform == PlatformID.Unix)
+            {
+                standardizedPath = Regex.Replace(standardizedPath.Replace('\\', '/'), "/{2,}", "/");
+            }
+            else if (platform == PlatformID.Win32NT)
+            {
+                standardizedPath = Regex.Replace(standardizedPath.Replace('/', '\\'), @"\\{2,}", @"\");
+            }
+
+            return standardizedPath;
+        }
+
+        /// <summary>
         /// Throws an exception if the platform provided is not supported.
         /// </summary>
         /// <param name="platform">The OS/system platform to validate as supported.</param>
@@ -400,28 +433,7 @@ namespace VirtualClient.Contracts
         /// <returns>A path standardized for the OS platform.</returns>
         public string StandardizePath(string path)
         {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return path;
-            }
-
-            string standardizedPath = path?.Trim();
-            if (this.Platform == PlatformID.Unix && standardizedPath == "/")
-            {
-                return standardizedPath;
-            }
-
-            standardizedPath = path.TrimEnd('\\', '/');
-            if (this.Platform == PlatformID.Unix)
-            {
-                standardizedPath = Regex.Replace(standardizedPath.Replace('\\', '/'), "/{2,}", "/");
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                standardizedPath = Regex.Replace(standardizedPath.Replace('/', '\\'), @"\\{2,}", @"\");
-            }
-
-            return standardizedPath;
+            return PlatformSpecifics.StandardizePath(this.Platform, path);
         }
 
         /// <summary>
