@@ -90,7 +90,7 @@ namespace VirtualClient.Monitors
 
         private static IConvertible SafeGet(DataRow row, string columnName)
         {
-            return row.Table.Columns.Contains(columnName) ? Convert.ToString(row[columnName]) : null;
+            return row.Table.Columns.Contains(columnName) ? Convert.ToString(row[columnName]) : "-1";
         }
     }
 }
