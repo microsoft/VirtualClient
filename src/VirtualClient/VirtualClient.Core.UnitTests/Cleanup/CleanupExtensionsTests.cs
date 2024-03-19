@@ -18,6 +18,7 @@ namespace VirtualClient.Cleanup
     public class CleanupExtensionsTests
     {
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanLogsDirectoryExtensionDeletesAllFilesAndDirectoriesInTheLogsFolderWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -53,7 +54,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanLogsDirectoryExtensionDeletesAllFilesAndDirectoriesInTheLogsFolderLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
@@ -89,6 +89,7 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanLogsDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheLogsDirectoryWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -119,7 +120,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanLogsDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheLogsDirectoryLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
@@ -150,6 +150,7 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanStateDirectoryExtensionDeletesAllFilesAndDirectoriesInTheStateFolderWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -181,7 +182,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanStateDirectoryExtensionDeletesAllFilesAndDirectoriesInTheStateFolderLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
@@ -213,6 +213,7 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanStateDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheStateDirectoryWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -243,7 +244,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanStateDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheStateDirectoryLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
@@ -274,6 +274,7 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDeletesExpectedPackageFilesAndDirectoriesInThePackagesFolderWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -343,7 +344,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDeletesExpectedPackageFilesAndDirectoriesInThePackagesFolderLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
@@ -413,6 +413,7 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemovePackagesMarkedAsBuiltInPackagesWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -509,7 +510,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemovePackagesMarkedAsBuiltInPackagesLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
@@ -606,6 +606,7 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfThePackagesDirectoryWindows()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
@@ -657,7 +658,6 @@ namespace VirtualClient.Cleanup
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfThePackagesDirectoryLinux()
         {
             DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);

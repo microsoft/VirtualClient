@@ -369,10 +369,10 @@ namespace VirtualClient
             // An explicit timeout is provided to the profile executor.
             using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
             {
-                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromSeconds(5));
+                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromMicroseconds(50));
                 Task executionTask = executor.ExecuteAsync(explicitTimeout, CancellationToken.None);
 
-                DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
+                DateTime testTimeout = DateTime.UtcNow.AddMilliseconds(50);
                 while (!executionTask.IsCompleted)
                 {
                     await Task.Delay(10).ConfigureAwait(false);
