@@ -276,6 +276,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PlatformArchitectureName).Returns(this.PlatformSpecifics.PlatformArchitectureName);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(this.ProcessManager);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(this.StateManager);
+            this.SystemManagement.SetupGet(sm => sm.ExperimentId).Returns(Guid.NewGuid().ToString());
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);

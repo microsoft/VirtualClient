@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -27,20 +28,19 @@ namespace VirtualClient.Actions
         private string mySQLPackagePath;
 
         [OneTimeSetUp]
-        public void SetupFixture(PlatformID platform, Architecture architecture)
+        public void SetupFixture()
         {
-            this.fixture = new DependencyFixture();
-            this.fixture.Setup(platform, architecture);
-            this.clientAgentId = $"{Environment.MachineName}-Client";
-            this.serverAgentId = $"{Environment.MachineName}-Server";
-
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
         [Test]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json")]
-        public void HammerDBWorkloadProfileParametersAreInlinedCorrectly(string profile)
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
+        public void HammerDBWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platform, Architecture architecture)
         {
+            this.SetupMockFixture(platform, architecture);
+
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
@@ -48,12 +48,13 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
-        // [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
         public void HammerDBWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
+            this.SetupMockFixture(platform, architecture);
             this.fixture.PackageManager.Clear();
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -66,11 +67,12 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
+        // [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
 
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
+            this.SetupMockFixture(platform, architecture);
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
@@ -102,8 +104,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.SetupDisks(withUnformatted: true);
@@ -145,8 +147,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
 
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile, PlatformID platform, Architecture architecture)
         {
@@ -181,8 +183,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
-        [TestCase("PERF-PostgreSQL-HammerDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMWindowsPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform);
@@ -226,8 +228,6 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands(bool singleVM)
         {
-            int password = this.fixture.ExperimentId;
-
             if (singleVM) 
             {
                 string currentDirectory = this.fixture.PlatformSpecifics.CurrentDirectory;
@@ -240,7 +240,7 @@ namespace VirtualClient.Actions
                     $"python3 {this.mySQLPackagePath}/configure.py --port 5432",
                     $"python3 {this.mySQLPackagePath}/setup-database.py --databaseName hammerdbtest",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --pot 5432 --virtualUsers 1 --warehouseCount 1 --password {password}",
+                    @$"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --port 5432 --virtualUsers 1 --warehouseCount 1 --password a-Z0-9 --databaseName hammerdbtest",
 
                     $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl",
@@ -254,11 +254,21 @@ namespace VirtualClient.Actions
                 {
                     "apt install python3 --yes --quiet",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --pot 5432 --virtualUsers 1 --warehouseCount 1 --password {password}",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --pot 5432 --virtualUsers 1 --warehouseCount 1 --password",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --dbName sbtest --runTransactionsTCLFilePath runTransactions.tcl",
                 };
             }
+        }
+
+        private void SetupMockFixture(PlatformID platform, Architecture architecture)
+        {
+            this.fixture = new DependencyFixture();
+            this.fixture.Setup(platform, architecture);
+            this.clientAgentId = $"{Environment.MachineName}-Client";
+            this.serverAgentId = $"{Environment.MachineName}-Server";
+
+            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
         private void SetupApiClient(string serverName, string serverIPAddress)

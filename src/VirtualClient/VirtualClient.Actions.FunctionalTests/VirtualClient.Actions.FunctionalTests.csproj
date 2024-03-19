@@ -113,6 +113,9 @@
         <Content Include="..\TestResources\Results_Sysbench.txt" Link="Resources\Results_Sysbench.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+      <Content Include="..\TestResources\Results_HammerDB.txt" Link="Resources\Results_HammerDB.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
