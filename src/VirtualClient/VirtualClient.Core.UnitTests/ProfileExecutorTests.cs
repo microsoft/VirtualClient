@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics.LinearAlgebra.Solvers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Moq;
@@ -174,7 +175,7 @@ namespace VirtualClient
                         }
                     };
 
-                    await executor.ExecuteAsync(new ProfileTiming(TimeSpan.FromSeconds(5)), cancellationTokenSource.Token)
+                    await executor.ExecuteAsync(new ProfileTiming(profileIterations: 5), cancellationTokenSource.Token)
                         .ConfigureAwait(false);
 
                     var monitorsStarted = this.mockFixture.Logger.MessagesLogged("TestMonitor.ExecuteStart");
