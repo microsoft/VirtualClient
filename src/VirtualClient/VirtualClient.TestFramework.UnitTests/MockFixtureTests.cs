@@ -13,6 +13,40 @@ namespace VirtualClient
     internal class MockFixtureTests
     {
         [Test]
+        [TestCase(null, null)]
+        [TestCase("  ", null)]
+        [TestCase("C:", null)]
+        [TestCase(@"C:\", null)]
+        [TestCase(@"C:\path", @"C:\")]
+        [TestCase(@"C:\any\path", @"C:\any")]
+        [TestCase(@"C:\any/path", @"C:\any")]
+        [TestCase(@"C:\any\path\file1.log", @"C:\any\path")]
+        [TestCase(@"any\path\file1.log", @"any\path")]
+        [TestCase(@"\any\path\file1.log", @"\any\path")]
+        [TestCase(@"~\any\path\file1.log", @"~\any\path")]
+        public void MockFixtureGetDirectoryNameHandlesWindowsStylePaths(string path, string expectedDirectoryName)
+        {
+            string actualDirectoryName = MockFixture.GetDirectoryName(path);
+            Assert.AreEqual(expectedDirectoryName, actualDirectoryName);
+        }
+
+        [Test]
+        [TestCase(null, null)]
+        [TestCase("  ", null)]
+        [TestCase("/", null)]
+        [TestCase("/home", null)]
+        [TestCase("/home/path", "/home")]
+        [TestCase("/home/path/", "/home")]
+        [TestCase("/home/path/file1.log", "/home/path")]
+        [TestCase("~/path/file1.log", "~/path")]
+        [TestCase(@"/home\path\file1.log", @"/home\path")]
+        public void MockFixtureGetDirectoryNameHandlesUnixStylePaths(string path, string expectedDirectoryName)
+        {
+            string actualDirectoryName = MockFixture.GetDirectoryName(path);
+            Assert.AreEqual(expectedDirectoryName, actualDirectoryName);
+        }
+
+        [Test]
         public void MockFixtureApiClientResponsesHandleBeingDisposed_CreateStateAsync()
         {
             MockFixture mockFixture = new MockFixture();
