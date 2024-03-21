@@ -383,7 +383,7 @@ namespace VirtualClient.Actions
                             {
                                 this.Logger.LogMetrics(
                                     $"Memtier-{this.Benchmark}",
-                                    this.Scenario,
+                                    this.MetricScenario ?? this.Scenario,
                                     processInfo.StartTime,
                                     processInfo.EndTime,
                                     metric.Name,
@@ -409,7 +409,7 @@ namespace VirtualClient.Actions
                         {
                             this.Logger.LogMetrics(
                                 $"Memtier-{this.Benchmark}",
-                                this.Scenario,
+                                this.MetricScenario ?? this.Scenario,
                                 processReference.StartTime,
                                 processReference.EndTime,
                                 metric.Name,
