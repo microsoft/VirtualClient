@@ -148,8 +148,12 @@ namespace VirtualClient.Dependencies
             this.fixture.Parameters["Action"] = "ConfigureServer";
             this.fixture.Parameters["DatabaseName"] = "postgresqltest";
 
-            this.fixture.Process.ExitCode = 1;
-            this.fixture.Process.OnHasExited = () => true;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                this.fixture.Process.ExitCode = 1;
+                this.fixture.Process.OnHasExited = () => true;
+                return this.fixture.Process;
+            };
 
             using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture);
             DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
@@ -208,7 +212,7 @@ namespace VirtualClient.Dependencies
             this.SetupDefaultBehavior(platform, architecture);
             this.fixture.Parameters["Action"] = "CreateDatabase";
             this.fixture.Parameters["DatabaseName"] = "postgresql-test";
-            int password = new TestPostgreSQLServerConfiguration(this.fixture).SuperUserPassword;
+            string password = new TestPostgreSQLServerConfiguration(this.fixture).SuperUserPassword;
 
             string[] expectedCommands =
             {
@@ -307,12 +311,12 @@ namespace VirtualClient.Dependencies
             this.fixture.Setup(platform, architecture);
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "PackageName", "postgresql" },
+                { "PackageName", "postgresql-server" },
                 { "ServerPassword", "postgresqlpassword" },
                 { "Port", 5432 }
             };
 
-            this.mockPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
+            this.mockPackage = new DependencyPath("postgresql-server", this.fixture.GetPackagePath("postgresql-server"));
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.packagePath = this.fixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;

@@ -28,7 +28,7 @@ namespace VirtualClient
         public void ChangeFilesToUtf8()
         {
             // Set the path to the directory where you want to change file encodings
-            string directoryPath = @"E:\Source\Github\VirtualClient\src\VirtualClient";
+            string directoryPath = @"C:\Users\kayvontadj\source\repos\VirtualClient\src\VirtualClient\VirtualClient.Actions\HammerDB\";
 
             var fileList = new DirectoryInfo(directoryPath)
                 .GetFiles("*.json", SearchOption.AllDirectories)

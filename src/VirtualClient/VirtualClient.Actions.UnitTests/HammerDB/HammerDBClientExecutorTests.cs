@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "Results_HammerDB.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -109,7 +109,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "Results_HammerDB.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -150,7 +150,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "HammerDBExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "Results_HammerDB.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;

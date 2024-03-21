@@ -6,6 +6,8 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using MathNet.Numerics.Distributions;
@@ -107,11 +109,15 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// Parameter defines the SuperUser Password for PostgreSQL Server.
         /// </summary>
-        public int SuperUserPassword
+        public string SuperUserPassword
         {
             get
             {
-                return this.ExperimentId.GetHashCode();
+                using (SHA256 sha256 = SHA256.Create())
+                {
+                    byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                    return Convert.ToBase64String(hashBytes);
+                }
             }
         }
 
@@ -166,7 +172,7 @@ namespace VirtualClient.Dependencies
                                 .ConfigureAwait(false);
                             break;
                         case ConfigurationAction.DistributeDatabase:
-                            await this.DistributeMySQLDatabaseAsync(telemetryContext, cancellationToken)
+                            await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
                     }
@@ -220,7 +226,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task DistributeMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task DistributePostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
 

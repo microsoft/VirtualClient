@@ -21,8 +21,8 @@ namespace VirtualClient.Actions
         [Test]
         public void HammerDBParserVerifyMetrics()
         {
-            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "HammerDBExample.txt"));
-            PostgreSQLMetricsParser testParser = new PostgreSQLMetricsParser(rawText);
+            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "Results_HammerDB.txt"));
+            HammerDBMetricsParser testParser = new HammerDBMetricsParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
             Assert.AreEqual(4, metrics.Count);
@@ -36,9 +36,7 @@ namespace VirtualClient.Actions
         public void PostgreSQLParserThrowIfInvalidOutputFormat()
         {
             string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "HammerDBIncorrectResultsExample.txt"));
-            PostgreSQLMetricsParser testParser = new PostgreSQLMetricsParser(rawText);
-            testParser = new PostgreSQLMetricsParser(rawText);
-            IList<Metric> metrics = testParser.Parse();
+            HammerDBMetricsParser testParser = new HammerDBMetricsParser(rawText);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => testParser.Parse());
             Assert.AreEqual(ErrorReason.InvalidResults, exception.Reason);

@@ -6,23 +6,19 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.HammerDBExecutor;
 
     /// <summary>
     /// PostgreSQL Executor
@@ -98,11 +94,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the SuperUser Password for PostgreSQL Server.
         /// </summary>
-        public int SuperUserPassword
+        public string SuperUserPassword
         {
             get
             {
-                return this.ExperimentId.GetHashCode();
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                return Convert.ToBase64String(hashBytes);
             }
         }
 

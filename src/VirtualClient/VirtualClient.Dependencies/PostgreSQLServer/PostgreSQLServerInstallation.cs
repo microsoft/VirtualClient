@@ -24,7 +24,7 @@ namespace VirtualClient.Dependencies
     [WindowsCompatible]
     public class PostgreSQLServerInstallation : ExecuteCommand
     {
-        private IStateManager stateManager;
+        private readonly IStateManager stateManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLServerInstallation"/> class.

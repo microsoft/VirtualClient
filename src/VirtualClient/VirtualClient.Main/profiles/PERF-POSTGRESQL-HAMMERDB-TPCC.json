@@ -132,11 +132,10 @@
       "Parameters": {
         "Scenario": "PopulatePostgreSQLDatabase",
         "DatabaseName": "$.Parameters.DatabaseName",
-        "RecordCount": 1,
         "PackageName": "hammerdb",
         "VirtualUsers": "$.Parameters.VirtualUsers",
         "WarehouseCount": "$.Parameters.WarehouseCount",
-
+        "Port":  "$.Parameters.Port",
         "Role": "Server"
       }
     },

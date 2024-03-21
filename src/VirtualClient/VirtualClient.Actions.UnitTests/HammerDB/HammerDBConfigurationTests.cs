@@ -109,7 +109,7 @@ namespace VirtualClient.Actions
         public async Task HammerDBConfigurationPreparesDatabase(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
-            int password = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters).SuperUserPassword;
+            string password = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters).SuperUserPassword;
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password {password} --databaseName hammerdbtest",
@@ -166,7 +166,7 @@ namespace VirtualClient.Actions
                 DatabasePopulated = true
             }));
 
-            int password = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters).SuperUserPassword;
+            string password = new TestHammerDBConfiguration(this.fixture.Dependencies, this.fixture.Parameters).SuperUserPassword;
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password {password} --databaseName hammerdbtest"

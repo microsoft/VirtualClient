@@ -3,9 +3,9 @@
     "description": "Toolsets for installing PostgreSQL on the system.",
     "version": "14",
     "metadata": {
-        "installationPath-linux-x64": "/etc/postgresql/14/main",
-        "installationPath-linux-arm64": "/etc/postgresql/14/main",
-        "installationPath-win-x64": "C:\\Program Files\\PostgreSQL\\14",
-        "installationPath-win-arm64": "C:\\Program Files\\PostgreSQL\\14",
+        "InstallationPath-linux-x64": "/etc/postgresql/14/main",
+        "InstallationPath-linux-arm64": "/etc/postgresql/14/main",
+        "InstallationPath-win-x64": "C:\\Program Files\\PostgreSQL\\14",
+        "InstallationPath-win-arm64": "C:\\Program Files\\PostgreSQL\\14",
     }
 }

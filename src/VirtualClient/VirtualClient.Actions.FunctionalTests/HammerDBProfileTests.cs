@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        // [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
+        [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
 
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
@@ -83,7 +83,7 @@ namespace VirtualClient.Actions
             this.fixture.SetupWorkloadPackage("hammerdb");
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
 
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false);
+            IEnumerable<string> expectedCommands = this.GetUnixProfileExpectedCommands(singleVM: false);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -108,19 +108,20 @@ namespace VirtualClient.Actions
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.Arm64)]
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
+            this.SetupMockFixture(platform, architecture);
             this.fixture.SetupDisks(withUnformatted: true);
 
             this.hammerdbPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("hammerdb");
             DependencyPath mySqlPackage = new DependencyPath("postgresql-server", this.fixture.GetPackagePath("postgresql-server"));
-            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
+            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, platform, architecture).Path;
 
             this.fixture.SetupWorkloadPackage("hammerdb");
-            this.fixture.SetupWorkloadPackage("postgresql-server");
+            this.fixture.SetupWorkloadPackage("postgresql-server", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
 
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
             this.fixture.SetupDirectory(this.mySQLPackagePath);
 
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true);
+            IEnumerable<string> expectedCommands = this.GetUnixProfileExpectedCommands(singleVM: true);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -152,6 +153,7 @@ namespace VirtualClient.Actions
 
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile, PlatformID platform, Architecture architecture)
         {
+            this.SetupMockFixture(platform, architecture);
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
@@ -162,7 +164,7 @@ namespace VirtualClient.Actions
             this.fixture.SetupWorkloadPackage("hammerdb");
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
 
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false);
+            IEnumerable<string> expectedCommands = this.GetWindowsProfileExpectedCommands(singleVM: false);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -187,20 +189,20 @@ namespace VirtualClient.Actions
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.Arm64)]
         public async Task HammerDBWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMWindowsPlatform(string profile, PlatformID platform, Architecture architecture)
         {
-            this.fixture.Setup(platform);
+            this.SetupMockFixture(platform, architecture);
             this.fixture.SetupDisks(withUnformatted: true);
 
             this.hammerdbPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("hammerdb");
             DependencyPath mySqlPackage = new DependencyPath("postgresql-server", this.fixture.GetPackagePath("postgresql-server"));
-            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
+            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, platform, architecture).Path;
 
             this.fixture.SetupWorkloadPackage("hammerdb");
-            this.fixture.SetupWorkloadPackage("postgresql-server");
+            this.fixture.SetupWorkloadPackage("postgresql-server", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "C:\\Program Files\\PostgreSQL\\14" } });
 
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
             this.fixture.SetupDirectory(this.mySQLPackagePath);
 
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true);
+            IEnumerable<string> expectedCommands = this.GetWindowsProfileExpectedCommands(singleVM: true);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -226,7 +228,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private IEnumerable<string> GetProfileExpectedCommands(bool singleVM)
+        private IEnumerable<string> GetUnixProfileExpectedCommands(bool singleVM)
         {
             if (singleVM) 
             {
@@ -236,16 +238,16 @@ namespace VirtualClient.Actions
                 {
                     "apt install python3 --yes --quiet",
 
-                    $"python3 {this.mySQLPackagePath}/install.py",
-                    $"python3 {this.mySQLPackagePath}/configure.py --port 5432",
-                    $"python3 {this.mySQLPackagePath}/setup-database.py --databaseName hammerdbtest",
+                    $"python3 {this.mySQLPackagePath}/install-server.py",
+                    $"python3 {this.mySQLPackagePath}/configure-server.py --port 5432",
+                    $"python3 {this.mySQLPackagePath}/setup-database.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+",
 
-                    @$"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --port 5432 --virtualUsers 1 --warehouseCount 1 --password a-Z0-9 --databaseName hammerdbtest",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
 
-                    $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
+                    $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories {currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl",
 
-                    $"python3 {this.hammerdbPackagePath}/run-workload.py --dbName sbtest --runTransactionsTCLFilePath runTransactions.tcl",
+                    $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };
             }
             else 
@@ -254,9 +256,40 @@ namespace VirtualClient.Actions
                 {
                     "apt install python3 --yes --quiet",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --pot 5432 --virtualUsers 1 --warehouseCount 1 --password",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
 
-                    $"python3 {this.hammerdbPackagePath}/run-workload.py --dbName sbtest --runTransactionsTCLFilePath runTransactions.tcl",
+                    $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
+                };
+            }
+        }
+
+        private IEnumerable<string> GetWindowsProfileExpectedCommands(bool singleVM)
+        {
+            string temphammerdbPackagePath = this.hammerdbPackagePath.Replace(@"\", @"\\");
+            if (singleVM)
+            {
+                string tempPostgreSqlPackagePath = this.mySQLPackagePath.Replace(@"\", @"\\");
+                return new List<string>()
+                {
+                    $"python3 {this.mySQLPackagePath}/install-server.py",
+                    $"python3 {this.mySQLPackagePath}/configure-server.py --port 5432",
+                    $"python3 {tempPostgreSqlPackagePath}/setup-database.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+",
+
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
+
+                    $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories E:\\;F:\\;G:\\;",
+                    $"python3 {this.hammerdbPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl",
+
+                    $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
+                };
+            }
+            else
+            {
+                return new List<string>()
+                {
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
+
+                    $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };
             }
         }

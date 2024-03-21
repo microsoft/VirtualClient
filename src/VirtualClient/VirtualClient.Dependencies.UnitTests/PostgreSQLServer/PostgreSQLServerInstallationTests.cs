@@ -10,6 +10,7 @@ namespace VirtualClient.Dependencies
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
     using Moq;
@@ -63,7 +64,18 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultBehavior(platform, architecture);
             this.fixture.Parameters["Action"] = "InstallServer";
+            DependencyPath dependencyPath;
+            if (platform == PlatformID.Unix)
+            {
+                dependencyPath = new DependencyPath("postgresql", this.mockPackage.Path, null, null, new Dictionary<string, IConvertible>() { { $"InstallationPath-{platformArchitecture}", "/etc/postgresql/14/main" } });
+            }
+            else
+            {
+                dependencyPath = new DependencyPath("postgresql", this.mockPackage.Path, null, null, new Dictionary<string, IConvertible>() { { $"InstallationPath-{platformArchitecture}", "C:\\Program Files\\PostgreSQL\\14" } });
+            }
 
+            this.fixture.SetupWorkloadPackage(dependencyPath);
+                
             string[] expectedCommands =
             {
                 $"python3 {this.packagePath}/install-server.py",

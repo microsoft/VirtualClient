@@ -20,15 +20,15 @@ namespace VirtualClient
         [OneTimeSetUp]
         public static void IsEnabled()
         {
-            const string variableName = "VC_ENABLE_INTEGRATION_TESTS";
+            // const string variableName = "VC_ENABLE_INTEGRATION_TESTS";
 
-            if (!string.Equals(Environment.GetEnvironmentVariable(variableName), "true", StringComparison.OrdinalIgnoreCase))
-            {
-                Assert.Ignore(
-                    $"Integration tests ignored. Set the environment variable '{variableName}' to true to enable support " +
-                    $"for running integrations tests locally. The environment variable can be set in the user-level or system-level variables on " +
-                    $"the operating system. See the 'GlobalSetup.cs' file for details.");
-            }
+            //if (!string.Equals(Environment.GetEnvironmentVariable(variableName), "true", StringComparison.OrdinalIgnoreCase))
+            //{
+            //    Assert.Ignore(
+            //        $"Integration tests ignored. Set the environment variable '{variableName}' to true to enable support " +
+            //        $"for running integrations tests locally. The environment variable can be set in the user-level or system-level variables on " +
+            //        $"the operating system. See the 'GlobalSetup.cs' file for details.");
+            //}
         }
     }
 }
