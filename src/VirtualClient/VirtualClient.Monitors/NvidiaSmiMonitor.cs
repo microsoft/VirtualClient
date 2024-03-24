@@ -70,10 +70,23 @@ namespace VirtualClient.Monitors
 
             // This is the Nvidia smi query gpu command
             // e.g.
-            // nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv,nounits
+            // nvidia-smi --query-gpu=--query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory,
+            // power.draw.average,clocks.gr,clocks.sm,clocks.video,clocks.mem,memory.total,memory.free,memory.used,power.draw.instant,pcie.link.gen.gpucurrent,
+            // pcie.link.width.current,ecc.errors.corrected.volatile.device_memory,ecc.errors.corrected.volatile.dram,ecc.errors.corrected.volatile.sram,
+            // ecc.errors.corrected.volatile.total,ecc.errors.corrected.aggregate.device_memory,ecc.errors.corrected.aggregate.dram,ecc.errors.corrected.aggregate.sram,
+            // ecc.errors.corrected.aggregate.total,ecc.errors.uncorrected.volatile.device_memory,ecc.errors.uncorrected.volatile.dram,ecc.errors.uncorrected.volatile.sram,
+            // ecc.errors.uncorrected.volatile.total,ecc.errors.uncorrected.aggregate.device_memory,ecc.errors.uncorrected.aggregate.dram,ecc.errors.uncorrected.aggregate.sram,
+            // ecc.errors.uncorrected.aggregate.total
+            // --format=csv,nounits
             int totalSamples = (int)this.MonitorFrequency.TotalSeconds;
             string command = "nvidia-smi";
-            string commandArguments = "--query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used " +
+            string commandArguments = "--query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory," +
+                "power.draw.average,clocks.gr,clocks.sm,clocks.video,clocks.mem,memory.total,memory.free,memory.used,power.draw.instant,pcie.link.gen.gpucurrent," +
+                "pcie.link.width.current,ecc.errors.corrected.volatile.device_memory,ecc.errors.corrected.volatile.dram,ecc.errors.corrected.volatile.sram," +
+                "ecc.errors.corrected.volatile.total,ecc.errors.corrected.aggregate.device_memory,ecc.errors.corrected.aggregate.dram,ecc.errors.corrected.aggregate.sram," +
+                "ecc.errors.corrected.aggregate.total,ecc.errors.uncorrected.volatile.device_memory,ecc.errors.uncorrected.volatile.dram,ecc.errors.uncorrected.volatile.sram," +
+                "ecc.errors.uncorrected.volatile.total,ecc.errors.uncorrected.aggregate.device_memory,ecc.errors.uncorrected.aggregate.dram,ecc.errors.uncorrected.aggregate.sram," +
+                "ecc.errors.uncorrected.aggregate.total " + 
                 "--format=csv,nounits";
 
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
