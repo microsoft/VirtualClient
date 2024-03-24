@@ -1,4 +1,4 @@
-﻿using VirtualClient.Common.Contracts;
+using VirtualClient.Common.Contracts;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\LAPACK\LAPACKResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "LAPACK", "LAPACKResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LAPACKMetricsParser(this.rawText);
         }
@@ -67,14 +67,21 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(@"Examples\LAPACK\LAPACKIncorrectFormatExample.txt")]
-        [TestCase(@"Examples\LAPACK\LAPACKIncorrectResultsExample.txt")]
-        public void LAPACKParserThrowIfInvalidOutput(string IncorrectLAPACKoutputPath)
+        public void LAPACKParserThrowIfInvalidOutput()
         {
-            this.rawText = File.ReadAllText(IncorrectLAPACKoutputPath);
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "LAPACK", "LAPACKIncorrectFormatExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LAPACKMetricsParser(this.rawText);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
+
+            workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            outputPath = Path.Combine(workingDirectory, "Examples", "LAPACK", "LAPACKIncorrectResultsExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new LAPACKMetricsParser(this.rawText);
+
+            exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Monitors
@@ -97,6 +97,8 @@ namespace VirtualClient.Monitors
         {
             try
             {
+                await Task.Delay(this.MonitorWarmupPeriod, cancellationToken);
+
                 Task counterDiscoveryTask = this.DiscoverCountersAsync(telemetryContext, cancellationToken);
                 Task counterCaptureTask = this.CaptureCountersAsync(telemetryContext, cancellationToken);
                 Task snapshotTask = this.SnapshotCountersAsync(telemetryContext, cancellationToken);
@@ -335,7 +337,7 @@ namespace VirtualClient.Monitors
                 {
                     try
                     {
-                        await Task.Delay(this.MonitorFrequency);
+                        await Task.Delay(this.MonitorFrequency, cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {

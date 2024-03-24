@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
@@ -121,6 +121,12 @@ namespace VirtualClient.Dependencies
                         string downloadedPackagePath = this.GetPackagePath(Path.GetFileName(this.PackageUri.ToString()));
                         string installationPath = downloadedPackagePath;
                         string packagesDirectory = this.GetPackagePath();
+
+                        // Create packages directory if not present.
+                        if (!this.fileSystem.Directory.Exists(packagesDirectory))
+                        {
+                            this.fileSystem.Directory.CreateDirectory(packagesDirectory);
+                        }
 
                         // Cleanup the file if it exists.
                         if (this.fileSystem.File.Exists(downloadedPackagePath))

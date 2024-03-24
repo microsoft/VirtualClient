@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -7,20 +7,14 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
-    using System.Net.Http;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
-    using Fare;
     using Moq;
     using NUnit.Framework;
-    using Polly;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
 
     [TestFixture]
     [Category("Functional")]
@@ -77,9 +71,18 @@ namespace VirtualClient.Actions
             IPAddress.TryParse("1.2.3.5", out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
-            ServerState state = new ServerState(new Dictionary<string, IConvertible>
+            ServerState state = new ServerState(new List<PortDescription>
             {
-                [nameof(ServerState.Ports)] = 6379
+                new PortDescription
+                {
+                    CpuAffinity = "0",
+                    Port = 6379
+                },
+                new PortDescription
+                {
+                    CpuAffinity = "1",
+                    Port = 6380
+                }
             });
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);

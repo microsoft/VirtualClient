@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Contracts
+namespace VirtualClient.Contracts
 {
     using System;
     using System.Reflection;

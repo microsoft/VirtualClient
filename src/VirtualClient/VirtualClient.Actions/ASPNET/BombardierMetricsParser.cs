@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -92,31 +92,31 @@ namespace VirtualClient.Actions
         private class Result
         {
             [JsonPropertyName("bytesRead")]
-            public int BytesRead { get; set; }
+            public long BytesRead { get; set; }
 
             [JsonPropertyName("bytesWritten")]
-            public int BytesWritten { get; set; }
+            public long BytesWritten { get; set; }
 
             [JsonPropertyName("timeTakenSeconds")]
             public double TimeTakenSeconds { get; set; }
 
             [JsonPropertyName("req1xx")]
-            public int Req1xx { get; set; }
+            public long Req1xx { get; set; }
 
             [JsonPropertyName("req2xx")]
-            public int Req2xx { get; set; }
+            public long Req2xx { get; set; }
 
             [JsonPropertyName("req3xx")]
-            public int Req3xx { get; set; }
+            public long Req3xx { get; set; }
 
             [JsonPropertyName("req4xx")]
-            public int Req4xx { get; set; }
+            public long Req4xx { get; set; }
 
             [JsonPropertyName("req5xx")]
-            public int Req5xx { get; set; }
+            public long Req5xx { get; set; }
 
             [JsonPropertyName("others")]
-            public int Others { get; set; }
+            public long Others { get; set; }
 
             [JsonPropertyName("latency")]
             public Latency Latency { get; set; }
@@ -152,13 +152,13 @@ namespace VirtualClient.Actions
         private class Spec
         {
             [JsonPropertyName("ConnectionCount")]
-            public int ConnectionCount { get; set; }
+            public long ConnectionCount { get; set; }
 
             [JsonPropertyName("testType")]
             public string TestType { get; set; }
 
             [JsonPropertyName("testDurationSeconds")]
-            public int TestDurationSeconds { get; set; }
+            public long TestDurationSeconds { get; set; }
 
             [JsonPropertyName("method")]
             public string Method { get; set; }
@@ -173,7 +173,7 @@ namespace VirtualClient.Actions
             public bool Stream { get; set; }
 
             [JsonPropertyName("timeoutSeconds")]
-            public int TimeoutSeconds { get; set; }
+            public long TimeoutSeconds { get; set; }
 
             [JsonPropertyName("client")]
             public string Client { get; set; }

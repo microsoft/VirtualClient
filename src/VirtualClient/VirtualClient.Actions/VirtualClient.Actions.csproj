@@ -12,7 +12,6 @@
         <PackageReference Include="MathNet.Numerics.Signed" Version="$(MathNet_Numerics_Signed_PackageVersion)" />
         <PackageReference Include="Microsoft.Windows.Compatibility" Version="$(Microsoft_Windows_Compatibility_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="$(Microsoft_Extensions_Http_Polly_PackageVersion)" />
-        <PackageReference Include="YamlDotNet" Version="$(YamlDotNet_PackageVersion)" />
     </ItemGroup>
     
     <ItemGroup>
@@ -31,7 +30,10 @@
         <ScriptFiles Include="PostgreSQL\*.sh" />
         <ScriptFiles Include="SuperBenchmark\*.yaml;SuperBenchmark\*.sh;SuperBenchmark\*.ini" />
         <ScriptFiles Include="MLPerf\**\*.py" />
-	    <ScriptFiles Include="Sysbench\*.sh" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ScriptFiles Remove="Sysbench\distribute-database.sh" />
     </ItemGroup>
 
     <Target Name="CopyWorkloadScriptsToOutput" AfterTargets="Build">

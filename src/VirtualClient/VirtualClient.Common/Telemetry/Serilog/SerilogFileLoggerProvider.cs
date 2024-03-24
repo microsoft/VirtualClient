@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Common.Telemetry
@@ -17,6 +17,7 @@ namespace VirtualClient.Common.Telemetry
     public sealed class SerilogFileLoggerProvider : ILoggerProvider
     {
         private LoggerConfiguration configuration;
+        private LogLevel minumumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerilogFileLoggerProvider"/> class.
@@ -25,10 +26,12 @@ namespace VirtualClient.Common.Telemetry
         /// Configuration settings that will be supplied to the Serilog logger
         /// used by the <see cref="ILogger"/> instance.
         /// </param>
-        public SerilogFileLoggerProvider(LoggerConfiguration configuration)
+        /// <param name="level">The minimum logging severity level.</param>
+        public SerilogFileLoggerProvider(LoggerConfiguration configuration, LogLevel level)
         {
             configuration.ThrowIfNull(nameof(configuration));
             this.configuration = configuration;
+            this.minumumLogLevel = level;
         }
 
         /// <summary>
@@ -42,7 +45,7 @@ namespace VirtualClient.Common.Telemetry
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            return new SerilogFileLogger(this.configuration);
+            return new SerilogFileLogger(this.configuration, this.minumumLogLevel);
         }
 
         /// <summary>

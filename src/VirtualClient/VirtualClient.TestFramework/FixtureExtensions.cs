@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -131,7 +131,7 @@ namespace VirtualClient
 
             List<DiskVolume> volumes = new List<DiskVolume>();
 
-            if (withVolume)
+            if (withVolume || os)
             {
                 volumes = new List<DiskVolume>() { FixtureExtensions.CreateDiskVolume(devicePath, platform, os) };
             }
@@ -234,9 +234,7 @@ namespace VirtualClient
         {
             return new ExecutionProfile(
                 $"mock execution profile{(randomization ? randomGen.Next().ToString() : string.Empty)}",
-                1,
                 TimeSpan.FromMinutes(1),
-                TimeSpan.FromMinutes(2),
                 new List<ExecutionProfileElement>() { FixtureExtensions.CreateExecutionProfileElement(randomization) },
                 new List<ExecutionProfileElement>() { FixtureExtensions.CreateExecutionProfileElement(randomization) },
                 new List<ExecutionProfileElement>() { FixtureExtensions.CreateExecutionProfileElement(randomization) },

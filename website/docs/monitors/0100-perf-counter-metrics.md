@@ -1,4 +1,4 @@
-﻿# Performance Counter Metrics
+# Performance Counter Metrics
 The following sections describe the various types of performance counters that are captured by the Virtual Client while running any of the
 various workloads supported. This is a standard set of performance counters captured in both the Guest/VM as well as the Azure Host scenarios.
 

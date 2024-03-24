@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -190,6 +190,9 @@ namespace VirtualClient
                 // --api-port
                 OptionFactory.CreateApiPortOption(required: false),
 
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
                 // --contentStore
                 OptionFactory.CreateContentStoreOption(required: false),
 
@@ -223,6 +226,12 @@ namespace VirtualClient
                 // --layoutPath
                 OptionFactory.CreateLayoutPathOption(required: false),
 
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
 
@@ -254,14 +263,25 @@ namespace VirtualClient
                 "runapi",
                 "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
             {
+                // OPTIONAL
+                // -------------------------------------------------------------------
                 // --api-port
                 OptionFactory.CreateApiPortOption(required: false),
+
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
 
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
                 // --ipaddress
                 OptionFactory.CreateIPAddressOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
@@ -291,6 +311,9 @@ namespace VirtualClient
                 // --agentId
                 OptionFactory.CreateAgentIdOption(required: false, Environment.MachineName),
 
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
@@ -305,6 +328,12 @@ namespace VirtualClient
 
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false),
@@ -324,16 +353,44 @@ namespace VirtualClient
 
             Command runResetCommand = new Command(
                 "reset",
-                "Resets the state of the Virtual Client for a 'first run' scenario.");
+                "Resets the state of the Virtual Client for a 'first run' scenario.")
+            {
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false)
+            };
 
             runResetCommand.AddAlias("Reset");
             runResetCommand.AddAlias("Clean");
             runResetCommand.AddAlias("clean");
             runResetCommand.Handler = CommandHandler.Create<ResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
+            Command convertCommand = new Command(
+                "convert",
+                "Converts execution profiles from JSON to YAML format and vice-versa.")
+            {
+                // Required
+                // -------------------------------------------------------------------
+                // --profile
+                OptionFactory.CreateProfileOption(required: true),
+
+                // --output-path
+                OptionFactory.CreateOutputDirectoryOption(required: true)
+            };
+
+            convertCommand.Handler = CommandHandler.Create<ConvertCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+
             rootCommand.AddCommand(runApiCommand);
             rootCommand.AddCommand(runBootstrapCommand);
             rootCommand.AddCommand(runResetCommand);
+            rootCommand.AddCommand(convertCommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
@@ -364,7 +421,7 @@ namespace VirtualClient
             {
                 FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
                 PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                loggerProviders.AddRange(DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings));
+                loggerProviders.AddRange(DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings, LogLevel.Trace));
             }
 
             Program.Logger = new LoggerFactory(loggerProviders).CreateLogger("VirtualClient");

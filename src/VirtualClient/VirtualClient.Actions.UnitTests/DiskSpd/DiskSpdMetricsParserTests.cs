@@ -13,18 +13,13 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class DiskSpdMetricsParserTests
     {
-        private string rawText;
-        private DiskSpdMetricsParser testParser;
-
         [Test]
         public void DiskSpdParserVerifyReadWrite()
         {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-ReadWrite.txt");
-            this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new DiskSpdMetricsParser(this.rawText);
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt"));
+            var parser = new DiskSpdMetricsParser(results);
 
-            IList<Metric> metrics = this.testParser.Parse();
+            IList<Metric> metrics = parser.Parse();
 
             // cpu metrics
             MetricAssert.Exists(metrics, "cpu usage 0", 3.02, "percentage");
@@ -132,12 +127,10 @@ namespace VirtualClient.Actions
         [Test]
         public void DiskSpdParserVerifyWriteOnly()
         {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-WriteOnly.txt");
-            this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new DiskSpdMetricsParser(this.rawText);
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly.txt"));
+            var parser = new DiskSpdMetricsParser(results);
 
-            IList<Metric> metrics = this.testParser.Parse();
+            IList<Metric> metrics = parser.Parse();
 
             // cpu metrics
             MetricAssert.Exists(metrics, "cpu usage 0", 5.55, "percentage");
@@ -220,12 +213,10 @@ namespace VirtualClient.Actions
         [Test]
         public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
         {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\Read8k.txt");
-            this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new DiskSpdMetricsParser(this.rawText);
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "Read8k.txt"));
+            var parser = new DiskSpdMetricsParser(results);
 
-            IList<Metric> metrics = this.testParser.Parse();
+            IList<Metric> metrics = parser.Parse();
 
             // cpu metrics
             MetricAssert.Exists(metrics, "cpu usage 0", 92.79, "percentage");

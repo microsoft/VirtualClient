@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Metadata
@@ -50,7 +50,7 @@ namespace VirtualClient.Metadata
                 this.eventHubAccessPolicy,
                 "telemetry-logs");
 
-            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(channel);
+            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(channel, LogLevel.Trace);
 
             string experimentId = Guid.NewGuid().ToString();
             string profile = "DOES-NOT-EXIST-INTEGRATION-TEST-3.json";

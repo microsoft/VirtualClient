@@ -1,4 +1,4 @@
-﻿# DiskSpd Workload Profiles
+# DiskSpd Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DiskSpd workload.  
 
 * [Workload Details](./diskspd.md)  

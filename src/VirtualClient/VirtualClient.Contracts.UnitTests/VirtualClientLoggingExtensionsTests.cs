@@ -620,7 +620,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -634,7 +634,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["toolResults"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
                 null));
         }
@@ -698,7 +698,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -710,7 +710,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"] == expectedMetadata as Object
+                    && context.Properties["metadata_metrics"] == expectedMetadata as Object
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["toolResults"].ToString() == expectedToolResults
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)),
@@ -889,7 +889,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
@@ -900,7 +900,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricDescription"].ToString() == "Metric 1 description"
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                   && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
+                   && context.Properties["metadata_metrics"] == expectedCounters[0].Metadata as object),
                 null,
                 null));
         }
@@ -946,7 +946,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
@@ -958,7 +958,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricDescription"].ToString() == "Metric 1 description"
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
+                    && context.Properties["metadata_metrics"] == expectedCounters[0].Metadata as object),
                 null,
                 null));
         }
@@ -1767,7 +1767,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -1780,7 +1780,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
                 null));
         }
@@ -1815,7 +1815,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -1828,7 +1828,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
                 null));
         }
@@ -1875,7 +1875,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -1888,7 +1888,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
                 null));
         }
@@ -1923,7 +1923,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -1936,7 +1936,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
                 null));
         }
@@ -1972,7 +1972,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == "Outcome"
                     && context.Properties["scenarioArguments"].ToString() == string.Empty
                     && context.Properties["metricName"].ToString() == "Failed"
@@ -1983,7 +1983,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty);
         }
 
         [Test]
@@ -2017,7 +2017,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == "Any_Outcome"
                     && context.Properties["scenarioArguments"].ToString() == string.Empty
                     && context.Properties["metricName"].ToString() == "Failed"
@@ -2028,7 +2028,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty);
         }
 
         [Test]
@@ -2068,7 +2068,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
                     && context.Properties["metricName"].ToString() == "Failed"
@@ -2079,7 +2079,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty);
         }
 
         [Test]
@@ -2113,7 +2113,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == "Outcome"
                     && context.Properties["scenarioArguments"].ToString() == string.Empty
                     && context.Properties["metricName"].ToString() == "Succeeded"
@@ -2124,7 +2124,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty);
         }
 
         [Test]
@@ -2158,7 +2158,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == "Any_Outcome"
                     && context.Properties["scenarioArguments"].ToString() == string.Empty
                     && context.Properties["metricName"].ToString() == "Succeeded"
@@ -2169,7 +2169,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty);
         }
 
         [Test]
@@ -2209,7 +2209,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
                     && context.Properties["metricName"].ToString() == "Succeeded"
@@ -2220,7 +2220,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Empty
-                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+                    && context.Properties["metadata_metrics"].ToString() == string.Empty);
         }
 
         [Test]

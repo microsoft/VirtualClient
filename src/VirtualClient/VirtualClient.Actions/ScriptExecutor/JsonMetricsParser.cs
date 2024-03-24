@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -43,6 +43,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             List<Metric> metrics = new List<Metric>();
+
             try
             {
                 JObject keyValuePairs = JObject.Parse(this.RawText);
@@ -53,14 +54,24 @@ namespace VirtualClient.Actions
                         metrics.Add(new Metric(keyValuePair.Name, value, MetricRelativity.Undefined));
                     }
                     else
-                    {                        
-                        this.logger.LogWarning($"The metric value for {keyValuePair.Name} couldn't be parsed, it should be of Double type.", this.eventContext);
+                    {
+                        throw new WorkloadResultsException(
+                            $"Invalid JSON metrics content formatting. The metric value for '{keyValuePair.Name}' is not a valid numeric data type.",
+                            ErrorReason.InvalidResults);
                     }
                 }
             }
-            catch (Exception e)
+            catch (WorkloadResultsException)
             {
-                this.logger.LogWarning($"The log File has incorrect JSON format. The log file should have metric name as keys and metricValue as Value in JSON format. Exception: {e}", this.eventContext);
+                throw;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException(
+                    $"Invalid JSON metrics content formatting. The metrics content must be in a valid JSON key/value pair JSON-format " +
+                    $"(e.g. {{ \"metric1\": 1234, \"metric2\": 987.65, \"metric3\": 32.0023481 }} )",
+                    exc,
+                    ErrorReason.InvalidResults);
             }
 
             return metrics;

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -108,7 +108,8 @@ namespace VirtualClient.Contracts
         public PlatformID Platform { get; }
 
         /// <summary>
-        /// The OS platform (e.g. Windows, Unix).
+        /// The name of the platform + architecture name for the system on which Virtual Client
+        /// is running (e.g. win-x64, win-arm64, linux-x64, linux-arm64).
         /// </summary>
         public string PlatformArchitectureName { get; }
 
@@ -202,6 +203,39 @@ namespace VirtualClient.Contracts
         public static bool IsRunningInContainer()
         {
             return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true);
+        }
+
+        /// <summary>
+        /// Standardizes/normalizes the path based upon the platform/OS ensuring
+        /// a valid path is 
+        /// </summary>
+        /// <param name="platform">The platform for which to standardize the path.</param>
+        /// <param name="path">The path to standardize.</param>
+        /// <returns>A path standardized for the OS platform.</returns>
+        public static string StandardizePath(PlatformID platform, string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+
+            string standardizedPath = path?.Trim();
+            if ((platform == PlatformID.Unix && standardizedPath == "/") || (platform == PlatformID.Win32NT && standardizedPath == @"\"))
+            {
+                return standardizedPath;
+            }
+
+            standardizedPath = path.TrimEnd('\\', '/');
+            if (platform == PlatformID.Unix)
+            {
+                standardizedPath = Regex.Replace(standardizedPath.Replace('\\', '/'), "/{2,}", "/");
+            }
+            else if (platform == PlatformID.Win32NT)
+            {
+                standardizedPath = Regex.Replace(standardizedPath.Replace('/', '\\'), @"\\{2,}", @"\");
+            }
+
+            return standardizedPath;
         }
 
         /// <summary>
@@ -399,28 +433,7 @@ namespace VirtualClient.Contracts
         /// <returns>A path standardized for the OS platform.</returns>
         public string StandardizePath(string path)
         {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return path;
-            }
-
-            string standardizedPath = path?.Trim();
-            if (this.Platform == PlatformID.Unix && standardizedPath == "/")
-            {
-                return standardizedPath;
-            }
-
-            standardizedPath = path.TrimEnd('\\', '/');
-            if (this.Platform == PlatformID.Unix)
-            {
-                standardizedPath = Regex.Replace(standardizedPath.Replace('\\', '/'), "/{2,}", "/");
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                standardizedPath = Regex.Replace(standardizedPath.Replace('/', '\\'), @"\\{2,}", @"\");
-            }
-
-            return standardizedPath;
+            return PlatformSpecifics.StandardizePath(this.Platform, path);
         }
 
         /// <summary>

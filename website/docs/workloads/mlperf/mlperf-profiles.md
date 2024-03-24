@@ -1,4 +1,4 @@
-﻿# MLPerf Workload Profiles
+# MLPerf Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the MLPerf workload.
 
 * [Workload Details](./mlperf.md)  
@@ -8,7 +8,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 Runs the MLPerf benchmark workload to test GPU performance.
 
 :::warning
-*This workload is supported ONLY for systems that contain Nvidia GPU hardware components. See the documentation above for more specifics.*
+This workload is supported ONLY for systems that contain Nvidia GPU hardware components. See the documentation above for more specifics.
 :::
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-MLPERF.json) 
@@ -55,7 +55,7 @@ Runs the MLPerf benchmark workload to test GPU performance.
 ## PERF-GPU-MLPERF-TRAINING-NVIDIA.json
 Runs the MLPerf benchmark workload to test GPU performance. 
 
-:::warn
+:::warning
 *This workload is supported ONLY for systems that contain Nvidia GPU hardware components. See the documentation above for more specifics.*
 :::
 

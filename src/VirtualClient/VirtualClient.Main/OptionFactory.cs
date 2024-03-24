@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -12,7 +12,9 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -30,7 +32,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateAgentIdOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--agentId", "--agentid", "--agent", "--clientId", "--clientid", "--client", "--a" })
+            Option<string> option = new Option<string>(new string[] { "--agent-id", "--agentId", "--agentid", "--agent", "--client-id", "--clientId", "--clientid", "--client", "--a" })
             {
                 Name = "AgentId",
                 Description = "A name/identifier to describe the instance of the application (the agent) that will be included with all " +
@@ -94,6 +96,55 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option indicates a clean/reset should be performed and defines the targets
+        /// (e.g. logs, state, packages, all).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCleanOption(bool required = true, object defaultValue = null)
+        {
+            Option<IList<string>> option = new Option<IList<string>>(
+                new string[] { "--clean" },
+                new ParseArgument<IList<string>>(result => OptionFactory.ParseDelimitedValues(result)))
+            {
+                Name = "CleanTargets",
+                Description = "Indicates a clean/reset should be performed and defines the targets. Valid targets are: logs, state, packages, all. Multiple targets can be defined comma-delimited (e.g. logs,state,packages).",
+                ArgumentHelpName = "targets",
+                AllowMultipleArgumentsPerToken = false,
+                Arity = new ArgumentArity(0, 10000)
+            };
+
+            option.AddValidator(result =>
+            {
+                if (result.Tokens?.Any() == true)
+                {
+                    IList<string> targets = OptionFactory.ParseDelimitedValues(result.Tokens[0].Value);
+
+                    IList<string> validTargets = new List<string>
+                    {
+                        CleanTargets.All,
+                        CleanTargets.Logs,
+                        CleanTargets.Packages,
+                        CleanTargets.State
+                    };
+
+                    IEnumerable<string> otherTargets = targets.Except(validTargets);
+                    if (otherTargets?.Any() == true)
+                    {
+                        throw new ArgumentException(
+                            $"Unsupported clean targets: {string.Join(", ", otherTargets)}. Valid targets include the following: {string.Join(", ", validTargets)}");
+                    }
+                }
+
+                return string.Empty;
+            });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines a template for the virtual folder structure to use when uploading 
         /// files to a target storage account (e.g. /{experimentId}/{agentId}/{toolName}/{role}/{scenario}).
         /// </summary>
@@ -101,7 +152,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateContentPathTemplateOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--contentPathTemplate", "--contentpathtemplate", "--contentPath", "--contentpath", "--cp" })
+            Option<string> option = new Option<string>(new string[] { "--content-path-template", "--contentPathTemplate", "--contentpathtemplate", "--content-path", "--contentPath", "--contentpath", "--cp" })
             {
                 Name = "ContentPathTemplate",
                 Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
@@ -128,7 +179,7 @@ namespace VirtualClient
             // line will handle this by creating different DependencyStore definitions to represent the various stores that 
             // are supported.
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--contentStore", "--contentstore", "--content", "--cs" },
+                new string[] { "--content-store", "--contentStore", "--contentstore", "--content", "--cs" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(result, DependencyStore.Content, fileSystem ?? OptionFactory.fileSystem, "content store")))
             {
                 Name = "ContentStore",
@@ -204,7 +255,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateEventHubConnectionStringOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--eventHubConnectionString", "--eventhubconnectionstring", "--eventHub", "--eventhub", "--eh" })
+            Option<string> option = new Option<string>(new string[] { "--event-hub-connection-string", "--eventHubConnectionString", "--eventhubconnectionstring", "--event-hub", "--eventHub", "--eventhub", "--eh" })
             {
                 Name = "EventHubConnectionString",
                 Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
@@ -247,7 +298,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateExperimentIdOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--experimentId", "--experimentid", "--experiment", "--e" })
+            Option<string> option = new Option<string>(new string[] { "--experiment-id", "--experimentId", "--experimentid", "--experiment", "--e" })
             {
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
@@ -287,7 +338,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateIPAddressOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--ipAddress", "--ipaddress", "--ip" })
+            Option<string> option = new Option<string>(new string[] { "--ip-address", "--ipAddress", "--ipaddress", "--ip" })
             {
                 Name = "IPAddress",
                 Description = "The IP address of a remote/target application API instance to monitor.",
@@ -351,13 +402,75 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLayoutPathOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--layout", "--layoutPath", "--layoutpath", "--lp" })
+            Option<string> option = new Option<string>(new string[] { "--layout-path", "--layout", "--layoutPath", "--layoutpath", "--lp" })
             {
                 Name = "LayoutPath",
                 Description = "The path to the environment layout .json file required for client/server operations. The contents of this " +
                     "file are used by the self-hosted API service for example to enable individual instances of the application running on different " +
                     "systems to synchronize with each other.",
                 ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option indicates the logging level for VC telemetry output. These levels correspond directly to the .NET LogLevel
+        /// enumeration (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLogLevelOption(bool required = true, object defaultValue = null)
+        {
+            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--log-level", "--ll" })
+            {
+                Name = "LoggingLevel",
+                Description = "indicates the logging level for telemetry output (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).",
+                ArgumentHelpName = "level",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            option.AddValidator(result =>
+            {
+                if (result.Tokens?.Any() == true)
+                {
+                    string value = result.Tokens.First().Value;
+                    if (!Enum.TryParse<LogLevel>(value, out LogLevel level) || !Enum.IsDefined<LogLevel>(level))
+                    {
+                        throw new ArgumentException(
+                            $"The value '{value}' is not a valid log level. Valid log levels include: " +
+                            $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => $"{l} ({(int)l})"))}");
+                    }
+                }
+
+                return string.Empty;
+            });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the retention period to preserve log files on the system. When used on the
+        /// command line, log files older than the retention period will be cleaned up.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLogRetentionOption(bool required = true, object defaultValue = null)
+        {
+            Option<TimeSpan> option = new Option<TimeSpan>(
+                new string[] { "--log-retention", "--lr" },
+                new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
+            {
+                Name = "LogRetention",
+                Description = 
+                    "Defines the retention period to preserve log files on the system. Log files older than the retention period will be deleted." +
+                    "This can be a valid timespan (e.g. 10.00:00:00) or a simple numeric value representing total minutes (e.g. 14400).",
+                ArgumentHelpName = "timespan",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -374,7 +487,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogToFileFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--log-to-file", "--logToFile", "--logtofile", "--ltf" })
+            Option<bool> option = new Option<bool>(new string[] { "--log-to-file", "--ltf" })
             {
                 Name = "LogToFile",
                 Description = "Flag indicates that the output of processes should be logged to files in the logs directory.",
@@ -454,6 +567,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the directory to which file output should be written.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateOutputDirectoryOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--output-path", "--output", "--path" })
+            {
+                Name = "OutputPath",
+                Description = "The directory to which file output should be written.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the name of a package (e.g. any.package.1.0.0.zip).
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -487,7 +620,7 @@ namespace VirtualClient
             // line will handle this by creating different DependencyStore definitions to represent the various stores that 
             // are supported.
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--packageStore", "--packagestore", "--packages", "--ps" },
+                new string[] { "--package-store", "--packageStore", "--packagestore", "--packages", "--ps" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(result, DependencyStore.Packages, fileSystem ?? OptionFactory.fileSystem, "package store")))
             {
                 Name = "PackageStore",
@@ -740,6 +873,60 @@ namespace VirtualClient
             OptionFactory.SetOptionRequirements(option, required);
 
             return option;
+        }
+
+        ////private static IEnumerable<string> ParseCleanTargets(ArgumentResult parsedResult)
+        ////{
+        ////    CleanTargets targets = null;
+
+        ////    bool cleanLogs = false;
+        ////    bool cleanPackages = false;
+        ////    bool cleanState = false;
+
+        ////    IList<string> commandLineTargets = OptionFactory.ParseDelimitedValues(parsedResult);
+
+        ////    if (!commandLineTargets.Any() || commandLineTargets.Contains("all", StringComparer.OrdinalIgnoreCase))
+        ////    {
+        ////        cleanLogs = true;
+        ////        cleanPackages = true;
+        ////        cleanState = true;
+        ////    }
+        ////    else
+        ////    {
+        ////        cleanLogs = commandLineTargets.Contains("logs", StringComparer.OrdinalIgnoreCase);
+        ////        cleanPackages = commandLineTargets.Contains("packages", StringComparer.OrdinalIgnoreCase);
+        ////        cleanState = commandLineTargets.Contains("state", StringComparer.OrdinalIgnoreCase);
+        ////    }
+
+        ////    if (cleanLogs || cleanPackages || cleanState)
+        ////    {
+        ////        targets = new CleanTargets(cleanLogs, cleanPackages, cleanState);
+        ////    }
+
+        ////    // return targets;
+        ////    return null;
+        ////}
+
+        private static IList<string> ParseDelimitedValues(string parsedResult)
+        {
+            // Example Format:
+            // --name=package1.zip,package2.zip
+
+            List<string> values = new List<string>();
+            if (!string.IsNullOrWhiteSpace(parsedResult))
+            {
+                string[] delimitedValues = parsedResult.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                if (delimitedValues?.Any() == true)
+                {
+                    foreach (string value in delimitedValues)
+                    {
+                        values.Add(value.Trim());
+                    }
+                }
+            }
+
+            return values;
         }
 
         private static IList<string> ParseDelimitedValues(ArgumentResult parsedResult)

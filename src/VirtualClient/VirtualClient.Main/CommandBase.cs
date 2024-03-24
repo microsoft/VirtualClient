@@ -1,10 +1,11 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics;
     using System.IO;
     using System.IO.Abstractions;
@@ -18,6 +19,7 @@ namespace VirtualClient
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using VirtualClient.Cleanup;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -52,10 +54,9 @@ namespace VirtualClient
         public IDictionary<string, int> ApiPorts { get; set; }
 
         /// <summary>
-        /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
-        /// or downloaded from the proxy endpoint.
+        /// A set of target resources to clean (e.g. logs, packages, state, all).
         /// </summary>
-        public Uri ProxyApiUri { get; set; }
+        public IList<string> CleanTargets { get; set; }
 
         /// <summary>
         /// Blob store to use for uploading Virtual Client content/monitoring files.
@@ -97,6 +98,29 @@ namespace VirtualClient
         public DateTime ExitWaitTimeout { get; set; }
 
         /// <summary>
+        /// True if a request to perform clean operations was requested on the
+        /// command line.
+        /// </summary>
+        public bool IsCleanRequested
+        {
+            get
+            {
+                return this.CleanTargets != null || this.LogRetention != null;
+            }
+        }
+
+        /// <summary>
+        /// The logging level for the application (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).
+        /// </summary>
+        public LogLevel LoggingLevel { get; set; } = LogLevel.Information;
+
+        /// <summary>
+        /// The retention period to keep log files. If not defined, log files will be left on
+        /// the system indefinitely.
+        /// </summary>
+        public TimeSpan? LogRetention { get; set; }
+
+        /// <summary>
         /// True if the output of processes executed should be logged to files in
         /// the logs directory.
         /// </summary>
@@ -119,6 +143,12 @@ namespace VirtualClient
         public DependencyStore PackageStore { get; set; }
 
         /// <summary>
+        /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
+        /// or downloaded from the proxy endpoint.
+        /// </summary>
+        public Uri ProxyApiUri { get; set; }
+
+        /// <summary>
         /// Issues a request to the OS to reboot.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies for requesting a reboot.</param>
@@ -135,6 +165,96 @@ namespace VirtualClient
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
         public abstract Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource);
+
+        /// <summary>
+        /// Executes clean/reset operations within the Virtual Client application folder. This is used to 
+        /// cleanup resources such as the "logs", "packages" and "state" directories.
+        /// </summary>
+        /// <param name="systemManagement">Provides system management functions required to execute the clean operations.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="logger"></param>
+        protected async Task CleanAsync(ISystemManagement systemManagement, CancellationToken cancellationToken, ILogger logger = null)
+        {
+            VirtualClient.Contracts.CleanTargets targets = null;
+            DateTime? logRetentionDate = null;
+
+            if (this.LogRetention != null)
+            {
+                logRetentionDate = DateTime.UtcNow.Subtract(this.LogRetention.Value);
+            }
+
+            if (this.CleanTargets != null)
+            {
+                if (this.CleanTargets?.Any() != true)
+                {
+                    // --clean used as a flag
+                    targets = VirtualClient.Contracts.CleanTargets.Create();
+                }
+                else
+                {
+                    targets = VirtualClient.Contracts.CleanTargets.Create(this.CleanTargets);
+                }
+
+                Type commandType = this.GetType();
+                EventContext telemetryContext = EventContext.Persisted();
+
+                telemetryContext.AddContext("cleanTargets", this.CleanTargets);
+
+                if (this.LogRetention != null)
+                {
+                    telemetryContext.AddContext("logRetention", this.LogRetention);
+                }
+
+                if (targets.CleanLogs)
+                {
+                    try
+                    {
+                        await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
+                        {
+                            await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
+                        });
+                    }
+                    catch
+                    {
+                        // Best effort.
+                    }
+                }
+
+                if (targets.CleanPackages)
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanPackages", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanPackagesDirectoryAsync(cancellationToken);
+                    });
+                }
+
+                if (targets.CleanState)
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanState", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanStateDirectoryAsync(cancellationToken);
+                    });
+                }
+            }
+            else if (logRetentionDate != null)
+            {
+                Type commandType = this.GetType();
+                EventContext telemetryContext = EventContext.Persisted()
+                    .AddContext("logRetention", this.LogRetention);
+
+                try
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
+                    });
+                }
+                catch
+                {
+                    // Best effort.
+                }
+            }
+        }
 
         /// <summary>
         /// Returns assembly version information for the application.
@@ -168,6 +288,11 @@ namespace VirtualClient
 
             this.InitializeGlobalTelemetryProperties(args);
 
+            if (this.Debug)
+            {
+                this.LoggingLevel = LogLevel.Trace;
+            }
+
             if (this.Metadata?.Any() == true)
             {
                 VirtualClientRuntime.Metadata.AddRange(this.Metadata, true);
@@ -188,7 +313,7 @@ namespace VirtualClient
                 platformSpecifics,
                 this.EventHubConnectionString,
                 this.ProxyApiUri,
-                this.Debug,
+                this.LoggingLevel,
                 telemetrySource?.ToString());
 
             List<IBlobManager> blobStores = new List<IBlobManager>();
@@ -205,7 +330,7 @@ namespace VirtualClient
                 this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
                 this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
 
-                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces-blobs.log"), TimeSpan.FromSeconds(5))
+                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces-blobs.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .CreateLogger("Proxy");
 
                 CommandBase.proxyApiDebugLoggers.Add(debugLogger);
@@ -237,16 +362,16 @@ namespace VirtualClient
             return dependencies;
         }
 
-        private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, bool debugMode)
+        private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
-            loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(LogLevel.Trace)
+            loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(level)
                 .WithFilter((eventId, logLevel, state) =>
                 {
-                    return logLevel >= LogLevel.Warning || eventId.Id == (int)LogType.Trace && debugMode == true;
+                    return eventId.Id == (int)LogType.Trace;
                 }));
         }
 
-        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, string eventHubConnectionString)
+        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, string eventHubConnectionString, LogLevel level)
         {
             if (!string.IsNullOrWhiteSpace(eventHubConnectionString))
             {
@@ -254,7 +379,7 @@ namespace VirtualClient
 
                 if (settings.IsEnabled)
                 {
-                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubConnectionString, settings);
+                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubConnectionString, settings, level);
                     if (eventHubProviders?.Any() == true)
                     {
                         loggingProviders.AddRange(eventHubProviders);
@@ -263,14 +388,14 @@ namespace VirtualClient
             }
         }
 
-        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration)
+        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, LogLevel level)
         {
             FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
 
             if (settings.IsEnabled)
             {
                 PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings);
+                IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings, level);
 
                 if (loggingProviders?.Any() == true)
                 {
@@ -283,7 +408,7 @@ namespace VirtualClient
         {
             if (proxyApiUri != null)
             {
-                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5))
+                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .CreateLogger("Proxy");
 
                 CommandBase.proxyApiDebugLoggers.Add(debugLogger);
@@ -295,14 +420,14 @@ namespace VirtualClient
             }
         }
 
-        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics specifics, string eventHubConnectionString, Uri proxyApiUri, bool debugMode, string source = null)
+        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics specifics, string eventHubConnectionString, Uri proxyApiUri, LogLevel level, string source = null)
         {
             // Application loggers. Events are routed to different loggers based upon
             // the EventId defined when the message is logged (e.g. Trace, Error, SystemEvent, TestMetrics).
             List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
 
-            CommandBase.AddConsoleLogging(loggingProviders, debugMode);
-            CommandBase.AddFileLogging(loggingProviders, configuration);
+            CommandBase.AddConsoleLogging(loggingProviders, level);
+            CommandBase.AddFileLogging(loggingProviders, configuration, level);
 
             if (proxyApiUri != null)
             {
@@ -310,7 +435,7 @@ namespace VirtualClient
             }
             else
             {
-                CommandBase.AddEventHubLogging(loggingProviders, configuration, eventHubConnectionString);
+                CommandBase.AddEventHubLogging(loggingProviders, configuration, eventHubConnectionString, level);
             }
 
             return loggingProviders.Any() ? new LoggerFactory(loggingProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
@@ -323,6 +448,7 @@ namespace VirtualClient
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 ["clientId"] = this.AgentId.ToLowerInvariant(),
+                ["clientInstance"] = Guid.NewGuid().ToString(),
                 ["appVersion"] = extensionsVersion ?? platformVersion,
                 ["appPlatformVersion"] = platformVersion,
                 ["executionArguments"] = SensitiveData.ObscureSecrets(string.Join(" ", args)),

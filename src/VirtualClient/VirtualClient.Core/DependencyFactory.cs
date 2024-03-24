@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -14,6 +14,7 @@ namespace VirtualClient
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
     using Serilog;
+    using Serilog.Events;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
@@ -120,7 +121,8 @@ namespace VirtualClient
         /// </summary>
         /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(string eventHubConnectionString, EventHubLogSettings settings)
+        /// <param name="level">The logging severity level.</param>
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(string eventHubConnectionString, EventHubLogSettings settings, LogLevel level)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
@@ -128,15 +130,16 @@ namespace VirtualClient
             {
                 // Logs/Traces
                 EventHubTelemetryChannel tracesChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                eventHubConnectionString,
-                settings.TracesHubName);
+                    eventHubConnectionString,
+                    settings.TracesHubName);
 
                 tracesChannel.EventTransmissionError += (sender, args) =>
                 {
                     ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (traces): {args.Error.Message}");
                 };
 
-                ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel)
+                // Traces logging is affected by --log-level values defined on the command line.
+                ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
                     .HandleTraceEvents();
 
                 loggerProviders.Add(tracesLoggerProvider);
@@ -151,7 +154,9 @@ namespace VirtualClient
                     ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (metrics): {args.Error.Message}");
                 };
 
-                ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel)
+                // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
+                // always written.
+                ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
                     .HandleMetricsEvents();
 
                 loggerProviders.Add(metricsLoggerProvider);
@@ -166,7 +171,9 @@ namespace VirtualClient
                     ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (events): {args.Error.Message}");
                 };
 
-                ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel)
+                // System Events are NOT affected by --log-level values defined on the command line. Events are
+                // always written.
+                ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace)
                     .HandleSystemEvents();
 
                 loggerProviders.Add(eventsLoggerProvider);
@@ -180,8 +187,9 @@ namespace VirtualClient
         /// </summary>
         /// <param name="logFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\traces.log).</param>
         /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
+        /// <param name="level">The logging severity level.</param>
         /// <param name="excludes">Properties to exclude from JSON structured output.</param>
-        public static ILoggerProvider CreateFileLoggerProvider(string logFilePath, TimeSpan flushInterval, IEnumerable<string> excludes = null)
+        public static ILoggerProvider CreateFileLoggerProvider(string logFilePath, TimeSpan flushInterval, LogLevel level, IEnumerable<string> excludes = null)
         {
             logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
 
@@ -199,7 +207,7 @@ namespace VirtualClient
                     retainedFileCountLimit: 10,
                     flushToDiskInterval: flushInterval);
 
-                loggerProvider = new SerilogFileLoggerProvider(logConfiguration);
+                loggerProvider = new SerilogFileLoggerProvider(logConfiguration, level);
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
@@ -236,7 +244,8 @@ namespace VirtualClient
         /// </summary>
         /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
         /// <param name="settings">Defines the settings for each log file that will be written.</param>
-        public static IEnumerable<ILoggerProvider> CreateFileLoggerProviders(string logFileDirectory, FileLogSettings settings)
+        /// <param name="level">The minimum logging severity level.</param>
+        public static IEnumerable<ILoggerProvider> CreateFileLoggerProviders(string logFileDirectory, FileLogSettings settings, LogLevel level)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
             List<string> excludes = new List<string>
@@ -260,14 +269,14 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
-                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), excludes)
+                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), level, excludes)
                     .HandleTraceEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), metricsExcludes)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), LogLevel.Trace, metricsExcludes)
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
@@ -281,14 +290,14 @@ namespace VirtualClient
                 loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Performance Counters
-                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
+                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), LogLevel.Trace, metricsExcludes)
                     .HandlePerformanceCounterEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => countersLoggerProvider.Dispose()));
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), excludes)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), LogLevel.Trace, excludes)
                     .HandleSystemEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));

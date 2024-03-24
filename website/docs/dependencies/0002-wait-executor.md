@@ -1,4 +1,4 @@
-﻿# Wait Executor Dependency
+# Wait Executor Dependency
 Virtual Client has a dependency component that can be added to a workload or monitor profile to wait for given amount of time between actions/dependencies steps in VC. The following section illustrates the
 details for integrating this into the profile.
 
@@ -24,7 +24,6 @@ The following sections provides examples for how to integrate the component into
 ```json
 {
   "Description": "SPEC CPU 2017 Integer and Floating Point (SPECrate) Benchmark Workload",
-  "MinimumExecutionInterval": "00:05:00",
   "MinimumRequiredExecutionTime": "02:00:00",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "(4-cores)=02:00:00,(16-cores)=05:00:00,(64-cores)=10:00:00",

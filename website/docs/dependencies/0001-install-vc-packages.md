@@ -1,4 +1,4 @@
-﻿# Install VC Packages
+# Install VC Packages
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install dependency packages from a package store. The following section illustrates the
 details for integrating this into the profile.
 

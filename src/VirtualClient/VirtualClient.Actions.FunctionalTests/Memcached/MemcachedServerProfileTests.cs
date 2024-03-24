@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -10,7 +10,9 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
     using static VirtualClient.Actions.MemcachedExecutor;
@@ -61,9 +63,12 @@ namespace VirtualClient.Actions
         [TestCase("PERF-MEMCACHED.json")]
         public async Task MemcachedMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetLoggedInUserName())
+                            .Returns("mockuser");
+
             IEnumerable<string> expectedCommands = new List<string>
             {
-                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384\""
+                $"sudo -u mockuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384\""
             };
 
             // Setup the expectations for the workload
@@ -73,9 +78,13 @@ namespace VirtualClient.Actions
             IPAddress.TryParse("1.2.3.5", out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
-            ServerState state = new ServerState(new Dictionary<string, IConvertible>
+            ServerState state = new ServerState(new List<PortDescription>
             {
-                [nameof(ServerState.Ports)] = 6379
+                new PortDescription
+                {
+                    CpuAffinity = "0,1,2,3",
+                    Port = 6379
+                }
             });
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);

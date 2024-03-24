@@ -1,4 +1,4 @@
-﻿# Getting Started (Docker)
+# Getting Started (Docker)
 
 In this document, we are going to run OpenSSL workload in a Docker Container.
 

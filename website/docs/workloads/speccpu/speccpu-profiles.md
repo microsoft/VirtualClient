@@ -1,4 +1,4 @@
-﻿# SPEC CPU Workload Profiles
+# SPEC CPU Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPEC CPU workload.
 
 * [Workload Details](./speccpu.md)  

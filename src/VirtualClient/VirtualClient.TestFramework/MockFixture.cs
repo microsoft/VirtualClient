@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -11,7 +11,9 @@ namespace VirtualClient
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
+    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
@@ -54,6 +56,8 @@ namespace VirtualClient
         /// </summary>
         public static readonly string TestResourcesDirectory = Path.Combine(TestAssemblyDirectory, "TestResources");
 
+        private static readonly char[] PathDividers = new char[] { '\\', '/' };
+        private static readonly Regex WindowsVolumeExpression = new Regex(@"^([a-z]\:[\\/])(.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private string experimentId;
 
         static MockFixture()
@@ -70,6 +74,12 @@ namespace VirtualClient
             this.experimentId = Guid.NewGuid().ToString();
             this.Setup(Environment.OSVersion.Platform, Architecture.X64);
         }
+
+        /// <summary>
+        /// A platform specific instance for the current OS and CPU architecture on which the
+        /// testing operations are running.
+        /// </summary>
+        public static PlatformSpecifics CurrentPlatform { get; } = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
         /// <summary>
         /// A mock API client.
@@ -238,6 +248,66 @@ namespace VirtualClient
         /// A mock profile timing/timeout definition.
         /// </summary>
         public ProfileTiming Timing { get; set; }
+
+        /// <summary>
+        /// Gets a directory path relevant to the test class type (.dll location) that is formatted
+        /// for the particular OS platform on which the developer is working (e.g. Linux, Windows).
+        /// This should be used to reference test resource/example file paths in order to ensure support
+        /// for cross-platform developer testing and IDEs.
+        /// </summary>
+        public static string GetDirectory(Type testClassType, params string[] pathSegments)
+        {
+            if (pathSegments?.Any() != true)
+            {
+                return MockFixture.CurrentPlatform.Combine(Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location));
+            }
+            else
+            {
+                return MockFixture.CurrentPlatform.Combine(new string[] { Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location) }.Union(pathSegments).ToArray());
+            }
+        }
+
+        /// <summary>
+        /// Use in place of Path.GetDirectoryName(). This allows for the unit tests to get directory names/paths
+        /// in scenarios where we are projecting paths for 1 OS while actually running on another. Note that there
+        /// is a shortcoming in the .NET framework that causes the directory name to fail getting resolved when
+        /// presenting a Windows-style path (e.g. C:\any\path) to the Path.GetDirectoryName() method while running
+        /// on a Linux system.
+        /// </summary>
+        /// <param name="path">The path for which to get the directory name.</param>
+        /// <returns>The directory name for the path.</returns>
+        public static string GetDirectoryName(string path)
+        {
+            string directoryName = null;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                string effectivePath = path.TrimEnd(MockFixture.PathDividers);
+                int firstIndexOfPathDivider = effectivePath.IndexOfAny(MockFixture.PathDividers);
+                int lastIndexOfPathDivider = effectivePath.LastIndexOfAny(MockFixture.PathDividers);
+
+                if (lastIndexOfPathDivider >= 0 && lastIndexOfPathDivider != firstIndexOfPathDivider)
+                {
+                    // Paths with more than 1 segment.
+                    //
+                    // e.g.
+                    // /home/path    -> /home
+                    // C:\Users\Path -> C:\Users
+                    directoryName = effectivePath.Substring(0, lastIndexOfPathDivider);
+                }
+                else
+                {
+                    // e.g.
+                    // C:\Users -> C:\
+                    System.Text.RegularExpressions.Match volumeMatch = MockFixture.WindowsVolumeExpression.Match(path);
+                    if (volumeMatch.Success)
+                    {
+                        directoryName = volumeMatch.Groups[1].Value;
+                    }
+                }
+            }
+
+            return directoryName;
+        }
 
         /// <summary>
         /// Returns a path that is combined specific to the platform defined for this

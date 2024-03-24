@@ -1,4 +1,4 @@
-﻿namespace VirtualClient
+namespace VirtualClient
 {
     using System.Collections.Generic;
     using NUnit.Framework;

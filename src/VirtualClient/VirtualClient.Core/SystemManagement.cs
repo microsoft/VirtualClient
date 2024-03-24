@@ -1,10 +1,11 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO.Abstractions;
     using System.Linq;
@@ -126,18 +127,55 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Get the logged In Username i.e, username of the user who invoked a command with elevated privileges using the "sudo" command in Unix operating system.
+        /// </summary>
+        public string GetLoggedInUserName()
+        {
+            string loggedInUserName = Environment.UserName;
+            if (string.Equals(loggedInUserName, "root"))
+            {
+                loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
+                {
+                    loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
+                    if (string.IsNullOrEmpty(loggedInUserName))
+                    {
+                        throw new EnvironmentSetupException($"'USER' Environment variable is set to root and 'SUDO_USER' Environment variable is either root or null." +
+                            "The required environment variable 'VC_SUDO_USER' is expected to be set to a valid non-empty value." +
+                            "Please ensure that the necessary environment variables are configured properly for the execution environment.", ErrorReason.EnvironmentIsInsufficent);
+                    }
+                }
+            }
+
+            return loggedInUserName;
+        }
+
+        /// <summary>
         /// Returns information about the specific Linux distribution (e.g. Ubuntu, CentOS).
         /// </summary>
         public async Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken)
         {
-            using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
-            {
-                await process.StartAndWaitAsync(cancellationToken);
-                process.ThrowIfErrored<ProcessException>(ProcessProxy.DefaultSuccessCodes, "hostnamectl failed.", errorReason: ErrorReason.LinuxDistributionNotSupported);
-                HostnamectlParser parser = new HostnamectlParser(process.StandardOutput.ToString());
+            LinuxDistributionInfo result = new LinuxDistributionInfo();
 
-                return parser.Parse();
+            try
+            {
+                string osReleaseFile = await this.FileSystem.File.ReadAllTextAsync("/etc/os-release", cancellationToken).ConfigureAwait(false);
+                OsReleaseFileParser parser = new OsReleaseFileParser(osReleaseFile);
+                result = parser.Parse();
             }
+            catch
+            {
+                using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+                    process.ThrowIfErrored<ProcessException>(ProcessProxy.DefaultSuccessCodes, "hostnamectl failed.", errorReason: ErrorReason.LinuxDistributionNotSupported);
+                    HostnamectlParser parser = new HostnamectlParser(process.StandardOutput.ToString());
+
+                    result = parser.Parse();
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

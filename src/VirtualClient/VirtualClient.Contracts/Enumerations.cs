@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -536,6 +536,11 @@ namespace VirtualClient
         Flatcar,
 
         /// <summary>
+        /// Fedora
+        /// </summary>
+        Fedora,
+
+        /// <summary>
         /// MSFT internal CentOS based distro Mariner
         /// </summary>
         Mariner
@@ -608,7 +613,15 @@ namespace VirtualClient
         /// (e.g. workload, monitor, dependency scenario). In telemetry output, 
         /// the metadata section name will be: 'metadata_scenario'.
         /// </summary>
-        Scenario
+        Scenario,
+
+        /// <summary>
+        /// Metadata related to the Virtual Client runtime scenario 
+        /// (e.g. workload, monitor, dependency scenario) as "extensions" to
+        /// that scenario definition. In telemetry output, the metadata section name 
+        /// will be: 'metadata_scenario_ext'.
+        /// </summary>
+        ScenarioExtensions
     }
 
     /// <summary>

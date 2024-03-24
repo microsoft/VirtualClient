@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -56,6 +56,12 @@ namespace VirtualClient.Contracts
         /// <param name="ipAddress">IP address present in the environment layout for the agent</param>
         /// <returns>True/False is an IP is defined on current system.</returns>
         bool IsLocalIPAddress(string ipAddress);
+
+        /// <summary>
+        /// Get the logged In Username i.e, username of the user who invoked a command with elevated privileges using the "sudo" command in Unix operating system.
+        /// </summary>
+        /// <returns>Username of the logged In user</returns>
+        string GetLoggedInUserName();
 
         /// <summary>
         /// Returns information about the CPU on the system.

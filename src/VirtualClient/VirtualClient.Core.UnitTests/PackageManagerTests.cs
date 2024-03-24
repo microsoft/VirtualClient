@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -63,6 +63,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversExtensionsThatExistInAUserDefinedLocation()
         {
             string expectedPackageName = "package_123";
@@ -84,6 +85,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversExtensionsThatExistInTheDefaultPackagesDirectory()
         {
             string expectedPackageName = "package_123";
@@ -113,8 +115,8 @@ namespace VirtualClient
             Assert.IsEmpty(packages);
         }
 
-
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerSearchesForExtensionsDuringDiscoveryUsingTheExpectedSearchPriority()
         {
             // Packages that exist in the user-defined location are selected first.
@@ -144,6 +146,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversPackagesThatExistInAUserDefinedLocation()
         {
             string expectedPackageName = "package_123";
@@ -163,6 +166,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversPackagesThatExistInTheDefaultPackagesDirectory()
         {
             string expectedPackageName = "package_123";
@@ -181,6 +185,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerSearchesForPackagesDuringDiscoveryUsingTheExpectedSearchPriority()
         {
             // Packages that exist in the user-defined location are selected first.
@@ -220,6 +225,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerCanFindPackagesThatAreAlreadyRegistered()
         {
             string expectedPackageName = "package_987";
@@ -326,6 +332,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerInstallsDependencyPackagesToTheExpectedLocation_CustomInstallationPathProvided()
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
@@ -561,6 +568,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerInstallsProfileExtensionsToTheExpectedLocation()
         {
             string profileExtensionsPath = this.mockFixture.Combine(
@@ -585,6 +593,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerInstallsBinaryExtensionsToTheExpectedLocation()
         {
             string binaryExtensionsPath = this.mockFixture.ToPlatformSpecificPath(

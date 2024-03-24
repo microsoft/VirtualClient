@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -46,8 +46,15 @@ namespace VirtualClient
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IServiceCollection dependencies = this.InitializeDependencies(args);
+            ILogger logger = dependencies.GetService<ILogger>();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             IApiManager apiManager = dependencies.GetService<IApiManager>();
             IApiClientManager apiClientManager = dependencies.GetService<IApiClientManager>();
+
+            if (this.IsCleanRequested)
+            {
+                await this.CleanAsync(systemManagement, cancellationToken, logger);
+            }
 
             int localPort = apiClientManager.GetApiPort(new ClientInstance(
                 Environment.MachineName,

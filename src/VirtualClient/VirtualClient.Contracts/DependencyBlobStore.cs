@@ -1,4 +1,4 @@
-﻿using VirtualClient.Common.Extensions;
+using VirtualClient.Common.Extensions;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.

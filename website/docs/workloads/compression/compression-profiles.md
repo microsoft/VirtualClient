@@ -1,4 +1,4 @@
-﻿---
+---
 id: compression-profiles
 sidebar_position: 1
 ---

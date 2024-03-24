@@ -1,9 +1,12 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Threading;
     using Moq;
     using NUnit.Framework;

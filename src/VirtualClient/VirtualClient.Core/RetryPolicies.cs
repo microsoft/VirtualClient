@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -17,6 +17,11 @@ namespace VirtualClient
         /// Common retry policy for deleting files.
         /// </summary>
         public static IAsyncPolicy FileDelete { get; } = Policy.Handle<IOException>().WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries));
+
+        /// <summary>
+        /// Common retry policy for file access and operations.
+        /// </summary>
+        public static IAsyncPolicy FileOperations { get; } = Policy.Handle<IOException>().WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries));
 
         /// <summary>
         /// Common retry policy for state updates via the <see cref="StateManager"/>.

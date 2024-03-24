@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Common.Telemetry
@@ -29,6 +29,7 @@ namespace VirtualClient.Common.Telemetry
         private static AssemblyName loggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
         private static AssemblyName executingAssembly = Assembly.GetEntryAssembly().GetName();
         private EventHubTelemetryChannel underlyingTelemetryChannel;
+        private LogLevel minumumLogLevel;
 
         static EventHubTelemetryLogger()
         {
@@ -39,10 +40,12 @@ namespace VirtualClient.Common.Telemetry
         /// Initializes a new instance of the <see cref="EventHubTelemetryLogger"/> class.
         /// </summary>
         /// <param name="channel">The telemetry channel that log data is sent to.</param>
-        public EventHubTelemetryLogger(EventHubTelemetryChannel channel)
+        /// <param name="level">The minimum logging severity level.</param>
+        public EventHubTelemetryLogger(EventHubTelemetryChannel channel, LogLevel level)
         {
             channel.ThrowIfNull(nameof(channel));
             this.underlyingTelemetryChannel = channel;
+            this.minumumLogLevel = level;
         }
 
         /// <summary>
@@ -100,7 +103,7 @@ namespace VirtualClient.Common.Telemetry
         /// <inheritdoc />
         public bool IsEnabled(LogLevel logLevel)
         {
-            return true;
+            return logLevel >= this.minumumLogLevel;
         }
 
         /// <inheritdoc/>
@@ -108,6 +111,11 @@ namespace VirtualClient.Common.Telemetry
         {
             try
             {
+                if (!this.IsEnabled(logLevel))
+                {
+                    return;
+                }
+
                 EventData eventData = this.CreateEvent(logLevel, eventId, state, exception, formatter);
                 this.AddEventDataToChannel(eventData);
             }

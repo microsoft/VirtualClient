@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies.Packaging
@@ -88,6 +88,7 @@ namespace VirtualClient.Dependencies.Packaging
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsFirstDisk()
         {
             Disk mockDisk = this.mockFixture.Create<Disk>();
@@ -111,6 +112,7 @@ namespace VirtualClient.Dependencies.Packaging
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsLastDisk()
         {
             Disk mockDisk = this.mockFixture.Create<Disk>();

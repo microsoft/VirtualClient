@@ -1,4 +1,4 @@
-﻿# Run Custom Scripts with Virtual Client
+# Run Custom Scripts with Virtual Client
 The following section covers the steps to use custom scripts and test suites with Virtual Client, by just authoring custom profiles, thereby 
 without any code change in Virtual Client. Virtual Client provides multiple "Action" components that can be used to build a custom profile 
 and run any script/test-suite. Virtual Client would have some expectations from the custom script/test-suite in terms of folder 
@@ -229,7 +229,7 @@ The following parameters are supported by the Executor Classes that can be modif
      ``` json
          {
             "Description": "Memory Stress Script Executor",
-            "MinimumExecutionInterval": "00:10:00",
+            "MinimumExecutionInterval": "00:00:05",
             "Metadata": {
                 "SupportedPlatforms": "win-x64,win-arm64"
             },

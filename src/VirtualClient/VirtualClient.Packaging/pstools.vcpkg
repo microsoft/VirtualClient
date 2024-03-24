@@ -1,8 +1,0 @@
-﻿{
-    "name": "pstools",
-    "description": "Kit of Sysinternals command-line tools that aid in the administration of local and remote systems.",
-    "metadata": {
-        "version": "2.51",
-        "url": "https://learn.microsoft.com/en-us/sysinternals/downloads/pstools"
-    }
-}

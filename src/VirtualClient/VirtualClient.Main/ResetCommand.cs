@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -32,10 +32,18 @@ namespace VirtualClient
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IServiceCollection dependencies = this.InitializeDependencies(args);
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            ILogger logger = dependencies.GetService<ILogger>();
 
-            await ResetCommand.CleanLogsDirectoryAsync(systemManagement, cancellationToken);
-            await ResetCommand.CleanStateDirectoryAsync(systemManagement, cancellationToken);
-            await ResetCommand.CleanPackagesAsync(systemManagement, cancellationToken);
+            if (this.CleanTargets == null)
+            {
+                // The default is to clean everything.
+                this.CleanTargets = new List<string>
+                {
+                    VirtualClient.Contracts.CleanTargets.All
+                };
+            }
+
+            await this.CleanAsync(systemManagement, cancellationToken, logger);
 
             return 0;
         }
@@ -69,82 +77,6 @@ namespace VirtualClient
             dependencies.AddSingleton<IStateManager>(systemManagement.StateManager);
 
             return dependencies;
-        }
-
-        private static async Task CleanLogsDirectoryAsync(ISystemManagement systemManagement, CancellationToken cancellationToken)
-        {
-            IFileSystem fileSystem = systemManagement.FileSystem;
-            string logsDirectory = systemManagement.PlatformSpecifics.GetLogsPath();
-
-            IEnumerable<string> logFiles = fileSystem.Directory.EnumerateFiles(logsDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await ResetCommand.DeleteFiles(fileSystem, logFiles, cancellationToken);
-
-            IEnumerable<string> logDirectories = fileSystem.Directory.EnumerateDirectories(logsDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await ResetCommand.DeleteDirectories(fileSystem, logDirectories, cancellationToken);
-        }
-
-        private static async Task CleanPackagesAsync(ISystemManagement systemManagement, CancellationToken cancellationToken)
-        {
-            IFileSystem fileSystem = systemManagement.FileSystem;
-            string packagesDirectory = systemManagement.PlatformSpecifics.GetPackagePath();
-
-            IEnumerable<string> packageRegistrations = fileSystem.Directory.EnumerateFiles(packagesDirectory, "*.vcpkgreg", System.IO.SearchOption.AllDirectories);
-
-            if (packageRegistrations?.Any() == true)
-            {
-                foreach (string file in packageRegistrations)
-                {
-                    DependencyPath packageInfo = (await fileSystem.File.ReadAllTextAsync(file)).FromJson<DependencyPath>();
-                    bool isBuiltIn = packageInfo.Metadata.GetValue<bool>("built-in", false);
-
-                    if (!isBuiltIn)
-                    {
-                        if (fileSystem.Directory.Exists(packageInfo.Path) && packageInfo.Path.StartsWith(packagesDirectory))
-                        {
-                            IEnumerable<string> packageFiles = fileSystem.Directory.EnumerateFiles(packageInfo.Path, "*.*", System.IO.SearchOption.AllDirectories);
-
-                            await DeleteFiles(fileSystem, packageFiles, cancellationToken);
-                            await fileSystem.Directory.DeleteAsync(packageInfo.Path, true);
-                        }
-
-                        await fileSystem.File.DeleteAsync(file);
-                    }
-                }
-            }
-        }
-
-        private static async Task CleanStateDirectoryAsync(ISystemManagement systemManagement, CancellationToken cancellationToken)
-        {
-            IFileSystem fileSystem = systemManagement.FileSystem;
-            string stateDirectory = systemManagement.PlatformSpecifics.GetStatePath();
-
-            IEnumerable<string> stateFiles = fileSystem.Directory.EnumerateFiles(stateDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await ResetCommand.DeleteFiles(fileSystem, stateFiles, cancellationToken);
-
-            IEnumerable<string> stateDirectories = fileSystem.Directory.EnumerateDirectories(stateDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await ResetCommand.DeleteDirectories(fileSystem, stateDirectories, cancellationToken);
-        }
-
-        private static async Task DeleteDirectories(IFileSystem fileSystem, IEnumerable<string> directories, CancellationToken cancellationToken)
-        {
-            if (directories?.Any() == true)
-            {
-                foreach (string directory in directories)
-                {
-                    await fileSystem.Directory.DeleteAsync(directory, true);
-                }
-            }
-        }
-
-        private static async Task DeleteFiles(IFileSystem fileSystem, IEnumerable<string> files, CancellationToken cancellationToken)
-        {
-            if (files?.Any() == true)
-            {
-                foreach (string file in files)
-                {
-                    await fileSystem.File.DeleteAsync(file);
-                }
-            }
         }
     }
 }
