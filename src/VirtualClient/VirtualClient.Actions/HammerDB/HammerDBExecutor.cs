@@ -213,7 +213,7 @@ namespace VirtualClient.Actions
 
             await HammerDBExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManager.FirewallManager, cancellationToken);
 
-            DependencyPath hammerDBPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+            DependencyPath hammerDBPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.HammerDBPackagePath = hammerDBPackage.Path;
 
             await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
