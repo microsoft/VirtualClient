@@ -311,12 +311,12 @@ namespace VirtualClient.Dependencies
             this.fixture.Setup(platform, architecture);
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "PackageName", "postgresql-server" },
+                { "PackageName", "postgresql" },
                 { "ServerPassword", "postgresqlpassword" },
                 { "Port", 5432 }
             };
 
-            this.mockPackage = new DependencyPath("postgresql-server", this.fixture.GetPackagePath("postgresql-server"));
+            this.mockPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.packagePath = this.fixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
