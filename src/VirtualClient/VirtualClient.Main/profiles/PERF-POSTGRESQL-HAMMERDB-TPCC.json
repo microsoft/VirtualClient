@@ -111,22 +111,11 @@
     {
       "Type": "PostgreSQLServerConfiguration",
       "Parameters": {
-        "Scenario": "CreatePostgreSQLDatabase",
+        "Scenario": "SetupPostgreSQLDatabase",
         "Action": "SetupDatabase",
         "DatabaseName": "$.Parameters.DatabaseName",
         "Port": "$.Parameters.Port",
         "PackageName": "postgresql",
-        "Role": "Server"
-      }
-    },
-    {
-      "Type": "PostgreSQLServerConfiguration",
-      "Parameters": {
-        "Scenario": "DistributePostgreSQLDatabase",
-        "Action": "DistributeDatabase",
-        "DatabaseName": "$.Parameters.DatabaseName",
-        "PackageName": "postgresql",
-        "Port": "$.Parameters.Port",
         "Role": "Server"
       }
     },
@@ -140,6 +129,17 @@
         "PackageName": "hammerdb",
         "VirtualUsers": "$.Parameters.VirtualUsers",
         "WarehouseCount": "$.Parameters.WarehouseCount",
+        "Port": "$.Parameters.Port",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "PostgreSQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "DistributePostgreSQLDatabase",
+        "Action": "DistributeDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "PackageName": "postgresql",
         "Port": "$.Parameters.Port",
         "Role": "Server"
       }
