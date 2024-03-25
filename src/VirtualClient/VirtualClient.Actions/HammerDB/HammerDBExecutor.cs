@@ -162,6 +162,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The workload option passed to HammerDB.
+        /// </summary>
+        public string SQLServer
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.SQLServer), out IConvertible sqlServer);
+                return sqlServer?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
@@ -260,7 +272,7 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
                 string distribution = distributionInfo.LinuxDistribution.ToString();
 
-                string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --createDBTCLPath {this.CreateDBTclName} --port {this.Port}" +
+                string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --createDBTCLPath {this.CreateDBTclName} --port {this.Port}" +
                     $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --databaseName {this.DatabaseName}";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(

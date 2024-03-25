@@ -112,11 +112,11 @@ namespace VirtualClient.Actions
             this.fixture.SetupDisks(withUnformatted: true);
 
             this.hammerdbPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("hammerdb");
-            DependencyPath mySqlPackage = new DependencyPath("postgresql-server", this.fixture.GetPackagePath("postgresql-server"));
+            DependencyPath mySqlPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, platform, architecture).Path;
 
             this.fixture.SetupWorkloadPackage("hammerdb");
-            this.fixture.SetupWorkloadPackage("postgresql-server", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
+            this.fixture.SetupWorkloadPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
 
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
             this.fixture.SetupDirectory(this.mySQLPackagePath);
@@ -193,11 +193,11 @@ namespace VirtualClient.Actions
             this.fixture.SetupDisks(withUnformatted: true);
 
             this.hammerdbPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("hammerdb");
-            DependencyPath mySqlPackage = new DependencyPath("postgresql-server", this.fixture.GetPackagePath("postgresql-server"));
+            DependencyPath mySqlPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, platform, architecture).Path;
 
             this.fixture.SetupWorkloadPackage("hammerdb");
-            this.fixture.SetupWorkloadPackage("postgresql-server", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "C:\\Program Files\\PostgreSQL\\14" } });
+            this.fixture.SetupWorkloadPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "C:\\Program Files\\PostgreSQL\\14" } });
 
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
             this.fixture.SetupDirectory(this.mySQLPackagePath);
@@ -242,7 +242,7 @@ namespace VirtualClient.Actions
                     $"python3 {this.mySQLPackagePath}/configure-server.py --port 5432",
                     $"python3 {this.mySQLPackagePath}/setup-database.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
 
                     $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories {currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl",
@@ -256,7 +256,7 @@ namespace VirtualClient.Actions
                 {
                     "apt install python3 --yes --quiet",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };
@@ -275,7 +275,7 @@ namespace VirtualClient.Actions
                     $"python3 {this.mySQLPackagePath}/configure-server.py --port 5432",
                     $"python3 {tempPostgreSqlPackagePath}/setup-database.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+",
 
-                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
 
                     $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories E:\\;F:\\;G:\\;",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --databaseName hammerdbtest --createDBTCLPath createDB.tcl",
@@ -287,7 +287,7 @@ namespace VirtualClient.Actions
             {
                 return new List<string>()
                 {
-                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --createDBTCLPath createDB.tcl --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --databaseName hammerdbtest",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };
