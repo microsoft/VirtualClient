@@ -64,7 +64,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    throw new WorkloadException($"Exceptions occurred when trying to parse the workload result of 'SPEcviewperf'.", ErrorReason.WorkloadFailed);
+                    throw new SchemaException($"The SPECviewperf output file has incorrect format for parsing.");
                 }
 
                 metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index }, { "name", name } };

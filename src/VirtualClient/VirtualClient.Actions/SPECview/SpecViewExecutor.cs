@@ -228,7 +228,7 @@ namespace VirtualClient.Actions
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
 
-                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Error, relatedContext);
                 }
             }
         }
