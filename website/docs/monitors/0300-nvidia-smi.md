@@ -23,12 +23,37 @@ The following section describes the various counters/metrics that are available 
 
 | Metric Name | Description |
 |-------------|-------------|
+| utilization.gpu | GPU Utilization percentage. |
+| utilization.memory | GPU Memory Utilization percentage. |
 | temperature.gpu | GPU temperature in celsuis. |
-| utilization.gpu [%] | GPU Utilization percentage. |
-| utilization.memory [%] | GPU Memory Utilization percentage. |
-| memory.total [MiB] | Total GPU Memory in MiB. |
-| memory.free [MiB] | Free GPU Memory in MiB. |
-| memory.used [MiB] | Used GPU Memory in MiB. |
+| temperature.memory | GPU memory temperature in celsuis. |
+| power.draw.average | Average GPU Power Draw in Watts. |
+| clocks.gr | GPU Graphics Clock in MHz. |
+| clocks.sm | GPU SM Clock in MHz. |
+| clocks.video | GPU Video Clock in MHz. |
+| clocks.mem | GPU Memory Clock in MHz. |
+| memory.total | Total GPU Memory in MiB. |
+| memory.free | Free GPU Memory in MiB. |
+| memory.used | Used GPU Memory in MiB. |
+| power.draw.instant | Instantaneous GPU Power Draw in Watts. |
+| pcie.link.gen.gpucurrent | Current PCIe Link Generation. |
+| pcie.link.width.current | Current PCIe Link Width. |
+| ecc.errors.corrected.volatile.device_memory | Volatile Device Memory Corrected ECC Errors. |
+| ecc.errors.corrected.volatile.dram | Volatile DRAM Corrected ECC Errors. |
+| ecc.errors.corrected.volatile.sram | Volatile SRAM Corrected ECC Errors. |
+| ecc.errors.corrected.volatile.total | Volatile Total Corrected ECC Errors. |
+| ecc.errors.corrected.aggregate.device_memory | Aggregate Device Memory Corrected ECC Errors. |
+| ecc.errors.corrected.aggregate.dram | Aggregate DRAM Corrected ECC Errors. |
+| ecc.errors.corrected.aggregate.sram | Aggregate SRAM Corrected ECC Errors. |
+| ecc.errors.corrected.aggregate.total | Aggregate Total Corrected ECC Errors. |
+| ecc.errors.uncorrected.volatile.device_memory | Volatile Device Memory Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.volatile.dram | Volatile DRAM Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.volatile.sram | Volatile SRAM Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.volatile.total | Volatile Total Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.aggregate.device_memory | Aggregate Device Memory Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.aggregate.dram | Aggregate DRAM Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.aggregate.sram | Aggregate SRAM Uncorrected ECC Errors. |
+| ecc.errors.uncorrected.aggregate.total | Aggregate Total Uncorrected ECC Errors. |
 
 ### Example
 This is an example of the minimum profile to run NvidiaSmiMonitor.
