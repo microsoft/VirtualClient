@@ -109,6 +109,11 @@ namespace VirtualClient.Contracts
         /// <param name="text">Original text.</param>
         public static string TranslateToSecondUnit(string text)
         {
+            if (text.Trim().StartsWith('-'))
+            {
+                throw new NotSupportedException($"{nameof(TranslateToSecondUnit)} does not support negative time.");
+            }
+
             // Unit: h, hr, hrs, hour, hours
             Regex hourRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(h|hr|hrs|hours|hour)$", RegexOptions.IgnoreCase);
             Match hourMatch = Regex.Match(text, hourRegex.ToString(), hourRegex.Options);
@@ -175,13 +180,13 @@ namespace VirtualClient.Contracts
                     return Convert.ToString(secondUnitTime);
 
                 case MetricUnit.Milliseconds:
-                    return Convert.ToString(secondUnitTime * 1000);
+                    return Convert.ToString(secondUnitTime * Math.Pow(10, 3));
 
                 case MetricUnit.Microseconds:
-                    return Convert.ToString(secondUnitTime * 1000000);
+                    return Convert.ToString(secondUnitTime * Math.Pow(10, 6));
 
                 case MetricUnit.Nanoseconds:
-                    return Convert.ToString(secondUnitTime / 1.0000E+9);
+                    return Convert.ToString(secondUnitTime / Math.Pow(10, 9));
 
                 case MetricUnit.Minutes:
                     return Convert.ToString(secondUnitTime / 60);

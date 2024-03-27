@@ -49,6 +49,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
+        [TestCase("0.0h", "0")]
         [TestCase("1h", "3600")]
         [TestCase("1hrs", "3600")]
         [TestCase("1hr", "3600")]
@@ -84,6 +85,18 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
+        [TestCase(" -2seconds ")]
+        [TestCase("-1minute")]
+        public void TextParserExtensionsDoesNotSupportNegativeTime(string originalText)
+        {
+            Assert.Throws<NotSupportedException>(() => 
+            {
+                TextParsingExtensions.TranslateToSecondUnit(originalText);
+            });
+        }
+
+        [Test]
+        [TestCase("0", MetricUnit.Nanoseconds, "0")]
         [TestCase("60M", MetricUnit.Minutes, "60")]
         [TestCase("60s", MetricUnit.Minutes, "1")]
         [TestCase("60.0seCONDs", MetricUnit.Minutes, "1")]
