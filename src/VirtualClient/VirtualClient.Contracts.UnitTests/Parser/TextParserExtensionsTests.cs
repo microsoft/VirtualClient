@@ -52,22 +52,25 @@ namespace VirtualClient.Contracts.Parser
         [TestCase("1h", "3600")]
         [TestCase("1hrs", "3600")]
         [TestCase("1hr", "3600")]
-        [TestCase("1hours", "3600")]
-        [TestCase("1hour", "3600")]
+        [TestCase("1.0hours", "3600")]
+        [TestCase("0.01HOUR", "36")]
         //
         [TestCase("1m", "60")]
         [TestCase("1minutes", "60")]
-        [TestCase("1minute", "60")]
+        [TestCase("1MINUTE", "60")]
+        [TestCase("0.5MINUTE", "30")]
         //
         [TestCase("1000ms", "1")]
         [TestCase("1000milliseconds", "1")]
         [TestCase("1000millisecond", "1")]
+        [TestCase("0.99MILLISECONDS", "0.00099")]
+        [TestCase("0.99MiLLiseconDS", "0.00099")]
         //
         [TestCase("1000000us", "1")]
         [TestCase("1000000microsecond", "1")]
         [TestCase("1000000microseconds", "1")]
         //
-        [TestCase("1000000000ns", "1")]
+        [TestCase("1000000000.00ns", "1")]
         [TestCase("1000000000nanosecond", "1")]
         [TestCase("1000000000nanoseconds", "1")]
         //
@@ -81,16 +84,22 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
+        [TestCase("60M", MetricUnit.Minutes, "60")]
         [TestCase("60s", MetricUnit.Minutes, "1")]
-        [TestCase("24hr", MetricUnit.Minutes, "1440")]
+        [TestCase("60.0seCONDs", MetricUnit.Minutes, "1")]
+        [TestCase("0.01MinuteS", MetricUnit.Seconds, "0.6")]
+        [TestCase("24hour", MetricUnit.Minutes, "1440")]
+        [TestCase("24HOURs", MetricUnit.Minutes, "1440")]
+        [TestCase("2.04HOURs", MetricUnit.Minutes, "122.4")]
+        [TestCase("0.02hr", MetricUnit.Minutes, "1.2")]
         [TestCase("24hrs", MetricUnit.Seconds, "86400")]
         [TestCase("1000ms", MetricUnit.Milliseconds, "1000")]
         [TestCase("1000ms", MetricUnit.Seconds, "1")]
         [TestCase("1000000000nanoseconds", MetricUnit.Microseconds, "1000000")]
-        [TestCase("1000000us", MetricUnit.Seconds, "1")]
+        [TestCase("1000000.00us", MetricUnit.Seconds, "1")]
         public void TextParserExtensionsTranslateTimeUnitAsExpected(string originalText, string metricUnit, string expectedOutput)
         {
-            Assert.IsTrue(string.Equals(TextParsingExtensions.TranslateTimeByUnit(originalText, metricUnit), expectedOutput));
+            Assert.AreEqual(TextParsingExtensions.TranslateTimeByUnit(originalText, metricUnit), expectedOutput);
         }
     }
 }
