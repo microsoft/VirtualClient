@@ -104,6 +104,100 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Translate the unit of time to second. Example: 1m->60 and 1h->3,600
+        /// </summary>
+        /// <param name="text">Original text.</param>
+        public static string TranslateToSecondUnit(string text)
+        {
+            if (text.Trim().StartsWith('-'))
+            {
+                throw new NotSupportedException($"{nameof(TranslateToSecondUnit)} does not support negative time.");
+            }
+
+            // Unit: h, hr, hrs, hour, hours
+            Regex hourRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(h|hr|hrs|hours|hour)$", RegexOptions.IgnoreCase);
+            Match hourMatch = Regex.Match(text, hourRegex.ToString(), hourRegex.Options);
+            if (hourMatch.Success)
+            {
+                return Convert.ToString(Convert.ToDouble(hourMatch.Groups[1].Value) * (60 * 60));
+            }
+
+            // Unit: ms, millisecond, milliseconds
+            Regex millisecondRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(ms|milliseconds|millisecond)", RegexOptions.IgnoreCase);
+            Match millisecondMatch = Regex.Match(text, millisecondRegex.ToString(), millisecondRegex.Options);
+            if (millisecondMatch.Success)
+            {
+                return Convert.ToString(Convert.ToDouble(millisecondMatch.Groups[1].Value) * Math.Pow(10, -3));
+            }
+
+            // Unit: us, microsecond, microseconds
+            Regex microsecondsRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(us|microseconds|microsecond)", RegexOptions.IgnoreCase);
+            Match microsecondsMatch = Regex.Match(text, microsecondsRegex.ToString(), microsecondsRegex.Options);
+            if (microsecondsMatch.Success)
+            {
+                return Convert.ToString(Convert.ToDouble(microsecondsMatch.Groups[1].Value) * Math.Pow(10, -6));
+            }
+
+            // Unit: ns, nanosecond, nanoseconds
+            Regex nanosecondsRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(ns|nanoseconds|nanosecond)", RegexOptions.IgnoreCase);
+            Match nanosecondMatch = Regex.Match(text, nanosecondsRegex.ToString(), nanosecondsRegex.Options);
+            if (nanosecondMatch.Success)
+            {
+                return Convert.ToString(Convert.ToDouble(nanosecondMatch.Groups[1].Value) * Math.Pow(10, -9));
+            }
+
+            // Unit: m, minute, minutes
+            Regex minuteRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(m|minutes|minute)", RegexOptions.IgnoreCase);
+            Match minuteMatch = Regex.Match(text, minuteRegex.ToString(), minuteRegex.Options);
+            if (minuteMatch.Success)
+            {
+                return Convert.ToString(Convert.ToDouble(minuteMatch.Groups[1].Value) * 60);
+            }
+
+            // Unit: s, second, seconds
+            Regex secondsRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(s|seconds|second)", RegexOptions.IgnoreCase);
+            Match secondsMatch = Regex.Match(text, secondsRegex.ToString(), secondsRegex.Options);
+            if (secondsMatch.Success)
+            {
+                return Convert.ToString(Convert.ToDouble(secondsMatch.Groups[1].Value) * 1);
+            }
+
+            return text;
+        }
+
+        /// <summary>
+        /// Translate time by unit provided.
+        /// </summary>
+        /// <param name="text">Original text.</param>
+        /// <param name="metricUnit">time unit for eg seconds,milliseconds, etc.</param>
+        public static string TranslateTimeByUnit(string text, string metricUnit)
+        {
+            double secondUnitTime = Convert.ToDouble(TranslateToSecondUnit(text));
+
+            switch (metricUnit)
+            {
+                case MetricUnit.Seconds:
+                    return Convert.ToString(secondUnitTime);
+
+                case MetricUnit.Milliseconds:
+                    return Convert.ToString(secondUnitTime * Math.Pow(10, 3));
+
+                case MetricUnit.Microseconds:
+                    return Convert.ToString(secondUnitTime * Math.Pow(10, 6));
+
+                case MetricUnit.Nanoseconds:
+                    return Convert.ToString(secondUnitTime / Math.Pow(10, 9));
+
+                case MetricUnit.Minutes:
+                    return Convert.ToString(secondUnitTime / 60);
+
+                default:
+                    throw new NotSupportedException($"Metric unit: {metricUnit} is not supported. Metric units supported {MetricUnit.Seconds}, " +
+                        $"{MetricUnit.Milliseconds}, {MetricUnit.Microseconds}, {MetricUnit.Nanoseconds}, {MetricUnit.Minutes}.");
+            }
+        }
+
+        /// <summary>
         /// Translate the unit of number in a text. Example: 1K->1000 and 1M->1000000.
         /// </summary>
         /// <param name="text">Original text.</param>
