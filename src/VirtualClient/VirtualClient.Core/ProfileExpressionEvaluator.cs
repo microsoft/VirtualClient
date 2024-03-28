@@ -9,7 +9,9 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.Scripting;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
@@ -24,6 +26,21 @@ namespace VirtualClient
         // {fn(512 / {LogicalThreadCount})}
         private static readonly Regex CalculateExpression = new Regex(
             @"\{calculate\(([0-9\*\/\+\-\(\)\s]+)\)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {calculate({IsTLSEnabled} ? "Yes" : "No")}
+        // (([^?]+)\s*\?\s*([^:]+)\s*:\s*([^)]+))
+        private static readonly Regex CalculateTernaryExpression = new Regex(
+            @"\{calculate\((([^?]+)\s*\?\s*([^:]+)\s*:\s*([^)]+))\)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // Expression: {calculate(512 == 4)}
+        // Expression: {calculate(512 > 2)}
+        // Expression: {calculate(512 != {LogicalCoreCount})}
+        private static readonly Regex CalculateComparisionExpression = new Regex(
+            @"\{calculate\((\d+\s*(?:==|!=|<|>|<=|>=|&&|\|\|)\s*\d+)\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -425,6 +442,68 @@ namespace VirtualClient
                         string function = match.Groups[1].Value;
                         int result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<int>(function);
 
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                    }
+                }
+
+                return new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                };
+            }),
+            // Expression: {calculate(512 == 4)}
+            // Expression: {calculate(512 > 2)}
+            // Expression: {calculate(512 != {LogicalCoreCount})}
+            // **IMPORTANT**
+            // This expression evaluation MUST come last after arthematic caluculation evaluators.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisionExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    foreach (Match match in matches)
+                    {
+                        string function = match.Groups[1].Value;
+                        bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
+
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                    }
+                }
+
+                return new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                };
+            }),
+            // Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
+            // Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
+            // **IMPORTANT**
+            // This expression evaluation MUST come last after arthematic/logical/comparative caluculation evaluators.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.CalculateTernaryExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    foreach (Match match in matches)
+                    {
+                        string function = match.Groups[1].Value;
+
+                        function = Regex.Replace(function, @"(?<=\b)(True|False)(?=\s*\?)", m =>
+                        {
+                            return m.Value.ToLower();
+                        });
+
+                        string result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<string>(function);
                         evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
                     }
                 }
