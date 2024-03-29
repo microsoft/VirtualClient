@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.cd2181b5.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.f2412590.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.cea975e9.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -22,11 +22,11 @@
 <p>Runs a CPU-intensive workload using the OpenSSL speed toolset to test the performance of the CPU in processing cryptography/encryption algorithms.
 This profile is designed to identify general/broad regressions when compared against a baseline. OpenSSL is an open source industry standard
 transport layer security (TLS/SSL) toolset.</p>
-<admonition type="info"><p><em>Note on Multi-Threaded Execution:<br>
+<admonition type="info"><p>*Note on Multi-Threaded Execution:<br>
 <!-- -->Although the toolset can be used on Windows, the OpenSSL speed workload was designed with Unix as a foundation. Multi-threaded/parallel testing
 is not supported for Windows builds of OpenSSL 3.0.  This means that the OpenSSL speed command will not heavily exercise the CPU resources on the
-system. It will use a single core/vCPU to run each test. With Linux builds, the toolset can be configured to use ALL cores/vCPUs available on the
-system in-parallel.</em></p></admonition>
+system. It will use a single core/vCPU to run each test. On Linux, VC starts Speed with <code>-multi {num-logical-cpus}</code> ,unless it is provided explicitly in the
+&quot;CommandArguments&quot; Action property.This means that on Linux, VC uses ALL cores/vCPUs available on the system in-parallel.</p></admonition>
 <ul>
 <li>
 <p><a href="https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-OPENSSL.json">Workload Profile</a></p>
