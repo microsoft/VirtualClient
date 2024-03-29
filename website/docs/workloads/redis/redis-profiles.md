@@ -83,7 +83,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | ServerInstances           | Optional. Defines the number of distinct Redis server instances to run concurrently. This allows the user to adjust alongside the number of client instances for higher scale situations.   | # logical processors |
   | ServerThreadCount         | Optional. The number of threads to use by the Redis server to handle operations.  | 4 |
   | ServerPort                | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381) | 6379 |
-  | IsTLSEnabled              | Optional. It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+  | IsTLSEnabled              | Optional. It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS| False |
 
 * **Component Parameters**  
   The following parameters describe the parameters within the profile components.
@@ -98,7 +98,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | ServerInstances           | The number of distinct Redis server instances to run concurrently. | # logical processors |
   | ServerThreadCount         | The number of threads to use by the Redis server to handle operations. | 4 |
   | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon)</mark><br/><br/>Defines a specific username under which to run the Redis server. | The user account for the process that launches Virtual Client.  |
-  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS| False |
 
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |
@@ -110,7 +110,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option. | true |
   | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
   | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
-  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS| False |
 
 
 * **Profile Runtimes**  
