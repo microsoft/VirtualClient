@@ -12,7 +12,7 @@ transport layer security (TLS/SSL) toolset.
 *Note on Multi-Threaded Execution:  
 Although the toolset can be used on Windows, the OpenSSL speed workload was designed with Unix as a foundation. Multi-threaded/parallel testing 
 is not supported for Windows builds of OpenSSL 3.0.  This means that the OpenSSL speed command will not heavily exercise the CPU resources on the
-system. It will use a single core/vCPU to run each test. On Linux, VC starts Speed with -multi {num-logical-cpus} ,unless it is provided explicitly in the
+system. It will use a single core/vCPU to run each test. On Linux, VC starts Speed with `-multi {num-logical-cpus}` ,unless it is provided explicitly in the
 "CommandArguments" Action property.This means that on Linux, VC uses ALL cores/vCPUs available on the system in-parallel.
 :::
 
