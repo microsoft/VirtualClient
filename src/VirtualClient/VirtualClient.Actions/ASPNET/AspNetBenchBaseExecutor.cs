@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The AspNetBench workload executor.
     /// </summary>
-    public class AspNetBenchBaseExecutor : VirtualClientComponent
+    public class AspNetBenchBaseExecutor : VirtualClientMultiRoleComponent
     {
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public AspNetBenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public AspNetBenchBaseExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -97,24 +97,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("AspNetBench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
-        }
-
-        /// <summary>
         /// Executes the AspNetBench workload.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -152,7 +134,16 @@ namespace VirtualClient.Actions
 
             await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
                 .ConfigureAwait(false);
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="DependencyException"></exception>
+        protected async Task BuildAspNetBenchAsync(CancellationToken cancellationToken)
+        {
             DependencyPath dotnetSdkPackage = await this.packageManager.GetPackageAsync(this.DotNetSdkPackageName, CancellationToken.None)
                 .ConfigureAwait(false);
 
@@ -173,14 +164,20 @@ namespace VirtualClient.Actions
 
             // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net8.0\Benchmarks.dll"
             this.aspnetBenchDllPath = this.Combine(
-                this.aspnetBenchDirectory, 
-                "bin", 
-                "Release", 
-                this.TargetFramework, 
+                this.aspnetBenchDirectory,
+                "bin",
+                "Release",
+                this.TargetFramework,
                 "Benchmarks.dll");
         }
 
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="process"></param>
+        /// <param name="telemetryContext"></param>
+        /// <exception cref="WorkloadResultsException"></exception>
+        protected void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
         {
             try
             {
@@ -210,7 +207,12 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task StartAspNetServerAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected Task StartAspNetServerAsync(CancellationToken cancellationToken)
         {
             // Example:
             // dotnet <path_to_binary>\Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:5000 --server Kestrel --kestrelTransport Sockets --protocol http
@@ -223,7 +225,13 @@ namespace VirtualClient.Actions
             return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, cancellationToken, isServer: true);
         }
 
-        private async Task RunBombardierAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected async Task RunBombardierAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {

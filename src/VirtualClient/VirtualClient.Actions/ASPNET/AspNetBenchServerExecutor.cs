@@ -24,29 +24,20 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Redis Benchmark Client Executor.
     /// </summary>
-    public class AspNetBenchClientExecutor : AspNetBenchBaseExecutor
+    public class AspNetBenchServerExecutor : AspNetBenchBaseExecutor
     {
+        private readonly object lockObject = new object();
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="AspNetBenchClientExecutor"/> class.
+        /// Initializes a new instance of the <see cref="AspNetBenchServerExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters">An enumeration of key-value pairs that can control the execution of the component.</param>/param>
-        public AspNetBenchClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public AspNetBenchServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.ClientFlowRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
-                .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries * 2));
-
-            this.ClientRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
-                .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries));
-
-            this.PollingTimeout = TimeSpan.FromMinutes(40);
         }
 
-
-        /// <summary>
-        /// Executes  client side.
-        /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
         }
