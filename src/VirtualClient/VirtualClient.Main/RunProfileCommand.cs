@@ -144,9 +144,6 @@ namespace VirtualClient
                 EventContext telemetryContext = EventContext.Persisted();
                 logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", telemetryContext);
 
-                EventContext telemetryContext = EventContext.Persisted();
-                logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", telemetryContext);
-
                 // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
                 // the 'packages' directory already).
                 await this.InitializePackagesAsync(packageManager, cancellationToken)
