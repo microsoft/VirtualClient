@@ -25,6 +25,7 @@ namespace VirtualClient
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Proxy;
 
@@ -286,7 +287,10 @@ namespace VirtualClient
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
-            this.InitializeGlobalTelemetryProperties(args);
+            if (this.Debug)
+            {
+                this.LoggingLevel = LogLevel.Trace;
+            }
 
             if (this.Debug)
             {
@@ -441,10 +445,15 @@ namespace VirtualClient
             return loggingProviders.Any() ? new LoggerFactory(loggingProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
         }
 
-        private void InitializeGlobalTelemetryProperties(string[] args)
+        /// <summary>
+        /// Initializes the global/persistent telemetry properties that will be included
+        /// with all telemetry emitted from the Virtual Client.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        protected virtual void SetGlobalTelemetryProperties(string[] args)
         {
             this.GetVersionInfo(out string platformVersion, out string extensionsVersion);
-            
+
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 ["clientId"] = this.AgentId.ToLowerInvariant(),
@@ -456,6 +465,26 @@ namespace VirtualClient
                 ["operatingSystemPlatform"] = Environment.OSVersion.Platform.ToString(),
                 ["platformArchitecture"] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
             });
+
+            IDictionary<string, IConvertible> parameters = this.Parameters?.ObscureSecrets();
+            EventContext.PersistentProperties["executionProfileParameters"] = parameters;
+            EventContext.PersistentProperties["parameters"] = parameters;
+
+            IDictionary<string, object> metadata = new Dictionary<string, object>();
+
+            if (this.Metadata?.Any() == true)
+            {
+                this.Metadata.ToList().ForEach(entry =>
+                {
+                    metadata[entry.Key] = entry.Value;
+                });
+            }
+
+            EventContext.PersistentProperties["metadata"] = metadata;
+
+            MetadataContract.Persist(
+                metadata?.ToDictionary(entry => entry.Key, entry => entry.Value as object),
+                MetadataContractCategory.Default);
         }
     }
 }

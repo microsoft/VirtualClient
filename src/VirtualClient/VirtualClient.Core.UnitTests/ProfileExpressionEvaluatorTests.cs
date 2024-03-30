@@ -864,6 +864,97 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_1()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            // "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
+            // {calculate(calculate(512 / (4 / 2)) ? "Yes" : "No")}
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "BUILD_TLS", "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}" },
+                { "IsTLSEnabled" , true }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("yes", parameters["BUILD_TLS"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_2()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            // "BUILD_TLS": "{calculate({calculate(512 == 2)} ? "Yes" : "No")}",
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "BUILD_TLS", "{calculate({calculate(512 == 2)} ? \"Yes\" : \"No\")}" },
+                { "IsTLSEnabled" , true }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("No", parameters["BUILD_TLS"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_3()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            // "BUILD_TLS": "{calculate({calculate(512 != 2)} ? "Yes" : "No")}",
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "BUILD_TLS", "{calculate({calculate(512 != 2)} ? \"Yes\" : \"No\")}" },
+                { "IsTLSEnabled" , true }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("Yes", parameters["BUILD_TLS"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_4()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            // "BUILD_TLS": "{calculate({calculate(512 >= 2)} ? "Yes" : "No")}",
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "BUILD_TLS", "{calculate({calculate(512 >= 2)} ? \"Yes\" : \"No\")}" },
+                { "IsTLSEnabled" , true }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("Yes", parameters["BUILD_TLS"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_5()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            // "BUILD_TLS": "{calculate({calculate(512 >= 2)} ? "Yes" : "No")}",
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "BUILD_TLS", "{calculate({calculate(512 < 2)} ? \"Yes\" : \"No\")}" },
+                { "IsTLSEnabled" , true }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("No", parameters["BUILD_TLS"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferencesInParameterSets_Scenario_1()
         {
             this.SetupDefaults(PlatformID.Win32NT);

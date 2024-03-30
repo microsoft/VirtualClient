@@ -258,7 +258,8 @@
             "Parameters": {
                 "Scenario": "CompileRedis",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "BUILD_TLS": "$.Parameters.IsTLSEnabled",
+                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+                "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
                 "Command": "make BUILD_TLS={BUILD_TLS}",
                 "WorkingDirectory": "{PackagePath:redis}"
             }
