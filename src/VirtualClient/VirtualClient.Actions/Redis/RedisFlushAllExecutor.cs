@@ -22,19 +22,23 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// Redis Benchmark Client Executor.
+    /// Redis Flush All Executor.
     /// </summary>
     public class RedisFlushAllExecutor : RedisExecutor
     {
-
-        public static string CommandLine = @"redis-cli -h {0} -p {1} FLUSHALL";
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RedisFlushAllExecutor"/> class.
+        /// </summary>
+        /// <param name="dependencies"></param>
+        /// <param name="parameters"></param>
         public RedisFlushAllExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-
         }
 
+        /// <summary>
+        /// Parameter defines the number of Redis Server instances running
+        /// </summary>
         public int ServerInstances
         {
             get
@@ -43,30 +47,30 @@ namespace VirtualClient.Actions
             }
         }
 
-        public int StartPort
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.StartPort), 6379);
-            }
-        }
-
         /// <summary>
-        /// Parameter defines the Memtier benchmark toolset command line to execute.
+        /// Parameter defines the port number of the first Redis Server
         /// </summary>
-        public string CommandLine
+        public int ServerPort
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLine));
+                return this.Parameters.GetValue<int>(nameof(this.ServerPort), 6379);
             }
         }
 
-
-
+        /// <summary>
+        /// Parameter for the Flush All CommandArguments.
+        /// </summary>
+        public string CommandArguments
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandArguments));
+            }
+        }
 
         /// <summary>
-        /// Executes  client side.
+        /// Executes Flush All Command.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -76,14 +80,14 @@ namespace VirtualClient.Actions
                 foreach (ClientInstance server in targetServers)
                 {
                     string ipAddress = IPAddress.Parse(server.IPAddress).ToString();
-                    int startport = this.StartPort;
-                    for (int instance = 0; i < this.ServerInstances; instance++)
+                    int serverPort = this.ServerPort;
+                    for (int instance = 0; instance < this.ServerInstances; instance++)
                     {
-                        int port = startport + instance;
+                        int port = serverPort + instance;
                         string portnumber = port.ToString();
-                        string fullcommand = GetCommandLine(ipAddress, portnumber);
+                        string commandArguments = this.GetCommandLine(ipAddress, portnumber);
 
-                        await this.ExecuteCommandAsync("", fullcommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                        await this.ExecuteCommandAsync("redis-cli", commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                             .ConfigureAwait(false);
                     }
                 }
@@ -92,7 +96,8 @@ namespace VirtualClient.Actions
 
         private string GetCommandLine(string ipAddress, string portnumber)
         {
-            string command = string.Format(this.CommandLine, ipAddress, portnumber);
+            string command = this.CommandArguments.Replace("{0}", ipAddress);
+            command = command.Replace("{1}", portnumber);
             return command;
         }
 
