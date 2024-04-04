@@ -22,18 +22,29 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// Redis Flush All Executor.
+    /// Redis Cli Executor.
     /// </summary>
-    public class RedisFlushAllExecutor : RedisExecutor
+    public class RedisCliExecutor : RedisExecutor
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RedisFlushAllExecutor"/> class.
+        /// Initializes a new instance of the <see cref="RedisCliExecutor"/> class.
         /// </summary>
         /// <param name="dependencies"></param>
         /// <param name="parameters"></param>
-        public RedisFlushAllExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public RedisCliExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
+        }
+
+        /// <summary>
+        /// Parameter defines the number of Redis Server instances running
+        /// </summary>
+        public string CommandLine
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLine), string.Empty);
+            }
         }
 
         /// <summary>
@@ -59,7 +70,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter for the Flush All CommandArguments.
+        /// Parameter for the the CommandArguments.
         /// </summary>
         public string CommandArguments
         {
@@ -70,7 +81,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes Flush All Command.
+        /// Executes Redis cli Command.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -96,10 +107,10 @@ namespace VirtualClient.Actions
 
         private string GetCommandLine(string ipAddress, string portnumber)
         {
-            string command = this.CommandArguments.Replace("{0}", ipAddress);
-            command = command.Replace("{1}", portnumber);
+            string command = this.CommandLine;
+            command = command.Replace("{ServerIpAddress}", ipAddress);
+            command = command.Replace("{ServerPortNumber}", portnumber);
             return command;
         }
-
     }
 }
