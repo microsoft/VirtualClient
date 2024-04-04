@@ -15,7 +15,8 @@ Virtual Client is a self-contained .NET 8 application, so "Installation" really 
 [all operating systems supported by .NET 8](https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md).
 
 ### Debian / Ubuntu (deb)
-VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`, which is typically in Linux `$PATH`.
+VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient` (which is 
+typically one of the default paths in the Linux `$PATH` environment variable). This is a symbolic link. The actual package is typically installed at the path `/opt/virtualclient`.
 
 ```bash
 # example: ubuntu
@@ -31,7 +32,8 @@ sudo apt-get install virtualclient
 ```
 
 ### Red Hat-based distributions (rpm)
-We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
+We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`
+(which is typically one of the default paths in the Linux `$PATH` environment variable). This is a symbolic link. The actual package is typically installed at the path `/opt/virtualclient`.
 
 ```bash
 # example: ubuntu
