@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.255bc540.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.0263a134.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.cea975e9.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -21,7 +21,8 @@ SHA256 algorithm.</p>
 <p>Virtual Client is a self-contained .NET 8 application, so &quot;Installation&quot; really just means copying the Virtual Client package onto your system. It runs out-of-box on
 <a href="https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md">all operating systems supported by .NET 8</a>.</p>
 <h3 id="debian--ubuntu-deb">Debian / Ubuntu (deb)</h3>
-<p>VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path <code>/usr/bin/virtualclient</code>, which is typically in Linux <code>$PATH</code>.</p>
+<p>VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path <code>/usr/bin/virtualclient</code> (which is
+typically one of the default paths in the Linux <code>$PATH</code> environment variable). This is a symbolic link. The actual package is typically installed at the path <code>/opt/virtualclient</code>.</p>
 <pre><code class="language-bash"># example: ubuntu
 declare os_distro=$(if command -v lsb_release &amp;&gt; /dev/null; then lsb_release -is | tr &#x27;[:upper:]&#x27; &#x27;[:lower:]&#x27; ; else grep -oP &#x27;(?&lt;=^ID=).+&#x27; /etc/os-release ; fi)
 # example: 20.04
@@ -34,7 +35,8 @@ sudo apt-get update
 sudo apt-get install virtualclient
 </code></pre>
 <h3 id="red-hat-based-distributions-rpm">Red Hat-based distributions (rpm)</h3>
-<p>We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path <code>/usr/local/bin/virtualclient</code>, which is typically in Linux <code>$PATH</code>.</p>
+<p>We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path <code>/usr/bin/virtualclient</code>
+(which is typically one of the default paths in the Linux <code>$PATH</code> environment variable). This is a symbolic link. The actual package is typically installed at the path <code>/opt/virtualclient</code>.</p>
 <pre><code class="language-bash"># example: ubuntu
 declare os_distro=$(if command -v lsb_release &amp;&gt; /dev/null; then lsb_release -is | tr &#x27;[:upper:]&#x27; &#x27;[:lower:]&#x27; ; else grep -oP &#x27;(?&lt;=^ID=).+&#x27; /etc/os-release ; fi)
 # example: 20.04
