@@ -61,7 +61,7 @@ namespace VirtualClient.Contracts
         /// <param name="role"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected Task WaitForRoleAsync(string role, CancellationToken cancellationToken)
+        protected async Task WaitForRoleAsync(string role, CancellationToken cancellationToken)
         {
             IPAddress ipAddress;
             List<Task> clientWorkloadTasks = new List<Task>();
