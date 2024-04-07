@@ -27,6 +27,7 @@ namespace VirtualClient.Actions
     public class RedisBenchmarkClientExecutor : RedisExecutor
     {
         private readonly object lockObject = new object();
+        private static string redisFlushAllCommandArguments = "-h {ServerIpAddress} -p {ServerPortNumber} FLUSHALL";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisBenchmarkClientExecutor"/> class.
@@ -88,6 +89,39 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.WarmUp), false);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines true/false whether the Redis Cli Flush All Command needs to be executed.
+        /// </summary>
+        public bool RedisFlushAll
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.RedisFlushAll), false);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the port number of the first Redis Server
+        /// </summary>
+        public int ServerPort
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ServerPort), 6379);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the number of Redis Server instances running
+        /// </summary>
+        public int ServerInstances
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ServerInstances), 1);
             }
         }
 
@@ -167,6 +201,21 @@ namespace VirtualClient.Actions
                                 // ===========================================================================
                                 ipAddress = IPAddress.Parse(server.IPAddress);
                                 await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
+
+                                if (this.RedisFlushAll)
+                                {
+                                    string ipAddress = IPAddress.Parse(server.IPAddress).ToString();
+                                    int serverPort = this.ServerPort;
+                                    for (int instance = 0; instance < this.ServerInstances; instance++)
+                                    {
+                                        int port = serverPort + instance;
+                                        string portnumber = port.ToString();
+                                        string commandArguments = this.GetCommandLine(ipAddress, portnumber);
+
+                                        await this.ExecuteCommandAsync("redis-cli", commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                                            .ConfigureAwait(false);
+                                    }
+                                }
                             }
                         }));
                     }
@@ -365,6 +414,14 @@ namespace VirtualClient.Actions
             }
 
             return state.Definition;
+        }
+
+        private string GetCommandLine(string ipAddress, string portnumber)
+        {
+            string command = RedisBenchmarkClientExecutor.redisFlushAllCommandArguments;
+            command = command.Replace("{ServerIpAddress}", ipAddress);
+            command = command.Replace("{ServerPortNumber}", portnumber);
+            return command;
         }
     }
 }
