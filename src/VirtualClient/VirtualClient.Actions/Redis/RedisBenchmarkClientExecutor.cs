@@ -206,12 +206,14 @@ namespace VirtualClient.Actions
                                 {
                                     string ipAddress = IPAddress.Parse(server.IPAddress).ToString();
                                     int serverPort = this.ServerPort;
+                                    this.Logger.LogTraceMessage("RedisFlushAll: Started");
                                     for (int instance = 0; instance < this.ServerInstances; instance++)
                                     {
                                         int port = serverPort + instance;
                                         string portnumber = port.ToString();
                                         string commandArguments = this.GetCommandLine(ipAddress, portnumber);
-
+                                        string logmessage = string.Format("CommandArgumens for  Redis-cli Command: {0}", commandArguments);
+                                        this.Logger.LogTraceMessage(logmessage);
                                         await this.ExecuteCommandAsync("redis-cli", commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                                             .ConfigureAwait(false);
                                     }
