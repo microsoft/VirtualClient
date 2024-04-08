@@ -162,19 +162,23 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.Logger.LogMessage("Before warmup check", telemetryContext);
             if (!this.WarmUp || !this.IsServerWarmedUp)
             {
                 IPAddress ipAddress;
                 List<Task> clientWorkloadTasks = new List<Task>();
+                this.Logger.LogMessage("Before MultiRoleLayout", telemetryContext);
 
                 if (this.IsMultiRoleLayout())
                 {
+                    this.Logger.LogMessage("Inside MultiRoleLayout", telemetryContext);
                     IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(ClientRole.Server);
                     foreach (ClientInstance server in targetServers)
                     {
                         // Reliability/Recovery:
                         // The pattern here is to allow for any steps within the workflow to fail and to simply start the entire workflow
                         // over again.
+                        this.Logger.LogMessage("Inside TargetServers For loop", telemetryContext);
                         clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                         {
                             if (!cancellationToken.IsCancellationRequested)
@@ -188,7 +192,7 @@ namespace VirtualClient.Actions
 
                                 // 2) Confirm the server-side application (e.g. web server) is online.
                                 // ===========================================================================
-                                this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
+                                this.Logger.LogMessage("Synchronization: Poll server for online signal...", telemetryContext);
                                 await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromSeconds(30), cancellationToken);
 
                                 this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
@@ -201,23 +205,26 @@ namespace VirtualClient.Actions
                                 // ===========================================================================
                                 ipAddress = IPAddress.Parse(server.IPAddress);
                                 await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
+                            }
+                        }));
 
-                                this.Logger.LogMessage($"RedisFlushAll Boolian ={this.RedisFlushAll}", telemetryContext);
-                                if (this.RedisFlushAll)
+                        clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
+                        {
+                            this.Logger.LogMessage($"RedisFlushAll Boolian ={this.RedisFlushAll}", telemetryContext);
+                            if (this.RedisFlushAll)
+                            {
+                                string ipAddress = IPAddress.Parse(server.IPAddress).ToString();
+                                int serverPort = this.ServerPort;
+                                this.Logger.LogMessage($"RedisFlushAll Started", telemetryContext);
+                                for (int instance = 0; instance < this.ServerInstances; instance++)
                                 {
-                                    string ipAddress = IPAddress.Parse(server.IPAddress).ToString();
-                                    int serverPort = this.ServerPort;
-                                    this.Logger.LogMessage($"RedisFlushAll Started", telemetryContext);
-                                    for (int instance = 0; instance < this.ServerInstances; instance++)
-                                    {
-                                        int port = serverPort + instance;
-                                        string portnumber = port.ToString();
-                                        string commandArguments = this.GetCommandLine(ipAddress, portnumber);
-                                        string logmessage = string.Format("CommandArgumens for  Redis-cli Command: {0}", commandArguments);
-                                        this.Logger.LogMessage(logmessage, telemetryContext);
-                                        await this.ExecuteCommandAsync("redis-cli", commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                                            .ConfigureAwait(false);
-                                    }
+                                    int port = serverPort + instance;
+                                    string portnumber = port.ToString();
+                                    string commandArguments = this.GetCommandLine(ipAddress, portnumber);
+                                    string logmessage = string.Format("CommandArgumens for  Redis-cli Command: {0}", commandArguments);
+                                    this.Logger.LogMessage(logmessage, telemetryContext);
+                                    await this.ExecuteCommandAsync("redis-cli", commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                                        .ConfigureAwait(false);
                                 }
                             }
                         }));
@@ -228,6 +235,7 @@ namespace VirtualClient.Actions
                     ipAddress = IPAddress.Loopback;
                     clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                     {
+                        this.Logger.LogMessage("Not MultiRoleLayout", telemetryContext);
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             ServerState serverState = await this.GetServerStateAsync(this.ServerApiClient, cancellationToken);
