@@ -202,18 +202,19 @@ namespace VirtualClient.Actions
                                 ipAddress = IPAddress.Parse(server.IPAddress);
                                 await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
 
+                                this.Logger.LogMessage($"RedisFlushAll Boolian ={this.RedisFlushAll}", telemetryContext);
                                 if (this.RedisFlushAll)
                                 {
                                     string ipAddress = IPAddress.Parse(server.IPAddress).ToString();
                                     int serverPort = this.ServerPort;
-                                    this.Logger.LogTraceMessage("RedisFlushAll: Started");
+                                    this.Logger.LogMessage($"RedisFlushAll Started", telemetryContext);
                                     for (int instance = 0; instance < this.ServerInstances; instance++)
                                     {
                                         int port = serverPort + instance;
                                         string portnumber = port.ToString();
                                         string commandArguments = this.GetCommandLine(ipAddress, portnumber);
                                         string logmessage = string.Format("CommandArgumens for  Redis-cli Command: {0}", commandArguments);
-                                        this.Logger.LogTraceMessage(logmessage);
+                                        this.Logger.LogMessage(logmessage, telemetryContext);
                                         await this.ExecuteCommandAsync("redis-cli", commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                                             .ConfigureAwait(false);
                                     }
