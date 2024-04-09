@@ -30,7 +30,7 @@ namespace VirtualClient.Contracts
             Regex ubuntuRegex = new Regex("Operating System: Ubuntu", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex debianRegex = new Regex("Operating System: Debian", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex rhel7Regex = new Regex(@"Operating System: Red Hat Enterprise Linux 7", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            Regex rhel8Regex = new Regex(@"Operating System: Red Hat Enterprise Linux 8.", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            Regex rhel8Regex = new Regex(@"Operating System: Red Hat Enterprise Linux (8|9).", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex flatcarRegex = new Regex("Operating System: Flatcar", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos7Regex = new Regex("Operating System: CentOS Linux 7", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos8Regex = new Regex("Operating System: CentOS Linux 8", RegexOptions.Multiline | RegexOptions.IgnoreCase);

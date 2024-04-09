@@ -55,5 +55,15 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(LinuxDistribution.Debian, this.testParser.Parse().LinuxDistribution);
             Assert.AreEqual("Debian GNU/Linux 11 (bullseye)", this.testParser.Parse().OperationSystemFullName);
         }
+
+        [Test]
+        public void OsReleaseFileParserrRecognizeRHEL93()
+        {
+            string outputPath = Path.Combine(this.ExamplePath, "RHEL93Example.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new OsReleaseFileParser(this.rawText);
+            Assert.AreEqual(LinuxDistribution.RHEL8, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual("Red Hat Enterprise Linux 9.3 (Plow)", this.testParser.Parse().OperationSystemFullName);
+        }
     }
 }
