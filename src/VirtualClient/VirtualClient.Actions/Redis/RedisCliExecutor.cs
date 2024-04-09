@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the number of Redis Server instances running
+        /// The command line to be executed.
         /// </summary>
         public string CommandLine
         {
@@ -48,7 +48,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the number of Redis Server instances running
+        /// The number of Redis Server instances running.
         /// </summary>
         public int ServerInstances
         {
@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the port number of the first Redis Server
+        /// The port number of the first Redis Server instance.
         /// </summary>
         public int ServerPort
         {
