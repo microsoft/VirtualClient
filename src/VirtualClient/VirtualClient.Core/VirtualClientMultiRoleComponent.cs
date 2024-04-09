@@ -54,14 +54,14 @@ namespace VirtualClient.Contracts
         /// </summary>
         protected TimeSpan PollingTimeout { get; set; } = TimeSpan.FromMinutes(30);
 
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="role"></param>
+        /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task WaitForRoleAsync(string role, CancellationToken cancellationToken)
+        protected async Task WaitForRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IPAddress ipAddress;
             List<Task> clientWorkloadTasks = new List<Task>();
@@ -78,7 +78,7 @@ namespace VirtualClient.Contracts
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
+                            IApiClient apiClient = this.apiClientManager.GetOrCreateApiClient(server.Name, server);
 
                             // 1) Confirm server is online.
                             // ===========================================================================
@@ -89,12 +89,6 @@ namespace VirtualClient.Contracts
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
                             await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromSeconds(30), cancellationToken);
-
-                            this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
-                            this.Logger.LogTraceMessage("Synchronization: Start client workload...");
-
-                            // 3) Get Parameters required.
-                            ServerState serverState = await this.GetServerStateAsync(serverApiClient, cancellationToken);
 
                             // 4) Execute the client workload.
                             // ===========================================================================
@@ -110,13 +104,24 @@ namespace VirtualClient.Contracts
         /// 
         /// </summary>
         /// <param name="role"></param>
+        /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected Task TerminateRoleAsync(string role, CancellationToken cancellationToken)
+        protected Task TerminateRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
         {
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected Task WaitForTerminationAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
 
+        }
     }
 }

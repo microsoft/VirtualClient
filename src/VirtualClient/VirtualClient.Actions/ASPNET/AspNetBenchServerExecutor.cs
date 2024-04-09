@@ -27,6 +27,7 @@ namespace VirtualClient.Actions
     public class AspNetBenchServerExecutor : AspNetBenchBaseExecutor
     {
         private readonly object lockObject = new object();
+        private string aspnetBenchDirectory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AspNetBenchServerExecutor"/> class.
@@ -40,6 +41,8 @@ namespace VirtualClient.Actions
 
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            await this.StartAspNetServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.WaitForRoleAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -50,12 +53,12 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            DependencyPath redisPackage = await this.GetPackageAsync(this.PackageName, CancellationToken.None);
+            // This workload needs three packages: aspnetbenchmarks, dotnetsdk, bombardier
+            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken)
+                .ConfigureAwait(false);
 
-            this.RedisPackagePath = redisPackage.Path;
-            this.RedisExecutablePath = this.PlatformSpecifics.Combine(this.RedisPackagePath, "src", "redis-benchmark");
-
+            // the directory we are looking for is at the src/Benchmarks
+            this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
         }
 
         private async Task<ServerState> GetServerStateAsync(IApiClient serverApiClient, CancellationToken cancellationToken)

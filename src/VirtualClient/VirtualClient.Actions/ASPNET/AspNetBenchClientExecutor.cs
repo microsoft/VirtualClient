@@ -22,10 +22,12 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// Redis Benchmark Client Executor.
+    /// AspNetBench Benchmark Client Executor.
     /// </summary>
     public class AspNetBenchClientExecutor : AspNetBenchBaseExecutor
     {
+        private string bombardierFilePath;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AspNetBenchClientExecutor"/> class.
         /// </summary>
@@ -34,25 +36,22 @@ namespace VirtualClient.Actions
         public AspNetBenchClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.ClientFlowRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
-                .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries * 2));
-
-            this.ClientRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
-                .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries));
-
             this.PollingTimeout = TimeSpan.FromMinutes(40);
         }
-
 
         /// <summary>
         /// Executes  client side.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            await this.WaitForRoleAsync(ClientRole.Server, telemetryContext, cancellationToken).ConfigureAwait(false);
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            await this.RunBombardierAsync(serverIPAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.TerminateRoleAsync(ClientRole.Server, telemetryContext, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Initializes the environment and dependencies for client of redis Benchmark workload.
+        /// Initializes the environment and dependencies for client of AspNetBench Benchmark workload.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
@@ -60,27 +59,10 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            DependencyPath redisPackage = await this.GetPackageAsync(this.PackageName, CancellationToken.None);
+            DependencyPath bombardierPackage = await this.GetPlatformSpecificPackageAsync(this.BombardierPackageName, cancellationToken)
+                .ConfigureAwait(false);
 
-            this.RedisPackagePath = redisPackage.Path;
-            this.RedisExecutablePath = this.PlatformSpecifics.Combine(this.RedisPackagePath, "src", "redis-benchmark");
-
-        }
-
-        private async Task<ServerState> GetServerStateAsync(IApiClient serverApiClient, CancellationToken cancellationToken)
-        {
-            Item<ServerState> state = await serverApiClient.GetStateAsync<ServerState>(
-                nameof(ServerState),
-                cancellationToken);
-
-            if (state == null)
-            {
-                throw new WorkloadException(
-                    $"Expected server state information missing. The server did not return state indicating the details for the Memcached server(s) running.",
-                    ErrorReason.WorkloadUnexpectedAnomaly);
-            }
-
-            return state.Definition;
+            this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
         }
     }
 }

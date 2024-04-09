@@ -97,18 +97,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes the AspNetBench workload.
-        /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            Task serverTask = this.StartAspNetServerAsync(cancellationToken);
-            await this.RunBombardierAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            this.killServer.Invoke();
-        }
-
-        /// <summary>
         /// Initializes the environment for execution of the AspNetBench workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -139,10 +127,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="DependencyException"></exception>
-        protected async Task BuildAspNetBenchAsync(CancellationToken cancellationToken)
+        protected async Task BuildAspNetBenchAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             DependencyPath dotnetSdkPackage = await this.packageManager.GetPackageAsync(this.DotNetSdkPackageName, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -159,7 +148,7 @@ namespace VirtualClient.Actions
             // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
-            await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, cancellationToken)
+            await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
             // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net8.0\Benchmarks.dll"
@@ -210,9 +199,10 @@ namespace VirtualClient.Actions
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected Task StartAspNetServerAsync(CancellationToken cancellationToken)
+        protected Task StartAspNetServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // Example:
             // dotnet <path_to_binary>\Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:5000 --server Kestrel --kestrelTransport Sockets --protocol http
@@ -222,22 +212,23 @@ namespace VirtualClient.Actions
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
 
-            return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, cancellationToken, isServer: true);
+            return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken);
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="ipAddress"></param>
         /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task RunBombardierAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected async Task RunBombardierAsync(string ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 // https://pkg.go.dev/github.com/codesenberg/bombardier
                 // ./bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:5000/json --print r --format json
-                this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:{this.Port}/json --print r --format json";
+                this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ipAddress}:{this.Port}/json --print r --format json";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
                     .ConfigureAwait(false))
@@ -248,40 +239,6 @@ namespace VirtualClient.Actions
 
                         process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, telemetryContext);
-                    }
-                }
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken, bool isServer = false)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                {
-                    if (isServer)
-                    {
-                        this.killServer = () => process.SafeKill();
-                    }
-
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                        
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-
-                        if (!isServer)
-                        {
-                            // We will kill the server at the end, exit code is -1, and we don't want it to log as failure.
-                            process.ThrowIfWorkloadFailed();
-                        }
                     }
                 }
             }
