@@ -172,7 +172,7 @@
     higher than the latest production release version as defined in the YAML files
     (e.g. /repo/.pipeline) and that is used in the Official builds. For example, if the
     major/minor version in the YAML file is set to 1.5.*, then the default version below
-    should be set to 1.6.0.0. This helps to simplify the debugging experience for developers
+    should be set to 1.0.0.0. This helps to simplify the debugging experience for developers
     who are creating extensions to the Virtual Client by avoiding errors/warnings surfaced by
     the Visual Studio debugger around mismatched versions of common .dlls.
     
@@ -181,7 +181,7 @@
     <PropertyGroup>
         <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <AssemblyVersion>1.6.0.0</AssemblyVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <AssemblyVersion Condition="'$(VCBuildVersion)' != ''">$(VCBuildVersion)</AssemblyVersion>
     </PropertyGroup>
 
