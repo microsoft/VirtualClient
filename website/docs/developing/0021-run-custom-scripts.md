@@ -229,7 +229,7 @@ The following parameters are supported by the Executor Classes that can be modif
      ``` json
          {
             "Description": "Memory Stress Script Executor",
-            "MinimumExecutionInterval": "00:10:00",
+            "MinimumExecutionInterval": "00:00:05",
             "Metadata": {
                 "SupportedPlatforms": "win-x64,win-arm64"
             },

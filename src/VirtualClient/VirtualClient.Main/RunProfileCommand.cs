@@ -104,12 +104,13 @@ namespace VirtualClient
             int exitCode = 0;
             ILogger logger = null;
             IPackageManager packageManager = null;
+            ISystemManagement systemManagement = null;
             IServiceCollection dependencies = null;
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             try
             {
-                this.SetGlobalTelemetryProperties();
+                this.SetGlobalTelemetryProperties(args);
 
                 // When timing constraints/hints are not provided on the command line, we run the
                 // application until it is explicitly stopped by the user or automation.
@@ -119,18 +120,26 @@ namespace VirtualClient
                 }
 
                 // 1) Setup any dependencies required to execute the workload profile.
-                this.ApplyBackwardsCompatibilityRequirements();
+                
                 dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
+                systemManagement = dependencies.GetService<ISystemManagement>();
+
+                IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
+
+                this.SetGlobalTelemetryProperties(profileNames, dependencies);
+                this.ApplyBackwardsCompatibilityRequirements();
+
+                if (this.IsCleanRequested)
+                {
+                    await this.CleanAsync(systemManagement, cancellationToken, logger);
+                }
 
                 if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
                 {
                     VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
                 }
-
-                IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
-                this.SetGlobalTelemetryProperties(profileNames, dependencies);
 
                 EventContext telemetryContext = EventContext.Persisted();
                 logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", telemetryContext);
@@ -584,15 +593,17 @@ namespace VirtualClient
         /// Initializes the global/persistent telemetry properties that will be included
         /// with all telemetry emitted from the Virtual Client.
         /// </summary>
-        protected void SetGlobalTelemetryProperties()
+        /// <param name="args">The command line arguments.</param>
+        protected override void SetGlobalTelemetryProperties(string[] args)
         {
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["experimentId"] = this.ExperimentId.ToLowerInvariant(),
-                ["executionProfileParameters"] = this.Parameters?.ObscureSecrets()
+                ["experimentId"] = this.ExperimentId.ToLowerInvariant()
             });
+
+            base.SetGlobalTelemetryProperties(args);
         }
 
         /// <summary>
@@ -635,25 +646,6 @@ namespace VirtualClient
                 ["executionProfileName"] = profileName,
                 ["executionProfilePath"] = profileFullPath
             });
-
-
-            IDictionary<string, object> metadata = new Dictionary<string, object>();
-
-            if (this.Metadata?.Any() == true)
-            {
-                this.Metadata.ToList().ForEach(entry =>
-                {
-                    metadata[entry.Key] = entry.Value;
-                });
-            }
-
-            // For backwards compatibility, ensure that the experiment ID and agent ID
-            // values are a part of the metadata. This is required for the original VC table
-            // JSON mappings that expect these properties to exist in the metadata supplied to
-            // VC on the command line.
-            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
-            metadata["agentId"] = this.AgentId;
-            MetadataContract.Persist(metadata, MetadataContractCategory.Default);
         }
 
         /// <summary>

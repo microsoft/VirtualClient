@@ -1,6 +1,6 @@
 {
     "Description": "Example Script Executor",
-    "MinimumExecutionInterval": "00:10:00",
+    "MinimumExecutionInterval": "00:00:05",
     "Metadata": {
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
     },

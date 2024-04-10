@@ -9,6 +9,7 @@ namespace VirtualClient
     using System.CommandLine.Builder;
     using System.CommandLine.Parsing;
     using System.Linq;
+    using System.Reflection.Emit;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -81,72 +82,54 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--proxy-api")]
-        [TestCase("--proxy")]
-        public void ProxyApiOptionSupportsExpectedAliases(string alias)
+        [TestCase("--clean")]
+        public void CleanOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateProxyApiOption();
-            ParseResult result = option.Parse($"{alias}=http://anyuri");
+            Option option = OptionFactory.CreateCleanOption();
+            ParseResult result = option.Parse($"{alias}=logs");
             Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]
-        public void ProxyApiOptionValidatesTheValueProvidedIsAnAbsoluteUri()
+        [TestCase("--clean")]
+        public void CleanOptionSupportsExpectedTargetResources(string alias)
         {
-            Option option = OptionFactory.CreateProxyApiOption();
-
-            ParseResult result = null;
-            Assert.DoesNotThrow(() => result = option.Parse($"--proxy-api=http://anyuri"));
+            Option option = OptionFactory.CreateCleanOption();
+            ParseResult result = option.Parse(alias);
             Assert.IsFalse(result.Errors.Any());
+            Assert.IsTrue(result.Tokens.Count == 1);
 
-            // This line works on a linux machine. Option works when it is a path.
-            // Assert.Throws<ArgumentException>(() => option.Parse($"--proxy-api=/any/relative/uri"));
-            Assert.Throws<ArgumentException>(() => option.Parse($"--proxy-api=notavaliduri"));
+            result = option.Parse($"{alias}=logs");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("logs", result.Tokens[1].Value);
+
+            result = option.Parse($"{alias}=packages");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("packages", result.Tokens[1].Value);
+
+            result = option.Parse($"{alias}=state");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("state", result.Tokens[1].Value);
+
+            result = option.Parse($"{alias}=all");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("all", result.Tokens[1].Value);
+
+            result = option.Parse($"{alias}=logs,packages,state");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("logs,packages,state", result.Tokens[1].Value);
+
+            result = option.Parse($"{alias}=logs;packages;state");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("logs;packages;state", result.Tokens[1].Value);
         }
 
         [Test]
-        public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithThePackageStoreOption()
+        [TestCase("--clean")]
+        public void CleanOptionValidatesTheTargetsProvided(string alias)
         {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-            {
-                Option option = OptionFactory.CreateProxyApiOption();
-
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--packageStore=anystore", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--packageStore=anystore --proxy-api=http://anyuri"));
-
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--packageStore=anystore" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --packageStore=anystore"));
-            }
-        }
-
-        [Test]
-        public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithTheContentStoreOption()
-        {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-            {
-                Option option = OptionFactory.CreateProxyApiOption();
-
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--contentStore=anystore", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--contentStore=anystore --proxy-api=http://anyuri"));
-
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--contentStore=anystore" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --contentStore=anystore"));
-            }
-        }
-
-        [Test]
-        public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithTheEventHubConnectionStringOption()
-        {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-            {
-                Option option = OptionFactory.CreateProxyApiOption();
-
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHubConnectionString=anyconnectionstring", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHubConnectionString=anyconnectionstring --proxy-api=http://anyuri"));
-
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHubConnectionString=anyconnectionstring" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHubConnectionString=anyconnectionstring"));
-            }
+            Option option = OptionFactory.CreateCleanOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"{alias}=not,valid,targets"));
         }
 
         [Test]
@@ -369,6 +352,33 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--log-retention")]
+        [TestCase("--lr")]
+        public void LogRetentionOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateLogRetentionOption();
+            ParseResult result = option.Parse($"{alias}=14400");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--log-retention")]
+        [TestCase("--lr")]
+        public void LogRetentionOptionSupportsBothIntegerMinutesAndTimeSpanFormats(string alias)
+        {
+            Option option = OptionFactory.CreateLogRetentionOption();
+            ParseResult result = option.Parse($"{alias}=14400");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(14400, int.Parse(result.Tokens.ElementAt(1).Value));
+
+            result = option.Parse($"{alias}=10.00:00:00");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(TimeSpan.FromDays(10), TimeSpan.Parse(result.Tokens.ElementAt(1).Value));
+        }
+
+        [Test]
         [TestCase("--log-to-file")]
         [TestCase("--ltf")]
         public void LogToFileFlagSupportsExpectedAliases(string alias)
@@ -492,6 +502,75 @@ namespace VirtualClient
             Option option = OptionFactory.CreateProfileOption();
             ParseResult result = option.Parse("--profile=Profile1 --profile=Profile2");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--proxy-api")]
+        [TestCase("--proxy")]
+        public void ProxyApiOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateProxyApiOption();
+            ParseResult result = option.Parse($"{alias}=http://anyuri");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void ProxyApiOptionValidatesTheValueProvidedIsAnAbsoluteUri()
+        {
+            Option option = OptionFactory.CreateProxyApiOption();
+
+            ParseResult result = null;
+            Assert.DoesNotThrow(() => result = option.Parse($"--proxy-api=http://anyuri"));
+            Assert.IsFalse(result.Errors.Any());
+
+            // This line works on a linux machine. Option works when it is a path.
+            // Assert.Throws<ArgumentException>(() => option.Parse($"--proxy-api=/any/relative/uri"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--proxy-api=notavaliduri"));
+        }
+
+        [Test]
+        public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithThePackageStoreOption()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                Option option = OptionFactory.CreateProxyApiOption();
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--packageStore=anystore", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--packageStore=anystore --proxy-api=http://anyuri"));
+
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--packageStore=anystore" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --packageStore=anystore"));
+            }
+        }
+
+        [Test]
+        public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithTheContentStoreOption()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                Option option = OptionFactory.CreateProxyApiOption();
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--contentStore=anystore", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--contentStore=anystore --proxy-api=http://anyuri"));
+
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--contentStore=anystore" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --contentStore=anystore"));
+            }
+        }
+
+        [Test]
+        public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithTheEventHubConnectionStringOption()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                Option option = OptionFactory.CreateProxyApiOption();
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHubConnectionString=anyconnectionstring", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHubConnectionString=anyconnectionstring --proxy-api=http://anyuri"));
+
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHubConnectionString=anyconnectionstring" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHubConnectionString=anyconnectionstring"));
+            }
         }
 
         [Test]

@@ -122,6 +122,12 @@ namespace VirtualClient.Dependencies
                         string installationPath = downloadedPackagePath;
                         string packagesDirectory = this.GetPackagePath();
 
+                        // Create packages directory if not present.
+                        if (!this.fileSystem.Directory.Exists(packagesDirectory))
+                        {
+                            this.fileSystem.Directory.CreateDirectory(packagesDirectory);
+                        }
+
                         // Cleanup the file if it exists.
                         if (this.fileSystem.File.Exists(downloadedPackagePath))
                         {
