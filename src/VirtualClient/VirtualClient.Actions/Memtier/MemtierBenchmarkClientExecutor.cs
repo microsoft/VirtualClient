@@ -36,9 +36,7 @@ namespace VirtualClient.Actions
             new Regex(@"connection\s+refused", RegexOptions.IgnoreCase | RegexOptions.Compiled)
         };
 
-        // private List<Metric> aggregatedMetrics;
         private List<ProcessOutputDescription> processOutputDescriptions;
-        // private int startingServerPort;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierBenchmarkClientExecutor"/> class.
@@ -132,18 +130,6 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.WarmUp), false);
-            }
-        }
-
-        /// <summary>
-        /// Parameter defines true/false whether the client action should also emit metric per each server process separately.
-        /// Default value is false and collects only aggregate metrics across all the redis/memcached server processes running in the system.
-        /// </summary>
-        public bool PerProcessMetric
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.PerProcessMetric), false);
             }
         }
 
