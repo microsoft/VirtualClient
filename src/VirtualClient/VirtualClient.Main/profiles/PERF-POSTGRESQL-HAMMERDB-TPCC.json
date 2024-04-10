@@ -1,6 +1,6 @@
 {
-    "Description": "HammerDB PostgrSQL TPCC Database Server Performance Workload",
-    "MinimumExecutionInterval": "00:01:00",
+  "Description": "HammerDB PostgrSQL TPCC Database Server Performance Workload",
+  "MinimumExecutionInterval": "00:01:00",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "04:00:00",
     "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
@@ -13,38 +13,38 @@
     "VirtualUsers": 1,
     "WarehouseCount": "1"
   },
-    "Actions": [
-        {
-            "Type": "HammerDBServerExecutor",
-          "Parameters": {
-            "Scenario": "ExecuteServer",
-            "PackageName": "hammerdb",
-            "DatabaseName": "$.Parameters.DatabaseName",
-            "Workload": "tpcc",
-            "SQLServer": "postgresql",
-            "Port": "$.Parameters.Port",
-            "VirtualUsers": "$.Parameters.VirtualUsers",
-            "WarehouseCount": "$.Parameters.WarehouseCount",
-            "DatabaseScenario": "$.Parameters.DatabaseScenario",
-            "Role": "Server"
-          }
-        },
-        {
-            "Type": "HammerDBClientExecutor",
-          "Parameters": {
-            "Scenario": "tpcc",
-            "DatabaseScenario": "$.Parameters.DatabaseScenario",
-            "Workload": "tpcc",
-            "SQLServer": "postgresql",
-            "PackageName": "hammerdb",
-            "DatabaseName": "$.Parameters.DatabaseName",
-            "Port": "$.Parameters.Port",
-            "VirtualUsers": "$.Parameters.VirtualUsers",
-            "WarehouseCount": "$.Parameters.WarehouseCount",
-            "Role": "Client"
-          }
-        }
-    ],
+  "Actions": [
+    {
+      "Type": "HammerDBServerExecutor",
+      "Parameters": {
+        "Scenario": "ExecuteServer",
+        "PackageName": "hammerdb",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "Workload": "tpcc",
+        "SQLServer": "postgresql",
+        "Port": "$.Parameters.Port",
+        "VirtualUsers": "$.Parameters.VirtualUsers",
+        "WarehouseCount": "$.Parameters.WarehouseCount",
+        "DatabaseScenario": "$.Parameters.DatabaseScenario",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "HammerDBClientExecutor",
+      "Parameters": {
+        "Scenario": "tpcc",
+        "DatabaseScenario": "$.Parameters.DatabaseScenario",
+        "Workload": "tpcc",
+        "SQLServer": "postgresql",
+        "PackageName": "hammerdb",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "Port": "$.Parameters.Port",
+        "VirtualUsers": "$.Parameters.VirtualUsers",
+        "WarehouseCount": "$.Parameters.WarehouseCount",
+        "Role": "Client"
+      }
+    }
+  ],
   "Dependencies": [
     {
       "Type": "FormatDisks",
