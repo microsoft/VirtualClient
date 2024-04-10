@@ -27,11 +27,6 @@ namespace VirtualClient.Actions
         private string hammerdbPackagePath;
         private string postgreSQLPackagePath;
 
-        [OneTimeSetUp]
-        public void SetupFixture()
-        {
-        }
-
         [Test]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Win32NT, Architecture.X64)]
