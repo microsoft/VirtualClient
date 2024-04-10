@@ -109,18 +109,7 @@
       }
     },
     {
-      "Type": "PostgreSQLServerConfiguration",
-      "Parameters": {
-        "Scenario": "SetupPostgreSQLDatabase",
-        "Action": "SetupDatabase",
-        "DatabaseName": "$.Parameters.DatabaseName",
-        "Port": "$.Parameters.Port",
-        "PackageName": "postgresql",
-        "Role": "Server"
-      }
-    },
-    {
-      "Type": "HammerDBConfiguration",
+      "Type": "HammerDBExecutor",
       "Parameters": {
         "Scenario": "PopulatePostgreSQLDatabase",
         "DatabaseName": "$.Parameters.DatabaseName",

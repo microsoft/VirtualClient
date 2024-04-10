@@ -10,7 +10,6 @@ namespace VirtualClient.Dependencies
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;

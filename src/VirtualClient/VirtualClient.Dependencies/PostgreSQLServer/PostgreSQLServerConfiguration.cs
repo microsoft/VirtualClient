@@ -113,11 +113,8 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                using (SHA256 sha256 = SHA256.Create())
-                {
-                    byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
-                    return Convert.ToBase64String(hashBytes);
-                }
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                return Convert.ToBase64String(hashBytes);
             }
         }
 
@@ -167,10 +164,6 @@ namespace VirtualClient.Dependencies
                             await this.ConfigurePostgreSQLServerAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
-                        case ConfigurationAction.SetupDatabase:
-                            await this.SetupPostgreSQLServerDatabaseAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-                            break;
                         case ConfigurationAction.DistributeDatabase:
                             await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
@@ -184,7 +177,7 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string arguments = $"{this.packageDirectory}/configure-server.py --port {this.Port}";
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port}";
 
             if (this.InMemory)
             {
@@ -195,9 +188,10 @@ namespace VirtualClient.Dependencies
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
                arguments,
-               Environment.CurrentDirectory,
+               this.packageDirectory,
                telemetryContext,
-               cancellationToken))
+               cancellationToken,
+               runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -207,30 +201,11 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task SetupPostgreSQLServerDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --password {this.SuperUserPassword}";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
-                arguments,
-                Environment.CurrentDirectory,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
         private async Task DistributePostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
 
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories {innoDbDirs}";
+            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories {innoDbDirs} --password {this.SuperUserPassword}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,

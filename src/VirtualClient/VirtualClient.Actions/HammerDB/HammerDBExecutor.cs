@@ -199,10 +199,28 @@ namespace VirtualClient.Actions
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
 
-        /// <inheritdoc/>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <summary>
+        /// Executes the workload.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
+               ?? new HammerDBState();
+
+            if (!state.DatabasePopulated)
+            {
+                await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
+                    }
+                });
+                state.DatabasePopulated = true;
+                await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
+            }
         }
 
         /// <inheritdoc/>
@@ -219,6 +237,14 @@ namespace VirtualClient.Actions
             await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
 
             this.InitializeApiClients(cancellationToken);
+
+            await this.Logger.LogMessageAsync($"{this.TypeName}.ConfigureHammerDBFile", telemetryContext.Clone(), async () =>
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.ConfigureCreateHammerDBFile(telemetryContext, cancellationToken);
+                }
+            });
 
             if (this.IsMultiRoleLayout())
             {
@@ -268,32 +294,11 @@ namespace VirtualClient.Actions
 
             if (!state.HammerDBInitialized)
             {
-                LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait(false);
-                string distribution = distributionInfo.LinuxDistribution.ToString();
-
-                string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --createDBTCLPath {this.CreateDBTclName} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --databaseName {this.DatabaseName}";
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    "python3",
-                    arguments,
-                    this.HammerDBPackagePath,
-                    telemetryContext,
-                    cancellationToken))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDBExecutor", logToFile: true);
-                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-                    }
-                }
-
                 state.HammerDBInitialized = true;
 
-                // The path to the HammerDB 'bin' folder is expected to exist in the PATH environment variable
-                // for the HammerDB toolset to work correctly.
-                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.HammerDBPackagePath, "bin"), append: true);
+                this.SystemManager.MakeFileExecutableAsync(this.Combine(this.HammerDBPackagePath, "hammerdbcli"), this.Platform, cancellationToken);
+
+                this.SystemManager.MakeFileExecutableAsync(this.Combine(this.HammerDBPackagePath, "bin", "tclsh8.6"), this.Platform, cancellationToken);
 
                 // Add the path to the HammerDB 'lib' folder to the LD_LIBRARY_PATH variable so that the *.so files can
                 // be found.
@@ -301,6 +306,48 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
+        }
+
+        private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string command = "python3";
+
+            string arguments = $"{this.HammerDBPackagePath}/populate-database.py --createDBTCLPath {this.CreateDBTclName}";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                arguments,
+                this.HammerDBPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDB", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
+        }
+
+        private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string command = $"python3";
+            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                arguments,
+                this.HammerDBPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDBExecutor", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
