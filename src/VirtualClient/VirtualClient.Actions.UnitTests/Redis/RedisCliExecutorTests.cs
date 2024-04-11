@@ -42,8 +42,7 @@ namespace VirtualClient.Actions
                 ["PackageName"] = this.mockPackage.Name,
                 ["CommandLine"] = "-h {ServerIpAddress} -p {ServerPortNumber} FLUSHALL",
                 ["ServerInstances"] = 1,
-                ["ServerPort"] = 6379,
-                ["Role"] = "client"
+                ["ServerPort"] = 6379
             };
 
 
