@@ -762,8 +762,6 @@ namespace VirtualClient.Contracts
             metricName.ThrowIfNullOrWhiteSpace(nameof(metricName));
             toolName.ThrowIfNullOrWhiteSpace(nameof(toolName));
             eventContext.ThrowIfNull(nameof(eventContext));
-            scenarioStartTime.ThrowIfInvalid(nameof(scenarioStartTime), (time) => time != DateTime.MinValue);
-            scenarioEndTime.ThrowIfInvalid(nameof(scenarioEndTime), (time) => time != DateTime.MinValue);
 
             var properties = new Dictionary<string, object>
             {

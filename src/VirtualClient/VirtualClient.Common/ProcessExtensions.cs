@@ -83,7 +83,7 @@ namespace VirtualClient.Common
 
             if (process.Start())
             {
-                await process.WaitForExitAsync(cancellationToken, timeout).ConfigureAwait(false);
+                await process.WaitForExitAsync(cancellationToken, timeout);
             }
         }
 
