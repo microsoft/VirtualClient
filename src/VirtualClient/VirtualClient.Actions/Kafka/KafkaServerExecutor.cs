@@ -47,17 +47,6 @@ namespace VirtualClient.Actions.Kafka
         }
 
         /// <summary>
-        /// Parameter defines the Kafka server command line to execute.
-        /// </summary>
-        public string CommandLine
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLine));
-            }
-        }
-
-        /// <summary>
         /// Port on which server runs.
         /// </summary>
         public int Port
@@ -65,17 +54,6 @@ namespace VirtualClient.Actions.Kafka
             get
             {
                 return this.Parameters.GetValue<int>(nameof(this.Port));
-            }
-        }
-
-        /// <summary>
-        /// Parameter defines the number of server instances/copies to run.
-        /// </summary>
-        public int ServerInstances
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.ServerInstances));
             }
         }
 
@@ -116,6 +94,11 @@ namespace VirtualClient.Actions.Kafka
         /// Path to Kafka kraft folder.
         /// </summary>
         protected string KafkaKraftDirectoryPath { get; set; }
+
+        /// <summary>
+        /// True/false whether the Producer test has ran once
+        /// </summary>
+        protected bool OneTimeConfigSetup { get; set; }
 
         /// <summary>
         /// Disposes of resources used by the executor including shutting down any
@@ -162,10 +145,15 @@ namespace VirtualClient.Actions.Kafka
 
                     await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
 
+                    if (!this.OneTimeConfigSetup)
+                    {
+                        await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
+                    }
+
                     if (this.ResetServer(telemetryContext))
                     {
                         await this.KillServerInstancesAsync(cancellationToken);
-                        await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
+
                         await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
                     }
 
@@ -241,7 +229,8 @@ namespace VirtualClient.Actions.Kafka
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("serverInstances", this.ServerInstances)
-                .AddContext("portRange", $"{this.Port}-{this.Port + this.ServerInstances}");
+                .AddContext("brokerPortRange", $"{this.Port}-{this.Port + this.ServerInstances}")
+                .AddContext("controllerPortRange", $"2{this.Port}-2{this.Port + this.ServerInstances}");
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.StartServerInstances", relatedContext, async () =>
             {
@@ -255,9 +244,9 @@ namespace VirtualClient.Actions.Kafka
                     clusterId = Regex.Replace(clusterId, $"(\n\r)|(\r\n)", " ");
 
                     // Start kafka servers based on server instances provided
-                    for (int i = 0; i < this.ServerInstances; i++)
+                    for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
                     {
-                        string propertiesFilePath = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{i + 1}.properties");
+                        string propertiesFilePath = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{serverInstance + 1}.properties");
 
                         // Format log directories
                         string formatLogDirCmdArgs = $"format -t {clusterId} -c {propertiesFilePath}";
@@ -265,7 +254,7 @@ namespace VirtualClient.Actions.Kafka
                         await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
 
                         // Start kafka server
-                        int port = this.Port + ((i - 1) * 2);
+                        int port = this.Port + serverInstance;
                         string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaStartScriptPath, propertiesFilePath);
                         this.serverProcesses.Add(this.StartServerAndWaitForExitAsync(
                             $"Kafka server process exited (port = {port})...",
@@ -369,11 +358,30 @@ namespace VirtualClient.Actions.Kafka
             string logDir = "/tmp";
             this.fileSystem.Directory.DeleteAsync(logDir);
             telemetryContext.AddContext("DeletedLogDirectory", logDir);
+            
+            List<string> controllerQuorumVotersList = new List<string>();
+            for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
+            {
+                string controllerPort = $"2{this.Port + serverInstance - 1}";
+                string controllerConnectString;
+                if (this.IsMultiRoleLayout())
+                {
+                    controllerConnectString = $"{serverInstance}@{this.ServerIpAddress}:{controllerPort}";
+                }
+                else
+                {
+                    controllerConnectString = $"{serverInstance}@localhost:{controllerPort}";
+                }
+                 
+                controllerQuorumVotersList.Add(controllerConnectString);
+            }
+
+            string controllerQuorumVoters = string.Join(",", controllerQuorumVotersList);
 
             for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
             {
-                int port = this.Port + ((serverInstance - 1) * 2);
-
+                int brokerPort = this.Port + serverInstance - 1;
+                int controllerPort = int.Parse($"2{this.Port + serverInstance - 1}");
                 string oldServerProperties = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, "server.properties");
                 string newServerProperties = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{serverInstance}.properties");
                 this.fileSystem.File.Copy(oldServerProperties, newServerProperties, true);
@@ -387,18 +395,20 @@ namespace VirtualClient.Actions.Kafka
                 if (this.IsMultiRoleLayout())
                 {
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"listeners *= *[^\n]*", $"listeners=PLAINTEXT://{this.ServerIpAddress}:{port},CONTROLLER://{this.ServerIpAddress}:{port + 1}", cancellationToken);
+                        newServerProperties, @"listeners *= *[^\n]*", $"listeners=PLAINTEXT://{this.ServerIpAddress}:{brokerPort},CONTROLLER://{this.ServerIpAddress}:{controllerPort}", cancellationToken);
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={serverInstance}@{this.ServerIpAddress}:{port + 1}", cancellationToken);
+                        newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={controllerQuorumVoters}", cancellationToken);
                 }
                 else
                 {
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"listeners *= *[^\n]*", $"listeners=PLAINTEXT://:{port},CONTROLLER://:{port + 1}", cancellationToken);
+                        newServerProperties, @"listeners *= *[^\n]*", $"listeners=PLAINTEXT://:{brokerPort},CONTROLLER://:{controllerPort}", cancellationToken);
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={serverInstance}@localhost:{port + 1}", cancellationToken);
+                        newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={controllerQuorumVoters}", cancellationToken);
                 }
 
+                this.OneTimeConfigSetup = true;
+                telemetryContext.AddContext(nameof(this.OneTimeConfigSetup), this.OneTimeConfigSetup);
                 telemetryContext.AddContext(nameof(newServerProperties), newServerProperties);
             }
         }
@@ -465,11 +475,12 @@ namespace VirtualClient.Actions.Kafka
         private void OpenKafkaPorts(CancellationToken cancellationToken)
         {
             List<int> ports = new List<int>();
-            for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
+            for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
             {
-                int port = this.Port + ((serverInstance - 1) * 2);
-                ports.Add(port);
-                ports.Add(port + 1);
+                int brokerPort = this.Port + serverInstance;
+                int controllerPort = int.Parse($"2{this.Port + serverInstance}");
+                ports.Add(brokerPort);
+                ports.Add(controllerPort);
             }
 
             this.systemManagement.FirewallManager.EnableInboundConnectionsAsync(

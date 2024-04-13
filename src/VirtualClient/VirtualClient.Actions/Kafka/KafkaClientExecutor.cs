@@ -61,12 +61,12 @@ namespace VirtualClient.Actions.Kafka
 
             this.PollingTimeout = TimeSpan.FromMinutes(40);
         }
-
+        
         /// <summary>
         /// Parameter defines the kafka command line to execute.
         /// </summary>
         public string CommandLine { get; set; }
-        
+
         /// <summary>
         /// Parameter defines true/false whether the action is meant to warm up the server.
         /// </summary>
@@ -197,6 +197,8 @@ namespace VirtualClient.Actions.Kafka
             {
                 IPAddress ipAddress;
                 List<Task> clientWorkloadTasks = new List<Task>();
+                int replicationFactor = (this.Platform == PlatformID.Win32NT || this.ServerInstances <= 3) ? 1 : (this.ServerInstances > 5 ? 4 : this.ServerInstances - 2);
+                this.CommandLine = this.CommandLine.Replace("$ReplicationFactor", replicationFactor.ToString());
 
                 if (this.IsMultiRoleLayout())
                 {
@@ -265,17 +267,24 @@ namespace VirtualClient.Actions.Kafka
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkloads", relatedContext.Clone(), async () =>
             {
-                List<string> commands = new List<string>();
-                relatedContext.AddContext("command", this.PlatformSpecificCommandType);
-                relatedContext.AddContext("commandArguments", commands);
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    List<string> commands = new List<string>();
+                    relatedContext.AddContext("command", this.PlatformSpecificCommandType);
+                    relatedContext.AddContext("commandArguments", commands);
 
-                List<Task> workloadProcesses = new List<Task>();
-                string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaCommandScriptPath, this.CommandLine);
-                commands.Add($"{this.PlatformSpecificCommandType} {commandArguments}");
+                    List<Task> workloadProcesses = new List<Task>();
 
-                workloadProcesses.Add(this.ExecuteWorkloadAsync(this.PlatformSpecificCommandType, commandArguments, this.KafkaPackagePath, relatedContext, cancellationToken));
+                    for (int i = 0; i < this.ClientInstances; i++)
+                    {
+                        string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaCommandScriptPath, this.CommandLine);
+                        commands.Add($"{this.PlatformSpecificCommandType} {commandArguments}");
 
-                await Task.WhenAll(workloadProcesses);
+                        workloadProcesses.Add(this.ExecuteWorkloadAsync(this.PlatformSpecificCommandType, commandArguments, this.KafkaPackagePath, relatedContext, cancellationToken));
+                    }
+
+                    await Task.WhenAll(workloadProcesses);
+                }
             });
         }
 
@@ -295,7 +304,7 @@ namespace VirtualClient.Actions.Kafka
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Kafka", logToFile: true);
                                 process.ThrowIfWorkloadFailed();
 
-                                if (this.CommandType != KafkaCommandType.Setup)
+                                if (this.CommandType == KafkaCommandType.ConsumerTest)
                                 {
                                     string output = process.StandardOutput.ToString();
                                     telemetryContext.AddContext(this.CommandType.ToString(), output);

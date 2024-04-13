@@ -11,6 +11,7 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
+    using VirtualClient.Actions.Kafka;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -34,6 +35,39 @@
         {
             this.ApiClientManager = dependencies.GetService<IApiClientManager>();
             this.SystemManagement = this.Dependencies.GetService<ISystemManagement>();
+        }
+
+        /// <summary>
+        /// Parameter defines the number of server instances/copies to run.
+        /// </summary>
+        public int ServerInstances
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ServerInstances));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the number of client instances/copies to run.
+        /// </summary>
+        public int ClientInstances
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the number of client instances/copies to run.
+        /// </summary>
+        public int Partitions
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.Partitions), 6);
+            }
         }
 
         /// <summary>
@@ -72,6 +106,18 @@
         /// Command type to be used based on platform.
         /// </summary>
         protected string PlatformSpecificCommandType { get; set; }
+
+        /// <summary>
+        /// Validates the component definition for requirements.
+        /// </summary>
+        protected override void Validate()
+        {
+            base.Validate();
+            if (this.ClientInstances > this.Partitions)
+            {
+                throw new ArgumentException($"Parameter ClientInstance {this.ClientInstances} should be <= parameter Partitions {this.Partitions}");
+            }
+        }
 
         /// <summary>
         /// Executes the workload.
