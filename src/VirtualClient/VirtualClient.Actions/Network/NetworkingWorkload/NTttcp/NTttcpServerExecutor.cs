@@ -23,7 +23,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
         }
     }
 }

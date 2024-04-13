@@ -5,7 +5,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -24,8 +23,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     [UnixCompatible]
     public class SockPerfClientExecutor : SockPerfExecutor
     {
-        private IFileSystem fileSystem;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfClientExecutor"/> class.
         /// </summary>
@@ -34,12 +31,10 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
-            this.fileSystem = dependencies.GetService<IFileSystem>();
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             IProcessProxy process = null;
 
@@ -53,6 +48,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
+                        await this.DeleteResultsFileAsync();
+
                         using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
                             try
@@ -64,14 +61,21 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 {
                                     if (process.IsErrored())
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, "SockPerf", logToFile: true);
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
                                         process.ThrowIfWorkloadFailed();
                                     }
+                                    else
+                                    {
+                                        string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray());
 
-                                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
-
-                                    string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "SockPerf", results: results.AsArray(), logToFile: true);
+                                        this.CaptureMetrics(
+                                            results,
+                                            process.FullCommand(),
+                                            process.StartTime,
+                                            process.ExitTime,
+                                            relatedContext);
+                                    }
                                 }
                             }
                             catch (TimeoutException exc)
@@ -88,7 +92,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 throw;
                             }
                         }
-                    }).ConfigureAwait(false);
+                    });
                 }
 
                 return process;
@@ -118,38 +122,39 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
-            this.MetadataContract.AddForScenario(
-                this.Tool.ToString(),
-                commandArguments,
-                toolVersion: null);
-
-            this.MetadataContract.Apply(telemetryContext);
-
-            IFile fileAccess = this.SystemManagement.FileSystem.File;
-
-            if (fileAccess.Exists(this.ResultsPath))
+            if (!string.IsNullOrWhiteSpace(results))
             {
-                string resultsContent = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None)
+                this.MetadataContract.AddForScenario(
+                    this.Tool.ToString(),
+                    commandArguments,
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
+                MetricsParser parser = new SockPerfMetricsParser(results, this.ConfidenceLevel);
+                IList<Metric> metrics = parser.Parse();
+
+                this.Logger.LogMetrics(
+                    this.Tool.ToString(),
+                    this.Name,
+                    startTime,
+                    endTime,
+                    metrics,
+                    string.Empty,
+                    commandArguments,
+                    this.Tags,
+                    telemetryContext);
+            }
+        }
+
+        private async Task DeleteResultsFileAsync()
+        {
+            if (this.SystemManagement.FileSystem.File.Exists(this.ResultsPath))
+            {
+                await this.SystemManagement.FileSystem.File.DeleteAsync(this.ResultsPath)
                     .ConfigureAwait(false);
-
-                if (!string.IsNullOrWhiteSpace(resultsContent))
-                {
-                    MetricsParser parser = new SockPerfMetricsParser(resultsContent, this.ConfidenceLevel);
-                    IList<Metric> metrics = parser.Parse();
-
-                    this.Logger.LogMetrics(
-                        this.Tool.ToString(),
-                        this.Name,
-                        startTime,
-                        endTime,
-                        metrics,
-                        string.Empty,
-                        commandArguments,
-                        this.Tags,
-                        telemetryContext);
-                }
             }
         }
     }

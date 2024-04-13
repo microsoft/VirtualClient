@@ -31,7 +31,7 @@ namespace VirtualClient.Contracts
             Regex ubuntuRegex = new Regex("Name=(\")?Ubuntu", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex debianRegex = new Regex("Name=(\")?Debian", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex rhel7Regex = new Regex("PRETTY_NAME=(\")?Red Hat Enterprise Linux 7.", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            Regex rhel8Regex = new Regex("PRETTY_NAME=(\")?Red Hat Enterprise Linux 8.", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            Regex rhel8Regex = new Regex("PRETTY_NAME=(\")?Red Hat Enterprise Linux (8|9).", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex flatcarRegex = new Regex("Name=(\")?Flatcar", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos7Regex = new Regex("Name=(\")?CentOS Linux 7", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos8Regex = new Regex("Name=(\")?CentOS Linux 8", RegexOptions.Multiline | RegexOptions.IgnoreCase);
