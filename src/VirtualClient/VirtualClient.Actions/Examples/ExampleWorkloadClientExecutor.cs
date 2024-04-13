@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // Overview:
             // ----------------------------------------------------------------------------------------------------------------------
@@ -141,29 +141,13 @@ namespace VirtualClient.Actions
                 // Dates should ALWAYS be represented in UTC.
                 DateTime startTime = DateTime.UtcNow;
 
-                string workloadResults = await this.ExecuteWorkloadAsync(this.CommandLine, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime finishTime = DateTime.UtcNow;
-
-                await this.CaptureMetricsAsync(workloadResults, this.CommandLine, startTime, finishTime, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 // Expected when a Task.Delay is cancelled.
             }
+
+            return Task.CompletedTask;
         }
-
-        /// <summary>
-        /// Performs initialization operations for the executor.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            await this.WaitForRoleAsync("server", cancellationToken).ConfigureAwait(false);
-
-            // make sure package is present on system
-        }
-
     }
 }

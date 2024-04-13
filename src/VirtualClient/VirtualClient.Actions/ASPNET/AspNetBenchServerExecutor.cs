@@ -26,7 +26,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class AspNetBenchServerExecutor : AspNetBenchBaseExecutor
     {
-        private readonly object lockObject = new object();
         private string aspnetBenchDirectory;
 
         /// <summary>
@@ -39,10 +38,18 @@ namespace VirtualClient.Actions
         {
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.StartAspNetServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            await this.WaitForRoleAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            Console.WriteLine("wait");
+            await Task.Delay(TimeSpan.FromMinutes(10));
+            Console.WriteLine("end");
         }
 
         /// <summary>
@@ -59,6 +66,7 @@ namespace VirtualClient.Actions
 
             // the directory we are looking for is at the src/Benchmarks
             this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
+            await this.BuildAspNetBenchAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<ServerState> GetServerStateAsync(IApiClient serverApiClient, CancellationToken cancellationToken)

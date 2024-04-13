@@ -11,8 +11,20 @@
     },
     "Actions": [
         {
-            "Type": "AspNetBenchExecutor",
+            "Type": "AspNetBenchClientExecutor",
             "Parameters": {
+                "Role": "Client",
+                "Scenario": "ExecuteJsonSerializationBenchmark",
+                "PackageName": "aspnetbenchmarks",
+                "BombardierPackageName": "bombardier",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework"
+            }
+        },
+        {
+            "Type": "AspNetBenchServerExecutor",
+            "Parameters": {
+                "Role": "Server",
                 "Scenario": "ExecuteJsonSerializationBenchmark",
                 "PackageName": "aspnetbenchmarks",
                 "BombardierPackageName": "bombardier",
@@ -46,6 +58,32 @@
             }
         },
         {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "build-essentials",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneWrkRepo",
+                "RepoUri": "https://github.com/wg/wrk.git",
+                "PackageName": "wrk",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileWrk",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:wrk}",
+                "Role": "Client"
+            }
+        },
+        {
             "Type": "DotNetInstallation",
             "Parameters": {
                 "Scenario": "InstallDotNetSdk",
@@ -61,6 +99,12 @@
                 "BlobName": "bombardier.1.2.5.zip",
                 "PackageName": "bombardier",
                 "Extract": true
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
             }
         }
     ]

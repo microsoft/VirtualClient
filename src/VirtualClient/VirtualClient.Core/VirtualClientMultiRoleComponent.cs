@@ -5,8 +5,10 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
     using System.Net;
+    using System.Net.Http;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -17,7 +19,9 @@ namespace VirtualClient.Contracts
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
 
@@ -26,6 +30,12 @@ namespace VirtualClient.Contracts
     /// </summary>
     public abstract class VirtualClientMultiRoleComponent : VirtualClientComponent
     {
+        private static readonly List<string> CompletedStatuses = new List<string>
+        {
+            ClientServerStatus.ExecutionCompleted.ToString(),
+            ClientServerStatus.Failed.ToString()
+        };
+
         private ISystemManagement systemManagement;
         private IApiClientManager apiClientManager;
 
@@ -61,10 +71,9 @@ namespace VirtualClient.Contracts
         /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task WaitForRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected Task WaitForRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPAddress ipAddress;
-            List<Task> clientWorkloadTasks = new List<Task>();
+            List<Task> tasks = new List<Task>();
 
             if (this.IsMultiRoleLayout())
             {
@@ -74,7 +83,7 @@ namespace VirtualClient.Contracts
                     // Reliability/Recovery:
                     // The pattern here is to allow for any steps within the workflow to fail and to simply start the entire workflow
                     // over again.
-                    clientWorkloadTasks.Add(this.RetryPolicy.ExecuteAsync(async () =>
+                    tasks.Add(this.RetryPolicy.ExecuteAsync(async () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
@@ -83,21 +92,13 @@ namespace VirtualClient.Contracts
                             // 1) Confirm server is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
-                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken);
-
-                            // 2) Confirm the server-side application (e.g. web server) is online.
-                            // ===========================================================================
-                            this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
-                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromSeconds(30), cancellationToken);
-
-                            // 4) Execute the client workload.
-                            // ===========================================================================
-                            ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
+                            await apiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken);
                         }
                     }));
                 }
             }
+
+            return Task.WhenAll(tasks);
         }
 
         /// <summary>
@@ -109,7 +110,7 @@ namespace VirtualClient.Contracts
         /// <returns></returns>
         protected Task TerminateRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -121,7 +122,74 @@ namespace VirtualClient.Contracts
         /// <returns></returns>
         protected Task WaitForTerminationAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            return Task.CompletedTask;
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="WorkloadException"></exception>
+        protected Task SendInstructionsAndPollForCompletionAsync(string role, CancellationToken cancellationToken)
+        {
+            // Send instructions to execute a workload/component on the server-side
+            Instructions instructions = new Instructions(InstructionsType.ClientServerStartExecution);
+            instructions.AddComponent(this.TypeName, this.Parameters);
+
+            List<Task> tasks = new List<Task>();
+
+            if (this.IsMultiRoleLayout())
+            {
+                IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(role);
+                foreach (ClientInstance server in targetServers)
+                {
+                    // Reliability/Recovery:
+                    // The pattern here is to allow for any steps within the workflow to fail and to simply start the entire workflow
+                    // over again.
+                    tasks.Add(this.RetryPolicy.ExecuteAsync(async () =>
+                    {
+                        IApiClient apiClient = this.apiClientManager.GetOrCreateApiClient(server.Name, server);
+
+                        this.Logger.LogTraceMessage("Synchronization: Send client workload request...");
+
+                        HttpResponseMessage response = await apiClient.SendInstructionsAsync<Instructions>(instructions, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new WorkloadException(
+                                $"Workload instructions request failed with response '{(int)response.StatusCode}/{response.StatusCode.ToString()}'",
+                                ErrorReason.ApiRequestFailed);
+                        }
+
+                        // Poll until the server-side indicates the workload is either completed or failed.
+                        Item<Instructions> instructionsInstance = await response.Content.ReadAsJsonAsync<Item<Instructions>>()
+                            .ConfigureAwait(false);
+
+                        await apiClient.PollForExpectedStateAsync<State>(
+                            instructionsInstance.Id,
+                            (state => VirtualClientMultiRoleComponent.CompletedStatuses.Contains(state.Status(), StringComparer.OrdinalIgnoreCase)),
+                            TimeSpan.FromDays(90),
+                            cancellationToken).ConfigureAwait(false);
+
+                        Item<State> state = await apiClient.GetStateAsync<State>(instructionsInstance.Id, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (string.Equals(state.Definition.Status(), ClientServerStatus.Failed.ToString(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            int? errorReasonCode = state.Definition.ErrorReason();
+                            string errorMessage = $"Server-side workload failed for component '{this.TypeName}' on target instance '{apiClient.BaseUri.Host}'. {state.Definition.ErrorMessage()}";
+                            ErrorReason errorReason = errorReasonCode != null ? (ErrorReason)errorReasonCode : ErrorReason.WorkloadFailed;
+
+                            throw new WorkloadException(errorMessage, errorReason);
+                        }
+                    }));
+                }
+            }
+
+            return Task.WhenAll(tasks);
         }
     }
 }

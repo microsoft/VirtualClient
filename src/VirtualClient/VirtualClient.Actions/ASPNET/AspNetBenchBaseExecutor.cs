@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The AspNetBench workload executor.
     /// </summary>
-    public class AspNetBenchBaseExecutor : VirtualClientMultiRoleComponent
+    public abstract class AspNetBenchBaseExecutor : VirtualClientMultiRoleComponent
     {
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -33,8 +33,6 @@ namespace VirtualClient.Actions
         private string bombardierFilePath;
         private string serverArgument;
         private string clientArgument;
-
-        private Action killServer;
 
         /// <summary>
         /// Constructor for <see cref="AspNetBenchExecutor"/>
@@ -144,7 +142,7 @@ namespace VirtualClient.Actions
             }
 
             this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
-
+            Console.WriteLine(this.dotnetExePath);
             // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
@@ -211,7 +209,8 @@ namespace VirtualClient.Actions
             string options = $"--nonInteractive true --scenarios json --urls http://localhost:{this.Port} --server Kestrel --kestrelTransport Sockets --protocol http";
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
-
+            Console.WriteLine("2");
+            Console.WriteLine(this.dotnetExePath);
             return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken);
         }
 
@@ -223,6 +222,35 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         protected async Task RunBombardierAsync(string ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                // https://pkg.go.dev/github.com/codesenberg/bombardier
+                // ./bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:5000/json --print r --format json
+                this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ipAddress}:{this.Port}/json --print r --format json";
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBench", logToFile: true);
+
+                        process.ThrowIfWorkloadFailed();
+                        this.CaptureMetrics(process, telemetryContext);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected async Task RunWrkAsync(string ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
