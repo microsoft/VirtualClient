@@ -365,6 +365,10 @@ namespace VirtualClient.Common
             {
                 // Expected whenever the CancellationToken receives a cancellation request.
             }
+            finally
+            {
+                this.exitTime = DateTime.UtcNow;
+            }
         }
 
         /// <summary>
