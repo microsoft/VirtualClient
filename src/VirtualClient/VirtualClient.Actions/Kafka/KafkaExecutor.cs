@@ -51,11 +51,11 @@
         /// <summary>
         /// Parameter defines the number of client instances/copies to run.
         /// </summary>
-        public int ClientInstances
+        public int MaxClientInstances
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
+                return this.Parameters.GetValue<int>(nameof(this.MaxClientInstances), 1);
             }
         }
 
@@ -113,9 +113,9 @@
         protected override void Validate()
         {
             base.Validate();
-            if (this.ClientInstances > this.Partitions)
+            if (this.MaxClientInstances > this.Partitions)
             {
-                throw new ArgumentException($"Parameter ClientInstance {this.ClientInstances} should be <= parameter Partitions {this.Partitions}");
+                throw new ArgumentException($"Parameter ClientInstance {this.MaxClientInstances} should be <= parameter Partitions {this.Partitions}");
             }
         }
 

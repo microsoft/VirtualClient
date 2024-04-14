@@ -79,6 +79,17 @@ namespace VirtualClient.Actions.Kafka
         }
 
         /// <summary>
+        /// Parameter defines the number of client instances/copies to run.
+        /// </summary>
+        public int ClientInstances
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
+            }
+        }
+
+        /// <summary>
         /// The retry policy to apply to the client-side execution workflow.
         /// </summary>
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
