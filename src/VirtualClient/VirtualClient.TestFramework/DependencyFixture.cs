@@ -51,7 +51,7 @@ namespace VirtualClient
         /// </summary>
         public DependencyFixture(PlatformID? platform = null, Architecture? architecture = null)
         {
-            this.Setup(platform ?? PlatformID.Win32NT, architecture ?? Architecture.X64);
+            this.Setup(platform ?? PlatformID.Win32NT, architecture ?? Architecture.X64, useUnixStylePathsOnly: false);
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace VirtualClient
         /// <summary>
         /// Sets up or resets the fixture to default mock behaviors.
         /// </summary>
-        public virtual DependencyFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null)
+        public virtual DependencyFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false)
         {
             this.SetupMocks(true);
 
@@ -266,7 +266,7 @@ namespace VirtualClient
             this.ApiClient = new InMemoryApiClient(ipAddress);
             this.ApiClientManager = new InMemoryApiClientManager();
             this.ApiManager = new InMemoryApiManager();
-            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
+            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly);
             this.Configuration = new ConfigurationBuilder().Build();
             this.DiskManager = new InMemoryDiskManager();
             this.FileSystem = new InMemoryFileSystem(this.PlatformSpecifics);

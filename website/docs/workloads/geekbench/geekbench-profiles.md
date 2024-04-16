@@ -1,5 +1,5 @@
-# GeekBench5 Workload Profiles
-The following profiles run customer-representative or benchmarking scenarios using the GeekBench5 workload.
+# GeekBench Workload Profiles
+The following profiles run customer-representative or benchmarking scenarios using the GeekBench5 and GeekBench6 workloads.
 
 * [Workload Details](./geekbench.md)  
 
@@ -11,8 +11,9 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH5.json) 
 
 * **Supported Platform/Architectures**
-  Note that Geekbench5 runs on linux-arm64 systems; however, it is a preview build that carries a requirement of uploading data to Primate Labs' (Geekbench producer)
-  data systems. We are currently electing to NOT support this in Virtual Client.
+  Note that GeekBench5 runs on linux-arm64 systems; however, to do so requires that the date be uploaded to Primate Labs' (the producer of GeekBench)
+  data systems. We do not sanction or support uploading customer data to unexpected systems and thus do not support the use of GeekBench5 on
+  linux-arm64 systems.
   * linux-x64 
   * win-x64
   * win-arm64
@@ -42,7 +43,7 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
   VirtualClient.exe --profile=PERF-CPU-GEEKBENCH5.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
 
-  # GeekBench6 Workload Profiles
+ # GeekBench6 Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the GeekBench6 workload.
 
 * [Workload Details](./geekbench.md)  
@@ -55,8 +56,6 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) 
 
 * **Supported Platform/Architectures**
-  Note that Geekbench6 runs on linux-arm64 systems; however, it is a preview build that carries a requirement of uploading data to Primate Labs' (Geekbench producer)
-  data systems. We are currently electing to NOT support this in Virtual Client.
   * linux-x64 
   * linux-arm64 
   * win-x64

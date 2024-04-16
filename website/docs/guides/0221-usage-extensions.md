@@ -1,9 +1,8 @@
-# Usage: Using Custom Extensions
+# Using/Integrating Extensions
 The Virtual Client platform supports a few different "extensions" models enabling developers to create feature sets and for users to integrate those into the platform
 runtime. This document covers how to use and integrate extensions into the platform. Additional documentation exists that focuses on the development process itself.
 
 * [Developing Extensions](../developing/0020-develop-extensions.md)
-* [VC Packages](../developing/0040-vc-packages.md)
 
 ## What are Extensions
 Extensions in a simple sense are extra feature sets for actions, monitors or dependency handlers that can be developed independently of the core Virtual Client platform
@@ -25,19 +24,18 @@ the Virtual Client runtime platform version to use.
 * **The version of the Virtual Client runtime/.exe must be >= to the framework version referenced by the extensions**  
   When developing Virtual Client extensions, a version of the `VirtualClient.Framework` package is referenced. This framework package will have a version (e.g. 1.15.0). 
   The binaries/.dlls built and that contain the extensions features have thus taken a "contract" against this specific version of Virtual Client. In order to integrate
-  the extensions binaries/.dlls into the Virtual Client, the version of the Virtual Client runtime/.exe must be greater than or equal to the version of the `VirtualClient.Framework` 
+  the extensions binaries/.dlls into the Virtual Client, the version of the Virtual Client must be greater than or equal to the version of the `VirtualClient.Framework` 
   package used to compile the extensions projects.
 
-  For example, suppose the extensions projects were compiled against VirtualClient.Framework version 1.15.0. These extensions can be ran by any version of Virtual Client runtime >=
-  to 1.15.0 (e.g. 1.15.0, 1.15.1, 1.15.10 etc...). However, these extensions COULD NOT be used with Virtual Client runtime version 1.14.0.
+  For example, suppose the extensions projects were compiled against VirtualClient.Framework version 1.15.0. These extensions can be ran by any version of Virtual Client >=
+  to 1.15.0 (e.g. 1.15.0, 1.15.1, 1.15.10 etc...). However, these extensions COULD NOT be used with Virtual Client version 1.14.0.
 
-* **Use a version of Virtual Client runtime/.exe having the major and minor version matching the framework version referenced by the extensions**  
+* **Use a version of Virtual Client runtime/.exe show major and minor version matches the framework version referenced by the extensions**  
   To ensure compatibility it is generally recommended that the version of the Virtual Client runtime/.exe used to integrate extensions have the same
-  major and minor version as the `VirtualClient.Framework` package version referenced by the projects in the extensions repo. So although a user MIGHT
-  be able to use a VirtualClient.exe from version 1.17.0 with extensions .dlls compiled targeting VirtualClient.Framework 1.16.0, it would not be advisable
-  because the \{major\}.\{minor\} version DOES NOT match (e.g. 1.17 vs. 1.16 respectively). The following table illustrates a few examples as a reference.
+  major and minor version as the `VirtualClient.Framework` package version referenced by the projects in the extensions repo. The following table illustrates
+  a few examples as a reference.
 
-  <mark>In general, backwards compatibility for Virtual Client releases is maintained within a \{major\}.\{minor\} range only (e.g. 1.14.0, 1.14.1, 1.14.2, ~~1.15.0~~). The Virtual Client team attempts to honor this most of the time; however, no guarantees are made.</mark>
+  <mark>In general, backwards compatibility for Virtual Client releases is maintained within a {{major}}.{{minor}} range only (e.g. 1.14.0, 1.14.1, 1.14.2, ~~1.15.0~~). The Virtual Client team attempts to honor this most of the time; however, no guarantees are made.</mark>
 
   https://semver.org/
 
@@ -57,13 +55,13 @@ the Virtual Client runtime platform version to use.
 
 ### How to Use .NET-Based/Managed Code Extensions
 When developing .NET-based extensions, the user/developer will create a simple folder structure with the extensions binaries/.dlls and profiles in it. The folder structure
-is covered more in-depth in the `Developing Extensions` and `VC Packages` documentation noted at the top. The following section describes how to incorporate .NET-based extensions.
+is covered more in-depth in the `Developing Extensions` documentation noted at the top. The following section describes how to incorporate .NET-based extensions.
 
 * **Place Extensions Folder in Default 'packages' Location**  
   The default way to incorporate extensions into the Virtual Client runtime is to add the extensions package into the Virtual Client default 'packages' folder.
-  Extensions themselves have a special folder structure that is consistent with other packages (e.g. workload and monitor toolsets) that are incorporated into Virtual Client.
-  Simply copy the folder (and its contents) into the 'packages' folder. In fact the extensions packages can even be placed in the 'packages' folder as a .zip/archive file 
-  (e.g. any.virtualclient.extensions.1.0.0.zip) and Virtual Client will extract them on startup.
+  Extensions themselves have a special folder structure that is consistent with other packages (e.g. workloads, monitors) that are incorporated into Virtual Client.
+  This makes it easy to incorporate the extensions because they can just be copied into the 'packages' folder. In fact the extensions packages can even be placed
+  in the 'packages' folder as a .zip/archive file (e.g. any.virtualclient.extensions.1.0.0.zip) and Virtual Client will extract them on startup.
 
   ``` bash
   # e.g.
