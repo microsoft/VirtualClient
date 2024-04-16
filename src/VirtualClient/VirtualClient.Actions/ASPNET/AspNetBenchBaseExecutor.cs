@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using static System.Net.Mime.MediaTypeNames;
 
     /// <summary>
     /// The AspNetBench workload executor.
@@ -31,6 +32,7 @@ namespace VirtualClient.Actions
         private string aspnetBenchDirectory;
         private string aspnetBenchDllPath;
         private string bombardierFilePath;
+        private string wrkFilePath;
         private string serverArgument;
         private string clientArgument;
 
@@ -103,23 +105,31 @@ namespace VirtualClient.Actions
             DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            if (workloadPackage == null)
+            if (workloadPackage != null)
             {
-                throw new DependencyException(
-                    $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
-                    ErrorReason.WorkloadDependencyMissing);
+                // the directory we are looking for is at the src/Benchmarks
+                this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
             }
-
-            // the directory we are looking for is at the src/Benchmarks
-            this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
 
             DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                 .ConfigureAwait(false);
 
-            this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
+            if (bombardierPackage != null)
+            {
+                this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
+                await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
+                    .ConfigureAwait(false);
+            }
 
-            await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
+            DependencyPath wrkPackage = await this.packageManager.GetPackageAsync("wrk", cancellationToken)
                 .ConfigureAwait(false);
+
+            if (wrkPackage != null)
+            {
+                this.wrkFilePath = this.Combine(wrkPackage.Path, "wrk");
+                await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
 
         /// <summary>
@@ -142,7 +152,6 @@ namespace VirtualClient.Actions
             }
 
             this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
-            Console.WriteLine(this.dotnetExePath);
             // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
@@ -175,7 +184,7 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                BombardierMetricsParser parser = new BombardierMetricsParser(process.StandardOutput.ToString());
+                WrkMetricParser parser = new WrkMetricParser(process.StandardOutput.ToString());
 
                 this.Logger.LogMetrics(
                     toolName: "AspNetBench",
@@ -206,7 +215,7 @@ namespace VirtualClient.Actions
             // dotnet <path_to_binary>\Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:5000 --server Kestrel --kestrelTransport Sockets --protocol http
             // --header "Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7" --header "Connection: keep-alive" 
 
-            string options = $"--nonInteractive true --scenarios json --urls http://localhost:{this.Port} --server Kestrel --kestrelTransport Sockets --protocol http";
+            string options = $"--nonInteractive true --scenarios json --urls http://*:{this.Port} --server Kestrel --kestrelTransport Sockets --protocol http";
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
             Console.WriteLine("2");
@@ -255,10 +264,10 @@ namespace VirtualClient.Actions
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 // https://pkg.go.dev/github.com/codesenberg/bombardier
-                // ./bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:5000/json --print r --format json
-                this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ipAddress}:{this.Port}/json --print r --format json";
+                // ./wrk -t 256 -c 256 -d 15s --timeout 10s http://10.1.0.23:9876/json --header "Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"
+                this.clientArgument = $"-t 256 -c 256 -d 15s --timeout 10s http://{ipAddress}:{this.Port}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q = 0.9,application/xml;q=0.8,*/*;q=0.7\"";
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.wrkFilePath, this.clientArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
                     .ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)

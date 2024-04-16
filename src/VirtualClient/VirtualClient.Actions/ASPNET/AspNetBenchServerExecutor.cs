@@ -26,8 +26,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class AspNetBenchServerExecutor : AspNetBenchBaseExecutor
     {
-        private string aspnetBenchDirectory;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AspNetBenchServerExecutor"/> class.
         /// </summary>
@@ -46,27 +44,11 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.StartAspNetServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            Console.WriteLine("wait");
-            await Task.Delay(TimeSpan.FromMinutes(10));
-            Console.WriteLine("end");
-        }
-
-        /// <summary>
-        /// Initializes the environment and dependencies for client of redis Benchmark workload.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns></returns>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            // This workload needs three packages: aspnetbenchmarks, dotnetsdk, bombardier
-            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken)
-                .ConfigureAwait(false);
-
-            // the directory we are looking for is at the src/Benchmarks
-            this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
             await this.BuildAspNetBenchAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
+            await this.StartAspNetServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.WaitAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private async Task<ServerState> GetServerStateAsync(IApiClient serverApiClient, CancellationToken cancellationToken)

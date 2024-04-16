@@ -61,7 +61,7 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "build-essentials",
+                "Packages-Apt": "build-essential,unzip",
                 "Role": "Client"
             }
         },

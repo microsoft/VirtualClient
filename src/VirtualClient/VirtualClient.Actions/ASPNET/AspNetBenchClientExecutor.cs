@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
         {
             await this.WaitForRoleAsync(ClientRole.Server, telemetryContext, cancellationToken).ConfigureAwait(false);
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            await this.RunBombardierAsync(serverIPAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.RunWrkAsync(serverIPAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
             await this.TerminateRoleAsync(ClientRole.Server, telemetryContext, cancellationToken).ConfigureAwait(false);
         }
 
