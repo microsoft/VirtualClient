@@ -30,6 +30,7 @@ namespace VirtualClient
     using YamlDotNet.Core;
     using YamlDotNet.Serialization.NamingConventions;
     using YamlDotNet.Serialization;
+    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -94,6 +95,11 @@ namespace VirtualClient
         public ProfileTiming Timeout { get; set; }
 
         /// <summary>
+        /// Platform extensions discovered at runtime (e.g. binaries/.dlls, profiles).
+        /// </summary>
+        protected PlatformExtensions Extensions { get; set; }
+
+        /// <summary>
         /// Executes the profile operations.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
@@ -110,8 +116,6 @@ namespace VirtualClient
 
             try
             {
-                this.SetGlobalTelemetryProperties(args);
-
                 // When timing constraints/hints are not provided on the command line, we run the
                 // application until it is explicitly stopped by the user or automation.
                 if (this.Timeout == null && this.Iterations == null)
@@ -119,60 +123,57 @@ namespace VirtualClient
                     this.Timeout = ProfileTiming.Forever();
                 }
 
+                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
+                {
+                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
+                }
+
+                this.SetGlobalTelemetryProperties(args);
+
                 // 1) Setup any dependencies required to execute the workload profile.
-                
                 dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
                 systemManagement = dependencies.GetService<ISystemManagement>();
 
-                IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
-
-                this.SetGlobalTelemetryProperties(profileNames, dependencies);
-                this.ApplyBackwardsCompatibilityRequirements();
+                EventContext telemetryContext = EventContext.Persisted();
 
                 if (this.IsCleanRequested)
                 {
                     await this.CleanAsync(systemManagement, cancellationToken, logger);
                 }
 
-                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
-                {
-                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
-                }
-
-                EventContext telemetryContext = EventContext.Persisted();
-                logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", telemetryContext);
+                logger.LogMessage($"Platform.Initialize", telemetryContext);
+                this.LogContextToConsole(dependencies);
 
                 // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
                 // the 'packages' directory already).
-                await this.InitializePackagesAsync(packageManager, cancellationToken)
-                    .ConfigureAwait(false);
-
-                // Installs any extensions that are pre-existing on the system (e.g. they exist in
-                // the 'packages' directory already).
-                await this.InstallExtensionsAsync(packageManager, cancellationToken)
-                    .ConfigureAwait(false);
-
-                this.SetHostMetadata(profileNames, dependencies);
+                await this.InitializePackagesAsync(packageManager, cancellationToken);
 
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
                 ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
 
-                this.LogContextToConsole(dependencies);
+                // Installs any extensions that are pre-existing on the system (e.g. they exist in
+                // the 'packages' directory already).
+                this.Extensions = await this.DiscoverExtensionsAsync(packageManager, cancellationToken);
+                if (this.Extensions?.Binaries?.Any() == true)
+                {
+                    await this.LoadExtensionsBinariesAsync(this.Extensions, cancellationToken);
+                }
 
-                IEnumerable<string> effectiveProfiles = await this.InitializeProfilesAsync(dependencies, cancellationToken)
-                    .ConfigureAwait(false);
+                IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
+                this.SetGlobalTelemetryProperties(profileNames, dependencies);
+                this.SetHostMetadataTelemetryProperties(profileNames, dependencies);
+
+                IEnumerable<string> effectiveProfiles = await this.InitializeProfilesAsync(dependencies, cancellationToken);
 
                 if (this.InstallDependencies)
                 {
-                    await this.ExecuteProfileDependenciesInstallationAsync(effectiveProfiles, dependencies, cancellationTokenSource)
-                        .ConfigureAwait(false);
+                    await this.ExecuteProfileDependenciesInstallationAsync(effectiveProfiles, dependencies, cancellationTokenSource);
                 }
                 else
                 {
-                    await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource)
-                        .ConfigureAwait(false);
+                    await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
                 }
             }
             catch (OperationCanceledException)
@@ -245,34 +246,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Performs any changes that need to be made to support backwards compatibility
-        /// requirements for the application.
-        /// </summary>
-        protected void ApplyBackwardsCompatibilityRequirements()
-        {
-            this.AgentId = BackwardsCompatibility.GetAgentId(this.AgentId, this.Metadata);
-            this.ExperimentId = BackwardsCompatibility.GetExperimentId(this.ExperimentId, this.Metadata);
-
-            // Preserve backwards compatibility with the previous way of referencing a blob store using
-            // an AccountKey supplied on the command line. In the future, we will be removing the need to 
-            // supply the AccountKey as a parameter on the command line (e.g. --parameters:AccountKey={key})
-            // in favor of supplying the package store connection string/SAS URI (e.g. --packagesStore={connectionstring}).
-            if (this.PackageStore == null && this.Parameters?.Any() == true)
-            {
-                if (this.Parameters.TryGetValue("AccountKey", out IConvertible accountKey))
-                {
-                    string connectionToken =
-                        $"DefaultEndpointsProtocol=https;" +
-                        $"AccountName={RunProfileCommand.DefaultBlobStoreUri.Host.Split('.').First()};" +
-                        $"AccountKey={accountKey};" +
-                        $"EndpointSuffix=core.windows.net";
-
-                    this.PackageStore = new DependencyBlobStore(DependencyStore.Packages, connectionToken);
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns the full paths to the profiles specified on the command line.
         /// </summary>
         protected IEnumerable<string> GetProfilePaths(IServiceCollection dependencies)
@@ -299,12 +272,14 @@ namespace VirtualClient
                         profileFullPath = remappedProfile;
                     }
 
-                    if (!fileSystem.File.Exists(profileFullPath))
+                    // If the profile defined is not a full path to a profile located on the system, then we
+                    // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
+                    // parent directory itself or in any platform extensions locations.
+                    string pathFound;
+                    if (this.TryGetProfileFromDefaultLocation(systemManagement, path, out pathFound)
+                        || this.TryGetProfileFromExtensionsLocation(systemManagement, path, out pathFound))
                     {
-                        // If the profile defined is not a full path to a profile located on the system, then we
-                        // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
-                        // parent directory itself.
-                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(path);
+                        profileFullPath = pathFound;
                     }
                 }
 
@@ -445,10 +420,11 @@ namespace VirtualClient
         /// <summary>
         /// Validates the existence of the profiles specified downloading them as needed.
         /// </summary>
-        protected async Task<IEnumerable<string>> InitializeProfilesAsync(IServiceCollection dependencies, CancellationToken cancellationToken, bool pathsOnly = false)
+        protected async Task<IEnumerable<string>> InitializeProfilesAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
         {
-            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
-            IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
+            IFileSystem fileSystem = systemManagement.FileSystem;
 
             List<string> effectiveProfiles = new List<string>();
             foreach (string path in this.Profiles)
@@ -476,19 +452,16 @@ namespace VirtualClient
                             fileSystem.Directory.CreateDirectory(downloadDirectory);
                         }
 
-                        if (!pathsOnly)
+                        using (var client = new HttpClient())
                         {
-                            using (var client = new HttpClient())
+                            await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
                             {
-                                await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
+                                var response = await client.GetAsync(profileUri);
+                                using (var fs = new FileStream(profileFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
                                 {
-                                    var response = await client.GetAsync(profileUri);
-                                    using (var fs = new FileStream(profileFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
-                                    {
-                                        await response.Content.CopyToAsync(fs);
-                                    }
-                                });
-                            }
+                                    await response.Content.CopyToAsync(fs);
+                                }
+                            });
                         }
                     }
                     else
@@ -504,13 +477,17 @@ namespace VirtualClient
                         {
                             // If the profile defined is not a full path to a profile located on the system, then we
                             // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
-                            // parent directory itself.
-                            profileFullPath = platformSpecifics.GetProfilePath(path);
-
-                            if (!pathsOnly && !fileSystem.File.Exists(profileFullPath))
+                            // parent directory itself or in any platform extensions locations.
+                            string pathFound;
+                            if (!this.TryGetProfileFromDefaultLocation(systemManagement, path, out pathFound) 
+                                && !this.TryGetProfileFromExtensionsLocation(systemManagement, path, out pathFound))
                             {
-                                throw new DependencyException($"Profile does not exist at the path '{path}'.", ErrorReason.ProfileNotFound);
+                                throw new DependencyException(
+                                    $"Profile does not exist at the path '{path}' nor in any extensions locations.",
+                                    ErrorReason.ProfileNotFound);
                             }
+
+                            profileFullPath = pathFound;
                         }
                     }
 
@@ -604,6 +581,21 @@ namespace VirtualClient
             });
 
             base.SetGlobalTelemetryProperties(args);
+
+            string profile = this.Profiles.First();
+            string profileName = Path.GetFileName(profile);
+            string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+
+            // Additional persistent/global telemetry properties in addition to the ones
+            // added on application startup.
+            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+            {
+                // Ex: PERF-CPU-OPENSSL (win-x64)
+                ["executionProfile"] = platformSpecificProfileName,
+
+                // Ex: PERF-CPU-OPENSSL.json
+                ["executionProfileName"] = profileName
+            });
         }
 
         /// <summary>
@@ -628,22 +620,14 @@ namespace VirtualClient
         protected void SetGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
         {
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-            ILogger logger = dependencies.GetService<ILogger>();
 
             string profile = profiles.First();
-            string profileName = Path.GetFileName(profile);
             string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
-            string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, systemManagement.Platform, systemManagement.CpuArchitecture);
 
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                // Ex: PERF-CPU-OPENSSL (win-x64)
-                ["executionProfile"] = platformSpecificProfileName,
-
-                // Ex: PERF-CPU-OPENSSL.json
-                ["executionProfileName"] = profileName,
                 ["executionProfilePath"] = profileFullPath
             });
         }
@@ -652,7 +636,7 @@ namespace VirtualClient
         /// Initializes the global/persistent telemetry properties that will be included
         /// with all telemetry emitted from the Virtual Client.
         /// </summary>
-        protected void SetHostMetadata(IEnumerable<string> profiles, IServiceCollection dependencies)
+        protected void SetHostMetadataTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
         {
             ILogger logger = dependencies.GetService<ILogger>();
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
@@ -710,6 +694,11 @@ namespace VirtualClient
             {
                 // Best Effort only
             }
+        }
+
+        private async Task<PlatformExtensions> DiscoverExtensionsAsync(IPackageManager packageManager, CancellationToken cancellationToken)
+        {
+            return await packageManager.DiscoverExtensionsAsync(cancellationToken);
         }
 
         private async Task ExecuteProfileDependenciesInstallationAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
@@ -783,7 +772,7 @@ namespace VirtualClient
             // If the dependencies installed include any packages that contain extensions, the extensions will
             // be installed/integrated into the VC runtime. This might include additional profiles or binaries
             // that contain actions, monitors or dependency component definitions.
-            await this.InstallExtensionsAsync(systemManagement.PackageManager, CancellationToken.None)
+            await this.DiscoverExtensionsAsync(systemManagement.PackageManager, CancellationToken.None)
                 .ConfigureAwait(false);
         }
 
@@ -883,29 +872,38 @@ namespace VirtualClient
         private async Task InitializePackagesAsync(IPackageManager packageManager, CancellationToken cancellationToken)
         {
             // 3) Initialize, discover and register any pre-existing packages on the system.
-            await packageManager.InitializePackagesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await packageManager.InitializePackagesAsync(cancellationToken);
 
-            IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken);
 
             if (packages?.Any() == true)
             {
-                await packageManager.RegisterPackagesAsync(packages, cancellationToken)
-                    .ConfigureAwait(false);
+                await packageManager.RegisterPackagesAsync(packages, cancellationToken);
             }
         }
 
-        private async Task InstallExtensionsAsync(IPackageManager packageManager, CancellationToken cancellationToken)
+        private Task LoadExtensionsBinariesAsync(PlatformExtensions extensions, CancellationToken cancellationToken)
         {
-            IEnumerable<DependencyPath> extensions = await packageManager.DiscoverExtensionsAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (extensions?.Any() == true)
+            return Task.Run(() =>
             {
-                await packageManager.InstallExtensionsAsync(extensions, cancellationToken)
-                    .ConfigureAwait(false);
-            }
+                if (extensions?.Binaries?.Any() == true)
+                {
+                    IEnumerable<string> binaryDirectories = extensions.Binaries.Select(bin => bin.DirectoryName).Distinct();
+                    if (binaryDirectories?.Any() == true)
+                    {
+                        foreach (string directory in binaryDirectories)
+                        {
+                            ComponentTypeCache.Instance.LoadComponentTypes(directory);
+                        }
+                    }
+
+                    // Load supporting assemblies
+                    foreach (IFileInfo binary in extensions.Binaries)
+                    {
+                        ComponentTypeCache.Instance.LoadAssembly(binary.FullName);
+                    }
+                }
+            });
         }
 
         private void LogContextToConsole(IServiceCollection dependencies)
@@ -945,6 +943,35 @@ namespace VirtualClient
             {
                 ConsoleLogger.Default.LogMessage($"Iterations: {this.Iterations.ProfileIterations}", telemetryContext);
             }
+        }
+
+        private bool TryGetProfileFromDefaultLocation(ISystemManagement systemManagement, string profileName, out string profilePath)
+        {
+            profilePath = null;
+            string filePath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
+
+            if (systemManagement.FileSystem.File.Exists(filePath))
+            {
+                profilePath = filePath;
+            }
+
+            return profilePath != null;
+        }
+
+        private bool TryGetProfileFromExtensionsLocation(ISystemManagement systemManagement, string profileName, out string profilePath)
+        {
+            profilePath = null;
+            if (this.Extensions?.Profiles?.Any() == true)
+            {
+                IFileInfo file = this.Extensions.Profiles.FirstOrDefault(p => string.Equals(p.Name, profileName));
+
+                if (file != null && systemManagement.FileSystem.File.Exists(file.FullName))
+                {
+                    profilePath = file.FullName;
+                }
+            }
+
+            return profilePath != null;
         }
 
         private void Validate(IServiceCollection dependencies, ExecutionProfile profile)

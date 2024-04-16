@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-
 namespace VirtualClient
 {
     /// <summary>
@@ -278,9 +276,19 @@ namespace VirtualClient
         ExtensionAssemblyInvalid = 580,
 
         /// <summary>
+        /// Duplicate extensions binaries or profiles were found during startup.
+        /// </summary>
+        DuplicateExtensionsFound = 581,
+
+        /// <summary>
+        /// Duplicate packages were found during startup.
+        /// </summary>
+        DuplicatePackagesFound = 582,
+
+        /// <summary>
         /// Not a supported version.
         /// </summary>
-        VersionNotSupported = 581
+        VersionNotSupported = 590
     }
 
     /// <summary>

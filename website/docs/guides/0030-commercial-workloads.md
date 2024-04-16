@@ -68,21 +68,30 @@ This example vcpkg file
 User also have the option to put in workload packages under `virtualclient/packages` directory. Any directory with a `.vcpkg` inside will be registered as a VC package.
 
 ### Define alternative package directory using environment variable
-A user of the Virtual Client can define an environment variable called **VCDependenciesPath**. This directory will be used
-  to discover packages with the highest priority. If a package is not defined here, the Virtual Client will look for the package in the 
-  locations noted below. If a package is found in this location, Virtual Client will not search for other locations. The package found
-  here will be used.
+A user of the Virtual Client can define an environment variable called `VC_PACKAGES_PATH`. This directory will be used to discover packages in addition to the 
+default 'packages' folder location.
 
+It is recommended that package directory names ALWAYS be lower-cased (e.g. geekbench5 vs. Geekbench5).
 
-  Package parent directory names should ALWAYS be lower-cased (e.g. geekbench5 vs. Geekbench5).
-
-  ```
-  e.g.
-  set VCDependenciesPath=C:\any\custom\packages\location
+```
+e.g.
+ # Windows example
+  set VC_PACKAGES_PATH=C:\any\custom\packages\location
 
   C:\any\custom\packages\location\geekbench5
+  C:\any\custom\packages\location\geekbench5\geekbench5.vcpkg
   C:\any\custom\packages\location\geekbench5\linux-x64
   C:\any\custom\packages\location\geekbench5\linux-arm64
   C:\any\custom\packages\location\geekbench5\win-x64
   C:\any\custom\packages\location\geekbench5\win-arm64
-  ```
+
+  # Linux example
+  export VC_PACKAGES_PATH=/home/user/any/custom/packages/location
+
+  /home/user/any/custom/packages/location/geekbench5
+  /home/user/any/custom/packages/location/geekbench5/geekbench5.vcpkg
+  /home/user/any/custom/packages/location/geekbench5/linux-x64
+  /home/user/any/custom/packages/location/geekbench5/linux-arm64
+  /home/user/any/custom/packages/location/geekbench5/win-x64
+  /home/user/any/custom/packages/location/geekbench5/win-arm64
+```

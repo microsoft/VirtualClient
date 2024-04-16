@@ -14,7 +14,6 @@ namespace VirtualClient
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
     using Serilog;
-    using Serilog.Events;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
@@ -248,35 +247,18 @@ namespace VirtualClient
         public static IEnumerable<ILoggerProvider> CreateFileLoggerProviders(string logFileDirectory, FileLogSettings settings, LogLevel level)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
-            List<string> excludes = new List<string>
-            {
-                "executionPlatform",
-                "executionProfile",
-                "executionProfileDescription",
-                "executionProfileParameters",
-                "profileFriendlyName"
-            };
-
-            List<string> metricsExcludes = new List<string>(excludes)
-            {
-                "binaryVersion",
-                "transactionId",
-                "durationMs",
-                "executionArguments",
-                "operatingSystemPlatform"
-            };
 
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
-                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), level, excludes)
+                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), level)
                     .HandleTraceEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), LogLevel.Trace, metricsExcludes)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), LogLevel.Trace)
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
@@ -290,14 +272,14 @@ namespace VirtualClient
                 loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Performance Counters
-                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), LogLevel.Trace, metricsExcludes)
+                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .HandlePerformanceCounterEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => countersLoggerProvider.Dispose()));
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), LogLevel.Trace, excludes)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .HandleSystemEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));

@@ -37,7 +37,7 @@ namespace VirtualClient
         /// Delegate allows the user to define custom logic to execute whenever extension packages
         /// are being discovered.
         /// </summary>
-        public Func<IEnumerable<DependencyPath>> OnDiscoverExtensions { get; set; }
+        public Func<PlatformExtensions> OnDiscoverExtensions { get; set; }
 
         /// <summary>
         /// Delegate allows the user to define custom logic to execute whenever packages
@@ -90,18 +90,6 @@ namespace VirtualClient
         public Func<IBlobManager, DependencyDescriptor, string, string> OnInstallPackage { get; set; }
 
         /// <summary>
-        /// Delegate allows the user to define custom logic to execute whenever extensions 
-        /// are installed.
-        /// <list>
-        /// <item>Parameters:</item>
-        /// <list type="bullet">
-        /// <item><see cref="DependencyPath"/> package description - A description of the package with extensions to install.</item>
-        /// </list>
-        /// </list>
-        /// </summary>
-        public Action<DependencyPath> OnInstallExtensions { get; set; }
-
-        /// <summary>
         /// Delegate allows the user to define custom logic when a package is registered.
         /// <list>
         /// <item>Parameters:</item>
@@ -115,11 +103,11 @@ namespace VirtualClient
         /// <summary>
         /// Mimics the behavior of discovering packages on the system.
         /// </summary>
-        public Task<IEnumerable<DependencyPath>> DiscoverExtensionsAsync(CancellationToken cancellationToken)
+        public Task<PlatformExtensions> DiscoverExtensionsAsync(CancellationToken cancellationToken)
         {
             return this.OnDiscoverExtensions != null
                 ? Task.FromResult(this.OnDiscoverExtensions.Invoke())
-                : Task.FromResult(this as IEnumerable<DependencyPath>);
+                : Task.FromResult(new PlatformExtensions());
         }
 
         /// <summary>
@@ -176,17 +164,6 @@ namespace VirtualClient
             this.Add(new DependencyPath(description.PackageName.ToLowerInvariant(), packageInstallationLocation, $"Description of '{description.Name}' package"));
 
             return Task.FromResult(packageInstallationLocation);
-        }
-
-        /// <summary>
-        /// Mimics the installation of extensions to the runtime platform.
-        /// </summary>
-        /// <param name="description">Provides information about the extensions to install.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        public Task InstallExtensionsAsync(DependencyPath description, CancellationToken cancellationToken)
-        {
-            this.OnInstallExtensions?.Invoke(description);
-            return Task.CompletedTask;
         }
 
         /// <summary>

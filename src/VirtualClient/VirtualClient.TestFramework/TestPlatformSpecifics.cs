@@ -19,14 +19,15 @@ namespace VirtualClient
         /// Initializes a new version of the <see cref="TestPlatformSpecifics"/> class.
         /// </summary>
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
         /// paths on a system that are expected to be in a different format than is typical for the
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        public TestPlatformSpecifics(PlatformID platform)
-            : this(platform, Architecture.X64)
+        public TestPlatformSpecifics(PlatformID platform, bool useUnixStylePathsOnly = false)
+            : this(platform, Architecture.X64, useUnixStylePathsOnly)
         {
         }
 
@@ -35,14 +36,15 @@ namespace VirtualClient
         /// </summary>
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
         /// paths on a system that are expected to be in a different format than is typical for the
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        public TestPlatformSpecifics(PlatformID platform, Architecture architecture)
-            : base(platform, architecture, platform == PlatformID.Win32NT ? "C:\\users\\any\\tools\\VirtualClient" : "/home/user/tools/VirtualClient")
+        public TestPlatformSpecifics(PlatformID platform, Architecture architecture, bool useUnixStylePathsOnly = false)
+            : base(platform, architecture, platform == PlatformID.Win32NT ? "C:\\users\\any\\tools\\VirtualClient" : "/home/user/tools/VirtualClient", useUnixStylePathsOnly)
         {
             this.EnvironmentVariables = new Dictionary<string, string>();
         }
@@ -52,14 +54,15 @@ namespace VirtualClient
         /// </summary>
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
         /// <param name="currentDirectory">The directory to use as the current working directory.</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
         /// paths on a system that are expected to be in a different format than is typical for the
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        public TestPlatformSpecifics(PlatformID platform, string currentDirectory)
-            : base(platform, Architecture.X64, currentDirectory)
+        public TestPlatformSpecifics(PlatformID platform, string currentDirectory, bool useUnixStylePathsOnly = false)
+            : base(platform, Architecture.X64, currentDirectory, useUnixStylePathsOnly)
         {
             this.EnvironmentVariables = new Dictionary<string, string>();
         }
@@ -70,14 +73,15 @@ namespace VirtualClient
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
         /// <param name="currentDirectory">The directory to use as the current working directory.</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
         /// paths on a system that are expected to be in a different format than is typical for the
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        public TestPlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory)
-            : base(platform, architecture, currentDirectory)
+        public TestPlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory, bool useUnixStylePathsOnly = false)
+            : base(platform, architecture, currentDirectory, useUnixStylePathsOnly)
         {
             this.EnvironmentVariables = new Dictionary<string, string>();
         }

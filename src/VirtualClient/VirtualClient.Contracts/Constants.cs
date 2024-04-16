@@ -92,6 +92,16 @@ namespace VirtualClient.Contracts
         /// Name = VC_PASSWORD
         /// </summary>
         public const string VC_PASSWORD = nameof(VC_PASSWORD);
+
+        /// <summary>
+        /// Name = VC_LIBRARY_PATH
+        /// </summary>
+        public const string VC_LIBRARY_PATH = nameof(VC_LIBRARY_PATH);
+
+        /// <summary>
+        /// Name = VC_PACKAGES_PATH
+        /// </summary>
+        public const string VC_PACKAGES_PATH = nameof(VC_PACKAGES_PATH);
     }
 
     /// <summary>
