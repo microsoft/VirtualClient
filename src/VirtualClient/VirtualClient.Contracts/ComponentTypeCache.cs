@@ -39,8 +39,32 @@ namespace VirtualClient.Contracts
         public static ComponentTypeCache Instance { get; } = new ComponentTypeCache();
 
         /// <summary>
+        /// Loads the assembly at the path specified into the current runtime.
+        /// </summary>
+        /// <param name="assemblyPath">The full path to the binary/assembly/.dll.</param>
+        public void LoadAssembly(string assemblyPath)
+        {
+            try
+            {
+                Assembly.LoadFrom(assemblyPath);
+            }
+            catch (BadImageFormatException)
+            {
+                // Expected for certain types of assemblies that are not .NET intermediate
+                // language assemblies (IL).
+            }
+            catch (FileLoadException)
+            {
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
         /// Loads provider types from assemblies in the path provided.
         /// </summary>
+        /// <param name="assemblyDirectory">The full path to the binary/assemblies directory.</param>
         public void LoadComponentTypes(string assemblyDirectory)
         {
             lock (ComponentTypeCache.LockObject)

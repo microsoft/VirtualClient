@@ -144,20 +144,22 @@ namespace VirtualClient
                 EventContext telemetryContext = EventContext.Persisted();
                 logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", telemetryContext);
 
+                this.SetHostMetadata(profileNames, dependencies);
+
                 // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
                 // the 'packages' directory already).
-                await this.InitializePackagesAsync(packageManager, cancellationToken)
-                    .ConfigureAwait(false);
-
-                // Installs any extensions that are pre-existing on the system (e.g. they exist in
-                // the 'packages' directory already).
-                await this.InstallExtensionsAsync(packageManager, cancellationToken)
-                    .ConfigureAwait(false);
-
-                this.SetHostMetadata(profileNames, dependencies);
+                await this.InitializePackagesAsync(packageManager, cancellationToken);
 
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
                 ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
+
+                // Installs any extensions that are pre-existing on the system (e.g. they exist in
+                // the 'packages' directory already).
+                PlatformExtensions extensions = await this.DiscoverExtensionsAsync(packageManager, cancellationToken);
+                if (extensions?.Binaries?.Any() == true)
+                {
+                    await this.LoadExtensionsBinariesAsync(extensions, cancellationToken);
+                }
 
                 this.LogContextToConsole(dependencies);
 
@@ -712,6 +714,11 @@ namespace VirtualClient
             }
         }
 
+        private async Task<PlatformExtensions> DiscoverExtensionsAsync(IPackageManager packageManager, CancellationToken cancellationToken)
+        {
+            return await packageManager.DiscoverExtensionsAsync(cancellationToken);
+        }
+
         private async Task ExecuteProfileDependenciesInstallationAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
@@ -783,7 +790,7 @@ namespace VirtualClient
             // If the dependencies installed include any packages that contain extensions, the extensions will
             // be installed/integrated into the VC runtime. This might include additional profiles or binaries
             // that contain actions, monitors or dependency component definitions.
-            await this.InstallExtensionsAsync(systemManagement.PackageManager, CancellationToken.None)
+            await this.DiscoverExtensionsAsync(systemManagement.PackageManager, CancellationToken.None)
                 .ConfigureAwait(false);
         }
 
@@ -883,29 +890,44 @@ namespace VirtualClient
         private async Task InitializePackagesAsync(IPackageManager packageManager, CancellationToken cancellationToken)
         {
             // 3) Initialize, discover and register any pre-existing packages on the system.
-            await packageManager.InitializePackagesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await packageManager.InitializePackagesAsync(cancellationToken);
 
-            IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken);
 
             if (packages?.Any() == true)
             {
-                await packageManager.RegisterPackagesAsync(packages, cancellationToken)
-                    .ConfigureAwait(false);
+                await packageManager.RegisterPackagesAsync(packages, cancellationToken);
             }
         }
 
-        private async Task InstallExtensionsAsync(IPackageManager packageManager, CancellationToken cancellationToken)
+        private Task LoadExtensionsBinariesAsync(PlatformExtensions extensions, CancellationToken cancellationToken)
         {
-            IEnumerable<DependencyPath> extensions = await packageManager.DiscoverExtensionsAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (extensions?.Any() == true)
+            return Task.Run(() =>
             {
-                await packageManager.InstallExtensionsAsync(extensions, cancellationToken)
-                    .ConfigureAwait(false);
-            }
+                if (extensions?.Binaries?.Any() == true)
+                {
+                    IEnumerable<string> binaryDirectories = extensions.Binaries.Select(bin => bin.DirectoryName).Distinct();
+                    if (binaryDirectories?.Any() == true)
+                    {
+                        foreach (string directory in binaryDirectories)
+                        {
+                            try
+                            {
+                                ComponentTypeCache.Instance.LoadComponentTypes(directory);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+
+                    // Load supporting assemblies
+                    foreach (IFileInfo binary in extensions.Binaries)
+                    {
+                        ComponentTypeCache.Instance.LoadAssembly(binary.FullName);
+                    }
+                }
+            });
         }
 
         private void LogContextToConsole(IServiceCollection dependencies)

@@ -24,7 +24,7 @@
         <AutoFixture_PackageVersion>4.17.0</AutoFixture_PackageVersion>
 
         <!-- Azure.Identity -->
-        <Azure_Identity_PackageVersion>1.10.3</Azure_Identity_PackageVersion>
+        <Azure_Identity_PackageVersion>1.11.0</Azure_Identity_PackageVersion>
 
         <!-- Azure.Messaging.EventHubs -->
         <Azure_Messaging_EventHubs_PackageVersion>5.9.3</Azure_Messaging_EventHubs_PackageVersion>

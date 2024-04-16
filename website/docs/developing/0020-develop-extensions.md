@@ -184,60 +184,171 @@ Once extensions have been developed and an extensions package exists, they can b
 extensions can be bootstrapped/installed on the system to suit the needs of the situation. The following examples illustrate some common ways that extensions can 
 be integrated into the Virtual Client runtime.
 
-* #### Extensions are Downloaded from a Package Store
-  The default for most Virtual Client scenarios is to download extensions from a package store. The **VirtualClient bootstrap** command can be used to download
-  extensions from a package store and install them.
+### Place Extensions Directly in Virtual Client Application Folder
+The simplest way to integrate extensions binaries, profiles or packages into Virtual Client is to copy the files directly to the Virtual Client application
+directory (e.g. /virtualclient, /virtualclient/profiles, /virtualclient/packages).
 
+* Extensions binaries/.dlls can be placed directly in the root directory of the Virtual Client application (i.e. right beside the VirtualClient executable).  
 
-  ```bash
-  # Package/Blob Store Structure
-  /container=packages/blob=crc.vc.extensions.zip
+  ``` bash
+  # Given an installation location /home/users/virtualclient, the binaries/.dlls 
+  # can be copied into the root directory directly.
+  #
+  /home/users/virtualclient/Custom.VirtualClient.Extensions.Actions.dll
+  /home/users/virtualclient/Custom.VirtualClient.Extensions.Dependencies.dll
+  /home/users/virtualclient/Custom.VirtualClient.Extensions.Monitors.dll
+  ```
 
-  # 1) Execute Bootstrap Command
-  /VirtualClient/VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions --packages="{BlobStoreConnectionString|SAS URI}"
+* Extensions profiles can be placed directly in the Virtual Client 'profiles' directory alongside the existing/out-of-box profiles.
+
+  ``` bash
+  # Given an installation location /home/users/virtualclient, the profiles 
+  # can be copied into the 'profiles' directory directly.
+  #
+  /home/users/virtualclient/profiles/PERF-CUSTOM-WORKLOAD-A.json
+  /home/users/virtualclient/profiles/PERF-CUSTOM-WORKLOAD-B.json
+  ```
+
+* Extensions packages can be placed directly in the Virtual Client 'packages' directory.
+  
+  ``` bash
+  # Given an installation location /home/users/virtualclient, the packages 
+  # can be copied into the 'packages' directory directly.
+  /home/users/virtualclient/packages/customworkload_a.1.0.0.zip
+  /home/users/virtualclient/packages/customworkload_b.1.0.0.zip
+  ```
+
+### Reference Extensions from Other Locations on the System
+Virtual Client enables the user/developer to define additional locations to look for extensions during execution startup. To do so, the user/developer can set
+custom environment variables on the system to provide Virtual Client with the alternate locations. Virtual Client will look for dependencies in both the default
+locations (normal operation) as well as within these alternate locations.
+
+#### Supported Environment Variables
+The following environment variables can be used to define alternate locations for dependencies:
+
+* **VC_LIBRARY_PATH**  
+  Defines 1 or more path locations where extensions assemblies/.dlls exist and that should be loaded at runtime. Multiple directory paths can be defined separated
+  by a semi-colon ';' character (similar to the Windows and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only
+  for extension assemblies/.dlls. Recursive subdirectory searches are not supported.
+
+  ``` bash
+  # Example Folder Contents:
+  # /VirtualClient.Extensions.Actions
+  #      /VirtualClient.Extensions.Actions.dll
+  #      /VirtualClient.Extensions.Actions.pdb
+  #
+  # /VirtualClient.Extensions.Monitors
+  #      /VirtualClient.Extensions.Monitors.dll
+  #      /VirtualClient.Extensions.Monitors.pdb
+  #
+  # On Windows systems
+  C:\VirtualClient> set VC_LIBRARY_PATH=C:\Extensions\VirtualClient.Extensions.Actions
+  C:\VirtualClient> set VC_LIBRARY_PATH=C:\Extensions\VirtualClient.Extensions.Actions;C:\Extensions\VirtualClient.Extensions.Monitors
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_LIBRARY_PATH=/home/user/Extensions/VirtualClient.Extensions.Actions
+  /home/user/virtualclient$ export VC_LIBRARY_PATH=/home/user/Extensions/VirtualClient.Extensions.Actions;/home/user/Extensions/VirtualClient.Extensions.Monitors
+  ```
+
+* **VC_PACKAGES_PATH**  
+  Defines 1 or more path locations where Virtual Client packages (including extensions packages) exist. Multiple directory paths can be defined separated by a semi-colon ';' character (similar to the Windows 
+  and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only for packages. Recursive subdirectory searches are
+  not supported.
+
+  ``` bash
+  # Example Folder Contents:
+  # /CustomPackages1
+  #      /customworkload_a.1.0.0.zip
+  #      /customworkload_b.1.0.0.zip
+  #
+  # /CustomPackages2
+  #      /customworkload_c.1.0.0.zip
+  #      /customworkload_d.1.0.0.zip
+  #
+  # On Windows systems
+  C:\VirtualClient> set VC_PACKAGES_PATH=C:\CustomPackages1
+  C:\VirtualClient> set VC_PACKAGES_PATH=C:\CustomPackages1;C:\CustomPackages2;
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_PACKAGES_PATH=/home/user/CustomPackages1
+  /home/user/virtualclient$ export VC_PACKAGES_PATH=/home/user/CustomPackages1;/home/user/CustomPackages2
+  ```
+
+* **VC_PROFILES_PATH**  
+  Defines 1 or more path locations where extensions profiles exist and that should be available for use during execution. Multiple directory paths can be defined separated
+  by a semi-colon ';' character (similar to the Windows and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only for extension 
+  profiles. Recursive subdirectory searches are not supported.
+
+  ``` bash
+  # Example Folder Contents:
+  # /CustomProfiles1
+  #      /PERF-CUSTOM-WORKLOAD-A.json
+  #      /PERF-CUSTOM-WORKLOAD-B.json
+  #
+  # /CustomProfiles2
+  #      /PERF-CUSTOM-WORKLOAD-C.json
+  #      /PERF-CUSTOM-WORKLOAD-D.json
+  #
+  # On Windows systems
+  C:\VirtualClient> set VC_PROFILES_PATH=C:\CustomPackages1
+  C:\VirtualClient> set VC_PROFILES_PATH=C:\CustomPackages1;C:\CustomPackages2;
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_PROFILES_PATH=/home/user/CustomProfiles1
+  /home/user/virtualclient$ export VC_PROFILES_PATH=/home/user/CustomProfiles1;/home/user/CustomProfiles2
+  ```
+
+#### Priority of Operations
+Given multiple of these environment variables are defined at the same time, Virtual Client will perform the search (and load/install) operations in the
+following way:
+
+* **Priority for extensions packages and binaries/.dlls:**  
+  * Packages with "extensions" in the default Virtual Client `/packages` folder are installed. This includes assemblies/.dlls and profiles extensions.
+  * Packages with "extensions" in directories defined in the `VC_PACKAGES_PATH` environment variable are installed. This includes assemblies/.dlls and profiles extensions.
+    However, packages that exist in the `/packages` folder have precedence. Duplicate packages found in the paths defined by this environment variable will be ignored.
+  * Binaries/.dlls in directories defined in the `VC_LIBRARY_PATH` environment variable are loaded into the runtime unless a duplicate (by name) is already loaded. 
+    Duplicate binaries/.dlls in the paths defined by this environment variable will be ignored.
+
+* **Priority for extensions profile:**  
+  * Profiles that are in the default Virtual Client `packages` folder have highest precedence.
+  * Profiles in directories defined in the `VC_PROFILES_PATH` environment variable have secondary precedence.
+
+### Downloaded Extensions from a Package Store
+The default for most Virtual Client scenarios is to download extensions from a package store. The **VirtualClient bootstrap** command can be used to download
+extensions from a package store and install them.
+
+```bash
+# Package/Blob Store Structure
+/container=packages/blob=crc.vc.extensions.zip
+
+# Execute bootstrap command to download and install the extensions
+C:\Users\Any\VirtualClient> VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions --packages="{BlobStoreConnectionString|SAS URI}"
  
-  # 2) Execute Extensions Profile
-  /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440 --packages="{BlobStoreConnectionString|SAS URI}"
-  ```
+# Execute an extensions profile
+C:\Users\Any\VirtualClient> VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440 --packages="{BlobStoreConnectionString|SAS URI}"
+```
 
+### A Custom-Defined Bootstrap Profile is Used
+The developer can choose to use a custom profile for bootstrapping/installing extensions as well.
 
-* #### Extensions are Placed Directly in Packages Folder
-  Extensions .zip packages can be placed directly in the Virtual Client 'packages' directory. To integrate "drop-in" packages,
-  the **VirtualClient bootstrap** command can be used to extract extensions packages on the file system and install the profiles and binaries.
-
-
-  ```bash
-  # Folder Location
-  /VirtualClient/packages/crc.vc.extensions.zip
-
-  # 1) Execute Bootstrap Command
-  /VirtualClient/VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions
-
-  # 2) Execute Extensions Profile
-  /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440
-  ```
-
-* #### A Custom-Defined Bootstrap Profile is Used
-  The developer can choose to use a custom profile for bootstrapping/installing extensions as well.
-
-  ``` json
-  # Profile = BOOTSTRAP-EXTENSIONS.json
-  {
-    "Description": "Installs extensions from a package store.",
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallCRCExtensionsPackage",
-                "BlobContainer": "packages",
-                "BlobName": "crc.vc.extensions.zip",
-                "PackageName": "crcvcextensions",
-                "Extract": true
-            }
-        }
-    ]
-  }
-  ```
+``` json
+# Profile = BOOTSTRAP-EXTENSIONS.json
+{
+  "Description": "Installs extensions from a package store.",
+  "Dependencies": [
+      {
+          "Type": "DependencyPackageInstallation",
+          "Parameters": {
+              "Scenario": "InstallCRCExtensionsPackage",
+              "BlobContainer": "packages",
+              "BlobName": "crc.vc.extensions.zip",
+              "PackageName": "crcvcextensions",
+              "Extract": true
+          }
+      }
+  ]
+}
+```
   
   ...Then you can use it! Note that the profile can exist in another directory location and be referenced by the path to the file (full or relative path).
 
@@ -270,8 +381,6 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
   VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
-
-
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the

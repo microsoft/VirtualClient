@@ -7,6 +7,9 @@ namespace VirtualClient.Contracts
     using System.IO;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using Fare;
+    using Microsoft.CodeAnalysis.Scripting;
+    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using NUnit.Framework;
 
     [TestFixture]
@@ -19,27 +22,32 @@ namespace VirtualClient.Contracts
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void FundamentalPathsMatchExpectedPaths()
         {
+            string currentDirectory = Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
 
-            Assert.AreEqual(
-                Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "logs"),
-                platformSpecifics.LogsDirectory);
+            Assert.AreEqual(currentDirectory, platformSpecifics.CurrentDirectory);
+            Assert.AreEqual(Path.Combine(currentDirectory, "logs"), platformSpecifics.LogsDirectory);
+            Assert.AreEqual(Path.Combine(currentDirectory, "packages"), platformSpecifics.PackagesDirectory);
+            Assert.AreEqual(Path.Combine(currentDirectory, "profiles"), platformSpecifics.ProfilesDirectory);
+            Assert.AreEqual(Path.Combine(currentDirectory, "scripts"), platformSpecifics.ScriptsDirectory);
+            Assert.AreEqual(Path.Combine(currentDirectory, "state"), platformSpecifics.StateDirectory);
+        }
 
-            Assert.AreEqual(
-                Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "packages"),
-                platformSpecifics.PackagesDirectory);
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public void FundamentalPathsMatchExpectedPathsWhenUseUnixStylePathsOnlyIsUsed()
+        {
+            // e.g.
+            // C:\Any\Path\To\The\Test -> C:/Any/Path/To/The/Test
+            string currentDirectory = Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location).Replace("\\", "/");
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64, useUnixStylePathsOnly: true);
 
-            Assert.AreEqual(
-                Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "profiles"),
-                platformSpecifics.ProfilesDirectory);
-
-            Assert.AreEqual(
-              Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "scripts"),
-              platformSpecifics.ScriptsDirectory);
-
-            Assert.AreEqual(
-               Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "state"),
-               platformSpecifics.StateDirectory);
+            Assert.AreEqual(currentDirectory, platformSpecifics.CurrentDirectory);
+            Assert.AreEqual($"{currentDirectory}/logs", platformSpecifics.LogsDirectory);
+            Assert.AreEqual($"{currentDirectory}/packages", platformSpecifics.PackagesDirectory);
+            Assert.AreEqual($"{currentDirectory}/profiles", platformSpecifics.ProfilesDirectory);
+            Assert.AreEqual($"{currentDirectory}/scripts", platformSpecifics.ScriptsDirectory);
+            Assert.AreEqual($"{currentDirectory}/state", platformSpecifics.StateDirectory);
         }
 
         [Test]
@@ -225,6 +233,36 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("/home/any/unix/style/path")]
+        [TestCase("/home/any/unix/style/path/")]
+        [TestCase(@"/home/any/unix\style\path")]
+        [TestCase(@"/home\any\unix/style\path")]
+        [TestCase(@"/home\\any\unix//style\path")]
+        public void PlatformSpecificsStandardizesPathsCorrectlyWhenUseUnixStylePathsOnlyIsUsed_Unix_Platform(string path)
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64, useUnixStylePathsOnly: true);
+
+            string expectedPath = "/home/any/unix/style/path";
+            string actualPath = platformSpecifics.StandardizePath(path);
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(@"C:\Users\Any\Windows\Style\Path")]
+        [TestCase(@"C:\Users\Any\Windows\Style\Path\")]
+        [TestCase(@"C:/Users/Any\Windows/Style/Path")]
+        [TestCase(@"C:\Users\Any/Windows\Style/Path")]
+        [TestCase(@"C:\Users\\Any\Windows//Style\Path")]
+        public void PlatformSpecificsStandardizesPathsCorrectlyWhenUseUnixStylePathsOnlyIsUsed_Windows_Platform(string path)
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64, useUnixStylePathsOnly: true);
+
+            string expectedPath = "C:/Users/Any/Windows/Style/Path";
+            string actualPath = platformSpecifics.StandardizePath(path);
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase(@"/a", "/b", "/c", "/")]
         [TestCase(@"/packages/a", @"/packages/b", @"/packages/c", @"/packages/")]
         [TestCase(@"/packages/a/b/c", @"/packages/a/b", @"/packages/a", @"/packages/")]
@@ -362,6 +400,62 @@ namespace VirtualClient.Contracts
             string expectedPath = "/home/any/path/on/the/system";
             string actualPath = platformSpecifics.Combine(pathSegments);
 
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsCreatesTheExpectedPathWhenUseUnixStylePathsOnlyIsUsed_Unix_Platform()
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64, useUnixStylePathsOnly: true);
+
+            string expectedPath = "/home/any/unix/style/path";
+            string actualPath = platformSpecifics.Combine("/home/any/unix", "style/path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("/home/any/unix", "style", "path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("/home/any/unix/", "style", "path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("/home/any/unix/", "/style/path/");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("/home/any/unix/", @"\style\path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine(@"/home\any\unix/", @"/style\path");
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsCreatesTheExpectedPathWhenUseUnixStylePathsOnlyIsUsed_Windows_Platform()
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64, useUnixStylePathsOnly: true);
+
+            string expectedPath = "C:/Users/Any/Unix/Style/Path";
+            string actualPath = platformSpecifics.Combine(@"C:\Users\Any\Unix", @"Style\Path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine(@"C:\Users\Any\Unix", @"Style", "Path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("C:/Users/Any/Unix", "Style/Path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("C:/Users/Any/Unix", "Style", "Path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("C:/Users/Any/Unix/", "Style", "Path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("C:/Users/Any/Unix/", "/Style/Path/");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine("C:/Users/Any/Unix/", @"\Style\Path");
+            Assert.AreEqual(expectedPath, actualPath);
+
+            actualPath = platformSpecifics.Combine(@"C:/Users\Any\Unix/", @"\Style/Path");
             Assert.AreEqual(expectedPath, actualPath);
         }
 

@@ -82,4 +82,10 @@
         <!-- Framework Package = System.IO.FileSystem.Primitives -->
         <NuspecProperties>$(NuspecProperties);System_IO_FileSystem_Primitives_Version=$(System_IO_FileSystem_Primitives_PackageVersion)</NuspecProperties>
     </PropertyGroup>
+
+    <Target Name="ShowBuildVersion" BeforeTargets="CoreClean">
+        <Message Text=" " Importance="high" />
+        <Message Text="Build Version: $(AssemblyVersion)" Importance="high" />
+        <Message Text=" " Importance="high" />
+    </Target>
 </Project>
