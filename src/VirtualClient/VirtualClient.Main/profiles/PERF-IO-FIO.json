@@ -475,7 +475,8 @@
                 "Packages-Apt": "libaio1,libaio-dev",
                 "Packages-Dnf": "libaio,libaio-devel",
                 "Packages-Yum": "libaio,libaio-devel",
-                "Packages-Zypper": "libaio1,libaio-dev"
+                "Packages-Zypper": "libaio1,libaio-dev",
+                "packages-dnf": "lshw"
             }
         },
         {
@@ -484,7 +485,6 @@
                 "Scenario": "InstallFIOPackage",
                 "BlobContainer": "packages",
                 "BlobName": "fio.3.30.0.zip",
-                "packages-dnf": "lshw",
                 "PackageName": "fio",
                 "Extract": true
             }
