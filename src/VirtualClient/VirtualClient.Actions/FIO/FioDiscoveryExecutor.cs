@@ -53,6 +53,23 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The size of the test file that should use in workload tests (e.g. 496GB).
+        /// </summary>
+        public string FileSize
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.FileSize), out IConvertible fileSize);
+                return fileSize?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(DiskWorkloadExecutor.FileSize)] = value;
+            }
+        }
+
+        /// <summary>
         /// Parameter. True to used direct, non-buffered I/O (default). False to use buffered I/O.
         /// </summary>
         public int DirectIO
