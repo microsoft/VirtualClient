@@ -473,10 +473,9 @@
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "libaio1,libaio-dev",
-                "Packages-Dnf": "libaio,libaio-devel",
+                "Packages-Dnf": "libaio,libaio-devel, lshw",
                 "Packages-Yum": "libaio,libaio-devel",
                 "Packages-Zypper": "libaio1,libaio-dev",
-                "packages-dnf": "lshw"
             }
         },
         {
