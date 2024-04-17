@@ -119,13 +119,14 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Denotes if In-Memory scenario will be utilized
+        /// Shared Buffer Size for PostgreSQL
         /// </summary>
-        public bool InMemory
+        public string SharedMemoryBuffer
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.InMemory), false);
+                this.Parameters.TryGetValue(nameof(this.SharedMemoryBuffer), out IConvertible sharedMemoryBuffer);
+                return sharedMemoryBuffer?.ToString();
             }
         }
 
@@ -177,21 +178,14 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port}";
-
-            if (this.InMemory)
-            {
-                string inMemoryMB = await this.GetPostgreSQLInMemoryCapacityAsync(cancellationToken);
-                arguments += $" --inMemory {inMemoryMB}";
-            }
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port} --sharedMemoryBuffer {this.SharedMemoryBuffer}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
                arguments,
                this.packageDirectory,
                telemetryContext,
-               cancellationToken,
-               runElevated: true))
+               cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -259,15 +253,6 @@ namespace VirtualClient.Dependencies
             }
 
             return diskPaths;
-        }
-
-        private async Task<string> GetPostgreSQLInMemoryCapacityAsync(CancellationToken cancellationToken)
-        {
-            MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
-            long totalMemoryKiloBytes = memoryInfo.TotalMemory;
-            int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024); 
-
-            return bufferSizeInMegaBytes.ToString();
         }
 
         /// <summary>

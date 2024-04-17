@@ -3,15 +3,15 @@
   "MinimumExecutionInterval": "00:01:00",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "04:00:00",
-    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedPlatforms": "linux-x64",
     "SupportedOperatingSystems": "Debian,Ubuntu"
   },
   "Parameters": {
     "DatabaseName": "hammerdbtest",
-    "DatabaseScenario": "Balanced",
     "Port": "5432",
-    "VirtualUsers": 1,
-    "WarehouseCount": "1"
+    "VirtualUsers": "{calculate({LogicalCoreCount} * 10)}",
+    "WarehouseCount": "{calculate({LogicalCoreCount} * 80)}",
+    "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
   },
   "Actions": [
     {
@@ -25,7 +25,6 @@
         "Port": "$.Parameters.Port",
         "VirtualUsers": "$.Parameters.VirtualUsers",
         "WarehouseCount": "$.Parameters.WarehouseCount",
-        "DatabaseScenario": "$.Parameters.DatabaseScenario",
         "Role": "Server"
       }
     },
@@ -33,7 +32,6 @@
       "Type": "HammerDBClientExecutor",
       "Parameters": {
         "Scenario": "tpcc",
-        "DatabaseScenario": "$.Parameters.DatabaseScenario",
         "Workload": "tpcc",
         "SQLServer": "postgresql",
         "PackageName": "hammerdb",
@@ -105,7 +103,33 @@
         "PackageName": "postgresql",
         "Role": "Server",
         "DatabaseName": "$.Parameters.DatabaseName",
-        "Port": "$.Parameters.Port"
+        "Port": "$.Parameters.Port",
+        "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
+      }
+    },
+    {
+      "Type": "HammerDBExecutor",
+      "Parameters": {
+        "Scenario": "PopulatePostgreSQLDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "Workload": "tpcc",
+        "SQLServer": "postgresql",
+        "PackageName": "hammerdb",
+        "VirtualUsers": "1",
+        "WarehouseCount": "1",
+        "Port": "$.Parameters.Port",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "PostgreSQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "DistributePostgreSQLDatabase",
+        "Action": "DistributeDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "PackageName": "postgresql",
+        "Port": "$.Parameters.Port",
+        "Role": "Server"
       }
     },
     {
@@ -118,17 +142,6 @@
         "PackageName": "hammerdb",
         "VirtualUsers": "$.Parameters.VirtualUsers",
         "WarehouseCount": "$.Parameters.WarehouseCount",
-        "Port": "$.Parameters.Port",
-        "Role": "Server"
-      }
-    },
-    {
-      "Type": "PostgreSQLServerConfiguration",
-      "Parameters": {
-        "Scenario": "DistributePostgreSQLDatabase",
-        "Action": "DistributeDatabase",
-        "DatabaseName": "$.Parameters.DatabaseName",
-        "PackageName": "postgresql",
         "Port": "$.Parameters.Port",
         "Role": "Server"
       }

@@ -80,18 +80,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the scenario to use for the PostgreSQL user accounts used
-        /// to create the DB and run transactions against it.
-        /// </summary>
-        public string DatabaseScenario
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), HammerDBScenario.Balanced);
-            }
-        }
-
-        /// <summary>
         /// Parameter defines the SuperUser Password for PostgreSQL Server.
         /// </summary>
         public string SuperUserPassword
@@ -117,23 +105,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the number of virtual users.
         /// </summary>
-        public int VirtualUsers
+        public string VirtualUsers
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.VirtualUsers));
+                this.Parameters.TryGetValue(nameof(HammerDBExecutor.VirtualUsers), out IConvertible virtualUsers);
+                return virtualUsers?.ToString(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
         /// The warehouse count passed to HammerDB.
         /// </summary>
-        public int? WarehouseCount
+        public string? WarehouseCount
         {
             get
             {
                 this.Parameters.TryGetValue(nameof(HammerDBExecutor.WarehouseCount), out IConvertible warehouseCount);
-                return warehouseCount?.ToInt32(CultureInfo.InvariantCulture);
+                return warehouseCount?.ToString(CultureInfo.InvariantCulture);
             }
         }
 
@@ -209,16 +198,16 @@ namespace VirtualClient.Actions
             HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
                ?? new HammerDBState();
 
-            if (!state.DatabasePopulated)
+            if (!state.DatabaseCreated)
             {
-                await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
+                await this.Logger.LogMessageAsync($"{this.TypeName}.CreateDatabase", telemetryContext.Clone(), async () =>
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-                state.DatabasePopulated = true;
+                state.DatabaseCreated = true;
                 await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
             }
         }
@@ -410,30 +399,18 @@ namespace VirtualClient.Actions
                 }
             }
 
-            public bool DatabasePopulated
+            public bool DatabaseCreated
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabasePopulated), false);
+                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabaseCreated), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
+                    this.Properties[nameof(HammerDBState.DatabaseCreated)] = value;
                 }
             }
-        }
-
-        /// <summary>
-        /// Defines the HammerDB scenario.
-        /// </summary>
-        internal class HammerDBScenario
-        {
-            public const string Balanced = nameof(Balanced);
-
-            public const string InMemory = nameof(InMemory);
-
-            public const string Configure = nameof(Configure);
         }
     }
 }
