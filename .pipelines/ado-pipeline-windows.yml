@@ -12,7 +12,7 @@ pr: none
 
 variables:
 - name: VcVersion
-  value: 1.14.1
+  value: 1.14.18
 - name: ROOT
   value: $(Build.SourcesDirectory)
 - name: CDP_DEFINITION_BUILD_COUNT
