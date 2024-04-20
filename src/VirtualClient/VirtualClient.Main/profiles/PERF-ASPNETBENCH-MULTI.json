@@ -7,20 +7,11 @@
     },
     "Parameters": {
         "DotNetVersion": "8.0.204",
-        "TargetFramework": "net8.0"
+        "TargetFramework": "net8.0",
+        "AspNetCoreThreadCount": 1,
+        "DotNetSystemNetSocketsThreadCount": 1
     },
     "Actions": [
-        {
-            "Type": "AspNetBenchClientExecutor",
-            "Parameters": {
-                "Role": "Client",
-                "Scenario": "ExecuteJsonSerializationBenchmark",
-                "PackageName": "aspnetbenchmarks",
-                "BombardierPackageName": "bombardier",
-                "DotNetSdkPackageName": "dotnetsdk",
-                "TargetFramework": "$.Parameters.TargetFramework"
-            }
-        },
         {
             "Type": "AspNetBenchServerExecutor",
             "Parameters": {
@@ -29,9 +20,36 @@
                 "PackageName": "aspnetbenchmarks",
                 "BombardierPackageName": "bombardier",
                 "DotNetSdkPackageName": "dotnetsdk",
-                "TargetFramework": "$.Parameters.TargetFramework"
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "AspNetCoreThreadCount": "$.Parameters.AspNetCoreThreadCount",
+                "DotNetSystemNetSocketsThreadCount": "$.Parameters.DotNetSystemNetSocketsThreadCount"
+            }
+        },
+        {
+            "Type": "AspNetBenchClientExecutor",
+            "Parameters": {
+                "Role": "Client",
+                "Scenario": "ExecuteJsonSerializationBenchmarkWarmUp",
+                "PackageName": "aspnetbenchmarks",
+                "BombardierPackageName": "bombardier",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "WrkCommandLine": "-t 256 -c 256 -d 45s --timeout 10s http://{ipAddress}:{port}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q = 0.9,application/xml;q=0.8,*/*;q=0.7\""
+            }
+        },
+        {
+            "Type": "AspNetBenchClientExecutor",
+            "Parameters": {
+                "Role": "Client",
+                "Scenario": "ExecuteJsonSerializationBenchmark",
+                "PackageName": "aspnetbenchmarks",
+                "BombardierPackageName": "bombardier",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "WrkCommandLine": "-t 256 -c 256 -d 15s --timeout 10s http://{ipAddress}:{port}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q = 0.9,application/xml;q=0.8,*/*;q=0.7\""
             }
         }
+
     ],
     "Dependencies": [
         {

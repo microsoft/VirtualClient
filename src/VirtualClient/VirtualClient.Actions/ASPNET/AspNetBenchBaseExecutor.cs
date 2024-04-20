@@ -58,7 +58,7 @@ namespace VirtualClient.Actions
             get
             {
                 // Lower case to prevent build path issue.
-                return this.Parameters.GetValue<string>(nameof(AspNetBenchExecutor.TargetFramework)).ToLower();
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.TargetFramework)).ToLower();
             }
         }
 
@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
             get
             {
                 // Lower case to prevent build path issue.
-                return this.Parameters.GetValue<string>(nameof(AspNetBenchExecutor.Port), "9876");
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.Port), "9876");
             }
         }
 
@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(AspNetBenchExecutor.BombardierPackageName), "bombardier");
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.BombardierPackageName), "bombardier");
             }
         }
 
@@ -92,7 +92,43 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(AspNetBenchExecutor.DotNetSdkPackageName), "dotnetsdk");
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.DotNetSdkPackageName), "dotnetsdk");
+            }
+        }
+
+        /// <summary>
+        /// ASPNETCORE_threadCount
+        /// </summary>
+        public string AspNetCoreThreadCount
+        {
+            get
+            {
+                // Lower case to prevent build path issue.
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.AspNetCoreThreadCount), 1);
+            }
+        }
+
+        /// <summary>
+        /// DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT
+        /// </summary>
+        public string DotNetSystemNetSocketsThreadCount
+        {
+            get
+            {
+                // Lower case to prevent build path issue.
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.DotNetSystemNetSocketsThreadCount), 1);
+            }
+        }
+
+        /// <summary>
+        /// wrk commandline
+        /// </summary>
+        public string WrkCommandLine
+        {
+            get
+            {
+                // Lower case to prevent build path issue.
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.WrkCommandLine), string.Empty);
             }
         }
 
@@ -218,8 +254,10 @@ namespace VirtualClient.Actions
             string options = $"--nonInteractive true --scenarios json --urls http://*:{this.Port} --server Kestrel --kestrelTransport Sockets --protocol http";
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
-            Console.WriteLine("2");
-            Console.WriteLine(this.dotnetExePath);
+
+            this.SetEnvironmentVariable("ASPNETCORE_threadCount", this.AspNetCoreThreadCount);
+            this.SetEnvironmentVariable("DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT", this.DotNetSystemNetSocketsThreadCount);
+
             return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken);
         }
 
@@ -265,14 +303,16 @@ namespace VirtualClient.Actions
             {
                 // https://pkg.go.dev/github.com/codesenberg/bombardier
                 // ./wrk -t 256 -c 256 -d 15s --timeout 10s http://10.1.0.23:9876/json --header "Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"
-                this.clientArgument = $"-t 256 -c 256 -d 15s --timeout 10s http://{ipAddress}:{this.Port}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q = 0.9,application/xml;q=0.8,*/*;q=0.7\"";
+                this.clientArgument = this.WrkCommandLine;
+                this.clientArgument = this.clientArgument.Replace("{ipAddress}", ipAddress);
+                this.clientArgument = this.clientArgument.Replace("{port}", this.Port);
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(this.wrkFilePath, this.clientArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
                     .ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBench", logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "wrk", logToFile: true);
 
                         process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, telemetryContext);
