@@ -10,7 +10,6 @@ namespace VirtualClient.Actions
     using MathNet.Numerics.Statistics;
     using VirtualClient;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Parser;
 
     /// <summary>
     /// Parser for Redis Memtier benchmark output.
@@ -68,34 +67,29 @@ namespace VirtualClient.Actions
             // Create the set of metric aggregates.
             //
             // e.g.
-            // GET_Bandwidth -> GET_Bandwidth-Avg
-            //               -> GET_Bandwidth-Min
-            //               -> GET_Bandwidth-Max
-            //               -> GET_Bandwidth-Stddev
-            //               -> GET_Bandwidth-P80
-            //               -> GET_Bandwidth-Total
+            // GET_Bandwidth -> GET-Bandwidth AVG
+            //               -> GET-Bandwidth MIN
+            //               -> GET-Bandwidth MAX
+            //               -> GET-Bandwidth STDDEV
+            //               -> GET-Bandwidth P80
+            //               -> GET-Bandwidth TOTAL
             List<Metric> metricAggregates = new List<Metric>();
             foreach (MetricAggregate aggregate in aggregations.Values)
             {
-                metricAggregates.Add(new Metric($"{aggregate.Name}-Avg", aggregate.Average(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                metricAggregates.Add(new Metric($"{aggregate.Name}-Min", aggregate.Min(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                metricAggregates.Add(new Metric($"{aggregate.Name}-Max", aggregate.Max(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                metricAggregates.Add(new Metric($"{aggregate.Name}-Stddev", aggregate.StandardDeviation(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name} Avg", aggregate.Average(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name} Min", aggregate.Min(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name} Max", aggregate.Max(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name} Stddev", aggregate.StandardDeviation(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
 
                 if (MemtierMetricsParser.BandwidthExpression.IsMatch(aggregate.Name))
                 {
                     // e.g.
-                    // GET_Bandwidth-P80
-                    // GET_Bandwidth-Total
-                    // GET_Throughput-P80
-                    // GET_Throughput-Total
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-P50", aggregate.Percentile(50), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-P80", aggregate.Percentile(80), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-P90", aggregate.Percentile(90), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-P95", aggregate.Percentile(95), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-P99", aggregate.Percentile(99), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-P99.9", ArrayStatistics.QuantileInplace(aggregate.ToArray(), 0.999d), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
-                    metricAggregates.Add(new Metric($"{aggregate.Name}-Total", aggregate.Sum(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    // GET-Bandwidth P80
+                    // GET-Bandwidth TOTAL
+                    metricAggregates.Add(new Metric($"{aggregate.Name} P20", aggregate.Percentile(20), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name} P50", aggregate.Percentile(50), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name} P80", aggregate.Percentile(80), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name} Total", aggregate.Sum(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
                 }
             }
 
@@ -324,7 +318,7 @@ namespace VirtualClient.Actions
                 {
                     "Ops/sec",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Throughput" : $"{metricNamePrefix}_Throughput",
+                        metricNamePrefix == null ? "Throughput" : $"{metricNamePrefix}-Throughput",
                         metricUnit: MetricUnit.RequestsPerSec,
                         relativity: MetricRelativity.HigherIsBetter,
                         description: "Total number of requests/operations per second during the period of time.")
@@ -332,21 +326,21 @@ namespace VirtualClient.Actions
                 {
                     "Hits/sec",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Hits/sec" : $"{metricNamePrefix}_Hits/sec",
+                        metricNamePrefix == null ? "Hits/sec" : $"{metricNamePrefix}-Hits/sec",
                         relativity: MetricRelativity.HigherIsBetter,
                         description: "Total number of cache hits per second during the period of time.")
                 },
                 {
                     "Misses/sec",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Misses/sec" : $"{metricNamePrefix}_Misses/sec",
+                        metricNamePrefix == null ? "Misses/sec" : $"{metricNamePrefix}-Misses/sec",
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "Total number of cache misses per second during a period of time. This is an indication of data evictions due to reaching memory limits.")
                 },
                 {
                     "AvgLatency",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Latency-Avg" : $"{metricNamePrefix}_Latency-Avg",
+                        metricNamePrefix == null ? "Latency-Avg" : $"{metricNamePrefix}-Latency-Avg",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "Average latency for requests/operations during the period of time.")
@@ -354,7 +348,7 @@ namespace VirtualClient.Actions
                 {
                     "p50Latency",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Latency-P50" : $"{metricNamePrefix}_Latency-P50",
+                        metricNamePrefix == null ? "Latency-P50" : $"{metricNamePrefix}-Latency-P50",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "The latency for 50% of all requests was at or under this value.")
@@ -362,7 +356,7 @@ namespace VirtualClient.Actions
                 {
                     "p90Latency",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Latency-P90" : $"{metricNamePrefix}_Latency-P90",
+                        metricNamePrefix == null ? "Latency-P90" : $"{metricNamePrefix}-Latency-P90",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "The latency for 90% of all requests was at or under this value.")
@@ -370,7 +364,7 @@ namespace VirtualClient.Actions
                 {
                     "p95Latency",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Latency-P95" : $"{metricNamePrefix}_Latency-P95",
+                        metricNamePrefix == null ? "Latency-P95" : $"{metricNamePrefix}-Latency-P95",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "The latency for 95% of all requests was at or under this value.")
@@ -378,7 +372,7 @@ namespace VirtualClient.Actions
                 {
                     "p99Latency",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Latency-P99" : $"{metricNamePrefix}_Latency-P99",
+                        metricNamePrefix == null ? "Latency-P99" : $"{metricNamePrefix}-Latency-P99",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "The latency for 99% of all requests was at or under this value.")
@@ -386,7 +380,7 @@ namespace VirtualClient.Actions
                 {
                     "p99.9Latency",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Latency-P99.9" : $"{metricNamePrefix}_Latency-P99.9",
+                        metricNamePrefix == null ? "Latency-P99.9" : $"{metricNamePrefix}-Latency-P99.9",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
                         description: "The latency for 99.9% of all requests was at or under this value.")
@@ -394,7 +388,7 @@ namespace VirtualClient.Actions
                 {
                     "KB/sec",
                     new MetricAggregate(
-                        metricNamePrefix == null ? "Bandwidth" : $"{metricNamePrefix}_Bandwidth",
+                        metricNamePrefix == null ? "Bandwidth" : $"{metricNamePrefix}-Bandwidth",
                         metricUnit: MetricUnit.KilobytesPerSecond,
                         relativity: MetricRelativity.HigherIsBetter,
                         description: "Total amount of data transferred per second during the period of time.")
@@ -414,7 +408,7 @@ namespace VirtualClient.Actions
                 p80LatencyOnGet = double.Parse(getLatencyP80.Groups[1].Value);
 
                 metrics.Add(new Metric(
-                    "GET_Latency-P80",
+                    "GET-Latency-P80",
                     p80LatencyOnGet,
                     MetricUnit.Milliseconds,
                     MetricRelativity.LowerIsBetter,
@@ -427,7 +421,7 @@ namespace VirtualClient.Actions
                 p80LatencyOnSet = double.Parse(setLatencyP80.Groups[1].Value);
 
                 metrics.Add(new Metric(
-                    "SET_Latency-P80",
+                    "SET-Latency-P80",
                     p80LatencyOnSet,
                     MetricUnit.Milliseconds,
                     MetricRelativity.LowerIsBetter,
