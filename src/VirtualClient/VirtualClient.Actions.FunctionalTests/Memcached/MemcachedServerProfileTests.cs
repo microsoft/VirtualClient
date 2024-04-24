@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
@@ -62,9 +63,12 @@ namespace VirtualClient.Actions
         [TestCase("PERF-MEMCACHED.json")]
         public async Task MemcachedMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetLoggedInUserName())
+                            .Returns("mockuser");
+
             IEnumerable<string> expectedCommands = new List<string>
             {
-                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384\""
+                $"sudo -u mockuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384\""
             };
 
             // Setup the expectations for the workload

@@ -1,8 +1,0 @@
-﻿{
-    "name": "hplinpack",
-    "description": "Toolsets for executing the hplinpack workload",
-    "version": "2.3",
-    "metadata": {
-	"licenseFile": "https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT"
- }
-}

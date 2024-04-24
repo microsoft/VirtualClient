@@ -58,6 +58,12 @@ namespace VirtualClient.Contracts
         bool IsLocalIPAddress(string ipAddress);
 
         /// <summary>
+        /// Get the logged In Username i.e, username of the user who invoked a command with elevated privileges using the "sudo" command in Unix operating system.
+        /// </summary>
+        /// <returns>Username of the logged In user</returns>
+        string GetLoggedInUserName();
+
+        /// <summary>
         /// Returns information about the CPU on the system.
         /// </summary>
         Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken);

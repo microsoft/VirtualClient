@@ -328,7 +328,7 @@ namespace VirtualClient.Actions
                     ports.Add(new PortDescription
                     {
                         CpuAffinity = this.BindToCores ? i.ToString() : null,
-                        Port = this.Port
+                        Port = this.Port + i
                     });
                 }
 

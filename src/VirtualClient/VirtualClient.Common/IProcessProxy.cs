@@ -39,7 +39,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Gets the exit time for the underlying process.
         /// </summary>
-        DateTime ExitTime { get; }
+        DateTime ExitTime { get; set; }
 
         /// <summary>
         /// The underlying process details.
@@ -97,7 +97,7 @@ namespace VirtualClient.Common
         /// <summary>
         ///  Gets the start time for the underlying process.
         /// </summary>
-        DateTime StartTime { get; }
+        DateTime StartTime { get; set; }
 
         /// <summary>
         /// Gracefully closes the process and main window.

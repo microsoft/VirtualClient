@@ -18,18 +18,11 @@ namespace VirtualClient.Actions
     class JsonMetricsParserTests
     {
         private JsonMetricsParser testParser;
-        string workingDirectory;
-
-        [SetUp]
-        public void Setup()
-        {
-            this.workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        }
 
         [Test]
         public void JsonMetricsParserVerifyMetricsForPassResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "validJsonExample.json");
+            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "Examples", "ScriptExecutor", "validJsonExample.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();
@@ -41,16 +34,27 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void JsonMetricsParserVerifyMetricsForFailedResults()
+        public void JsonMetricsParserThrowsIfTheJsonResultsHaveInvalidMetrics()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "invalidJsonExample.json");
+            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "Examples", "ScriptExecutor", "invalidJsonExample.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
-            IList<Metric> metrics = this.testParser.Parse();
 
-            Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "metric2", 1.45);
-            MetricAssert.Exists(metrics, "metric3", 129.09);
+            Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
+        }
+
+        [Test]
+        public void JsonMetricsParserThrowsIfTheResultsAreNotProperlyFormattedKeyValuePairs()
+        {
+            this.testParser = new JsonMetricsParser("{ 'this': { 'is': 'json' }, 'but': [ 'not', 'properly', 'formatted' ] }", new InMemoryLogger(), EventContext.None);
+            Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
+        }
+
+        [Test]
+        public void JsonMetricsParserThrowsIfTheResultsAreNotJsonFormatted()
+        {
+            this.testParser = new JsonMetricsParser("<this><is/><not/><json/></this>", new InMemoryLogger(), EventContext.None);
+            Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
         }
     }
 }

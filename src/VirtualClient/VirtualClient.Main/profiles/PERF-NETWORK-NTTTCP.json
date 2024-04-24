@@ -1,0 +1,235 @@
+{
+    "Description": "Network NTttcp Workload Scenarios",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Parameters": {
+        "ConfigureNetwork": true,
+        "EnableBusyPoll": true,
+        "DisableFirewall": true,
+        "NTttcpPort": 5500,
+        "NTttcpDuration": 60,
+        "ProfilingEnabled": false,
+        "ProfilingMode": "None",
+        "TestDuration": 60
+    },
+    "Actions": [
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_4K_Buffer_T1",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 1,
+                "BufferSizeClient": "4K",
+                "BufferSizeServer": "4K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T1",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_64K_Buffer_T1",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 1,
+                "BufferSizeClient": "64K",
+                "BufferSizeServer": "64K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T1",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_256K_Buffer_T1",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 1,
+                "BufferSizeClient": "256K",
+                "BufferSizeServer": "256K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T1",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_4K_Buffer_T32",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 32,
+                "BufferSizeClient": "4K",
+                "BufferSizeServer": "4K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T32",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_64K_Buffer_T32",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 32,
+                "BufferSizeClient": "64K",
+                "BufferSizeServer": "64K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T32",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_256K_Buffer_T32",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 32,
+                "BufferSizeClient": "256K",
+                "BufferSizeServer": "256K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T32",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_4K_Buffer_T256",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 256,
+                "BufferSizeClient": "4K",
+                "BufferSizeServer": "4K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T256",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_64K_Buffer_T256",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 256,
+                "BufferSizeClient": "64K",
+                "BufferSizeServer": "64K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T256",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_TCP_256K_Buffer_T256",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "ThreadCount": 256,
+                "BufferSizeClient": "256K",
+                "BufferSizeServer": "256K",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T256",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_UDP_1400B_Buffer_T1",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "UDP",
+                "ThreadCount": 1,
+                "BufferSizeClient": "1400",
+                "BufferSizeServer": "1400",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_UDP_1400B_Buffer_T1",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "NTttcp_UDP_1400B_Buffer_T32",
+                "ToolName": "NTttcp",
+                "PackageName": "networking",
+                "Protocol": "UDP",
+                "ThreadCount": 32,
+                "BufferSizeClient": "1400",
+                "BufferSizeServer": "1400",
+                "TestDuration": "$.Parameters.NTttcpDuration",
+                "Port": "$.Parameters.NTttcpPort",
+                "ProfilingScenario": "NTttcp_UDP_1400B_Buffer_T32",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallNetworkToolsetPackage",
+                "BlobContainer": "packages",
+                "BlobName": "networking.3.1.0.zip",
+                "PackageName": "networking",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "NetworkConfigurationSetup",
+            "Parameters": {
+                "Scenario": "ConfigureNetwork",
+                "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
+                "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
+                "DisableFirewall": "$.Parameters.DisableFirewall",
+                "VisualStudioCRuntimePackageName": "visualstudiocruntime"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
+}

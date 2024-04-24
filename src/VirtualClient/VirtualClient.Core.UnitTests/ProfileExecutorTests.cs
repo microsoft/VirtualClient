@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics.LinearAlgebra.Solvers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Moq;
@@ -41,7 +42,7 @@ namespace VirtualClient
             // project that is at the foundation of all unit + functional tests in the solution.
             this.mockProfile = new ExecutionProfile(
                 description: "Any profile description",
-                minimumExecutionInterval: null,
+                minimumExecutionInterval: TimeSpan.FromMicroseconds(10),
                 actions: new List<ExecutionProfileElement>
                 {
                     new ExecutionProfileElement(
@@ -174,7 +175,7 @@ namespace VirtualClient
                         }
                     };
 
-                    await executor.ExecuteAsync(new ProfileTiming(TimeSpan.FromSeconds(5)), cancellationTokenSource.Token)
+                    await executor.ExecuteAsync(new ProfileTiming(profileIterations: 5), cancellationTokenSource.Token)
                         .ConfigureAwait(false);
 
                     var monitorsStarted = this.mockFixture.Logger.MessagesLogged("TestMonitor.ExecuteStart");
@@ -368,10 +369,10 @@ namespace VirtualClient
             // An explicit timeout is provided to the profile executor.
             using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
             {
-                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromSeconds(5));
+                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromMicroseconds(50));
                 Task executionTask = executor.ExecuteAsync(explicitTimeout, CancellationToken.None);
 
-                DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
+                DateTime testTimeout = DateTime.UtcNow.AddMilliseconds(50);
                 while (!executionTask.IsCompleted)
                 {
                     await Task.Delay(10).ConfigureAwait(false);
@@ -612,7 +613,7 @@ namespace VirtualClient
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.InstallDependencies")?.Select(i => i.Item3 as EventContext);
+                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.InstallDependenciesStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(events);
                 Assert.IsNotEmpty(events);
                 Assert.IsTrue(events.Count() == 1);
@@ -664,7 +665,7 @@ namespace VirtualClient
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteMonitors")?.Select(i => i.Item3 as EventContext);
+                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteMonitorsStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(events);
                 Assert.IsNotEmpty(events);
                 Assert.IsTrue(events.Count() == 1);

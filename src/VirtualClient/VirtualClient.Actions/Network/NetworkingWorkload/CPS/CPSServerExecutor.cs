@@ -25,7 +25,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
         }
 
         /// <summary>

@@ -28,7 +28,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                 .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
         }
@@ -123,7 +122,6 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Name = $"{this.Scenario} {this.Role}";
             this.ProcessName = "latte";
             this.Tool = NetworkingWorkloadTool.Latte;
-            this.ResultsPath = this.PlatformSpecifics.Combine(workloadPackage.Path, LatteExecutor.OutputFileName);
             this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "latte.exe");
 
             return Task.CompletedTask;

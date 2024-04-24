@@ -31,7 +31,8 @@ else
 fi
 
 echo "Building VirtualClient solution."
-dotnet build src/VirtualClient/VirtualClient.sln -c Release
+dotnet build src/VirtualClient/VirtualClient.sln -c Release -p:VCBuildVersion=$VCBuildVersion
+
 
 if [ "$BUILD_ALL" = true ]; then
     echo "Publishing VirtualClient for all platforms."

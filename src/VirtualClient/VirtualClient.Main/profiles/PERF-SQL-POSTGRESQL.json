@@ -54,7 +54,8 @@
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "libxft-dev",
-                "Packages-Yum": "libxft-devel,libXft"
+                "Packages-Yum": "libxft-devel,libXft",
+                "Packages-Dnf": "lshw"
             }
         },
         {
