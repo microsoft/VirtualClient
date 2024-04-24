@@ -292,11 +292,6 @@ namespace VirtualClient
                 this.LoggingLevel = LogLevel.Trace;
             }
 
-            if (this.Debug)
-            {
-                this.LoggingLevel = LogLevel.Trace;
-            }
-
             if (this.Metadata?.Any() == true)
             {
                 VirtualClientRuntime.Metadata.AddRange(this.Metadata, true);

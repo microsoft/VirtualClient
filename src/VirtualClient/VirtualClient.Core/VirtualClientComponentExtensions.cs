@@ -98,11 +98,6 @@ namespace VirtualClient
         /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
         /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
         /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
-        /// <param name="timeout">
-        /// An absolute timeout to apply for the case that the process does not finish in the amount of time expected. If the
-        /// timeout is reached a <see cref="TimeoutException"/> exception will be thrown.
-        /// </param>
-        /// <param name="addCleanupTasks">Allows any final cleanup work to be performed. Default = true</param>
         /// <returns>The process that executed the command.</returns>
         public static async Task<IProcessProxy> ExecuteCommandAsync(
             this VirtualClientComponent component,
@@ -113,9 +108,7 @@ namespace VirtualClient
             CancellationToken cancellationToken,
             bool runElevated = false,
             string username = null,
-            Action<IProcessProxy> beforeExecution = null,
-            TimeSpan? timeout = null,
-            bool addCleanupTasks = true)
+            Action<IProcessProxy> beforeExecution = null)
         {
             component.ThrowIfNull(nameof(component));
             command.ThrowIfNullOrWhiteSpace(nameof(command));
@@ -154,15 +147,12 @@ namespace VirtualClient
                     process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
-                if (addCleanupTasks)
-                {
-                    component.CleanupTasks.Add(() => process.SafeKill());
-                }
+                component.CleanupTasks.Add(() => process.SafeKill());
 
                 component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken, timeout)
+                await process.StartAndWaitAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
 

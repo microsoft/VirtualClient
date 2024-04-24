@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Kafka\KafkaProducerResultExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "Kafka", "KafkaProducerResultExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new KafkaProducerMetricsParser(this.rawText);
         }
@@ -62,7 +62,7 @@ namespace VirtualClient.Actions
         public void KafkaProducerMetricsParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Kafka\KafkaProducerResultExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "Kafka", "KafkaProducerResultExample.txt");
             this.rawText = File.ReadAllText(outputPath).Substring(0, 10);
             this.testParser = new KafkaProducerMetricsParser(this.rawText);
 

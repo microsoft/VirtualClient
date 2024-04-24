@@ -73,9 +73,11 @@ Runs the Kafka workload using this profile which uses kafka-producer-perf-test a
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | ServerInstances           | Optional. Number of kafka servers to run   | 3 |
   | ServerPort                | Optional. The initial port on which the Kafka servers will listen for traffic. Additional ports will be used for each 1 server instance defined in an alternate manner (e.g. 9092, 9094, 9096) | 9092 |
+  | ServerInstances           | Optional. Number of kafka servers to run   | 3 |
+  | ClientInstances           | The number of client instances to run concurrently. | 3 |
   | RecordSize              | Optional. It defines the size of record| 100 |
+  | Partitions                | The number of partitions to create of topics. | 3 |
   | NumberOfRecords          | Optional. Total number of records to sent/consume| 5000000 |
 
 * **Component Parameters**  
@@ -87,6 +89,8 @@ Runs the Kafka workload using this profile which uses kafka-producer-perf-test a
   | PackageName               | The name of the package that contains the Kafka server binaries/scripts.    |               |
   | Port                | Optional. The initial port on which the Kafka servers will listen for traffic. Additional ports will be used for each 1 server instance defined in an alternate manner (e.g. 9092, 9094, 9096) | 9092 |
   | ServerInstances           | The number of distinct Kafka server instances to run concurrently. | 3 |
+  | MaxClientInstances        | The max number of client instances that can run concurrently. | 3 |
+  | Partitions                | The number of partitions to create of topics. | 3 |
 
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |
@@ -96,7 +100,11 @@ Runs the Kafka workload using this profile which uses kafka-producer-perf-test a
   | PackageName               | The name of the package that contains the Kafka benchmark binaries/scripts.  | |
   | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
   | ServerInstances           | The number of distinct Kafka server instances to run concurrently. Same value as in Server | 3 |
-  | CommandType           | Command type value can be one of - Setup, ProducerTest and ConsumerTest | |
+  | ClientInstances           | The number of client instances to run concurrently. | 3 |
+  | MaxClientInstances        | The max number of client instances that can run concurrently. | 3 |
+  | Partitions                | The number of partitions to create of topics. | 3 |
+  | RecordSize              | Optional. It defines the size of record| 100 |
+  | CommandType               | Command type value can be one of - Setup, ProducerTest and ConsumerTest | |
 
 
 * **Profile Runtimes**  

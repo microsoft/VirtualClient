@@ -23,7 +23,7 @@
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
-    public class KafkaExecutor : VirtualClientComponent
+    public abstract class KafkaExecutor : VirtualClientComponent
     {
         /// <summary>
         /// Constructor
@@ -204,6 +204,74 @@
             }
 
             return commandArgs;
+        }
+
+        /// <summary>
+        /// Executes a command within an isolated process.
+        /// </summary>
+        /// <param name="command">The command to execute within the process.</param>
+        /// <param name="commandArguments">The arguments to supply to the command.</param>
+        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
+        /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
+        /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
+        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
+        /// <returns>The process that executed the command.</returns>
+        protected async Task<IProcessProxy> RunProcessAsync(
+            string command,
+            string commandArguments,
+            string workingDirectory,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
+            bool runElevated = false,
+            string username = null,
+            Action<IProcessProxy> beforeExecution = null)
+        {
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                if (this.Platform != PlatformID.Unix)
+                {
+                    throw new NotSupportedException($"The application of a username is not supported on '{this.Platform}' platform/architecture systems.");
+                }
+
+                if (!runElevated)
+                {
+                    throw new NotSupportedException($"The application of a username is not supported unless running elevated. Use the '{nameof(runElevated)}' parameter.");
+                }
+            }
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext(nameof(command), command)
+                .AddContext(nameof(commandArguments), commandArguments)
+                .AddContext(nameof(workingDirectory), workingDirectory)
+                .AddContext(nameof(runElevated), runElevated);
+
+            IProcessProxy process = null;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ProcessManager processManager = this.Dependencies.GetService<ProcessManager>();
+
+                if (!runElevated)
+                {
+                    process = processManager.CreateProcess(command, commandArguments, workingDirectory);
+                }
+                else
+                {
+                    process = processManager.CreateElevatedProcess(this.Platform, command, commandArguments, workingDirectory, username);
+                }
+
+                this.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+
+                beforeExecution?.Invoke(process);
+                await process.StartAndWaitAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return process;
         }
     }
 }

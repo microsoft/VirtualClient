@@ -308,7 +308,7 @@ namespace VirtualClient.Actions.Kafka
                     try
                     {
                         DateTime startTime = DateTime.UtcNow;
-                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, timeout: TimeSpan.FromMinutes(5)))
+                        using (IProcessProxy process = await this.RunProcessAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {

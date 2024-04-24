@@ -290,7 +290,7 @@ namespace VirtualClient.Actions.Kafka
                 string clusterIdCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, "random-uuid");
                 telemetryContext.AddContext(nameof(clusterIdCmdArgs), clusterIdCmdArgs);
                 string output;
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, clusterIdCmdArgs, workingDirectory, telemetryContext, cancellationToken, runElevated: true, timeout: TimeSpan.FromMinutes(5)))
+                using (IProcessProxy process = await this.RunProcessAsync(command, clusterIdCmdArgs, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -327,7 +327,7 @@ namespace VirtualClient.Actions.Kafka
                 try
                 {
                     telemetryContext.AddContext(nameof(commandArguments), commandArguments);
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, addCleanupTasks: addCleanupTasks))
+                    using (IProcessProxy process = await this.RunProcessAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
