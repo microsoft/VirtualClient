@@ -427,13 +427,13 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string subcommand = "bash";
+                    string precommand = "bash";
                     string command = this.MemtierExecutablePath;
                     string workingDirectory = this.MemtierPackagePath;
                     string commandArguments = string.Empty;
                     List<string> commands = new List<string>();
 
-                    relatedContext.AddContext("command", command);
+                    relatedContext.AddContext("command", precommand);
                     relatedContext.AddContext("commandArguments", commands);
                     relatedContext.AddContext("workingDirectory", workingDirectory);
 
@@ -464,7 +464,7 @@ namespace VirtualClient.Actions
                             }
 
                             commands.Add(commandArguments);
-                            workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, subcommand, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
+                            workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, precommand, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
 
                             if (this.WarmUp)
                             {
