@@ -47,6 +47,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
+                { nameof(SysbenchConfiguration.Benchmark), "OLTP" },
                 { nameof(SysbenchConfiguration.DatabaseName), "sbtest" },
                 { nameof(SysbenchConfiguration.PackageName), "sysbench" },
                 { nameof(SysbenchConfiguration.Scenario), "populate_database" }
@@ -74,7 +75,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1000 --threadCount 8",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8",
             };
 
             int commandNumber = 0;
@@ -119,7 +120,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1000 --threadCount 8",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8",
             };
 
             int commandNumber = 0;
@@ -165,12 +166,12 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
             this.fixture.Parameters[nameof(SysbenchConfiguration.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.Scenario)] = "Configure";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";
 
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 40 --recordCount 1000 --threadCount 16",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --benchmark OLTP --tableCount 40 --recordCount 1000 --threadCount 16",
             };
 
             int commandNumber = 0;
@@ -220,6 +221,114 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                string expectedCommand = expectedCommands[commandNumber];
+
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+
+            using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchConfigurationProperlyExecutesTPCCPreparation()
+        {
+            this.fixture.Parameters[nameof(SysbenchConfiguration.Benchmark)] = "TPCC";
+
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            {
+                SysbenchInitialized = true
+            }));
+
+            string[] expectedCommands =
+            {
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8"
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                string expectedCommand = expectedCommands[commandNumber];
+
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+
+            using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchConfigurationProperlyExecutesTPCCConfigurablePreparation()
+        {
+            this.fixture.Parameters[nameof(SysbenchConfiguration.Benchmark)] = "TPCC";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.WarehouseCount)] = "1000";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";
+
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            {
+                SysbenchInitialized = true
+            }));
+
+            string[] expectedCommands =
+            {
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --benchmark TPCC --tableCount 40 --warehouses 1000 --threadCount 16"
             };
 
             int commandNumber = 0;

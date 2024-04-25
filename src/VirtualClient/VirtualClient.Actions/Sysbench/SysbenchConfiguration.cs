@@ -5,13 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
     using Microsoft.Extensions.DependencyInjection;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -52,7 +48,20 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.PrepareMySQLDatabase(telemetryContext, cancellationToken);
+                        if (this.Benchmark == BenchmarkName.OLTP)
+                        {
+                            await this.PrepareOLTPMySQLDatabase(telemetryContext, cancellationToken);
+                        }
+                        else if (this.Benchmark == BenchmarkName.TPCC)
+                        {
+                            await this.PrepareTPCCMySQLDatabase(telemetryContext, cancellationToken);
+                        }
+                        else
+                        {
+                            throw new DependencyException(
+                            $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".",
+                            ErrorReason.NotSupported);
+                        }
                     }
                 });
 
@@ -64,24 +73,41 @@ namespace VirtualClient.Actions
             }
         }
 
-        /// <summary>
-        /// Performs initialization operations for the executor.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task PrepareOLTPMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
-            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.Scenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.Scenario, this.RecordCount);
+            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
 
-            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            string command = $"python3";
+            string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                arguments + this.sysbenchPrepareArguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
         }
 
-        private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task PrepareTPCCMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = $"python3";
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
+            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount}";
+
+            string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(

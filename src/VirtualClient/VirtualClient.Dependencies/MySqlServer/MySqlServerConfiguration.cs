@@ -53,6 +53,17 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
+        /// The database name option passed to Sysbench.
+        /// </summary>
+        public string Benchmark
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(MySQLServerConfiguration.Benchmark));
+            }
+        }
+
+        /// <summary>
         /// The specifed action that controls the execution of the dependency.
         /// </summary>
         public bool SkipInitialize
@@ -237,7 +248,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         {
             string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\"";
+            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --benchmark {this.Benchmark} --directories \"{innoDbDirs}\"";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,
