@@ -20,14 +20,14 @@ idea. The name of the client must match the name of the system or the value of t
 
 ``` bash
 # Single System (environment layout not required)
-./VirtualClient --profile=PERF-KAFKA.json --system=Juno --timeout=1440
+./VirtualClient --profile=PERF-KAFKA.json --system=Demo --timeout=1440
 
 # Multi-System
 # On Client Role System...
-./VirtualClient --profile=PERF-KAKFA.json --system=Juno --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-KAKFA.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
 
 # On Server Role System...
-./VirtualClient --profile=PERF-KAFKA.json --system=Juno --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-KAFKA.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
 
 # Example contents of the 'layout.json' file:
 {

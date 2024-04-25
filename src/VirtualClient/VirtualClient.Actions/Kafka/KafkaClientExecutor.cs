@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -15,7 +18,7 @@ using VirtualClient.Common.Telemetry;
 using VirtualClient.Contracts;
 using VirtualClient.Contracts.Metadata;
 
-namespace VirtualClient.Actions.Kafka
+namespace VirtualClient.Actions
 {
     /// <summary>
     /// Kafka Command Type.

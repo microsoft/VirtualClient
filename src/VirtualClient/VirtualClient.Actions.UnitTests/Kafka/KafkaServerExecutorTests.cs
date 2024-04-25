@@ -15,12 +15,11 @@ namespace VirtualClient.Actions
     using Moq;
     using NUnit.Framework;
     using Polly;
-    using VirtualClient.Actions.Kafka;
+    using VirtualClient.Actions;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.KafkaExecutor;
 
     [TestFixture]
     [Category("Unit")]

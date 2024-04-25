@@ -91,7 +91,7 @@ for using them.
 | [Stressapptest](https://microsoft.github.io/VirtualClient/docs/workloads/stressapptest) | Fault Tolerance | linux-x64, linux-arm64 | [Apache-2.0](https://github.com/stressapptest/stressapptest/blob/master/NOTICE)  |
 | [Stress-ng](https://microsoft.github.io/VirtualClient/docs/workloads/stress-ng) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](https://microsoft.github.io/VirtualClient/docs/workloads/superbenchmark) | Machine Learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
-| [Kafka](../workloads/kafka/kafka.md) | Streaming data | win-x64, win-arm64 | [Apache License 2.0](https://github.com/apache/kafka/blob/trunk/LICENSE)  |
+| [Kafka](../workloads/kafka/kafka.md) | Streaming data | win-x64, win-arm64 | [Apache-2.0](https://github.com/apache/kafka/blob/trunk/LICENSE)  |
 | [Sysbench OLTP w/MySQL](https://microsoft.github.io/VirtualClient/docs/workloads/sysbench-oltp) | Relational Database Performance | linux-x64, linux-arm64 | [GPL-2.0 (Sysbench)](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[GPL-2.0 (MySQL)](https://www.mysql.com/about/legal/licensing/oem/) |
 
 

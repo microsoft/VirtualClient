@@ -1,31 +1,29 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Services.Description;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
 using VirtualClient.Common;
-using VirtualClient.Common.Contracts;
 using VirtualClient.Common.Extensions;
 using VirtualClient.Common.Telemetry;
 using VirtualClient.Contracts;
 
-namespace VirtualClient.Actions.Kafka
+namespace VirtualClient.Actions
 {
     /// <summary>
     /// Kafka server executor.
     /// </summary>
     public class KafkaServerExecutor : KafkaExecutor
     {
+        private readonly int port = 9092;
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private List<Task> serverProcesses;
@@ -44,17 +42,6 @@ namespace VirtualClient.Actions.Kafka
             this.serverProcesses = new List<Task>();
             this.ServerRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
                 .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries));
-        }
-
-        /// <summary>
-        /// Port on which server runs.
-        /// </summary>
-        public int Port
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.Port));
-            }
         }
 
         /// <summary>
@@ -229,8 +216,8 @@ namespace VirtualClient.Actions.Kafka
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("serverInstances", this.ServerInstances)
-                .AddContext("brokerPortRange", $"{this.Port}-{this.Port + this.ServerInstances}")
-                .AddContext("controllerPortRange", $"2{this.Port}-2{this.Port + this.ServerInstances}");
+                .AddContext("brokerPortRange", $"{this.port}-{this.port + this.ServerInstances}")
+                .AddContext("controllerPortRange", $"2{this.port}-2{this.port + this.ServerInstances}");
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.StartServerInstances", relatedContext, async () =>
             {
@@ -254,7 +241,7 @@ namespace VirtualClient.Actions.Kafka
                         await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
 
                         // Start kafka server
-                        int port = this.Port + serverInstance;
+                        int port = this.port + serverInstance;
                         string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaStartScriptPath, propertiesFilePath);
                         this.serverProcesses.Add(this.StartServerAndWaitForExitAsync(
                             $"Kafka server process exited (port = {port})...",
@@ -362,7 +349,7 @@ namespace VirtualClient.Actions.Kafka
             List<string> controllerQuorumVotersList = new List<string>();
             for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
             {
-                string controllerPort = $"2{this.Port + serverInstance - 1}";
+                string controllerPort = $"2{this.port + serverInstance - 1}";
                 string controllerConnectString;
                 if (this.IsMultiRoleLayout())
                 {
@@ -380,8 +367,8 @@ namespace VirtualClient.Actions.Kafka
 
             for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
             {
-                int brokerPort = this.Port + serverInstance - 1;
-                int controllerPort = int.Parse($"2{this.Port + serverInstance - 1}");
+                int brokerPort = this.port + serverInstance - 1;
+                int controllerPort = int.Parse($"2{this.port + serverInstance - 1}");
                 string oldServerProperties = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, "server.properties");
                 string newServerProperties = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{serverInstance}.properties");
                 this.fileSystem.File.Copy(oldServerProperties, newServerProperties, true);
@@ -477,8 +464,8 @@ namespace VirtualClient.Actions.Kafka
             List<int> ports = new List<int>();
             for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
             {
-                int brokerPort = this.Port + serverInstance;
-                int controllerPort = int.Parse($"2{this.Port + serverInstance}");
+                int brokerPort = this.port + serverInstance;
+                int controllerPort = int.Parse($"2{this.port + serverInstance}");
                 ports.Add(brokerPort);
                 ports.Add(controllerPort);
             }
