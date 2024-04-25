@@ -122,23 +122,6 @@ namespace VirtualClient.Actions
             return;
         }
 
-        /// <summary>
-        /// Performs initialization operations for the executor.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
-            // Adjust tableCount, tableCount, and recordCount if not the configurable scenario
-
-            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.Scenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.Scenario, this.RecordCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
-        }
-
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
@@ -184,26 +167,74 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string command = "python3";
-                    string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        command, 
-                        script + this.sysbenchExecutionArguments, 
-                        this.SysbenchPackagePath, 
-                        telemetryContext, 
-                        cancellationToken))
+                    if (this.Benchmark == BenchmarkName.OLTP)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                        }
+                        await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
+                    }
+                    else if (this.Benchmark == BenchmarkName.TPCC)
+                    {
+                        await this.RunTPCCWorkloadAsync(telemetryContext, cancellationToken);
                     }
                 }
             });
+        }
+
+        private async Task RunOLTPWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
+
+            string command = "python3";
+            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                script + this.sysbenchExecutionArguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                }
+            }
+        }
+
+        private async Task RunTPCCWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
+
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
+
+            string command = "python3";
+            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                script + this.sysbenchExecutionArguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                }
+            }
         }
     }
 }

@@ -61,6 +61,17 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The database name option passed to Sysbench.
         /// </summary>
+        public string Benchmark
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.Benchmark));
+            }
+        }
+
+        /// <summary>
+        /// The database name option passed to Sysbench.
+        /// </summary>
         public string DatabaseName
         {
             get
@@ -114,6 +125,18 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
                 return threads?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// Number of records per table.
+        /// </summary>
+        public int? WarehouseCount
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchExecutor.WarehouseCount), out IConvertible warehouseCount);
+                return warehouseCount?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -198,6 +221,18 @@ namespace VirtualClient.Actions
             recordCount = (databaseScenario == SysbenchScenario.Configure || recordCount == 1) ? recordCount : recordEstimate;
 
             return recordCount;
+        }
+
+        /// <summary>
+        /// Method to determine the record count for the given run.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetWarehouseCount(string databaseScenario, int? warehouses)
+        {
+            int warehouseCount = warehouses.GetValueOrDefault(100);
+            warehouseCount = (databaseScenario == SysbenchScenario.Configure || warehouseCount == 1) ? warehouseCount : 100;
+
+            return warehouseCount;
         }
 
         /// <summary>
@@ -351,7 +386,7 @@ namespace VirtualClient.Actions
                             break;
                         default:
                             throw new WorkloadException(
-                                $"The Sysbench OLTP workload is not supported on the current Linux distro - " +
+                                $"The Sysbench workload is not supported on the current Linux distro - " +
                                 $"{linuxDistributionInfo.LinuxDistribution}.  Supported distros include:" +
                                 $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
                                 ErrorReason.LinuxDistributionNotSupported);
@@ -404,6 +439,16 @@ namespace VirtualClient.Actions
             public const string InMemory = nameof(InMemory);
 
             public const string Configure = nameof(Configure);
+        }
+
+        /// <summary>
+        /// Defines the Sysbench OLTP benchmark scenario.
+        /// </summary>
+        internal class BenchmarkName
+        {
+            public const string OLTP = nameof(OLTP);
+
+            public const string TPCC = nameof(TPCC);
         }
     }
 }

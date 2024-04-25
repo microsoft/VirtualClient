@@ -252,3 +252,5 @@ The following steps show how to create the Sysbench database and then move/distr
   # Fully populate the Sysbench database with records.
   ~/vc_tools/sysbench/src$ ./sysbench oltp_common --threads=1 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=localhost prepare
   ```
+
+  For reference, the approximate size of a database created by Sysbench for a 10-table database is 1MB + 10kB per record.
