@@ -82,6 +82,29 @@ namespace VirtualClient.Actions
                 this.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = value;
             }
         }
+        
+        /// <summary>
+        /// Defines the job files specified in the profile.
+        /// </summary>
+        public string JobFiles
+        {
+            get
+            {
+                return this.Parameters.ContainsKey(nameof(this.JobFiles)) ? 
+                    this.Parameters.GetValue<string>(nameof(this.JobFiles)) : null;
+            }
+        }
+
+        /// <summary>
+        /// Template for Job file.
+        /// </summary>
+        public string TemplateJobFile
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.TemplateJobFile));
+            }
+        }
 
         /// <summary>
         /// True/false whether the test files that FIO uses in benchmark tests should be deleted at the end
@@ -347,6 +370,12 @@ namespace VirtualClient.Actions
 
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
+
+                    if (this.JobFiles != null)
+                    {
+                        await this.UpdateCommandLineForJobFilesAsync(cancellationToken);
+                    }
+
                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -434,7 +463,7 @@ namespace VirtualClient.Actions
         /// <param name="commandArguments">
         /// The command line arguments to supply to the FIO executable (e.g. --name=fio_randread_4GB_4k_d1_th1_direct --ioengine=libaio).
         /// </param>
-        /// <param name="testedInstance">The disk instance under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
+         /// <param name="testedInstance">The disk instance under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
         /// <param name="disksToTest">The disks under test.</param>
         protected virtual DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
@@ -935,11 +964,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override void Validate()
         {
-            if (string.IsNullOrWhiteSpace(this.CommandLine))
+            if (string.IsNullOrWhiteSpace(this.CommandLine) && string.IsNullOrWhiteSpace(this.JobFiles))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
-                    $"required '{nameof(FioExecutor.CommandLine)}' arguments defined.",
+                    $"required '{nameof(FioExecutor.CommandLine)}' or '{nameof(FioExecutor.JobFiles)}' arguments defined.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.CommandLine) && !string.IsNullOrWhiteSpace(this.JobFiles))
+            {
+                throw new WorkloadException(
+                    "Unexpected profile definition. Only one of JobFiles or CommandLine can be defined.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -976,6 +1012,63 @@ namespace VirtualClient.Actions
             }
 
             return sanitizedFilePath;
+        }
+
+        private async Task UpdateCommandLineForJobFilesAsync(CancellationToken cancellationToken)
+        {
+            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
+            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                .ConfigureAwait(false);
+
+            this.CommandLine = string.Empty;
+
+            string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
+            foreach (string templateJobFilePath in templateJobFilePaths)
+            {
+                // Create/update new job file at runtime.
+                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, nameof(FioExecutor), "updated.jobfile");
+                this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
+
+                // Update command line to include the new job file.
+                this.CommandLine += updatedJobFilePath + " ";
+            }
+
+            this.CommandLine += "--output-format=json";
+        }
+
+        private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
+        {
+            string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
+            int direct = 1;
+
+            foreach (string key in this.Parameters.Keys)
+            {
+                text = text.Replace($"{{{nameof(key).ToLower()}}}", this.Parameters.GetValue<string>(key));
+            }
+
+            int randomReadQueueDepth = int.Parse(this.Parameters.GetValue<string>("RandomReadQueueDepth"));
+            int randomReadNumJobs = int.Parse(this.Parameters.GetValue<string>("RandomReadNumJobs"));
+            int randomWriteQueueDepth = int.Parse(this.Parameters.GetValue<string>("RandomWriteQueueDepth"));
+            int randomWriteNumJobs = int.Parse(this.Parameters.GetValue<string>("RandomWriteNumJobs"));
+            int sequentialReadQueueDepth = int.Parse(this.Parameters.GetValue<string>("SequentialReadQueueDepth"));
+            int sequentialReadNumJobs = int.Parse(this.Parameters.GetValue<string>("SequentialReadNumJobs"));
+            int sequentialWriteQueueDepth = int.Parse(this.Parameters.GetValue<string>("SequentialWriteQueueDepth"));
+            int sequentialWriteNumJobs = int.Parse(this.Parameters.GetValue<string>("SequentialWriteNumJobs"));
+
+            int randomReadIOdepth = randomReadQueueDepth / randomReadNumJobs;
+            int randomWriteIOdepth = randomWriteQueueDepth / randomWriteNumJobs;
+            int sequentialReadIOdepth = sequentialReadQueueDepth / sequentialReadNumJobs;
+            int sequentialWriteIOdepth = sequentialWriteQueueDepth / sequentialWriteNumJobs;
+
+            text = text.Replace($"${{{nameof(randomReadIOdepth).ToLower()}}}", randomReadIOdepth.ToString());
+            text = text.Replace($"${{{nameof(randomWriteIOdepth).ToLower()}}}", randomWriteIOdepth.ToString());
+            text = text.Replace($"${{{nameof(sequentialReadIOdepth).ToLower()}}}", sequentialReadIOdepth.ToString());
+            text = text.Replace($"${{{nameof(sequentialWriteIOdepth).ToLower()}}}", sequentialWriteIOdepth.ToString());
+
+            text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
+            text = text.Replace("directio", direct.ToString());
+
+            this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
         }
 
         private class WorkloadState

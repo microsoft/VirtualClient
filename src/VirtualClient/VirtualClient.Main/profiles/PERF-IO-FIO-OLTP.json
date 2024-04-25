@@ -3,7 +3,9 @@
   "Metadata": {
     "RecommendedMinimumExecutionTime": "02:00:00",
     "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+    "Notes": "This profile uses FIO job files (e.g. *.jobfile). The job file paths should be comma/semicolon-delimited under 'JobFiles'.",
+    "Documentation": "(generalfiolink), (fiojobfilelink)"
   },
   "Parameters": {
     "DiskFillSize": "10G",
@@ -34,13 +36,34 @@
         "Scenario": "FioExecutorJobFile",
         "PackageName": "fio",
         "DiskFilter": "$.Parameters.DiskFilter",
-        "CommandLine": "--thread --output-format=json {JobFile}",
         "TestName": "read_write_operations",
-        "JobFile": "{ScriptPath:fio}/oltp-c.jobfile",
+        "JobFiles": "{ScriptPath:fio}/oltp-c.jobfile",
         "ProcessModel": "$.Parameters.ProcessModel",
         "FileName": "fio-test.dat",
         "DeleteTestFilesOnFinish": false,
-        "Tags": "IO,FIO,OLTP"
+        "Tags": "IO,FIO,OLTP",
+        "DirectIO": "true",
+        "DurationSec": "180",
+        "GroupReporting": "0",
+        "RandomIOFileSize": "10G",
+        "RandomReadBlockSize": "8K",
+        "RandomReadNumJobs": 1,
+        "RandomReadQueueDepth": 512,
+        "RandomReadWeight": 5416,
+        "RandomWriteBlockSize": "8K",
+        "RandomWriteNumJobs": 1,
+        "RandomWriteQueueDepth": 512,
+        "RandomWriteWeight": 4255,
+        "SequentialDiskCount": "1",
+        "SequentialIOFileSize": "10G",
+        "SequentialReadBlockSize": "56K",
+        "SequentialReadNumJobs": 1,
+        "SequentialReadQueueDepth": 64,
+        "SequentialReadWeight": 0,
+        "SequentialWriteBlockSize": "56K",
+        "SequentialWriteNumJobs": 1,
+        "SequentialWriteQueueDepth": 64,
+        "SequentialWriteWeight": 329
       }
     }
   ],
