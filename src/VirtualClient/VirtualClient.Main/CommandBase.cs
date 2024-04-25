@@ -461,11 +461,17 @@ namespace VirtualClient
                 ["platformArchitecture"] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
             });
 
-            IDictionary<string, IConvertible> parameters = this.Parameters?.ObscureSecrets();
+            // TODO:
+            // This is for backwards compatibility for Aurora team. This is a temporary solution until they
+            // are able to update downstream subscribers to use camel-casing for JSON property names
+            // (e.g. vmResourceName vs. VMResourceName or vMResourceName).
+            IDictionary<string, IConvertible> parameters = this.Parameters?.ObscureSecrets()
+                .ToDictionary(entry => entry.Key.CamelCased(), entry => entry.Value);
+
             EventContext.PersistentProperties["executionProfileParameters"] = parameters;
             EventContext.PersistentProperties["parameters"] = parameters;
 
-            IDictionary<string, object> metadata = new Dictionary<string, object>();
+            IDictionary<string, object> metadata = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             if (this.Metadata?.Any() == true)
             {
@@ -475,11 +481,14 @@ namespace VirtualClient
                 });
             }
 
-            EventContext.PersistentProperties["metadata"] = metadata;
+            // TODO:
+            // This is for backwards compatibility for Aurora team. This is a temporary solution until they
+            // are able to update downstream subscribers to use camel-casing for JSON property names
+            // (e.g. vmResourceName vs. VMResourceName or vMResourceName).
+            metadata = metadata.ObscureSecrets().ToDictionary(entry => entry.Key.CamelCased(), entry => entry.Value, StringComparer.OrdinalIgnoreCase);
 
-            MetadataContract.Persist(
-                metadata?.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                MetadataContractCategory.Default);
+            EventContext.PersistentProperties["metadata"] = metadata;
+            MetadataContract.Persist(metadata, MetadataContractCategory.Default);
         }
     }
 }

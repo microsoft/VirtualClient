@@ -1080,7 +1080,7 @@ namespace VirtualClient.Contracts
                     }
                 }
 
-                obscuredParameters[entry.Key?.CamelCased()] = value as TValue;
+                obscuredParameters[entry.Key] = value as TValue;
             }
 
             return obscuredParameters;

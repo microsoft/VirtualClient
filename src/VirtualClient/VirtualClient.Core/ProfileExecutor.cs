@@ -196,7 +196,9 @@ namespace VirtualClient
                 {
                     if (this.Profile.Metadata?.Any() == true)
                     {
-                        VirtualClientRuntime.Metadata.AddRange(this.Profile.Metadata, true);
+                        VirtualClientRuntime.Metadata.AddRange(
+                            this.Profile.Metadata.Select(entry => new KeyValuePair<string, IConvertible>(entry.Key.CamelCased(), entry.Value)),
+                            true);
                     }
 
                     // The parent context is created when the profile operations start up. We can use the
@@ -715,10 +717,20 @@ namespace VirtualClient
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
                         runtimeComponent.FailFast = this.FailFast;
 
-                        // Metadata: Profile Component-level (overrides global)
+                        // Global metadata. Supplied on the command line.
+                        if (VirtualClientRuntime.Metadata?.Any() == true)
+                        {
+                            runtimeComponent.Metadata.AddRange(
+                                VirtualClientRuntime.Metadata.Select(entry => new KeyValuePair<string, IConvertible>(entry.Key.CamelCased(), entry.Value)),
+                                true);
+                        }
+
+                        // Profile Component-level Metadata (overrides global)
                         if (component.Metadata?.Any() == true)
                         {
-                            runtimeComponent.Metadata.AddRange(component.Metadata, true);
+                            runtimeComponent.Metadata.AddRange(
+                                component.Metadata.Select(entry => new KeyValuePair<string, IConvertible>(entry.Key.CamelCased(), entry.Value)),
+                                true);
                         }
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))

@@ -604,6 +604,14 @@ namespace VirtualClient
             });
 
             base.SetGlobalTelemetryProperties(args);
+
+            // TODO:
+            // This is for gackwards compatibility for Aurora team. This is a temporary solution until they
+            // are able to update downstream subscribers to read experimentId and agentId from the custom dimensions
+            // proper vs. from the metadata within.
+            IDictionary<string, object> metadata = EventContext.PersistentProperties["metadata"] as IDictionary<string, object>;
+            metadata["experimentId"] = this.ExperimentId;
+            metadata["agentId"] = this.AgentId;
         }
 
         /// <summary>

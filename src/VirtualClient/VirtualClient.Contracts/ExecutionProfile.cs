@@ -55,7 +55,7 @@ namespace VirtualClient.Contracts
                 : new List<ExecutionProfileElement>();
 
             this.Metadata = metadata != null
-                ? new Dictionary<string, IConvertible>(metadata, StringComparer.OrdinalIgnoreCase)
+                ? new Dictionary<string, IConvertible>(metadata.Select(entry => new KeyValuePair<string, IConvertible>(entry.Key.CamelCased(), entry.Value)), StringComparer.OrdinalIgnoreCase)
                 : new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
             this.Parameters = parameters != null

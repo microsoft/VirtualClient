@@ -14,7 +14,6 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
@@ -76,11 +75,6 @@ namespace VirtualClient.Contracts
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
-
-            if (VirtualClientRuntime.Metadata?.Any() == true)
-            {
-                this.Metadata.AddRange(VirtualClientRuntime.Metadata, true);
-            }
 
             if (dependencies.TryGetService<ILogger>(out ILogger logger))
             {
@@ -580,6 +574,10 @@ namespace VirtualClient.Contracts
 
                     if (this.Metadata?.Any() == true)
                     {
+                        // TODO:
+                        // This is for backwards compatibility for Aurora team. This is a temporary solution until they
+                        // are able to update downstream subscribers to use camel-casing for JSON property names
+                        // (e.g. vmResourceName vs. VMResourceName or vMResourceName).
                         this.MetadataContract.Add(
                             this.Metadata.Keys.ToDictionary(key => key, entry => this.Metadata[entry] as object).ObscureSecrets(),
                             MetadataContractCategory.Default,

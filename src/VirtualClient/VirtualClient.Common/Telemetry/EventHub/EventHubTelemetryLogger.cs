@@ -149,7 +149,8 @@ namespace VirtualClient.Common.Telemetry
                 appHost = Environment.MachineName
             };
 
-            return new EventData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventObject, EventHubTelemetryLogger.DefaultJsonSerializationSettings)));
+            string serializedMessage = JsonConvert.SerializeObject(eventObject, EventHubTelemetryLogger.DefaultJsonSerializationSettings);
+            return new EventData(Encoding.UTF8.GetBytes(serializedMessage));
         }
 
         private static IEnumerable<KeyValuePair<string, object>> GetContextProperties(EventContext context, object bufferInfo = null)

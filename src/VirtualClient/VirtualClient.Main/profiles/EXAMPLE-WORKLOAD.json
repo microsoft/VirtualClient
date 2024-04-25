@@ -13,7 +13,8 @@
             "Type": "ExampleWorkloadExecutor",
             "Metadata": {
                 "ExampleMetadata1": "Value1",
-                "ExampleMetadata2": true
+                "ExampleMetadata2": true,
+                "VMResourceBob": "VM01"
             },
             "Parameters": {
                 "Scenario": "Scenario1",
