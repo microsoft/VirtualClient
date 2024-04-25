@@ -20,6 +20,7 @@ supported by Sysbench are as follows:
 | oltp_update_non_index | Measures performance of non-index updates on the MySQL database       |
 | select_random_points  | Measures performance of random point select on the MySQL database     |
 | select_random_ranges  | Measures performance of random range select on the MySQL database     |
+| tpcc                  | Runs the TPCC workload on the MySQL database. **Only TPCC Workload Available**             |
 
 
 ## Workload Metrics

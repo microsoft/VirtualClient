@@ -11,9 +11,6 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using MathNet.Numerics.Distributions;
-    using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -435,9 +432,7 @@ namespace VirtualClient.Actions
         internal class SysbenchScenario
         {
             public const string Balanced = nameof(Balanced);
-
             public const string InMemory = nameof(InMemory);
-
             public const string Configure = nameof(Configure);
         }
 
@@ -447,7 +442,6 @@ namespace VirtualClient.Actions
         internal class BenchmarkName
         {
             public const string OLTP = nameof(OLTP);
-
             public const string TPCC = nameof(TPCC);
         }
     }

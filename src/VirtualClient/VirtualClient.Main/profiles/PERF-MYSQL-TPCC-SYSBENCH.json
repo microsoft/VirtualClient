@@ -7,7 +7,6 @@
         "SupportedOperatingSystems": "Debian,Ubuntu"
     },
     "Parameters": {
-        "Benchmark": "TPCC", 
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Balanced",
         "Duration": "00:30:00"
@@ -25,7 +24,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "tpcc",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -83,7 +82,7 @@
             "Parameters": {
                 "Scenario": "InstallMySQLServer",
                 "Action": "InstallServer",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -93,7 +92,7 @@
             "Parameters": {
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -103,7 +102,7 @@
             "Parameters": {
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
                 "Role": "Server"
@@ -114,7 +113,7 @@
             "Parameters": {
                 "Scenario": "SetMySQLGlobalVariables",
                 "Action": "SetGlobalVariables",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
                 "PackageName": "mysql-server",
                 "Role": "Server"
@@ -124,7 +123,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "WarehouseCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -136,7 +135,7 @@
             "Type": "MySQLServerConfiguration",
             "Parameters": {
                 "Scenario": "DistributeMySQLDatabase",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
@@ -147,7 +146,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
-                "Benchmark": "$.Parameters.Benchmark",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",

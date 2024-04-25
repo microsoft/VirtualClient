@@ -5,13 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
     using Microsoft.Extensions.DependencyInjection;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -59,6 +55,12 @@ namespace VirtualClient.Actions
                         else if (this.Benchmark == BenchmarkName.TPCC)
                         {
                             await this.PrepareTPCCMySQLDatabase(telemetryContext, cancellationToken);
+                        }
+                        else
+                        {
+                            throw new DependencyException(
+                            $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".",
+                            ErrorReason.NotSupported);
                         }
                     }
                 });

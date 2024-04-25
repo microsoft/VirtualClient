@@ -10,7 +10,6 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;

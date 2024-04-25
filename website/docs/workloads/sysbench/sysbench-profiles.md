@@ -97,9 +97,9 @@ There are a lot of moving parts to this workload that allows for both out-of-box
   "Parameters": 
   {
     "Scenario": "PopulateMySQLDatabase",
-    "BenchmarkName": "OLTP",
+    "BenchmarkName": "TPCC",
     "DatabaseName": "sbtest",
-    "RecordCount": 1,
+    "WarehouseCount": 1,
     "NumTables": 10,
     "PackageName": "sysbench",
     "Role": "Server"
@@ -110,7 +110,7 @@ There are a lot of moving parts to this workload that allows for both out-of-box
   "Parameters": 
   {
     "Scenario": "DistributeMySQLDatabase",
-    "BenchmarkName": "OLTP",
+    "BenchmarkName": "TPCC",
     "Action": "DistributeDatabase",
     "DatabaseName": "sbtest",
     "NumTables": 10,
@@ -123,10 +123,10 @@ There are a lot of moving parts to this workload that allows for both out-of-box
   "Parameters": 
   {
     "Scenario": "PopulateMySQLDatabase",
-    "BenchmarkName": "OLTP",
+    "BenchmarkName": "TPCC",
     "DatabaseName": "sbtest",
     "NumTables": 10,
-    "RecordCount": 10000,
+    "WarehouseCount": 100,
     "PackageName": "sysbench",
     "Role": "Server"
   }
@@ -192,4 +192,62 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   # When running in a client/server environment
   ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
   ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Server01  --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
+  ```
+
+## PERF-MYSQL-TPCC-SYSBENCH.json
+Runs a system-intensive workload using the Sysbench Benchmark to test the bandwidth of CPU, Memory, and Disk I/O.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-TPCC-SYSBENCH.json) 
+
+* **Supported Platform/Architectures**
+  * linux-x64
+  * linux-arm64
+
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to Virtual Client profiles.
+
+  | Parameter                 | Purpose                                                                                                                 |Default      |
+  |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
+  | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
+  | DatabaseScenario           | Not Required. Configures the scenario in which to stress the database.                                      | Balanced          |
+  | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. TPCC)                                     | N/A          |
+  | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
+  | Workload              | Required. Use "tpcc" workload.                                   | N/A          |
+
+  The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
+
+  | Parameter                 | Purpose                                                                                                                 |Default      |
+  |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
+  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8     |
+  | WarehouseCount       | Not Required. Number of warehouses per table in the database.                                               | 100       |
+  | NumTables             | Not Required. Number of tables created in the database.                         | 10              |
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores.
+
+* **Usage Examples**
+  The following section provides a few basic examples of how to use the workload profile.
+
+  ``` bash
+  # When running on a single system (environment layout not required)
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440" --packageStore="{BlobConnectionString|SAS Uri}
+
+  # Override the default database name
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440" --parameters="DatabaseName=mytestDB" --packageStore="{BlobConnectionString|SAS Uri}
+
+  # When running in a client/server environment
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Server01  --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
   ```

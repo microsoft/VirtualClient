@@ -175,6 +175,12 @@ namespace VirtualClient.Actions
                     {
                         await this.RunTPCCWorkloadAsync(telemetryContext, cancellationToken);
                     }
+                    else
+                    {
+                        throw new DependencyException(
+                            $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".", 
+                            ErrorReason.NotSupported);
+                    }
                 }
             });
         }
