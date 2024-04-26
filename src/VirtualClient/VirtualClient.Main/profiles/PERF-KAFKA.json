@@ -27,7 +27,7 @@
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Setup-topic-replication-factor-one-sync",
+        "Scenario": "Create-topic-replication-factor-one-sync",
         "PackageName": "kafka",
         "ServerInstances": "$.Parameters.ServerInstances",
         "MaxClientInstances": "$.Parameters.ClientInstances",
@@ -35,13 +35,13 @@
         "WarmUp": true,
         "CommandLine": "--create --topic sync-test-rep-one --partitions {Partitions} --replication-factor 1 --bootstrap-server {0}:9092",
         "Role": "Client",
-        "CommandType": "Setup"
+        "CommandType": "CreateTopic"
       }
     },
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Setup-topic-replication-factor-dynamic-sync",
+        "Scenario": "Create-topic-replication-factor-dynamic-sync",
         "PackageName": "kafka",
         "WarmUp": true,
         "ServerInstances": "$.Parameters.ServerInstances",
@@ -49,13 +49,13 @@
         "Partitions": "$.Parameters.Partitions",
         "CommandLine": "--create --topic sync-test-rep-dynamic --partitions {Partitions} --replication-factor $ReplicationFactor --bootstrap-server {0}:9092",
         "Role": "Client",
-        "CommandType": "Setup"
+        "CommandType": "CreateTopic"
       }
     },
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Setup-topic-replication-factor-dynamic-async",
+        "Scenario": "Create-topic-replication-factor-dynamic-async",
         "PackageName": "kafka",
         "WarmUp": true,
         "ServerInstances": "$.Parameters.ServerInstances",
@@ -63,7 +63,7 @@
         "Partitions": "$.Parameters.Partitions",
         "CommandLine": "--create --topic async-test-rep-dynamic --partitions {Partitions} --replication-factor $ReplicationFactor --bootstrap-server {0}:9092",
         "Role": "Client",
-        "CommandType": "Setup"
+        "CommandType": "CreateTopic"
       }
     },
     {

@@ -26,9 +26,9 @@ namespace VirtualClient.Actions
     public enum KafkaCommandType
     {
         /// <summary>
-        /// Setup the server by creating kafka topics.
+        /// Create kafka topics.
         /// </summary>
-        Setup,
+        CreateTopic,
 
         /// <summary>
         /// Run producer script.
@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
             base.Validate();
             if (!Enum.IsDefined(typeof(KafkaCommandType), this.CommandType))
             {
-                throw new ArgumentException($"Parameter CommandType should be one of ${KafkaCommandType.Setup}, ${KafkaCommandType.ProducerTest} or ${KafkaCommandType.ConsumerTest}");
+                throw new ArgumentException($"Parameter CommandType should be one of ${KafkaCommandType.CreateTopic}, ${KafkaCommandType.ProducerTest} or ${KafkaCommandType.ConsumerTest}");
             }
         }
 
@@ -186,7 +186,7 @@ namespace VirtualClient.Actions
 
             switch (this.CommandType)
             {
-                case KafkaCommandType.Setup:
+                case KafkaCommandType.CreateTopic:
                     this.KafkaCommandScriptPath = this.KafkaTopicScriptPath;
                     break;
                 case KafkaCommandType.ProducerTest:

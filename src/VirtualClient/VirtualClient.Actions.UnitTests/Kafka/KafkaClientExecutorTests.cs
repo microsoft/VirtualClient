@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
                 ["Port"] = 9092,
                 ["PackageName"] = this.mockKafkaPackage.Name,
                 ["CommandLine"] = "--create --topic sync-test-rep-one --partitions 6 --replication-factor 1 --bootstrap-server {0}:{Port}",
-                ["CommandType"] = KafkaCommandType.Setup
+                ["CommandType"] = KafkaCommandType.CreateTopic
             };
 
             this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -76,10 +76,10 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, KafkaCommandType.Setup, "kafka-topics.bat")]
+        [TestCase(PlatformID.Win32NT, KafkaCommandType.CreateTopic, "kafka-topics.bat")]
         [TestCase(PlatformID.Win32NT, KafkaCommandType.ProducerTest, "kafka-producer-perf-test.bat")]
         [TestCase(PlatformID.Win32NT, KafkaCommandType.ConsumerTest, "kafka-consumer-perf-test.bat")]
-        [TestCase(PlatformID.Unix, KafkaCommandType.Setup, "kafka-topics.sh")]
+        [TestCase(PlatformID.Unix, KafkaCommandType.CreateTopic, "kafka-topics.sh")]
         [TestCase(PlatformID.Unix, KafkaCommandType.ProducerTest, "kafka-producer-perf-test.sh")]
         [TestCase(PlatformID.Unix, KafkaCommandType.ConsumerTest, "kafka-consumer-perf-test.sh")]
         public async Task KafkaClientExecutorConfirmsTheExpectedKafkStartaScript(PlatformID platformID, KafkaCommandType kafkaCommandType, string commandScript)
@@ -99,7 +99,7 @@ namespace VirtualClient.Actions
         public async Task KafkaClientExecutorExecutesWorkloadForSetup(PlatformID platformID)
         {
             this.SetupTests(platformID);
-            this.fixture.Parameters["CommandType"] = KafkaCommandType.Setup;
+            this.fixture.Parameters["CommandType"] = KafkaCommandType.CreateTopic;
             this.fixture.Parameters["CommandLine"] = "--create --topic sync-test-rep-one --partitions 6 --replication-factor 1 --bootstrap-server {0}:{Port}";
             this.fixture.FileSystem.Setup(fe => fe.Directory.Delete(It.IsAny<string>()));
 

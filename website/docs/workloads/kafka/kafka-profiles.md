@@ -104,7 +104,7 @@ Runs the Kafka workload using this profile which uses kafka-producer-perf-test a
   | MaxClientInstances        | The max number of client instances that can run concurrently. | 3 |
   | Partitions                | The number of partitions to create of topics. | 3 |
   | RecordSize              | Optional. It defines the size of record| 100 |
-  | CommandType               | Command type value can be one of - Setup, ProducerTest and ConsumerTest | |
+  | CommandType               | Command type value can be one of - CreateTopic, ProducerTest and ConsumerTest | |
 
 
 * **Profile Runtimes**  
