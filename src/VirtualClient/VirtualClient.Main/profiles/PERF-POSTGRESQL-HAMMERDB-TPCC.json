@@ -9,8 +9,8 @@
   "Parameters": {
     "DatabaseName": "hammerdbtest",
     "Port": "5432",
-    "VirtualUsers": "{calculate({LogicalCoreCount} * 10)}",
-    "WarehouseCount": "{calculate({LogicalCoreCount} * 80)}",
+    "VirtualUsers": "{calculate({LogicalCoreCount})}",
+    "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 1.5/80)}",
     "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
   },
   "Actions": [
