@@ -40,7 +40,7 @@ namespace VirtualClient.Actions.DiskPerformance
         public void SetupTest()
         {
             this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix, System.Runtime.InteropServices.Architecture.X64);
+            this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupMocks();
 
             // Setup default profile parameter values.
