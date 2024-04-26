@@ -1039,34 +1039,11 @@ namespace VirtualClient.Actions
         private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
         {
             string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
-            int direct = 1;
 
             foreach (string key in this.Parameters.Keys)
             {
                 text = text.Replace($"${{{key.ToLower()}}}", this.Parameters.GetValue<string>(key));
             }
-
-            int randomReadQueueDepth = int.Parse(this.Parameters.GetValue<string>("RandomReadQueueDepth"));
-            int randomReadNumJobs = int.Parse(this.Parameters.GetValue<string>("RandomReadNumJobs"));
-            int randomWriteQueueDepth = int.Parse(this.Parameters.GetValue<string>("RandomWriteQueueDepth"));
-            int randomWriteNumJobs = int.Parse(this.Parameters.GetValue<string>("RandomWriteNumJobs"));
-            int sequentialReadQueueDepth = int.Parse(this.Parameters.GetValue<string>("SequentialReadQueueDepth"));
-            int sequentialReadNumJobs = int.Parse(this.Parameters.GetValue<string>("SequentialReadNumJobs"));
-            int sequentialWriteQueueDepth = int.Parse(this.Parameters.GetValue<string>("SequentialWriteQueueDepth"));
-            int sequentialWriteNumJobs = int.Parse(this.Parameters.GetValue<string>("SequentialWriteNumJobs"));
-
-            int randomReadIOdepth = randomReadQueueDepth / randomReadNumJobs;
-            int randomWriteIOdepth = randomWriteQueueDepth / randomWriteNumJobs;
-            int sequentialReadIOdepth = sequentialReadQueueDepth / sequentialReadNumJobs;
-            int sequentialWriteIOdepth = sequentialWriteQueueDepth / sequentialWriteNumJobs;
-
-            text = text.Replace($"${{{nameof(randomReadIOdepth).ToLower()}}}", randomReadIOdepth.ToString());
-            text = text.Replace($"${{{nameof(randomWriteIOdepth).ToLower()}}}", randomWriteIOdepth.ToString());
-            text = text.Replace($"${{{nameof(sequentialReadIOdepth).ToLower()}}}", sequentialReadIOdepth.ToString());
-            text = text.Replace($"${{{nameof(sequentialWriteIOdepth).ToLower()}}}", sequentialWriteIOdepth.ToString());
-
-            text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
-            text = text.Replace("${directio}", direct.ToString());
 
             this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
         }

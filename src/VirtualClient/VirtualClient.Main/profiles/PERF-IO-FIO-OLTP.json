@@ -43,12 +43,12 @@
         "DeleteTestFilesOnFinish": false,
         "Tags": "IO,FIO,OLTP",
         "DurationSec": "180",
-	      "RandomIOFilePath": "/dev/sdc",
-	      "SequentialIOFilePath": "/dev/sdc",
-	      "RandomReadIOPS": 270,
-	      "RandomWriteIOPS": 270,
-	      "SequentialReadIOPS": 270,
-	      "SequentialWriteIOPS": 270,
+        "RandomIOFilePath": "/dev/sdc",
+        "SequentialIOFilePath": "/dev/sdc",
+        "RandomReadIOPS": 270,
+        "RandomWriteIOPS": 270,
+        "SequentialReadIOPS": 270,
+        "SequentialWriteIOPS": 270,
         "GroupReporting": "0",
         "RandomIOFileSize": "10G",
         "RandomReadBlockSize": "8K",
@@ -68,7 +68,13 @@
         "SequentialWriteBlockSize": "56K",
         "SequentialWriteNumJobs": 1,
         "SequentialWriteQueueDepth": 64,
-        "SequentialWriteWeight": 329
+        "SequentialWriteWeight": 329,
+        "RandomReadIOdepth": "{calculate({RandomReadQueueDepth}/{RandomReadNumJobs})}",
+        "RandomWriteIOdepth": "{calculate({RandomWriteQueueDepth}/{RandomWriteNumJobs})}",
+        "SequentialReadIOdepth": "{calculate({SequentialReadQueueDepth}/{SequentialReadNumJobs})}",
+        "SequentialWriteIOdepth": "{calculate({SequentialWriteQueueDepth}/{SequentialWriteNumJobs})}",
+        "DirectIO": 1,
+        "IOEngine": "libaio"
       }
     }
   ],
