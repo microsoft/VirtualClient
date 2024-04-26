@@ -109,5 +109,16 @@ namespace VirtualClient
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
+
+        private static CommandLineBuilder SetupCommandLine2(string[] args, CancellationTokenSource cancellationTokenSource)
+        {
+            RootCommand rootCommand = new RootCommand("Installs a dependency on the system.")
+            {
+                Handler = CommandHandler.Create<InstallCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource))
+            };
+
+
+            return new CommandLineBuilder(rootCommand).WithDefaults();
+        }
     }
 }

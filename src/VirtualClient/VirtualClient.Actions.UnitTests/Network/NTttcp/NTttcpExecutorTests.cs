@@ -125,6 +125,57 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public async Task NTttcpExecutorClientWillNotExitOnCancellationRequestUntilTheResultsAreCaptured()
+        {
+            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await networkingWorkloadExecutor.OnInitialize.Invoke(EventContext.None, CancellationToken.None);
+
+            int processExecuted = 0;
+            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            {
+                InMemoryProcess process = new InMemoryProcess()
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo()
+                    {
+                        FileName = file,
+                        Arguments = arguments,
+                    },
+                    OnHasExited = () => true,
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    StandardOutput = new VirtualClient.Common.ConcurrentBuffer()
+                };
+
+                if (!arguments.Contains("chmod"))
+                {
+                    processExecuted++;
+                    this.networkingWorkloadState.ToolState = NetworkingWorkloadToolState.Stopped;
+                    var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.networkingWorkloadState);
+
+                    this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                         .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+                }
+
+                string standardOutput = null;
+                if (file.Contains("sysctl"))
+                {
+                    string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "Examples", "NTttcp", "sysctlExampleOutput.txt"));
+                    process.StandardOutput.Append(standardOutput);
+                }
+
+                return process;
+            };
+
+            TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+            //Process 1: Ntttcp, Process 2: Sysctl
+            Assert.AreEqual(2, processExecuted);
+        }
+
+        [Test]
         public async Task NTttcpExecutorServerExecutesAsExpected()
         {
             NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);

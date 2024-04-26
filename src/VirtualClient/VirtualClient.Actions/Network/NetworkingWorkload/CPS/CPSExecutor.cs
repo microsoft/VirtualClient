@@ -5,7 +5,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -26,9 +25,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     [UnixCompatible]
     public class CPSExecutor : NetworkingWorkloadToolExecutor
     {
-        private const string OutputFileName = "cps-results.xml";
         private IFileSystem fileSystem;
-        private string results;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSClientExecutor"/> class.
@@ -38,7 +35,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
             this.fileSystem = dependencies.GetService<IFileSystem>();
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
                 .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
@@ -206,16 +202,14 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Name = $"{this.Scenario} {this.Role}";
             this.ProcessName = "cps";
             this.Tool = NetworkingWorkloadTool.CPS;
-            this.ResultsPath = this.PlatformSpecifics.Combine(workloadPackage.Path, CPSExecutor.OutputFileName);
-            this.results = null;
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "cps.exe");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "cps.exe");
             }
             else if (this.Platform == PlatformID.Unix)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "cps");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "cps");
             }
             else
             {
@@ -252,7 +246,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             IProcessProxy process = null;
 
@@ -272,16 +266,19 @@ namespace VirtualClient.Actions.NetworkPerformance
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
+                                await this.LogProcessDetailsAsync(process, relatedContext, "CPS");
+                                process.ThrowIfWorkloadFailed();
 
-                                if (process.IsErrored())
-                                {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CPS", logToFile: true);
-                                    process.ThrowIfWorkloadFailed();
-                                }
-                                else
-                                {
-                                    this.results = process.StandardOutput.ToString();
-                                }
+                                this.CaptureMetrics(
+                                    process.StandardOutput.ToString(),
+                                    process.FullCommand(),
+                                    process.StartTime,
+                                    process.ExitTime,
+                                    relatedContext);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                // Expected when the client signals a cancellation.
                             }
                             catch (TimeoutException exc)
                             {
@@ -298,7 +295,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 throw new WorkloadException($"CPS workload failed to start successfully", exc, ErrorReason.WorkloadFailed);
                             }
                         }
-                    }).ConfigureAwait(false);
+                    });
                 }
 
                 return process;
@@ -308,9 +305,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
-            if (!string.IsNullOrWhiteSpace(this.results))
+            if (!string.IsNullOrWhiteSpace(results))
             {
                 this.MetadataContract.AddForScenario(
                     this.Tool.ToString(),
@@ -319,7 +316,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                MetricsParser parser = new CPSMetricsParser(this.results, this.ConfidenceLevel, this.WarmupTime);
+                MetricsParser parser = new CPSMetricsParser(results, this.ConfidenceLevel, this.WarmupTime);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(
@@ -335,10 +332,10 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
             else
             {
-                throw new WorkloadException($"Workload results missing. The CPS workload did not produce any valid results.");
+                throw new WorkloadException(
+                    $"Workload results missing. The CPS workload did not produce valid results.",
+                    ErrorReason.WorkloadResultsNotFound);
             }
-
-            return Task.CompletedTask;
         }
     }
 }
