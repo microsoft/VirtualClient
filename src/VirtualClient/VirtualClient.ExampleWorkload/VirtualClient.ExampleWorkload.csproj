@@ -9,7 +9,7 @@
         <RunAnalyzers>false</RunAnalyzers>
         <IsPackable>true</IsPackable>
         <DelaySign>false</DelaySign>
-        <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118</NoWarn>
+        <NoWarn>CA1416,IL2026,IL2104,IL2072,IL3000,NU5100,NU5118,NU5128,SA1118</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

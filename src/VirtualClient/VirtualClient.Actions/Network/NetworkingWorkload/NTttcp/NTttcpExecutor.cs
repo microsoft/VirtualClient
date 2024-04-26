@@ -39,7 +39,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
 
@@ -293,7 +292,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             IProcessProxy process = null;
 
@@ -307,6 +306,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
+                        await this.DeleteResultsFileAsync();
+
                         using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
                             try
@@ -316,16 +317,25 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (process.IsErrored())
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp");
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp");
                                     process.ThrowIfWorkloadFailed();
                                 }
                                 else
                                 {
-                                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
+                                    string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray());
 
-                                    string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp", results: results.AsArray(), logToFile: true);
+                                    this.CaptureMetrics(
+                                        results,
+                                        process.FullCommand(),
+                                        process.StartTime,
+                                        process.ExitTime,
+                                        relatedContext);
                                 }
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                // Expected when the client signals a cancellation.
                             }
                             catch (TimeoutException exc)
                             {
@@ -341,7 +351,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 throw;
                             }
                         }
-                    }).ConfigureAwait(false);
+                    });
                 }
 
                 return process;
@@ -351,65 +361,66 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
-            this.MetadataContract.AddForScenario(
-                this.Tool.ToString(),
-                commandArguments,
-                toolVersion: null);
-
-            IFile fileAccess = this.SystemManagement.FileSystem.File;
-            EventContext relatedContext = telemetryContext.Clone();
-
-            if (fileAccess.Exists(this.ResultsPath))
+            if (!string.IsNullOrWhiteSpace(results))
             {
-                string resultsContent = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None)
-                    .ConfigureAwait(false);
+                this.MetadataContract.AddForScenario(
+                    this.Tool.ToString(),
+                    commandArguments,
+                    toolVersion: null);
 
-                if (!string.IsNullOrWhiteSpace(resultsContent))
+                EventContext relatedContext = telemetryContext.Clone();
+                MetricsParser parser = new NTttcpMetricsParser(results, this.IsInClientRole);
+                IList<Metric> metrics = parser.Parse();
+
+                if (parser.Metadata.Any())
                 {
-                    MetricsParser parser = new NTttcpMetricsParser(resultsContent, this.IsInClientRole);
-                    IList<Metric> metrics = parser.Parse();
+                    this.MetadataContract.Add(
+                        parser.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value as object),
+                        MetadataContractCategory.Scenario,
+                        true);
 
-                    if (parser.Metadata.Any())
+                    foreach (var entry in parser.Metadata)
                     {
-                        this.MetadataContract.Add(
-                            parser.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                            MetadataContractCategory.Scenario,
-                            true);
-
-                        foreach (var entry in parser.Metadata)
-                        {
-                            relatedContext.Properties[entry.Key] = entry.Value;
-                        }
-                    }
-
-                    this.MetadataContract.Apply(telemetryContext);
-
-                    this.Logger.LogMetrics(
-                        this.Tool.ToString(),
-                        this.Name,
-                        startTime,
-                        endTime,
-                        metrics,
-                        string.Empty,
-                        commandArguments,
-                        this.Tags,
-                        relatedContext);
-
-                    if (this.Platform == PlatformID.Unix)
-                    {
-                        string sysctlResults = await this.GetSysctlOutputAsync(CancellationToken.None);
-
-                        if (!string.IsNullOrWhiteSpace(sysctlResults))
-                        {
-                            SysctlParser sysctlParser = new SysctlParser(sysctlResults);
-                            string parsedSysctlResults = sysctlParser.Parse();
-
-                            relatedContext.AddContext("sysctlResults", parsedSysctlResults);
-                        }
+                        relatedContext.Properties[entry.Key] = entry.Value;
                     }
                 }
+
+                this.MetadataContract.Apply(relatedContext);
+
+                this.Logger.LogMetrics(
+                    this.Tool.ToString(),
+                    this.Name,
+                    startTime,
+                    endTime,
+                    metrics,
+                    string.Empty,
+                    commandArguments,
+                    this.Tags,
+                    relatedContext);
+
+                if (this.Platform == PlatformID.Unix)
+                {
+                    string sysctlResults = this.GetSysctlOutputAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+                    if (!string.IsNullOrWhiteSpace(sysctlResults))
+                    {
+                        SysctlParser sysctlParser = new SysctlParser(sysctlResults);
+                        string parsedSysctlResults = sysctlParser.Parse();
+
+                        relatedContext.AddContext("sysctlResults", parsedSysctlResults);
+                    }
+                }
+            }
+        }
+
+        private async Task DeleteResultsFileAsync()
+        {
+            if (this.SystemManagement.FileSystem.File.Exists(this.ResultsPath))
+            {
+                await this.SystemManagement.FileSystem.File.DeleteAsync(this.ResultsPath)
+                    .ConfigureAwait(false);
             }
         }
 

@@ -18,143 +18,182 @@ the Redis server and provides throughput and latency percentile distributions.
 The following metrics are examples of those captured by the Virtual Client when running the Memtier workload against a
 Redis server.
 
-|ToolName       | ScenarioName          | Metric Name  | Example Value  | Unit |
-|--------------|-------------------------|--------------|---------------|-------|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Throughput_Avg	| 96143.676666666681|	requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Throughput_Max	|99310.66	        | requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Throughput_Min	|93126.7	        |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Throughput_Stdev|	1756.3137622699699|	requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Throughput_P80	|98123.77	        |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Throughput_Sum	|1153724.12	        |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Hits/sec_Avg	|48070.774999999994	|             |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Hits/sec_Max	|49654.27	|                     |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Hits/sec_Min	|46562.29	|                      |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Hits/sec_Stdev	|878.156472669686   |	           |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Hits/sec_P80	|49060.82	        |              |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Hits/sec_Sum	|576849.29999999993	|               |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Misses/sec_Avg	|0	                |               |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Misses/sec_Min	|0	                |               |   
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Misses/sec_Max	|0	                |               |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Misses/sec_Stdev|	0	            |               |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Misses/sec_P80	|0	                |               |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Misses/sec_Sum	|0	                |               |
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-Avg_Avg	|265.929245	        |milliseconds|             
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-Avg_Min	|257.37339	        |milliseconds|         
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-Avg_Max	|274.49494	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-Avg_Stdev|	4.8649509314371953	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-Avg_P80	|268.37573	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P50_Avg	|258.4736666666667	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P50_Min	|252.927	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P50_Max	|266.239	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P50_Stdev|	3.9095334191634046|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P50_P80	 |260.095	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P90_Min	 |331.775	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P90_Avg	 |337.74833333333333|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P90_P80	 |339.967	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P90_Max	 |348.159	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P90_Stdev|	4.6894529413236388|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P95_Min	 |346.111	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P95_Avg	 |354.4736666666667	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P95_Max	 |364.543	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P95_Stdev|	4.6894529413236388|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P95_P80	 |356.351	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99_Avg	 |385.36433333333338|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99_Min	 |376.831	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99_Max	 |397.311	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99_Stdev|	5.3427117542394855|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99_P80	 |389.119	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Avg|	442.02566666666667|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Min|	411.647	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Max|	532.479	        |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Stdev	|32.01080706400402|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Latency-P99.9_P80	|452.607	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Bandwidth_Avg	 |99831.145833333328|	kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Bandwidth_Min	 |96698.49	        |   kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Bandwidth_Stdev	 |1823.6575402628735|	kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Bandwidth_Max	 |103119.55	        |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1||Bandwidth_P80	 |101887.18	        |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Throughput_Avg|	48070.774999999994|	requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|Bandwidth_Sum	 |1197973.75    	|kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Throughput_Min|	46562.29	    |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Throughput_Max|	49654.27	    |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Throughput_P80|	49060.82	    |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Throughput_Stdev|	878.156472669686	|requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Throughput_Sum	|576849.29999999993	|requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Avg	|265.9334425	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Min	|257.37776	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_P80	|268.38027	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Max	|274.49896	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Stdev|	4.8649389483855519|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Avg	 |258.4736666666667	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Min	 |252.927	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Max	 |266.239	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Avg	 |337.74833333333333|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Stdev|	4.6894529413236388|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Min	 |331.775	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Max	 |348.159	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Stdev|	3.9095334191634046|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_P80	 |260.095	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_P80	 |339.967	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Avg	 |354.81500000000005|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Min	 |346.111	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Max	 |364.543	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Stdev|	5.0252567430265076|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_P80	|356.351	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Avg	|386.047	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Min	|376.831	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Max	|397.311	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Stdev|	5.3208600808515767|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_P80	 |391.167	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Avg|	442.87900000000008|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Min|	411.647	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Max|	532.479	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Stdev|	31.706816932640848|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_P80	|454.655	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Avg	 |49797.129166666673|	kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Stdev	 |909.68510072129129|	kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Min	 |48234.48	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Max	 |51437.47	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_P80	 |50822.73	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Throughput_Avg	 |48072.902499999989|	requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Sum	 |597565.55	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Throughput_Min	 |46564.42	    |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Throughput_Max	 |49656.39	    |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Throughput_P80	 |49062.95	    |requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Throughput_Stdev	|878.15536932182385|	requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Throughput_Sum	 |576874.82999999984|	requests/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Avg	 |265.92504749999995|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Min	 |257.36902	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Max	 |274.49091	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_P80	 |268.37118	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Avg	 |258.4736666666667|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Stdev|	4.8649615272924267|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Min	 |252.927	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Max	 |266.239	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_P80	 |260.095	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Avg	 |337.74833333333333|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Stdev|	3.9095334191634046|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Min	 |331.775	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Max	 |348.159	    |milli0seconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Stdev|	4.6894529413236388|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_P80	 |339.967	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Avg	 |354.30299999999994|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Min	 |346.111	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Max	 |364.543	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Stdev|	4.8029857380591956|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_P80	 |356.351	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Stdev|	5.1850095039021333|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Min	 |374.783	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Avg	 |384.85233333333332|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_P80	 |389.119	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Max	 |395.263	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Avg|	441.17233333333337|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Min|	409.599 	|milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Max|	536.575	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Stdev	|33.438038432632723|	milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Avg	 |50034.015833333331|	kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_P80|	450.559	    |milliseconds|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Min	 |48464.01	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_P80	 |51064.45	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Stdev	 |913.97098802841549|	kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Sum	 |600408.19	    |kilobytes/sec|
-|Memtier-Redis	|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Max	 |51682.07	    |kilobytes/sec|
+### Raw Metrics - Memtier Benchmark
+The following table shows the list of metrics that are captured from the execution of the Memtier workload against a Redis server. Each Memtier 
+client will produce the following metrics. Certain profiles for Virtual Client capture aggregate metrics as well (see below).
+
+| ScenarioName          | Metric Name  | Example Value  | Unit |
+|-------------------------|------------|----------------|-------|
+|memtier_16t_16c_1kb_r1:1|Bandwidth	 |99831.145833333328|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput	| 96143.676666666681|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|Hits/sec	    |48070.774999999994	|             |
+|memtier_16t_16c_1kb_r1:1|Misses/sec	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Latency-Avg |265.929245	        |milliseconds|             
+|memtier_16t_16c_1kb_r1:1|Latency-P50 |258.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P80 |299.226  	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90  |331.775	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95  |346.111	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99  |385.36433333333338|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9 |	442.02566666666667|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth	 |49797.129166666673|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput |	48070.774999999994|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-Avg	|265.9334425	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P50	 |258.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P90	 |331.775	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P95	 |354.81500000000005|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99	|386.047	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99.9 |	442.87900000000008|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth	 |50034.015833333331|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput	 |48072.902499999989|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-Avg	 |265.92504749999995|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P50	 |266.239	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P90	 |348.159	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P95	 |364.543	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99	 |395.263	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99.9 |	441.17233333333337|	milliseconds|
+
+### Aggregated Metrics - Memtier Benchmark
+The following tables shows the list of metrics that are captured from the execution of the Memtier workload against a Redis server. The metrics
+are the result of aggregating the raw metrics (see above) for each individual Memtier client into a single set.
+
+| ScenarioName          | Metric Name  | Example Value  | Unit |
+|-------------------------|--------------|---------------|-------|
+|memtier_16t_16c_1kb_r1:1|Bandwidth Avg	 |99831.145833333328|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth Min	 |96698.49	        |   kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth Stddev	 |1823.6575402628735|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth Max	 |103119.55	        |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth P20	 |98381.842	        |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth P50	 |100443.297	        |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth P80	 |101887.18	        |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth Total |1197973.75    	|kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput Avg	| 96143.676666666681|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput Max	|99310.66	        | requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput Min	|93126.7	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput Stddev|	1756.3137622699699|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput P20	|94854.33	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput P50	|95182.65	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput P80	|98123.77	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput Total	|1153724.12	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Hits/sec Avg	|48070.774999999994	|             |
+|memtier_16t_16c_1kb_r1:1|Hits/sec Max	|49654.27	|                     |
+|memtier_16t_16c_1kb_r1:1|Hits/sec Min	|46562.29	|                      |
+|memtier_16t_16c_1kb_r1:1|Hits/sec Stddev	|878.156472669686   |	           |
+|memtier_16t_16c_1kb_r1:1|Hits/sec Total	|576849.29999999993	|               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec Avg	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec Min	|0	                |               |   
+|memtier_16t_16c_1kb_r1:1|Misses/sec Max	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec Stddev|	0	            |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec Total	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Latency-Avg Avg	|265.929245	        |milliseconds|             
+|memtier_16t_16c_1kb_r1:1|Latency-Avg Min	|257.37339	        |milliseconds|         
+|memtier_16t_16c_1kb_r1:1|Latency-Avg Max	|274.49494	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-Avg Stddev|	4.8649509314371953	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-Avg P80	|268.37573	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50 Avg	|258.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50 Min	|252.927	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50 Max	|266.239	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50 Stddev|	3.9095334191634046|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50 P80	 |260.095	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90 Min	 |331.775	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90 Avg	 |337.74833333333333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90 P80	 |339.967	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90 Max	 |348.159	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90 Stddev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95 Min	 |346.111	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95 Avg	 |354.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95 Max	 |364.543	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95 Stddev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95 P80	 |356.351	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99 Avg	 |385.36433333333338|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99 Min	 |376.831	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99 Max	 |397.311	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99 Stddev|	5.3427117542394855|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99 P80	 |389.119	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9 Avg|	442.02566666666667|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9 Min|	411.647	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9 Max|	532.479	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9 Stddev	|32.01080706400402|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth Avg	 |49797.129166666673|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth Min	 |48234.48	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth Max	 |51437.47	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth Stddev	 |909.68510072129129|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth P20	 |47827.237	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth P50	 |48389.11	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth P80	 |50822.73	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Bandwidth Total	 |597565.55	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput Avg|	48070.774999999994|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput Min|	46562.29	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput Max|	49654.27	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput Stddev|	878.156472669686	|requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput P20|	47922.592	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput P50|	48103.772	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput P80|	49060.82	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Throughput Total	|576849.29999999993	|requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-Avg Avg	|265.9334425	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-Avg Min	|257.37776	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-Avg Max	|274.49896	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-Avg Stddev|	4.8649389483855519|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P50 Avg	 |258.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P50 Min	 |252.927	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P50 Max	 |266.239	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P50 Stddev|	3.9095334191634046|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P80 Avg	 |301.428	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P80 Min	 |260.095	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P80 Max	 |339.967	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P80 Stddev|	4.3814413423246189|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P90 Avg	 |337.74833333333333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P90 Min	 |331.775	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P90 Max	 |348.159	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P90 Stddev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P95 Avg	 |354.81500000000005|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P95 Min	 |346.111	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P95 Max	 |364.543	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P95 Stddev|	5.0252567430265076|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99 Avg	|386.047	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99 Min	|376.831	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99 Max	|397.311	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99 Stddev|	5.3208600808515767|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99.9 Avg|	442.87900000000008|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99.9 Min|	411.647	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99.9 Max|	532.479	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET-Latency-P99.9 Stddev|	31.706816932640848|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth Avg	 |50034.015833333331|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth Min	 |48464.01	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth Max	 |51682.07	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth Stddev	 |913.97098802841549|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth P20	 |48003.542	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth P50	 |49993.77	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth P80	 |51064.45	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Bandwidth Total	 |600408.19	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput Avg	 |48072.902499999989|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput Min	 |46564.42	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput Max	 |49656.39	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput Stddev	|878.15536932182385|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput P20	 |46291.362	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput P50	 |48556.10	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput P80	 |49062.95	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Throughput Total	 |576874.82999999984|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-Avg Avg	 |265.92504749999995|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-Avg Min	 |257.36902	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-Avg Max	 |274.49091	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-Avg Stddev|	4.8649615272924267|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P50 Avg	 |258.4736666666667|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P50 Min	 |252.927	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P50 Max	 |266.239	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P50 Stddev|	3.9095334191634046|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P90 Avg	 |337.74833333333333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P90 Min	 |331.775	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P90 Max	 |348.159	    |milli0seconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P90 Stddev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P95 Avg	 |354.30299999999994|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P95 Min	 |346.111	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P95 Max	 |364.543	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P95 Stddev|	4.8029857380591956|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99 Avg	 |384.85233333333332|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99 Min	 |374.783	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99 Max	 |395.263	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99 Stddev|	5.1850095039021333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99.9 Avg|	441.17233333333337|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99.9 Min|	409.599 	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99.9 Max|	536.575	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET-Latency-P99.9 Stddev	|33.438038432632723| milliseconds |
