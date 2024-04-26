@@ -1026,7 +1026,7 @@ namespace VirtualClient.Actions
             foreach (string templateJobFilePath in templateJobFilePaths)
             {
                 // Create/update new job file at runtime.
-                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, nameof(FioExecutor), "updated.jobfile");
+                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "updated.jobfile");
                 this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
 
                 // Update command line to include the new job file.
@@ -1043,7 +1043,7 @@ namespace VirtualClient.Actions
 
             foreach (string key in this.Parameters.Keys)
             {
-                text = text.Replace($"{{{nameof(key).ToLower()}}}", this.Parameters.GetValue<string>(key));
+                text = text.Replace($"${{{key.ToLower()}}}", this.Parameters.GetValue<string>(key));
             }
 
             int randomReadQueueDepth = int.Parse(this.Parameters.GetValue<string>("RandomReadQueueDepth"));
@@ -1066,7 +1066,7 @@ namespace VirtualClient.Actions
             text = text.Replace($"${{{nameof(sequentialWriteIOdepth).ToLower()}}}", sequentialWriteIOdepth.ToString());
 
             text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
-            text = text.Replace("directio", direct.ToString());
+            text = text.Replace("${directio}", direct.ToString());
 
             this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
         }
