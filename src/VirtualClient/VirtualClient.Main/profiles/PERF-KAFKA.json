@@ -1,0 +1,171 @@
+{
+  "Description": "Kafka Benchmark",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "02:00:00",
+    "SupportedPlatforms": "win-arm64,win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "ServerInstances": 3,
+    "ClientInstances": 3,
+    "RecordSize": 100,
+    "Partitions": 6,
+    "NumberOfRecords": 5000000
+  },
+  "Actions": [
+    {
+      "Type": "KafkaServerExecutor",
+      "Parameters": {
+        "Scenario": "kafka_server",
+        "PackageName": "kafka",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "Partitions": "$.Parameters.Partitions",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Create-topic-replication-factor-one-sync",
+        "PackageName": "kafka",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "Partitions": "$.Parameters.Partitions",
+        "WarmUp": true,
+        "CommandLine": "--create --topic sync-test-rep-one --partitions {Partitions} --replication-factor 1 --bootstrap-server {0}:9092",
+        "Role": "Client",
+        "CommandType": "CreateTopic"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Create-topic-replication-factor-dynamic-sync",
+        "PackageName": "kafka",
+        "WarmUp": true,
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "Partitions": "$.Parameters.Partitions",
+        "CommandLine": "--create --topic sync-test-rep-dynamic --partitions {Partitions} --replication-factor $ReplicationFactor --bootstrap-server {0}:9092",
+        "Role": "Client",
+        "CommandType": "CreateTopic"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Create-topic-replication-factor-dynamic-async",
+        "PackageName": "kafka",
+        "WarmUp": true,
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "Partitions": "$.Parameters.Partitions",
+        "CommandLine": "--create --topic async-test-rep-dynamic --partitions {Partitions} --replication-factor $ReplicationFactor --bootstrap-server {0}:9092",
+        "Role": "Client",
+        "CommandType": "CreateTopic"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Producer-batchSize-8196-sync",
+        "PackageName": "kafka",
+        "WarmUp": true,
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "RecordSize": "$.Parameters.RecordSize",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic sync-test-rep-one --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:9092 buffer.memory=67108864 batch.size=8196",
+        "Role": "Client",
+        "CommandType": "ProducerTest"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Producer-batchSize-64000-sync",
+        "PackageName": "kafka",
+        "WarmUp": true,
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "RecordSize": "$.Parameters.RecordSize",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic sync-test-rep-dynamic --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:9092 buffer.memory=67108864 batch.size=64000",
+        "Role": "Client",
+        "CommandType": "ProducerTest"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Consumer-sync",
+        "PackageName": "kafka",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic sync-test-rep-one --messages {NumberOfRecords} --bootstrap-server {0}:9092",
+        "Role": "Client",
+        "CommandType": "ConsumerTest"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Producer-batchSize-8196-async-{ClientInstances}",
+        "PackageName": "kafka",
+        "WarmUp": true,
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "ClientInstances": "$.Parameters.ClientInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "RecordSize": "$.Parameters.RecordSize",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic async-test-rep-dynamic --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:9092 buffer.memory=67108864 batch.size=8196",
+        "Role": "Client",
+        "CommandType": "ProducerTest"
+      }
+    },
+    {
+      "Type": "KafkaClientExecutor",
+      "Parameters": {
+        "Scenario": "Consumer-async-{ClientInstances}",
+        "PackageName": "kafka",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "ClientInstances": "$.Parameters.ClientInstances",
+        "MaxClientInstances": "$.Parameters.ClientInstances",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic async-test-rep-dynamic --messages {NumberOfRecords} --bootstrap-server {0}:9092",
+        "Role": "Client",
+        "CommandType": "ConsumerTest"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "DownloadKafkaPackage",
+        "BlobContainer": "packages",
+        "BlobName": "kafka_2.13-3.6.1.zip",
+        "PackageName": "kafka",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "JDKPackageDependencyInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-21.0.1.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer"
+      }
+    }
+  ]
+}
