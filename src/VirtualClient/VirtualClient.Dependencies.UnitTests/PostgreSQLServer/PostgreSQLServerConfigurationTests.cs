@@ -44,7 +44,7 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure-server.py --port 5432",
+                $"python3 {this.packagePath}/configure-server.py --port 5432 --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+",
             };
 
             int commandNumber = 0;
@@ -268,11 +268,11 @@ namespace VirtualClient.Dependencies
 
             if (platform == PlatformID.Unix)
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName postgresql-test --directories /dev/sdd1;/dev/sde1;/dev/sdf1;";
+                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName postgresql-test --directories /dev/sdd1;/dev/sde1;/dev/sdf1; --password [A-Za-z0-9+/=]+";
             }
             else
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName postgresql-test --directories D:\\;E:\\;F:\\;";
+                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName postgresql-test --directories D:\\;E:\\;F:\\; --password [A-Za-z0-9+/=]+";
             }
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
