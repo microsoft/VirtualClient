@@ -373,7 +373,7 @@ namespace VirtualClient.Actions
 
                     if (this.JobFiles != null)
                     {
-                        await this.UpdateCommandLineForJobFilesAsync(cancellationToken);
+                        await this.SetCommandLineForJobFilesAsync(cancellationToken);
                     }
 
                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
@@ -1014,7 +1014,7 @@ namespace VirtualClient.Actions
             return sanitizedFilePath;
         }
 
-        private async Task UpdateCommandLineForJobFilesAsync(CancellationToken cancellationToken)
+        private async Task SetCommandLineForJobFilesAsync(CancellationToken cancellationToken)
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
@@ -1026,14 +1026,15 @@ namespace VirtualClient.Actions
             foreach (string templateJobFilePath in templateJobFilePaths)
             {
                 // Create/update new job file at runtime.
-                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "updated.jobfile");
+                string templateJobFileName = Path.GetFileName(templateJobFilePath);
+                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, templateJobFileName);
                 this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
 
                 // Update command line to include the new job file.
-                this.CommandLine += updatedJobFilePath + " ";
+                this.CommandLine += $"{updatedJobFilePath} ";
             }
 
-            this.CommandLine += "--output-format=json";
+            this.CommandLine = $"{this.CommandLine.Trim()} --output-format=json";
         }
 
         private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)

@@ -41,10 +41,7 @@
         "ProcessModel": "$.Parameters.ProcessModel",
         "FileName": "fio-test.dat",
         "DeleteTestFilesOnFinish": false,
-        "Tags": "IO,FIO,OLTP",
         "DurationSec": "180",
-        "RandomIOFilePath": "/dev/sdc",
-        "SequentialIOFilePath": "/dev/sdc",
         "RandomReadIOPS": 270,
         "RandomWriteIOPS": 270,
         "SequentialReadIOPS": 270,
@@ -74,7 +71,7 @@
         "SequentialReadIOdepth": "{calculate({SequentialReadQueueDepth}/{SequentialReadNumJobs})}",
         "SequentialWriteIOdepth": "{calculate({SequentialWriteQueueDepth}/{SequentialWriteNumJobs})}",
         "DirectIO": 1,
-        "IOEngine": "libaio"
+        "Tags": "IO,FIO,OLTP"
       }
     }
   ],
