@@ -147,9 +147,30 @@ namespace VirtualClient.Actions.DiskPerformance
             {
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                string updatedJobFilePath = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "updated.jobfile");
+                string updatedJobFilePath = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1path");
 
                 Assert.AreEqual($"{updatedJobFilePath} --output-format=json", executor.CommandLine);
+            }
+        }
+
+        [Test]
+        public async Task FioExecutorRunsCommandWithMultipleJobFiles()
+        {
+            this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
+            this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "path/to/jobfile1,path/jobfile2;path/jobfile3";
+
+            DependencyPath workloadPlatformSpecificPackage =
+                this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+
+            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                string updatedJobFile1Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1");
+                string updatedJobFile2Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile2");
+                string updatedJobFile3Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile3");
+
+                Assert.AreEqual($"{updatedJobFile1Path} {updatedJobFile2Path} {updatedJobFile3Path} --output-format=json", executor.CommandLine);
             }
         }
 
