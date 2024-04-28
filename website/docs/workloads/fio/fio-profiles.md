@@ -427,3 +427,91 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
   # Override the default target percentages
   ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="TargetPercents="40,80,120"
   ```
+
+
+-----------------------------------------------------------------------
+
+## PERF-IO-FIO-OLTP.json
+Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
+workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
+weight/percentage defined. 
+A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
+
+Random IO : It represents the Database of OLTP-C workload.
+Sequential IO : It represents the logs of OLTP-C workload.
+Therefore, they are performed on different disks
+
+The intent of this profile is to expose the ability to use template job files via the FioExecutor.
+
+* **Supported Platform/Architectures**
+  * linux-x64
+  * linux-arm64
+  * win-x64  
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | DefaultNumJobs            | Optional. Allows the user to override Number of jobs for each component (Random read component,Random write component,Sequential read component,Sequential write component)             | 1 |
+  | DiskFilter                | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
+  | RandomIOFileSize          | Optional. Allows the user to override the default random io file size used in the profile (e.g. 124GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 124GB |
+  | SequentialIOFileSize      | Optional. Allows the user to override the default random io file size used in the profile. | 20GB |
+  | TargetIOPS                | Optional. Allows the user to override the default value for Target IOPS for all the components combined. | 5000 |
+  | TargetPercents            | Optional. Allows the user to override the target percent list which is use to determine Total IOPS. | "10,40,90,98,100,102,110" |
+  | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
+  | SequentialDiskCount | Optional. Specifies the number of disk that will have Sequential I/O from Selected Disks. | 1 |
+  
+  
+* **Profile Component Parameters** 
+  The following section describes the parameters used by the individual components in the profile.
+
+  | Parameter                 | Purpose                                                                         | 
+  |---------------------------|---------------------------------------------------------------------------------|
+  | DefaultRandomIOBlockSize  | Default Block size value for Random Read and Write. |
+  | DefaultRandomIOQueueDepth | Default QueueDepth value for Random Read and Write. |
+  | DefaultSequentialIOBlockSize  | Default Block size value for Sequential Read and Write. |
+  | DefaultSequentialIOQueueDepth | Default Queue Depth value for Sequential Read and Write.|
+  | DirectIO | Direct IO parameter for FIO toolset |
+  | GroupReporting               | Group Reporting parameter for FIO toolset|
+  | RandomReadBlockSize  | Random read component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random read component.  |
+  | RandomReadNumJobs | Random read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random read component. |
+  | RandomReadQueueDepth | Random read component's Queue Depth. If it is provided it overwrites the DefaultRandomIOQueueDepth for Random read component. |
+  | RandomReadWeight | Weight of Random read component being use to calculate the IOPS of random read component. |
+  | RandomWriteBlockSize  | Random write component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random write component.  |
+  | RandomWriteNumJobs | Random write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random write component. |
+  | RandomWriteQueueDepth | Random write component's Queue Depth. If it is provided it overwrites the DefaultRandomIOQueueDepth for Random write component. |
+  | RandomWriteWeight | Weight of Random write component being use to calculate the IOPS of random write component. |
+  | SequentialReadBlockSize  | Sequential read component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential read component.  |
+  | SequentialReadNumJobs | Sequential read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential read component. |
+  | SequentialReadQueueDepth | Sequential read component's Queue Depth. If it is provided it overwrites the DefaultSequentialIOQueueDepth for Sequential read component. |
+  | SequentialReadWeight | Weight of Sequential read component being use to calculate the IOPS of random read component. |
+  | SequentialWriteBlockSize  | Sequential write component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential write component.  |
+  | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
+  | SequentialWriteQueueDepth | Sequential write component's Queue Depth. If it is provided it overwrites the DefaultSequentialIOQueueDepth for Sequential write component. |
+  | SequentialWriteWeight | Weight of Sequential write component being use to calculate the IOPS of random write component. |
+  | DurationSec | Type of Input Output operation |
+  | Scenario                  | Scenario use to define the given action of profile  |
+  | Tags                      | Tags usefull for telemetry data |
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
+  
+* **Usage Examples**  
+  The following section provides a few basic examples of how to use the workload profile.
+
+  ``` bash
+  # Run the workload on the system
+  ./VirtualClient --profile=PERF-IO-FIO-OLTP.json --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ```
