@@ -461,12 +461,9 @@ The intent of this profile is to expose the ability to use template job files vi
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DefaultNumJobs            | Optional. Allows the user to override Number of jobs for each component (Random read component,Random write component,Sequential read component,Sequential write component)             | 1 |
   | DiskFilter                | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
   | RandomIOFileSize          | Optional. Allows the user to override the default random io file size used in the profile (e.g. 124GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 124GB |
   | SequentialIOFileSize      | Optional. Allows the user to override the default random io file size used in the profile. | 20GB |
-  | TargetIOPS                | Optional. Allows the user to override the default value for Target IOPS for all the components combined. | 5000 |
-  | TargetPercents            | Optional. Allows the user to override the target percent list which is use to determine Total IOPS. | "10,40,90,98,100,102,110" |
   | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
   | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
   | SequentialDiskCount | Optional. Specifies the number of disk that will have Sequential I/O from Selected Disks. | 1 |
