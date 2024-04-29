@@ -116,7 +116,8 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Run the Memtier benchmark. Values based on the default parameter values set at the top
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
+                    // $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -145,7 +146,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Run the Memtier benchmark. Values based on the default parameter values set at the top
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -175,10 +176,10 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #2
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -208,16 +209,16 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #2
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                     // Client instance #3
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #4
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
