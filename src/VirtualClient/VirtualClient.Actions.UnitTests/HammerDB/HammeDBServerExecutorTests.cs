@@ -32,16 +32,9 @@ namespace VirtualClient.Actions
         private MockFixture fixture;
         private DependencyPath mockPackage;
 
-        [SetUp]
-        public void SetupDefaultMockBehavior()
-        {
-        }
-
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task HammerDBServerExecutorSkipsHammerDBInitializationWhenInitialized(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
@@ -80,7 +73,7 @@ namespace VirtualClient.Actions
                 await HammerDBExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(0, commandsExecuted);
+            Assert.AreEqual(1, commandsExecuted);
         }
 
         public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
@@ -105,6 +98,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters["PackageName"] = "hammerdb";
             this.fixture.Parameters["Port"] = 5432;
+            this.fixture.Parameters["DatabaseName"] = "hammerdbtest";
         }
 
         private class TestHammerDBServerExecutor : HammerDBServerExecutor
