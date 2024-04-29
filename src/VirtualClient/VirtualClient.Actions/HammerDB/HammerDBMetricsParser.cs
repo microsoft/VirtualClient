@@ -15,23 +15,23 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Parser for PostgreSQL result document.
     /// </summary>
-    public class PostgreSQLMetricsParser : MetricsParser
+    public class HammerDBMetricsParser : MetricsParser
     {
         /// <summary>
         /// Sectionize by one or more empty lines.
         /// </summary>
-        private static readonly Regex PostgreSQLSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
+        private static readonly Regex HammerDBSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Separate the column values by 2 or more spaces.
         /// </summary>
-        private static readonly Regex PostgreSQLDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
+        private static readonly Regex HammerDBDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// Constructor for <see cref="PostgreSQLMetricsParser"/>
+        /// Constructor for <see cref="HammerDBMetricsParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public PostgreSQLMetricsParser(string rawText)
+        public HammerDBMetricsParser(string rawText)
             : base(rawText)
         {
         }
@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Results for PostgreSQL.
         /// </summary>
-        protected DataTable PostgreSQLResult { get; set; }
+        protected DataTable HammerDBResult { get; set; }
 
         /// <inheritdoc/>
         public override IList<Metric> Parse()
@@ -47,11 +47,11 @@ namespace VirtualClient.Actions
             try
             {
                 this.Preprocess();
-                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, PostgreSQLSectionDelimiter);
+                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, HammerDBSectionDelimiter);
                 this.ThrowIfInvalidOutputFormat();
                 this.CalculateThroughputResult();
 
-                List<Metric> metrics = new List<Metric>(this.PostgreSQLResult.GetMetrics(nameIndex: 1, valueIndex: 0, metricRelativity: MetricRelativity.HigherIsBetter));
+                List<Metric> metrics = new List<Metric>(this.HammerDBResult.GetMetrics(nameIndex: 1, valueIndex: 0, metricRelativity: MetricRelativity.HigherIsBetter));
 
                 metrics.Add(new Metric(
                     "Operations/sec",
@@ -85,8 +85,8 @@ namespace VirtualClient.Actions
         {
             string sectionName = "TEST RESULT";
             IList<string> columnNames = new List<string> { "Value", "Name" };
-            this.PostgreSQLResult = DataTableExtensions.ConvertToDataTable(
-                this.Sections[sectionName], PostgreSQLDataTableDelimiter, sectionName, columnNames);
+            this.HammerDBResult = DataTableExtensions.ConvertToDataTable(
+                this.Sections[sectionName], HammerDBDataTableDelimiter, sectionName, columnNames);
         }
 
         /// <inheritdoc/>

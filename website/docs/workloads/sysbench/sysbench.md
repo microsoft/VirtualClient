@@ -20,6 +20,7 @@ supported by Sysbench are as follows:
 | oltp_update_non_index | Measures performance of non-index updates on the MySQL database       |
 | select_random_points  | Measures performance of random point select on the MySQL database     |
 | select_random_ranges  | Measures performance of random range select on the MySQL database     |
+| tpcc                  | Runs the TPCC workload on the MySQL database. **Only TPCC Workload Available**             |
 
 
 ## Workload Metrics
@@ -252,3 +253,5 @@ The following steps show how to create the Sysbench database and then move/distr
   # Fully populate the Sysbench database with records.
   ~/vc_tools/sysbench/src$ ./sysbench oltp_common --threads=1 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=localhost prepare
   ```
+
+  For reference, the approximate size of a database created by Sysbench for a 10-table database is 1MB + 10kB per record.

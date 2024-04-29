@@ -49,6 +49,9 @@
         <Content Include="..\TestResources\Results_FIO_Write.json" Link="Examples\FIO\Results_FIO_Write.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="..\TestResources\Results_HammerDB.txt" Link="Examples\HammerDB\Results_HammerDB.txt">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
