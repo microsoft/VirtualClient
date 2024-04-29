@@ -117,12 +117,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The warehouse count passed to HammerDB.
         /// </summary>
-        public string? WarehouseCount
+        public string WarehouseCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBExecutor.WarehouseCount), out IConvertible warehouseCount);
-                return warehouseCount?.ToString(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(this.WarehouseCount), out IConvertible warehouseCount);
+                return warehouseCount?.ToString();
             }
         }
 

@@ -10,7 +10,7 @@
     "DatabaseName": "hammerdbtest",
     "Port": "5432",
     "VirtualUsers": "{calculate({LogicalCoreCount})}",
-    "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 1.5/80)}",
+    "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
     "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
   },
   "Actions": [
