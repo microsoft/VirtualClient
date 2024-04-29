@@ -21,19 +21,18 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// The Sysbench Client workload executor.
+    /// The HammerDB Client workload executor.
     /// </summary>
-    public class SysbenchClientExecutor : SysbenchExecutor
+    public class HammerDBClientExecutor : HammerDBExecutor
     {
-        private string sysbenchExecutionArguments;
-        private string sysbenchLoggingArguments;
+        private string hammerDBExecutionArguments;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SysbenchClientExecutor"/> class.
+        /// Initializes a new instance of the <see cref="HammerDBClientExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">An enumeration of dependencies that can be used for dependency injection.</param>
         /// <param name="parameters">An enumeration of key-value pairs that can control the execution of the component.</param>
-        public SysbenchClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public HammerDBClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
             this.ClientFlowRetryPolicy = Policy.Handle<Exception>().RetryAsync(3);
@@ -41,13 +40,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The total time of execution option passed to Sysbench.
+        /// The total time of execution option passed to HammerDB.
         /// </summary>
         public TimeSpan Duration
         {
             get
             { 
-                return this.Parameters.GetTimeSpanValue(nameof(SysbenchClientExecutor.Duration), TimeSpan.FromMinutes(5));
+                return this.Parameters.GetTimeSpanValue(nameof(HammerDBClientExecutor.Duration), TimeSpan.FromMinutes(5));
             }
         }
 
@@ -122,12 +121,22 @@ namespace VirtualClient.Actions
             return;
         }
 
+        /// <summary>
+        /// Performs initialization operations for the executor.
+        /// </summary>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
+            this.hammerDBExecutionArguments = $"--runTransactionsTCLFilePath {this.RunTransactionsTclName}";
+        }
+
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.MetadataContract.AddForScenario(
-                    "Sysbench",
+                    "HammerDB",
                     process.FullCommand(),
                     toolVersion: null);
 
@@ -139,23 +148,23 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        SysbenchMetricsParser parser = new SysbenchMetricsParser(text);
+                        HammerDBMetricsParser parser = new HammerDBMetricsParser(text);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
-                            toolName: "Sysbench",
+                            toolName: "HammerDB",
                             scenarioName: this.MetricScenario ?? this.Scenario,
                             process.StartTime,
                             process.ExitTime,
                             metrics,
                             null,
-                            scenarioArguments: this.sysbenchLoggingArguments,
+                            null,
                             this.Tags,
                             telemetryContext);
                     }
                     catch (Exception exc)
                     {
-                        throw new WorkloadException($"Failed to parse sysbench output.", exc, ErrorReason.InvalidResults);
+                        throw new WorkloadException($"Failed to parse HammerDB output.", exc, ErrorReason.InvalidResults);
                     }
                 }
             }
@@ -167,80 +176,26 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    if (this.Benchmark == BenchmarkName.OLTP)
+                    string command = "python3";
+                    string script = $"{this.HammerDBPackagePath}/run-workload.py";
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        command, 
+                        script + " " + this.hammerDBExecutionArguments, 
+                        this.HammerDBPackagePath, 
+                        telemetryContext, 
+                        cancellationToken))
                     {
-                        await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
-                    }
-                    else if (this.Benchmark == BenchmarkName.TPCC)
-                    {
-                        await this.RunTPCCWorkloadAsync(telemetryContext, cancellationToken);
-                    }
-                    else
-                    {
-                        throw new DependencyException(
-                            $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".", 
-                            ErrorReason.NotSupported);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDB", logToFile: true);
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                        }
                     }
                 }
             });
-        }
-
-        private async Task RunOLTPWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
-
-            string command = "python3";
-            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
-                script + this.sysbenchExecutionArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                }
-            }
-        }
-
-        private async Task RunTPCCWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
-
-            string command = "python3";
-            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
-                script + this.sysbenchExecutionArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                }
-            }
         }
     }
 }

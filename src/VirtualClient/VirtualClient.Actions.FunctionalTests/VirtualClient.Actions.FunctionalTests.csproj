@@ -113,6 +113,9 @@
         <Content Include="..\TestResources\Results_Sysbench.txt" Link="Resources\Results_Sysbench.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+      <Content Include="..\TestResources\Results_HammerDB.txt" Link="Resources\Results_HammerDB.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -169,9 +172,6 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-OPENFOAM.json" Link="Profiles\PERF-OPENFOAM.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\VirtualClient.Main\profiles\PERF-SQL-POSTGRESQL.json" Link="Profiles\PERF-SQL-POSTGRESQL.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-STRESSNG.json" Link="Profiles\PERF-STRESSNG.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -205,6 +205,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-OLTP-SYSBENCH.json" Link="Profiles\PERF-MYSQL-OLTP-SYSBENCH.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	   </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-TPCC-SYSBENCH.json" Link="Profiles\PERF-MYSQL-TPCC-SYSBENCH.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-DEATHSTARBENCH.json" Link="Profiles\PERF-NETWORK-DEATHSTARBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -217,6 +220,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-2.json" Link="Profiles\PERF-NETWORK-2.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+      <Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json" Link="Profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-SPECCPU-FPRATE.json" Link="Profiles\PERF-SPECCPU-FPRATE.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
