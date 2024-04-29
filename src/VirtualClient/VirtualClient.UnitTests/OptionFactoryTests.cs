@@ -479,7 +479,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public void ParametersOptionSupportsDelimitedKeyValuePairs()
+        public void ParametersOptionSupportsThreeCommaDelimitedKeyValuePairs()
         {
             Option option = OptionFactory.CreateParametersOption();
             ParseResult result = option.Parse("--parameters:Key1=Value1,,,Key2=Value2");
@@ -487,6 +487,19 @@ namespace VirtualClient
         }
 
         [Test]
+        public void ParametersOptionSupportsSemicolonDelimitedKeyValuePairs()
+        {
+
+            Option option = OptionFactory.CreateParametersOption();
+            ParseResult result = option.Parse("--parameters=Key1=Value1;Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+
+            // Testing if the option factory supports semicolon delimited key value pairs when the values contains semicolon
+            result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+            [Test]
         [TestCase("--profile")]
         [TestCase("--p")]
         public void ProfileOptionSupportsExpectedAliases(string alias)

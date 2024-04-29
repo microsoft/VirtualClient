@@ -965,7 +965,7 @@ namespace VirtualClient
             {
                 if (!string.IsNullOrWhiteSpace(token.Value))
                 {
-                    string[] delimitedProperties = Regex.Split(token.Value, @"(?<=^|(?<![^=;,]+)(,,,|;))");
+                    string[] delimitedProperties = Regex.Split(token.Value, @"(?<=)(,,,|;)(?!(^;|,,,))");
 
                     if (delimitedProperties?.Any() == true)
                     {
