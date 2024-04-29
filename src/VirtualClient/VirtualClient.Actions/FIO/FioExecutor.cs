@@ -887,7 +887,11 @@ namespace VirtualClient.Actions
             else
             {
                 this.GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, commandArguments);
-                parser = new FioMetricsParser(workloadProcess.StandardOutput.ToString(), parseReadMetrics, parseWriteMetrics);
+
+                string modifiedOutput = this.FilterWarnings(workloadProcess.StandardOutput.ToString());
+
+                Console.WriteLine("Modified output:\n" + modifiedOutput);
+                parser = new FioMetricsParser(modifiedOutput, parseReadMetrics, parseWriteMetrics);
             }
 
             IList<Metric> metrics = parser.Parse();
@@ -1047,6 +1051,13 @@ namespace VirtualClient.Actions
             }
 
             this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
+        }
+
+        private string FilterWarnings(string fioOutput)
+        {
+            string modifiedOutput = Regex.Replace(fioOutput, @"^fio:.*$", string.Empty, RegexOptions.Multiline).Trim();
+
+            return modifiedOutput;
         }
 
         private class WorkloadState
