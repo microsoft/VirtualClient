@@ -12,6 +12,7 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Text.RegularExpressions;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -964,7 +965,7 @@ namespace VirtualClient
             {
                 if (!string.IsNullOrWhiteSpace(token.Value))
                 {
-                    string[] delimitedProperties = token.Value.Split(",,,", StringSplitOptions.RemoveEmptyEntries);
+                    string[] delimitedProperties = Regex.Split(token.Value, @"(?<=^|(?<![^=;,]+)(,,,|;))");
 
                     if (delimitedProperties?.Any() == true)
                     {
@@ -993,13 +994,13 @@ namespace VirtualClient
             {
                 store = new DependencyBlobStore(storeName, argument);
             }
+            else if (fileSystem.Directory.Exists(Path.GetFullPath(argument)))
+            {
+                store = new DependencyFileStore(storeName, Path.GetFullPath(argument));
+            }
             else
             {
-                string fullPath = Path.GetFullPath(argument);
-                if (fileSystem.Directory.Exists(fullPath))
-                {
-                    store = new DependencyFileStore(storeName, fullPath);
-                }
+
             }
 
             if (store == null)
@@ -1173,6 +1174,29 @@ namespace VirtualClient
             {
                 throw new ArgumentException(errorMessage);
             }
+        }
+
+        private static IDictionary<string, string> ParseConnectionString(string value)
+        {
+            // Parse connection string style arugments into list of key value pairs
+            // The key-value pairs will be delimetered by semi-colons
+            // Example format: CertificateThumbprint=AAA;ClientId=BBB;TenantId=CCC
+
+            IDictionary<string, string> keyValuePairs = new Dictionary<string, string>();
+
+            string[] pairs = value.Split(';');
+            foreach (string pair in pairs)
+            {
+                string[] keyValue = pair.Split('=');
+                if (keyValue.Length == 2)
+                {
+                    string key = keyValue[0].Trim();
+                    string stringValue = keyValue[1].Trim();
+                    keyValuePairs.Add(key, stringValue);
+                }
+            }
+
+            return keyValuePairs;
         }
     }
 }

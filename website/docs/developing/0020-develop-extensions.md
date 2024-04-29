@@ -269,7 +269,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
 
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
-  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
+  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Release/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
 
 
 
@@ -314,7 +314,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
   e.g.
 
   # Example output directory for extensions
-  S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
+  S:\one\crc-virtualclient-examples\out\bin\Release\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
   ```
 
 **Setup Visual Studio for debugging:**
@@ -325,11 +325,11 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
   3. Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
      * Launch = Executable
      * Executable = \{PathToVirtualClientExe\}  
-       **(e.g. ```S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net8.0\VirtualClient.exe```)**
+       **(e.g. ```S:\one\crc-air-workloads\out\bin\Release\x64\VirtualClient.Main\net8.0\VirtualClient.exe```)**
      * Application arguments = **```--profile={PathToCustomProfile} --profile=MONITORS.NONE.json --packages="{PackageStoreConnectionString|SASUri}"```**.  
        **(e.g. ```--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS.NONE.json --packages="https://virtualclient..."```)**
      * Environment variables = **Add the ```VCDependenciesPath``` variable and the path to your built extensions binaries**.  
-       **(e.g. ```VCDependenciesPath = S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0```)**
+       **(e.g. ```VCDependenciesPath = S:\one\crc-virtualclient-examples\out\bin\Release\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0```)**
   4. Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
   5. Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
   
