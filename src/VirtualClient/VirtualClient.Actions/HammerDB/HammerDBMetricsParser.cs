@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
         private static readonly Regex HammerDBDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// Constructor for <see cref="PostgreSQLMetricsParser"/>
+        /// Constructor for <see cref="HammerDBMetricsParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
         public HammerDBMetricsParser(string rawText)

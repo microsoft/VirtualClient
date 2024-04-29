@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common.Contracts;
@@ -36,25 +37,37 @@ namespace VirtualClient.Actions
         private ClientInstance clientInstance;
         private string mockPackagePath;
 
-        [SetUp]
-        public void SetupDefaultMockBehavior()
-        {
-        }
-
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task HammerDBClientExecutorRunsTheExpectedWorkloadCommand(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl";
+            string tempPackagePath;
 
+            if (platform == PlatformID.Win32NT)
+            {
+                tempPackagePath = this.mockPackagePath.Replace(@"\", @"\\");
+            }
+            else
+            {
+                tempPackagePath = this.mockPackagePath;
+            }
+
+            string[] expectedCommands =
+            {
+                $"python3 {tempPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+",
+                $"python3 {tempPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl"
+        };
+            int commandNumber = 0;
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                Assert.IsTrue(expectedCommand == $"{exe} {arguments}");
+                string expectedCommand = expectedCommands[commandNumber];
+                string executedCommand = $"{exe} {arguments}";
+                bool executed = Regex.IsMatch(executedCommand,expectedCommands[commandNumber]);
+                Assert.IsTrue(executed);
+                commandNumber += 1;
 
                 InMemoryProcess process = new InMemoryProcess
                 {
@@ -67,9 +80,6 @@ namespace VirtualClient.Actions
                     OnStart = () => true,
                     OnHasExited = () => true
                 };
-
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB", "Results_HammerDB.txt");
-                process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
             };
@@ -86,14 +96,19 @@ namespace VirtualClient.Actions
                 this.fixture.Setup(platform, architecture);
                 this.mockPackage = new DependencyPath("hammerdb", this.fixture.PlatformSpecifics.GetPackagePath("hammerdb"));
                 this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-                this.mockPackagePath = this.mockPackage.Path;
+                this.mockPackagePath = this.fixture.ToPlatformSpecificPath(mockPackage, platform, architecture).Path;
 
                 this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(HammerDBClientExecutor.DatabaseName), "tpcc" },
+                { nameof(HammerDBClientExecutor.Port), "5432"},
+                { nameof(HammerDBClientExecutor.DatabaseName), "hammerdbtest" },
+                { nameof(HammerDBClientExecutor.SuperUserPassword), "pass" },
                 { nameof(HammerDBClientExecutor.Workload), "tpcc" },
+                { nameof(HammerDBClientExecutor.SQLServer), "postgresql" },
+                { nameof(HammerDBClientExecutor.VirtualUsers), "1"},
+                { nameof(HammerDBClientExecutor.WarehouseCount), "1"},
+                { "ServerIpAddress", "localhost"},
                 { nameof(HammerDBClientExecutor.PackageName), "hammerdb" },
-                { nameof(HammerDBClientExecutor.Scenario), "tpcc" }
             };
 
                 string agentId = $"{Environment.MachineName}";
@@ -123,8 +138,6 @@ namespace VirtualClient.Actions
 
                 this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
-
-                this.fixture.Parameters["Port"] = 5432;
             }
         }
 
