@@ -90,7 +90,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DatabaseName), "vc-mysqldb");
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseName));
             }
         }
 

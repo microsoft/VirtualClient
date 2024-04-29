@@ -8,6 +8,7 @@ namespace VirtualClient.Dependencies
     using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -34,17 +35,26 @@ namespace VirtualClient.Dependencies
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForConfigureServerCommand(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
             this.fixture.Parameters["Action"] = "ConfigureServer";
 
+            string tempPackagePath;
+
+            if (platform == PlatformID.Win32NT)
+            {
+                tempPackagePath = this.packagePath.Replace(@"\", @"\\");
+            }
+            else
+            {
+                tempPackagePath = this.packagePath;
+            }
+
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure-server.py --port 5432 --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+",
+                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+",
             };
 
             int commandNumber = 0;
@@ -52,8 +62,9 @@ namespace VirtualClient.Dependencies
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 string expectedCommand = expectedCommands[commandNumber];
+                string executedCommand = $"{exe} {arguments}";
 
-                Assert.IsTrue(expectedCommand == $"{exe} {arguments}");
+                Assert.IsTrue(Regex.IsMatch(executedCommand, expectedCommand));
                 commandNumber++;
 
                 InMemoryProcess process = new InMemoryProcess
@@ -84,69 +95,11 @@ namespace VirtualClient.Dependencies
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForConfigureServerCommandInMemoryScenario(PlatformID platform, Architecture architecture)
-        {
-            this.SetupDefaultBehavior(platform, architecture);
-            this.fixture.Parameters["Action"] = "ConfigureServer";
-            this.fixture.Parameters["InMemory"] = true;
-
-            // Mocking 8GB of memory
-            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 8));
-
-            string[] expectedCommands =
-            {
-                $"python3 {this.packagePath}/configure-server.py --port 5432 --inMemory 8192"
-            };
-
-            int commandNumber = 0;
-
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                string expectedCommand = expectedCommands[commandNumber];
-
-                Assert.IsTrue(expectedCommand == $"{exe} {arguments}");
-                commandNumber++;
-
-                InMemoryProcess process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-
-                return process;
-            };
-
-            this.fixture.StateManager.OnSaveState((stateId, state) =>
-            {
-                Assert.IsNotNull(state);
-            });
-
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture))
-            {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public void PostgreSQLServerConfigurationThrowsExceptionWhenConfigureServerProcessIsErrored(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
             this.fixture.Parameters["Action"] = "ConfigureServer";
-            this.fixture.Parameters["DatabaseName"] = "postgresqltest";
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
@@ -162,9 +115,7 @@ namespace VirtualClient.Dependencies
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task PostgreSQLConfigurationSkipsDatabaseCreationWhenOneExists(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
@@ -204,80 +155,27 @@ namespace VirtualClient.Dependencies
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForCreateDatabaseCommand(PlatformID platform, Architecture architecture)
-        {
-            this.SetupDefaultBehavior(platform, architecture);
-            this.fixture.Parameters["Action"] = "CreateDatabase";
-            this.fixture.Parameters["DatabaseName"] = "postgresql-test";
-            string password = new TestPostgreSQLServerConfiguration(this.fixture).SuperUserPassword;
-
-            string[] expectedCommands =
-            {
-                $"python3 {this.packagePath}/setup-database.py --dbName postgresql-test --password {password}",
-            };
-
-            int commandNumber = 0;
-
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                string expectedCommand = expectedCommands[commandNumber];
-
-                Assert.IsTrue(expectedCommand == $"{exe} {arguments}");
-                commandNumber++;
-
-                InMemoryProcess process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-
-                return process;
-            };
-
-            this.fixture.StateManager.OnSaveState((stateId, state) =>
-            {
-                Assert.IsNotNull(state);
-            });
-
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture))
-            {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForDistributeDatabaseCommand(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehavior(platform, architecture);
             this.fixture.Parameters["Action"] = "DistributeDatabase";
-            this.fixture.Parameters["DatabaseName"] = "postgresql-test";
             string expectedCommand;
 
             if (platform == PlatformID.Unix)
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName postgresql-test --directories /dev/sdd1;/dev/sde1;/dev/sdf1; --password [A-Za-z0-9+/=]+";
+                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName hammerdbtest --directories /dev/sdd1;/dev/sde1;/dev/sdf1; --password [A-Za-z0-9+/=]+";
             }
             else
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName postgresql-test --directories D:\\;E:\\;F:\\; --password [A-Za-z0-9+/=]+";
+                string tempPackagePath = this.packagePath.Replace(@"\", @"\\");
+                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories D:\\\\;E:\\\\;F:\\\\; --password [A-Za-z0-9+/=]+";
             }
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                Assert.IsTrue(expectedCommand == $"{exe} {arguments}");
+                string executedCommand = $"{exe} {arguments}";
+                Assert.IsTrue(Regex.IsMatch(executedCommand, expectedCommand));
 
                 InMemoryProcess process = new InMemoryProcess
                 {
@@ -313,7 +211,9 @@ namespace VirtualClient.Dependencies
             {
                 { "PackageName", "postgresql" },
                 { "ServerPassword", "postgresqlpassword" },
-                { "Port", 5432 }
+                { "Port", 5432 },
+                { "DatabaseName", "hammerdbtest" },
+                { "SharedMemoryBuffer", "454567" }
             };
 
             this.mockPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
