@@ -495,7 +495,7 @@ namespace VirtualClient
             Assert.IsFalse(result.Errors.Any());
 
             // Testing if the option factory supports semicolon delimited key value pairs when the values contains semicolon
-            result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2");
+            result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A,V3B;V3C");
             Assert.IsFalse(result.Errors.Any());
         }
 

@@ -82,5 +82,10 @@ namespace VirtualClient
         /// If blob store uses certificate to authenticate.
         /// </summary>
         public bool UseCertificate { get; }
+
+        /// <summary>
+        /// If blob store uses managed identity to authenticate.
+        /// </summary>
+        public bool UseManagedIdentity { get; }
     }
 }

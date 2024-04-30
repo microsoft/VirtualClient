@@ -960,25 +960,12 @@ namespace VirtualClient
             // Example Format:
             // --metadata=Property1=true,,,Property2=1234,,,Property3=value1,value2
 
-            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>();
             foreach (Token token in parsedResult.Tokens)
             {
                 if (!string.IsNullOrWhiteSpace(token.Value))
                 {
-                    string[] delimitedProperties = Regex.Split(token.Value, @"(?<=)(,,,|;)(?!(^;|,,,))");
-
-                    if (delimitedProperties?.Any() == true)
-                    {
-                        foreach (string property in delimitedProperties)
-                        {
-                            if (property.Contains("=", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                string key = property.Substring(0, property.IndexOf("=", StringComparison.Ordinal));
-                                string value = property.Substring(property.IndexOf("=", StringComparison.Ordinal) + 1);
-                                delimitedValues[key.Trim()] = value.Trim();
-                            }
-                        }
-                    }
+                    delimitedValues.AddRange(TextParsingExtensions.ParseVcDelimiteredParameters(token.Value));
                 }
             }
 
@@ -1000,7 +987,15 @@ namespace VirtualClient
             }
             else
             {
-
+                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
+                if (parameters.ContainsKey(nameof(DependencyBlobStore.ClientId)))
+                {
+                    store = new DependencyBlobStore(storeName, parameters["connection"].ToString());
+                }
+                else if (parameters.ContainsKey(nameof(DependencyBlobStore.UseManagedIdentity)))
+                {
+                    store = new DependencyBlobStore();
+                }   
             }
 
             if (store == null)

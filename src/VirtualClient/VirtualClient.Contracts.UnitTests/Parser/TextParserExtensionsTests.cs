@@ -5,6 +5,7 @@ namespace VirtualClient.Contracts.Parser
 {
     using NUnit.Framework;
     using System;
+    using System.Collections.Generic;
     using VirtualClient.Common;
     using VirtualClient.TestExtensions;
 
@@ -113,6 +114,38 @@ namespace VirtualClient.Contracts.Parser
         public void TextParserExtensionsTranslateTimeUnitAsExpected(string originalText, string metricUnit, string expectedOutput)
         {
             Assert.AreEqual(TextParsingExtensions.TranslateTimeByUnit(originalText, metricUnit), expectedOutput);
+        }
+
+        [Test]
+        public void TextParserExtensionsParseVcDelimeteredParameters()
+        {
+            string example = "key1=value1;key2=value2;key3=value3";
+            var result = TextParsingExtensions.ParseVcDelimiteredParameters(example);
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", "value3" }
+            }, result);
+
+            string exampleWithSemiColon = "key1=v1a;v1b,v1c;key2=value2;key3=v3a;v3b";
+            result = TextParsingExtensions.ParseVcDelimiteredParameters(exampleWithSemiColon);
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "v1a;v1b,v1c" },
+                { "key2", "value2" },
+                { "key3", "v3a;v3b" }
+            }, result);
+
+            string complexExample = "key1=v1a;v1b,v1c;key2=value2;key3=v3a;;v3b,,,key4=v4a,,,v4b;v4c;;;v4d";
+            result = TextParsingExtensions.ParseVcDelimiteredParameters(complexExample);
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "v1a;v1b,v1c" },
+                { "key2", "value2" },
+                { "key3", "v3a;;v3b" },
+                { "key4", "v4a,,,v4b;v4c;;;v4d" }
+            }, result);
         }
     }
 }

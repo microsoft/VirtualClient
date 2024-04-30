@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using YamlDotNet.Core.Tokens;
 
     /// <summary>
     /// Extensions for parsing test documents.
@@ -101,6 +102,34 @@ namespace VirtualClient.Contracts
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Sectionize raw text into sections based on regex. First line of each section will become section key!
+        /// </summary>
+        /// <param name="text">Raw text.</param>
+        public static IDictionary<string, IConvertible> ParseVcDelimiteredParameters(string text)
+        {
+            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>();
+            string[] segments = text.Split('=', StringSplitOptions.TrimEntries);
+            // Only start at second segment and end at second to last segment
+            // Because first segment is the key for first pair, and last segment is the value for last pair.
+            string key = segments[0];
+            for (int i = 1; i < segments.Length - 1; i++)
+            {
+                // This is just to 
+                int lastCommaIndex = segments[i].LastIndexOf(",,,");
+                int lastSemicolonIndex = segments[i].LastIndexOf(';');
+                int splitIndex = Math.Max(lastCommaIndex, lastSemicolonIndex);
+
+                string value = segments[i].Substring(0, splitIndex);
+                delimitedValues.Add(key, value);
+                key = segments[i].Substring(splitIndex).Trim(';').Trim(',');
+            }
+
+            delimitedValues.Add(key, segments[segments.Length - 1]);
+
+            return delimitedValues;
         }
 
         /// <summary>
