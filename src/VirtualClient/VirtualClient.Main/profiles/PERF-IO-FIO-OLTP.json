@@ -10,7 +10,6 @@
   "Parameters": {
     "DiskFillSize": "10G",
     "FileSize": "10G",
-    "DataIntegrityFileSize": "1G",
     "DiskFilter": "BiggestSize",
     "ProcessModel": "SingleProcess"
   },
