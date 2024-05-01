@@ -434,8 +434,16 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
 ## PERF-IO-FIO-OLTP.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
 workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
-weight/percentage defined. 
-A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
+weight/percentage. 
+
+  ``` script
+  Examples:
+  For Total IOPS = 5000, Random Read Weight = 5416, Random Write Weight = 4255, Sequential Read Weight = 0 , Sequential Write Weight = 329
+  - Random Read IOPS = (5000 * 5416)/(5416+4255+0+329) = 2708
+  - Random Write IOPS = (5000 * 4255)/(5416+4255+0+329) = 2128
+  - Sequential Read IOPS = (5000 * 0)/(5416+4255+0+329) = 0
+  - Sequential Write IOPS = (5000 * 329)/(5416+4255+0+329) = 164
+  ```
 
 Random IO : It represents the Database of OLTP-C workload.
 Sequential IO : It represents the logs of OLTP-C workload.
@@ -472,23 +480,15 @@ Therefore, they are performed on different disks
 
   | Parameter                 | Purpose                                                                         | 
   |---------------------------|---------------------------------------------------------------------------------|
-  | DefaultRandomIOBlockSize  | Default Block size value for Random Read and Write. |
-  | DefaultRandomIOQueueDepth | Default QueueDepth value for Random Read and Write. |
-  | DefaultSequentialIOBlockSize  | Default Block size value for Sequential Read and Write. |
-  | DefaultSequentialIOQueueDepth | Default Queue Depth value for Sequential Read and Write.|
   | DirectIO | Direct IO parameter for FIO toolset |
   | RandomReadBlockSize  | Random read component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random read component.  |
   | RandomReadNumJobs | Random read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random read component. |
-  | RandomReadWeight | Weight of Random read component being use to calculate the IOPS of random read component. |
   | RandomWriteBlockSize  | Random write component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random write component.  |
   | RandomWriteNumJobs | Random write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random write component. |
-  | RandomWriteWeight | Weight of Random write component being use to calculate the IOPS of random write component. |
   | SequentialReadBlockSize  | Sequential read component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential read component.  |
   | SequentialReadNumJobs | Sequential read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential read component. |
-  | SequentialReadWeight | Weight of Sequential read component being use to calculate the IOPS of random read component. |
   | SequentialWriteBlockSize  | Sequential write component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential write component.  |
   | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
-  | SequentialWriteWeight | Weight of Sequential write component being use to calculate the IOPS of random write component. |
   | DurationSec | Type of Input Output operation |
   | Scenario                  | Scenario use to define the given action of profile  |
   | Tags                      | Tags usefull for telemetry data |

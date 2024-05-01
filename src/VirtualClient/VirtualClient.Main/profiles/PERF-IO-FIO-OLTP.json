@@ -19,11 +19,13 @@
       "Parameters": {
         "Scenario": "DiskFill",
         "PackageName": "fio",
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "CommandLine": "--name=disk_fill --size={DiskFillSize} --numjobs=1 --rw=write --bs=256k --iodepth=64 --direct=1 --overwrite=1 --thread",
+        "ProcessModel": "SingleProcessPerDisk",
         "TestName": "disk_fill",
         "JobFiles": "{ScriptPath:fio}/oltp-c2-diskfill.fio.jobfile",
         "FileName": "fio-test.dat",
+        "DeleteTestFilesOnFinish": false,
+        "DiskFilter": "$.Parameters.DiskFilter",
+        "DirectIO": 1,
         "DiskFill": true,
         "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
         "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize"
@@ -112,14 +114,13 @@
         "RandomWriteNumJobs": 1,
         "RandomWriteIODepth": 512,
         "SequentialDiskCount": "1",
-        "SequentialIOFileSize": "10G",
+        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
         "SequentialReadBlockSize": "12K",
         "SequentialReadNumJobs": 1,
         "SequentialReadIODepth": 64,
         "SequentialWriteBlockSize": "12K",
         "SequentialWriteNumJobs": 1,
         "SequentialWriteIODepth": 64,
-
         "Tags": "IO,FIO,OLTP"
       }
     },
@@ -151,7 +152,6 @@
         "SequentialWriteBlockSize": "16K",
         "SequentialWriteNumJobs": 1,
         "SequentialWriteIODepth": 64,
-
         "Tags": "IO,FIO,OLTP"
       }
     },
