@@ -991,7 +991,7 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.DiskFill && string.IsNullOrWhiteSpace(this.DiskFillSize))
+            if (this.DiskFill && string.IsNullOrWhiteSpace(this.JobFiles) && string.IsNullOrWhiteSpace(this.DiskFillSize))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +

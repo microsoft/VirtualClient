@@ -5,7 +5,6 @@
 [global]
 direct=${directio}
 group_reporting=0
-size=${randomiofilesize}
 time_based=1
 
 # by setting the submit mode to offload, we can guarantee a fixed rate of
@@ -18,9 +17,10 @@ new_group
 bs=${randomreadblocksize}
 iodepth=${randomreadiodepth}
 numjobs=${randomreadnumjobs}
-rate_iops=270
+rate_iops=2708
 runtime=${durationsec}
 rw=randread
+size=${randomiofilesize}
 
 # Represents writing of data in sql/OLTP database.
 [randomwriter]
@@ -28,9 +28,10 @@ new_group
 bs=${randomwriteblocksize}
 iodepth=${randomwriteiodepth}
 numjobs=${randomwritenumjobs}
-rate_iops=270
+rate_iops=2128
 runtime=${durationsec}
 rw=randwrite
+size=${randomiofilesize}
 
 # Represents log readers of sql/OLTP database.
 [sequentialreader]
@@ -38,7 +39,7 @@ new_group
 bs=${sequentialreadblocksize}
 iodepth=${sequentialreadiodepth}
 numjobs=${sequentialreadnumjobs}
-rate_iops=270
+rate_iops=0
 runtime=${durationsec}
 rw=read
 size=${sequentialiofilesize}
@@ -49,25 +50,7 @@ new_group
 bs=${sequentialwriteblocksize}
 iodepth=${sequentialwriteiodepth}
 numjobs=${sequentialwritenumjobs}
-rate_iops=270
+rate_iops=164
 runtime=${durationsec}
-rw=write
-size=${sequentialiofilesize}
-
-# Initialize database data.
-[initrandomio]
-new_group
-bs=256K
-iodepth=64
-numjobs=1
-rw=write
-size=${randomiofilesize}
-
-# Initialize logs database.
-[initsequentialio]
-new_group
-bs=256K
-iodepth=64
-numjobs=1
 rw=write
 size=${sequentialiofilesize}
