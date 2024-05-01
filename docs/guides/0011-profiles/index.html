@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.b4522254.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.8b2d4588.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.3499af61.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -57,7 +57,7 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 designers of profiles to be as expressive as possible with intentions. One of the express goals of the Virtual Client team with regards to profile design is
 to have profiles be as clear and self-describing as possible. It helps users to establish context into the purpose of the profile and what it will do when running on
 the system. The following table describes the set of well-known parameters that can be used in profiles.</p>
-<table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>LogicalCoreCount</td><td>Represents the number of logical cores/vCPUs on the system.</td></tr><tr><td>PhysicalCoreCount</td><td>Represents the number of physical cores on the system.</td></tr><tr><td>PackagePath:{package_name}</td><td>Represents the path to a package that is installed on the system by one of the dependency components (e.g. {PackagePath:openssl} ...resolving to /home/users/virtualclient/packages/openssl).</td></tr><tr><td>PackagePath/Platform:{package_name}</td><td>Represents the &quot;platform-specific&quot; path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. {PackagePath/Platform<!-- -->:openssl<!-- -->} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64).</td></tr><tr><td>Platform</td><td>Represents the platform-architecture for the system on which Virtual Client is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64)</td></tr><tr><td>SystemMemoryBytes</td><td>Represents the total memory/RAM (in bytes) on the system.</td></tr><tr><td>SystemMemoryKilobytes</td><td>Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes).</td></tr><tr><td>SystemMemoryMegabytes</td><td>Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes).</td></tr><tr><td>SystemMemoryGigabytes</td><td>Represents the total memory/RAM (in gigabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 gigabyte = 1024 megabytes or 1024 x 1024 kilobytes or 1024 x 1024 x 1024 bytes).</td></tr></tbody></table>
+<table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>LogicalCoreCount</td><td>Represents the number of logical cores/vCPUs on the system.</td></tr><tr><td>PhysicalCoreCount</td><td>Represents the number of physical cores on the system.</td></tr><tr><td>PackagePath:{package_name}</td><td>Represents the path to a package that is installed on the system by one of the dependency components (e.g. {PackagePath:openssl} ...resolving to /home/users/virtualclient/packages/openssl).</td></tr><tr><td>PackagePath/Platform:{package_name}</td><td>Represents the &quot;platform-specific&quot; path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. {PackagePath/Platform<!-- -->:openssl<!-- -->} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64).</td></tr><tr><td>Platform</td><td>Represents the platform-architecture for the system on which Virtual Client is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64)</td></tr><tr><td>ScriptPath:{script_folder}</td><td>Represents the path to a script that is copied to the build output &#x27;scripts&#x27; directory.</td></tr><tr><td>SystemMemoryBytes</td><td>Represents the total memory/RAM (in bytes) on the system.</td></tr><tr><td>SystemMemoryKilobytes</td><td>Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes).</td></tr><tr><td>SystemMemoryMegabytes</td><td>Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes).</td></tr><tr><td>SystemMemoryGigabytes</td><td>Represents the total memory/RAM (in gigabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 gigabyte = 1024 megabytes or 1024 x 1024 kilobytes or 1024 x 1024 x 1024 bytes).</td></tr></tbody></table>
 <pre><code class="language-json">&quot;Actions&quot;: [
     {
         &quot;Type&quot;: &quot;RedisServerExecutor&quot;,
@@ -138,6 +138,18 @@ the system. The following table describes the set of well-known parameters that 
             &quot;WorkingDirectory&quot;: &quot;{PackagePath:customtoolset-{Platform}}&quot;
         }
     }
+]
+
+&quot;Actions&quot;: [
+	{
+		&quot;Type&quot;: &quot;FioExecutor&quot;,
+		&quot;Parameters&quot;: {
+			&quot;Scenario&quot;: &quot;FioExecutorJobFile&quot;,
+			&quot;PackageName&quot;: &quot;fio&quot;,
+			&quot;JobFile&quot;: &quot;{ScriptPath:fio}/oltp-c.jobfile&quot;,
+			&quot;CommandLine&quot;: &quot;--thread {JobFile}&quot;
+		}
+	}
 ]
 </code></pre>
 <br>
