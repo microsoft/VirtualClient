@@ -441,8 +441,6 @@ Random IO : It represents the Database of OLTP-C workload.
 Sequential IO : It represents the logs of OLTP-C workload.
 Therefore, they are performed on different disks
 
-The intent of this profile is to expose the ability to use template job files via the FioExecutor.
-
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
@@ -479,22 +477,17 @@ The intent of this profile is to expose the ability to use template job files vi
   | DefaultSequentialIOBlockSize  | Default Block size value for Sequential Read and Write. |
   | DefaultSequentialIOQueueDepth | Default Queue Depth value for Sequential Read and Write.|
   | DirectIO | Direct IO parameter for FIO toolset |
-  | GroupReporting               | Group Reporting parameter for FIO toolset|
   | RandomReadBlockSize  | Random read component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random read component.  |
   | RandomReadNumJobs | Random read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random read component. |
-  | RandomReadQueueDepth | Random read component's Queue Depth. If it is provided it overwrites the DefaultRandomIOQueueDepth for Random read component. |
   | RandomReadWeight | Weight of Random read component being use to calculate the IOPS of random read component. |
   | RandomWriteBlockSize  | Random write component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random write component.  |
   | RandomWriteNumJobs | Random write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random write component. |
-  | RandomWriteQueueDepth | Random write component's Queue Depth. If it is provided it overwrites the DefaultRandomIOQueueDepth for Random write component. |
   | RandomWriteWeight | Weight of Random write component being use to calculate the IOPS of random write component. |
   | SequentialReadBlockSize  | Sequential read component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential read component.  |
   | SequentialReadNumJobs | Sequential read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential read component. |
-  | SequentialReadQueueDepth | Sequential read component's Queue Depth. If it is provided it overwrites the DefaultSequentialIOQueueDepth for Sequential read component. |
   | SequentialReadWeight | Weight of Sequential read component being use to calculate the IOPS of random read component. |
   | SequentialWriteBlockSize  | Sequential write component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential write component.  |
   | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
-  | SequentialWriteQueueDepth | Sequential write component's Queue Depth. If it is provided it overwrites the DefaultSequentialIOQueueDepth for Sequential write component. |
   | SequentialWriteWeight | Weight of Sequential write component being use to calculate the IOPS of random write component. |
   | DurationSec | Type of Input Output operation |
   | Scenario                  | Scenario use to define the given action of profile  |

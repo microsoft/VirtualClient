@@ -4,7 +4,7 @@
 # --------------- Global section defines defaults across all components
 [global]
 direct=${directio}
-group_reporting=${groupreporting}
+group_reporting=0
 size=${randomiofilesize}
 time_based=1
 
@@ -18,7 +18,7 @@ new_group
 bs=${randomreadblocksize}
 iodepth=${randomreadiodepth}
 numjobs=${randomreadnumjobs}
-rate_iops=${randomreadiops}
+rate_iops=270
 runtime=${durationsec}
 rw=randread
 
@@ -28,7 +28,7 @@ new_group
 bs=${randomwriteblocksize}
 iodepth=${randomwriteiodepth}
 numjobs=${randomwritenumjobs}
-rate_iops=${randomwriteiops}
+rate_iops=270
 runtime=${durationsec}
 rw=randwrite
 
@@ -38,7 +38,7 @@ new_group
 bs=${sequentialreadblocksize}
 iodepth=${sequentialreadiodepth}
 numjobs=${sequentialreadnumjobs}
-rate_iops=${sequentialreadiops}
+rate_iops=270
 runtime=${durationsec}
 rw=read
 size=${sequentialiofilesize}
@@ -49,7 +49,7 @@ new_group
 bs=${sequentialwriteblocksize}
 iodepth=${sequentialwriteiodepth}
 numjobs=${sequentialwritenumjobs}
-rate_iops=${sequentialwriteiops}
+rate_iops=270
 runtime=${durationsec}
 rw=write
 size=${sequentialiofilesize}

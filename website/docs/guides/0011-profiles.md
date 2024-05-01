@@ -64,11 +64,11 @@ the system. The following table describes the set of well-known parameters that 
 | PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
 | PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
 | Platform                              | Represents the platform-architecture for the system on which Virtual Client is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64) |
+| ScriptPath:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
 | SystemMemoryBytes                     | Represents the total memory/RAM (in bytes) on the system. |
 | SystemMemoryKilobytes                 | Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes). |
 | SystemMemoryMegabytes                 | Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes). |
 | SystemMemoryGigabytes                 | Represents the total memory/RAM (in gigabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 gigabyte = 1024 megabytes or 1024 x 1024 kilobytes or 1024 x 1024 x 1024 bytes). |
-| ScriptPath:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
 
 ``` json
 "Actions": [
