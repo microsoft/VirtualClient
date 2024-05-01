@@ -481,6 +481,8 @@ Therefore, they are performed on different disks
   | Parameter                 | Purpose                                                                         | 
   |---------------------------|---------------------------------------------------------------------------------|
   | DirectIO | Direct IO parameter for FIO toolset |
+  | DurationSec | Type of Input Output operation |
+  | JobFiles | Template job files to be used |
   | RandomReadBlockSize  | Random read component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random read component.  |
   | RandomReadNumJobs | Random read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random read component. |
   | RandomWriteBlockSize  | Random write component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random write component.  |
@@ -489,7 +491,7 @@ Therefore, they are performed on different disks
   | SequentialReadNumJobs | Sequential read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential read component. |
   | SequentialWriteBlockSize  | Sequential write component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential write component.  |
   | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
-  | DurationSec | Type of Input Output operation |
+  | ProcessModel              |  Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). |
   | Scenario                  | Scenario use to define the given action of profile  |
   | Tags                      | Tags usefull for telemetry data |
 
