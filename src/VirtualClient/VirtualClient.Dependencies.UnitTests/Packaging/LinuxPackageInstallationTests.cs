@@ -146,7 +146,7 @@ namespace VirtualClient.Dependencies
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
                 OperationSystemFullName = "TestMariner",
-                LinuxDistribution = LinuxDistribution.Mariner
+                LinuxDistribution = LinuxDistribution.AzLinux
             };
             this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 

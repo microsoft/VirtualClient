@@ -543,7 +543,7 @@ namespace VirtualClient
         /// <summary>
         /// MSFT internal CentOS based distro Mariner
         /// </summary>
-        Mariner
+        AzLinux
     }
 
     /// <summary>
