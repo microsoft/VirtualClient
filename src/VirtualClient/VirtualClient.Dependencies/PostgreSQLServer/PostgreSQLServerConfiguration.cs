@@ -1,26 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Dependencies.MySqlServer
+namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-    using VirtualClient;
+    using Polly;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Dependencies.MySqlServer;
+    using static VirtualClient.Dependencies.MySqlServer.MySQLServerConfiguration;
 
     /// <summary>
-    /// Installation component for MySQL
+    /// Provides functionality for configuring PostgreSQL Server.
     /// </summary>
-    public class MySQLServerConfiguration : ExecuteCommand
+    [UnixCompatible]
+    [WindowsCompatible]
+    public class PostgreSQLServerConfiguration : ExecuteCommand
     {
         private const string PythonCommand = "python3";
         private readonly IStateManager stateManager;
@@ -31,7 +39,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         /// </summary>
         /// <param name="dependencies">An enumeration of dependencies that can be used for dependency injection.</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
-        public MySQLServerConfiguration(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public PostgreSQLServerConfiguration(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -49,17 +57,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.Action));
-            }
-        }
-
-        /// <summary>
-        /// The database name option passed to Sysbench.
-        /// </summary>
-        public string Benchmark
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(MySQLServerConfiguration.Benchmark));
             }
         }
 
@@ -93,29 +90,43 @@ namespace VirtualClient.Dependencies.MySqlServer
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DatabaseName), "vc-mysqldb");
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseName));
             }
         }
 
         /// <summary>
-        /// Global variable name to set
+        /// Parameter defines the port to use for the PostgreSQL Server.
         /// </summary>
-        public string Variables
+        public string Port
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.Variables), string.Empty);
+                this.Parameters.TryGetValue(nameof(this.Port), out IConvertible port);
+                return port?.ToString();
             }
         }
 
         /// <summary>
-        /// Denotes if In-Memory scenario will be utilized
+        /// Parameter defines the SuperUser Password for PostgreSQL Server.
         /// </summary>
-        public bool InMemory
+        public string SuperUserPassword
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.InMemory), false);
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                return Convert.ToBase64String(hashBytes);
+            }
+        }
+
+        /// <summary>
+        /// Shared Buffer Size for PostgreSQL
+        /// </summary>
+        public string SharedMemoryBuffer
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.SharedMemoryBuffer), out IConvertible sharedMemoryBuffer);
+                return sharedMemoryBuffer?.ToString();
             }
         }
 
@@ -125,12 +136,14 @@ namespace VirtualClient.Dependencies.MySqlServer
         protected ISystemManagement SystemManager { get; }
 
         /// <summary>
-        /// Installs MySQL
+        /// Executes PostgreSQL configuration steps.
         /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             ProcessManager manager = this.SystemManager.ProcessManager;
-            string stateId = $"{nameof(MySQLServerConfiguration)}-{this.Action}-action-success";
+            string stateId = $"{nameof(PostgreSQLServerConfiguration)}-{this.Action}-action-success";
             ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>($"{nameof(ConfigurationState)}", cancellationToken)
                 .ConfigureAwait(false);
 
@@ -149,85 +162,44 @@ namespace VirtualClient.Dependencies.MySqlServer
                     switch (this.Action)
                     {
                         case ConfigurationAction.ConfigureServer:
-                            await this.ConfigureMySQLServerAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-                            break;
-                        case ConfigurationAction.CreateDatabase:
-                            await this.CreateMySQLServerDatabaseAsync(telemetryContext, cancellationToken)
+                            await this.ConfigurePostgreSQLServerAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
                         case ConfigurationAction.DistributeDatabase:
-                            await this.DistributeMySQLDatabaseAsync(telemetryContext, cancellationToken)
+                            await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
                     }
 
                     await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
                 }
-                else if (this.Action == ConfigurationAction.SetGlobalVariables)
-                {
-                    await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                }
             }
         }
 
-        private async Task ConfigureMySQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string serverIp = this.GetServerIpAddress();
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
-
-            string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
-
-            if (this.InMemory)
-            {
-                string inMemoryMB = await this.GetMySQLInMemoryCapacityAsync(cancellationToken);
-                arguments += $" --inMemory {inMemoryMB}";
-            }
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port} --sharedMemoryBuffer {this.SharedMemoryBuffer}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
-                arguments,
-                Environment.CurrentDirectory,
-                telemetryContext,
-                cancellationToken))
+               "python3",
+               arguments,
+               this.packageDirectory,
+               telemetryContext,
+               cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
                     process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
         }
 
-        private async Task CreateMySQLServerDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task DistributePostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName}";
+            string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
 
-            if (this.IsMultiRoleLayout())
-            {
-                string clientIps = this.GetClientIpAddresses();
-                arguments += $" --clientIps \"{clientIps}\"";
-            }
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
-                arguments,
-                Environment.CurrentDirectory,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task SetMySQLGlobalVariableAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string arguments = $"{this.packageDirectory}/set-global-variables.py --variables \"{this.Variables}\"";
+            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories {innoDbDirs} --password {this.SuperUserPassword}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,
@@ -238,34 +210,13 @@ namespace VirtualClient.Dependencies.MySqlServer
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
                     process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
         }
 
-        private async Task DistributeMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
-
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --benchmark {this.Benchmark} --directories \"{innoDbDirs}\"";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    PythonCommand,
-                    arguments,
-                    Environment.CurrentDirectory,
-                    telemetryContext,
-                    cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task<string> GetMySQLInnodbDirectoriesAsync(CancellationToken cancellationToken)
+        private async Task<string> GetPostgreSQLInnodbDirectoriesAsync(CancellationToken cancellationToken)
         {
             string diskPaths = string.Empty;
 
@@ -303,47 +254,9 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             return diskPaths;
         }
-        
-        private async Task<string> GetMySQLInMemoryCapacityAsync(CancellationToken cancellationToken)
-        {
-            MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
-            long totalMemoryKiloBytes = memoryInfo.TotalMemory;
-            int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024);
-            
-            return bufferSizeInMegaBytes.ToString();
-        }
-
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
-            }
-
-            return serverIPAddress;
-        }
-
-        private string GetClientIpAddresses()
-        {
-            string clientIpAddresses = string.Empty;
-
-            IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
-
-            foreach (ClientInstance instance in clientInstances)
-            {
-                IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
-                clientIpAddresses += clientIPAddress.ToString() + ';';
-            }
-
-            return clientIpAddresses;
-        }
 
         /// <summary>
-        /// Supported MySQL Server configuration actions.
+        /// Supported PostgreSQL Server configuration actions.
         /// </summary>
         internal class ConfigurationAction
         {
@@ -353,15 +266,9 @@ namespace VirtualClient.Dependencies.MySqlServer
             public const string ConfigureServer = nameof(ConfigureServer);
 
             /// <summary>
-            /// Creates Database on MySQL server and Users on Server and any Clients.
+            /// Creates Database on PostgreSQL server and Users on Server and any Clients.
             /// </summary>
-            public const string CreateDatabase = nameof(CreateDatabase);
-
-            /// <summary>
-            /// Sets global variables to user-specified value.
-            /// ie. "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1024"
-            /// </summary>
-            public const string SetGlobalVariables = nameof(SetGlobalVariables);
+            public const string SetupDatabase = nameof(SetupDatabase);
 
             /// <summary>
             /// Distributes existing database to disks on the system
