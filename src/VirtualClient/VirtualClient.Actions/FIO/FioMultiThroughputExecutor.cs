@@ -265,17 +265,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Template for Job file.
-        /// </summary>
-        public string TemplateJobFile
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.TemplateJobFile));
-            }
-        }
-
-        /// <summary>
         /// Target percents list.
         /// </summary>
         public List<int> TargetPercents
