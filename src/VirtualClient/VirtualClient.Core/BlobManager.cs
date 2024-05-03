@@ -8,10 +8,12 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Azure.Identity;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
     using Polly;
@@ -55,6 +57,11 @@ namespace VirtualClient
         /// Represents the store description/details.
         /// </summary>
         public DependencyStore StoreDescription { get; }
+
+        /// <summary>
+        /// Certificate manager to read certificate from local cert store.
+        /// </summary>
+        internal ICertificateManager CertificateManger { get; set; }
 
         /// <inheritdoc />
         public async Task<DependencyDescriptor> DownloadBlobAsync(DependencyDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
@@ -258,8 +265,8 @@ namespace VirtualClient
         /// </summary>
         protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
         {
-            string connectionString = (this.StoreDescription as DependencyBlobStore).ConnectionToken;
-            BlobContainerClient containerClient = BlobManager.CreateContainerClient(descriptor, connectionString, out bool hasContainerPrivileges);
+            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore, out bool hasContainerPrivileges);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
             return blobClient.DownloadToAsync(stream, cancellationToken);
@@ -270,8 +277,8 @@ namespace VirtualClient
         /// </summary>
         protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
         {
-            string connectionString = (this.StoreDescription as DependencyBlobStore).ConnectionToken;
-            BlobContainerClient containerClient = BlobManager.CreateContainerClient(descriptor, connectionString, out bool hasContainerPrivileges);
+            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore, out bool hasContainerPrivileges);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
             if (hasContainerPrivileges)
@@ -287,7 +294,7 @@ namespace VirtualClient
                 .ConfigureAwait(false);
         }
 
-        private static BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, string connectionToken, out bool hasContainerPrivileges)
+        private BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore, out bool hasContainerPrivileges)
         {
             // [Authentication Options]
             // 1) Storage Account connection string
@@ -320,25 +327,38 @@ namespace VirtualClient
 
             hasContainerPrivileges = false;
             BlobContainerClient containerClient = null;
-            if (Uri.TryCreate(connectionToken, UriKind.Absolute, out Uri sasUri))
+            if (!string.IsNullOrEmpty(blobStore.ConnectionToken))
             {
-                Uri containerUri = sasUri;
-                if (!sasUri.AbsolutePath.Contains(descriptor.ContainerName, StringComparison.OrdinalIgnoreCase))
+                if (Uri.TryCreate(blobStore.ConnectionToken, UriKind.Absolute, out Uri sasUri))
                 {
-                    // The connection authentication token is a blob service-specific SAS URI.
-                    containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
+                    Uri containerUri = sasUri;
+                    if (!sasUri.AbsolutePath.Contains(descriptor.ContainerName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // The connection authentication token is a blob service-specific SAS URI.
+                        containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
+                        hasContainerPrivileges = true;
+                    }
+
+                    containerClient = new BlobContainerClient(containerUri);
+                }
+                else
+                {
+                    // The connection authentication token is either a storage account-level connection string
+                    // or a Blob service-level connection string.
+                    containerClient = new BlobContainerClient(blobStore.ConnectionToken, descriptor.ContainerName.ToLowerInvariant());
                     hasContainerPrivileges = true;
                 }
-
-                containerClient = new BlobContainerClient(containerUri);
             }
-            else
+            else if (blobStore.UseCertificate == true)
             {
-                // The connection authentication token is either a storage account-level connection string
-                // or a Blob service-level connection string.
-                containerClient = new BlobContainerClient(connectionToken, descriptor.ContainerName.ToLowerInvariant());
-                hasContainerPrivileges = true;
+                X509Certificate2 certificate = this.CertificateManger
+                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new StorageCredentials(certificate);
             }
+            else if (blobStore.UseManagedIdentity == true)
+            {
+                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new DefaultAzureCredential());
+            }
+            
 
             return containerClient;
         }

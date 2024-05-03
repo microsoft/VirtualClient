@@ -87,5 +87,10 @@ namespace VirtualClient
         /// If blob store uses managed identity to authenticate.
         /// </summary>
         public bool UseManagedIdentity { get; }
+
+        /// <summary>
+        /// Endpoint for Azure Storage url
+        /// </summary>
+        public string EndpointUrl { get; }
     }
 }
