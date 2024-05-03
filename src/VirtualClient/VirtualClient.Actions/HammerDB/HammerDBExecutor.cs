@@ -198,16 +198,16 @@ namespace VirtualClient.Actions
             HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
                ?? new HammerDBState();
 
-            if (!state.DatabaseCreated)
+            if (state.DatabaseCreated != 2)
             {
-                await this.Logger.LogMessageAsync($"{this.TypeName}.CreateDatabase", telemetryContext.Clone(), async () =>
+                await this.Logger.LogMessageAsync($"{this.TypeName}.{this.Scenario}", telemetryContext.Clone(), async () =>
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-                state.DatabaseCreated = true;
+                state.DatabaseCreated++;
                 await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
             }
         }
@@ -399,11 +399,11 @@ namespace VirtualClient.Actions
                 }
             }
 
-            public bool DatabaseCreated
+            public int DatabaseCreated
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabaseCreated), false);
+                    return this.Properties.GetValue<int>(nameof(HammerDBState.DatabaseCreated), 0);
                 }
 
                 set

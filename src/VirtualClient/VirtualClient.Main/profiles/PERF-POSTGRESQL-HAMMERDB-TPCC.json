@@ -110,7 +110,7 @@
     {
       "Type": "HammerDBExecutor",
       "Parameters": {
-        "Scenario": "PopulatePostgreSQLDatabase",
+        "Scenario": "CreatePostgreSQLDatabase",
         "DatabaseName": "$.Parameters.DatabaseName",
         "Workload": "tpcc",
         "SQLServer": "postgresql",
