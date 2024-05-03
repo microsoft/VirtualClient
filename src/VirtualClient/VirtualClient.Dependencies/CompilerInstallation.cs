@@ -224,7 +224,7 @@ namespace VirtualClient.Dependencies
 
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
-                case LinuxDistribution.Mariner:
+                case LinuxDistribution.AzLinux:
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
