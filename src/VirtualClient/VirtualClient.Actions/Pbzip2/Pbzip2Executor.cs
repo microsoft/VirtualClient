@@ -231,7 +231,7 @@ namespace VirtualClient.Actions
                     case LinuxDistribution.Debian:
                     case LinuxDistribution.CentOS8:
                     case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.Mariner:
+                    case LinuxDistribution.AzLinux:
                     case LinuxDistribution.CentOS7:
                     case LinuxDistribution.RHEL7:
                         break;

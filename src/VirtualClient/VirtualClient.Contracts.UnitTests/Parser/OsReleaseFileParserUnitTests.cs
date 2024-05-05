@@ -27,7 +27,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void OsReleaseFileParserrRecognizeFedoraOS()
+        public void OsReleaseFileParserRecognizeFedoraOS()
         {
             string outputPath = Path.Combine(this.ExamplePath, "FedoraOSExample.txt");
             this.rawText = File.ReadAllText(outputPath);
@@ -37,7 +37,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void OsReleaseFileParserrRecognizeUbuntu22()
+        public void OsReleaseFileParserRecognizeUbuntu22()
         {
             string outputPath = Path.Combine(this.ExamplePath, "Ubuntu22Example.txt");
             this.rawText = File.ReadAllText(outputPath);
@@ -47,7 +47,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void OsReleaseFileParserrRecognizeDebian11()
+        public void OsReleaseFileParserRecognizeDebian11()
         {
             string outputPath = Path.Combine(this.ExamplePath, "Debian11Example.txt");
             this.rawText = File.ReadAllText(outputPath);
@@ -57,13 +57,23 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void OsReleaseFileParserrRecognizeRHEL93()
+        public void OsReleaseFileParserRecognizeRHEL93()
         {
             string outputPath = Path.Combine(this.ExamplePath, "RHEL93Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new OsReleaseFileParser(this.rawText);
             Assert.AreEqual(LinuxDistribution.RHEL8, this.testParser.Parse().LinuxDistribution);
             Assert.AreEqual("Red Hat Enterprise Linux 9.3 (Plow)", this.testParser.Parse().OperationSystemFullName);
+        }
+
+        [Test]
+        public void OsReleaseFileParserRecognizeAzLinux3()
+        {
+            string outputPath = Path.Combine(this.ExamplePath, "AzLinux3Example.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new OsReleaseFileParser(this.rawText);
+            Assert.AreEqual(LinuxDistribution.AzLinux, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual("Microsoft Azure Linux 3.0", this.testParser.Parse().OperationSystemFullName);
         }
     }
 }
