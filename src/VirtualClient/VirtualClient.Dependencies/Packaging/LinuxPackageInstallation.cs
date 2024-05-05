@@ -194,7 +194,7 @@ namespace VirtualClient.Dependencies
 
                     case LinuxDistribution.CentOS8:
                     case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.Mariner:
+                    case LinuxDistribution.AzLinux:
                         installer = this.InstantiateDnfInstaller();
                         break;
 

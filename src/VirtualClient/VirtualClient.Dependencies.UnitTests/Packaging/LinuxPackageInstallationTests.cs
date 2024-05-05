@@ -126,7 +126,7 @@ namespace VirtualClient.Dependencies
                 { "Repositories-Ubuntu", "extrarepo1,extrarepo2" },
                 { "Packages-Ubuntu", "morepack1,morepack2" },
                 { "Packages-Debian", "wrongpack1,wrongpack2" },
-                { "Packages-Mariner", "wrongpack1,wrongpack2" },
+                { "Packages-AzLinux", "wrongpack1,wrongpack2" },
                 { "Repositories-SUSE", "wrongrepo1,wrongrepo2" },
             };
 
@@ -146,7 +146,7 @@ namespace VirtualClient.Dependencies
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
                 OperationSystemFullName = "TestMariner",
-                LinuxDistribution = LinuxDistribution.Mariner
+                LinuxDistribution = LinuxDistribution.AzLinux
             };
             this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
@@ -159,10 +159,10 @@ namespace VirtualClient.Dependencies
                 { "Packages-Yum", "wrongpack1,wrongpack2" },
                 { "Repositories-Ubuntu", "wrongpack1,wrongpack2" },
                 { "Repositories-Dnf", "repo1,repo2" },
-                { "Repositories-Mariner", "extrarepo1,extrarepo2" },
+                { "Repositories-AzLinux", "extrarepo1,extrarepo2" },
                 { "Packages-Ubuntu", "morepack1,morepack2" },
                 { "Packages-Debian", "wrongpack1,wrongpack2" },
-                { "Packages-Mariner", "morepack1,morepack2" },
+                { "Packages-AzLinux", "morepack1,morepack2" },
                 { "Repositories-SUSE", "wrongrepo1,wrongrepo2" },
             };
 
