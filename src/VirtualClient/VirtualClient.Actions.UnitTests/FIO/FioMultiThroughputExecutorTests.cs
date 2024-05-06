@@ -348,6 +348,32 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        public void FioMultiThroughputFailsIfGroupIDIsNull()
+        {
+            int executions = 0;
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                executor.Metadata.Remove("GroupId");
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                {
+                    if (!arguments.Contains("chmod"))
+                    {
+                        executions++;
+                        Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
+                            $"{nameof(FioMultiThroughputExecutor)}" +
+                            $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
+                            $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));
+                    }
+                    return this.defaultMemoryProcess;
+                };
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+            }
+            Assert.IsTrue(executions == 1);
+        }
+
         private class TestFioMultiThroughputExecutor : FioMultiThroughputExecutor
         {
             public TestFioMultiThroughputExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

@@ -75,8 +75,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                object metadata = null;
-                EventContext.PersistentProperties.TryGetValue(nameof(metadata), out metadata);
+                IConvertible metadata;
+                this.Metadata.TryGetValue(nameof(metadata), out metadata);
 
                 IConvertible value = string.Empty;
                 if (metadata != null)
