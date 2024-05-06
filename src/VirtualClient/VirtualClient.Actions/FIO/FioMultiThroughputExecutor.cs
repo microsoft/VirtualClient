@@ -75,13 +75,10 @@ namespace VirtualClient.Actions
         {
             get
             {
-                IConvertible metadata;
-                this.Metadata.TryGetValue(nameof(metadata), out metadata);
-
                 IConvertible value = string.Empty;
-                if (metadata != null)
+                if (this.Metadata != null)
                 {
-                    (metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId).CamelCased(), out value);
+                    (this.Metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId), out value);
                 }
 
                 return value == null ? string.Empty : value.ToString();
