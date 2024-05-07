@@ -24,6 +24,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_write",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -36,6 +37,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_only",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -48,6 +50,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_write_only",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -60,6 +63,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_delete",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -72,6 +76,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_insert",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -84,6 +89,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_index",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -96,6 +102,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_non_index",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -108,6 +115,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_points",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -120,6 +128,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_ranges",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
@@ -177,6 +186,7 @@
             "Parameters": {
                 "Scenario": "InstallMySQLServer",
                 "Action": "InstallServer",
+                "Benchmark": "OLTP",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -186,6 +196,7 @@
             "Parameters": {
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
+                "Benchmark": "OLTP",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -195,6 +206,7 @@
             "Parameters": {
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
                 "Role": "Server"
@@ -205,6 +217,7 @@
             "Parameters": {
                 "Scenario": "SetMySQLGlobalVariables",
                 "Action": "SetGlobalVariables",
+                "Benchmark": "OLTP",
                 "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
                 "PackageName": "mysql-server",
                 "Role": "Server"
@@ -214,6 +227,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "RecordCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -225,6 +239,7 @@
             "Type": "MySQLServerConfiguration",
             "Parameters": {
                 "Scenario": "DistributeMySQLDatabase",
+                "Benchmark": "OLTP",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
@@ -235,6 +250,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
+                "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",

@@ -427,3 +427,83 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
   # Override the default target percentages
   ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="TargetPercents="40,80,120"
   ```
+
+
+-----------------------------------------------------------------------
+
+## PERF-IO-FIO-OLTP.json
+Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
+workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
+weight/percentage. 
+
+  ``` script
+  Examples:
+  For Total IOPS = 5000, Random Read Weight = 5416, Random Write Weight = 4255, Sequential Read Weight = 0 , Sequential Write Weight = 329
+  - Random Read IOPS = (5000 * 5416)/(5416+4255+0+329) = 2708
+  - Random Write IOPS = (5000 * 4255)/(5416+4255+0+329) = 2128
+  - Sequential Read IOPS = (5000 * 0)/(5416+4255+0+329) = 0
+  - Sequential Write IOPS = (5000 * 329)/(5416+4255+0+329) = 164
+  ```
+
+Random IO : It represents the Database of OLTP-C workload.
+Sequential IO : It represents the logs of OLTP-C workload.
+Therefore, they are performed on different disks
+
+* **Supported Platform/Architectures**
+  * linux-x64
+  * linux-arm64
+  * win-x64  
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | DiskFilter                | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
+  | RandomIOFileSize          | Optional. Allows the user to override the default random io file size used in the profile (e.g. 124GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 124GB |
+  | SequentialIOFileSize      | Optional. Allows the user to override the default random io file size used in the profile. | 20GB |
+  | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
+  | SequentialDiskCount | Optional. Specifies the number of disk that will have Sequential I/O from Selected Disks. | 1 |
+  
+  
+* **Profile Component Parameters** 
+  The following section describes the parameters used by the individual components in the profile.
+
+  | Parameter                 | Purpose                                                                         | 
+  |---------------------------|---------------------------------------------------------------------------------|
+  | DirectIO | Direct IO parameter for FIO toolset |
+  | DurationSec | Type of Input Output operation |
+  | JobFiles | Template job files to be used |
+  | RandomReadBlockSize  | Random read component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random read component.  |
+  | RandomReadNumJobs | Random read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random read component. |
+  | RandomWriteBlockSize  | Random write component's Block size. If it is provided it overwrites the DefaultRandomIOBlockSize for Random write component.  |
+  | RandomWriteNumJobs | Random write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Random write component. |
+  | SequentialReadBlockSize  | Sequential read component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential read component.  |
+  | SequentialReadNumJobs | Sequential read component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential read component. |
+  | SequentialWriteBlockSize  | Sequential write component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential write component.  |
+  | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
+  | ProcessModel              |  Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). |
+  | Scenario                  | Scenario use to define the given action of profile  |
+  | Tags                      | Tags usefull for telemetry data |
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
+  
+* **Usage Examples**  
+  The following section provides a few basic examples of how to use the workload profile.
+
+  ``` bash
+  # Run the workload on the system
+  ./VirtualClient --profile=PERF-IO-FIO-OLTP.json --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ```

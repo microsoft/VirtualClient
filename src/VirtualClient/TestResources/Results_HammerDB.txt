@@ -1,0 +1,94 @@
+﻿HammerDB CLI v4.5
+Copyright (C) 2003-2022 Steve Shaw
+Type "help" for a list of commands
+SETTING CONFIGURATION
+Database set to PostgreSQL
+Benchmark set to TPC-C for PostgreSQL
+Error: Invalid number of arguments
+Usage: diset dict key value
+Type "print dict" for valid dictionaries and keys for PostgreSQL
+Value 5432 for connection:pg_port is the same as existing value 5432, no change made
+Value postgres for tpcc:pg_superuser is the same as existing value postgres, no change made
+Value postgres for tpcc:pg_superuserpass is the same as existing value postgres, no change made
+Value postgres for tpcc:pg_defaultdbase is the same as existing value postgres, no change made
+Value nmalkapuramuser for tpcc:pg_user is the same as existing value nmalkapuramuser, no change made
+Value 1234 for tpcc:pg_pass is the same as existing value 1234, no change made
+Value tpcc for tpcc:pg_dbase is the same as existing value tpcc, no change made
+Value timed for tpcc:pg_driver is the same as existing value timed, no change made
+Changed tpcc:pg_duration from 5 to 2 for PostgreSQL
+Changed tpcc:pg_duration from 2 to 5 for PostgreSQL
+Value true for tpcc:pg_vacuum is the same as existing value true, no change made
+Dictionary Settings for PostgreSQL
+connection {
+ pg_host    = localhost
+ pg_port    = 5432
+ pg_sslmode = prefer
+}
+tpcc       {
+ pg_count_ware       = 1
+ pg_num_vu           = 1
+ pg_superuser        = postgres
+ pg_superuserpass    = postgres
+ pg_defaultdbase     = postgres
+ pg_user             = nmalkapuramuser
+ pg_pass             = 1234
+ pg_dbase            = tpcc
+ pg_tspace           = pg_default
+ pg_vacuum           = true
+ pg_dritasnap        = false
+ pg_oracompat        = false
+ pg_cituscompat      = false
+ pg_storedprocs      = false
+ pg_partition        = false
+ pg_total_iterations = 10000000
+ pg_raiseerror       = false
+ pg_keyandthink      = false
+ pg_driver           = timed
+ pg_rampup           = 2
+ pg_duration         = 5
+ pg_allwarehouse     = false
+ pg_timeprofile      = false
+ pg_async_scale      = false
+ pg_async_client     = 10
+ pg_async_verbose    = false
+ pg_async_delay      = 1000
+ pg_connect_pool     = false
+}
+Script loaded, Type "print script" to view
+SEQUENCE STARTED
+1 VU TEST
+Vuser 1 created MONITOR - WAIT IDLE
+Vuser 2 created - WAIT IDLE
+Logging activated
+to /tmp/hammerdb.log
+2 Virtual Users Created with Monitor VU
+Vuser 1:RUNNING
+Vuser 1:Beginning rampup time of 2 minutes
+Vuser 2:RUNNING
+Vuser 2:Processing 10000000 transactions with output suppressed...
+Vuser 1:Rampup 1 minutes complete ...
+Timer: 1 minutes elapsed
+Vuser 1:Rampup 2 minutes complete ...
+Timer: 2 minutes elapsed
+Vuser 1:Rampup complete, Taking start Transaction Count.
+Vuser 1:Timing test period of 5 in minutes
+Timer: 3 minutes elapsed
+Vuser 1:1 ...,
+Timer: 4 minutes elapsed
+Vuser 1:2 ...,
+Timer: 5 minutes elapsed
+Vuser 1:3 ...,
+Timer: 6 minutes elapsed
+Vuser 1:4 ...,
+Timer: 7 minutes elapsed
+Vuser 1:5 ...,
+Vuser 1:Test complete, Taking end Transaction Count.
+Vuser 1:1 Active Virtual Users configured
+Vuser 1:TEST RESULT : System achieved 11400 NOPM from 26163 PostgreSQL TPM
+Vuser 1:Checkpoint and Vacuum
+Vuser 2:FINISHED SUCCESS
+Vuser 1:Checkpoint and Vacuum Complete
+Vuser 1:FINISHED SUCCESS
+ALL VIRTUAL USERS COMPLETE
+vudestroy success
+TEST SEQUENCE COMPLETE

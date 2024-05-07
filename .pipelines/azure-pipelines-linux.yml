@@ -16,7 +16,7 @@ resources:
     options: --entrypoint=""
 
 variables:
-  VcVersion : 1.14.14
+  VcVersion : 1.14.24
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -145,6 +145,28 @@ stages:
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-amazonlinux2-prod-yum'
+
+
+    # Azure Mariner
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Mariner 2.0 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'cbl-mariner-2.0-prod'
+    
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Mariner 1.0 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'cbl-mariner-1.0-prod'
         
     # Centos
     - task: PublishLinuxPackagesPMC@0

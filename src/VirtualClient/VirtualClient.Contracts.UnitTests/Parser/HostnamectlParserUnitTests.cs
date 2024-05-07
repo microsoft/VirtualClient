@@ -96,13 +96,23 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void HostnamectlParserRecognizeMariner()
+        public void HostnamectlParserRecognizeMariner2()
         {
             string outputPath = Path.Combine(this.ExamplePath, "MarinerExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new HostnamectlParser(this.rawText);
-            Assert.AreEqual(LinuxDistribution.Mariner, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual(LinuxDistribution.AzLinux, this.testParser.Parse().LinuxDistribution);
             Assert.AreEqual("CBL-Mariner/Linux", this.testParser.Parse().OperationSystemFullName);
+        }
+
+        [Test]
+        public void HostnamectlParserRecognizeAzLinux3()
+        {
+            string outputPath = Path.Combine(this.ExamplePath, "AzLinux3Example.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new HostnamectlParser(this.rawText);
+            Assert.AreEqual(LinuxDistribution.AzLinux, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual("Microsoft Azure Linux 3.0", this.testParser.Parse().OperationSystemFullName);
         }
 
         [Test]

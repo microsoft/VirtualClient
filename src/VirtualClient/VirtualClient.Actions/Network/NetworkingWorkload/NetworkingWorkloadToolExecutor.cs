@@ -108,12 +108,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// True/false whether the workload (e.g. NTttcp, CPS, SockPerf) is expected
-        /// to emit results. Latte and SockPerf server-side workloads do not emit results.
-        /// </summary>
-        protected bool WorkloadEmitsResults { get; set; }
-
-        /// <summary>
         /// Returns true if the local instance is in the Client role.
         /// </summary>
         protected bool IsInClientRole { get; set; }
@@ -126,7 +120,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected virtual Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected virtual void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             throw new NotImplementedException();
         }
@@ -155,44 +149,31 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             EventContext relatedContext = telemetryContext.Clone();
 
-            await this.EnableInboundFirewallAccessAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await this.EnableInboundFirewallAccessAsync(cancellationToken);
 
             Item<NetworkingWorkloadState> state = await NetworkingWorkloadExecutor.ServerApiClient.GetStateAsync<NetworkingWorkloadState>(
                 nameof(NetworkingWorkloadState),
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             if (state != null && state.Definition.ToolState == NetworkingWorkloadToolState.Running)
             {
                 NetworkingWorkloadState workloadState = state.Definition;
-                await this.DeleteResultsFileAsync().ConfigureAwait(false);
 
                 // Note:
                 // We found that certain of the workloads do not exit when they are supposed to. We enforce an
                 // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-                TimeSpan workloadTimeout = TimeSpan.FromSeconds(state.Definition.WarmupTime + (state.Definition.TestDuration * 2));
+                TimeSpan workloadTimeout = TimeSpan.FromMinutes(20);
+
+                // 1200 = 20 mins x 60 secs
+                if (state.Definition.WarmupTime + state.Definition.TestDuration > 1200) 
+                {
+                    workloadTimeout = TimeSpan.FromSeconds(state.Definition.WarmupTime + (state.Definition.TestDuration * 3));
+                }
 
                 string commandArguments = this.GetCommandLineArguments();
                 DateTime startTime = DateTime.UtcNow;
 
-                await this.ExecuteWorkloadAsync(commandArguments, workloadTimeout, relatedContext, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    // There is sometimes a delay in the output of the results to the results
-                    // file. We will poll for the results for a period of time before giving up.
-                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.CaptureMetricsAsync(commandArguments, startTime, endTime, relatedContext)
-                        .ConfigureAwait(false);
-                }
+                await this.ExecuteWorkloadAsync(commandArguments, relatedContext, cancellationToken, workloadTimeout);
             }
         }
 
@@ -207,53 +188,29 @@ namespace VirtualClient.Actions.NetworkPerformance
                 EventContext relatedContext = telemetryContext.Clone();
                 Item<NetworkingWorkloadState> state = await NetworkingWorkloadExecutor.LocalApiClient.GetStateAsync<NetworkingWorkloadState>(
                     nameof(NetworkingWorkloadState),
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 if (state != null)
                 {
                     relatedContext.AddContext("initialState", state);
 
-                    await this.EnableInboundFirewallAccessAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                    await this.EnableInboundFirewallAccessAsync(cancellationToken);
 
                     try
                     {
-                        await this.DeleteResultsFileAsync().ConfigureAwait(false);
-
-                        // Note:
-                        // We found that certain of the workloads do not exit when they are supposed to. We enforce an
-                        // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-                        TimeSpan workloadTimeout = TimeSpan.FromSeconds(state.Definition.WarmupTime + (state.Definition.TestDuration * 2));
-
                         string commandArguments = this.GetCommandLineArguments();
-                        DateTime startTime = DateTime.UtcNow;
+
                         List<Task> workloadTasks = new List<Task>
                         {
                             this.ConfirmProcessRunningAsync(state, relatedContext, cancellationToken),
-                            this.ExecuteWorkloadAsync(commandArguments, workloadTimeout, relatedContext, cancellationToken)
+                            this.ExecuteWorkloadAsync(commandArguments, relatedContext, cancellationToken)
                         };
 
-                        await Task.WhenAll(workloadTasks).ConfigureAwait(false);
-                        DateTime endTime = DateTime.UtcNow;
-
-                        if (this.WorkloadEmitsResults)
-                        {
-                            // There is sometimes a delay in the output of the results to the results
-                            // file. We will poll for the results for a period of time before giving up.
-                            await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken)
-                                .ConfigureAwait(false);
-
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.CaptureMetricsAsync(commandArguments, startTime, endTime, relatedContext)
-                                    .ConfigureAwait(false);
-                            }
-                        }
+                        await Task.WhenAll(workloadTasks);
                     }
                     finally
                     {
-                        await NetworkingWorkloadExecutor.LocalApiClient.DeleteStateAsync(nameof(NetworkingWorkloadState), cancellationToken)
-                            .ConfigureAwait(false);
+                        await NetworkingWorkloadExecutor.LocalApiClient.DeleteStateAsync(nameof(NetworkingWorkloadState), cancellationToken);
                     }
                 }
             });
@@ -280,10 +237,10 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Executes the powershell script.
         /// </summary>
         /// <param name="commandArguments">The command arguments to use to run the workload toolset.</param>
-        /// <param name="timeout">The absolute timeout for the workload.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events emitted.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected virtual Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <param name="timeout">The absolute timeout for the workload.</param>
+        protected virtual Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             throw new NotImplementedException();
         }
@@ -377,27 +334,22 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Returns true if results are found in the results file within the polling/timeout
         /// period specified.
         /// </summary>
-        protected virtual async Task WaitForResultsAsync(TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected virtual async Task<string> WaitForResultsAsync(TimeSpan timeout, EventContext telemetryContext)
         {
+            string results = null;
             IFile fileAccess = this.SystemManagement.FileSystem.File;
-            IDictionary<string, double> results = null;
             DateTime pollingTimeout = DateTime.UtcNow.Add(timeout);
-            EventContext relatedContext = telemetryContext.Clone();
 
-            while (DateTime.UtcNow < pollingTimeout && !cancellationToken.IsCancellationRequested)
+            while (DateTime.UtcNow < pollingTimeout)
             {
                 if (fileAccess.Exists(this.ResultsPath))
                 {
                     try
                     {
-                        string resultsContent = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(this.ResultsPath)
-                            .ConfigureAwait(false);
+                        results = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
 
-                        if (!string.IsNullOrWhiteSpace(resultsContent))
+                        if (!string.IsNullOrWhiteSpace(results))
                         {
-                            this.Logger.LogMessage($"{this.TypeName}.WorkloadOutputFileContents", relatedContext
-                                .AddContext("results", resultsContent));
-
                             break;
                         }
                     }
@@ -408,24 +360,17 @@ namespace VirtualClient.Actions.NetworkPerformance
                     }
                 }
 
-                await this.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+                await this.WaitAsync(TimeSpan.FromSeconds(2), CancellationToken.None);
             }
 
-            if (results?.Any() == false)
+            if (string.IsNullOrWhiteSpace(results))
             {
                 throw new WorkloadResultsException(
-                    $"Results not found. The workload '{this.ExecutablePath}' did not produce any valid results.",
-                    ErrorReason.WorkloadFailed);
+                    $"Results not found. The workload '{this.ExecutablePath}' did not produce valid results.",
+                    ErrorReason.WorkloadResultsNotFound);
             }
-        }
 
-        private async Task DeleteResultsFileAsync()
-        {
-            if (this.SystemManagement.FileSystem.File.Exists(this.ResultsPath))
-            {
-                await this.SystemManagement.FileSystem.File.DeleteAsync(this.ResultsPath)
-                    .ConfigureAwait(false);
-            }
+            return results;
         }
     }
 }
