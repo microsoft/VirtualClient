@@ -994,8 +994,23 @@ namespace VirtualClient
                 }
                 else if (parameters.ContainsKey(nameof(DependencyBlobStore.UseManagedIdentity)))
                 {
-                    store = new DependencyBlobStore();
-                }   
+                    store = new DependencyBlobStore(storeName);
+                }
+                else if (parameters.ContainsKey(nameof(DependencyBlobStore.UseCertificate)))
+                {
+                    parameters.TryGetValue(nameof(DependencyBlobStore.CertificateCommonName), out IConvertible certCommonName);
+                    parameters.TryGetValue(nameof(DependencyBlobStore.CertificateThumbprint), out IConvertible certThumbprint);
+                    parameters.TryGetValue(nameof(DependencyBlobStore.Issuer), out IConvertible issuer);
+                    parameters.TryGetValue(nameof(DependencyBlobStore.ClientId), out IConvertible clientId);
+                    parameters.TryGetValue(nameof(DependencyBlobStore.TenantId), out IConvertible tenantId);
+                    store = new DependencyBlobStore(
+                        storeName, 
+                        certificateCommonName: (string)certCommonName,
+                        issuer: (string)issuer,
+                        certificateThumbprint: (string)certThumbprint,
+                        clientId: (string)clientId,
+                        tenantId: (string)tenantId);
+                }
             }
 
             if (store == null)

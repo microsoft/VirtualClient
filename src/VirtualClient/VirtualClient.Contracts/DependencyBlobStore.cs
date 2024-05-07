@@ -11,6 +11,16 @@ namespace VirtualClient
     public class DependencyBlobStore : DependencyStore
     {
         /// <summary>
+        /// Initializes an instance of the <see cref="DependencyBlobStore"/> class. Uses Azure managed identity as default auth.
+        /// </summary>
+        /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>
+        public DependencyBlobStore(string storeName)
+            : base(storeName, DependencyStore.StoreTypeAzureStorageBlob)
+        {
+            this.UseManagedIdentity = true;
+        }
+
+        /// <summary>
         /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.
         /// </summary>
         /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>

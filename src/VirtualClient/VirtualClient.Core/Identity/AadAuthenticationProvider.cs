@@ -191,7 +191,13 @@ namespace VirtualClient
             if (this.TokenCredential == null)
             {
                 this.TokenCredential = await TokenCredentialExtensions.GetTokenCredentialAsync(
-                this.tenantId, this.clientId, this.managedIdentityClientId, this.certificateThumbprint, this.certificateIssuer, this.certificateSubject, this.certManager).ConfigureDefaults();
+                    this.tenantId, 
+                    this.clientId, 
+                    this.managedIdentityClientId, 
+                    this.certificateThumbprint, 
+                    this.certificateIssuer, 
+                    this.certificateSubject, 
+                    this.certManager).ConfigureAwait(false);
             }
 
             AuthenticationResult authenticationResult;

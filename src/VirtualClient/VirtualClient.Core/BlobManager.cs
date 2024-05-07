@@ -16,6 +16,7 @@ namespace VirtualClient
     using Azure.Identity;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
+    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -62,6 +63,11 @@ namespace VirtualClient
         /// Certificate manager to read certificate from local cert store.
         /// </summary>
         internal ICertificateManager CertificateManger { get; set; }
+
+        /// <summary>
+        /// Authentication provider
+        /// </summary>
+        internal IAuthenticationProvider<AuthenticationResult> AuthenticationProvider { get; set; }
 
         /// <inheritdoc />
         public async Task<DependencyDescriptor> DownloadBlobAsync(DependencyDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
@@ -263,13 +269,13 @@ namespace VirtualClient
         /// <summary>
         /// Downloads the blob to the stream provided.
         /// </summary>
-        protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
+        protected virtual async Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
         {
             DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
-            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore, out bool hasContainerPrivileges);
+            BlobContainerClient containerClient = await this.CreateContainerClientAsync(descriptor, blobStore, cancellationToken);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
-            return blobClient.DownloadToAsync(stream, cancellationToken);
+            return await blobClient.DownloadToAsync(stream, cancellationToken);
         }
 
         /// <summary>
@@ -278,23 +284,27 @@ namespace VirtualClient
         protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
         {
             DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
-            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore, out bool hasContainerPrivileges);
+            BlobContainerClient containerClient = await this.CreateContainerClientAsync(descriptor, blobStore, cancellationToken);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
-            if (hasContainerPrivileges)
-            {
+            try
+            { 
                 // Container-specific SAS URIs do not allow the client to access container existence, properties or
                 // to create the container. Furthermore, the container MUST already exist in order for this type of
                 // SAS URI to be created from it.
                 await containerClient.CreateIfNotExistsAsync(PublicAccessType.None)
                     .ConfigureAwait(false);
             }
+            catch
+            {
+                // Do nothing if identity doesn't have container access.
+            }
 
             return await blobClient.UploadAsync(stream, uploadOptions, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        private BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore, out bool hasContainerPrivileges)
+        private async Task<BlobContainerClient> CreateContainerClientAsync(BlobDescriptor descriptor, DependencyBlobStore blobStore, CancellationToken cancellationToken)
         {
             // [Authentication Options]
             // 1) Storage Account connection string
@@ -325,7 +335,6 @@ namespace VirtualClient
             //
             //    e.g. https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
 
-            hasContainerPrivileges = false;
             BlobContainerClient containerClient = null;
             if (!string.IsNullOrEmpty(blobStore.ConnectionToken))
             {
@@ -336,7 +345,6 @@ namespace VirtualClient
                     {
                         // The connection authentication token is a blob service-specific SAS URI.
                         containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
-                        hasContainerPrivileges = true;
                     }
 
                     containerClient = new BlobContainerClient(containerUri);
@@ -346,13 +354,19 @@ namespace VirtualClient
                     // The connection authentication token is either a storage account-level connection string
                     // or a Blob service-level connection string.
                     containerClient = new BlobContainerClient(blobStore.ConnectionToken, descriptor.ContainerName.ToLowerInvariant());
-                    hasContainerPrivileges = true;
                 }
             }
             else if (blobStore.UseCertificate == true)
             {
-                X509Certificate2 certificate = this.CertificateManger
-                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new StorageCredentials(certificate);
+                // Using thumbprint if provided.
+                if (string.IsNullOrEmpty(blobStore.CertificateThumbprint))
+                {
+                    // Get the certificate from the store
+                    X509Certificate2 certificate = this.CertificateManger.GetCertificateFromStoreAsync(
+                        blobStore.CertificateThumbprint).GetAwaiter().GetResult();
+                    string token = await this.AuthenticationProvider.AuthenticateAsync(cancellationToken).ConfigureAwait(false).;
+                    containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new StorageCredentials(certificate);)
+                }
             }
             else if (blobStore.UseManagedIdentity == true)
             {
