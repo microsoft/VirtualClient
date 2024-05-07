@@ -14,18 +14,19 @@ The following links provide additional information on the Virtual Client project
 
 ## [Getting Started](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/)
 
-You will follow the [**Tutorial**](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/) to benchmark your system with a quick workload: OpenSSL Speed - SHA256.
+You can follow along with the ["getting started" tutorial](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/) running a quick workload (OpenSSL Speed - SHA256) on your
+local system.
 
 ## Contributing
 
-We welcome your contribution, and there are many ways to contribute to VirtualClient:
+We welcome your contribution, and there are a number of ways to contribute to the Virtual Client project:
 
-* [Just say Hi](https://github.com/microsoft/VirtualClient/discussions/categories/show-and-tell). It inspires us to know that there are fellow performance enthusiatics out there and VirtualClient made your work a little easier.
-* [Feature Requests](https://github.com/microsoft/VirtualClient/issues/new/choose). It helps us to know what benchmarks people are using.
-* [Submit bugs](https://github.com/microsoft/VirtualClient/issues/new/choose). We apologize for the bug and we will investigate it ASAP.
-* Review [source code changes](https://github.com/microsoft/VirtualClient/pulls). You likely know more about one workload than us. Tell us your insights.
-* Review the [documentation](https://github.com/microsoft/VirtualClient/tree/main/website/docs) and make pull requests for anything from typos to new content.
-* We welcome you to directly work in the codebase. Please take a look at our [CONTRIBUTING.md](./CONTRIBUTING.md). [Start here](https://microsoft.github.io/VirtualClient/docs/category/developing/) and contact us if you have any questions.
+* [Make a Feature Request](https://github.com/microsoft/VirtualClient/issues/new/choose).
+* [Submit bugs](https://github.com/microsoft/VirtualClient/issues/new/choose). We apologize for anything missed and will investigate it ASAP.
+* [Review source code changes](https://github.com/microsoft/VirtualClient/pulls).
+* [Review the documentation](https://github.com/microsoft/VirtualClient/tree/main/website/docs).
+* [Fork and Contribute Directly](./CONTRIBUTING.md). We welcome you to directly work in the codebase. We offer a [developer guide](https://microsoft.github.io/VirtualClient/docs/category/developing/). Please contact us if you have any questions.
+* [Provide Feedback to the Team](https://github.com/microsoft/VirtualClient/discussions/categories/show-and-tell).
 
 Thank you and we look forward to your contribution.
 
