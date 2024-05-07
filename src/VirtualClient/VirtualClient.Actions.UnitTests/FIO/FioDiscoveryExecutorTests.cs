@@ -285,6 +285,55 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        public async Task FioDiscoveryExecutorExecutesAsExpectedIfGroupIDIsRemoved()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcess;
+
+            List<string> expectedCommandLines = new List<string>
+            {
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
+            };
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                executor.Metadata.Remove("GroupId".CamelCased());
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.AreEqual(4, this.mockFixture.ProcessManager.Commands.Count());
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
+            }
+        }
+
+        [Test]
+        public async Task FioDiscoveryExecutorExecutesAsExpectedIfGroupIDHasBadCasing()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcess;
+
+            List<string> expectedCommandLines = new List<string>
+            {
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
+            };
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                executor.Metadata.Remove("GroupId".CamelCased());
+                executor.Metadata.Add("grouPId", string.Empty);
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.AreEqual(4, this.mockFixture.ProcessManager.Commands.Count());
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
+            }
+        }
+
         private class TestFioDiscoveryExecutor : FioDiscoveryExecutor
         {
             public TestFioDiscoveryExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

@@ -239,6 +239,9 @@ namespace VirtualClient.Actions
                     
                     $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories {currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2; --password [A-Za-z0-9+/=]+",
 
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
+
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };
             }
@@ -272,6 +275,9 @@ namespace VirtualClient.Actions
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
 
                     $"python3 {tempPostgreSqlPackagePath}/distribute-database.py --dbName hammerdbtest --directories E:\\\\;F:\\\\;G:\\\\; --password [A-Za-z0-9+/=]+",
+
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };

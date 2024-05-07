@@ -75,13 +75,10 @@ namespace VirtualClient.Actions
         {
             get
             {
-                object metadata = null;
-                EventContext.PersistentProperties.TryGetValue(nameof(metadata), out metadata);
-
                 IConvertible value = string.Empty;
-                if (metadata != null)
+                if (this.Metadata != null)
                 {
-                    (metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId).CamelCased(), out value);
+                    (this.Metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId), out value);
                 }
 
                 return value == null ? string.Empty : value.ToString();
