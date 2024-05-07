@@ -319,6 +319,42 @@ how to incorporate script-based extensions.
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-1.json
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-2.json
   ```
+  
+## Downloaded Extensions from a Package Store
+The default for most Virtual Client scenarios is to download extensions from a package store. The `VirtualClient bootstrap` command can be used to download
+extensions from a package store and install them.
+
+``` bash
+# Package/Blob Store Structure
+/container=packages/blob=crc.vc.extensions.zip
+
+# Execute bootstrap command to download and install the extensions
+C:\Users\Any\VirtualClient> VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions --packages="{BlobStoreConnectionString|SAS URI}"
+ 
+# Execute an extensions profile
+C:\Users\Any\VirtualClient> VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440 --packages="{BlobStoreConnectionString|SAS URI}"
+```
+
+The developer can choose to use a custom profile for bootstrapping/installing extensions as well.
+
+``` json
+# Profile = BOOTSTRAP-EXTENSIONS.json
+{
+  "Description": "Installs extensions from a package store.",
+  "Dependencies": [
+      {
+          "Type": "DependencyPackageInstallation",
+          "Parameters": {
+              "Scenario": "InstallCRCExtensionsPackage",
+              "BlobContainer": "packages",
+              "BlobName": "crc.vc.extensions.zip",
+              "PackageName": "crcvcextensions",
+              "Extract": true
+          }
+      }
+  ]
+}
+```
 
 ## Script-Based Extensions Walkthrough
 The following sections provide a bit more guidance on how to develop script-based extensions for Virtual Client and then to integrate them. Virtual Client provides 
