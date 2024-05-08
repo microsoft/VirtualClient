@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+    using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
     using Serilog;
@@ -107,6 +108,21 @@ namespace VirtualClient
         /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
         /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
         public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubConnectionString, string eventHubName)
+        {
+            var client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
+            EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
+
+            DependencyFactory.telemetryChannels.Add(channel);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
+            return channel;
+        }
+
+        /// <summary>
+        /// Creates an Event Hub channel targeting the hub provided.
+        /// </summary>
+        /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
+        /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
+        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventhubNamespace, string eventHubName, string certificateName)
         {
             var client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);

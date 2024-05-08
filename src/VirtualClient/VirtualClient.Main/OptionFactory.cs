@@ -12,7 +12,10 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
+    using Azure.Core;
+    using Azure.Identity;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -998,11 +1001,7 @@ namespace VirtualClient
                 }
                 else if (parameters.ContainsKey(nameof(DependencyBlobStore.UseCertificate)))
                 {
-                    parameters.TryGetValue(nameof(DependencyBlobStore.CertificateCommonName), out IConvertible certCommonName);
-                    parameters.TryGetValue(nameof(DependencyBlobStore.CertificateThumbprint), out IConvertible certThumbprint);
-                    parameters.TryGetValue(nameof(DependencyBlobStore.Issuer), out IConvertible issuer);
-                    parameters.TryGetValue(nameof(DependencyBlobStore.ClientId), out IConvertible clientId);
-                    parameters.TryGetValue(nameof(DependencyBlobStore.TenantId), out IConvertible tenantId);
+                    
                     store = new DependencyBlobStore(
                         storeName, 
                         certificateCommonName: (string)certCommonName,
@@ -1207,6 +1206,32 @@ namespace VirtualClient
             }
 
             return keyValuePairs;
+        }
+
+        private static TokenCredential GetTokenCredential(IDictionary<string, string> parameters, ICertificateManager certManager = null)
+        {
+            certManager = null ?? new CertificateManager();
+            X509Certificate2 certificate;
+
+            parameters.TryGetValue(nameof(DependencyBlobStore.CertificateSubject), out IConvertible certCommonName);
+            parameters.TryGetValue(nameof(DependencyBlobStore.CertificateThumbprint), out IConvertible certThumbprint);
+            parameters.TryGetValue(nameof(DependencyBlobStore.Issuer), out IConvertible issuer);
+            parameters.TryGetValue(nameof(DependencyBlobStore.ClientId), out IConvertible clientId);
+            parameters.TryGetValue(nameof(DependencyBlobStore.TenantId), out IConvertible tenantId);
+
+            // Using thumbprint if provided.
+            if (string.IsNullOrEmpty(blobStore.CertificateThumbprint))
+            {
+                // Get the certificate from the store
+                certificate = await this.CertificateManger.GetCertificateFromStoreAsync(blobStore.CertificateThumbprint);
+            }
+            else
+            {
+                // Get the certificate from the store
+                certificate = await this.CertificateManger.GetCertificateFromStoreAsync(blobStore.Issuer, blobStore.CertificateSubject);
+            }
+
+            TokenCredential certCredential = new ClientCertificateCredential(blobStore.TenantId, blobStore.ClientId, certificate);
         }
     }
 }

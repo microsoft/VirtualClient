@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Azure.Core;
     using Azure.Identity;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
@@ -358,21 +359,13 @@ namespace VirtualClient
             }
             else if (blobStore.UseCertificate == true)
             {
-                // Using thumbprint if provided.
-                if (string.IsNullOrEmpty(blobStore.CertificateThumbprint))
-                {
-                    // Get the certificate from the store
-                    X509Certificate2 certificate = this.CertificateManger.GetCertificateFromStoreAsync(
-                        blobStore.CertificateThumbprint).GetAwaiter().GetResult();
-                    string token = await this.AuthenticationProvider.AuthenticateAsync(cancellationToken).ConfigureAwait(false).;
-                    containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new StorageCredentials(certificate);)
-                }
+
+                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), certCredential);
             }
             else if (blobStore.UseManagedIdentity == true)
             {
                 containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new DefaultAzureCredential());
             }
-            
 
             return containerClient;
         }
