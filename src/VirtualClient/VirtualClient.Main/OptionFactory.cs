@@ -16,9 +16,12 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using Azure.Core;
     using Azure.Identity;
+    using Azure.Messaging.EventHubs.Producer;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -259,7 +262,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateEventHubConnectionStringOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--event-hub-connection-string", "--eventHubConnectionString", "--eventhubconnectionstring", "--event-hub", "--eventHub", "--eventhub", "--eh" })
+            Option<EventhubAuthenticationContext> option = new Option<EventhubAuthenticationContext>(
+                new string[] { "--event-hub-connection-string", "--eventHubConnectionString", "--eventhubconnectionstring", "--event-hub", "--eventHub", "--eventhub", "--eh" },
+                new ParseArgument<EventhubAuthenticationContext>(result => OptionFactory.ParseEventhubAuthenticationContext(result)))
             {
                 Name = "EventHubConnectionString",
                 Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
@@ -991,25 +996,9 @@ namespace VirtualClient
             else
             {
                 IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
-                if (parameters.ContainsKey(nameof(DependencyBlobStore.ClientId)))
-                {
-                    store = new DependencyBlobStore(storeName, parameters["connection"].ToString());
-                }
-                else if (parameters.ContainsKey(nameof(DependencyBlobStore.UseManagedIdentity)))
-                {
-                    store = new DependencyBlobStore(storeName);
-                }
-                else if (parameters.ContainsKey(nameof(DependencyBlobStore.UseCertificate)))
-                {
-                    
-                    store = new DependencyBlobStore(
-                        storeName, 
-                        certificateCommonName: (string)certCommonName,
-                        issuer: (string)issuer,
-                        certificateThumbprint: (string)certThumbprint,
-                        clientId: (string)clientId,
-                        tenantId: (string)tenantId);
-                }
+                TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
+                string endpointUrl = parameters.GetValue<string>("EndpointUrl", "https://virtualclient.blob.core.windows.net/packages");
+                store = new DependencyBlobStore(storeName, endpointUrl, tokenCredential);
             }
 
             if (store == null)
@@ -1020,6 +1009,25 @@ namespace VirtualClient
             }
 
             return store;
+        }
+
+        private static EventhubAuthenticationContext ParseEventhubAuthenticationContext(ArgumentResult parsedResult)
+        {
+            EventhubAuthenticationContext authContext;
+            string argument = parsedResult.Tokens.First().Value;
+            IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
+            if (parameters.TryGetValue(nameof(EventhubAuthenticationContext.ConnectionString), out IConvertible connectionString))
+            {
+                authContext = new EventhubAuthenticationContext((string)connectionString);
+            }
+            else
+            {
+                string eventhubNamespace = parameters.GetValue<string>(nameof(EventhubAuthenticationContext.EventhubNamespace));
+                TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
+                authContext = new EventhubAuthenticationContext(eventhubNamespace, tokenCredential);
+            }
+
+            return authContext;
         }
 
         private static TimeSpan ParseTimeSpan(ArgumentResult parsedResult)
@@ -1208,30 +1216,41 @@ namespace VirtualClient
             return keyValuePairs;
         }
 
-        private static TokenCredential GetTokenCredential(IDictionary<string, string> parameters, ICertificateManager certManager = null)
+        private static TokenCredential GetTokenCredential(IDictionary<string, IConvertible> parameters, ICertificateManager certManager = null)
         {
-            certManager = null ?? new CertificateManager();
-            X509Certificate2 certificate;
+            TokenCredential credential;
 
-            parameters.TryGetValue(nameof(DependencyBlobStore.CertificateSubject), out IConvertible certCommonName);
-            parameters.TryGetValue(nameof(DependencyBlobStore.CertificateThumbprint), out IConvertible certThumbprint);
-            parameters.TryGetValue(nameof(DependencyBlobStore.Issuer), out IConvertible issuer);
-            parameters.TryGetValue(nameof(DependencyBlobStore.ClientId), out IConvertible clientId);
-            parameters.TryGetValue(nameof(DependencyBlobStore.TenantId), out IConvertible tenantId);
-
-            // Using thumbprint if provided.
-            if (string.IsNullOrEmpty(blobStore.CertificateThumbprint))
+            if (parameters.GetValue<bool>("UseManagedIdentity", false) == true)
             {
-                // Get the certificate from the store
-                certificate = await this.CertificateManger.GetCertificateFromStoreAsync(blobStore.CertificateThumbprint);
+                credential = new DefaultAzureCredential();
             }
             else
             {
-                // Get the certificate from the store
-                certificate = await this.CertificateManger.GetCertificateFromStoreAsync(blobStore.Issuer, blobStore.CertificateSubject);
-            }
+                certManager = null ?? new CertificateManager();
+                X509Certificate2 certificate;
 
-            TokenCredential certCredential = new ClientCertificateCredential(blobStore.TenantId, blobStore.ClientId, certificate);
+                string certSubject = parameters.GetValue<string>("CertificateSubject", string.Empty);
+                string certThumbprint = parameters.GetValue<string>("CertificateThumbprint", string.Empty);
+                string issuer = parameters.GetValue<string>("Issuer", string.Empty);
+                string clientId = parameters.GetValue<string>("ClientId", string.Empty);
+                string tenantId = parameters.GetValue<string>("TenantId", string.Empty);
+
+                // Using thumbprint if provided.
+                if (string.IsNullOrEmpty(certThumbprint))
+                {
+                    // Get the certificate from the store
+                    certificate = certManager.GetCertificateFromStoreAsync(certThumbprint).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    // Get the certificate from the store
+                    certificate = certManager.GetCertificateFromStoreAsync(issuer, certSubject).GetAwaiter().GetResult();
+                }
+
+                credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+            }
+            
+            return credential;
         }
     }
 }

@@ -107,24 +107,20 @@ namespace VirtualClient
         /// </summary>
         /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
         /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
-        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubConnectionString, string eventHubName)
+        /// <param name="eventHubNameSpace">Eventhub namespace</param>
+        /// <param name="tokenCredential">Azure Token credential to authenticate with </param>
+        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubName, string eventHubNameSpace = null, TokenCredential tokenCredential = null, string eventHubConnectionString = null)
         {
-            var client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
-            EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
+            EventHubProducerClient client;
+            if (string.IsNullOrEmpty(eventHubConnectionString))
+            {
+                client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
+            }
+            else
+            {
+                client = new EventHubProducerClient(eventHubNameSpace, eventHubName, tokenCredential);
+            }
 
-            DependencyFactory.telemetryChannels.Add(channel);
-            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
-            return channel;
-        }
-
-        /// <summary>
-        /// Creates an Event Hub channel targeting the hub provided.
-        /// </summary>
-        /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
-        /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
-        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventhubNamespace, string eventHubName, string certificateName)
-        {
-            var client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
             DependencyFactory.telemetryChannels.Add(channel);

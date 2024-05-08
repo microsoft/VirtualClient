@@ -270,13 +270,13 @@ namespace VirtualClient
         /// <summary>
         /// Downloads the blob to the stream provided.
         /// </summary>
-        protected virtual async Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
+        protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
         {
             DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
-            BlobContainerClient containerClient = await this.CreateContainerClientAsync(descriptor, blobStore, cancellationToken);
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
-            return await blobClient.DownloadToAsync(stream, cancellationToken);
+            return blobClient.DownloadToAsync(stream, cancellationToken);
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace VirtualClient
         protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
         {
             DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
-            BlobContainerClient containerClient = await this.CreateContainerClientAsync(descriptor, blobStore, cancellationToken);
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
             try
@@ -305,7 +305,7 @@ namespace VirtualClient
                 .ConfigureAwait(false);
         }
 
-        private async Task<BlobContainerClient> CreateContainerClientAsync(BlobDescriptor descriptor, DependencyBlobStore blobStore, CancellationToken cancellationToken)
+        private BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
         {
             // [Authentication Options]
             // 1) Storage Account connection string
@@ -357,14 +357,14 @@ namespace VirtualClient
                     containerClient = new BlobContainerClient(blobStore.ConnectionToken, descriptor.ContainerName.ToLowerInvariant());
                 }
             }
-            else if (blobStore.UseCertificate == true)
+            else if (blobStore.TokenCredential != null)
             {
-
-                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), certCredential);
+                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), blobStore.TokenCredential);
             }
-            else if (blobStore.UseManagedIdentity == true)
+            else
             {
-                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), credential: new DefaultAzureCredential());
+                throw new DependencyException(
+                    "Neither sas-url nor token credential was provided to the StorageBlobManager to uploaddownload from Blob storage.", ErrorReason.DependencyDescriptionInvalid);
             }
 
             return containerClient;
