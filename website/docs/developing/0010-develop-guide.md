@@ -911,22 +911,24 @@ examples illustrate how to do this.
   
 
   Once the profile is created, setup Visual Studio for debugging
-  1. Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
-  2. Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
+  * Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
+
+  * Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
     **Set as Startup Project** from the context menu.
-  3. Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
-     * Application arguments =```--profile={PathToCustomProfile} --profile=MONITORS-NONE.json --packages="{PackageStoreConnectionString|SASUri}"```.  
-       (e.g. ```--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json --packages="https://virtualclient..."```)
-  4. Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
-  5. Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
+
+  * Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
+    * Application arguments = \{VirtualClientCommandLine\}    
+      (e.g. `--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json --packages="https://virtualclient..."`)
+
+  * Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
+
+  * Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
 
 
 * **Custom Profile Option #2**  
   This option is the same as option #1 above except that the developer will copy the workload dependency package to the appropriate directory in the 
   Virtual Client build output directory ahead of time. Once the package is in this directory, the Virtual Client does not need to download it and thus
   the custom profile can be simplified by removing the "Dependencies" section as illustrated below.
-
-  
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
@@ -958,14 +960,18 @@ examples illustrate how to do this.
   ```
   
   Once the profile is created, setup Visual Studio for debugging
-  1. Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
-  2. Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
+  * Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
+
+  * Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
     **Set as Startup Project** from the context menu.
-  3. Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
-     * Application arguments = ```--profile={PathToCustomProfile} --profile=MONITORS-NONE.json```.  
-       (e.g. ```--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json```)
-  4. Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
-  5. Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
+
+  * Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
+     * Application arguments = \{VirtualClientCommandLine\}    
+       (e.g. `--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json`)  
+
+  * Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
+
+  * Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
 
 * **Custom Profile Option #3**  
   This option is the same as option #2 above except that we will set an environment variable to the path/directory location of the workload dependency
@@ -992,25 +998,30 @@ examples illustrate how to do this.
   }
   ```
   
-  The workload dependencies package exists in a directory on the system already. We set an environment variable **VCDependenciesPath** to this path/directory location 
+  The workload dependencies package exists in a directory on the system already. We set an environment variable **VC_PACKAGES_PATH** to this path/directory location 
   before beginning to debug.
 
   ```
   e.g.
 
-  # Workload dependency package exists in a folder on the file system. We will set the 'VCDependenciesPath' environment variable to this
-  # location.
+  # Workload dependency package exists in a folder on the file system. We will set the 'VC_PACKAGES_PATH' environment 
+  # variable to this location.
   S:\one\debugging\packages\exampleworkload.1.0.0.zip
   ```
 
   Once the profile is created, setup Visual Studio for debugging
-  1. Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
-  2. Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
+  * Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
+
+  * Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
     **Set as Startup Project** from the context menu.
-  3. Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
-     * Application arguments = ```--profile={PathToCustomProfile}```.  
-       (e.g. ```--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json```)
-     * Environment variables = Add the ```VCDependenciesPath``` variable and the path to your package directory.  
-       (e.g. ```VCDependenciesPath = S:\one\debugging\packages```)
-  4. Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
-  5. Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
+
+  * Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
+    * Application arguments = \{VirtualClientCommandLine\}   
+      (e.g. `--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json`)
+
+    * Environment variables = Add the `VC_PACKAGES_PATH` variable and the path to your package directory.  
+      (e.g. `VC_PACKAGES_PATH = S:\one\debugging\packages`)
+
+  * Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
+
+  * Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
