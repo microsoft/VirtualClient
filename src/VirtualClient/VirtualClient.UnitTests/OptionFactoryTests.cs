@@ -190,9 +190,6 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--event-hub-connection-string")]
-        [TestCase("--eventHubConnectionString")]
-        [TestCase("--eventhubconnectionstring")]
         [TestCase("--event-hub")]
         [TestCase("--eventHub")]
         [TestCase("--eventhub")]
@@ -578,11 +575,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHubConnectionString=anyconnectionstring", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHubConnectionString=anyconnectionstring --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHub=EventhubNamespace=anyconnectionstring;ManagedIdentityId=123", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHub=EventhubNamespace=anyconnectionstring;ManagedIdentityId=123 --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHubConnectionString=anyconnectionstring" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHubConnectionString=anyconnectionstring"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHub=EventhubNamespace=anyconnectionstring;ManagedIdentityId=123" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHub=EventhubNamespace=anyconnectionstring;ManagedIdentityId=123"));
             }
         }
 

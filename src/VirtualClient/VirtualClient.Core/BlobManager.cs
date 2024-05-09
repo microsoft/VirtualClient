@@ -60,16 +60,6 @@ namespace VirtualClient
         /// </summary>
         public DependencyStore StoreDescription { get; }
 
-        /// <summary>
-        /// Certificate manager to read certificate from local cert store.
-        /// </summary>
-        internal ICertificateManager CertificateManger { get; set; }
-
-        /// <summary>
-        /// Authentication provider
-        /// </summary>
-        internal IAuthenticationProvider<AuthenticationResult> AuthenticationProvider { get; set; }
-
         /// <inheritdoc />
         public async Task<DependencyDescriptor> DownloadBlobAsync(DependencyDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
         {

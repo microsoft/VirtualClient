@@ -147,7 +147,7 @@ stages:
         repository: 'microsoft-amazonlinux2-prod-yum'
 
 
-    # Azure Mariner
+    # AzLinux
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish'
       inputs:
