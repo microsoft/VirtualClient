@@ -150,9 +150,11 @@ namespace VirtualClient
 
         [Test]
         [TestCase("DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net")]
+        [TestCase("\"DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net\"")]
         [TestCase("BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z")]
         [TestCase("https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
         [TestCase("https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
+        [TestCase("\"https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https\"")]
         public void ContentStoreOptionSupportsValidConnectionStringsAndSasTokenUris(string connectionToken)
         {
             Option option = OptionFactory.CreateContentStoreOption();

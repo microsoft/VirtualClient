@@ -1024,16 +1024,27 @@ namespace VirtualClient
         {
             EventHubAuthenticationContext authContext;
             string argument = parsedResult.Tokens.First().Value;
-            IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
-            if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString))
+            if (argument.TrimStart('\'').TrimStart('\"').StartsWith("Endpoint=", StringComparison.OrdinalIgnoreCase))
             {
-                authContext = new EventHubAuthenticationContext((string)connectionString);
+                // This is the older way of supplier connection string directly.
+                // --eventhub=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx
+                authContext = new EventHubAuthenticationContext(argument);
             }
             else
             {
-                string eventHubNamespace = parameters.GetValue<string>(nameof(EventHubAuthenticationContext.EventHubNamespace));
-                TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
-                authContext = new EventHubAuthenticationContext(eventHubNamespace, tokenCredential);
+                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
+                if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString))
+                {
+                    // This is the new way of supplying connection string with declaration.
+                    // --eventhub=ConnectionString=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx
+                    authContext = new EventHubAuthenticationContext((string)connectionString);
+                }
+                else
+                {
+                    string eventHubNamespace = parameters.GetValue<string>(nameof(EventHubAuthenticationContext.EventHubNamespace));
+                    TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
+                    authContext = new EventHubAuthenticationContext(eventHubNamespace, tokenCredential);
+                }
             }
 
             return authContext;
@@ -1200,29 +1211,6 @@ namespace VirtualClient
             {
                 throw new ArgumentException(errorMessage);
             }
-        }
-
-        private static IDictionary<string, string> ParseConnectionString(string value)
-        {
-            // Parse connection string style arugments into list of key value pairs
-            // The key-value pairs will be delimetered by semi-colons
-            // Example format: CertificateThumbprint=AAA;ClientId=BBB;TenantId=CCC
-
-            IDictionary<string, string> keyValuePairs = new Dictionary<string, string>();
-
-            string[] pairs = value.Split(';');
-            foreach (string pair in pairs)
-            {
-                string[] keyValue = pair.Split('=');
-                if (keyValue.Length == 2)
-                {
-                    string key = keyValue[0].Trim();
-                    string stringValue = keyValue[1].Trim();
-                    keyValuePairs.Add(key, stringValue);
-                }
-            }
-
-            return keyValuePairs;
         }
 
         private static TokenCredential GetTokenCredential(IDictionary<string, IConvertible> parameters)
