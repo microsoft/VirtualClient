@@ -17,6 +17,7 @@ namespace VirtualClient
     using Azure.Core;
     using Azure.Identity;
     using Azure.Messaging.EventHubs.Producer;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -260,13 +261,13 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateEventHubConnectionStringOption(bool required = false, object defaultValue = null)
+        public static Option CreateEventhubAuthenticationContextOption(bool required = false, object defaultValue = null)
         {
             Option<EventhubAuthenticationContext> option = new Option<EventhubAuthenticationContext>(
-                new string[] { "--event-hub-connection-string", "--eventHubConnectionString", "--eventhubconnectionstring", "--event-hub", "--eventHub", "--eventhub", "--eh" },
+                new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh" },
                 new ParseArgument<EventhubAuthenticationContext>(result => OptionFactory.ParseEventhubAuthenticationContext(result)))
             {
-                Name = "EventHubConnectionString",
+                Name = "EventhubAuthenticationContext",
                 Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
                 ArgumentHelpName = "connectionstring",
                 AllowMultipleArgumentsPerToken = false
@@ -750,7 +751,7 @@ namespace VirtualClient
 
                 OptionFactory.ThrowIfOptionExists(
                     result,
-                    "EventHubConnectionString",
+                    "EventhubAuthenticationContext",
                     "Invalid usage. An Event Hub connection string option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
 
                 return string.Empty;
@@ -968,7 +969,7 @@ namespace VirtualClient
             // Example Format:
             // --metadata=Property1=true,,,Property2=1234,,,Property3=value1,value2
 
-            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>();
+            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             foreach (Token token in parsedResult.Tokens)
             {
                 if (!string.IsNullOrWhiteSpace(token.Value))
@@ -1220,9 +1221,9 @@ namespace VirtualClient
         {
             TokenCredential credential;
 
-            if (parameters.GetValue<bool>("UseManagedIdentity", false) == true)
+            if (parameters.TryGetValue("ManagedIdentityId", out IConvertible managedIdentityId))
             {
-                credential = new DefaultAzureCredential();
+                credential = new ManagedIdentityCredential((string)managedIdentityId);
             }
             else
             {
@@ -1236,7 +1237,7 @@ namespace VirtualClient
                 string tenantId = parameters.GetValue<string>("TenantId", string.Empty);
 
                 // Using thumbprint if provided.
-                if (string.IsNullOrEmpty(certThumbprint))
+                if (!string.IsNullOrEmpty(certThumbprint))
                 {
                     // Get the certificate from the store
                     certificate = certManager.GetCertificateFromStoreAsync(certThumbprint).GetAwaiter().GetResult();

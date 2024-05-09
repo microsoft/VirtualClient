@@ -44,6 +44,11 @@ Virtual Client supports the following authentication options for all blob stores
 [Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
 [Account Shared Access Signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN)
 
+  * Azure Entra Id + Certificate
+    ```--packages=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
+
+  * Azure Managed Identity
+
   * **Storage Account Connection String**  
     The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
     storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a

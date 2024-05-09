@@ -110,7 +110,7 @@ namespace VirtualClient.Contracts
         /// <param name="text">Raw text.</param>
         public static IDictionary<string, IConvertible> ParseVcDelimiteredParameters(string text)
         {
-            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>();
+            IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             string[] segments = text.Split('=', StringSplitOptions.TrimEntries);
             // Only start at second segment and end at second to last segment
             // Because first segment is the key for first pair, and last segment is the value for last pair.

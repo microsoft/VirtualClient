@@ -116,6 +116,7 @@ namespace VirtualClient
             catch (Exception exc)
             {
                 exitCode = 1;
+                Console.Error.WriteLine(exc.Message);
                 Console.Error.WriteLine(exc.StackTrace);
             }
 
@@ -206,7 +207,7 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --eventHubConnectionString
-                OptionFactory.CreateEventHubConnectionStringOption(required: false),
+                OptionFactory.CreateEventhubAuthenticationContextOption(required: false),
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
@@ -317,8 +318,8 @@ namespace VirtualClient
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
-                // --eventHubConnectionString
-                OptionFactory.CreateEventHubConnectionStringOption(required: false),
+                // --eventhub
+                OptionFactory.CreateEventhubAuthenticationContextOption(required: false),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),

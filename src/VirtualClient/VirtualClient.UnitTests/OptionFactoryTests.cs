@@ -199,7 +199,7 @@ namespace VirtualClient
         [TestCase("--eh")]
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateEventHubConnectionStringOption();
+            Option option = OptionFactory.CreateEventhubAuthenticationContextOption();
             ParseResult result = option.Parse($"{alias}=ConnectionString");
             Assert.IsFalse(result.Errors.Any());
         }
