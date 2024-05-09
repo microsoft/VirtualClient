@@ -68,7 +68,7 @@ namespace VirtualClient.TestExtensions
         private static X509Certificate2 CreateCertificate(bool withPrivateKey = false)
         {
             X509Certificate2 certificate = null;
-            string resourcesDirectory = $@"{Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location)}\Resources";
+            string resourcesDirectory = Path.Combine(Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location), "Resources");
 
             if (withPrivateKey)
             {
