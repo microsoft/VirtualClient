@@ -207,7 +207,7 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --eventHubConnectionString
-                OptionFactory.CreateEventhubAuthenticationContextOption(required: false),
+                OptionFactory.CreateEventHubAuthenticationContextOption(required: false),
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
@@ -319,7 +319,7 @@ namespace VirtualClient
                 OptionFactory.CreateDebugFlag(required: false, false),
 
                 // --eventhub
-                OptionFactory.CreateEventhubAuthenticationContextOption(required: false),
+                OptionFactory.CreateEventHubAuthenticationContextOption(required: false),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),

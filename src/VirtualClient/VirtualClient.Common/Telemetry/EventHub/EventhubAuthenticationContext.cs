@@ -11,25 +11,25 @@ namespace VirtualClient.Common.Telemetry
     /// <summary>
     /// Represents context to authenticate with Azure Event Hub.
     /// </summary>
-    public class EventhubAuthenticationContext
+    public class EventHubAuthenticationContext
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventhubAuthenticationContext"/> class.
+        /// Initializes a new instance of the <see cref="EventHubAuthenticationContext"/> class.
         /// </summary>
         /// <param name="connectionString">Eventhub connection string</param>
-        public EventhubAuthenticationContext(string connectionString)
+        public EventHubAuthenticationContext(string connectionString)
         {
             this.ConnectionString = connectionString;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventhubAuthenticationContext"/> class.
+        /// Initializes a new instance of the <see cref="EventHubAuthenticationContext"/> class.
         /// </summary>
-        /// <param name="eventhubNameSpace">Eventhub namespace</param>
+        /// <param name="eventHubNameSpace">Eventhub namespace</param>
         /// <param name="tokenCredential">Token credential to authenticate with eventhub</param>
-        public EventhubAuthenticationContext(string eventhubNameSpace, TokenCredential tokenCredential)
+        public EventHubAuthenticationContext(string eventHubNameSpace, TokenCredential tokenCredential)
         {
-            this.EventhubNamespace = eventhubNameSpace;
+            this.EventHubNamespace = eventHubNameSpace;
             this.TokenCredential = tokenCredential;
         }
 
@@ -41,7 +41,7 @@ namespace VirtualClient.Common.Telemetry
         /// <summary>
         /// Fully qualified eventhub namespace
         /// </summary>
-        public string EventhubNamespace { get; }
+        public string EventHubNamespace { get; }
 
         /// <summary>
         /// TokenCredential for Azure Eventhub

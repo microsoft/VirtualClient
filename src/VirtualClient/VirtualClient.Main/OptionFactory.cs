@@ -34,6 +34,11 @@ namespace VirtualClient
         private static readonly IFileSystem fileSystem = new FileSystem();
 
         /// <summary>
+        /// ICertificateManager that could be override in unit tests.
+        /// </summary>
+        internal static ICertificateManager CertificateManager { get; set; } = null;
+
+        /// <summary>
         /// Command line option defines the ID of the agent to use with telemetry data reported from the system.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -261,13 +266,13 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateEventhubAuthenticationContextOption(bool required = false, object defaultValue = null)
+        public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null)
         {
-            Option<EventhubAuthenticationContext> option = new Option<EventhubAuthenticationContext>(
+            Option<EventHubAuthenticationContext> option = new Option<EventHubAuthenticationContext>(
                 new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh" },
-                new ParseArgument<EventhubAuthenticationContext>(result => OptionFactory.ParseEventhubAuthenticationContext(result)))
+                new ParseArgument<EventHubAuthenticationContext>(result => OptionFactory.ParseEventHubAuthenticationContext(result)))
             {
-                Name = "EventhubAuthenticationContext",
+                Name = "EventHubAuthenticationContext",
                 Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
                 ArgumentHelpName = "connectionstring",
                 AllowMultipleArgumentsPerToken = false
@@ -751,7 +756,7 @@ namespace VirtualClient
 
                 OptionFactory.ThrowIfOptionExists(
                     result,
-                    "EventhubAuthenticationContext",
+                    "EventHubAuthenticationContext",
                     "Invalid usage. An Event Hub connection string option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
 
                 return string.Empty;
@@ -1012,20 +1017,20 @@ namespace VirtualClient
             return store;
         }
 
-        private static EventhubAuthenticationContext ParseEventhubAuthenticationContext(ArgumentResult parsedResult)
+        private static EventHubAuthenticationContext ParseEventHubAuthenticationContext(ArgumentResult parsedResult)
         {
-            EventhubAuthenticationContext authContext;
+            EventHubAuthenticationContext authContext;
             string argument = parsedResult.Tokens.First().Value;
             IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
-            if (parameters.TryGetValue(nameof(EventhubAuthenticationContext.ConnectionString), out IConvertible connectionString))
+            if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString))
             {
-                authContext = new EventhubAuthenticationContext((string)connectionString);
+                authContext = new EventHubAuthenticationContext((string)connectionString);
             }
             else
             {
-                string eventhubNamespace = parameters.GetValue<string>(nameof(EventhubAuthenticationContext.EventhubNamespace));
+                string eventHubNamespace = parameters.GetValue<string>(nameof(EventHubAuthenticationContext.EventHubNamespace));
                 TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
-                authContext = new EventhubAuthenticationContext(eventhubNamespace, tokenCredential);
+                authContext = new EventHubAuthenticationContext(eventHubNamespace, tokenCredential);
             }
 
             return authContext;
@@ -1217,7 +1222,7 @@ namespace VirtualClient
             return keyValuePairs;
         }
 
-        private static TokenCredential GetTokenCredential(IDictionary<string, IConvertible> parameters, ICertificateManager certManager = null)
+        private static TokenCredential GetTokenCredential(IDictionary<string, IConvertible> parameters)
         {
             TokenCredential credential;
 
@@ -1227,12 +1232,12 @@ namespace VirtualClient
             }
             else
             {
-                certManager = null ?? new CertificateManager();
+                ICertificateManager certManager = OptionFactory.CertificateManager ?? new CertificateManager();
                 X509Certificate2 certificate;
 
                 string certSubject = parameters.GetValue<string>("CertificateSubject", string.Empty);
                 string certThumbprint = parameters.GetValue<string>("CertificateThumbprint", string.Empty);
-                string issuer = parameters.GetValue<string>("Issuer", string.Empty);
+                string issuer = parameters.GetValue<string>("CertificateIssuer", string.Empty);
                 string clientId = parameters.GetValue<string>("ClientId", string.Empty);
                 string tenantId = parameters.GetValue<string>("TenantId", string.Empty);
 

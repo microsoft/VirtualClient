@@ -44,33 +44,60 @@ Virtual Client supports the following authentication options for all blob stores
 [Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
 [Account Shared Access Signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN)
 
-  * Azure Entra Id + Certificate
+  * **Azure Entra Id + Certificate using thumbprint** 
+    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
+    This method uses certificate thumbprint to search for the certificate. Required parameters are:
+    * CertificateThumbprint
+    * ClientId
+    * TenantId
+    * EndpointUrl
+
     ```--packages=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
 
-  * Azure Managed Identity
+  * **Azure Entra Id + Certificate using issuer + subject** 
+    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
+    This method uses certificate issuer + subject to search for the certificate. This has the benefit of supporting frequent cert rotation with no argument changes. The issuer can be a substring of the exact issuer appearing in the certificate. The search only looks for contains. 
+    Required parameters are:
+    * CertificateIssuer
+    * CertificateSubject
+    * ClientId
+    * TenantId
+    * EndpointUrl
 
-  * **Storage Account Connection String**  
-    The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
-    storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
-    SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
-    account that the application should be able to access.<br/><br/>
-    ```(e.g. DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net)```
+    ```--packages=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
 
-  * **Blob Service Connection String**  
-    This is a connection string to the Blob service in the storage account. It allows user-defined/restricted access privileges to be defined for
-    all containers and blobs in the storage account. This is a good fit for scenarios where content (e.g. from different monitors) is uploaded to 
-    different containers within the blob store and thus the application needs access to all containers.<br/><br/>
-    ```(e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...)```
+  * **Azure Managed Identity** 
+    This method uses Azure managed identity to authenticate. An id is required to avoid cases where a machine have multiple identities.
+    
+    ```--packages=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
 
   * **Blob Service SAS URI**  
-    This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.<br/><br/>
+    This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.
+
     ```(e.g. https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...)```
 
   * **Blob Container SAS URI**  
     This is a SAS URI to a single blob container within the storage account. This is the most restrictive way of providing privileges but is also the most secure because it
     provides the least amount of access to the application. This is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container 
-    within the blob store.<br/><br/>
+    within the blob store.
+
     ```(e.g. https://anystorageaccount.blob.core.windows.net/packages?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH...)```
+
+  * **Storage Account Connection String (Deprecated)**  
+    The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
+    storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
+    SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
+    account that the application should be able to access.
+
+    ```(e.g. DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net)```
+
+  * **Blob Service Connection String (Deprecated)**  
+    This is a connection string to the Blob service in the storage account. It allows user-defined/restricted access privileges to be defined for
+    all containers and blobs in the storage account. This is a good fit for scenarios where content (e.g. from different monitors) is uploaded to 
+    different containers within the blob store and thus the application needs access to all containers.
+
+    ```(e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...)```
+
 
 Use the following recommendations when creating shared access keys in the blob store to ensure the right amount of privileges
 are granted to the Virtual Client application for uploading and downloading blobs.

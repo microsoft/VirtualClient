@@ -137,13 +137,13 @@ namespace VirtualClient.Contracts.Parser
                 { "key3", "v3a;v3b" }
             }, result);
 
-            string complexExample = "key1=v1a;v1b,v1c;key2=value2;key3=v3a;;v3b,,,key4=v4a,,,v4b;v4c;;;v4d";
+            string complexExample = "key1=v1a;v1b,v1 c;key2=value2;key3=v 3 a;;v3b,,,key4=v4a,,,v4b;v4c;;;v4d";
             result = TextParsingExtensions.ParseVcDelimiteredParameters(complexExample);
             CollectionAssert.AreEqual(new Dictionary<string, string>
             {
-                { "key1", "v1a;v1b,v1c" },
+                { "key1", "v1a;v1b,v1 c" },
                 { "key2", "value2" },
-                { "key3", "v3a;;v3b" },
+                { "key3", "v 3 a;;v3b" },
                 { "key4", "v4a,,,v4b;v4c;;;v4d" }
             }, result);
         }
