@@ -1003,15 +1003,18 @@ namespace VirtualClient
             {
                 IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
                 TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
-                string endpointUrl = parameters.GetValue<string>("EndpointUrl", "https://virtualclient.blob.core.windows.net/packages");
-                store = new DependencyBlobStore(storeName, endpointUrl, tokenCredential);
-            }
-
-            if (store == null)
-            {
-                throw new ArgumentException(
+                if (tokenCredential!= null)
+                {
+                    string endpointUrl = parameters.GetValue<string>("EndpointUrl", "https://virtualclient.blob.core.windows.net/packages");
+                    store = new DependencyBlobStore(storeName, endpointUrl, tokenCredential);
+                }
+                else
+                {
+                    throw new ArgumentException(
                     $"The value provided for the '{optionName}' option is not a valid. The value provided for a dependency store must be a " +
-                    $"valid storage account blob connection string, SAS URI or a directory path that exists on the system.");
+                    $"valid storage account blob connection string, SAS URI or a directory path that exists on the system." +
+                    $"Or a delimitered parameter list that describes authentication using certificate or managed identity.");
+                }
             }
 
             return store;
@@ -1246,14 +1249,19 @@ namespace VirtualClient
                 {
                     // Get the certificate from the store
                     certificate = certManager.GetCertificateFromStoreAsync(certThumbprint).GetAwaiter().GetResult();
+                    credential = new ClientCertificateCredential(tenantId, clientId, certificate);
                 }
-                else
+                else if (!string.IsNullOrEmpty(issuer) && !string.IsNullOrEmpty(certSubject))
                 {
                     // Get the certificate from the store
                     certificate = certManager.GetCertificateFromStoreAsync(issuer, certSubject).GetAwaiter().GetResult();
+                    credential = new ClientCertificateCredential(tenantId, clientId, certificate);
                 }
-
-                credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+                else
+                {
+                    // Assign null for the credential. Caller method should throw ArgumentException if needed.
+                    credential = null;
+                }              
             }
             
             return credential;
