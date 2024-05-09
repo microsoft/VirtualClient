@@ -1,0 +1,23 @@
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 3
+      - name: Run-Script
+        run: |
+          pip install yq
+          chmod +x ./update-version.sh
+          ./update-version.sh
