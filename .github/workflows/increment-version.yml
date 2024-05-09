@@ -19,5 +19,7 @@ jobs:
       - name: Run-Script
         run: |
           pip install yq
-          chmod +x ./update-version.sh
-          ./update-version.sh
+          chmod +x ./increment-linux-version.sh
+          ./increment-linux-version.sh
+          chmod +x ./increment-windows-version.sh
+          ./increment-windows-version.sh
