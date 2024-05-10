@@ -951,12 +951,12 @@ examples illustrate how to do this.
   }
   ```
   
-  The workload dependencies package must be copied into the **\{repo_directory\}/out/bin/Debug/x64/VirtualClient.Main/packages**
+  The workload dependencies package must be copied into the **\{repo_directory\}/out/bin/Release/x64/VirtualClient.Main/packages**
   directory before beginning to debug.
 
   ```
   e.g.
-  S:\one\virtualclient\out\bin\Debug\VirtualClient.Main\packages\exampleworkload.1.0.0.zip
+  S:\one\virtualclient\out\bin\Release\VirtualClient.Main\packages\exampleworkload.1.0.0.zip
   ```
   
   Once the profile is created, setup Visual Studio for debugging

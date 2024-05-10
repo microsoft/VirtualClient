@@ -129,7 +129,6 @@ namespace VirtualClient
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
 
                 this.SetGlobalTelemetryProperties(profileNames, dependencies);
-                this.ApplyBackwardsCompatibilityRequirements();
 
                 if (this.IsCleanRequested)
                 {
@@ -242,34 +241,6 @@ namespace VirtualClient
             }
 
             return exitCode;
-        }
-
-        /// <summary>
-        /// Performs any changes that need to be made to support backwards compatibility
-        /// requirements for the application.
-        /// </summary>
-        protected void ApplyBackwardsCompatibilityRequirements()
-        {
-            this.AgentId = BackwardsCompatibility.GetAgentId(this.AgentId, this.Metadata);
-            this.ExperimentId = BackwardsCompatibility.GetExperimentId(this.ExperimentId, this.Metadata);
-
-            // Preserve backwards compatibility with the previous way of referencing a blob store using
-            // an AccountKey supplied on the command line. In the future, we will be removing the need to 
-            // supply the AccountKey as a parameter on the command line (e.g. --parameters:AccountKey={key})
-            // in favor of supplying the package store connection string/SAS URI (e.g. --packagesStore={connectionstring}).
-            if (this.PackageStore == null && this.Parameters?.Any() == true)
-            {
-                if (this.Parameters.TryGetValue("AccountKey", out IConvertible accountKey))
-                {
-                    string connectionToken =
-                        $"DefaultEndpointsProtocol=https;" +
-                        $"AccountName={RunProfileCommand.DefaultBlobStoreUri.Host.Split('.').First()};" +
-                        $"AccountKey={accountKey};" +
-                        $"EndpointSuffix=core.windows.net";
-
-                    this.PackageStore = new DependencyBlobStore(DependencyStore.Packages, connectionToken);
-                }
-            }
         }
 
         /// <summary>
@@ -848,6 +819,16 @@ namespace VirtualClient
             }
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
+
+            if (this.Timeout?.ProfileIterations != null)
+            {
+                logger.LogMessage($"Iterations: {this.Timeout.ProfileIterations}", telemetryContext);
+            }
+            else if (this.Timeout?.Duration != null)
+            {
+                logger.LogMessage($"Duration: {this.Timeout.Duration}", telemetryContext);
+            }
+            
             this.Validate(dependencies, profile);
 
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
