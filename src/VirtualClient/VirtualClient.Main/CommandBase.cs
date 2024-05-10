@@ -364,10 +364,7 @@ namespace VirtualClient
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(level)
-                .WithFilter((eventId, logLevel, state) =>
-                {
-                    return eventId.Id == (int)LogType.Trace;
-                }));
+                .HandleTraceEvents());
         }
 
         private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, EventHubAuthenticationContext eventHubAuthContext, LogLevel level)

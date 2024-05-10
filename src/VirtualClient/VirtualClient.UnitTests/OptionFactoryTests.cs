@@ -775,6 +775,19 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        public void IterationsOptionsCanParsedCorrectlyWithPackagesSasurl()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string sasPart = "--packages=https://anystorageaccount.blob.core.windows.net/?sv=2020&ss=b&srt=c&sp=rwlacx&se=2Z&st=2021Z&spr=https";
+                string eventhubPart = "--eventhub=\"Endpoint=sb://xxx.servicebus.windows.net/;S=Az;SKey=EZ=\"";
+                string itertionPart = "--iterations=2";
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { }, tokenSource);
+                ParseResult result = commandBuilder.Build().Parse($"{sasPart} {itertionPart} {eventhubPart}");
+            }
+        }
+
         private static X509Certificate2 GenerateMockCertificate()
         {
             using (RSA rsa = RSA.Create(1024))

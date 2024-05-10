@@ -819,6 +819,16 @@ namespace VirtualClient
             }
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
+
+            if (this.Timeout?.ProfileIterations != null)
+            {
+                logger.LogMessage($"Iterations: {this.Timeout.ProfileIterations}", telemetryContext);
+            }
+            else if (this.Timeout?.Duration != null)
+            {
+                logger.LogMessage($"Duration: {this.Timeout.Duration}", telemetryContext);
+            }
+            
             this.Validate(dependencies, profile);
 
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))

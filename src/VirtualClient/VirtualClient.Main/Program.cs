@@ -105,13 +105,15 @@ namespace VirtualClient
                     }
                 }
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException exc)
             {
                 // Expected when the CancellationTokenSource is cancelled followed by being disposed.
+                Console.WriteLine(exc.Message);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException exc)
             {
                 // Expected when the Ctrl-C is pressed to cancel operation.
+                Console.WriteLine(exc.Message);
             }
             catch (Exception exc)
             {
