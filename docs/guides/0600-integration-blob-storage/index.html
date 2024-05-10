@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.0f7a7ee5.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.3d41beb0.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.d8887172.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -53,31 +53,62 @@ VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore=&quo
 <a href="https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN">Account Shared Access Signatures</a></p>
 <ul>
 <li>
-<p><strong>Storage Account Connection String</strong><br>
-<!-- -->The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
-storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
-SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
-account that the application should be able to access.<br><br>
-<code>(e.g. DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net)</code></p>
+<p><strong>Azure Entra Id + Certificate using thumbprint</strong>
+VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
+This method uses certificate thumbprint to search for the certificate. Required parameters are:</p>
+<ul>
+<li>CertificateThumbprint</li>
+<li>ClientId</li>
+<li>TenantId</li>
+<li>EndpointUrl</li>
+</ul>
+<p><code>--packages=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages</code></p>
 </li>
 <li>
-<p><strong>Blob Service Connection String</strong><br>
-<!-- -->This is a connection string to the Blob service in the storage account. It allows user-defined/restricted access privileges to be defined for
-all containers and blobs in the storage account. This is a good fit for scenarios where content (e.g. from different monitors) is uploaded to
-different containers within the blob store and thus the application needs access to all containers.<br><br>
-<code>(e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&amp;ss=b&amp;srt=c&amp;sp=rwlacx&amp;se=2021-11-23T14:30:18Z&amp;st=2021-11-23T02:19:18Z&amp;spr=https&amp;sig=jcql6El...)</code></p>
+<p><strong>Azure Entra Id + Certificate using issuer + subject</strong>
+VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
+This method uses certificate issuer + subject to search for the certificate. This has the benefit of supporting frequent cert rotation with no argument changes. The issuer can be a substring of the exact issuer appearing in the certificate. The search only looks for contains.
+Required parameters are:</p>
+<ul>
+<li>CertificateIssuer</li>
+<li>CertificateSubject</li>
+<li>ClientId</li>
+<li>TenantId</li>
+<li>EndpointUrl</li>
+</ul>
+<p><code>--packages=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages</code></p>
+</li>
+<li>
+<p><strong>Azure Managed Identity</strong>
+This method uses Azure managed identity to authenticate. An id is required to avoid cases where a machine have multiple identities.</p>
+<p><code>--packages=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages</code></p>
 </li>
 <li>
 <p><strong>Blob Service SAS URI</strong><br>
-<!-- -->This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.<br><br>
-<code>(e.g. https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&amp;ss=b&amp;srt=c&amp;sp=rwlacx&amp;se=2021-11-23T14:30:18Z&amp;st=2021-11-23T02:19:18Z&amp;spr=https&amp;sig=jcql6El...)</code></p>
+<!-- -->This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.</p>
+<p><code>(e.g. https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&amp;ss=b&amp;srt=c&amp;sp=rwlacx&amp;se=2021-11-23T14:30:18Z&amp;st=2021-11-23T02:19:18Z&amp;spr=https&amp;sig=jcql6El...)</code></p>
 </li>
 <li>
 <p><strong>Blob Container SAS URI</strong><br>
 <!-- -->This is a SAS URI to a single blob container within the storage account. This is the most restrictive way of providing privileges but is also the most secure because it
 provides the least amount of access to the application. This is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container
-within the blob store.<br><br>
-<code>(e.g. https://anystorageaccount.blob.core.windows.net/packages?sp=r&amp;st=2021-11-23T18:22:49Z&amp;se=2021-11-24T02:22:49Z&amp;spr=https&amp;sv=2020-08-04&amp;sr=c&amp;sig=ndyPRH...)</code></p>
+within the blob store.</p>
+<p><code>(e.g. https://anystorageaccount.blob.core.windows.net/packages?sp=r&amp;st=2021-11-23T18:22:49Z&amp;se=2021-11-24T02:22:49Z&amp;spr=https&amp;sv=2020-08-04&amp;sr=c&amp;sig=ndyPRH...)</code></p>
+</li>
+<li>
+<p><strong>Storage Account Connection String (Deprecated)</strong><br>
+<!-- -->The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
+storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
+SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
+account that the application should be able to access.</p>
+<p><code>(e.g. DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net)</code></p>
+</li>
+<li>
+<p><strong>Blob Service Connection String (Deprecated)</strong><br>
+<!-- -->This is a connection string to the Blob service in the storage account. It allows user-defined/restricted access privileges to be defined for
+all containers and blobs in the storage account. This is a good fit for scenarios where content (e.g. from different monitors) is uploaded to
+different containers within the blob store and thus the application needs access to all containers.</p>
+<p><code>(e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&amp;ss=b&amp;srt=c&amp;sp=rwlacx&amp;se=2021-11-23T14:30:18Z&amp;st=2021-11-23T02:19:18Z&amp;spr=https&amp;sig=jcql6El...)</code></p>
 </li>
 </ul>
 <p>Use the following recommendations when creating shared access keys in the blob store to ensure the right amount of privileges
