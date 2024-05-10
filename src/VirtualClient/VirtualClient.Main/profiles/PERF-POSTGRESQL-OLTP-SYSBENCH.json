@@ -1,5 +1,5 @@
 {
-    "Description": "Sysbench OLTP MySQL Database Server Performance Workload",
+    "Description": "Sysbench OLTP PostgreSQL Database Server Performance Workload",
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "04:00:00",
@@ -8,6 +8,8 @@
     },
     "Parameters": {
         "DatabaseName": "sbtest",
+        "Port": "5432",
+        "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}",
         "DatabaseScenario": "Balanced",
         "Duration": "00:05:00"
     },
@@ -24,7 +26,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_write",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -38,7 +40,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_only",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -52,7 +54,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_write_only",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -66,7 +68,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_delete",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -80,7 +82,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_insert",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -94,7 +96,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_index",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -108,7 +110,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_non_index",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -122,7 +124,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_points",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -136,7 +138,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_ranges",
-                "ServerType": "MySQL",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -165,10 +167,10 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "DownloadMySqlServerPackage",
+                "Scenario": "DownloadPostgreSQLServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql-server-8.0.36.zip",
-                "PackageName": "mysql-server",
+                "BlobName": "postgresql.14.0.0-1.zip",
+                "PackageName": "postgresql",
                 "Extract": true,
                 "Role": "Server"
             }
@@ -191,52 +193,43 @@
             }
         },
         {
-            "Type": "MySQLServerInstallation",
+            "Type": "PostgreSQLServerInstallation",
             "Parameters": {
-                "Scenario": "InstallMySQLServer",
+                "Scenario": "InstallPostgreSQLServer",
                 "Action": "InstallServer",
-                "Benchmark": "OLTP",
-                "PackageName": "mysql-server",
+                "PackageName": "postgresql",
                 "Role": "Server"
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
-                "Scenario": "ConfigureMySQLServer",
+                "Scenario": "ConfigurePostgreSQLServer",
                 "Action": "ConfigureServer",
-                "Benchmark": "OLTP",
-                "PackageName": "mysql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "CreateMySQLDatabase",
-                "Action": "CreateDatabase",
-                "Benchmark": "OLTP",
+                "PackageName": "postgresql",
+                "Role": "Server",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "mysql-server",
-                "Role": "Server"
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
-                "Scenario": "SetMySQLGlobalVariables",
-                "Action": "SetGlobalVariables",
-                "Benchmark": "OLTP",
-                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
-                "PackageName": "mysql-server",
-                "Role": "Server"
+                "Scenario": "ConfigurePostgreSQLServer",
+                "Action": "SetupDatabase",
+                "PackageName": "postgresql",
+                "Role": "Server",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
             }
         },
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
-                "ServerType": "MySQL",
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "RecordCount": 1,
@@ -246,20 +239,21 @@
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
-                "Scenario": "DistributeMySQLDatabase",
+                "Scenario": "DistributePostgreSQLDatabase",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "mysql-server",
+                "PackageName": "postgresql",
+                "Port": "$.Parameters.Port",
                 "Role": "Server"
             }
         },
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
-                "ServerType": "MySQL",
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "ServerType": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",

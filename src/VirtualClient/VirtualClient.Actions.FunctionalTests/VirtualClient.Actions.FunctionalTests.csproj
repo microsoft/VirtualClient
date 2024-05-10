@@ -223,6 +223,12 @@
       <Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json" Link="Profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-OLTP-SYSBENCH.json" Link="Profiles\PERF-POSTGRESQL-OLTP-SYSBENCH.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-TPCC-SYSBENCH.json" Link="Profiles\PERF-POSTGRESQL-TPCC-SYSBENCH.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-SPECCPU-FPRATE.json" Link="Profiles\PERF-SPECCPU-FPRATE.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>

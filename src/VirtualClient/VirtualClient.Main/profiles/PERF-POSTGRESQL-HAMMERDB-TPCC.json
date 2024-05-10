@@ -61,7 +61,7 @@
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
-        "Scenario": "DownloadPoatgreSQLServerPackage",
+        "Scenario": "DownloadPostgreSQLServerPackage",
         "BlobContainer": "packages",
         "BlobName": "postgresql.14.0.0-1.zip",
         "PackageName": "postgresql",

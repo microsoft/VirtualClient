@@ -6,6 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Security.Cryptography;
     using System.Text;
     using System.Threading;
@@ -144,7 +145,7 @@ namespace VirtualClient.Dependencies
         {
             ProcessManager manager = this.SystemManager.ProcessManager;
             string stateId = $"{nameof(PostgreSQLServerConfiguration)}-{this.Action}-action-success";
-            ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>($"{nameof(ConfigurationState)}", cancellationToken)
+            ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
 
             DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
@@ -165,6 +166,10 @@ namespace VirtualClient.Dependencies
                             await this.ConfigurePostgreSQLServerAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
+                        case ConfigurationAction.SetupDatabase:
+                            await this.SetupPostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+                            break;
                         case ConfigurationAction.DistributeDatabase:
                             await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
@@ -178,14 +183,37 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port} --sharedMemoryBuffer {this.SharedMemoryBuffer}";
+            string serverIp = this.GetServerIpAddress();
+
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
                arguments,
                this.packageDirectory,
                telemetryContext,
-               cancellationToken))
+               cancellationToken,
+               runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+                }
+            }
+        }
+
+        private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port}";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+               "python3",
+               arguments,
+               this.packageDirectory,
+               telemetryContext,
+               cancellationToken,
+               runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -206,7 +234,8 @@ namespace VirtualClient.Dependencies
                     arguments,
                     Environment.CurrentDirectory,
                     telemetryContext,
-                    cancellationToken))
+                    cancellationToken,
+                    runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -253,6 +282,20 @@ namespace VirtualClient.Dependencies
             }
 
             return diskPaths;
+        }
+
+        private string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
+                serverIPAddress = serverIP.ToString();
+            }
+
+            return serverIPAddress;
         }
 
         /// <summary>
