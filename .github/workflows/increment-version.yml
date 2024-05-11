@@ -1,5 +1,6 @@
-# Action name: increment-version.
 # This action is used to automatically increment the version within the VERSION file whenever it's not manually incremented.
+name: Increment Version
+
 on:
   pull_request:
     branches:
