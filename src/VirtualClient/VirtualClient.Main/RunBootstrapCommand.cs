@@ -46,7 +46,7 @@ namespace VirtualClient
                 ContentStore = this.ContentStore,
                 Debug = this.Debug,
                 Timeout = ProfileTiming.OneIteration(),
-                EventHubConnectionString = this.EventHubConnectionString,
+                EventHubAuthenticationContext = this.EventHubAuthenticationContext,
                 ExecutionSystem = this.ExecutionSystem,
                 ExperimentId = this.ExperimentId,
                 InstallDependencies = true,

@@ -202,7 +202,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
 
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
-  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
+  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Release/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
@@ -245,7 +245,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
   e.g.
 
   # Example output directory for extensions
-  S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
+  S:\one\crc-virtualclient-examples\out\bin\Release\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
   ```
 
 **Setup Visual Studio for debugging:**

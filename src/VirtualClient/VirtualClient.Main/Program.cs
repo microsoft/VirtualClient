@@ -105,17 +105,20 @@ namespace VirtualClient
                     }
                 }
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException exc)
             {
                 // Expected when the CancellationTokenSource is cancelled followed by being disposed.
+                Console.WriteLine(exc.Message);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException exc)
             {
                 // Expected when the Ctrl-C is pressed to cancel operation.
+                Console.WriteLine(exc.Message);
             }
             catch (Exception exc)
             {
                 exitCode = 1;
+                Console.Error.WriteLine(exc.Message);
                 Console.Error.WriteLine(exc.StackTrace);
             }
 
@@ -206,7 +209,7 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --eventHubConnectionString
-                OptionFactory.CreateEventHubConnectionStringOption(required: false),
+                OptionFactory.CreateEventHubAuthenticationContextOption(required: false),
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
@@ -317,8 +320,8 @@ namespace VirtualClient
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
-                // --eventHubConnectionString
-                OptionFactory.CreateEventHubConnectionStringOption(required: false),
+                // --eventhub
+                OptionFactory.CreateEventHubAuthenticationContextOption(required: false),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),

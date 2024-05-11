@@ -79,7 +79,7 @@ namespace VirtualClient
         /// <summary>
         /// A connection string to the Event Hub into which telemetry will be uploaded.
         /// </summary>
-        public string EventHubConnectionString { get; set; }
+        public EventHubAuthenticationContext EventHubAuthenticationContext { get; set; }
 
         /// <summary>
         /// The execution system/environment platform (e.g. Azure).
@@ -310,7 +310,7 @@ namespace VirtualClient
             ILogger logger = CommandBase.CreateLogger(
                 configuration,
                 platformSpecifics,
-                this.EventHubConnectionString,
+                this.EventHubAuthenticationContext,
                 this.ProxyApiUri,
                 this.LoggingLevel,
                 telemetrySource?.ToString());
@@ -364,21 +364,18 @@ namespace VirtualClient
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(level)
-                .WithFilter((eventId, logLevel, state) =>
-                {
-                    return eventId.Id == (int)LogType.Trace;
-                }));
+                .HandleTraceEvents());
         }
 
-        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, string eventHubConnectionString, LogLevel level)
+        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, EventHubAuthenticationContext eventHubAuthContext, LogLevel level)
         {
-            if (!string.IsNullOrWhiteSpace(eventHubConnectionString))
+            if (eventHubAuthContext != null)
             {
                 EventHubLogSettings settings = configuration.GetSection(nameof(EventHubLogSettings)).Get<EventHubLogSettings>();
 
                 if (settings.IsEnabled)
                 {
-                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubConnectionString, settings, level);
+                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubAuthContext, settings, level);
                     if (eventHubProviders?.Any() == true)
                     {
                         loggingProviders.AddRange(eventHubProviders);
@@ -419,7 +416,7 @@ namespace VirtualClient
             }
         }
 
-        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics specifics, string eventHubConnectionString, Uri proxyApiUri, LogLevel level, string source = null)
+        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics specifics, EventHubAuthenticationContext eventHubAuthContext, Uri proxyApiUri, LogLevel level, string source = null)
         {
             // Application loggers. Events are routed to different loggers based upon
             // the EventId defined when the message is logged (e.g. Trace, Error, SystemEvent, TestMetrics).
@@ -434,7 +431,7 @@ namespace VirtualClient
             }
             else
             {
-                CommandBase.AddEventHubLogging(loggingProviders, configuration, eventHubConnectionString, level);
+                CommandBase.AddEventHubLogging(loggingProviders, configuration, eventHubAuthContext, level);
             }
 
             return loggingProviders.Any() ? new LoggerFactory(loggingProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
