@@ -57,7 +57,7 @@
             "Parameters": {
                 "Scenario": "DownloadPostgreSQLServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0-1.zip",
+                "BlobName": "postgresql.14.0.0.rev1.zip",
                 "PackageName": "postgresql",
                 "Extract": true,
                 "Role": "Server"

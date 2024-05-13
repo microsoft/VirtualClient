@@ -227,7 +227,7 @@ namespace VirtualClient.Dependencies
         {
             string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
 
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories {innoDbDirs} --password {this.SuperUserPassword}";
+            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\" --password {this.SuperUserPassword}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,

@@ -65,7 +65,7 @@ namespace VirtualClient.Actions
                     }
                 });
 
-                if (this.RecordCount > 1)
+                if (this.RecordCount > 1 || this.WarehouseCount > 1)
                 {
                     state.DatabasePopulated = true;
                     await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
