@@ -269,7 +269,7 @@ namespace VirtualClient
         public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null)
         {
             Option<EventHubAuthenticationContext> option = new Option<EventHubAuthenticationContext>(
-                new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventbHubConnectionString" },
+                new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventHubConnectionString" },
                 new ParseArgument<EventHubAuthenticationContext>(result => OptionFactory.ParseEventHubAuthenticationContext(result)))
             {
                 Name = "EventHubAuthenticationContext",
