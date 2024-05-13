@@ -351,7 +351,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.CentOS7:
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL7:
-                    commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}/fm");
+                    commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}-server/fm");
                     break;
 
                 case LinuxDistribution.SUSE:

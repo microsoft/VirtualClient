@@ -10,9 +10,9 @@
     "Parameters": {
         "Username": "",
         "DiskFilter": "SizeGreaterThan:1000gb",
-        "LinuxCudaVersion": "12.0",
-        "LinuxDriverVersion": "525",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        "LinuxCudaVersion": "12.4",
+        "LinuxDriverVersion": "550",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run",
         "RequireCustomSystemSupport": true
     },
     "Actions": [
