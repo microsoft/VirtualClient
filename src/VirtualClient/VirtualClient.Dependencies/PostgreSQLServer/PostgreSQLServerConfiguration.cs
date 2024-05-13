@@ -11,18 +11,14 @@ namespace VirtualClient.Dependencies
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-    using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Dependencies.MySqlServer;
-    using static VirtualClient.Dependencies.MySqlServer.MySQLServerConfiguration;
 
     /// <summary>
     /// Provides functionality for configuring PostgreSQL Server.
@@ -192,8 +188,7 @@ namespace VirtualClient.Dependencies
                arguments,
                this.packageDirectory,
                telemetryContext,
-               cancellationToken,
-               runElevated: true))
+               cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -212,8 +207,7 @@ namespace VirtualClient.Dependencies
                arguments,
                this.packageDirectory,
                telemetryContext,
-               cancellationToken,
-               runElevated: true))
+               cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -234,8 +228,7 @@ namespace VirtualClient.Dependencies
                     arguments,
                     Environment.CurrentDirectory,
                     telemetryContext,
-                    cancellationToken,
-                    runElevated: true))
+                    cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {

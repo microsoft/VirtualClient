@@ -14,7 +14,6 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.MySqlServer;
 
     /// <summary>
     /// Provides functionality for installing specific version of PostgreSQL.
@@ -169,8 +168,7 @@ namespace VirtualClient.Dependencies
                     arguments,
                     Environment.CurrentDirectory,
                     telemetryContext,
-                    cancellationToken,
-                    runElevated: true))
+                    cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
