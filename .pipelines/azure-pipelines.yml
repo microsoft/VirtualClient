@@ -18,7 +18,7 @@ pool:
   vmImage: windows-latest
 
 variables:
-  VcVersion : 1.14.20
+  VcVersion : 1.14.26
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -86,5 +86,13 @@ steps:
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
 
+- task: NuGetAuthenticate@1
+  displayName: 'Authenticate with NuGet feed'
+
+- script: dotnet nuget push $(Build.SourcesDirectory)\out\packages\*.nupkg --api-key VSTS --timeout 1200 --source https://msazure.pkgs.visualstudio.com/_packaging/CRC-VC/nuget/v3/index.json --skip-duplicate
+  displayName: 'Publish NuGet to ADO Artifact Packages as temporary workaround to ADO lagging behind in package availability'
+
 - script: $(Build.SourcesDirectory)\upload-packages.cmd $(Build.SourcesDirectory)\out\packages $(NUGETORGAPIKEY)
   displayName: 'Publish NuGet Packages'
+
+

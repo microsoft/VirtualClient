@@ -541,9 +541,9 @@ namespace VirtualClient
         Fedora,
 
         /// <summary>
-        /// MSFT internal CentOS based distro Mariner
+        /// MSFT internal CentOS based distro AzLinux (Previously Mariner)
         /// </summary>
-        Mariner
+        AzLinux
     }
 
     /// <summary>

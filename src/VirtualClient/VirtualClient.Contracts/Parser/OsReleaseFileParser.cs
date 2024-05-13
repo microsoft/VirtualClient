@@ -35,7 +35,8 @@ namespace VirtualClient.Contracts
             Regex flatcarRegex = new Regex("Name=(\")?Flatcar", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos7Regex = new Regex("Name=(\")?CentOS Linux 7", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos8Regex = new Regex("Name=(\")?CentOS Linux 8", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            Regex marinerRegex = new Regex("Name=(\")?CBL-Mariner", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            // Mariner 3+ renamed to AzLinux
+            Regex marinerRegex = new Regex("Name=(\")?(CBL-Mariner|Microsoft Azure Linux)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex suseRegex = new Regex("Name=(\")?SUSE", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex fedoraRegex = new Regex("Name=(\")?Fedora", RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
@@ -49,7 +50,7 @@ namespace VirtualClient.Contracts
                 { centos7Regex, LinuxDistribution.CentOS7 },
                 { centos8Regex, LinuxDistribution.CentOS8 },
                 { suseRegex, LinuxDistribution.SUSE },
-                { marinerRegex, LinuxDistribution.Mariner },
+                { marinerRegex, LinuxDistribution.AzLinux },
                 { fedoraRegex, LinuxDistribution.Fedora }
             };
 

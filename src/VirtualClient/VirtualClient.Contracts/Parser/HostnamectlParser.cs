@@ -34,7 +34,8 @@ namespace VirtualClient.Contracts
             Regex flatcarRegex = new Regex("Operating System: Flatcar", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos7Regex = new Regex("Operating System: CentOS Linux 7", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex centos8Regex = new Regex("Operating System: CentOS Linux 8", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            Regex marinerRegex = new Regex("Operating System: CBL-Mariner", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            // Mariner 3+ renamed to AzLinux 3
+            Regex azLinuxRegex = new Regex("Operating System: (CBL-Mariner|Microsoft Azure Linux)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex suseRegex = new Regex("Operating System: SUSE", RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
             Dictionary<Regex, LinuxDistribution> distroMapping = new Dictionary<Regex, LinuxDistribution>()
@@ -47,7 +48,7 @@ namespace VirtualClient.Contracts
                 { centos7Regex, LinuxDistribution.CentOS7 },
                 { centos8Regex, LinuxDistribution.CentOS8 },
                 { suseRegex, LinuxDistribution.SUSE },
-                { marinerRegex, LinuxDistribution.Mariner }
+                { azLinuxRegex, LinuxDistribution.AzLinux }
             };
 
             LinuxDistribution distribution = LinuxDistribution.Unknown;

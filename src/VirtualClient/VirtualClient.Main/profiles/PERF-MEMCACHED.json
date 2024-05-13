@@ -20,7 +20,7 @@
             "Parameters": {
                 "Scenario": "Server",
                 "PackageName": "memcached",
-                "CommandLine": "-p {Port} -t 4 -m 30720 -c {ServerMaxConnections}",
+                "CommandLine": "-p {Port} -t 4 -m 30720 -c {ServerMaxConnections} :: &",
                 "BindToCores": true,
                 "Port": "$.Parameters.ServerPort",
                 "ServerThreadCount": 4,

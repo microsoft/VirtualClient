@@ -5,6 +5,7 @@ repo. Extensions allow development teams to add features to the Virtual Client r
 Before getting started, it is helpful to familiarize yourself with the Virtual Client platform design and concepts.
 
 * [General Developer Guide](./0010-develop-guide.md)
+* [Integrating Extensions at Runtime](../guides/0221-usage-extensions.md)
 
 The following example extensions repo can be used for reference to the details described within this guide.
 
@@ -180,78 +181,10 @@ will have the following content.
   ```
 
 ## How To Use/Integrate Extensions
-Once extensions have been developed and an extensions package exists, they can be used in the Virtual Client runtime. There are a number of different ways that
-extensions can be bootstrapped/installed on the system to suit the needs of the situation. The following examples illustrate some common ways that extensions can 
-be integrated into the Virtual Client runtime.
+Once extensions have been developed and an extensions package exists, they can be used in the Virtual Client runtime. See the following documentation
+for details on how to integrate extensions into the runtime.
 
-* #### Extensions are Downloaded from a Package Store
-  The default for most Virtual Client scenarios is to download extensions from a package store. The **VirtualClient bootstrap** command can be used to download
-  extensions from a package store and install them.
-
-
-  ```bash
-  # Package/Blob Store Structure
-  /container=packages/blob=crc.vc.extensions.zip
-
-  # 1) Execute Bootstrap Command
-  /VirtualClient/VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions --packages="{BlobStoreConnectionString|SAS URI}"
- 
-  # 2) Execute Extensions Profile
-  /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440 --packages="{BlobStoreConnectionString|SAS URI}"
-  ```
-
-
-* #### Extensions are Placed Directly in Packages Folder
-  Extensions .zip packages can be placed directly in the Virtual Client 'packages' directory. To integrate "drop-in" packages,
-  the **VirtualClient bootstrap** command can be used to extract extensions packages on the file system and install the profiles and binaries.
-
-
-  ```bash
-  # Folder Location
-  /VirtualClient/packages/crc.vc.extensions.zip
-
-  # 1) Execute Bootstrap Command
-  /VirtualClient/VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions
-
-  # 2) Execute Extensions Profile
-  /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440
-  ```
-
-* #### A Custom-Defined Bootstrap Profile is Used
-  The developer can choose to use a custom profile for bootstrapping/installing extensions as well.
-
-  ``` json
-  # Profile = BOOTSTRAP-EXTENSIONS.json
-  {
-    "Description": "Installs extensions from a package store.",
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallCRCExtensionsPackage",
-                "BlobContainer": "packages",
-                "BlobName": "crc.vc.extensions.zip",
-                "PackageName": "crcvcextensions",
-                "Extract": true
-            }
-        }
-    ]
-  }
-  ```
-  
-  ...Then you can use it! Note that the profile can exist in another directory location and be referenced by the path to the file (full or relative path).
-
-
-  ```bash
-  # Package/Blob Store Structure
-  /container=packages/blob=crc.vc.extensions.zip
-
-  # 1) Execute Bootstrap Command
-  /VirtualClient/VirtualClient.exe --profile=S:\Some\Other\Folder\BOOTSTRAP-EXTENSIONS.json --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
-
-  # 2) Execute Extensions Profile
-  /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440
-  ```
+* [Integrating Extensions at Runtime](../guides/0221-usage-extensions.md)
 
 ## How To Debug Extensions in Visual Studio
 This next section is going to cover the topic of debugging Virtual Client extensions. It is very helpful at times when doing development work to have
@@ -269,9 +202,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
 
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
-  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
-
-
+  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Release/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
@@ -307,29 +238,36 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
   ```
 
 
-  The Virtual Client platform allows the developer to define a custom environment variable **VCDependencyPath** to provide an extra location 
+  The Virtual Client platform allows the developer to define a custom environment variable **VC_LIBRARY_PATH** to provide an extra location 
   to search for binaries that contain Virtual Client components. This environment variable should be set to the build output path for your extensions.
 
   ```
   e.g.
 
   # Example output directory for extensions
-  S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
+  S:\one\crc-virtualclient-examples\out\bin\Release\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
   ```
 
 **Setup Visual Studio for debugging:**
 
   1. Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
+
   2. Set the extensions project containing the code to debug as the startup project. To do so, right-click on the project in the Solution Explorer and select 
     **Set as Startup Project** from the context menu.
+
   3. Right-click on the VirtualClient.Main project and open the **Debug** options. Set the following information.
      * Launch = Executable
+
      * Executable = \{PathToVirtualClientExe\}  
-       **(e.g. ```S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net8.0\VirtualClient.exe```)**
-     * Application arguments = **```--profile={PathToCustomProfile} --profile=MONITORS.NONE.json --packages="{PackageStoreConnectionString|SASUri}"```**.  
-       **(e.g. ```--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS.NONE.json --packages="https://virtualclient..."```)**
-     * Environment variables = **Add the ```VCDependenciesPath``` variable and the path to your built extensions binaries**.  
-       **(e.g. ```VCDependenciesPath = S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0```)**
+       (e.g. ```S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net8.0\VirtualClient.exe```)
+
+     * Application arguments = \{VirtualClientCommandLine\}   
+       (e.g. `--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS.NONE.json --packages="https://virtualclient..."`)
+
+     * Environment variables = Add the `VC_LIBRARY_PATH` variable and the path to your built extensions binaries.  
+       (e.g. `VC_LIBRARY_PATH = S:\one\crc-virtualclient-examples\out\bin\Debug\x64\CRC.VirtualClient.Extensions.Actions\net8.0`)
+
   4. Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
+
   5. Click the play/continue button at the top-center of the Visual Studio IDE window (or press the F5 key).
   

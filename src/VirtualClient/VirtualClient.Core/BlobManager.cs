@@ -8,12 +8,16 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Azure.Core;
+    using Azure.Identity;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
+    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -258,8 +262,8 @@ namespace VirtualClient
         /// </summary>
         protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
         {
-            string connectionString = (this.StoreDescription as DependencyBlobStore).ConnectionToken;
-            BlobContainerClient containerClient = BlobManager.CreateContainerClient(descriptor, connectionString, out bool hasContainerPrivileges);
+            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
             return blobClient.DownloadToAsync(stream, cancellationToken);
@@ -270,24 +274,28 @@ namespace VirtualClient
         /// </summary>
         protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
         {
-            string connectionString = (this.StoreDescription as DependencyBlobStore).ConnectionToken;
-            BlobContainerClient containerClient = BlobManager.CreateContainerClient(descriptor, connectionString, out bool hasContainerPrivileges);
+            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
             BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
 
-            if (hasContainerPrivileges)
-            {
+            try
+            { 
                 // Container-specific SAS URIs do not allow the client to access container existence, properties or
                 // to create the container. Furthermore, the container MUST already exist in order for this type of
                 // SAS URI to be created from it.
                 await containerClient.CreateIfNotExistsAsync(PublicAccessType.None)
                     .ConfigureAwait(false);
             }
+            catch
+            {
+                // Do nothing if identity doesn't have container access.
+            }
 
             return await blobClient.UploadAsync(stream, uploadOptions, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        private static BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, string connectionToken, out bool hasContainerPrivileges)
+        private BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
         {
             // [Authentication Options]
             // 1) Storage Account connection string
@@ -318,26 +326,35 @@ namespace VirtualClient
             //
             //    e.g. https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
 
-            hasContainerPrivileges = false;
             BlobContainerClient containerClient = null;
-            if (Uri.TryCreate(connectionToken, UriKind.Absolute, out Uri sasUri))
+            if (!string.IsNullOrEmpty(blobStore.ConnectionToken))
             {
-                Uri containerUri = sasUri;
-                if (!sasUri.AbsolutePath.Contains(descriptor.ContainerName, StringComparison.OrdinalIgnoreCase))
+                if (Uri.TryCreate(blobStore.ConnectionToken, UriKind.Absolute, out Uri sasUri))
                 {
-                    // The connection authentication token is a blob service-specific SAS URI.
-                    containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
-                    hasContainerPrivileges = true;
-                }
+                    Uri containerUri = sasUri;
+                    if (!sasUri.AbsolutePath.Contains(descriptor.ContainerName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // The connection authentication token is a blob service-specific SAS URI.
+                        containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
+                    }
 
-                containerClient = new BlobContainerClient(containerUri);
+                    containerClient = new BlobContainerClient(containerUri);
+                }
+                else
+                {
+                    // The connection authentication token is either a storage account-level connection string
+                    // or a Blob service-level connection string.
+                    containerClient = new BlobContainerClient(blobStore.ConnectionToken, descriptor.ContainerName.ToLowerInvariant());
+                }
+            }
+            else if (blobStore.TokenCredential != null)
+            {
+                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), blobStore.TokenCredential);
             }
             else
             {
-                // The connection authentication token is either a storage account-level connection string
-                // or a Blob service-level connection string.
-                containerClient = new BlobContainerClient(connectionToken, descriptor.ContainerName.ToLowerInvariant());
-                hasContainerPrivileges = true;
+                throw new DependencyException(
+                    "Neither sas-url nor token credential was provided to the StorageBlobManager to uploaddownload from Blob storage.", ErrorReason.DependencyDescriptionInvalid);
             }
 
             return containerClient;

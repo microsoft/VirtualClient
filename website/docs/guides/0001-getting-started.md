@@ -130,10 +130,10 @@ The following section provides instructions for building on Windows systems.
 - The build process will create ready-to-run builds of the Virtual Client for all supported platforms and architectures. Virtual Client executable and binaries can be found in the repo 'out' directory in corresponding architecture/runtimes folder locations. 
 
   ```bash
-  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\VirtualClient
-  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\VirtualClient.exe
-  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net8.0\linux-x64\publish\VirtualClient
-  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net8.0\win-x64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\VirtualClient
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net8.0\linux-x64\publish\VirtualClient
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net8.0\win-x64\publish\VirtualClient.exe
   ```
 - VirtualClient is a self-contained .NET application. The application can be run from the build output locations noted above or copied to another
   system. When simply copy the contents of the `/publish/` folder specific to the platform/architecture to the system on which you want to run. 
