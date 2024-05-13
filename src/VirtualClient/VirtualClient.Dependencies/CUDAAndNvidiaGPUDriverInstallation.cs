@@ -343,7 +343,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                     commands.Add("apt update");
                     commands.Add("apt upgrade -y");
-                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion} nvidia-dkms-{this.LinuxDriverVersion} -y");
+                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion}-server nvidia-dkms-{this.LinuxDriverVersion}-server -y");
                     commands.Add($"apt install cuda-drivers-fabricmanager-{this.LinuxDriverVersion} -y");
 
                     break;
@@ -351,7 +351,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.CentOS7:
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL7:
-                    commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}-server/fm");
+                    commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}/fm");
                     break;
 
                 case LinuxDistribution.SUSE:
