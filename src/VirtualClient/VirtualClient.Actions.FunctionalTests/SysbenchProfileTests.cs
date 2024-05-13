@@ -557,7 +557,7 @@ namespace VirtualClient.Actions
                             "apt install python3 --yes --quiet",
 
                             $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+",
+                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+",
                             $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432",
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --serverType PostgreSQL --packagePath {this.sysbenchPackagePath}",
@@ -583,7 +583,7 @@ namespace VirtualClient.Actions
                             "apt install python3 --yes --quiet",
 
                             $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+",
+                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+",
                             $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432",
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --serverType PostgreSQL --packagePath {this.sysbenchPackagePath}",
