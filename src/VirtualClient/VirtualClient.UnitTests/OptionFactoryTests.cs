@@ -10,10 +10,13 @@ namespace VirtualClient
     using System.CommandLine.Parsing;
     using System.Linq;
     using System.Reflection.Emit;
+    using System.Security.Cryptography;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using Moq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -147,9 +150,11 @@ namespace VirtualClient
 
         [Test]
         [TestCase("DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net")]
+        [TestCase("\"DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net\"")]
         [TestCase("BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z")]
         [TestCase("https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
         [TestCase("https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
+        [TestCase("\"https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https\"")]
         public void ContentStoreOptionSupportsValidConnectionStringsAndSasTokenUris(string connectionToken)
         {
             Option option = OptionFactory.CreateContentStoreOption();
@@ -190,17 +195,34 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--event-hub-connection-string")]
-        [TestCase("--eventHubConnectionString")]
-        [TestCase("--eventhubconnectionstring")]
         [TestCase("--event-hub")]
         [TestCase("--eventHub")]
         [TestCase("--eventhub")]
         [TestCase("--eh")]
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateEventHubConnectionStringOption();
+            Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
             ParseResult result = option.Parse($"{alias}=ConnectionString");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net")]
+        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net\"")]
+        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net")]
+        public void EventHubOptionSupportsCertificateAndManagedIdentities(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            OptionFactory.CertificateManager = mockCertManager.Object;
+
+            Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
+            ParseResult result = option.Parse($"--eventhub={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -457,7 +479,27 @@ namespace VirtualClient
         public void PackageStoreOptionSupportsValidConnectionStringsAndSasTokenUris(string connectionToken)
         {
             Option option = OptionFactory.CreatePackageStoreOption();
-            ParseResult result = option.Parse($"--packageStore={connectionToken}");
+            ParseResult result = option.Parse($"--packages={connectionToken}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
+        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages\"")]
+        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
+        public void PackageStoreOptionSupportsCertificateAndManagedIdentities(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            OptionFactory.CertificateManager = mockCertManager.Object;
+
+            Option option = OptionFactory.CreatePackageStoreOption();
+            ParseResult result = option.Parse($"--packages={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -479,7 +521,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public void ParametersOptionSupportsDelimitedKeyValuePairs()
+        public void ParametersOptionSupportsThreeCommaDelimitedKeyValuePairs()
         {
             Option option = OptionFactory.CreateParametersOption();
             ParseResult result = option.Parse("--parameters:Key1=Value1,,,Key2=Value2");
@@ -487,6 +529,19 @@ namespace VirtualClient
         }
 
         [Test]
+        public void ParametersOptionSupportsSemicolonDelimitedKeyValuePairs()
+        {
+
+            Option option = OptionFactory.CreateParametersOption();
+            ParseResult result = option.Parse("--parameters=Key1=Value1;Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+
+            // Testing if the option factory supports semicolon delimited key value pairs when the values contains semicolon
+            result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A,V3B;V3C");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+            [Test]
         [TestCase("--profile")]
         [TestCase("--p")]
         public void ProfileOptionSupportsExpectedAliases(string alias)
@@ -565,11 +620,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHubConnectionString=anyconnectionstring", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHubConnectionString=anyconnectionstring --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123 --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHubConnectionString=anyconnectionstring" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHubConnectionString=anyconnectionstring"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123"));
             }
         }
 
@@ -717,6 +772,40 @@ namespace VirtualClient
                 CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--profile=ANY.json", "--iterations=3", "--dependencies" }, tokenSource);
                 ArgumentException error = Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--profile=ANY.json --iterations=3 --dependencies"));
                 Assert.AreEqual("Invalid usage. The profile iterations option cannot be used when a dependencies flag is provided.", error.Message);
+            }
+        }
+
+        [Test]
+        public void IterationsOptionsCanParsedCorrectlyWithPackagesSasurl()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string sasPart = "--packages=https://anystorageaccount.blob.core.windows.net/?sv=2020&ss=b&srt=c&sp=rwlacx&se=2Z&st=2021Z&spr=https";
+                string eventhubPart = "--eventhub=\"Endpoint=sb://xxx.servicebus.windows.net/;S=Az;SKey=EZ=\"";
+                string itertionPart = "--iterations=2";
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { }, tokenSource);
+                ParseResult result = commandBuilder.Build().Parse($"{sasPart} {itertionPart} {eventhubPart}");
+            }
+        }
+
+        private static X509Certificate2 GenerateMockCertificate()
+        {
+            using (RSA rsa = RSA.Create(1024))
+            {
+                var request = new CertificateRequest("cn=unittest", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                request.CertificateExtensions.Add(
+                    new X509BasicConstraintsExtension(true, false, 0, true));
+
+                // Self-sign the certificate
+                var certificate = request.CreateSelfSigned(DateTime.UtcNow, DateTime.UtcNow.AddMinutes(10));
+
+                // Optional: Export the certificate to a byte array or file
+                byte[] certBytes = certificate.Export(X509ContentType.Pfx, "password");
+
+                // Use the certificate for testing, e.g., with HttpClientHandler or other scenarios.
+
+                return new X509Certificate2(certBytes, "password");
             }
         }
     }
