@@ -16,7 +16,7 @@ resources:
     options: --entrypoint=""
 
 variables:
-  VcVersion : 1.14.17
+  VcVersion : 1.14.28
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -147,7 +147,7 @@ stages:
         repository: 'microsoft-amazonlinux2-prod-yum'
 
 
-    # Azure Mariner
+    # AzLinux
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish'
       inputs:

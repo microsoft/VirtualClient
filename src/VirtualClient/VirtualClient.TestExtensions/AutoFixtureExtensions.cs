@@ -68,19 +68,19 @@ namespace VirtualClient.TestExtensions
         private static X509Certificate2 CreateCertificate(bool withPrivateKey = false)
         {
             X509Certificate2 certificate = null;
-            string resourcesDirectory = $@"{Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location)}\Resources";
+            string resourcesDirectory = Path.Combine(Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location), "Resources");
 
             if (withPrivateKey)
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes($@"{resourcesDirectory}\testcertificate.private"),
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate.private")),
                     AutoFixtureExtensions.CertificatePass(),
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes($@"{resourcesDirectory}\testcertificate.public"));
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate.private")));
             }
 
             return certificate;

@@ -427,39 +427,46 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
+                    string precommand = "bash";
                     string command = this.MemtierExecutablePath;
                     string workingDirectory = this.MemtierPackagePath;
                     string commandArguments = string.Empty;
                     List<string> commands = new List<string>();
 
-                    relatedContext.AddContext("command", command);
+                    relatedContext.AddContext("command", precommand);
                     relatedContext.AddContext("commandArguments", commands);
                     relatedContext.AddContext("workingDirectory", workingDirectory);
 
                     List<Task> workloadProcesses = new List<Task>();
                     DateTime startTime = DateTime.UtcNow;
+                    int serverprocesscount = serverState.Ports.Count();
+                    CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
 
                     for (int i = 0; i < serverState.Ports.Count(); i++)
                     {
                         PortDescription portDescription = serverState.Ports.ElementAt(i);
                         int serverPort = portDescription.Port;
 
+                        int memtiercpuaffinity = (serverprocesscount + i) % logicalProcessorCount;
                         for (int instances = 0; instances < this.ClientInstances; instances++)
                         {
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
+                            commandArguments = $"-c \"numactl -C {memtiercpuaffinity} {command} --server {serverIPAddress} --port {serverPort}";
+
                             if (this.IsTLSEnabled)
                             {
-                                commandArguments = $"--server {serverIPAddress} --port {serverPort} --tls --cert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}  --key {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --cacert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")} {this.CommandLine}";
+                                commandArguments += $" --tls --cert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}  --key {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --cacert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")} {this.CommandLine}\"";
                             }
                             else
                             {
-                                commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine}";
+                                commandArguments += $" {this.CommandLine}\"";
                             }
 
                             commands.Add(commandArguments);
-                            workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, command, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
+                            workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, precommand, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
 
                             if (this.WarmUp)
                             {

@@ -29,6 +29,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             this.fixture = new MockFixture();
             this.fixture.Setup(PlatformID.Unix);
             this.fixture.Parameters["PackageName"] = "mysql-server";
+            this.fixture.Parameters["Benchmark"] = "OLTP";
 
             this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
@@ -325,7 +326,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/distribute-database.py --dbName mysql-test --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\"",
+                $"python3 {this.packagePath}/distribute-database.py --dbName mysql-test --benchmark OLTP --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\"",
             };
 
             int commandNumber = 0;
