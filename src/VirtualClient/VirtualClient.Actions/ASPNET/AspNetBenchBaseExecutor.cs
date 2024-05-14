@@ -255,9 +255,6 @@ namespace VirtualClient.Actions
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
 
-            this.SetEnvironmentVariable("ASPNETCORE_threadCount", this.AspNetCoreThreadCount);
-            this.SetEnvironmentVariable("DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT", this.DotNetSystemNetSocketsThreadCount);
-
             return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken);
         }
 

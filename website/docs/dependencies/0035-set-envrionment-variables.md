@@ -1,5 +1,5 @@
 # Set Environment Variables
-Set environment variables on the system.
+Set one or multiple environment variables on the system.
 
 ## Supported Platform/Architectures
 * linux-x64
@@ -12,22 +12,18 @@ The following section describes the parameters used by the individual component 
 
 | **Parameter** | **Required** | **Description**                                         |
 |---------------|--------------|---------------------------------------------------------|
-| Command | Yes          | The command(s) to execute. Multiple commands should be delimited using the '&amp;&amp;' characters. |
-| WorkingDirectory   | No          | The working directory from which the command should be executed.  |
+| EnvironmentVariables   | No          | Semicolon delimtered key value pairs with equal sign. Example: "Varaible1=A;Variable2=B"  |
 
 ## Example
-The following section describes the parameters used by the individual component in the profile. Note: If the 'PackageName' parameter is defined, this parameter will take precedence over the WorkingDirectory parameter. Otherwise, the directory where the package is installed for the 'PackageName' parameter will be used as the working directory.
+The following section describes the parameters used by the individual component in the profile.
 
-* [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json)
 
 ```json
 {
-    "Type": "ExecuteCommand",
+    "Type": "SetEnvironmentVariable",
     "Parameters": {
-        "Scenario": "CompileMemtier",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
-        "WorkingDirectory": "{PackagePath:memtier}"
+        "Scenario": "SetEnvironmentVariable",
+        "EnvironmentVariables": "Varaible1=A;Variable2=B",
     }
 }
 ```

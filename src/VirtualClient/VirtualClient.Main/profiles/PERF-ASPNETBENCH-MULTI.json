@@ -8,6 +8,7 @@
     "Parameters": {
         "DotNetVersion": "8.0.204",
         "TargetFramework": "net8.0",
+        "EnvironmentVariables": "ASPNETCORE_threadCount=1;DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT=1",
         "AspNetCoreThreadCount": 1,
         "DotNetSystemNetSocketsThreadCount": 1
     },
@@ -113,6 +114,14 @@
             "Type": "ApiServer",
             "Parameters": {
                 "Scenario": "StartAPIServer"
+            }
+        },
+        {
+            "Type": "SetEnvironmentVariable",
+            "Parameters": {
+                "Scenario": "SetEnvironmentVariableForAspNet",
+                "EnvironmentVariables": "$.Parameters.EnvironmentVariables",
+                "Role": "Server"
             }
         }
     ]
