@@ -171,8 +171,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         /// <exception cref="DependencyException"></exception>
         protected async Task BuildAspNetBenchAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -207,7 +207,7 @@ namespace VirtualClient.Actions
         /// 
         /// </summary>
         /// <param name="process"></param>
-        /// <param name="telemetryContext"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <exception cref="WorkloadResultsException"></exception>
         protected void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
         {
@@ -242,8 +242,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         protected Task StartAspNetServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -265,8 +265,8 @@ namespace VirtualClient.Actions
         /// 
         /// </summary>
         /// <param name="ipAddress"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         protected async Task RunBombardierAsync(string ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -294,8 +294,8 @@ namespace VirtualClient.Actions
         /// 
         /// </summary>
         /// <param name="ipAddress"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         protected async Task RunWrkAsync(string ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {

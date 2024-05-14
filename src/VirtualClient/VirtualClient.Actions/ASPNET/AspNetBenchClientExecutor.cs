@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using Polly;
     using VirtualClient;
     using VirtualClient.Actions.Memtier;
+    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -26,8 +27,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class AspNetBenchClientExecutor : AspNetBenchBaseExecutor
     {
-        private string bombardierFilePath;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AspNetBenchClientExecutor"/> class.
         /// </summary>
@@ -47,7 +46,6 @@ namespace VirtualClient.Actions
             await this.WaitForRoleAsync(ClientRole.Server, telemetryContext, cancellationToken).ConfigureAwait(false);
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             await this.RunWrkAsync(serverIPAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
-            await this.TerminateRoleAsync(ClientRole.Server, telemetryContext, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -62,7 +60,7 @@ namespace VirtualClient.Actions
             DependencyPath bombardierPackage = await this.GetPlatformSpecificPackageAsync(this.BombardierPackageName, cancellationToken)
                 .ConfigureAwait(false);
 
-            this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
+            this.RegisterToTerminateRole(ClientRole.Server);
         }
     }
 }

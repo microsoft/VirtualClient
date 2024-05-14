@@ -39,8 +39,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

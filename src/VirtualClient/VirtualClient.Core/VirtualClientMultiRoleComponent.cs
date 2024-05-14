@@ -68,8 +68,8 @@ namespace VirtualClient.Contracts
         /// 
         /// </summary>
         /// <param name="role"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         protected Task WaitForRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -102,34 +102,26 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// 
+        /// Not implemented yet. Designed to terminate all corresponding roles in a layout.
         /// </summary>
-        /// <param name="role"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        protected Task TerminateRoleAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <param name="role">Name of the role to terminate</param>
+        protected void RegisterToTerminateRole(string role)
         {
-            return Task.CompletedTask;
+            IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(role);
+            IList<IApiClient> clients = new List<IApiClient>();
+            foreach (ClientInstance server in targetServers)
+            {
+                clients.Add(this.apiClientManager.GetOrCreateApiClient(server.Name, server));
+            }
+
+            this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", clients.ToArray());
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="role"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        protected Task WaitForTerminationAsync(string role, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="role"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
         protected Task SendInstructionsAndPollForCompletionAsync(string role, CancellationToken cancellationToken)

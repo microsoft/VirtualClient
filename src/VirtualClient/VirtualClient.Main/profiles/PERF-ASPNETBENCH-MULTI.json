@@ -110,16 +110,6 @@
             }
         },
         {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallBombardierPackage",
-                "BlobContainer": "packages",
-                "BlobName": "bombardier.1.2.5.zip",
-                "PackageName": "bombardier",
-                "Extract": true
-            }
-        },
-        {
             "Type": "ApiServer",
             "Parameters": {
                 "Scenario": "StartAPIServer"
