@@ -5,6 +5,7 @@
         "RecommendedMinimumExecutionTime": "08:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
+        "RecommendOperationSystem": "Ubunutu-22.04, Default LinusCudaVersion,LinuxDriverVersion,LinuxLocalRunFile support this OS only.",
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
     "Parameters": {
