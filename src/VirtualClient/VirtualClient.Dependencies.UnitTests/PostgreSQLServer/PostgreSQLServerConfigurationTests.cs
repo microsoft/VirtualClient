@@ -54,7 +54,7 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
-                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+",
+                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+ --serverIp 1.2.3.5",
             };
 
             int commandNumber = 0;
