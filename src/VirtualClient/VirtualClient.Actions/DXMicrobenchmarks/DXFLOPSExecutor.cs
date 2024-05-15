@@ -198,7 +198,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Validates the package installation
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         /// <exception cref="DependencyException"></exception>
         private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)

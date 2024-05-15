@@ -271,7 +271,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Unsupported Linux error handling.
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
         private async Task ThrowIfUnixDistroNotSupportedAsync(CancellationToken cancellationToken)
