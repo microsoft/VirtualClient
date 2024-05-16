@@ -3,7 +3,8 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
-        "SupportedOperatingSystems": "Ubuntu-22.04",
+        "SupportedOperatingSystems": "Ubuntu",
+        "RecommendOperationSystem": "Ubunutu-22.04, Default drivers support this OS only.",
         "SupportedRequireCustomSystemSupport": "A100_PCIe_80GBx4",
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
