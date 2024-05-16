@@ -1,0 +1,128 @@
+{
+    "Description": ".NET benchmarking Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:05:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Parameters": {
+        "DotNetVersion": "8.0.204",
+        "TargetFramework": "net8.0",
+        "EnvironmentVariables": "ASPNETCORE_threadCount=1;DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT=1",
+        "AspNetCoreThreadCount": 1,
+        "DotNetSystemNetSocketsThreadCount": 1
+    },
+    "Actions": [
+        {
+            "Type": "AspNetBenchServerExecutor",
+            "Parameters": {
+                "Role": "Server",
+                "Scenario": "ExecuteJsonSerializationBenchmark",
+                "PackageName": "aspnetbenchmarks",
+                "BombardierPackageName": "bombardier",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "AspNetCoreThreadCount": "$.Parameters.AspNetCoreThreadCount",
+                "DotNetSystemNetSocketsThreadCount": "$.Parameters.DotNetSystemNetSocketsThreadCount"
+            }
+        },
+        {
+            "Type": "AspNetBenchClientExecutor",
+            "Parameters": {
+                "Role": "Client",
+                "Scenario": "ExecuteJsonSerializationBenchmarkWarmUp",
+                "PackageName": "aspnetbenchmarks",
+                "BombardierPackageName": "bombardier",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "WrkCommandLine": "-t 256 -c 256 -d 45s --timeout 10s http://{ipAddress}:{port}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q = 0.9,application/xml;q=0.8,*/*;q=0.7\""
+            }
+        },
+        {
+            "Type": "AspNetBenchClientExecutor",
+            "Parameters": {
+                "Role": "Client",
+                "Scenario": "ExecuteJsonSerializationBenchmark",
+                "PackageName": "aspnetbenchmarks",
+                "BombardierPackageName": "bombardier",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "WrkCommandLine": "-t 256 -c 256 -d 15s --timeout 10s http://{ipAddress}:{port}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q = 0.9,application/xml;q=0.8,*/*;q=0.7\""
+            }
+        }
+
+    ],
+    "Dependencies": [
+        {
+            "Type": "ChocolateyInstallation",
+            "Parameters": {
+                "Scenario": "InstallChocolatey",
+                "PackageName": "chocolatey"
+            }
+        },
+        {
+            "Type": "ChocolateyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallGit",
+                "PackageName": "chocolatey",
+                "Packages": "git"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneAspNetBenchmarksRepo",
+                "RepoUri": "https://github.com/aspnet/Benchmarks.git",
+                "PackageName": "aspnetbenchmarks"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "build-essential,unzip",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneWrkRepo",
+                "RepoUri": "https://github.com/wg/wrk.git",
+                "PackageName": "wrk",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileWrk",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:wrk}",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "DotNetInstallation",
+            "Parameters": {
+                "Scenario": "InstallDotNetSdk",
+                "DotNetVersion": "$.Parameters.DotNetVersion",
+                "PackageName": "dotnetsdk"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        },
+        {
+            "Type": "SetEnvironmentVariable",
+            "Parameters": {
+                "Scenario": "SetEnvironmentVariableForAspNet",
+                "EnvironmentVariables": "$.Parameters.EnvironmentVariables",
+                "Role": "Server"
+            }
+        }
+    ]
+}
