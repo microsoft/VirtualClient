@@ -5,14 +5,15 @@
         "RecommendedMinimumExecutionTime": "08:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
+        "RecommendOperationSystem": "Ubunutu-22.04, Default LinusCudaVersion,LinuxDriverVersion,LinuxLocalRunFile support this OS only.",
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
     "Parameters": {
         "ConfigurationFile": "default.yaml",
         "Username": "",
-        "LinuxCudaVersion": "12.0",
-        "LinuxDriverVersion": "525",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+        "LinuxCudaVersion": "12.4",
+        "LinuxDriverVersion": "550",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run"
     },
     "Actions": [
         {
