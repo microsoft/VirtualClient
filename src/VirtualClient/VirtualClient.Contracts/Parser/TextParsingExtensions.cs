@@ -111,23 +111,45 @@ namespace VirtualClient.Contracts
         public static IDictionary<string, IConvertible> ParseVcDelimiteredParameters(string text)
         {
             IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            string[] segments = text.Split('=', StringSplitOptions.TrimEntries);
-            // Only start at second segment and end at second to last segment
-            // Because first segment is the key for first pair, and last segment is the value for last pair.
-            string key = segments[0];
-            for (int i = 1; i < segments.Length - 1; i++)
+
+            if (text.Contains(",,,"))
             {
-                // This is just to 
-                int lastCommaIndex = segments[i].LastIndexOf(",,,");
-                int lastSemicolonIndex = segments[i].LastIndexOf(';');
-                int splitIndex = Math.Max(lastCommaIndex, lastSemicolonIndex);
+                // If the list contains three comma",,,", use this as delimeter
+                string[] delimitedProperties = text.Split(",,,", StringSplitOptions.RemoveEmptyEntries);
 
-                string value = segments[i].Substring(0, splitIndex);
-                delimitedValues.Add(key, value);
-                key = segments[i].Substring(splitIndex).Trim(';').Trim(',');
+                if (delimitedProperties?.Any() == true)
+                {
+                    foreach (string property in delimitedProperties)
+                    {
+                        if (property.Contains("=", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            string key = property.Substring(0, property.IndexOf("=", StringComparison.Ordinal));
+                            string value = property.Substring(property.IndexOf("=", StringComparison.Ordinal) + 1);
+                            delimitedValues[key.Trim()] = value.Trim();
+                        }
+                    }
+                }
             }
+            else
+            {
+                string[] segments = text.Split('=', StringSplitOptions.TrimEntries);
+                // Only start at second segment and end at second to last segment
+                // Because first segment is the key for first pair, and last segment is the value for last pair.
+                string key = segments[0];
+                for (int i = 1; i < segments.Length - 1; i++)
+                {
+                    // This is just to 
+                    int lastCommaIndex = segments[i].LastIndexOf(",,,");
+                    int lastSemicolonIndex = segments[i].LastIndexOf(';');
+                    int splitIndex = Math.Max(lastCommaIndex, lastSemicolonIndex);
 
-            delimitedValues.Add(key, segments[segments.Length - 1]);
+                    string value = segments[i].Substring(0, splitIndex);
+                    delimitedValues.Add(key, value);
+                    key = segments[i].Substring(splitIndex).Trim(';').Trim(',');
+                }
+
+                delimitedValues.Add(key, segments[segments.Length - 1]);
+            }
 
             return delimitedValues;
         }
