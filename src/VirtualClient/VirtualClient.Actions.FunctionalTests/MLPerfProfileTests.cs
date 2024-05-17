@@ -46,8 +46,8 @@ namespace VirtualClient.Actions
             {
                 $"sudo apt update",
                 $"sudo apt install build-essential -yq",
-                $"sudo wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
-                $"sudo sh cuda_12.0.0_525.60.13_linux.run --silent",
+                $"sudo wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run",
+                $"sudo sh cuda_12.4.1_550.54.15_linux.run --silent",
                 $"sudo bash -c \"echo 'export PATH=/usr/local/cuda-11.6/bin${{PATH:+:${{PATH}}}}' | sudo tee -a /home/[a-z]+/.bashrc\"",
                 $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-11.6/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' " +
                 "| sudo tee -a /home/[a-z]+/.bashrc\""
