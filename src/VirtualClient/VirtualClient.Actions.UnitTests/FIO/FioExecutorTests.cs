@@ -4,6 +4,7 @@
 namespace VirtualClient.Actions.DiskPerformance
 {
     using System;
+    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -27,6 +28,7 @@ namespace VirtualClient.Actions.DiskPerformance
         private IEnumerable<Disk> disks;
         private string mockCommandLine;
         private string mockResults;
+        private DependencyPath mockWorkloadPackage;
 
         [OneTimeSetUp]
         public void SetupFixture()
@@ -48,7 +50,8 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(FioExecutor.CommandLine), this.mockCommandLine },
                 { nameof(FioExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
                 { nameof(FioExecutor.DeleteTestFilesOnFinish), "true" },
-                { nameof(FioExecutor.TestName), "fio_test_1" }
+                { nameof(FioExecutor.TestName), "fio_test_1" },
+                { nameof(FioExecutor.PackageName), "fio" }
             };
 
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
@@ -56,6 +59,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("fio", this.mockFixture.GetPackagePath("fio")));
             this.mockFixture.File.OnFileExists().Returns(true);
+            this.mockFixture.File.Setup(file => file.ReadAllText(It.IsAny<string>())).Returns(string.Empty);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 return new InMemoryProcess
@@ -71,6 +75,11 @@ namespace VirtualClient.Actions.DiskPerformance
                     StandardOutput = new ConcurrentBuffer(new StringBuilder(this.mockResults))
                 };
             };
+
+            string workloadName = "fio";
+            this.mockWorkloadPackage = new DependencyPath(
+                workloadName,
+                this.mockFixture.PlatformSpecifics.GetPackagePath(workloadName));
         }
 
         [Test]
@@ -94,6 +103,74 @@ namespace VirtualClient.Actions.DiskPerformance
                     commandLine);
 
                 Assert.AreEqual($"fio_randwrite_496GB_4k_d16_th32_direct", testName);
+            }
+        }
+
+        [Test]
+        public void FioExecutorThrowsOnNullCommandLineAndJobFiles()
+        {
+            this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
+            this.profileParameters[nameof(TestFioExecutor.JobFiles)] = null;
+
+            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                WorkloadException error = Assert.Throws<WorkloadException>(executor.Validate);
+
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
+            }
+        }
+
+        [Test]
+        public void FioExecutorThrowsIfCommandLineAndJobFilesIncluded()
+        {
+            this.profileParameters[nameof(TestFioExecutor.CommandLine)] = "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct --size=496GB --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth}";
+            this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "{ScriptPath:fio}/oltp-c.fio.jobfile";
+
+            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                WorkloadException error = Assert.Throws<WorkloadException>(executor.Validate);
+
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
+            }
+        }
+
+        [Test]
+        public async Task FioExecutorRunsCommandWithJobFile()
+        {
+            this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
+            this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "jobfile1path";
+
+            DependencyPath workloadPlatformSpecificPackage =
+                this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+
+            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                string updatedJobFilePath = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1path");
+
+                Assert.AreEqual($"{updatedJobFilePath} --output-format=json", executor.CommandLine);
+            }
+        }
+
+        [Test]
+        public async Task FioExecutorRunsCommandWithMultipleJobFiles()
+        {
+            this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
+            this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "path/to/jobfile1,path/jobfile2;path/jobfile3";
+
+            DependencyPath workloadPlatformSpecificPackage =
+                this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+
+            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                string updatedJobFile1Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1");
+                string updatedJobFile2Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile2");
+                string updatedJobFile3Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile3");
+
+                Assert.AreEqual($"{updatedJobFile1Path} {updatedJobFile2Path} {updatedJobFile3Path} --output-format=json", executor.CommandLine);
             }
         }
 
@@ -266,6 +343,11 @@ namespace VirtualClient.Actions.DiskPerformance
             public new DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
             {
                 return base.CreateWorkloadProcess(executable, commandArguments, testedInstance, disksToTest);
+            }
+
+            public new void Validate()
+            {
+                base.Validate();
             }
         }
     }

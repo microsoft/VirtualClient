@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+    using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
     using Serilog;
@@ -106,9 +107,20 @@ namespace VirtualClient
         /// </summary>
         /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
         /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
-        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubConnectionString, string eventHubName)
+        /// <param name="eventHubNameSpace">Event hub namespace</param>
+        /// <param name="tokenCredential">Azure Token credential to authenticate with </param>
+        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubName, string eventHubNameSpace = null, TokenCredential tokenCredential = null, string eventHubConnectionString = null)
         {
-            var client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
+            EventHubProducerClient client;
+            if (!string.IsNullOrEmpty(eventHubConnectionString))
+            {
+                client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
+            }
+            else
+            {
+                client = new EventHubProducerClient(eventHubNameSpace, eventHubName, tokenCredential);
+            }
+
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
             DependencyFactory.telemetryChannels.Add(channel);
@@ -119,19 +131,22 @@ namespace VirtualClient
         /// <summary>
         /// Creates logger providers for writing telemetry to Event Hub targets.
         /// </summary>
-        /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
+        /// <param name="eventHubAuthContext">Information to authenticate with eventhub.</param>
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
         /// <param name="level">The logging severity level.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(string eventHubConnectionString, EventHubLogSettings settings, LogLevel level)
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(EventHubAuthenticationContext eventHubAuthContext, EventHubLogSettings settings, LogLevel level)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
-            if (!string.IsNullOrWhiteSpace(eventHubConnectionString) && settings != null)
+            // Proceed if either connectionstring or token credentail is provided.
+            if ((!string.IsNullOrEmpty(eventHubAuthContext.ConnectionString) || eventHubAuthContext.TokenCredential != null) && settings != null)
             {
                 // Logs/Traces
                 EventHubTelemetryChannel tracesChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                    eventHubConnectionString,
-                    settings.TracesHubName);
+                    eventHubName: settings.TracesHubName,
+                    eventHubNameSpace: eventHubAuthContext.EventHubNamespace,
+                    eventHubAuthContext.TokenCredential,
+                    eventHubAuthContext.ConnectionString);
 
                 tracesChannel.EventTransmissionError += (sender, args) =>
                 {
@@ -146,8 +161,10 @@ namespace VirtualClient
 
                 // Test Metrics/Results
                 EventHubTelemetryChannel metricsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                    eventHubConnectionString,
-                    settings.MetricsHubName);
+                    eventHubName: settings.MetricsHubName,
+                    eventHubNameSpace: eventHubAuthContext.EventHubNamespace,
+                    eventHubAuthContext.TokenCredential,
+                    eventHubAuthContext.ConnectionString);
 
                 metricsChannel.EventTransmissionError += (sender, args) =>
                 {
@@ -163,8 +180,10 @@ namespace VirtualClient
 
                 // System Events
                 EventHubTelemetryChannel systemEventsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                    eventHubConnectionString,
-                    settings.EventsHubName);
+                    eventHubName: settings.EventsHubName,
+                    eventHubNameSpace: eventHubAuthContext.EventHubNamespace,
+                    eventHubAuthContext.TokenCredential,
+                    eventHubAuthContext.ConnectionString);
 
                 systemEventsChannel.EventTransmissionError += (sender, args) =>
                 {

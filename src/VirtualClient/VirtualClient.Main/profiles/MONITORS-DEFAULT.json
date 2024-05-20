@@ -15,7 +15,6 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallEpelPackage",
-                "Packages-Mariner": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
                 "Packages-RHEL8": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
                 "Packages-RHEL7": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
                 "Packages-CentOS7": "epel-release"

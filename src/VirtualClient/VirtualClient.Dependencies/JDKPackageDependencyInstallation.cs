@@ -80,7 +80,7 @@ namespace VirtualClient.Dependencies
                     javaExecutable = this.PlatformSpecifics.Combine(javaDirectory, "java.exe");
                 }
 
-                this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, javaDirectory, EnvironmentVariableTarget.Process);
+                this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, jdkPackage.Path, EnvironmentVariableTarget.Process);
                 this.SetEnvironmentVariable(EnvironmentVariable.JAVA_EXE, javaExecutable, EnvironmentVariableTarget.Process);
                 this.SetEnvironmentVariable(EnvironmentVariable.PATH, javaDirectory, append: true);
 

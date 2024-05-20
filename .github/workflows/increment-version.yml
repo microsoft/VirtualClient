@@ -1,0 +1,25 @@
+# This action is used to automatically increment the version within the VERSION file whenever it's not manually incremented.
+name: Increment Version
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 3
+      - name: Run-Script
+        run: |
+          chmod +x ./increment-version.sh
+          ./increment-version.sh

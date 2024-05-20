@@ -61,8 +61,8 @@ namespace VirtualClient.Monitors
         /// <summary>
         /// Query the gpu for utilization information
         /// </summary>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

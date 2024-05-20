@@ -29,11 +29,10 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = false;
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             IProcessProxy process = null;
 
@@ -60,14 +59,21 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 {
                                     try
                                     {
+                                        // Wait until the cancellation token is signalled by the client.
                                         await this.WaitAsync(cancellationToken);
                                         process.Close();
 
                                         await process.WaitForExitAsync(cancellationToken);
                                         await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
                                     }
+                                    catch (OperationCanceledException)
+                                    {
+                                        // Expected when the client signals a cancellation.
+                                    }
                                     finally
                                     {
+                                        // Latte must be explicitly terminated given the current implementation. If it is not,
+                                        // the process will remain running in the background.
                                         process.SafeKill(this.Logger);
                                     }
                                 }
@@ -93,24 +99,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"-a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToLowerInvariant()}";
-        }
-
-        /// <summary>
-        /// Not applicable on the server-side
-        /// </summary>
-        protected override Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
-        {
-            // Latte server-side does not generate results.
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Not applicable on the server-side
-        /// </summary>
-        protected override Task WaitForResultsAsync(TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            // Latte server-side does not generate results.
-            return Task.CompletedTask;
         }
     }
 }
