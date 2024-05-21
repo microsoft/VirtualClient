@@ -332,11 +332,9 @@ namespace VirtualClient.Actions
         {
             string dockerExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()}";
 
-            await this.ExecuteCommandAsync(
-                "bash", 
-                $"-c \"{this.ExportScratchSpace} && mkdir $MLPERF_SCRATCH_PATH/data $MLPERF_SCRATCH_PATH/models $MLPERF_SCRATCH_PATH/preprocessed_data\"", 
-                this.NvidiaDirectory, 
-                cancellationToken);
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "data"));
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "models"));
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "preprocessed_data"));
 
             await this.ExecuteCommandAsync(
                 "sudo", 
