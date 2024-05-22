@@ -1,0 +1,72 @@
+{
+    "Description": "Metaseq GPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "10:00:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Ubuntu",
+        "SpecialRequirements": "NVIDIA GPU"
+    },
+    "Parameters": {
+        "Version": "1.1.6",
+        "Username": "",
+        "LinuxCudaVersion": "12.2",
+        "LinuxDriverVersion": "535",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
+        "ApptainerImageVersion": "f7ffa5f_2306",
+        "TrainingScript": "train_7.5.sh",
+        "Hostnames": ""
+    },
+    "Actions": [
+        {
+            "Type": "MetaseqExecutor",
+            "Parameters": {
+                "Scenario": "metaseq",
+                "ApptainerImageVersion": "$.Parameters.ApptainerImageVersion",
+                "TrainingScript": "$.Parameters.TrainingScript",
+                "Hostnames": "$.Parameters.Hostnames"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "build-essential,libseccomp-dev,pkg-config,uidmap,squashfs-tools,squashfuse,fuse2fs,fuse-overlayfs,fakeroot,cryptsetup,curl,wget,git"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallMetaseqPackage",
+                "BlobContainer": "packages",
+                "BlobName": "metaseq.1.0.0.zip",
+                "PackageName": "metaseq",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "NvidiaCudaInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaCuda",
+                "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
+                "Username": "$.Parameters.Username",
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+            }
+        },
+        {
+            "Type": "ApptainerInstallation",
+            "Parameters": {
+                "Scenario": "InstallApptainer",
+                "Version": "$.Parameters.Version"
+            }
+        },
+        {
+            "Type": "NvidiaContainerToolkitInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaContainerToolkit"
+            }
+        }
+    ]
+}
