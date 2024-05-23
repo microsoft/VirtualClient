@@ -22,7 +22,7 @@ Virtual Client supports the following authentication options for eventhubs:
     * TenantId
     * EventHubNamespace
 
-    ```--packages=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
+    ```--eventhub=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
 
   * **Azure Entra Id + Certificate using issuer + subject** 
     VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
@@ -34,12 +34,12 @@ Virtual Client supports the following authentication options for eventhubs:
     * TenantId
     * EventHubNamespace
 
-    ```--packages=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
+    ```--eventhub=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
 
   * **Azure Managed Identity** 
-    This method uses Azure managed identity to authenticate. An id is required to avoid cases where a machine have multiple identities.
+    This method uses Azure managed identity to authenticate. An id is required to support cases where a machine have multiple identities.
     
-    ```--packages=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
+    ```--eventhub=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net```
 
   * **EventHub connection string**  
     This is a [event hub connection string](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string).
