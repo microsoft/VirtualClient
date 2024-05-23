@@ -302,6 +302,8 @@ namespace VirtualClient
                 platformSpecifics.CpuArchitecture,
                 logger);
 
+            systemManagement.EnableLongPathInWindows();
+
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
 
             // Note that a bug was found in the version of "lshw" (B.02.18) that is installed on some Ubuntu images. The bug causes the

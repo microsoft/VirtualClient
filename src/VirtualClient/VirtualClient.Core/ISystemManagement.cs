@@ -47,5 +47,11 @@ namespace VirtualClient
         /// Provides features for creating and managing processes on the system.
         /// </summary>
         ISshClientManager SshClientManager { get; }
+
+        /// <summary>
+        /// Overwrite the default of 260 char in windows file path length to 32,767.
+        /// https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+        /// </summary>
+        void EnableLongPathInWindows();
     }
 }
