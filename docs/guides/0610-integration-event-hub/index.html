@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.53cd8637.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.944916af.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.88e09cd5.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -38,7 +38,7 @@ This method uses certificate thumbprint to search for the certificate. Required 
 <li>TenantId</li>
 <li>EventHubNamespace</li>
 </ul>
-<p><code>--packages=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net</code></p>
+<p><code>--eventhub=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net</code></p>
 </li>
 <li>
 <p><strong>Azure Entra Id + Certificate using issuer + subject</strong>
@@ -52,12 +52,12 @@ Required parameters are:</p>
 <li>TenantId</li>
 <li>EventHubNamespace</li>
 </ul>
-<p><code>--packages=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net</code></p>
+<p><code>--eventhub=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net</code></p>
 </li>
 <li>
 <p><strong>Azure Managed Identity</strong>
-This method uses Azure managed identity to authenticate. An id is required to avoid cases where a machine have multiple identities.</p>
-<p><code>--packages=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages</code></p>
+This method uses Azure managed identity to authenticate. An id is required to support cases where a machine have multiple identities.</p>
+<p><code>--eventhub=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net</code></p>
 </li>
 <li>
 <p><strong>EventHub connection string</strong><br>
