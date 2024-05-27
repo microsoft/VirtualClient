@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -147,24 +148,31 @@ namespace VirtualClient.Actions
                 this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
             }
 
-            DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (bombardierPackage != null)
+            try 
             {
-                this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
-                await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                // Check for Bombardier Package, if not available try wrk package
+                DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                               .ConfigureAwait(false);
+
+                if (bombardierPackage != null)
+                {
+                    this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
+                    await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
-
-            DependencyPath wrkPackage = await this.packageManager.GetPackageAsync("wrk", cancellationToken)
-                .ConfigureAwait(false);
-
-            if (wrkPackage != null)
+            catch (DependencyException)
             {
-                this.wrkFilePath = this.Combine(wrkPackage.Path, "wrk");
-                await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                this.Logger.LogMessage($"Catch {this.BombardierPackageName} package exception", LogLevel.Information, telemetryContext);
+                DependencyPath wrkPackage = await this.packageManager.GetPackageAsync("wrk", cancellationToken)
+                                .ConfigureAwait(false);
+
+                if (wrkPackage != null)
+                {
+                    this.wrkFilePath = this.Combine(wrkPackage.Path, "wrk");
+                    await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
         }
 
