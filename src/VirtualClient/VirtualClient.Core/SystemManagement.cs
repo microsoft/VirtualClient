@@ -246,6 +246,24 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Overwrite the default of 260 char in windows file path length to 32,767.
+        /// https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+        /// </summary>
+        public void EnableLongPathInWindows()
+        {
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                const string keyPath = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
+
+                // Name of the DWORD value
+                const string valueName = "LongPathsEnabled";
+
+                // Set the value to enable long paths
+                Registry.SetValue(keyPath, valueName, 1, RegistryValueKind.DWord);
+            }
+        }
+
+        /// <summary>
         /// Causes the process to idle until the operations are cancelled.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
