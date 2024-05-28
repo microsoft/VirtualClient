@@ -87,6 +87,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The name of the package where the wrk package is downloaded.
+        /// </summary>
+        public string WrkPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.WrkPackageName), "wrk");
+            }
+        }
+
+        /// <summary>
         /// The name of the package where the DotNetSDK package is downloaded.
         /// </summary>
         public string DotNetSdkPackageName
@@ -164,7 +175,7 @@ namespace VirtualClient.Actions
             catch (DependencyException)
             {
                 this.Logger.LogMessage($"Catch {this.BombardierPackageName} package exception", LogLevel.Information, telemetryContext);
-                DependencyPath wrkPackage = await this.packageManager.GetPackageAsync("wrk", cancellationToken)
+                DependencyPath wrkPackage = await this.packageManager.GetPackageAsync(this.WrkPackageName, cancellationToken)
                                 .ConfigureAwait(false);
 
                 if (wrkPackage != null)
