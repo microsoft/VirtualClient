@@ -11,7 +11,6 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -174,7 +173,6 @@ namespace VirtualClient.Actions
             }
             catch (DependencyException)
             {
-                this.Logger.LogMessage($"Catch {this.BombardierPackageName} package exception", LogLevel.Information, telemetryContext);
                 DependencyPath wrkPackage = await this.packageManager.GetPackageAsync(this.WrkPackageName, cancellationToken)
                                 .ConfigureAwait(false);
 
