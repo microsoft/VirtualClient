@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
+    using System.Security.Principal;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -248,6 +249,7 @@ namespace VirtualClient
         /// <summary>
         /// Overwrite the default of 260 char in windows file path length to 32,767.
         /// https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+        /// Does not throw if doesn't have priviledge
         /// </summary>
         public void EnableLongPathInWindows()
         {
@@ -258,8 +260,16 @@ namespace VirtualClient
                 // Name of the DWORD value
                 const string valueName = "LongPathsEnabled";
 
-                // Set the value to enable long paths
-                Registry.SetValue(keyPath, valueName, 1, RegistryValueKind.DWord);
+                try
+                {
+                    // Set the value to enable long paths
+                    Registry.SetValue(keyPath, valueName, 1, RegistryValueKind.DWord);
+                }
+                catch
+                {
+                    // Does not throw if missing admin priviledge
+                }
+                
             }
         }
 
