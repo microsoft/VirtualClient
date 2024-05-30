@@ -43,9 +43,9 @@ steps:
 - powershell: |
     # Read the content of VERSION
     $version=Get-Content $(Build.SourcesDirectory)\VERSION
-
+    $version
     # Set the file content as a pipeline variable
-    Write-Host "##vso[task.setvariable variable=VcVersion;isOutput=true]$version"
+    Write-Host "##vso[task.setvariable variable=VcVersion]$version"
   displayName: 'Set VC Version'
 
   # Ensure the artifact output/bin/obj directories are clean.
