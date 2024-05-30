@@ -5,7 +5,8 @@ if [ -n "$1" ]; then
 fi
 
 if [ -z "$VCBuildVersion" ]; then
-    VCBuildVersion="0.0.1"
+    RepoBuildVersion=$(cat VERSION)
+    VCBuildVersion="$RepoBuildVersion-alpha"
 fi
 
 while [[ "$#" -gt 0 ]]; do

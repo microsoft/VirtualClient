@@ -6,6 +6,8 @@ if /i "%~1" == "/?" Goto :Usage
 if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
 
+set "VCBuildVersion="
+
 REM The "VCBuildVersion" environment variable is referenced by the MSBuild processes during build.
 REM All binaries will be compiled with this version (e.g. .dlls + .exes). The packaging process uses 
 REM the same environment variable to define the version of the NuGet package(s) produced. The build 
@@ -14,8 +16,10 @@ if /i NOT "%~1" == "" (
     set VCBuildVersion=%~1
 )
 
+REM Default version to the VERSION file but append -alpha for manual builds
 if /i "%VCBuildVersion%" == "" (
-    set VCBuildVersion=0.0.1.0
+    set /p RepoBuildVersion=<VERSION
+    set VCBuildVersion=%RepoBuildVersion%-alpha
 )
 
 set VCSolutionDir=%~dp0src\VirtualClient
