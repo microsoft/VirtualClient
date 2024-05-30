@@ -18,8 +18,7 @@ if /i NOT "%~1" == "" (
 
 REM Default version to the VERSION file but append -alpha for manual builds
 if /i "%VCBuildVersion%" == "" (
-    set /p RepoBuildVersion=<VERSION
-    set VCBuildVersion=%RepoBuildVersion%-alpha
+    set /p VCBuildVersion=<VERSION
 )
 
 set VCSolutionDir=%~dp0src\VirtualClient
