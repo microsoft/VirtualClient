@@ -38,6 +38,14 @@ stages:
         performMultiLevelLookup: true
         workingDirectory: '$(Build.SourcesDirectory)'
 
+    - script: |
+        # Read the content of VERSION
+        version=$(Build.SourcesDirectory)/VERSION
+
+        # Set the file content as a pipeline variable
+        echo "##vso[task.setvariable variable=VcVersion;isOutput=true]$version"
+      displayName: 'Set VC Version'
+
     - script: chmod -R +x $(Build.SourcesDirectory)
       displayName: 'Allow scripts to be executable on Linux'
 
