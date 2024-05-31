@@ -163,14 +163,24 @@ stages:
 
     # AzLinux
     - task: PublishLinuxPackagesPMC@0
-      displayName: 'Mariner 2.0 rpm publish'
+      displayName: 'Mariner 2.0 rpm publish x64'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'cbl-mariner-2.0-prod-yum'
+        repository: 'cbl-mariner-2.0-prod-Microsoft-x86_64-yum'
+      
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Mariner 2.0 rpm publish aarch64'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'cbl-mariner-2.0-prod-Microsoft-aarch64-yum'
     
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
@@ -180,8 +190,18 @@ stages:
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'cbl-mariner-1.0-prod-yum'
+        repository: 'cbl-mariner-1.0-prod-Microsoft-aarch64-rpms-yum'
         
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Mariner 1.0 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'cbl-mariner-1.0-prod-Microsoft-x86_64-rpms-yum'
+
     # Centos
     - task: PublishLinuxPackagesPMC@0
       displayName: 'CentOS 7 rpm publish'
