@@ -170,7 +170,7 @@ stages:
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'cbl-mariner-2.0-prod'
+        repository: 'cbl-mariner-2.0-prod-yum'
     
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
@@ -180,7 +180,7 @@ stages:
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'cbl-mariner-1.0-prod'
+        repository: 'cbl-mariner-1.0-prod-yum'
         
     # Centos
     - task: PublishLinuxPackagesPMC@0
