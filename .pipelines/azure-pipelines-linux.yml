@@ -82,7 +82,8 @@ stages:
         flattenFolders: true
         Contents: |
           *.deb
-          **/RPMS/**/*.rpm
+          rpm_arm64/RPMS/aarch64/*.rpm
+          rpm_x64/RPMS/x86_64/*.rpm
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
     - task: EsrpCodeSigning@1
