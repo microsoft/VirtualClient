@@ -5,7 +5,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -31,11 +30,10 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             IProcessProxy process = null;
 
@@ -58,10 +56,15 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Latte", logToFile: true);
-
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
                                     process.ThrowIfWorkloadFailed();
-                                    await this.SystemManagement.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());
+
+                                    this.CaptureMetrics(
+                                        process.StandardOutput.ToString(),
+                                        process.FullCommand(),
+                                        process.StartTime,
+                                        process.ExitTime,
+                                        relatedContext);
                                 }
                             }
                             catch (TimeoutException exc)
@@ -78,7 +81,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 throw;
                             }
                         }
-                    }).ConfigureAwait(false);
+                    });
                 }
 
                 return process;
@@ -100,39 +103,31 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
-            this.MetadataContract.AddForScenario(
-                this.Tool.ToString(),
-                commandArguments,
-                toolVersion: null);
-
-            this.MetadataContract.Apply(telemetryContext);
-
-            IFile fileAccess = this.SystemManagement.FileSystem.File;
-
-            if (fileAccess.Exists(this.ResultsPath))
+            if (!string.IsNullOrWhiteSpace(results))
             {
-                string resultsContent = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(this.ResultsPath)
-                    .ConfigureAwait(false);
+                this.MetadataContract.AddForScenario(
+                    this.Tool.ToString(),
+                    commandArguments,
+                    toolVersion: null);
 
-                if (!string.IsNullOrWhiteSpace(resultsContent))
-                {
-                    MetricsParser parser = new LatteMetricsParser(resultsContent);
-                    IList<Metric> metrics = parser.Parse();
+                this.MetadataContract.Apply(telemetryContext);
 
-                    this.Logger.LogMetrics(
-                        this.Tool.ToString(),
-                        this.Name,
-                        startTime,
-                        endTime,
-                        metrics,
-                        string.Empty,
-                        commandArguments,
-                        this.Tags,
-                        telemetryContext,
-                        resultsContent);
-                }
+                MetricsParser parser = new LatteMetricsParser(results);
+                IList<Metric> metrics = parser.Parse();
+
+                this.Logger.LogMetrics(
+                    this.Tool.ToString(),
+                    this.Name,
+                    startTime,
+                    endTime,
+                    metrics,
+                    string.Empty,
+                    commandArguments,
+                    this.Tags,
+                    telemetryContext,
+                    results);
             }
         }
     }

@@ -1,0 +1,13 @@
+﻿       Static hostname: linux-vm-5
+       Icon name: computer-vm
+         Chassis: vm 🖴
+      Machine ID: 86687b25d03f4b0ba54e801b9da2e1b6
+         Boot ID: 70a5733f02cd42098b9b09dbb9145ad4
+  Virtualization: microsoft
+Operating System: Red Hat Enterprise Linux 9.3 (Plow)
+     CPE OS Name: cpe:/o:redhat:enterprise_linux:9::baseos
+          Kernel: Linux 5.14.0-362.8.1.el9_3.x86_64
+    Architecture: x86-64
+ Hardware Vendor: Microsoft Corporation
+  Hardware Model: Virtual Machine
+Firmware Version: Hyper-V UEFI Release v4.1

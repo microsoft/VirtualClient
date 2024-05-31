@@ -12,9 +12,17 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Text.RegularExpressions;
+    using Azure.Core;
+    using Azure.Identity;
+    using Azure.Messaging.EventHubs.Producer;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -24,6 +32,11 @@ namespace VirtualClient
     public static class OptionFactory
     {
         private static readonly IFileSystem fileSystem = new FileSystem();
+
+        /// <summary>
+        /// ICertificateManager that could be override in unit tests.
+        /// </summary>
+        internal static ICertificateManager CertificateManager { get; set; } = null;
 
         /// <summary>
         /// Command line option defines the ID of the agent to use with telemetry data reported from the system.
@@ -253,11 +266,13 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateEventHubConnectionStringOption(bool required = false, object defaultValue = null)
+        public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--event-hub-connection-string", "--eventHubConnectionString", "--eventhubconnectionstring", "--event-hub", "--eventHub", "--eventhub", "--eh" })
+            Option<EventHubAuthenticationContext> option = new Option<EventHubAuthenticationContext>(
+                new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventHubConnectionString" },
+                new ParseArgument<EventHubAuthenticationContext>(result => OptionFactory.ParseEventHubAuthenticationContext(result)))
             {
-                Name = "EventHubConnectionString",
+                Name = "EventHubAuthenticationContext",
                 Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
                 ArgumentHelpName = "connectionstring",
                 AllowMultipleArgumentsPerToken = false
@@ -741,7 +756,7 @@ namespace VirtualClient
 
                 OptionFactory.ThrowIfOptionExists(
                     result,
-                    "EventHubConnectionString",
+                    "EventHubAuthenticationContext",
                     "Invalid usage. An Event Hub connection string option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
 
                 return string.Empty;
@@ -964,20 +979,7 @@ namespace VirtualClient
             {
                 if (!string.IsNullOrWhiteSpace(token.Value))
                 {
-                    string[] delimitedProperties = token.Value.Split(",,,", StringSplitOptions.RemoveEmptyEntries);
-
-                    if (delimitedProperties?.Any() == true)
-                    {
-                        foreach (string property in delimitedProperties)
-                        {
-                            if (property.Contains("=", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                string key = property.Substring(0, property.IndexOf("=", StringComparison.Ordinal));
-                                string value = property.Substring(property.IndexOf("=", StringComparison.Ordinal) + 1);
-                                delimitedValues[key.Trim()] = value.Trim();
-                            }
-                        }
-                    }
+                    delimitedValues.AddRange(TextParsingExtensions.ParseVcDelimiteredParameters(token.Value));
                 }
             }
 
@@ -993,23 +995,59 @@ namespace VirtualClient
             {
                 store = new DependencyBlobStore(storeName, argument);
             }
+            else if (fileSystem.Directory.Exists(Path.GetFullPath(argument)))
+            {
+                store = new DependencyFileStore(storeName, Path.GetFullPath(argument));
+            }
             else
             {
-                string fullPath = Path.GetFullPath(argument);
-                if (fileSystem.Directory.Exists(fullPath))
+                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
+                TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
+                if (tokenCredential!= null)
                 {
-                    store = new DependencyFileStore(storeName, fullPath);
+                    string endpointUrl = parameters.GetValue<string>("EndpointUrl", "https://virtualclient.blob.core.windows.net/packages");
+                    store = new DependencyBlobStore(storeName, endpointUrl, tokenCredential);
+                }
+                else
+                {
+                    throw new ArgumentException(
+                    $"The value provided for the '{optionName}' option is not a valid. The value provided for a dependency store must be a " +
+                    $"valid storage account blob connection string, SAS URI or a directory path that exists on the system." +
+                    $"Or a delimitered parameter list that describes authentication using certificate or managed identity.");
                 }
             }
 
-            if (store == null)
+            return store;
+        }
+
+        private static EventHubAuthenticationContext ParseEventHubAuthenticationContext(ArgumentResult parsedResult)
+        {
+            EventHubAuthenticationContext authContext;
+            string argument = parsedResult.Tokens.First().Value;
+            if (argument.TrimStart('\'').TrimStart('\"').StartsWith("Endpoint=", StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException(
-                    $"The value provided for the '{optionName}' option is not a valid. The value provided for a dependency store must be a " +
-                    $"valid storage account blob connection string, SAS URI or a directory path that exists on the system.");
+                // This is the older way of supplier connection string directly.
+                // --eventhub=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx
+                authContext = new EventHubAuthenticationContext(argument);
+            }
+            else
+            {
+                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
+                if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString))
+                {
+                    // This is the new way of supplying connection string with declaration.
+                    // --eventhub=ConnectionString=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx
+                    authContext = new EventHubAuthenticationContext((string)connectionString);
+                }
+                else
+                {
+                    string eventHubNamespace = parameters.GetValue<string>(nameof(EventHubAuthenticationContext.EventHubNamespace));
+                    TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
+                    authContext = new EventHubAuthenticationContext(eventHubNamespace, tokenCredential);
+                }
             }
 
-            return store;
+            return authContext;
         }
 
         private static TimeSpan ParseTimeSpan(ArgumentResult parsedResult)
@@ -1173,6 +1211,48 @@ namespace VirtualClient
             {
                 throw new ArgumentException(errorMessage);
             }
+        }
+
+        private static TokenCredential GetTokenCredential(IDictionary<string, IConvertible> parameters)
+        {
+            TokenCredential credential;
+
+            if (parameters.TryGetValue("ManagedIdentityId", out IConvertible managedIdentityId))
+            {
+                credential = new ManagedIdentityCredential((string)managedIdentityId);
+            }
+            else
+            {
+                ICertificateManager certManager = OptionFactory.CertificateManager ?? new CertificateManager();
+                X509Certificate2 certificate;
+
+                string certSubject = parameters.GetValue<string>("CertificateSubject", string.Empty);
+                string certThumbprint = parameters.GetValue<string>("CertificateThumbprint", string.Empty);
+                string issuer = parameters.GetValue<string>("CertificateIssuer", string.Empty);
+                string clientId = parameters.GetValue<string>("ClientId", string.Empty);
+                string tenantId = parameters.GetValue<string>("TenantId", string.Empty);
+
+                // Using thumbprint if provided.
+                if (!string.IsNullOrEmpty(certThumbprint))
+                {
+                    // Get the certificate from the store
+                    certificate = certManager.GetCertificateFromStoreAsync(certThumbprint).GetAwaiter().GetResult();
+                    credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+                }
+                else if (!string.IsNullOrEmpty(issuer) && !string.IsNullOrEmpty(certSubject))
+                {
+                    // Get the certificate from the store
+                    certificate = certManager.GetCertificateFromStoreAsync(issuer, certSubject).GetAwaiter().GetResult();
+                    credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+                }
+                else
+                {
+                    // Assign null for the credential. Caller method should throw ArgumentException if needed.
+                    credential = null;
+                }              
+            }
+            
+            return credential;
         }
     }
 }

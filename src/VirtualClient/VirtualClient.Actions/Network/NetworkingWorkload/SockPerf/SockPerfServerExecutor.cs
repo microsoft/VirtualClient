@@ -30,11 +30,10 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = false;
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             IProcessProxy process = null;
 
@@ -66,12 +65,16 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 {
                                     try
                                     {
-                                        // Wait until the cancellation token is signalled.
+                                        // Wait until the cancellation token is signalled by the client.
                                         await this.WaitAsync(cancellationToken);
                                         process.Close();
 
                                         await process.WaitForExitAsync(cancellationToken);
                                         await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+                                    }
+                                    catch (OperationCanceledException)
+                                    {
+                                        // Expected when the client signals a cancellation.
                                     }
                                     finally
                                     {
@@ -104,24 +107,6 @@ namespace VirtualClient.Actions.NetworkPerformance
             string protocolParam = this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
 
             return $"server -i {serverIPAddress} -p {this.Port} {protocolParam}".Trim();
-        }
-
-        /// <summary>
-        /// Not applicable on the server-side
-        /// </summary>
-        protected override Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
-        {
-            // Sockperf server-side does not generate results.
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Not applicable on the server-side
-        /// </summary>
-        protected override Task WaitForResultsAsync(TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            // Sockperf server-side does not generate results.
-            return Task.CompletedTask;
         }
     }
 }

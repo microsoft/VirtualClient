@@ -11,6 +11,41 @@ Event Hub is a highly scalable Azure cloud messaging hub/proxy that has out-of-t
 pipeline resources (e.g. Azure Data Explorer/Kusto, Azure Storage Account). Virtual Client allows the user to supply a connection string to an Event Hubs namespace on the command line. The remainder of this document 
 covers the requirements for using an Event Hub including the setup.
 
+## Event Hubs Authentication
+Virtual Client supports the following authentication options for eventhubs:
+
+  * **Azure Entra Id + Certificate using thumbprint** 
+    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
+    This method uses certificate thumbprint to search for the certificate. Required parameters are:
+    * CertificateThumbprint
+    * ClientId
+    * TenantId
+    * EventHubNamespace
+
+    ```--eventhub=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
+
+  * **Azure Entra Id + Certificate using issuer + subject** 
+    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
+    This method uses certificate issuer + subject to search for the certificate. This has the benefit of supporting frequent cert rotation with no argument changes. The issuer can be a substring of the exact issuer appearing in the certificate. The search only looks for contains.
+    Required parameters are:
+    * CertificateIssuer
+    * CertificateSubject
+    * ClientId
+    * TenantId
+    * EventHubNamespace
+
+    ```--eventhub=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
+
+  * **Azure Managed Identity** 
+    This method uses Azure managed identity to authenticate. An id is required to support cases where a machine have multiple identities.
+    
+    ```--eventhub=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net```
+
+  * **EventHub connection string**  
+    This is a [event hub connection string](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string).
+
+    ```(e.g. Endpoint=sb://aaa.servicebus.windows.net/;SharedAccessKeyName=TelemetrySharedAccessKey;SharedAccessKey=bbbbbbbbbb...)```
+
 ### Create Event Hub Namespace
 The Virtual Client emits data for each one of these categories into a distinct/singular target Event Hub within an Event Hub namespace (a 1-to-1 mapping).
 In order to use Event Hub with the Virtual Client, an Event Hub namespace must be setup. The following recommendations relate to the Event Hub namespace itself.

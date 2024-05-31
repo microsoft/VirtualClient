@@ -53,6 +53,23 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The size of the test file that should use in workload tests (e.g. 496GB).
+        /// </summary>
+        public string FileSize
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.FileSize), out IConvertible fileSize);
+                return fileSize?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(DiskWorkloadExecutor.FileSize)] = value;
+            }
+        }
+
+        /// <summary>
         /// Parameter. True to used direct, non-buffered I/O (default). False to use buffered I/O.
         /// </summary>
         public int DirectIO
@@ -119,13 +136,10 @@ namespace VirtualClient.Actions
         {
             get
             {
-                object metadata = null;
-                EventContext.PersistentProperties.TryGetValue(nameof(metadata), out metadata);
-
                 IConvertible value = string.Empty;
-                if (metadata != null)
+                if (this.Metadata != null)
                 {
-                    (metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId).CamelCased(), out value);
+                    (this.Metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId), out value);
                 }
 
                 return value == null ? string.Empty : value.ToString();

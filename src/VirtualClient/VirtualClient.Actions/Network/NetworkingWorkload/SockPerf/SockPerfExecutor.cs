@@ -28,7 +28,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.WorkloadEmitsResults = true;
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
 

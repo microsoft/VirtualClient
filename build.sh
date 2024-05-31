@@ -5,7 +5,7 @@ if [ -n "$1" ]; then
 fi
 
 if [ -z "$VCBuildVersion" ]; then
-    VCBuildVersion="0.0.1"
+    VCBuildVersion=$(cat VERSION)
 fi
 
 while [[ "$#" -gt 0 ]]; do
@@ -31,7 +31,8 @@ else
 fi
 
 echo "Building VirtualClient solution."
-dotnet build src/VirtualClient/VirtualClient.sln -c Release
+dotnet build src/VirtualClient/VirtualClient.sln -c Release -p:VCBuildVersion=$VCBuildVersion
+
 
 if [ "$BUILD_ALL" = true ]; then
     echo "Publishing VirtualClient for all platforms."

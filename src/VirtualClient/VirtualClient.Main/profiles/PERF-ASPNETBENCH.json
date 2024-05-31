@@ -6,8 +6,8 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "DotNetVersion": "7.0.401",
-        "TargetFramework": "net7.0"
+        "DotNetVersion": "8.0.204",
+        "TargetFramework": "net8.0"
     },
     "Actions": [
         {

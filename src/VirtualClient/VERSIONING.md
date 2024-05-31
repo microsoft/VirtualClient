@@ -90,7 +90,7 @@ been made. This process is generally followed with most changes to the Virtual C
 * **Set the default build version to a major/minor which is higher than the version set in the pipeline YAML files above.
   In order to ensure the debugging experience for developers creating extensions for the Virtual Client, the default version
   should be set to a higher major/minor version than the one for the Official build. For example, if the Official build version
-  in the YAML is set to a major/minor of 1.5.*, then the default version for the Virtual Client should be set to 1.6.*. The default
+  in the YAML is set to a major/minor of 1.5.*, then the default version for the Virtual Client should be set to 1.0.*. The default
   version is set in the Module.props for the Virtual Client solution/directory.
 
   <div style="font-size:10pt">
@@ -99,7 +99,7 @@ been made. This process is generally followed with most changes to the Virtual C
   <PropertyGroup>
       <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
       <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-      <AssemblyVersion>1.6.0.0</AssemblyVersion>
+      <AssemblyVersion>1.0.0.0</AssemblyVersion>
       <AssemblyVersion Condition="'$(VCBuildVersion)' != ''">$(VCBuildVersion)</AssemblyVersion>
   </PropertyGroup>
   ```

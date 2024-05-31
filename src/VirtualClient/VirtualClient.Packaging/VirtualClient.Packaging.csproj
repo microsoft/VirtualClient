@@ -72,6 +72,18 @@
 
         <!-- Test Framework Package = Moq -->
         <NuspecProperties>$(NuspecProperties);Moq_Version=$(Moq_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Serilog.Extensions.Logging -->
+        <NuspecProperties>$(NuspecProperties);Serilog_Extensions_Logging_Version=$(Serilog_Extensions_Logging_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Serilog.Sinks.File -->
+        <NuspecProperties>$(NuspecProperties);Serilog_Sinks_File_Version=$(Serilog_Sinks_File_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Serilog.Sinks.RollingFile -->
+        <NuspecProperties>$(NuspecProperties);Serilog_Sinks_RollingFile_Version=$(Serilog_Sinks_RollingFile_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = SSH.Net -->
+        <NuspecProperties>$(NuspecProperties);SSH_NET_Version=$(SSH_Net_PackageVersion)</NuspecProperties>
         
         <!-- Framework Package = System.Diagnostics.PerformanceCounter -->
         <NuspecProperties>$(NuspecProperties);System_Diagnostics_PerformanceCounter_Version=$(System_Diagnostics_PerformanceCounter_PackageVersion)</NuspecProperties>
@@ -81,5 +93,11 @@
 
         <!-- Framework Package = System.IO.FileSystem.Primitives -->
         <NuspecProperties>$(NuspecProperties);System_IO_FileSystem_Primitives_Version=$(System_IO_FileSystem_Primitives_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = System.Net.NameResolution -->
+        <NuspecProperties>$(NuspecProperties);System_Net_NameResolution_Version=$(System_Net_NameResolution_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = YamlDotNet -->
+        <NuspecProperties>$(NuspecProperties);YamlDotNet_Version=$(YamlDotNet_PackageVersion)</NuspecProperties>
     </PropertyGroup>
 </Project>

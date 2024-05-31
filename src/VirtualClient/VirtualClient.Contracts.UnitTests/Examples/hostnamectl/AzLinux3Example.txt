@@ -1,0 +1,14 @@
+﻿Static hostname: omega
+       Icon name: computer-vm
+         Chassis: vm 🖴
+      Machine ID: cf5e3269332149319128b5b09f03c002
+         Boot ID: e28e22f759d8431da7f93d28cca0b10c
+  Virtualization: qemu
+Operating System: Microsoft Azure Linux 3.0
+          Kernel: Linux 6.6.22.1-2.azl3
+    Architecture: arm64
+Hardware Vendor: QEMU
+  Hardware Model: QEMU Virtual Machine
+Firmware Version: 0.0.0
+   Firmware Date: Fri 2015-02-06
+    Firmware Age: 9y 2month 3w 5d

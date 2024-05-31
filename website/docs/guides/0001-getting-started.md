@@ -15,7 +15,8 @@ Virtual Client is a self-contained .NET 8 application, so "Installation" really 
 [all operating systems supported by .NET 8](https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md).
 
 ### Debian / Ubuntu (deb)
-VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`, which is typically in Linux `$PATH`.
+VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient` (which is 
+typically one of the default paths in the Linux `$PATH` environment variable). This is a symbolic link. The actual package is typically installed at the path `/opt/virtualclient`.
 
 ```bash
 # example: ubuntu
@@ -31,7 +32,8 @@ sudo apt-get install virtualclient
 ```
 
 ### Red Hat-based distributions (rpm)
-We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
+We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`
+(which is typically one of the default paths in the Linux `$PATH` environment variable). This is a symbolic link. The actual package is typically installed at the path `/opt/virtualclient`.
 
 ```bash
 # example: ubuntu
@@ -128,10 +130,10 @@ The following section provides instructions for building on Windows systems.
 - The build process will create ready-to-run builds of the Virtual Client for all supported platforms and architectures. Virtual Client executable and binaries can be found in the repo 'out' directory in corresponding architecture/runtimes folder locations. 
 
   ```bash
-  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\VirtualClient
-  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\VirtualClient.exe
-  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net8.0\linux-x64\publish\VirtualClient
-  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net8.0\win-x64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\VirtualClient
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net8.0\linux-x64\publish\VirtualClient
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net8.0\win-x64\publish\VirtualClient.exe
   ```
 - VirtualClient is a self-contained .NET application. The application can be run from the build output locations noted above or copied to another
   system. When simply copy the contents of the `/publish/` folder specific to the platform/architecture to the system on which you want to run. 

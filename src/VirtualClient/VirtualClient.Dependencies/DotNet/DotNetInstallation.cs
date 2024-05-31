@@ -24,7 +24,7 @@ namespace VirtualClient.Dependencies
         private const string WindowsInstallScriptName = "dotnet-install.ps1";
 
         private string installDirectory;
-        private ISystemManagement systemManager;
+        private ISystemManagement systemManagement;
         private IFileSystem fileSystem;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace VirtualClient.Dependencies
         public DotNetInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.systemManager = this.Dependencies.GetService<ISystemManagement>();
+            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
             this.fileSystem = this.Dependencies.GetService<IFileSystem>();
 
             this.installDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "dotnet");
@@ -62,6 +62,8 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.systemManagement.EnableLongPathInWindows();
+
             if (!this.fileSystem.Directory.Exists(this.installDirectory))
             {
                 this.fileSystem.Directory.CreateDirectory(this.installDirectory);
@@ -74,7 +76,7 @@ namespace VirtualClient.Dependencies
 
             if (this.Platform == PlatformID.Unix)
             {
-                await this.systemManager.MakeFileExecutableAsync(destinyFile, this.Platform, cancellationToken).ConfigureAwait(false);
+                await this.systemManagement.MakeFileExecutableAsync(destinyFile, this.Platform, cancellationToken).ConfigureAwait(false);
                 await this.ExecuteCommandAsync(destinyFile, this.GetInstallArgument(), this.installDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
             }
             else
@@ -83,7 +85,7 @@ namespace VirtualClient.Dependencies
             }
 
             DependencyPath dotnetPackage = new DependencyPath(this.PackageName, this.installDirectory, "DotNet SDK", this.DotNetVersion);
-            await this.systemManager.PackageManager.RegisterPackageAsync(dotnetPackage, cancellationToken).ConfigureAwait(false);
+            await this.systemManagement.PackageManager.RegisterPackageAsync(dotnetPackage, cancellationToken).ConfigureAwait(false);
         }
 
         private string GetInstallArgument()
@@ -107,7 +109,7 @@ namespace VirtualClient.Dependencies
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             EventContext relatedContext = telemetryContext.Clone();
-            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
+            using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
             {
                 this.CleanupTasks.Add(() => process.SafeKill());
                 this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
