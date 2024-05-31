@@ -33,6 +33,12 @@ stages:
       continueOnError: false
       inputs:
         packageType: 'sdk'
+        version: '2.1.x'
+
+    - task: UseDotNet@2
+      continueOnError: false
+      inputs:
+        packageType: 'sdk'
         version: '8.0.101'
         useGlobalJson: false
         performMultiLevelLookup: true
@@ -40,7 +46,7 @@ stages:
 
     - script: |
         # Read the content of VERSION
-        version='cat $(Build.SourcesDirectory)/VERSION'
+        version=$(cat $(Build.SourcesDirectory)/VERSION)
 
         # Set the file content as a pipeline variable
         echo "##vso[task.setvariable variable=VcVersion]$version"
