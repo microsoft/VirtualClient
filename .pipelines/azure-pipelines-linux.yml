@@ -164,6 +164,7 @@ stages:
     # AzLinux
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish x64'
+      enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -174,6 +175,7 @@ stages:
       
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish aarch64'
+      enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -184,6 +186,7 @@ stages:
     
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
+      enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -194,6 +197,7 @@ stages:
         
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
+      enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
