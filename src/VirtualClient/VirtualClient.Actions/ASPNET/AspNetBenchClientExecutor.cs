@@ -57,8 +57,6 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            DependencyPath bombardierPackage = await this.GetPlatformSpecificPackageAsync(this.BombardierPackageName, cancellationToken)
-                .ConfigureAwait(false);
 
             this.RegisterToTerminateRole(ClientRole.Server);
         }
