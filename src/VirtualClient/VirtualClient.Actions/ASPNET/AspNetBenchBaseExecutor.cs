@@ -86,6 +86,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The name of the package where the wrk package is downloaded.
+        /// </summary>
+        public string WrkPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(AspNetBenchBaseExecutor.WrkPackageName), "wrk");
+            }
+        }
+
+        /// <summary>
         /// The name of the package where the DotNetSDK package is downloaded.
         /// </summary>
         public string DotNetSdkPackageName
@@ -147,24 +158,30 @@ namespace VirtualClient.Actions
                 this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
             }
 
-            DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (bombardierPackage != null)
+            try 
             {
-                this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
-                await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                // Check for Bombardier Package, if not available try wrk package
+                DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                               .ConfigureAwait(false);
+
+                if (bombardierPackage != null)
+                {
+                    this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
+                    await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
-
-            DependencyPath wrkPackage = await this.packageManager.GetPackageAsync("wrk", cancellationToken)
-                .ConfigureAwait(false);
-
-            if (wrkPackage != null)
+            catch (DependencyException)
             {
-                this.wrkFilePath = this.Combine(wrkPackage.Path, "wrk");
-                await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                DependencyPath wrkPackage = await this.packageManager.GetPackageAsync(this.WrkPackageName, cancellationToken)
+                                .ConfigureAwait(false);
+
+                if (wrkPackage != null)
+                {
+                    this.wrkFilePath = this.Combine(wrkPackage.Path, "wrk");
+                    await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
         }
 

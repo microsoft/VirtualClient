@@ -151,8 +151,6 @@ namespace VirtualClient.Actions
             List<string> expectedCommands = new List<string>
             {
                 "sudo usermod -aG docker anyuser",
-                "sudo bash -c \"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch" +
-                " && mkdir $MLPERF_SCRATCH_PATH/data $MLPERF_SCRATCH_PATH/models $MLPERF_SCRATCH_PATH/preprocessed_data\"",
                 "sudo -u anyuser bash -c \"make prebuild MLPERF_SCRATCH_PATH=/dev/sdd1/scratch\"",
                 "sudo docker ps",
                 "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
@@ -195,6 +193,18 @@ namespace VirtualClient.Actions
                 fileVisited = true;
             })
             .ReturnsAsync(makeFileString);
+
+            IEnumerable<string> expectedDirectories = new List<string>
+            {
+                "/dev/sdd1/scratch/data",
+                "/dev/sdd1/scratch/models",
+                "/dev/sdd1/scratch/preprocessed_data"
+            };
+
+            this.mockFixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
+            {
+                Assert.IsTrue(expectedDirectories.Select(ed => directory.Contains(ed)).Any());
+            });
 
             List<string> commandsExecuted = new List<string>();
             this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
@@ -246,6 +256,17 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(makeFileString);
 
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
+            IEnumerable<string> expectedDirectories = new List<string>
+            {
+                "/dev/sdd1/scratch/data",
+                "/dev/sdd1/scratch/models",
+                "/dev/sdd1/scratch/preprocessed_data"
+            };
+
+            this.mockFixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
+            {
+                Assert.IsTrue(expectedDirectories.Select(ed => directory.Contains(ed)).Any());
+            });
 
             List<string> commandsExecuted = new List<string>();
 
@@ -298,8 +319,6 @@ namespace VirtualClient.Actions
             commands = new List<string>
             {
                 "sudo usermod -aG docker anyuser",
-                "sudo bash -c \"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch" +
-                " && mkdir $MLPERF_SCRATCH_PATH/data $MLPERF_SCRATCH_PATH/models $MLPERF_SCRATCH_PATH/preprocessed_data\"",
                 "sudo -u anyuser bash -c \"make prebuild MLPERF_SCRATCH_PATH=/dev/sdd1/scratch\"",
                 "sudo docker ps",
                 "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
