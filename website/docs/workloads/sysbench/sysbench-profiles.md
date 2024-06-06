@@ -136,10 +136,11 @@ There are a lot of moving parts to this workload that allows for both out-of-box
 * **SysbenchClientExecutor**: Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from SysbenchConfiguration -- though a database of 10 tables with 10,000 records each can be created, a workload can be run on 5 tables for 1000 records if desired. VC does not support dropping and recreating a new database or table configuration within the same profile or system.
 * **SysbenchServerExecutor**: Sets the server online for client interaction.
 
-## PERF-MYSQL-OLTP-SYSBENCH.json
+## PERF-MYSQL-OLTP-SYSBENCH.json and PERF-POSTGREQL-OLTP-SYSBENCH.json
 Runs a system-intensive workload using the Sysbench Benchmark to test the bandwidth of CPU, Memory, and Disk I/O.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-OLTP-SYSBENCH.json) 
+* [Workload Profile - MySQL](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-OLTP-SYSBENCH.json) 
+* [Workload Profile - PostgreSQL](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-OLTP-SYSBENCH.json)
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -160,23 +161,23 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
-  | DatabaseScenario              | Not Required. Configures the scenario in which to stress the database.                                      | Balanced          |
+  | DatabaseName              | Optional. Configure the name of database under test.                                                                |sbtest          |
+  | DatabaseScenario              | Optional. Configures the scenario in which to stress the database.                                      | Balanced          |
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. OLTP)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
   | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
+  | ServerType              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
 
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8     |
-  | RecordCount          | Not Required. Number of records per table in the database.                   | 10^(log2(vCPU) + 2)         |
-  | NumTables             | Not Required. Number of tables created in the database.                         | 10              |
+  | Threads              | Optional. Number of threads to use during workload execution.                | vCPU * 8     |
+  | RecordCount          | Optional. Number of records per table in the database (OLTP only).                   | 10^(log2(vCPU) + 2)         |
+  | NumTables             | Optional. Number of tables created in the database.                         | 10              |
 
 * **Profile Runtimes**  
-  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
-  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
   number of system cores.
 
 * **Usage Examples**
@@ -194,10 +195,11 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Server01  --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
   ```
 
-## PERF-MYSQL-TPCC-SYSBENCH.json
+## PERF-MYSQL-TPCC-SYSBENCH.json and PERF-POSTGRESQL-TPCC-SYSBENCH.json
 Runs a system-intensive workload using the Sysbench Benchmark to test the bandwidth of CPU, Memory, and Disk I/O.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-TPCC-SYSBENCH.json) 
+* [Workload Profile - MySQL](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-TPCC-SYSBENCH.json) 
+* [Workload Profile - PostgreSQL](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-POSTGRESQL-TPCC-SYSBENCH.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -218,23 +220,23 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
-  | DatabaseScenario           | Not Required. Configures the scenario in which to stress the database.                                      | Balanced          |
+  | DatabaseName              | Optional. Configure the name of database under test.                                                                |sbtest          |
+  | DatabaseScenario           | Optional. Configures the scenario in which to stress the database.                                      | Balanced          |
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. TPCC)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
   | Workload              | Required. Use "tpcc" workload.                                   | N/A          |
+  | ServerType              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
 
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8     |
-  | WarehouseCount       | Not Required. Number of warehouses per table in the database.                                               | 100       |
-  | NumTables             | Not Required. Number of tables created in the database.                         | 10              |
+  | Threads              | Optional. Number of threads to use during workload execution.                | vCPU * 8     |
+  | WarehouseCount       | Optional. Number of warehouses per table in the database.                                               | 100       |
+  | NumTables             | Optional. Number of tables created in the database.                         | 10              |
 
 * **Profile Runtimes**  
-  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
-  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
   number of system cores.
 
 * **Usage Examples**

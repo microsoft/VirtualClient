@@ -8,6 +8,7 @@
     },
     "Parameters": {
         "DatabaseName": "sbtest",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Port": "5432",
         "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}",
         "DatabaseScenario": "Balanced",
@@ -132,6 +133,7 @@
                 "Scenario": "DistributePostgreSQLDatabase",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "postgresql",
                 "Port": "$.Parameters.Port",
                 "Role": "Server"

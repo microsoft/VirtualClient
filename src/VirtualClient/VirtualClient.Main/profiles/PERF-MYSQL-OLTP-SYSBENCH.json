@@ -9,6 +9,7 @@
     "Parameters": {
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Balanced",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Duration": "00:05:00"
     },
     "Actions": [
@@ -206,6 +207,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
                 "Benchmark": "OLTP",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -227,6 +229,7 @@
                 "Scenario": "SetMySQLGlobalVariables",
                 "Action": "SetGlobalVariables",
                 "Benchmark": "OLTP",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
                 "PackageName": "mysql-server",
                 "Role": "Server"

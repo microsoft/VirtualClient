@@ -9,6 +9,7 @@
     "Parameters": {
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Balanced",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Duration": "00:30:00"
     },
     "Actions": [
@@ -94,6 +95,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
                 "Benchmark": "TPCC",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -139,6 +141,7 @@
                 "Scenario": "DistributeMySQLDatabase",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
