@@ -163,6 +163,12 @@ namespace VirtualClient.Actions
                     this.Combine(this.MakefileDirectory, "wrk"),
                     this.Platform,
                     cancellationToken);
+
+                await this.SystemManager.MakeFileExecutableAsync(
+                    this.Combine(this.MakefileDirectory, "deps", "luajit", "src", "luajit"),
+                    this.Platform,
+                    cancellationToken);
+
             }
 
             await this.InstallDependenciesAsync(cancellationToken)

@@ -98,6 +98,7 @@ namespace VirtualClient.Actions
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
+                $"sudo make clean",
                 $"sudo make",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1000 >> results.txt\"",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read -R 1000 >> results.txt\"",
@@ -137,6 +138,7 @@ namespace VirtualClient.Actions
                 // On Unix/Linux systems, everything will be case-sensitive. As such the commands below are expected to be
                 // exactly the same as what is executed.
                 $"sudo chmod +x \"{this.mockPath.Path}/linux-x64/mediamicroservices/wrk2/wrk\"",
+                $"sudo chmod +x \"{this.mockPath.Path}/linux-x64/mediamicroservices/wrk2/deps/luajit/src/luajit\"",
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
                 $"sudo python3 -m pip install -U pip",
@@ -146,6 +148,7 @@ namespace VirtualClient.Actions
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
+                $"sudo make clean",
                 $"sudo make",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
@@ -190,6 +193,7 @@ namespace VirtualClient.Actions
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
+                $"sudo make clean",
                 $"sudo make",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/hotel-reservation/mixed-workload_type_1.lua http://0.0.0.0:5000 -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
