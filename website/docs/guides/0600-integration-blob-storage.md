@@ -67,7 +67,7 @@ Virtual Client supports the following authentication options for all blob stores
     ```--packages=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
 
   * **Azure Managed Identity** 
-    This method uses Azure managed identity to authenticate. An id is required to avoid cases where a machine have multiple identities.
+    This method uses Azure managed identity to authenticate. An id is required to support cases where a machine have multiple identities.
     
     ```--packages=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
 

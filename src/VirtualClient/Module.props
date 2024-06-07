@@ -90,7 +90,7 @@
         <Microsoft_Extensions_Http_Polly_PackageVersion>6.0.9</Microsoft_Extensions_Http_Polly_PackageVersion>
 
         <!-- Microsoft.Windows.Compatibility -->
-        <Microsoft_Windows_Compatibility_PackageVersion>7.0.5</Microsoft_Windows_Compatibility_PackageVersion>
+        <Microsoft_Windows_Compatibility_PackageVersion>8.0.6</Microsoft_Windows_Compatibility_PackageVersion>
 
         <!-- Microsoft.Win32.Registry -->
         <Microsoft_Win32_Registry_PackageVersion>5.0.0</Microsoft_Win32_Registry_PackageVersion>
