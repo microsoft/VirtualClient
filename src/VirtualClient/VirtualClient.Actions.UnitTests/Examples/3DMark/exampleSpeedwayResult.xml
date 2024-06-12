@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<benchmark>
+    <results>
+        <result>
+            <name/>
+            <description/>
+            <passIndex>-1</passIndex>
+            <sourceId>1709948957.out</sourceId>
+            <SpeedWayCustom3DMarkScore>0</SpeedWayCustom3DMarkScore>
+            <SpeedWayCustomGraphicsScore>3457</SpeedWayCustomGraphicsScore>
+            <benchmarkRunId>17ae2acc-9781-4b4f-9fa5-b6ebf48a3620</benchmarkRunId>
+        </result>
+        <result>
+            <name/>
+            <description/>
+            <passIndex>0</passIndex>
+            <sourceId>1709948957.out</sourceId>
+            <SpeedWayCustomGraphicsScoreForPass>3457</SpeedWayCustomGraphicsScoreForPass>
+            <SpeedWayCustom3DMarkScoreForPass>0</SpeedWayCustom3DMarkScoreForPass>
+            <SpeedWayCustomGraphicsTest>34.57</SpeedWayCustomGraphicsTest>
+            <benchmarkRunId>17ae2acc-9781-4b4f-9fa5-b6ebf48a3620</benchmarkRunId>
+        </result>
+    </results>
+</benchmark>

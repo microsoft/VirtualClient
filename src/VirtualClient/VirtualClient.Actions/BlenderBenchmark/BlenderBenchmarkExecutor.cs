@@ -199,7 +199,7 @@ namespace VirtualClient.Actions
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
 
-                    this.Logger.LogMessage($"{nameof(BlenderBenchmarkExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    this.Logger.LogMessage($"{nameof(BlenderBenchmarkExecutor)}.WorkloadOutputParsingFailed", LogLevel.Error, relatedContext);
                 }
             }
         }

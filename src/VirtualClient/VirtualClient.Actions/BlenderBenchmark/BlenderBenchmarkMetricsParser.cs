@@ -55,12 +55,9 @@ namespace VirtualClient.Actions
 
                 return metrics;
             }
-            catch (JsonException exc)
+            catch (Exception exc)
             {
-                throw new WorkloadResultsException(
-                    "Workload results parsing failure. The example workload results are not valid or are not formatted in a valid JSON structure.",
-                    exc,
-                    ErrorReason.WorkloadResultsParsingFailed);
+                throw new SchemaException("The blenderbenchmark output JSON has incorrect format for parsing.", exc);
             }
         }
     }

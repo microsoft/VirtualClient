@@ -24,37 +24,68 @@ namespace VirtualClient.Actions
         /// Parser for the 3DMark workload
         /// </summary>
         /// <param name="rawText">The raw text from the 3DMark export process.</param>
-        /// <param name="definition">The 3dmark definition.</param>
-        public ThreeDMarkMetricsParser(string rawText, string definition)
+        /// <param name="benchmark">The 3dmark benchmark name.</param>
+        public ThreeDMarkMetricsParser(string rawText, string benchmark)
             : base(rawText)
         {
-            this.Defintion = definition;
+            this.Benchmark = benchmark;
         }
 
-        private string Defintion { get; set; }
+        private string Benchmark { get; set; }
 
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
             IList<Metric> metrics = new List<Metric>();
+
             try
             {
-                if (this.Defintion == "custom_TSGT1.3dmdef")
+                if (this.Benchmark.ToLower() == "timespy")
                 {
-                    metrics.Add(new Metric("timespy.graphics.1 [fps]", this.ParseXMLTag("TimeSpyPerformanceGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphics1", this.ParseXMLTag("TimeSpyCustomGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphics2", this.ParseXMLTag("TimeSpyCustomGraphicsTest2"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("cpu2", this.ParseXMLTag("TimeSpyCustomCpuSection2"), "fps", MetricRelativity.HigherIsBetter));
+
+                    // aggregate scores
+                    double cpuScore = this.ParseXMLTag("TimeSpyCustomCPUScore");
+                    double graphicsScore = this.ParseXMLTag("TimeSpyCustomGraphicsScore");
+                    double threeDMarkScore = this.CalculateTimeSpyAggregates(cpuScore, graphicsScore);
+                    metrics.Add(new Metric("graphicsScore", graphicsScore, "score", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("cpuScore", cpuScore, "score", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("3dMarkScore", threeDMarkScore, "score", MetricRelativity.HigherIsBetter));
                 }
-                else if (this.Defintion == "custom_TSGT2.3dmdef")
+                else if (this.Benchmark.ToLower() == "timespy_extreme")
                 {
-                    metrics.Add(new Metric("timespy.graphics.2 [fps]", this.ParseXMLTag("TimeSpyPerformanceGraphicsTest2"), "fps", MetricRelativity.HigherIsBetter));
+                    double cpuScore = this.ParseXMLTag("TimeSpyExtremeCustomCPUScore");
+                    double graphicsScore = this.ParseXMLTag("TimeSpyExtremeCustomGraphicsScore");
+                    double threeDMarkScore = this.CalculateTimeSpyAggregates(cpuScore, graphicsScore);
+                    metrics.Add(new Metric("graphicsScore", graphicsScore, "score", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("cpuScore", cpuScore, "score", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("3dMarkScore", threeDMarkScore, "score", MetricRelativity.HigherIsBetter));
                 }
-                else if (this.Defintion == "custom_TSCT.3dmdef")
+                else if (this.Benchmark.ToLower() == "pciexpress")
                 {
-                    metrics.Add(new Metric("timespy.cpu [fps]", this.ParseXMLTag("TimeSpyPerformanceCpuSection2"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("pciebandwidth", this.ParseXMLTag("PciExpressBandwidthCustom"), "GB/s", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("pciefps", this.ParseXMLTag("PciExpressFpsCustom"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Benchmark.ToLower() == "directxraytracing")
+                {
+                    metrics.Add(new Metric("featureTestPerformance", this.ParseXMLTag("DirectxRaytracingFtFpsPerformance"), "fps", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Benchmark.ToLower() == "portroyal")
+                {
+                    metrics.Add(new Metric("graphics1", this.ParseXMLTag("PortRoyalCustomGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphicsScore", this.ParseXMLTag("PortRoyalCustomGraphicsScore"), "score", MetricRelativity.HigherIsBetter));
+                }
+                else if (this.Benchmark.ToLower() == "speedway")
+                {
+                    metrics.Add(new Metric("graphics", this.ParseXMLTag("SpeedWayCustomGraphicsTest"), "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("graphicsScore", this.ParseXMLTag("SpeedWayCustomGraphicsScore"), "score", MetricRelativity.HigherIsBetter));
                 }
             }
             catch (Exception exc)
             {
-                throw new WorkloadException($"Results not found. The workload '3DMark' did not produce any valid results.", exc, ErrorReason.WorkloadFailed);
+                throw new SchemaException($"The 3DMark output file has incorrect format for parsing.", exc);
             }
 
             return metrics;
@@ -71,7 +102,21 @@ namespace VirtualClient.Actions
             Match m = Regex.Match(this.RawText, pattern);
             XElement tag = XElement.Parse(m.Value);
             double val = double.Parse(tag.Value);
+
+            if (val == 0)
+            {
+                throw new SchemaException($"3dMark tested 0 for {tagName}.");
+            }
+
             return val;
+        }
+
+        /// <summary>
+        /// Calculates the 3DMark TimeSpy Score
+        /// </summary>
+        private double CalculateTimeSpyAggregates(double cpuScore, double graphicsScore)
+        {
+            return 1 / ((0.85 / graphicsScore) + (0.15 / cpuScore));
         }
     }
 }
