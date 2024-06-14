@@ -294,10 +294,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
                 foreach (Disk disk in disksToTest)
                 {
-                    if (disk.GetPreferredAccessPath(this.Platform) != "/mnt")
-                    {
-                        diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)};";
-                    }
+                    diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)};";
                 }
             }
 

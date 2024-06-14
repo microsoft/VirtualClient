@@ -290,6 +290,7 @@ namespace VirtualClient.Actions
                 await this.WaitAsync(DeathStarBenchExecutor.ServerWarmUpTime, cancellationToken);
             }
 
+            await this.ExecuteCommandAsync("make clean", this.MakefileDirectory, cancellationToken);
             await this.ExecuteCommandAsync("make", this.MakefileDirectory, cancellationToken);
 
             foreach (var action in this.actionScript[this.ServiceName].Keys)
