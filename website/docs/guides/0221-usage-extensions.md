@@ -35,7 +35,12 @@ the Virtual Client runtime platform version to use.
   major and minor version as the `VirtualClient.Framework` package version referenced by the projects in the extensions repo. The following table illustrates
   a few examples as a reference.
 
-  <mark>In general, backwards compatibility for Virtual Client releases is maintained within a {{major}}.{{minor}} range only (e.g. 1.14.0, 1.14.1, 1.14.2, ~~1.15.0~~). The Virtual Client team attempts to honor this most of the time; however, no guarantees are made.</mark>
+  :::tip
+
+  In general, backwards compatibility for Virtual Client releases is maintained within a \{major\}.\{minor\} range only (e.g. 1.14.0, 1.14.1, 1.14.2, ~~1.15.0~~). The Virtual Client 
+  team attempts to honor this most of the time; however, no guarantees are made.
+ 
+  :::
 
   https://semver.org/
 
@@ -102,9 +107,11 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   environment variable) by delimiting the paths with a semi-colon (e.g. /home/user/extensions_packages1;/home/user/extensions_packages1). During startup, the runtime will search 
   for packages in both the default 'packages' directory as well as in the alternate location.
 
-  <mark>
+  :::tip
+
   Note that there may not be duplicate binaries or profiles (by name) in the target location. If duplicates (by name) are found, a runtime error will occur.
-  </mark>
+
+  :::
 
   ``` bash
   # e.g.
@@ -146,9 +153,11 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   This is particularly helpful in testing/debugging scenarios where developers are compiling extensions binaries on the same system enabling a fast inner-development 
   loop.
   
-  <mark>
+  :::tip
+
   Note that there may not be duplicate binaries (by name) in the target location. If duplicates (by name) are found, a runtime error will occur.
-  </mark>
+
+  :::
 
   ``` bash
   # e.g.
