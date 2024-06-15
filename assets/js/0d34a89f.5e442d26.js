@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[2060],{6214:t=>{t.exports=JSON.parse('{"metadata":{"permalink":"/VirtualClient/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":1,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);

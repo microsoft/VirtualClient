@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[7895],{7099:l=>{l.exports=JSON.parse('{"label":"ocp","permalink":"/VirtualClient/blog/tags/ocp","allTagsPath":"/VirtualClient/blog/tags","count":1,"unlisted":false}')}}]);

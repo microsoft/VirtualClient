@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[2535],{5641:t=>{t.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"VirtualClient at OpenComputeProject Summit 2023","permalink":"/VirtualClient/blog/ocp-summit-2023","unlisted":false}]}')}}]);
