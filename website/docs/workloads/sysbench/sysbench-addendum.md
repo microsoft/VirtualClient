@@ -1,4 +1,4 @@
-# Sysbench OLTP Client/Server Addendum
+# Sysbench Client/Server Addendum
 
 All SQL workloads tend to have a lot of moving parts and complexities. Below details a comprehensive look into the lifecycle of this workload, in order to offer a clearer look as to what is 
 happening under the hood when VC runs the Sysbench workload on a MySQL server.

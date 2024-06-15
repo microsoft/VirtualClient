@@ -43,11 +43,6 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
   VirtualClient.exe --profile=PERF-CPU-GEEKBENCH5.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
 
- # GeekBench6 Workload Profiles
-The following profiles run customer-representative or benchmarking scenarios using the GeekBench6 workload.
-
-* [Workload Details](./geekbench.md)  
-
 ## PERF-CPU-GEEKBENCH.json
 Runs a CPU-intensive workload using the GeekBench6 toolset to test the performance of the CPU across various types of common application algorithms 
 (e.g. Background Blur, Navigation, Text Compression, Object Detection). This profile is designed to identify general/broad regressions when compared 
