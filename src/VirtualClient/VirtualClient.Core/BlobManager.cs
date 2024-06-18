@@ -8,16 +8,12 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Net;
-    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
-    using Azure.Core;
-    using Azure.Identity;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;

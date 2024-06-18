@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-
 namespace VirtualClient
 {
     /// <summary>
@@ -190,6 +188,11 @@ namespace VirtualClient
         InstructionsNotProvided = 511,
 
         /// <summary>
+        /// Required license information is either missing or does not exist.
+        /// </summary>
+        InvalidOrMissingLicense = 512,
+
+        /// <summary>
         /// Disk format operations failed.
         /// </summary>
         DiskFormatFailed = 515,
@@ -278,9 +281,19 @@ namespace VirtualClient
         ExtensionAssemblyInvalid = 580,
 
         /// <summary>
+        /// Duplicate extensions binaries or profiles were found during startup.
+        /// </summary>
+        DuplicateExtensionsFound = 581,
+
+        /// <summary>
+        /// Duplicate packages were found during startup.
+        /// </summary>
+        DuplicatePackagesFound = 582,
+
+        /// <summary>
         /// Not a supported version.
         /// </summary>
-        VersionNotSupported = 581
+        VersionNotSupported = 590
     }
 
     /// <summary>

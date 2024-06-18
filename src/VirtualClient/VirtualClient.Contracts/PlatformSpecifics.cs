@@ -41,8 +41,11 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Initializes a new version of the <see cref="PlatformSpecifics"/> class.
         /// </summary>
-        public PlatformSpecifics(PlatformID platform, Architecture architecture)
-            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location))
+        /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
+        /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
+        public PlatformSpecifics(PlatformID platform, Architecture architecture, bool useUnixStylePathsOnly = false)
+            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location), useUnixStylePathsOnly)
         {
         }
 
@@ -52,24 +55,29 @@ namespace VirtualClient.Contracts
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
         /// <param name="currentDirectory">The directory to use as the current working directory.</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
         /// paths on a system that are expected to be in a different format than is typical for the
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        protected PlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory)
+        protected PlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory, bool useUnixStylePathsOnly = false)
         {
             this.Platform = platform;
             this.PlatformArchitectureName = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
             this.CpuArchitecture = architecture;
-            this.CurrentDirectory = currentDirectory;
-            this.LogsDirectory = this.Combine(currentDirectory, "logs");
-            this.ContentUploadsDirectory = this.Combine(currentDirectory, "contentuploads");
-            this.PackagesDirectory = this.Combine(currentDirectory, "packages");
-            this.ProfilesDirectory = this.Combine(currentDirectory, "profiles");
-            this.ScriptsDirectory = this.Combine(currentDirectory, "scripts");
-            this.StateDirectory = this.Combine(currentDirectory, "state");
+            this.UseUnixStylePathsOnly = useUnixStylePathsOnly;
+
+            string standardizedCurrentDirectory = this.StandardizePath(currentDirectory);
+            this.CurrentDirectory = standardizedCurrentDirectory;
+            this.LogsDirectory = this.Combine(standardizedCurrentDirectory, "logs");
+            this.ContentUploadsDirectory = this.Combine(standardizedCurrentDirectory, "contentuploads");
+            this.PackagesDirectory = this.Combine(standardizedCurrentDirectory, "packages");
+            this.ProfilesDirectory = this.Combine(standardizedCurrentDirectory, "profiles");
+            this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
+            this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
+            
         }
 
         /// <summary>
@@ -122,6 +130,12 @@ namespace VirtualClient.Contracts
         /// The directory where state objects are stored.
         /// </summary>
         public string StateDirectory { get; }
+
+        /// <summary>
+        /// True to standardize paths using Unix-style conventions (e.g. forward slashes '/')
+        /// only. When 'true' all paths (including Windows-formatted) will use forward slashes.
+        /// </summary>
+        public bool UseUnixStylePathsOnly { get; }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
@@ -211,8 +225,9 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="platform">The platform for which to standardize the path.</param>
         /// <param name="path">The path to standardize.</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <returns>A path standardized for the OS platform.</returns>
-        public static string StandardizePath(PlatformID platform, string path)
+        public static string StandardizePath(PlatformID platform, string path, bool useUnixStylePathsOnly = false)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -222,11 +237,16 @@ namespace VirtualClient.Contracts
             string standardizedPath = path?.Trim();
             if ((platform == PlatformID.Unix && standardizedPath == "/") || (platform == PlatformID.Win32NT && standardizedPath == @"\"))
             {
+                if (useUnixStylePathsOnly)
+                {
+                    standardizedPath = "/";
+                }
+
                 return standardizedPath;
             }
 
             standardizedPath = path.TrimEnd('\\', '/');
-            if (platform == PlatformID.Unix)
+            if (platform == PlatformID.Unix || useUnixStylePathsOnly)
             {
                 standardizedPath = Regex.Replace(standardizedPath.Replace('\\', '/'), "/{2,}", "/");
             }
@@ -433,7 +453,7 @@ namespace VirtualClient.Contracts
         /// <returns>A path standardized for the OS platform.</returns>
         public string StandardizePath(string path)
         {
-            return PlatformSpecifics.StandardizePath(this.Platform, path);
+            return PlatformSpecifics.StandardizePath(this.Platform, path, this.UseUnixStylePathsOnly);
         }
 
         /// <summary>

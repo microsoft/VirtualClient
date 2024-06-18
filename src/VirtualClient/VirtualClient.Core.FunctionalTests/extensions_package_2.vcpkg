@@ -1,0 +1,8 @@
+﻿{
+    "name": "extensions_package_2",
+    "description": "Example extensions package definition.",
+    "version": "1.0.0",
+    "metadata": {
+        "extensions": true
+    }
+}
