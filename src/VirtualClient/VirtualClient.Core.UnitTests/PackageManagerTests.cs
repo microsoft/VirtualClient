@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -27,12 +26,13 @@ namespace VirtualClient
     {
         private MockFixture mockFixture;
         private TestPackageManager packageManager;
-        private DependencyPath mockDependency;
-        private DependencyDescriptor mockDependencyDescription;
+        private DependencyPath mockPackage;
+        private DependencyDescriptor mockPackageDescriptor;
 
         [SetUp]
         public void SetupTest()
         {
+            this.mockFixture = new MockFixture();
             this.SetupMocks(PlatformID.Win32NT);
 
             // When we search for the package directory or directories within, they are found
@@ -47,8 +47,8 @@ namespace VirtualClient
         [TestCase(@"6.2.1.tar.gz", ArchiveType.Tgz)]
         [TestCase(@"6.2.1.tgz", ArchiveType.Tgz)]
         [TestCase(@"6.2.1.tar.gzip", ArchiveType.Tgz)]
-        [TestCase(@"C:\any\path\to\package.1.0.0.other", ArchiveType.Undefined)]
-        [TestCase(@"C:\any\path\to\package.1.0.0.zip", ArchiveType.Zip)]
+        [TestCase(@"C:/any/path/to/package.1.0.0.other", ArchiveType.Undefined)]
+        [TestCase(@"C:/any/path/to/package.1.0.0.zip", ArchiveType.Zip)]
         [TestCase(@"/home/user/vc/content/linux-x64/packages/6.2.1.tar", ArchiveType.Tar)]
         [TestCase(@"/home/user/vc/content/linux-x64/packages/6.2.1.tar.gz", ArchiveType.Tgz)]
         [TestCase(@"/home/user/vccontent/linux-x64/packages/6.2.1.tgz", ArchiveType.Tgz)]
@@ -64,85 +64,334 @@ namespace VirtualClient
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PackageManagerDiscoversExtensionsThatExistInAUserDefinedLocation()
+        public async Task PackageManagerDiscoversBinaryExtensionsThatExistInALocationDefinedByEnvironmentVariable()
         {
-            string expectedPackageName = "package_123";
-            string userDefinedPackageLocation = $@"C:\any\location\defined\by\the\user\to\packages";
-            string expectedPackageLocation = $@"{userDefinedPackageLocation}\{expectedPackageName}";
+            string expectedBinaryName = "Any.VirtualClient.Extensions.dll";
+            string extensionsBinaryLocation = $@"C:/any/location/defined/by/the/user";
+            string expectedBinaryLocation = $@"{extensionsBinaryLocation}/{expectedBinaryName}";
 
-            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName, userDefinedPackageLocation, extensionsPackage: true);
+            // Setup a mock location via the environment variable.
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables.Add(
+                EnvironmentVariable.VC_LIBRARY_PATH,
+                extensionsBinaryLocation);
 
-            IEnumerable<DependencyPath> packages = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None)
+            // The *.dll will be found in the target packages directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(extensionsBinaryLocation, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None)
                 .ConfigureAwait(false);
 
-            Assert.IsNotNull(packages);
-            Assert.IsNotEmpty(packages);
-            Assert.IsTrue(packages.Count() == 1);
-            Assert.AreEqual(expectedPackageName, packages.First().Name);
-            Assert.AreEqual(expectedPackageLocation, packages.First().Path);
-            Assert.IsTrue(packages.First().Metadata.ContainsKey(PackageMetadata.Extensions));
-            Assert.IsTrue(packages.First().Metadata[PackageMetadata.Extensions].ToBoolean(CultureInfo.InvariantCulture));
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Binaries);
+            Assert.IsTrue(extensions.Binaries.Count() == 1);
+            Assert.AreEqual(extensions.Binaries.First().FullName, expectedBinaryLocation);
+        }
+
+        [Test]
+        [TestCase("C:/any/location/defined/by/the/user/1;C:/any/location/defined/by/the/user/2")]
+        [TestCase("C:/any/location/defined/by/the/user/1;  C:/any/location/defined/by/the/user/2")]
+        [TestCase(";C:/any/location/defined/by/the/user/1;C:/any/location/defined/by/the/user/2;")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public async Task PackageManagerDiscoversBinaryExtensionsThatExistInALocationDefinedByEnvironmentVariable_Multiple_Locations(string environmentVariableValue)
+        {
+            string expectedBinaryName1 = "Any.VirtualClient.Extensions_1.dll";
+            string expectedBinaryName2 = "Any.VirtualClient.Extensions_2.dll";
+            string extensionsBinaryLocation1 = $@"C:/any/location/defined/by/the/user/1";
+            string extensionsBinaryLocation2 = $@"C:/any/location/defined/by/the/user/2";
+            string expectedBinaryLocation1 = $@"{extensionsBinaryLocation1}/{expectedBinaryName1}";
+            string expectedBinaryLocation2 = $@"{extensionsBinaryLocation2}/{expectedBinaryName2}";
+
+            // Setup a mock location via the environment variable.
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables.Add(
+                EnvironmentVariable.VC_LIBRARY_PATH,
+                environmentVariableValue);
+
+            // *.dlls will be found in the first packages directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(extensionsBinaryLocation1, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation1 });
+
+            // *.dlls will be found in the second packages directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(extensionsBinaryLocation2, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation2 });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None)
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Binaries);
+            Assert.IsTrue(extensions.Binaries.Count() == 2);
+            Assert.AreEqual(extensions.Binaries.ElementAt(0).FullName, expectedBinaryLocation1);
+            Assert.AreEqual(extensions.Binaries.ElementAt(1).FullName, expectedBinaryLocation2);
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PackageManagerDiscoversExtensionsThatExistInTheDefaultPackagesDirectory()
+        public async Task PackageManagerDiscoversBinariesThatExistInAnExtensionsPackageLocationDefinedByEnvironmentVariable()
         {
-            string expectedPackageName = "package_123";
-            string expectedPackageLocation = this.mockFixture.PlatformSpecifics.GetPackagePath(expectedPackageName);
+            string expectedPackageName = "any.extensions.pkg";
+            string expectedBinaryName = "Any.VirtualClient.Extensions.dll";
+            string extensionsPackageLocation = this.mockFixture.Combine("any", "location", "defined", "by", "the", "user", "to", "packages");
+            string expectedPlatformSpecificPackageLocation = this.mockFixture.Combine(extensionsPackageLocation, expectedPackageName, this.mockFixture.PlatformArchitectureName);
+            string expectedBinaryLocation = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, expectedBinaryName);
 
-            this.SetupPackageExistsInDefaultPackagesLocation(expectedPackageName, extensionsPackage: true);
+            // The extensions package exists
+            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName, extensionsPackageLocation, true);
 
-            IEnumerable<DependencyPath> packages = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None)
-                .ConfigureAwait(false);
+            // A platform-specific directory/content exists in the extensions package.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation))
+                .Returns(true);
 
-            Assert.IsNotNull(packages);
-            Assert.IsNotEmpty(packages);
-            Assert.IsTrue(packages.Count() == 1);
-            Assert.AreEqual(expectedPackageName, packages.First().Name);
-            Assert.AreEqual(expectedPackageLocation, packages.First().Path);
-            Assert.IsTrue(packages.First().Metadata.ContainsKey(PackageMetadata.Extensions));
-            Assert.IsTrue(packages.First().Metadata[PackageMetadata.Extensions].ToBoolean(CultureInfo.InvariantCulture));
+            // The *.dll will be found in the extensions package platform-specific directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(expectedPlatformSpecificPackageLocation, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Binaries);
+            Assert.IsTrue(extensions.Binaries.Count() == 1);
+            Assert.AreEqual(extensions.Binaries.First().FullName, expectedBinaryLocation);
         }
 
         [Test]
-        public async Task PackageManagerHandlesScenariosWhereThereAreNotAnyExtensionsOnTheSystemToDiscover()
+        [TestCase("C:/any/location/defined/by/the/user/to/packages/1;C:/any/location/defined/by/the/user/to/packages/2")]
+        [TestCase("C:/any/location/defined/by/the/user/to/packages/1;  C:/any/location/defined/by/the/user/to/packages/2")]
+        [TestCase(";C:/any/location/defined/by/the/user/to/packages/1;C:/any/location/defined/by/the/user/to/packages/2;")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public async Task PackageManagerDiscoversBinariesThatExistInAnExtensionsPackageLocationDefinedByEnvironmentVariable_Multiple_Locations(string environmentVariableValue)
         {
-            IEnumerable<DependencyPath> packages = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None)
-                .ConfigureAwait(false);
+            string expectedPackageName1 = "any.extensions.pkg_1";
+            string expectedPackageName2 = "any.extensions.pkg_2";
+            string expectedBinaryName1 = "Any.VirtualClient.Extensions_1.dll";
+            string expectedBinaryName2 = "Any.VirtualClient.Extensions_2.dll";
+            string extensionsPackageLocation1 = this.mockFixture.StandardizePath("C:/any/location/defined/by/the/user/to/packages/1");
+            string extensionsPackageLocation2 = this.mockFixture.StandardizePath("C:/any/location/defined/by/the/user/to/packages/2");
+            string expectedPlatformSpecificPackageLocation1 = this.mockFixture.Combine(extensionsPackageLocation1, expectedPackageName1, this.mockFixture.PlatformArchitectureName);
+            string expectedPlatformSpecificPackageLocation2 = this.mockFixture.Combine(extensionsPackageLocation2, expectedPackageName2, this.mockFixture.PlatformArchitectureName);
+            string expectedBinaryLocation1 = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation1, expectedBinaryName1);
+            string expectedBinaryLocation2 = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation2, expectedBinaryName2);
 
-            Assert.IsNotNull(packages);
-            Assert.IsEmpty(packages);
+            // The extensions packages exists
+            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName1, extensionsPackageLocation1, true);
+            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName2, extensionsPackageLocation2, true);
+
+            // Setup a mock location via the environment variable.
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables[EnvironmentVariable.VC_PACKAGES_PATH] = environmentVariableValue;
+
+            // A platform-specific directory/content exists in the extensions packages.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation1))
+                .Returns(true);
+
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation2))
+                .Returns(true);
+
+            // *.dlls will be found in the extensions package platform-specific directories
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(expectedPlatformSpecificPackageLocation1, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation1 });
+
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(expectedPlatformSpecificPackageLocation2, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation2 });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Binaries);
+            Assert.IsTrue(extensions.Binaries.Count() == 2);
+            Assert.AreEqual(extensions.Binaries.ElementAt(0).FullName, expectedBinaryLocation1);
+            Assert.AreEqual(extensions.Binaries.ElementAt(1).FullName, expectedBinaryLocation2);
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PackageManagerSearchesForExtensionsDuringDiscoveryUsingTheExpectedSearchPriority()
+        public void PackageManagerThrowsWhenDuplicateExtensionsBinariesAreFoundDuringDiscovery()
         {
-            // Packages that exist in the user-defined location are selected first.
-            string userDefinedPath = @"C:\any\user\defined\location";
-            this.SetupPackageExistsInUserDefinedLocation("package1", userDefinedPath, extensionsPackage: true);
+            string extensionsPackageName = "any.extensions_1.pkg";
+            string defaultPackageName = "any.extensions_2.pkg";
+            string extensionsBinaryName = "Any.VirtualClient.Extensions.dll";
+            string extensionsPackageLocation = this.mockFixture.StandardizePath("C:/any/location/defined/by/the/user/to/packages/1");
+            string defaultPackageLocation = this.mockFixture.GetPackagePath();
+            string extensionsPlatformSpecificPackageLocation = this.mockFixture.Combine(extensionsPackageLocation, extensionsPackageName, this.mockFixture.PlatformArchitectureName);
+            string defaultPlatformSpecificPackageLocation = this.mockFixture.Combine(defaultPackageLocation, defaultPackageName, this.mockFixture.PlatformArchitectureName);
 
-            // Packages that exist in the default 'packages' folder location are selected next
-            // but only if they are not found in the user-defined location.
-            this.SetupPackageExistsInDefaultPackagesLocation("package1", extensionsPackage: true);
-            this.SetupPackageExistsInDefaultPackagesLocation("package2", extensionsPackage: true);
+            // Extensions packages exist in both the default and a user-defined location
+            this.SetupPackageExistsInDefaultPackagesLocation(defaultPackageName, true);
+            this.SetupPackageExistsInUserDefinedLocation(extensionsPackageName, extensionsPackageLocation, true);
 
-            IEnumerable<DependencyPath> packages = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None)
-                .ConfigureAwait(false);
+            // User has provided an alternate location for extensions packages.
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables[EnvironmentVariable.VC_PACKAGES_PATH] = extensionsPackageLocation;
 
-            Assert.IsNotEmpty(packages);
+            // A platform-specific directory/content exists in both the default and
+            // user-defined extensions package location.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(extensionsPlatformSpecificPackageLocation))
+                .Returns(true);
 
-            IEnumerable<DependencyPath> package1Locations = packages.Where(pkg => pkg.Name == "package1");
-            IEnumerable<DependencyPath> package2Locations = packages.Where(pkg => pkg.Name == "package2");
+            this.mockFixture.Directory.Setup(dir => dir.Exists(defaultPlatformSpecificPackageLocation))
+                .Returns(true);
 
-            Assert.IsNotEmpty(package1Locations);
-            Assert.IsNotEmpty(package2Locations);
-            Assert.IsTrue(package1Locations.Count() == 1);
-            Assert.IsTrue(package2Locations.Count() == 1);
+            // *.dlls will be found in the extensions package platform-specific directories
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(extensionsPlatformSpecificPackageLocation, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { this.mockFixture.Combine(extensionsPlatformSpecificPackageLocation, extensionsBinaryName) });
 
-            Assert.AreEqual(Path.Combine(userDefinedPath, "package1"), package1Locations.First().Path);
-            Assert.AreEqual(Path.Combine(this.mockFixture.PlatformSpecifics.PackagesDirectory, "package2"), package2Locations.First().Path);
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(defaultPlatformSpecificPackageLocation, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { this.mockFixture.Combine(defaultPlatformSpecificPackageLocation, extensionsBinaryName) });
+
+            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => this.packageManager.DiscoverExtensionsAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DuplicateExtensionsFound, error.Reason);
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public async Task PackageManagerDiscoversBinariesThatExistInAnExtensionsPackageLocationDefinedInTheDefaultLocation()
+        {
+            string expectedPackageName = "any.extensions.pkg";
+            string expectedBinaryName = "Any.VirtualClient.Extensions.dll";
+            string extensionsPackageLocation = this.mockFixture.GetPackagePath();
+            string expectedPlatformSpecificPackageLocation = this.mockFixture.Combine(extensionsPackageLocation, expectedPackageName, this.mockFixture.PlatformArchitectureName);
+            string expectedBinaryLocation = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, expectedBinaryName);
+
+            // The extensions package exists
+            this.SetupPackageExistsInDefaultPackagesLocation(expectedPackageName, true);
+
+            // A platform-specific directory/content exists in the extensions package.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation))
+                .Returns(true);
+
+            // The *.dll will be found in the extensions package platform-specific directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(expectedPlatformSpecificPackageLocation, "*.dll", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedBinaryLocation });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Binaries);
+            Assert.IsTrue(extensions.Binaries.Count() == 1);
+            Assert.AreEqual(extensions.Binaries.First().FullName, expectedBinaryLocation);
+        }
+
+        [Test]
+        [TestCase("ANY-PROFILE.json")]
+        [TestCase("ANY-PROFILE.yml")]
+        [TestCase("ANY-PROFILE.yaml")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public async Task PackageManagerDiscoversProfileExtensionsThatExistInAPackageLocationDefinedByEnvironmentVariable(string expectedProfileName)
+        {
+            string expectedPackageName = "any.extensions.pkg";
+            string extensionsPackageLocation = this.mockFixture.Combine("any", "location", "defined", "by", "the", "user", "to", "packages");
+            string expectedPlatformSpecificPackageLocation = this.mockFixture.Combine(extensionsPackageLocation, expectedPackageName, this.mockFixture.PlatformArchitectureName);
+            string expectedProfileLocation = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, "profiles", expectedProfileName);
+
+            // The extensions package exists
+            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName, extensionsPackageLocation, true);
+
+            // A platform-specific directory/content exists in the extensions package.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation))
+                .Returns(true);
+
+            // A profiles directory exists for the platform.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, "profiles")))
+                .Returns(true);
+
+            // The profiles will be found in the extensions package platform-specific directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, "profiles"), "*.*", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedProfileLocation });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Profiles);
+            Assert.IsTrue(extensions.Profiles.Count() == 1);
+            Assert.AreEqual(extensions.Profiles.First().FullName, expectedProfileLocation);
+        }
+
+        [Test]
+        [TestCase("C:/any/location/defined/by/the/user/1;C:/any/location/defined/by/the/user/2")]
+        [TestCase("C:/any/location/defined/by/the/user/1;  C:/any/location/defined/by/the/user/2")]
+        [TestCase(";C:/any/location/defined/by/the/user/1;C:/any/location/defined/by/the/user/2;")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public async Task PackageManagerDiscoversProfileExtensionsThatExistInAPackageLocationDefinedByEnvironmentVariable_Multiple_Locations(string environmentVariableValue)
+        {
+            string expectedProfile1 = "ANY-PROFILE-1.json";
+            string expectedProfile2 = "ANY-PROFILE-2.json";
+            string expectedPackageName1 = "any.extensions_1.pkg";
+            string expectedPackageName2 = "any.extensions_2.pkg";
+            string extensionsPackageLocation1 = $"C:/any/location/defined/by/the/user/1";
+            string extensionsPackageLocation2 = $"C:/any/location/defined/by/the/user/2";
+            string expectedPlatformSpecificPackageLocation1 = this.mockFixture.Combine(extensionsPackageLocation1, expectedPackageName1, this.mockFixture.PlatformArchitectureName);
+            string expectedPlatformSpecificPackageLocation2 = this.mockFixture.Combine(extensionsPackageLocation2, expectedPackageName2, this.mockFixture.PlatformArchitectureName);
+            string expectedProfileLocation1 = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation1, "profiles", expectedProfile1);
+            string expectedProfileLocation2 = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation2, "profiles", expectedProfile2);
+
+            // The extensions packages exist
+            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName1, extensionsPackageLocation1, true);
+            this.SetupPackageExistsInUserDefinedLocation(expectedPackageName2, extensionsPackageLocation2, true);
+
+            // User has provided an alternate location for extensions packages.
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables[EnvironmentVariable.VC_PACKAGES_PATH] = environmentVariableValue;
+
+            // A platform-specific directory/content exists in the extensions packages.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation1))
+                .Returns(true);
+
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation2))
+                .Returns(true);
+
+            // Profiles directories exists for the platform.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation1, "profiles")))
+                .Returns(true);
+
+            this.mockFixture.Directory.Setup(dir => dir.Exists(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation2, "profiles")))
+                .Returns(true);
+
+            // Profiles exist in each of the extensions packages 'profiles' directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation1, "profiles"), "*.*", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedProfileLocation1 });
+
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation2, "profiles"), "*.*", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedProfileLocation2 });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Profiles);
+            Assert.IsTrue(extensions.Profiles.Count() == 2);
+            Assert.AreEqual(extensions.Profiles.ElementAt(0).FullName, expectedProfileLocation1);
+            Assert.AreEqual(extensions.Profiles.ElementAt(1).FullName, expectedProfileLocation2);
+        }
+
+        [Test]
+        [TestCase("ANY-PROFILE.json")]
+        [TestCase("ANY-PROFILE.yml")]
+        [TestCase("ANY-PROFILE.yaml")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public async Task PackageManagerDiscoversProfileExtensionsThatExistInAPackageInTheDefaultPackagesLocation(string expectedProfileName)
+        {
+            string expectedPackageName = "any.extensions.pkg";
+            string extensionsPackageLocation = this.mockFixture.GetPackagePath();
+            string expectedPlatformSpecificPackageLocation = this.mockFixture.Combine(extensionsPackageLocation, expectedPackageName, this.mockFixture.PlatformArchitectureName);
+            string expectedProfileLocation = this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, "profiles", expectedProfileName);
+
+            // The extensions package exists
+            this.SetupPackageExistsInDefaultPackagesLocation(expectedPackageName, true);
+
+            // A platform-specific directory/content exists in the extensions package.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(expectedPlatformSpecificPackageLocation))
+                .Returns(true);
+
+            // A profiles directory exists for the platform.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, "profiles")))
+                .Returns(true);
+
+            // The profiles will be found in the extensions package platform-specific directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(this.mockFixture.Combine(expectedPlatformSpecificPackageLocation, "profiles"), "*.*", SearchOption.TopDirectoryOnly))
+                .Returns(new string[] { expectedProfileLocation });
+
+            PlatformExtensions extensions = await this.packageManager.DiscoverExtensionsAsync(CancellationToken.None);
+
+            Assert.IsNotNull(extensions);
+            Assert.IsNotEmpty(extensions.Profiles);
+            Assert.IsTrue(extensions.Profiles.Count() == 1);
+            Assert.AreEqual(extensions.Profiles.First().FullName, expectedProfileLocation);
         }
 
         [Test]
@@ -150,8 +399,8 @@ namespace VirtualClient
         public async Task PackageManagerDiscoversPackagesThatExistInAUserDefinedLocation()
         {
             string expectedPackageName = "package_123";
-            string userDefinedPackageLocation = $@"C:\any\location\defined\by\the\user\to\packages";
-            string expectedPackageLocation = $@"{userDefinedPackageLocation}\{expectedPackageName}";
+            string userDefinedPackageLocation = $@"C:/any/location/defined/by/the/user/to/packages";
+            string expectedPackageLocation = $@"{userDefinedPackageLocation}/{expectedPackageName}";
 
             this.SetupPackageExistsInUserDefinedLocation(expectedPackageName, userDefinedPackageLocation);
 
@@ -162,7 +411,7 @@ namespace VirtualClient
             Assert.IsNotEmpty(packages);
             Assert.IsTrue(packages.Count() == 1);
             Assert.AreEqual(expectedPackageName, packages.First().Name);
-            Assert.AreEqual(expectedPackageLocation, packages.First().Path);
+            Assert.AreEqual(this.mockFixture.StandardizePath(expectedPackageLocation), this.mockFixture.StandardizePath(packages.First().Path));
         }
 
         [Test]
@@ -181,37 +430,23 @@ namespace VirtualClient
             Assert.IsNotEmpty(packages);
             Assert.IsTrue(packages.Count() == 1);
             Assert.AreEqual(expectedPackageName, packages.First().Name);
-            Assert.AreEqual(expectedPackageLocation, packages.First().Path);
+            Assert.AreEqual(this.mockFixture.StandardizePath(expectedPackageLocation), this.mockFixture.StandardizePath(packages.First().Path));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PackageManagerSearchesForPackagesDuringDiscoveryUsingTheExpectedSearchPriority()
+        public void PackageManagerThrowsWhenDuplicatePackagesAreFoundDuringDiscovery()
         {
             // Packages that exist in the user-defined location are selected first.
-            string userDefinedPath = @"C:\any\user\defined\location";
+            string userDefinedPath = @"C:/any/user/defined/location";
             this.SetupPackageExistsInUserDefinedLocation("package1", userDefinedPath);
 
             // Packages that exist in the default 'packages' folder location are selected next
             // but only if they are not found in the user-defined location.
-            this.SetupPackageExistsInDefaultPackagesLocation("package1");
-            this.SetupPackageExistsInDefaultPackagesLocation("package2");
+            this.SetupPackageExistsInDefaultPackagesLocation(new string[] { "package1", "package2" });
 
-            IEnumerable<DependencyPath> packages = await this.packageManager.DiscoverPackagesAsync(CancellationToken.None)
-                .ConfigureAwait(false);
-
-            Assert.IsNotEmpty(packages);
-
-            IEnumerable<DependencyPath> package1Locations = packages.Where(pkg => pkg.Name == "package1");
-            IEnumerable<DependencyPath> package2Locations = packages.Where(pkg => pkg.Name == "package2");
-
-            Assert.IsNotEmpty(package1Locations);
-            Assert.IsNotEmpty(package2Locations);
-            Assert.IsTrue(package1Locations.Count() == 1);
-            Assert.IsTrue(package2Locations.Count() == 1);
-
-            Assert.AreEqual(Path.Combine(userDefinedPath, "package1"), package1Locations.First().Path);
-            Assert.AreEqual(Path.Combine(this.mockFixture.PlatformSpecifics.PackagesDirectory, "package2"), package2Locations.First().Path);
+            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => this.packageManager.DiscoverPackagesAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DuplicatePackagesFound, error.Reason);
         }
 
         [Test]
@@ -229,7 +464,7 @@ namespace VirtualClient
         public async Task PackageManagerCanFindPackagesThatAreAlreadyRegistered()
         {
             string expectedPackageName = "package_987";
-            string expectedPackageLocation = $@"C:\any\location\for\virtualclient\packages\{expectedPackageName}";
+            string expectedPackageLocation = $@"C:/any/location/for/virtualclient/packages/{expectedPackageName}";
 
             this.SetupPackageIsRegistered(expectedPackageName, expectedPackageLocation);
 
@@ -248,13 +483,13 @@ namespace VirtualClient
 
             this.mockFixture.StateManager.OnSaveState((stateId, state) =>
             {
-                Assert.AreEqual(this.mockDependency.Name, stateId);
+                Assert.AreEqual(this.mockPackage.Name, stateId);
                 Assert.IsNotNull(state);
-                Assert.AreEqual(JObject.FromObject(this.mockDependency), state);
+                Assert.AreEqual(JObject.FromObject(this.mockPackage), state);
                 packageRegistered = true;
             });
 
-            await this.packageManager.RegisterPackageAsync(this.mockDependency, CancellationToken.None)
+            await this.packageManager.RegisterPackageAsync(this.mockPackage, CancellationToken.None)
                 .ConfigureAwait(false);
 
             Assert.IsTrue(packageRegistered);
@@ -264,11 +499,11 @@ namespace VirtualClient
         public void PackageManagerValidatesRequiredPropertiesAreDefinedWhenInstallingDependencyPackages()
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
-            this.mockDependencyDescription.Clear();
+            this.mockPackageDescriptor.Clear();
 
             Assert.ThrowsAsync<ArgumentException>(() => this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()));
         }
@@ -277,11 +512,11 @@ namespace VirtualClient
         public void PackageManagerThrowsIfAnArchiveIsReferencedWithoutTheArchiveTypeDefinedWhenInstallingDependencyPackages()
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
-            this.mockDependencyDescription.Remove(nameof(DependencyDescriptor.ArchiveType));
+            this.mockPackageDescriptor.Remove(nameof(DependencyDescriptor.ArchiveType));
 
             DependencyException error = Assert.ThrowsAsync<DependencyException>(() => this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()));
 
@@ -296,12 +531,12 @@ namespace VirtualClient
 
             this.packageManager.OnDownloadDependencyPackage = (description, installationPath, token) =>
             {
-                Assert.IsTrue(object.ReferenceEquals(this.mockDependencyDescription, description));
+                Assert.IsTrue(object.ReferenceEquals(this.mockPackageDescriptor, description));
             };
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
         }
@@ -311,8 +546,8 @@ namespace VirtualClient
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
-            string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockDependencyDescription.PackageName.ToLowerInvariant());
-            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockDependencyDescription.Name);
+            string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockPackageDescriptor.PackageName.ToLowerInvariant());
+            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.Name);
 
             bool confirmed = false;
             this.packageManager.OnDownloadDependencyPackage = (description, installationPath, token) =>
@@ -323,7 +558,7 @@ namespace VirtualClient
 
             string actualPackagePath = await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -337,9 +572,9 @@ namespace VirtualClient
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
-            string customPath = "C:\\my\\custom\\package\\path";
-            string expectedInstallationPath = this.mockFixture.Combine(customPath, this.mockDependencyDescription.Name);
-            string expectedPackagePath = this.mockFixture.Combine(customPath, this.mockDependencyDescription.PackageName.ToLowerInvariant());
+            string customPath = "C:/my/custom/package/path";
+            string expectedInstallationPath = this.mockFixture.Combine(customPath, this.mockPackageDescriptor.Name);
+            string expectedPackagePath = this.mockFixture.Combine(customPath, this.mockPackageDescriptor.PackageName.ToLowerInvariant());
 
             bool confirmed = false;
             this.packageManager.OnDownloadDependencyPackage = (description, installationPath, token) =>
@@ -350,7 +585,7 @@ namespace VirtualClient
 
             string actualPackagePath = await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 customPath,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
@@ -364,9 +599,9 @@ namespace VirtualClient
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
-            this.mockDependencyDescription.Extract = false;
-            string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockDependencyDescription.PackageName.ToLowerInvariant());
-            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockDependencyDescription.PackageName, this.mockDependencyDescription.Name);
+            this.mockPackageDescriptor.Extract = false;
+            string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockPackageDescriptor.PackageName.ToLowerInvariant());
+            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.PackageName, this.mockPackageDescriptor.Name);
 
             bool confirmed = false;
             this.packageManager.OnDownloadDependencyPackage = (description, installationPath, token) =>
@@ -377,7 +612,7 @@ namespace VirtualClient
 
             string actualPackagePath = await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -396,7 +631,7 @@ namespace VirtualClient
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -413,7 +648,7 @@ namespace VirtualClient
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -427,8 +662,8 @@ namespace VirtualClient
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
-            this.mockDependencyDescription.Name = name;
-            this.mockDependencyDescription.ArchiveType = ArchiveType.Zip;
+            this.mockPackageDescriptor.Name = name;
+            this.mockPackageDescriptor.ArchiveType = ArchiveType.Zip;
             string expectedArchivePath = this.mockFixture.GetPackagePath(name);
             string expectedDestinationPath = this.mockFixture.GetPackagePath("anypackage.1.0.0");
 
@@ -443,7 +678,7 @@ namespace VirtualClient
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -466,8 +701,8 @@ namespace VirtualClient
             this.SetupMocks(PlatformID.Unix);
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
-            this.mockDependencyDescription.Name = name;
-            this.mockDependencyDescription.ArchiveType = ArchiveType.Tgz;
+            this.mockPackageDescriptor.Name = name;
+            this.mockPackageDescriptor.ArchiveType = ArchiveType.Tgz;
             string expectedArchivePath = this.mockFixture.GetPackagePath(name);
             string expectedDestinationPath = this.mockFixture.GetPackagePath("anypackage.1.0.0");
 
@@ -482,7 +717,7 @@ namespace VirtualClient
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -496,14 +731,14 @@ namespace VirtualClient
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
-            string expectedArchivePath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockDependencyDescription.Name);
+            string expectedArchivePath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.Name);
 
             bool packageExtracted = false;
             this.packageManager.OnExtractArchive = (archivePath, destinationPath, archiveType, token) => packageExtracted = true;
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -517,17 +752,17 @@ namespace VirtualClient
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
             // Ensure the package definition is discovered
-            this.packageManager.OnDiscoverPackages = (path) => new List<DependencyPath> { this.mockDependency };
+            this.packageManager.OnDiscoverPackages = (path) => new List<DependencyPath> { this.mockPackage };
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
             // When a package is registered
             this.mockFixture.StateManager.Verify(mgr => mgr.SaveStateAsync(
-                this.mockDependency.Name,
+                this.mockPackage.Name,
                 It.IsAny<JObject>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<IAsyncPolicy>()));
@@ -539,12 +774,12 @@ namespace VirtualClient
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
             // Ensure the package definition is discovered
-            this.mockDependencyDescription.PackageName = this.mockDependency.Name + "-other";
-            this.packageManager.OnDiscoverPackages = (path) => new List<DependencyPath> { this.mockDependency };
+            this.mockPackageDescriptor.PackageName = this.mockPackage.Name + "-other";
+            this.packageManager.OnDiscoverPackages = (path) => new List<DependencyPath> { this.mockPackage };
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,
-                this.mockDependencyDescription,
+                this.mockPackageDescriptor,
                 CancellationToken.None,
                 retryPolicy: Policy.NoOpAsync()).ConfigureAwait(false);
 
@@ -554,125 +789,22 @@ namespace VirtualClient
             //
             // e.g. anyname
             this.mockFixture.StateManager.Verify(mgr => mgr.SaveStateAsync(
-                this.mockDependency.Name,
+                this.mockPackage.Name,
                 It.IsAny<JObject>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<IAsyncPolicy>()));
 
             // e.g. anyname-other
             this.mockFixture.StateManager.Verify(mgr => mgr.SaveStateAsync(
-               this.mockDependencyDescription.PackageName,
+               this.mockPackageDescriptor.PackageName,
                It.IsAny<JObject>(),
                It.IsAny<CancellationToken>(),
                It.IsAny<IAsyncPolicy>()));
         }
 
-        [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PackageManagerInstallsProfileExtensionsToTheExpectedLocation()
-        {
-            string profileExtensionsPath = this.mockFixture.Combine(
-                this.mockFixture.ToPlatformSpecificPath(
-                    this.mockDependency,
-                    this.mockFixture.PlatformSpecifics.Platform,
-                    this.mockFixture.PlatformSpecifics.CpuArchitecture).Path,
-                "profiles");
-
-            string expectedProfile = this.mockFixture.Combine(profileExtensionsPath, "ANY-PROFILE.json");
-            string expectedInstallationPath = this.mockFixture.GetProfilesPath("ANY-PROFILE.json");
-
-            // Setup profiles existing in the profile extensions directory.
-            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(profileExtensionsPath, "*.json", SearchOption.TopDirectoryOnly))
-                .Returns(new List<string> { expectedProfile });
-            this.mockFixture.File.Setup(file => file.GetLastWriteTimeUtc(expectedProfile)).Returns(DateTime.UtcNow);
-
-            await this.packageManager.InstallExtensionsAsync(this.mockDependency, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            this.mockFixture.File.Verify(file => file.Copy(expectedProfile, expectedInstallationPath, true));
-        }
-
-        [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PackageManagerInstallsBinaryExtensionsToTheExpectedLocation()
-        {
-            string binaryExtensionsPath = this.mockFixture.ToPlatformSpecificPath(
-                this.mockDependency,
-                this.mockFixture.PlatformSpecifics.Platform,
-                this.mockFixture.PlatformSpecifics.CpuArchitecture).Path;
-
-            string expectedBinary = this.mockFixture.Combine(binaryExtensionsPath, "Any.VirtualClient.Extensions.dll");
-            string expectedSymbols = this.mockFixture.Combine(binaryExtensionsPath, "Any.VirtualClient.Extensions.pdb");
-            string expectedInstallationPath1 = this.mockFixture.Combine(this.mockFixture.CurrentDirectory, "Any.VirtualClient.Extensions.dll");
-            string expectedInstallationPath2 = this.mockFixture.Combine(this.mockFixture.CurrentDirectory, "Any.VirtualClient.Extensions.pdb");
-
-            // Setup binaries + symbols existing in the binaries extensions directory.
-            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(binaryExtensionsPath, "*.*", SearchOption.TopDirectoryOnly))
-                .Returns(new List<string> { expectedBinary, expectedSymbols });
-            this.mockFixture.File.Setup(file => file.GetLastWriteTimeUtc(expectedBinary)).Returns(DateTime.UtcNow);
-            this.mockFixture.File.Setup(file => file.GetLastWriteTimeUtc(expectedSymbols)).Returns(DateTime.UtcNow);
-
-            // Setup the binaries do NOT already exist in the target location.
-            this.mockFixture.File.Setup(file => file.Exists(expectedInstallationPath1)).Returns(false);
-            this.mockFixture.File.Setup(file => file.Exists(expectedInstallationPath2)).Returns(false);
-
-            await this.packageManager.InstallExtensionsAsync(this.mockDependency, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            this.mockFixture.File.Verify(file => file.Copy(expectedBinary, expectedInstallationPath1, true));
-            this.mockFixture.File.Verify(file => file.Copy(expectedSymbols, expectedInstallationPath2, true));
-        }
-
-        [Test]
-        public async Task PackageManagerDoesNotInstallAProfileExtensionsIfItAlreadyExistsOnTheSystem()
-        {
-            string profileExtensionsPath = this.mockFixture.Combine(
-               this.mockFixture.ToPlatformSpecificPath(
-                   this.mockDependency,
-                   this.mockFixture.PlatformSpecifics.Platform,
-                   this.mockFixture.PlatformSpecifics.CpuArchitecture).Path,
-               "profiles");
-
-            string profileExtension = this.mockFixture.Combine(profileExtensionsPath, "ANY-PROFILE.json");
-            string targetProfilePath = this.mockFixture.GetProfilesPath("ANY-PROFILE.json");
-
-            // Setup profiles existing in the profile extensions directory.
-            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(profileExtensionsPath, "*.json", SearchOption.TopDirectoryOnly))
-                .Returns(new List<string> { profileExtension });
-
-            // The profile already exists in the 'profiles' directory.
-            this.mockFixture.File.Setup(file => file.Exists(targetProfilePath)).Returns(true);
-
-            await this.packageManager.InstallExtensionsAsync(this.mockDependency, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            this.mockFixture.File.Verify(file => file.Copy(profileExtension, targetProfilePath, false), Times.Never);
-        }
-
-        [Test]
-        public async Task PackageManagerDoesNotInstallABinaryExtensionsIfItAlreadyExistsOnTheSystem()
-        {
-            string binaryExtensionsPath = this.mockFixture.Combine(this.mockDependency.Path, "binaries");
-            string binaryExtension = this.mockFixture.Combine(binaryExtensionsPath, "MSFT.VirtualClient.Extensions.dll");
-            string targetBinaryPath = this.mockFixture.Combine(this.mockFixture.CurrentDirectory, "MSFT.VirtualClient.Extensions.dll");
-
-            // Setup binaries existing in the profile extensions directory.
-            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(binaryExtensionsPath, "*.*", SearchOption.TopDirectoryOnly))
-                .Returns(new List<string> { binaryExtension });
-
-            // The binary already exists in the VC root directory.
-            this.mockFixture.File.Setup(file => file.Exists(targetBinaryPath)).Returns(true);
-
-            await this.packageManager.InstallExtensionsAsync(this.mockDependency, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            this.mockFixture.File.Verify(file => file.Copy(binaryExtension, targetBinaryPath, false), Times.Never);
-        }
-
         public void SetupMocks(PlatformID platform, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
+            this.mockFixture.Setup(platform, architecture, useUnixStylePathsOnly: true);
 
             this.packageManager = new TestPackageManager(
                 this.mockFixture.StateManager.Object,
@@ -680,12 +812,12 @@ namespace VirtualClient
                 this.mockFixture.PlatformSpecifics,
                 logger: NullLogger.Instance);
 
-            this.mockDependency = new DependencyPath(
+            this.mockPackage = new DependencyPath(
                 "anyname",
-                platform == PlatformID.Unix ? "/home/any/path/to/dependency" : @"C:\any\users\path\to\dependency",
+                platform == PlatformID.Unix ? "/home/any/path/to/dependency" : @"C:/any/users/path/to/dependency",
                 "AnyDescription");
 
-            this.mockDependencyDescription = new BlobDescriptor
+            this.mockPackageDescriptor = new BlobDescriptor
             {
                 Name = "anyname.zip",
                 ContainerName = "anycontainer",
@@ -693,6 +825,20 @@ namespace VirtualClient
                 Extract = true,
                 ArchiveType = ArchiveType.Zip
             };
+        }
+
+        private void SetupExtensionsExistsInUserDefinedLocation(string binaryName, string userDefinedBinaryLocation, bool extensionsPackage = false)
+        {
+            string packagePath = this.mockFixture.PlatformSpecifics.Combine(userDefinedBinaryLocation, binaryName);
+
+            // Setup a mock location via the environment variable.
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables.Add(
+                EnvironmentVariable.VC_LIBRARY_PATH,
+                userDefinedBinaryLocation);
+
+            // The *.vcpkg definition will be found in the target packages directory
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(userDefinedBinaryLocation, "*.dll", SearchOption.AllDirectories))
+                .Returns(new string[] { this.mockFixture.Combine(userDefinedBinaryLocation, "Any.VirtualClient.Extensions.dll") });
         }
 
         private void SetupDependencyPackageInstallationDefaultMockBehaviors()
@@ -722,12 +868,18 @@ namespace VirtualClient
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(null as JObject);
 
             // Setup a mock location via the environment variable.
-            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables.Add(
-                PackageManager.UserDefinedPackageLocationVariable,
-                userDefinedPackageLocation);
+            (this.packageManager.PlatformSpecifics as TestPlatformSpecifics).EnvironmentVariables[EnvironmentVariable.VC_PACKAGES_PATH] = userDefinedPackageLocation;
+
+            // The packages parent directory exists.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(userDefinedPackageLocation))
+                .Returns(true);
+
+            // A package directory/content exists in the extensions package.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(this.mockFixture.Combine(userDefinedPackageLocation, packageName)))
+                .Returns(true);
 
             // The *.vcpkg definition will be found in the target packages directory
-            string vcpkgFilePath = this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{packageName}.vcpkg");
+            string vcpkgFilePath = this.mockFixture.Combine(packagePath, $"{packageName}.vcpkg");
             this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(userDefinedPackageLocation, "*.vcpkg", SearchOption.AllDirectories))
                 .Returns(new string[] { vcpkgFilePath });
 
@@ -744,25 +896,45 @@ namespace VirtualClient
 
         private void SetupPackageExistsInDefaultPackagesLocation(string packageName, bool extensionsPackage = false)
         {
-            string packagePath = this.mockFixture.PlatformSpecifics.GetPackagePath(packageName);
+            this.SetupPackageExistsInDefaultPackagesLocation(new string[] { packageName }, extensionsPackage);
+        }
+
+        private void SetupPackageExistsInDefaultPackagesLocation(IEnumerable<string> packageNames, bool extensionsPackage = false)
+        {
+            List<string> vcpkgFiles = new List<string>();
 
             // No package registrations should be found.
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(null as JObject);
 
-            // The *.vcpkg definition will be found in the default packages directory
-            string vcpkgFilePath = this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{packageName}.vcpkg");
-            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(this.mockFixture.PlatformSpecifics.PackagesDirectory, "*.vcpkg", SearchOption.AllDirectories))
-                .Returns(new string[] { vcpkgFilePath });
+            // The packages directory exists.
+            this.mockFixture.Directory.Setup(dir => dir.Exists(this.mockFixture.Combine(this.mockFixture.GetPackagePath())))
+                .Returns(true);
 
-            // The *.vcpkg file has valid package/dependency definition as content.
-            DependencyPath package = new DependencyPath(packageName, Path.GetDirectoryName(vcpkgFilePath));
-            if (extensionsPackage)
+            foreach (string packageName in packageNames)
             {
-                package.Metadata[PackageMetadata.Extensions] = true;
+                string packagePath = this.mockFixture.PlatformSpecifics.GetPackagePath(packageName);
+
+                // A package directory/content exists in the package.
+                this.mockFixture.Directory.Setup(dir => dir.Exists(packagePath))
+                    .Returns(true);
+
+                // The *.vcpkg definition will be found in the default packages directory
+                string vcpkgFilePath = this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{packageName}.vcpkg");
+                vcpkgFiles.Add(vcpkgFilePath);
+
+                // The *.vcpkg file has valid package/dependency definition as content.
+                DependencyPath package = new DependencyPath(packageName, Path.GetDirectoryName(vcpkgFilePath));
+                if (extensionsPackage)
+                {
+                    package.Metadata[PackageMetadata.Extensions] = true;
+                }
+
+                this.mockFixture.File.Setup(file => file.ReadAllTextAsync(vcpkgFilePath, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(package.ToJson());
             }
 
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(vcpkgFilePath, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(package.ToJson());
+            this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(this.mockFixture.PlatformSpecifics.PackagesDirectory, "*.vcpkg", SearchOption.AllDirectories))
+                .Returns(vcpkgFiles);
         }
 
         private class TestPackageManager : PackageManager

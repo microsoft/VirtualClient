@@ -3,15 +3,12 @@
 
 namespace VirtualClient.TestExtensions
 {
-    using System;
-    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
     using System.Security;
     using System.Security.Cryptography.X509Certificates;
     using AutoFixture;
-    using Microsoft.Identity.Client;
 
     /// <summary>
     /// Extension methods for <see cref="Fixture"/> instances and for general
@@ -46,19 +43,6 @@ namespace VirtualClient.TestExtensions
         }
 
         /// <summary>
-        /// Registers a factory method with the <see cref="Fixture"/> provided that
-        /// can be used to create a mock <see cref="AuthenticationResult"/> instances.
-        /// </summary>
-        /// <param name="fixture">The test/auto fixture.</param>
-        /// <param name="expiryTime">Expiry time for the token.</param>
-        public static Fixture SetupIdentityMocks(this Fixture fixture, DateTime expiryTime)
-        {
-            fixture.Register<AuthenticationResult>(() => AutoFixtureExtensions.CreateAuthenticationResult(expiryTime));
-
-            return fixture;
-        }
-
-        /// <summary>
         /// Returns a mock/test <see cref="X509Certificate2"/> instance.
         /// </summary>
         /// <returns>
@@ -86,26 +70,6 @@ namespace VirtualClient.TestExtensions
             return certificate;
         }
 
-        private static AuthenticationResult CreateAuthenticationResult(DateTime expiryTime)
-        {
-            return new AuthenticationResult(
-                accessToken: "anyaccesstoken",
-                isExtendedLifeTimeToken: false,
-                uniqueId: Guid.NewGuid().ToString(),
-                expiresOn: expiryTime,
-                extendedExpiresOn: DateTimeOffset.UtcNow.AddDays(24),
-                tenantId: Guid.NewGuid().ToString(),
-                account: new MockAadAccount
-                {
-                    Username = "anyuser@microsoft.com",
-                    Environment = "microsoft.onmicrosoft.com",
-                    HomeAccountId = new AccountId(Guid.NewGuid().ToString())
-                },
-                idToken: Guid.NewGuid().ToString(),
-                new List<string> { "https://graph.microsoft.com/.default" },
-                correlationId: Guid.NewGuid());
-        }
-
         /// <summary>
         /// Returns the "secret" word for the test PFX certificate.  Note that this certificate is used
         /// nowhere other than for testing.  It can be used to do nothing at all. In order to verify certain
@@ -124,26 +88,5 @@ namespace VirtualClient.TestExtensions
 
             return word;
         }
-    }
-
-    /// <summary>
-    /// Represents a mock <see cref="IAccount"/> object.
-    /// </summary>
-    public class MockAadAccount : IAccount
-    {
-        /// <summary>
-        /// The account username.
-        /// </summary>
-        public string Username { get; set; }
-
-        /// <summary>
-        /// The account environment.
-        /// </summary>
-        public string Environment { get; set; }
-
-        /// <summary>
-        /// The home account ID.
-        /// </summary>
-        public AccountId HomeAccountId { get; set; }
     }
 }

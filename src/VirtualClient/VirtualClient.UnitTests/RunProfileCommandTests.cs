@@ -227,9 +227,9 @@ namespace VirtualClient
                 base.SetGlobalTelemetryProperties(profiles, dependencies);
             }
 
-            public new void SetHostMetadata(IEnumerable<string> profiles, IServiceCollection dependencies)
+            public new void SetHostMetadataTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
             {
-                base.SetHostMetadata(profiles, dependencies);
+                base.SetHostMetadataTelemetryProperties(profiles, dependencies);
             }
         }
 

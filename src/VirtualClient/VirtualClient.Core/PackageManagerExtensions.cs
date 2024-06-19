@@ -70,24 +70,5 @@ namespace VirtualClient
                 }
             }
         }
-
-        /// <summary>
-        /// Installs the set of extensions within the packages on the system.
-        /// </summary>
-        /// <param name="packageManager">A package manager instance.</param>
-        /// <param name="extensionPackages">A set of packages containing extensions to install on the system.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        public static async Task InstallExtensionsAsync(this IPackageManager packageManager, IEnumerable<DependencyPath> extensionPackages, CancellationToken cancellationToken)
-        {
-            packageManager.ThrowIfNull(nameof(packageManager));
-            if (extensionPackages?.Any() == true)
-            {
-                foreach (DependencyPath package in extensionPackages)
-                {
-                    await packageManager.InstallExtensionsAsync(package, cancellationToken)
-                         .ConfigureAwait(false);
-                }
-            }
-        }
     }
 }

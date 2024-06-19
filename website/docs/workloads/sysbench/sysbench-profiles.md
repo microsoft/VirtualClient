@@ -1,7 +1,7 @@
-# Sysbench OLTP Workload Profiles
+# Sysbench Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Sysbench OLTP workload.
 
-* [Workload Details](./sysbench-oltp.md)  
+* [Workload Details](./sysbench.md)  
 * [Client/Server Workloads](../../guides/0020-client-server.md)
 
 ## Client/Server Topology Support
@@ -47,14 +47,20 @@ idea. The name of the client must match the name of the system or the value of t
 ```
 
 ## Balanced/In Memory Scenario Support
-In addition to the standard configuration, Virtual Client offers two tuned scenarios (Balanced and In-Memory) and one configurable scenario (Configure) to run the Sysbench workload. A database scenario can be selected by denoting it in the profile, under both the MySQLConfiguration Dependency and the SysbenchConfiguration Action. The Default scenario is Balanced.
+In addition to the standard configuration, Virtual Client offers two tuned scenarios (Balanced and In-Memory) and one configurable scenario (Configure) to run the 
+Sysbench workload. A database scenario can be selected by denoting it in the profile, under both the MySQLConfiguration Dependency and the SysbenchConfiguration Action. The Default 
+scenario is Balanced.
 
-* **Balanced**: The database size is about twice as big as the memory/RAM on the system. Half of the database will fit in memory, and half will fit on disk.
+* **Balanced**  
+  The database size is about twice as big as the memory/RAM on the system. Half of the database will fit in memory, and half will fit on disk.
   Target CPU usage is about 40-60% with somewhat heavy disk I/O usage. The configuration supports 1-5 additional data disks, and the database will be
   distributed among the disks as proportionately as possible. The default is 1 thread and 10^vCPU number of records.
-* **In-Memory**: The database size is just about the size of the memory/RAM on the system. Target CPU usage is about 80-90%, with a significant amount of disk
-  I/O usage.
-* **Configure**: Allows for user-defined table count, record size, and thread counts.
+
+* **InMemory**  
+  The database size is just about the size of the memory/RAM on the system. Target CPU usage is about 80-90%, with a significant amount of disk I/O usage.
+
+* **Configure**  
+  Allows for user-defined table count, record size, and thread counts.
 
 ``` bash
 {
@@ -81,60 +87,78 @@ There are a lot of moving parts to this workload that allows for both out-of-box
 
 ### Dependencies
 
-* **FormatDisks** and **MountDisks**: Format any unformatted disks on the server, then mount any unmounted disks.
-* **DependencyPackageInstallation**: On all VMs, download the sysbench package; on the server-side, also download the mysql-server package.
-* **LinuxPackageInstallation**: Download the python3 package to execute the python scripts provided for installation and configuration of the packages.
-* **MySQLServerInstallation and MySQLConfiguration**: Runs python scripts to install and configure the MySQL server (ie. set up network, database, variables, and users).
-* **ApiServer**: Starts the API server for Client-Server workloads.
+* **FormatDisks** and **MountDisks**  
+  Format any unformatted disks on the server, then mount any unmounted disks.
+
+* **DependencyPackageInstallation**  
+  On all VMs, download the sysbench package; on the server-side, also download the mysql-server package.
+
+* **LinuxPackageInstallation**  
+  Download the python3 package to execute the python scripts provided for installation and configuration of the packages.
+
+* **MySQLServerInstallation and MySQLConfiguration**  
+  Runs scripts to install and configure the MySQL server (ie. set up network, database, variables, and users).
+
+* **ApiServer**  
+  Starts the API server for Client-Server workloads.
 
 ### Actions
 
-* **SysbenchConfiguration**: Populates the MySQL database using the Sysbench tool. Note that the default Sysbench settings does not populate a database on the data disks, but on the OS disk. Thus, the recommended profile format is as follows. The below setup creates N tables in the database with one record each. Only then can MySQL equally distribute the database onto different data disks mounted on the system, as it copies the tables and their schemas into new tables. From there, Sysbench can add additional records to further populate the database tables. Once populated, VC persists the state, and it will not drop or recreate tables.
+* **SysbenchConfiguration**  
+  Populates the MySQL database using the Sysbench tool. Note that the default Sysbench settings does not populate a database on the data disks, but on the OS disk. Thus, the 
+  recommended profile format is as follows. The below setup creates N tables in the database with one record each. Only then can MySQL equally distribute the database onto different 
+  data disks mounted on the system, as it copies the tables and their schemas into new tables. From there, Sysbench can add additional records to further populate the database tables. 
+  Once populated, VC persists the state, and it will not drop or recreate tables.
 
-``` bash
-{
-  "Type": "SysbenchConfiguration",
-  "Parameters": 
+  ``` bash
   {
-    "Scenario": "PopulateMySQLDatabase",
-    "BenchmarkName": "TPCC",
-    "DatabaseName": "sbtest",
-    "WarehouseCount": 1,
-    "NumTables": 10,
-    "PackageName": "sysbench",
-    "Role": "Server"
+      "Type": "SysbenchConfiguration",
+      "Parameters": 
+      {
+        "Scenario": "PopulateMySQLDatabase",
+        "BenchmarkName": "TPCC",
+        "DatabaseName": "sbtest",
+        "WarehouseCount": 1,
+        "NumTables": 10,
+        "PackageName": "sysbench",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "MySQLServerConfiguration",
+      "Parameters": 
+      {
+        "Scenario": "DistributeMySQLDatabase",
+        "BenchmarkName": "TPCC",
+        "Action": "DistributeDatabase",
+        "DatabaseName": "sbtest",
+        "NumTables": 10,
+        "PackageName": "mysql-server",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "SysbenchConfiguration",
+      "Parameters": 
+      {
+        "Scenario": "PopulateMySQLDatabase",
+        "BenchmarkName": "TPCC",
+        "DatabaseName": "sbtest",
+        "NumTables": 10,
+        "WarehouseCount": 100,
+        "PackageName": "sysbench",
+        "Role": "Server"
+      }
   }
-},
-{
-  "Type": "MySQLServerConfiguration",
-  "Parameters": 
-  {
-    "Scenario": "DistributeMySQLDatabase",
-    "BenchmarkName": "TPCC",
-    "Action": "DistributeDatabase",
-    "DatabaseName": "sbtest",
-    "NumTables": 10,
-    "PackageName": "mysql-server",
-    "Role": "Server"
-  }
-},
-{
-  "Type": "SysbenchConfiguration",
-  "Parameters": 
-  {
-    "Scenario": "PopulateMySQLDatabase",
-    "BenchmarkName": "TPCC",
-    "DatabaseName": "sbtest",
-    "NumTables": 10,
-    "WarehouseCount": 100,
-    "PackageName": "sysbench",
-    "Role": "Server"
-  }
-}
-```
+  ```
 
-* **SysbenchClientExecutor**: Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from SysbenchConfiguration -- though a database of 10 tables with 10,000 records each can be created, a workload can be run on 5 tables for 1000 records if desired. VC does not support dropping and recreating a new database or table configuration within the same profile or system.
-* **SysbenchServerExecutor**: Sets the server online for client interaction.
+* **SysbenchClientExecutor**  
+  Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from SysbenchConfiguration -- though a database of 10 tables
+  with 10,000 records each can be created, a workload can be run on 5 tables for 1000 records if desired. VC does not support dropping and recreating a new database or table 
+  configuration within the same profile or system.
+
+* **SysbenchServerExecutor**  
+  Sets the server online for client interaction.
 
 ## PERF-MYSQL-OLTP-SYSBENCH.json
 Runs a system-intensive workload using the Sysbench Benchmark to test the bandwidth of CPU, Memory, and Disk I/O.
@@ -164,7 +188,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | DatabaseScenario              | Not Required. Configures the scenario in which to stress the database.                                      | Balanced          |
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. OLTP)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
-  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
+  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench.md)                                          | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
 
