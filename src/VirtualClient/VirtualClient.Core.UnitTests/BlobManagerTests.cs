@@ -69,6 +69,51 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("https://blob.core.windows.net", "https://blob.core.windows.net/packages")]
+        [TestCase("https://blob.core.windows.net/", "https://blob.core.windows.net/packages")]
+        [TestCase("https://blob.core.windows.net/packages", "https://blob.core.windows.net/packages")]
+        [TestCase("https://blob.core.windows.net/packages/", "https://blob.core.windows.net/packages/")]
+        public void BlobManagerCreatesTheExpectedContainerClientForStorageAccountUris(string uri, string expectedUri)
+        {
+            DependencyDescriptor packageDescriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+            {
+                { "BlobName", "anypackage.1.0.0.zip" },
+                { "ContainerName", "packages" },
+                { "Name", "anypackage" }
+            });
+
+            DependencyBlobStore store = new DependencyBlobStore("Packages", uri);
+            BlobContainerClient client = this.blobManager.CreateContainerClient(new BlobDescriptor(packageDescriptor), store);
+
+            Assert.AreEqual(expectedUri, client.Uri.AbsoluteUri);
+        }
+
+        [Test]
+        [TestCase(
+            "https://blob.core.windows.net/?sv=2022-11-02&ss=b&srt=co&sp=rwdacytfx&se=2024-06-13T02:35:01Z&st=2024-06-12T18:35:01Z&spr=https",
+            "https://blob.core.windows.net/packages?sv=2022-11-02&ss=b&srt=co&sp=rwdacytfx&se=2024-06-13T02:35:01Z&st=2024-06-12T18:35:01Z&spr=https")]
+        [TestCase(
+            "https://blob.core.windows.net/packages?sv=2022-11-02&ss=b&srt=co&sp=rwdacytfx&se=2024-06-13T02:35:01Z&st=2024-06-12T18:35:01Z&spr=https",
+            "https://blob.core.windows.net/packages?sv=2022-11-02&ss=b&srt=co&sp=rwdacytfx&se=2024-06-13T02:35:01Z&st=2024-06-12T18:35:01Z&spr=https")]
+        [TestCase(
+            "https://blob.core.windows.net/packages/?sv=2022-11-02&ss=b&srt=co&sp=rwdacytfx&se=2024-06-13T02:35:01Z&st=2024-06-12T18:35:01Z&spr=https",
+            "https://blob.core.windows.net/packages/?sv=2022-11-02&ss=b&srt=co&sp=rwdacytfx&se=2024-06-13T02:35:01Z&st=2024-06-12T18:35:01Z&spr=https")]
+        public void BlobManagerCreatesTheExpectedContainerClientForStorageAccountSasUris(string uri, string expectedUri)
+        {
+            DependencyDescriptor packageDescriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+            {
+                { "BlobName", "anypackage.1.0.0.zip" },
+                { "ContainerName", "packages" },
+                { "Name", "anypackage" }
+            });
+
+            DependencyBlobStore store = new DependencyBlobStore("Packages", uri);
+            BlobContainerClient client = this.blobManager.CreateContainerClient(new BlobDescriptor(packageDescriptor), store);
+
+            Assert.AreEqual(expectedUri, client.Uri.AbsoluteUri);
+        }
+
+        [Test]
         public void BlobManagerValidatesTheBlobNameBeforeDownloadingABlob()
         {
             List<string> invalidBlobNames = new List<string>
@@ -546,6 +591,11 @@ namespace VirtualClient
             public Func<BlobDescriptor, Stream, Response> OnDownloadToStreamAsync { get; set; }
 
             public Func<BlobDescriptor, Stream, BlobUploadOptions, Response<BlobContentInfo>> OnUploadFromStreamAsync { get; set; }
+
+            public new BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
+            {
+                return base.CreateContainerClient(descriptor, blobStore);
+            }
 
             protected override Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
             {

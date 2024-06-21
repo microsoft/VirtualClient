@@ -11,40 +11,131 @@ Event Hub is a highly scalable Azure cloud messaging hub/proxy that has out-of-t
 pipeline resources (e.g. Azure Data Explorer/Kusto, Azure Storage Account). Virtual Client allows the user to supply a connection string to an Event Hubs namespace on the command line. The remainder of this document 
 covers the requirements for using an Event Hub including the setup.
 
+## Authentication Preliminaries
+The sections below will reference the use of certificates for authentication with Azure storage account resources. This section describes a
+few preliminary expectations to consider when using certificates.
+
+### Referencing Certificates on Linux
+Virtual Client is a .NET application. Certificates used on a Linux system must be X.509 certificates containing a private key (e.g. PKCS#12, *.pfx). Additionally, the
+certificates must be installed on the system in the expected location for the user in which Virtual Client is running. The following locations
+describe where Virtual Client/.NET will search to find certificates:
+
+* **Root**  
+  When running the Virtual Client application as root (e.g. sudo ./VirtualClient), the application (.NET) will search for certificates
+  in `/root/.dotnet/corefx/cryptography/x509stores/my/` directory location.
+
+* **Specific User**  
+  When running the Virtual Client application as a specific user (e.g. /home/\{user\} ./VirtualClient), the application (.NET) will search for certificates
+  in `/{user}/.dotnet/corefx/cryptography/x509stores/my/` directory location. The directory MUST allow at least read/write access for the user to this directory and the
+  certificate files within it or Virtual Client will hit a permissions issue.
+
+  If you experience a permissions issue when running Virtual Client and trying to access certificates, you can attribute permissions on the
+  directory using the following command option:
+
+  ``` bash
+  sudo chmod -R 700 /{user}/.dotnet/corefx/cryptography/x509stores/my/
+
+  # e.g.
+  sudo chmod -R 700 /anyuser/.dotnet/corefx/cryptography/x509stores/my/
+  ```
+
 ## Event Hubs Authentication
 Virtual Client supports the following authentication options for eventhubs:
 
-  * **Azure Entra Id + Certificate using thumbprint** 
-    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
-    This method uses certificate thumbprint to search for the certificate. Required parameters are:
-    * CertificateThumbprint
-    * ClientId
-    * TenantId
-    * EventHubNamespace
+  * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)** 
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Event Hub namespace resources
+    (see the 'Authentication Preliminaries' section above). The following parameters are required:
 
-    ```--eventhub=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
+    * **CertificateThumbprint**  
+      The unique thumbprint (SHA1) of the certificate to use for authentication against the Microsoft Entra ID/App.
 
-  * **Azure Entra Id + Certificate using issuer + subject** 
-    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
-    This method uses certificate issuer + subject to search for the certificate. This has the benefit of supporting frequent cert rotation with no argument changes. The issuer can be a substring of the exact issuer appearing in the certificate. The search only looks for contains.
-    Required parameters are:
-    * CertificateIssuer
-    * CertificateSubject
-    * ClientId
-    * TenantId
-    * EventHubNamespace
+    * **ClientId**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure Event Hub namespace.
 
-    ```--eventhub=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net```
+    * **TenantId**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
 
-  * **Azure Managed Identity** 
-    This method uses Azure managed identity to authenticate. An id is required to support cases where a machine have multiple identities.
+    * **EventHubNamespace**  
+      The Event Hub namespace to which the telemetry will be sent. Note that the Microsoft Entra ID/App must be given
+      appropriate RBAC permissions to the Event Hub namespace (e.g. Azure Event Hubs Data Sender).
+
+    ``` bash
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID  = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID        = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
+
+    --eventhub="CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    ```
+
+  * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)** 
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its issuer and subject name to authenticate with Event Hub namespace resources
+    (see the 'Authentication Preliminaries' section above). The following parameters are required:
+
+    * **CertificateIssuer**  
+      The issuer defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=ABC CA Authority 01, DC=ABC, DC=COM).
+
+    * **CertificateSubject**  
+      The subject name defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=any.domain.com).
+
+    * **ClientId**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure Event Hub namespace.
+
+    * **TenantId**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
+
+    * **EventHubNamespace**  
+      The Event Hub namespace to which the telemetry will be sent. Note that the Microsoft Entra ID/App must be given
+      appropriate RBAC permissions to the Event Hub namespace (e.g. Azure Event Hubs Data Sender).
+
+    ``` bash
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Issuer    = CN=ABC CA Authority 01, DC=ABC, DC=COM
+    # Certificate Subject   = CN=any.domain.com
     
-    ```--eventhub=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net```
+    # Reference full Issuer and Subject
+    --eventhub="CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
 
-  * **EventHub connection string**  
-    This is a [event hub connection string](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string).
+    # Reference parts of the Issuer and Subject (e.g. COM, ABC, ABC CA Authority 01). Note that the full value of the part (e.g. CN=, DC=)
+    # must be defined. A substring is not valid.
+    --eventhub="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    --eventhub="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    --eventhub="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    ```
 
-    ```(e.g. Endpoint=sb://aaa.servicebus.windows.net/;SharedAccessKeyName=TelemetrySharedAccessKey;SharedAccessKey=bbbbbbbbbb...)```
+  * **Microsoft Azure Managed Identity** 
+    The following section shows how to use a Microsoft Azure managed identity to authenticate with Azure Event Hub namespace resources.
+    The following parameters are required:
+
+    * **ManagedIdentityId**  
+      The client ID of the managed identity to use for authentication against the Event Hub namespace.
+    
+    * **EventHubNamespace**  
+      The Event Hub namespace to which the telemetry will be sent. Note that the managed identity must be given
+      appropriate RBAC permissions to the Event Hub namespace (e.g. Azure Event Hubs Data Sender).
+    
+    ``` bash
+    # Given a Microsoft Azure Managed Identity with the following properties:
+    # Managed Identity ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
+
+    --eventhub="ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6;EventHubNamespace=any.servicebus.windows.net"
+    ```
+
+  * **Event Hub Namespace Shared Access Policies**  
+    The following section shows how to use an Event Hub Shared Access Policy (i.e. connection string) to authenticate with Azure Event Hub namespace resources.
+    The following parameters are required:
+
+    https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string
+
+    ``` bash
+    --eventHub="Endpoint=sb://aaa.servicebus.windows.net/;SharedAccessKeyName=TelemetrySharedAccessKey;SharedAccessKey=bbbbbbbbbb..."
+    ```
 
 ### Create Event Hub Namespace
 The Virtual Client emits data for each one of these categories into a distinct/singular target Event Hub within an Event Hub namespace (a 1-to-1 mapping).
