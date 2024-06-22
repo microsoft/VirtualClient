@@ -152,17 +152,13 @@ The following tables describe the various subcommands that are supported by the 
   | --ver                                       | No       |                              | Show application version information. |
 
   ``` bash
-  # Clean everything (full reset)
-  VirtualClient.exe bootstrap --clean
-  VirtualClient.exe bootstrap --clean=all
+  # Convert a JSON profile to YAML format
+  # (e.g. PERF-CPU-OPENSSL.json to S:\Users\Any\Profiles\PERF-CPU-OPENSSL.yml)
+  VirtualClient.exe convert --profile=PERF-CPU-OPENSSL.json --output-path=S:\Users\Any\Profiles
 
-  # Clean/reset specific targets (e.g. log files, state tracking, packages downloaded)
-  VirtualClient.exe bootstrap --clean=logs
-  VirtualClient.exe bootstrap --clean=state
-  VirtualClient.exe bootstrap --clean=packages
-
-  # Clean/reset multiple targets (e.g. log files and packages downloaded)
-  VirtualClient.exe bootstrap --clean=logs,packages
+  # Convert a YAML profile to JSON format
+  # (e.g. S:\Users\Any\Profiles\PERF-CPU-OPENSSL.yml to S:\Users\Any\Profiles\PERF-CPU-OPENSSL.json)
+  VirtualClient.exe convert --profile=S:\Users\Any\Profiles\PERF-CPU-OPENSSL.yml --output-path=S:\Users\Any\Profiles
   ```
 
 * ### runapi
