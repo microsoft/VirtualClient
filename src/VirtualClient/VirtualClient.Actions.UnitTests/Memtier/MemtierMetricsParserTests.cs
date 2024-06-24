@@ -6,10 +6,6 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
-    using System.Runtime.Intrinsics.X86;
-    using System.Text;
-    using Microsoft.Identity.Client;
     using NUnit.Framework;
     using VirtualClient.Contracts;
 

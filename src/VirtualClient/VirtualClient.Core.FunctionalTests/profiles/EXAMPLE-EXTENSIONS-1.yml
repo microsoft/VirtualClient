@@ -1,0 +1,17 @@
+description: Test Extensions Profile
+
+metadata:
+  # platform-architectures on which this profile runs.
+  supportedPlatforms: linux-x64,linux-arm64,win-x64,win-arm64
+
+parameters:
+
+actions:
+- type: TestExtensionsExecutor
+  metadata:
+    exampleMetadata1: Value1
+    exampleMetadata2: true
+  parameters:
+    scenario: Scenario1
+    commandLine: Workload --duration=00:00:15
+    tags: Test,VC
