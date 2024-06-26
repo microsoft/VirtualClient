@@ -58,6 +58,10 @@ namespace VirtualClient.Contracts
         /// </summary>
         public static readonly string EmailRegex = @"[\w\-\.]+@([\w -]+\.)+[\w-]{2,}";
 
+        private static readonly Regex CommaDelimitedExpression = new Regex(",", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SemiColonDelimitedExpression = new Regex(";", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex TripleCommaDelimitedExpression = new Regex(",,,", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Remove rows that matches the regex.
         /// </summary>
@@ -108,47 +112,51 @@ namespace VirtualClient.Contracts
         /// Sectionize raw text into sections based on regex. First line of each section will become section key!
         /// </summary>
         /// <param name="text">Raw text.</param>
-        public static IDictionary<string, IConvertible> ParseVcDelimiteredParameters(string text)
+        public static IDictionary<string, IConvertible> ParseDelimitedValues(string text)
         {
             IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
-            if (text.Contains(",,,"))
-            {
-                // If the list contains three comma",,,", use this as delimeter
-                string[] delimitedProperties = text.Split(",,,", StringSplitOptions.RemoveEmptyEntries);
+            // Priority of Delimiters
+            // 1) Triple-Comma Delimited (e.g. key1=value1,,,key2=value2)
+            // 2) Semi-Colon Delimited   (e.g. key1=value1;key2=value2)
+            // 3) Comma Delimited        (e.g. key1=value1,key2=value2)
 
-                if (delimitedProperties?.Any() == true)
+            string[] delimitedKeyValuePairs = null;
+
+            if (TextParsingExtensions.TripleCommaDelimitedExpression.IsMatch(text))
+            {
+                // Triple-comma delimiting
+                delimitedKeyValuePairs = TextParsingExtensions.TripleCommaDelimitedExpression.Split(text);
+            }
+            else if (TextParsingExtensions.SemiColonDelimitedExpression.IsMatch(text))
+            {
+                // Semi-Colon delimiting
+                delimitedKeyValuePairs = TextParsingExtensions.SemiColonDelimitedExpression.Split(text);
+            }
+            else if (TextParsingExtensions.CommaDelimitedExpression.IsMatch(text))
+            {
+                // Comma delimiting
+                delimitedKeyValuePairs = TextParsingExtensions.CommaDelimitedExpression.Split(text);
+            }
+
+            if (delimitedKeyValuePairs?.Any() == true)
+            {
+                foreach (string pair in delimitedKeyValuePairs)
                 {
-                    foreach (string property in delimitedProperties)
+                    // Note that the current logic accounts for key/value pairs with values that
+                    // contain equal (=) signs. The following are examples of where this is needed.
+                    //
+                    // - Certificate Issuer Distinguished Names (e.g. CN=ABC Infra CA 01, DC=ABC, DC=COM)
+                    // - Certificate Subject Distinguished Names (e.g. CN=any.service.azure.com).
+
+                    int indexOfEqual = pair.IndexOf("=", StringComparison.InvariantCultureIgnoreCase);
+                    if (indexOfEqual >= 1)
                     {
-                        if (property.Contains("=", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            string key = property.Substring(0, property.IndexOf("=", StringComparison.Ordinal));
-                            string value = property.Substring(property.IndexOf("=", StringComparison.Ordinal) + 1);
-                            delimitedValues[key.Trim()] = value.Trim();
-                        }
+                        string key = pair.Substring(0, indexOfEqual)?.Trim();
+                        string value = pair.Substring(key.Length + 1)?.Trim();
+                        delimitedValues[key] = value;
                     }
                 }
-            }
-            else
-            {
-                string[] segments = text.Split('=', StringSplitOptions.TrimEntries);
-                // Only start at second segment and end at second to last segment
-                // Because first segment is the key for first pair, and last segment is the value for last pair.
-                string key = segments[0];
-                for (int i = 1; i < segments.Length - 1; i++)
-                {
-                    // This is just to 
-                    int lastCommaIndex = segments[i].LastIndexOf(",,,");
-                    int lastSemicolonIndex = segments[i].LastIndexOf(';');
-                    int splitIndex = Math.Max(lastCommaIndex, lastSemicolonIndex);
-
-                    string value = segments[i].Substring(0, splitIndex);
-                    delimitedValues.Add(key, value);
-                    key = segments[i].Substring(splitIndex).Trim(';').Trim(',');
-                }
-
-                delimitedValues.Add(key, segments[segments.Length - 1]);
             }
 
             return delimitedValues;

@@ -37,6 +37,33 @@ The following stores are supported by the Virtual Client. The stores must be Azu
 
   ![monitoring content](./img/blob-storage-support-2.png)
 
+## Authentication Preliminaries
+The sections below will reference the use of certificates for authentication with Azure storage account resources. This section describes a
+few preliminary expectations to consider when using certificates.
+
+### Referencing Certificates on Linux
+Virtual Client is a .NET application. Certificates used on a Linux system must be X.509 certificates containing a private key (e.g. PKCS#12, *.pfx). Additionally, the
+certificates must be installed on the system in the expected location for the user in which Virtual Client is running. The following locations
+describe where Virtual Client/.NET will search to find certificates:
+
+* **Root**  
+  When running the Virtual Client application as root (e.g. sudo ./VirtualClient), the application (.NET) will search for certificates
+  in `/root/.dotnet/corefx/cryptography/x509stores/my/` directory location.
+
+* **Specific User**  
+  When running the Virtual Client application as a specific user (e.g. /home/\{user\} ./VirtualClient), the application (.NET) will search for certificates
+  in `/{user}/.dotnet/corefx/cryptography/x509stores/my/` directory location. The directory MUST allow at least read/write access for the user to this directory and the
+  certificate files within it or Virtual Client will hit a permissions issue.
+
+  If you experience a permissions issue when running Virtual Client and trying to access certificates, you can attribute permissions on the
+  directory using the following command option:
+
+  ``` bash
+  sudo chmod -R 700 /{user}/.dotnet/corefx/cryptography/x509stores/my/
+
+  # e.g.
+  sudo chmod -R 700 /anyuser/.dotnet/corefx/cryptography/x509stores/my/
+  ```
 
 ## Blob Store Authentication
 Virtual Client supports the following authentication options for all blob stores:
@@ -44,168 +71,241 @@ Virtual Client supports the following authentication options for all blob stores
 [Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
 [Account Shared Access Signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN)
 
-  * **Azure Entra Id + Certificate using thumbprint** 
-    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
-    This method uses certificate thumbprint to search for the certificate. Required parameters are:
-    * CertificateThumbprint
-    * ClientId
-    * TenantId
-    * EndpointUrl
+  * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)**  
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Azure storage account resources
+    (see the 'Authentication Preliminaries' section above). The following parameters are required:
 
-    ```--packages=CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
+    * **CertificateThumbprint**  
+      The unique thumbprint (SHA1) of the certificate to use for authentication against the Microsoft Entra ID/App.
 
-  * **Azure Entra Id + Certificate using issuer + subject** 
-    VC uses certificate to authenticate with an Azure Entra ID (AAD) application, which has read access to the package store.
-    This method uses certificate issuer + subject to search for the certificate. This has the benefit of supporting frequent cert rotation with no argument changes. The issuer can be a substring of the exact issuer appearing in the certificate. The search only looks for contains. 
-    Required parameters are:
-    * CertificateIssuer
-    * CertificateSubject
-    * ClientId
-    * TenantId
-    * EndpointUrl
+    * **ClientId**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure storage account.
 
-    ```--packages=CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
+    * **TenantId**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
 
-  * **Azure Managed Identity** 
-    This method uses Azure managed identity to authenticate. An id is required to support cases where a machine have multiple identities.
+    * **EndpointUrl**  
+      The full URL to the target Azure storage account. Note that the Microsoft Entra ID/App must be given
+      appropriate RBAC permissions to the storage account (e.g. Reader and Data Access + Storage Blob Data Reader or Storage Blob Data Contributor).
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
     
-    ```--packages=ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages```
+    # Reference full Issuer and Subject
+    --packages="CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    ```
 
-  * **Blob Service SAS URI**  
+  * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its issuer and subject name to authenticate with Azure storage account resources
+    (see the 'Authentication Preliminaries' section above). The following parameters are required:
+
+    * **CertificateIssuer**  
+      The issuer defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=ABC CA Authority 01, DC=ABC, DC=COM).
+
+    * **CertificateSubject**  
+      The subject name defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=any.domain.com).
+
+    * **ClientId**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure storage account.
+
+    * **TenantId**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
+
+    * **EndpointUrl**  
+      The full URL to the target Azure storage account. Note that the Microsoft Entra ID/App must be given
+      appropriate RBAC permissions to the storage account (e.g. Reader and Data Access + Storage Blob Data Reader or Storage Blob Data Contributor).
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Issuer    = CN=ABC CA Authority 01, DC=ABC, DC=COM
+    # Certificate Subject   = CN=any.domain.com
+
+    # Reference full Issuer and Subject
+    --packages="CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    --content="CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+
+    # Reference parts of the Issuer and Subject (e.g. COM, ABC, ABC CA Authority 01). Note that the full value of the part (e.g. CN=, DC=)
+    # must be defined. A substring is not valid.
+    --packages="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    --packages="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    --packages="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+
+    --content="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    --content="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    --content="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    ```
+
+  * **Microsoft Azure Managed Identity**  
+    The following section shows how to use a Microsoft Azure managed identity to authenticate with Azure storage account namespace resources.
+    The following parameters are required:
+
+    * **ManagedIdentityId**  
+      The client ID of the managed identity to use for authentication against the storage account.
+    
+    * **EndpointUrl**  
+      The full URL to the target Azure storage account. Note that the managed identity must be given
+      appropriate RBAC permissions to the storage account (e.g. Reader and Data Access + Storage Blob Data Reader or Storage Blob Data Contributor).
+    
+    ``` bash
+    # Given a Microsoft Azure Managed Identity with the following properties:
+    # Managed Identity ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
+
+    --packages="ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6;EndpointUrl=https://yourblobstore.blob.core.windows.net"
+    ```
+
+  * **Storage Account Blob Service SAS URI**  
     This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.
 
-    ```(e.g. https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...)```
+    ``` bash
+    --packages="https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El..."
+    ```
 
-  * **Blob Container SAS URI**  
+    Use the following recommendations when creating shared access keys in the blob store to ensure the right amount of privileges
+    are granted to the Virtual Client application for uploading and downloading blobs.
+
+    Select the following options when defining shared access signatures at the Blob service level:
+    * Allowed services = Blob
+    * Allowed resource types = Container, Object
+    * Allowed permissions = Read (allow Write and Create permissions if the storage account will be used for log/content uploads)
+    * Allowed protocols = HTTPS only
+
+    ![](./img/blob-service-sas-1.png)
+
+  * **Storage Account Blob Container SAS URI**  
     This is a SAS URI to a single blob container within the storage account. This is the most restrictive way of providing privileges but is also the most secure because it
     provides the least amount of access to the application. This is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container 
     within the blob store.
 
-    ```(e.g. https://anystorageaccount.blob.core.windows.net/packages?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH...)```
+    ``` bash
+    --packages="https://anystorageaccount.blob.core.windows.net/packages?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH..."
+    ```
+    
+    Select the following options when defining shared access signatures at the Blob container level:
+    * Signing method = Account key
+    * Permissions = Read (allow Write and Create permissions if the storage account will be used for log/content uploads)
+    * Allowed protocols = HTTPS only
 
-  * **Storage Account Connection String (Deprecated)**  
-    The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
-    storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
-    SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
-    account that the application should be able to access.
+    ![](./img/blob-container-sas-1.png)
 
-    ```(e.g. DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net)```
+## Storage Account Blob Conventions for Content/File Uploads
+In order to ensure that files/content uploaded (e.g. --content usages) are easy to find in the blob stores, Virtual Client supports defining a flexible blob path template. The virtual path 
+location of files/content in the storage account can be defined using the `--contentPathTemplate` command line option.
 
-  * **Blob Service Connection String (Deprecated)**  
-    This is a connection string to the Blob service in the storage account. It allows user-defined/restricted access privileges to be defined for
-    all containers and blobs in the storage account. This is a good fit for scenarios where content (e.g. from different monitors) is uploaded to 
-    different containers within the blob store and thus the application needs access to all containers.
-
-    ```(e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...)```
-
-
-Use the following recommendations when creating shared access keys in the blob store to ensure the right amount of privileges
-are granted to the Virtual Client application for uploading and downloading blobs.
-* **Blob Service Connection Strings or SAS URIs**  
-  Select the following options when defining shared access signatures at the Blob service level:
-  * Allowed services = Blob
-  * Allowed resource types = Container, Object
-  * Allowed permissions = Read, Write, Create
-  * Allowed protocols = HTTPS only
-
-  ![](./img/blob-service-sas-1.png)
-
-
-* **Blob Container SAS URIs**  
-  Select the following options when defining shared access signatures at the Blob container level:
-  * Signing method = Account key
-  * Permissions = Read, Write, Create
-  * Allowed protocols = HTTPS only
-
-  ![](./img/blob-container-sas-1.png)
-
-
-### Blob Store Folder/File Naming Conventions
-In  order to ensure that files associated with Virtual Client executors or monitors are easy to find in the blob stores, Virtual Client supports a flexible blob path template.
-At a high level, all files associated with a given experiment are contained together in the blob store.
-
-The virtual path of uploaded logs in blob storage is controlled by a VirtualClient Command Line Option parameter "--contentPathTemplate".
-
-Example: --contentPathTemplate="any-value1/\<standardProperty1>any-value2\<standardProperty2>/\<standardProperty3>/any-value3/\<standardProperty4>".
-
-In above example, the virtual blob folder structure will have sub-folders corresponding to each element separated by a '/' in the 
-ContentPathTemplate. The inlined values that are enclosed within brackets "{}", like "standaradProperty1" and "standaradProperty2", 
-needs to be one among the 5 defined standard properties of Virtual Client (ExperimentId, AgentId, ToolName, Role, Scenario).
-
-The first component of ContentPathTemplate (any-value1 in above example) will be taken up as the name of Blob storage Container where all files will be uploaded.
-The next component (\<standardProperty1> in above example) will be the root folder within the container and so on for the complete virtual folder structure within the blob storage.
-
-The default value of "ContentPathTemplate" is `{experimentId}/{agentId}/{toolName}/{role}/{scenario}`. In the default template, each element 
-is a standard property identified by Virtual Client.
-
-* **Experiment ID**  
-  The ID of the experiment is used to ensure all files associated with any executors or monitors are in the same virtual folder within the blob store.
-  Furthermore because an experiment ID is a global identifier, it is easier for the user or automation to find files associated with a given experiment
-  (e.g. for debugging/triage).
-
-* **Agent ID**  
-  The ID of the Virtual Client instance running (i.e. the agent) is also included. This ensures that files captured from a specific VM or node etc... are easy
-  to distinguish from each other.
-
-* **Tool Name**  
-  This is the name of the executor or monitor that created the files (directly or indirectly).
-
-* **Role**  
-  This is relevant for workloads that use multiple systems, and each system has an assigned role like Client or Server.
-
-* **ScenarioName**  
-  It is an indicator of the scenario being tested by the workload. It is defined for each action/monitor in an execution profile.
-
-All files will be uploaded in a virtual folder structure as defined by the ContentPathTemplate. For each file uploaded, a timestamp will be 
-prefixed to it so as to provide unique names.
-
-* **File Name**  
-  This is the name of the file as it should be reflected in the blob store. A timestamp (round-trip date/time format) will be added to the beginning of the file name
-  (e.g. 2023-08-17t0637583781z-monitor.log). The addition of the timestamp ensures that the files within a given virtual folder in the blob store will all
-  have unique names in order to avoid collisions. Round-trip date/time formats in addition to being a valid timestamp are naturally sortable in UX experiences
-  such as a web browser.
-
-* **Round-Trip Formatted Timestamp**  
-  As noted above, a round-trip formatted timestamp will be added to each file name to ensure uniqueness.
-
-Given the pieces of information noted above, the format for virtual paths and file names will look like:
-
-
-``` csharp
-// ContentPathTemplate and Parameters as defined in Virtual Client CommandLine:
-// -----------------------------------------------
-VirtualClient.exe --profile=........ --contentPathTemplate="value1/expt_{experimentId}_agent_{agentId}/{toolName}/value-2" 
-
-// Examples:
-// -----------------------------------------------
-// Given the Following Information:
-// - Experiment ID = 24149a49-66c9-4bd1-9332-18370c7c70e1
-// - Agent ID = cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01
-// - ToolName - a Background Monitor = exampleMonitor
-// - Files Produced = monitor.log
-//
-// The blob virtual folder paths/names would like the following:
-value1/expt_24149a49-66c9-4bd1-9332-18370c7c70e1_expt_agent_cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/examplemonitor/value-2/2022-03-07T01:32:27.1237655Z-monitor.log
-value1/expt_24149a49-66c9-4bd1-9332-18370c7c70e1_expt_agent_cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/examplemonitor/value-2/2022-03-07T01:34:32.6483092Z-monitor.log
-value1/expt_24149a49-66c9-4bd1-9332-18370c7c70e1_expt_agent_cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/examplemonitor/value-2/2022-03-07T01:36:30.2645013Z-monitor.log
-
-// Structure Within the Blob Store:
-// -----------------------------------------------
-// (container) value1 
-//   -> (virtual folder) /expt_24149a49-66c9-4bd1-9332-18370c7c70e1_agent_cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01
-//     -> (virtual folder) /examplemonitor
-//       -> (virtual folder) /value-2
-//         -> (blob) 2022-03-07T01:32:27.1237655Z-monitor.log
-//         -> (blob) 2022-03-07T01:34:32.6483092Z-monitor.log
-//         -> (blob) 2022-03-07T01:36:30.2645013Z-monitor.log
+``` bash
+# By default files/content uploaded will be saved to a container whose name matches the experiment ID for
+# the Virtual Client run.
+#
+# However, the location can be explicitly defined using the content path template.
+#
+# e.g.
+./VirtualClient --profile=PERF-CPU-OPENSSL.json ... --contentPathTemplate="{experimentId}/logs/{toolName}/{scenarioName}"
 ```
 
----------
+In above example, the virtual blob folder structure will have sub-folders corresponding to each element separated by a '/' in the content path template defined.
+This template is using different supported template placeholders (e.g. the parts in \{xyz\} brackets). These template placeholder values (e.g. \{experimentId\}, \{scenario\}), 
+will be replaced at runtime with appropriate values. Note that the directory path segments in the final virtual path will be entirely lower-cased. Azure storage account blob paths
+are case-sensitive. Lower-casing helps to ensure predictability.
 
-### Integration with the Development Process
+``` bash
+# e.g.
+# 
+# Given the following experiment properties:
+# Experiment ID = 29be58e5-94de-4703-beab-5c8862abcdAa7
+# Tool Name     = OpenSSL
+# Scenario Name = MD5
+#
+# ...and a content path template defined
+--contentPathTemplate="{experimentId}/logs/{toolName}/{scenarioName}"
+
+# Files/content would be uploaded to a virtual path in the storage account that looks like the following:
+# 29be58e5-94de-4703-beab-5c8862abcdAa7/logs/openssl/md5
+```
+
+### Default Content Path Template
+If a content path template is not defined explicitly on the command line, the default template will be used. The default template is as follows:
+
+``` bash
+# Default content path template
+"{experimentId}/{agentId}/{toolName}/{role}/{scenario}"
+```
+
+### Well-Known Content Path Template Placeholders
+The following section shows the set of supported "well-known" content path template placeholders.
+
+* **\{experimentId\}**  
+  The experiment ID for the Virtual Client execution (e.g. ./VirtualClient --profile=PERF-CPU-OPENSSL.json --experimentId=29be58e5-94de-4703-beab-5c8862abcdAa7 --> 29be58e5-94de-4703-beab-5c8862abcdAa7)
+
+* **\{agentId\}**  
+  The ID of the Virtual Client instance running (e.g. ./VirtualClient --profile=PERF-CPU-OPENSSL.json --agentId=agent1234 --> agent1234).
+
+* **\{toolName\}**  
+  This is the name of the tool/toolset associated with a given workload or monitor (e.g. OpenSSL).
+
+* **\{scenarioName\}**  
+  This is the name of the scenario in a profile associated with a given workload or monitor (e.g. MD5, SHA1).
+
+* **\{role\}**  
+  The client/server role for the Virtual Client instence (e.g. Client, Server). This is relevant only for profiles that execute workloads across multiple systems.
+
+### Additional Supported Content Path Template Placeholders
+In addition to the "well-known" content path template placeholders, the user can define any number of additional values on the command line using either
+the `--parameters` or `--metadata` options. The key for any one of the key/value pairs in either of these two command line options can be referenced as
+a placeholder in a content path template.
+
+  ``` bash
+  # e.g.
+  # Suppose a content path template is defined on the command line and it references placeholders for 
+  # properties defined/supplied in the --metadata (e.g. environment, audience).
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --experimentId=29be58e5-94de-4703-beab-5c8862abcdAa7 --agentId=agent1234 --contentPathTemplate="{environment}/{audience}/{experimentId}/{agentId}/{toolName}/{scenarioName}" --metadata="environment=demo,,,audience=my_team" 
+
+  # The custom placeholders defined in the metadata will be resolved at runtime and replaced
+  # in the virtual paths for the blobs/files (e.g. {environment} --> demo, {audience} --> my_team)
+  
+  # The following shows what the virtual paths might look like.
+  demo/my_team/29be58e5-94de-4703-beab-5c8862abcdAa7/agent1234/openssl/md5/2022-03-07T01:32:27.1237655Z-md5.log
+  demo/my_team/29be58e5-94de-4703-beab-5c8862abcdAa7/agent1234/openssl/md5/2022-03-07T02:20:45.4673920Z-md5.log
+  ```
+
+### Content Upload File Naming Conventions
+The following section provides additional context information related to content file uploads.
+
+* **File Naming Conventions**  
+  In order to ensure each file within the storage account is unique a timestamp will be added to the name of the file. This helps to avoid collisions in file
+  names that could result in a given blob/file being overwritten unexpectedly. Timestamps added to file names will be in "universal round trip" date/time format
+  (e.g. monitor.log --> 2023-08-17t0637583781z-monitor.log).
+
+  This is the name of the file as it should be reflected in the blob store. A timestamp (round-trip date/time format) will be added to the beginning of the file name
+  (e.g. 2023-08-17t0637583781z-monitor.log). Universal round-trip date/time formats have the additional benefit of being naturally sortable in U/X experiences
+  such as a web browser.
+
+  ``` bash
+  # e.g.
+  # Suppose the following content path template is defined on the command line:
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --experimentId=29be58e5-94de-4703-beab-5c8862abcdAa7 --agentId=agent1234 --contentPathTemplate="{environment}/{audience}/{experimentId}/{agentId}/{toolName}/{scenarioName}" --metadata="environment=demo,,,audience=my_team" 
+
+  # The following shows examples of what the virtual paths files uploaded might look like. The blob container
+  # is the very first segment in the content path template (e.g. demo).
+  demo/my_team/29be58e5-94de-4703-beab-5c8862abcdAa7/agent1234/openssl/md5/2022-03-07T01:32:27.1237655Z-md5.log
+  demo/my_team/29be58e5-94de-4703-beab-5c8862abcdAa7/agent1234/openssl/md5/2022-03-07T02:20:45.4673920Z-md5.log
+  demo/my_team/29be58e5-94de-4703-beab-5c8862abcdAa7/agent1234/openssl/sha256/2022-03-07T01:40:10.6382906Z-sha256.log
+  demo/my_team/29be58e5-94de-4703-beab-5c8862abcdAa7/agent1234/openssl/sha256/2022-03-07T02:56:11.3975286Z-sha256.log
+  ```
+
+## Integration with the Development Process
 This section describes how access to the supported blob stores can be integrated into the Virtual Client process.
 
-##### How Blob Stores are Integrated into Dependencies
+### How Blob Stores are Integrated into Dependencies
 When the Virtual Client reads the blob stores (i.e. connection strings) from the command line, it will place a set of
 BlobStore objects into the dependencies collection that is passed into the constructors of ALL profile actions, dependencies
 and monitors.

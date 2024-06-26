@@ -34,15 +34,5 @@ namespace VirtualClient
         /// <param name="subjectName">Certificate subject name.</param>
         /// <returns>Certificate.</returns>
         Task<X509Certificate2> GetCertificateFromStoreAsync(string issuer, string subjectName, IEnumerable<StoreLocation> storeLocations = null, StoreName storeName = StoreName.My);
-
-        /// <summary>
-        /// Verify specified certificate.
-        /// </summary>
-        /// <param name="certificate">Certificate to verify.</param>
-        /// <param name="subject">Expected certificate subject.</param>
-        /// <param name="issuer">Expected certificate issuer.</param>
-        /// <param name="thumbprint">Expected certificate thumbprint.</param>
-        /// <returns>True if verification passes; false if it fails.</returns>
-        bool VerifyCertificate(X509Certificate2 certificate, string subject, string issuer, string thumbprint);
     }
 }
