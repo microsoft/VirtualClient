@@ -21,83 +21,54 @@ namespace VirtualClient
     [Category("Unit")]
     public class RepoConsistencyTests
     {
-        /// <summary>
-        /// This test detects 
-        /// </summary>
         [Test]
-        public void DetectUtf8EncodingInCSharp()
+        public void ValidateCSharpFilesDoNotHaveByteOrderMarkSequences()
+        {
+            this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.cs", "C-Sharp/*.cs");
+        }
+
+        [Test]
+        public void ValidateMarkdownFilesDoNotHaveByteOrderMarkSequences()
+        {
+            this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.md", "Markdown/*.md");
+        }
+
+        [Test]
+        public void ValidateJsonFilesDoNotHaveByteOrderMarkSequences()
+        {
+            this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.json", "JSON/*.json");
+        }
+
+        [Test]
+        public void ValidateYamlFilesDoNotHaveByteOrderMarkSequences()
+        {
+            this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.yml", "YAML/*.yml");
+            this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.yaml", "YAML/*.yaml");
+        }
+
+        private void ValidateFilesDoNotHaveByteOrderMarkSequences(string fileExtension, string fileType)
         {
             DirectoryInfo currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
-            bool repoRootFound = false;
+            DirectoryInfo repoRootDirectory = null;
+
             while (currentDirectory != null)
             {
                 if (currentDirectory.GetDirectories(".git")?.Any() == true)
                 {
-                    repoRootFound = true;
+                    repoRootDirectory = currentDirectory;
                     break;
                 }
 
                 currentDirectory = currentDirectory.Parent;
             }
 
-            if (!repoRootFound)
+            if (repoRootDirectory == null)
             {
-                throw new FileNotFoundException("Could not locate profiles.");
+                throw new FileNotFoundException("Could not locate the root directory of the Git repo.");
             }
 
-
-            // *.cs files
-            string directoryPath = Path.Combine(currentDirectory.FullName, "src", "VirtualClient");
-            var fileList = new DirectoryInfo(directoryPath)
-                .GetFiles("*.cs", SearchOption.AllDirectories)
-                .Where(file =>
-                {
-                    using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
-                    {
-                        if (fileStream.Length >= 3)
-                        {
-                            byte[] buffer = new byte[3];
-                            fileStream.Read(buffer, 0, 3);
-
-                            // Check if the first three bytes match the UTF-8 BOM
-                            return (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF);
-                        }
-
-                        return false;
-                    }
-                }).ToList();
-
-            Assert.AreEqual(0, fileList.Count, $"You have *.cs files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
-                $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
-
-            // *.json files
-            directoryPath = Path.Combine(currentDirectory.FullName, "src", "VirtualClient");
-            fileList = new DirectoryInfo(directoryPath)
-                .GetFiles("*.json", SearchOption.AllDirectories)
-                .Where(file =>
-                {
-                    using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
-                    {
-                        if (fileStream.Length >= 3)
-                        {
-                            byte[] buffer = new byte[3];
-                            fileStream.Read(buffer, 0, 3);
-
-                            // Check if the first three bytes match the UTF-8 BOM
-                            return (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF);
-                        }
-
-                        return false;
-                    }
-                }).ToList();
-
-            Assert.AreEqual(0, fileList.Count, $"You have *.json files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
-                $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
-
-            // *.md files
-            directoryPath = Path.Combine(currentDirectory.FullName);
-            fileList = new DirectoryInfo(directoryPath)
-                .GetFiles("*.md", SearchOption.AllDirectories)
+            var fileList = new DirectoryInfo(repoRootDirectory.FullName)
+                .GetFiles(fileExtension, SearchOption.AllDirectories)
                 .Where(file => !file.FullName.Contains("node_modules"))
                 .Where(file =>
                 {
@@ -116,8 +87,11 @@ namespace VirtualClient
                     }
                 }).ToList();
 
-            Assert.AreEqual(0, fileList.Count, $"You have *.md files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
-                $"You can manually convert them or use the integration test(s) in VirtualClient.IntegrationTests.RepoConsistencyTests.");
+            Assert.AreEqual(
+                0,
+                fileList.Count,
+                $"Invalid file encodings. The repo has {fileType} files that are UTF-8 encoded with a byte-order mark (BOM) sequence. Open and save the following files " +
+                $"without the byte-order mark: {Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", fileList.Select(f => f.FullName).OrderBy(path => path))}");
         }
     }
 }

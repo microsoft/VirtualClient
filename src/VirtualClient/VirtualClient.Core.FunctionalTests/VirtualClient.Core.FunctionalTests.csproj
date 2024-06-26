@@ -1,0 +1,130 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RunCodeAnalysis>false</RunCodeAnalysis>
+        <RunAnalyzers>false</RunAnalyzers>
+        <RootNamespace>VirtualClient</RootNamespace>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
+        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+    <PropertyGroup>
+        <!-- We build on-->
+        <PlatformAlias>win</PlatformAlias>
+        <PlatformAlias Condition="'$(OS)' == 'Unix'">linux</PlatformAlias>
+        <ArchitectureAlias>x64</ArchitectureAlias>
+        <ArchitectureAlias Condition="'$(Platform)' == 'ARM64'">arm64</ArchitectureAlias>
+        <PlatformArchitectureName>$(PlatformAlias)-$(ArchitectureAlias)</PlatformArchitectureName>
+    </PropertyGroup>
+    <!--
+    Extensions Packages in Default Location
+    -->
+    <Target Name="CopyExtensionsPackagesToDefaultLocation" AfterTargets="Build">
+        <Copy 
+            SourceFiles="$(OutputPath)VirtualClient.Core.FunctionalTests.dll"
+            DestinationFiles="$(OutputPath)packages\extensions_package_1\$(PlatformArchitectureName)\Example.VirtualClient.Extensions_1.dll"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)profiles\EXAMPLE-EXTENSIONS-1.json"
+            DestinationFiles="$(OutputPath)packages\extensions_package_1\$(PlatformArchitectureName)\profiles\EXAMPLE-EXTENSIONS-1.json"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)profiles\EXAMPLE-EXTENSIONS-1.yml"
+            DestinationFiles="$(OutputPath)packages\extensions_package_1\$(PlatformArchitectureName)\profiles\EXAMPLE-EXTENSIONS-1.yml"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)profiles\EXAMPLE-EXTENSIONS-2.yaml"
+            DestinationFiles="$(OutputPath)packages\extensions_package_1\$(PlatformArchitectureName)\profiles\EXAMPLE-EXTENSIONS-2.yaml"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)extensions_package_1.vcpkg"
+            DestinationFiles="$(OutputPath)packages\extensions_package_1\extensions_package_1.vcpkg"
+            ContinueOnError="false"
+            />
+
+    </Target>
+    
+    <!--
+    Extensions Packages in User-Defined/Non-Default Location (e.g. VC_PACKAGES_PATH).
+    -->
+    <Target Name="CopyExtensionsPackagesToNonDefaultLocation" AfterTargets="Build">
+        <Copy
+            SourceFiles="$(OutputPath)VirtualClient.Core.FunctionalTests.dll"
+            DestinationFiles="$(OutputPath)extensions_packages\extensions_package_2\$(PlatformArchitectureName)\Example.VirtualClient.Extensions_2.dll"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)profiles\EXAMPLE-EXTENSIONS-1.json"
+            DestinationFiles="$(OutputPath)extensions_packages\extensions_package_2\$(PlatformArchitectureName)\profiles\EXAMPLE-EXTENSIONS-2.json"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)extensions_package_2.vcpkg"
+            DestinationFiles="$(OutputPath)extensions_packages\extensions_package_2\extensions_package_2.vcpkg"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(OutputPath)VirtualClient.Core.FunctionalTests.dll"
+            DestinationFiles="$(OutputPath)extensions_packages\extensions_package_3\$(PlatformArchitectureName)\Example.VirtualClient.Extensions_3.dll"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)profiles\EXAMPLE-EXTENSIONS-1.yml"
+            DestinationFiles="$(OutputPath)extensions_packages\extensions_package_3\$(PlatformArchitectureName)\profiles\EXAMPLE-EXTENSIONS-3.yml"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(ProjectDir)extensions_package_3.vcpkg"
+            DestinationFiles="$(OutputPath)extensions_packages\extensions_package_3\extensions_package_3.vcpkg"
+            ContinueOnError="false"
+            />
+
+    </Target>
+
+    <!--
+    Extensions Binaries in User-Defined/Non-Default Location (e.g. VC_LIBRARY_PATH).
+    -->
+    <Target Name="CopyExtensionsBinariesToNonDefaultLocationInOutput" AfterTargets="Build">
+        <Copy
+            SourceFiles="$(OutputPath)VirtualClient.Core.FunctionalTests.dll"
+            DestinationFiles="$(OutputPath)extensions\extensions_1\Example.VirtualClient.Extensions_4.dll"
+            ContinueOnError="false"
+            />
+
+        <Copy
+            SourceFiles="$(OutputPath)VirtualClient.Core.FunctionalTests.dll"
+            DestinationFiles="$(OutputPath)extensions\extensions_2\Example.VirtualClient.Extensions_5.dll"
+            ContinueOnError="false"
+            />
+
+    </Target>
+
+</Project>

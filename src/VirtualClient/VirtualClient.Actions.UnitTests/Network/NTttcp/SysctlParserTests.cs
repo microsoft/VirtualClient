@@ -3,15 +3,9 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Identity.Client;
-    using NUnit.Framework;
-    using System;
-    using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
-    using VirtualClient.Common.Contracts;
-    using VirtualClient.Contracts;
+    using NUnit.Framework;
 
     [TestFixture]
     [Category("Unit")]

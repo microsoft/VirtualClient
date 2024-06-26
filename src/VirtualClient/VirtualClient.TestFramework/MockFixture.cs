@@ -11,7 +11,6 @@ namespace VirtualClient
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
-    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -72,7 +71,7 @@ namespace VirtualClient
         public MockFixture()
         {
             this.experimentId = Guid.NewGuid().ToString();
-            this.Setup(Environment.OSVersion.Platform, Architecture.X64);
+            this.Setup(Environment.OSVersion.Platform, Architecture.X64, useUnixStylePathsOnly: false);
         }
 
         /// <summary>
@@ -359,9 +358,18 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Standardizes the path per the requirements of the current targeted
+        /// OS platform (e.g. Windows, Linux).
+        /// </summary>
+        public string StandardizePath(string path)
+        {
+            return this.PlatformSpecifics.StandardizePath(path);
+        }
+
+        /// <summary>
         /// Sets up or resets the fixture to default mock behaviors.
         /// </summary>
-        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null)
+        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false)
         {
             this.SetupMocks(true);
 
@@ -396,7 +404,7 @@ namespace VirtualClient
             this.DiskManager = new Mock<IDiskManager>();
             this.Logger = new InMemoryLogger();
             this.FirewallManager = new Mock<IFirewallManager>();
-            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
+            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly: useUnixStylePathsOnly);
             this.ProcessManager = new InMemoryProcessManager(platform);
             this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();

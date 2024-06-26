@@ -23,7 +23,7 @@ namespace VirtualClient
         /// Performs extensions package discovery on the system.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        Task<IEnumerable<DependencyPath>> DiscoverExtensionsAsync(CancellationToken cancellationToken);
+        Task<PlatformExtensions> DiscoverExtensionsAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Performs package discovery on the system.
@@ -64,13 +64,6 @@ namespace VirtualClient
         /// <param name="retryPolicy">A retry policy to apply to the blob download and installation to allow for transient error handling.</param>
         /// <returns>The path where the Blob package was installed.</returns>
         Task<string> InstallPackageAsync(IBlobManager packageStoreManager, DependencyDescriptor description, CancellationToken cancellationToken, string installationPath = null, IAsyncPolicy retryPolicy = null);
-
-        /// <summary>
-        /// Installs extensions to the runtime platform.
-        /// </summary>
-        /// <param name="package">Describes the extensions package to install.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        Task InstallExtensionsAsync(DependencyPath package, CancellationToken cancellationToken);
 
         /// <summary>
         /// Registers/saves the path so that it can be used by dependencies, workloads and monitors. Paths registered

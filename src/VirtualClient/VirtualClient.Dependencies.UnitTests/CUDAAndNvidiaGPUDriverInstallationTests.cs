@@ -37,7 +37,7 @@ namespace VirtualClient.Dependencies
             $"sudo tee -a /home/anyuser/.bashrc\"";
 
         private const string UpgradeCommand = "apt upgrade -y";
-        private const string InstallDriverCommand = "apt install nvidia-driver-510-server nvidia-dkms-510-server -y";
+        private const string InstallDriverCommand = "apt install nvidia-driver-510 nvidia-dkms-510 -y";
         private const string InstallFabricManagerCommand = "apt install cuda-drivers-fabricmanager-510 -y";
 
         private MockFixture fixture;

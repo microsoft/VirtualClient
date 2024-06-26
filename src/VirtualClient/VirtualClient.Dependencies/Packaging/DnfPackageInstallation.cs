@@ -22,6 +22,11 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class DnfPackageInstallation : VirtualClientComponent
     {
+        /// <summary>
+        /// The list of exit codes that dnf could return.
+        /// </summary>
+        public static readonly IEnumerable<int> DnfSuccessfulCodes = new int[] { 0, 100 };
+
         private const string DnfCommand = "dnf";
         private ISystemManagement systemManagement;
 
@@ -138,7 +143,7 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Dnf update first.
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"check-update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
                 // Runs the installation command with retries and throws if the command fails after all
@@ -214,7 +219,7 @@ namespace VirtualClient.Dependencies
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Dnf")
                             .ConfigureAwait(false);
 
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                        process.ThrowIfErrored<DependencyException>(DnfPackageInstallation.DnfSuccessfulCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });
