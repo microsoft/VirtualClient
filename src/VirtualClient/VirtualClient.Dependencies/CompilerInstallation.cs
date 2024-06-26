@@ -273,11 +273,8 @@ namespace VirtualClient.Dependencies
                         $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion}";
 
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
-            
-            // Remove cpp
-            await this.ExecuteCommandAsync("rm", "/usr/bin/cpp", Environment.CurrentDirectory, telemetryContext, cancellationToken);     
-            
-            // Ensure no residual issues exist in alternatives system for cpp
+
+            // Remove all existing alternatives for cpp
             await this.ExecuteCommandAsync("update-alternatives", "--remove-all cpp", Environment.CurrentDirectory, telemetryContext, cancellationToken);
 
             // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.

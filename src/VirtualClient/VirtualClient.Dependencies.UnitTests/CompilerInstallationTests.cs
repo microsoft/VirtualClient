@@ -77,6 +77,7 @@ namespace VirtualClient.Dependencies
                     $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-123 " +
                     $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-123 " +
                     $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-123",
+                "sudo update-alternatives --remove-all cpp",
                 "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-123 1230",
             };
 
@@ -109,7 +110,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(7, commandExecuted);
+            Assert.AreEqual(8, commandExecuted);
         }
 
         [Test]
@@ -252,6 +253,7 @@ namespace VirtualClient.Dependencies
                     $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10 " +
                     $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10 " +
                     $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-10",
+                "sudo update-alternatives --remove-all cpp",
                 "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-10 100",
             };
 
@@ -285,7 +287,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(7, commandExecuted);
+            Assert.AreEqual(8, commandExecuted);
         }
 
         [Test]
