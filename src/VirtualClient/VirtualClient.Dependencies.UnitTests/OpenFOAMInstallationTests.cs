@@ -23,7 +23,7 @@ namespace VirtualClient.Dependencies
     public class OpenFOAMInstallationTests
     {
         private const string AddPublicKeyCommand = "sh -c \"wget -O - https://dl.openfoam.org/gpg.key | apt-key add -\"";
-        private const string UpdateSoftwareRepositoriesCommand = "add-apt-repository http://dl.openfoam.org/ubuntu";
+        private const string UpdateSoftwareRepositoriesCommand = "add-apt-repository http://dl.openfoam.org/ubuntu --yes ";
         private const string UpdateAptPackageCommand = "apt update";
 
         private const string InstallOpenFOAMx64Command = "apt -y install openfoam9";
