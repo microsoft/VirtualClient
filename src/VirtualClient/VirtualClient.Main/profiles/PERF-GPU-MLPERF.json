@@ -10,10 +10,12 @@
     "Parameters": {
         "Username": "",
         "DiskFilter": "SizeGreaterThan:1000gb",
+        "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
         "LinuxCudaVersion": "12.0",
         "LinuxDriverVersion": "525",
         "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
-        "RequireCustomSystemSupport": true
+        "RequireCustomSystemSupport": true,
+        "Benchmarks": "bert,rnnt,ssd-mobilenet,ssd-resnet34"
     },
     "Actions": [
         {
@@ -23,7 +25,8 @@
                 "Model": "bert",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport",
+                "Benchmarks": "$.Parameters.Benchmarks"
             }
         },
         {
@@ -33,7 +36,8 @@
                 "Model": "rnnt",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport",
+                "Benchmarks": "$.Parameters.Benchmarks"
             }
         },
         {
@@ -43,7 +47,8 @@
                 "Model": "ssd-mobilenet",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport",
+                "Benchmarks": "$.Parameters.Benchmarks"
             }
         },
         {
@@ -53,7 +58,8 @@
                 "Model": "ssd-resnet34",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport",
+                "Benchmarks": "$.Parameters.Benchmarks"
             }
         }
     ],
@@ -68,7 +74,7 @@
             "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneMLCommonsRepo",
-                "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
+                "RepoUri": "$.Parameters.RepoUri",
                 "PackageName": "mlperf"
             }
         },

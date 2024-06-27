@@ -4,18 +4,18 @@
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SupportedRequireCustomSystemSupport": "A100_PCIe_80GBx4",
-        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
+        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip.",
+        "GPU": "H100"
     },
     "Parameters": {
         "Username": "",
         "DiskFilter": "SizeGreaterThan:1000gb",
-        "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
-        "LinuxCudaVersion": "12.0",
-        "LinuxDriverVersion": "525",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
-        "RequireCustomSystemSupport": true,
-        "Benchmarks": "bert,rnnt,ssd-mobilenet,ssd-resnet34"
+        "RepoUri": "https://github.com/mlcommons/inference_results_v3.1.git",
+        "LinuxCudaVersion": "12.2",
+        "LinuxDriverVersion": "535",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
+        "RequireCustomSystemSupport": false,
+        "Benchmarks": "bert,rnnt,retinanet"
     },
     "Actions": [
         {
@@ -43,19 +43,8 @@
         {
             "Type": "MLPerfExecutor",
             "Parameters": {
-                "Scenario": "inferencemodels-ssd-mobilenet",
-                "Model": "ssd-mobilenet",
-                "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport",
-                "Benchmarks": "$.Parameters.Benchmarks"
-            }
-        },
-        {
-            "Type": "MLPerfExecutor",
-            "Parameters": {
-                "Scenario": "inferencemodels-ssd-resnet34",
-                "Model": "ssd-resnet34",
+                "Scenario": "inferencemodels-retinanet",
+                "Model": "retinanet",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport",
