@@ -1,16 +1,16 @@
 # <img src="./website/static/img/vc-logo.svg" width="50"> Virtual Client
 
 
-[![Pull Request Build](https://github.com/microsoft/VirtualClient/actions/workflows/pull-request.yml/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pull-request.yml)
-[![Document Build](https://github.com/microsoft/VirtualClient/actions/workflows/deploy-doc.yml/badge.svg?branch=main)](https://github.com/microsoft/VirtualClient/actions/workflows/deploy-doc.yml)
-[![Document Deployment](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment)
+[![Pull Request Builds](https://github.com/microsoft/VirtualClient/actions/workflows/pull-request.yml/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pull-request.yml)
+[![Documentation Builds](https://github.com/microsoft/VirtualClient/actions/workflows/deploy-doc.yml/badge.svg?branch=main)](https://github.com/microsoft/VirtualClient/actions/workflows/deploy-doc.yml)
+[![Documentation Deployment Builds](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment)
 
 ------
 
 The following links provide additional information on the Virtual Client project.
 
 * [Overview](https://microsoft.github.io/VirtualClient/docs/overview/)
-* [Getting Started + How to Build](https://microsoft.github.io/VirtualClient/docs/guides/0001-getting-started.md)
+* [Getting Started + How to Build](https://microsoft.github.io/VirtualClient/docs/guides/getting-started)
 
 ## [Getting Started](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/)
 

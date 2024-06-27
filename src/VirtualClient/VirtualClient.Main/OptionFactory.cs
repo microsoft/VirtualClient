@@ -12,8 +12,11 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Security;
+    using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using Azure.Core;
     using Azure.Identity;
     using Azure.Messaging.EventHubs.Producer;
@@ -31,12 +34,8 @@ namespace VirtualClient
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Allow for longer description text.")]
     public static class OptionFactory
     {
-        private static readonly IFileSystem fileSystem = new FileSystem();
-
-        /// <summary>
-        /// ICertificateManager that could be override in unit tests.
-        /// </summary>
-        internal static ICertificateManager CertificateManager { get; set; } = null;
+        private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
+        private static readonly IFileSystem defaultFileSystem = new FileSystem();
 
         /// <summary>
         /// Command line option defines the ID of the agent to use with telemetry data reported from the system.
@@ -185,7 +184,8 @@ namespace VirtualClient
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
-        public static Option CreateContentStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null)
+        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        public static Option CreateContentStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, ICertificateManager certificateManager = null)
         {
             // Note:
             // We will be adding support for other cloud stores in the future (e.g. AWS, Google). The logic on the command
@@ -193,7 +193,12 @@ namespace VirtualClient
             // are supported.
             Option<DependencyStore> option = new Option<DependencyStore>(
                 new string[] { "--content-store", "--contentStore", "--contentstore", "--content", "--cs" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(result, DependencyStore.Content, fileSystem ?? OptionFactory.fileSystem, "content store")))
+                new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(
+                    result,
+                    DependencyStore.Content,
+                    fileSystem ?? OptionFactory.defaultFileSystem,
+                    certificateManager ?? OptionFactory.defaultCertificateManager,
+                    "content store")))
             {
                 Name = "ContentStore",
                 Description = "Blob store access token for the store to which content/monitoring files will be uploaded.",
@@ -266,11 +271,15 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null)
+        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
         {
             Option<EventHubAuthenticationContext> option = new Option<EventHubAuthenticationContext>(
                 new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventHubConnectionString" },
-                new ParseArgument<EventHubAuthenticationContext>(result => OptionFactory.ParseEventHubAuthenticationContext(result)))
+                new ParseArgument<EventHubAuthenticationContext>(result => OptionFactory.ParseEventHubAuthenticationContext(
+                    result,
+                    "Event Hub namespace",
+                    certificateManager ?? OptionFactory.defaultCertificateManager)))
             {
                 Name = "EventHubAuthenticationContext",
                 Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
@@ -482,7 +491,7 @@ namespace VirtualClient
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "LogRetention",
-                Description = 
+                Description =
                     "Defines the retention period to preserve log files on the system. Log files older than the retention period will be deleted." +
                     "This can be a valid timespan (e.g. 10.00:00:00) or a simple numeric value representing total minutes (e.g. 14400).",
                 ArgumentHelpName = "timespan",
@@ -628,7 +637,8 @@ namespace VirtualClient
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
-        public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null)
+        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, ICertificateManager certificateManager = null)
         {
             // Note:
             // We will be adding support for other cloud stores in the future (e.g. AWS, Google). The logic on the command
@@ -636,7 +646,12 @@ namespace VirtualClient
             // are supported.
             Option<DependencyStore> option = new Option<DependencyStore>(
                 new string[] { "--package-store", "--packageStore", "--packagestore", "--packages", "--ps" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(result, DependencyStore.Packages, fileSystem ?? OptionFactory.fileSystem, "package store")))
+                new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(
+                    result,
+                    DependencyStore.Packages,
+                    fileSystem ?? OptionFactory.defaultFileSystem,
+                    certificateManager ?? OptionFactory.defaultCertificateManager,
+                    "package store")))
             {
                 Name = "PackageStore",
                 Description = "Blob store access token for the store from which dependency/workload packages can be downloaded and installed.",
@@ -708,7 +723,7 @@ namespace VirtualClient
         public static Option CreateProfileOption(bool required = true, object defaultValue = null, ValidateSymbol<OptionResult> validator = null)
         {
             Option<IList<string>> option = new Option<IList<string>>(
-                new string[] { "--profile", "--p"  })
+                new string[] { "--profile", "--p" })
             {
                 Name = "Profiles",
                 Description = "The workload or monitoring profile(s) to execute.",
@@ -890,38 +905,6 @@ namespace VirtualClient
             return option;
         }
 
-        ////private static IEnumerable<string> ParseCleanTargets(ArgumentResult parsedResult)
-        ////{
-        ////    CleanTargets targets = null;
-
-        ////    bool cleanLogs = false;
-        ////    bool cleanPackages = false;
-        ////    bool cleanState = false;
-
-        ////    IList<string> commandLineTargets = OptionFactory.ParseDelimitedValues(parsedResult);
-
-        ////    if (!commandLineTargets.Any() || commandLineTargets.Contains("all", StringComparer.OrdinalIgnoreCase))
-        ////    {
-        ////        cleanLogs = true;
-        ////        cleanPackages = true;
-        ////        cleanState = true;
-        ////    }
-        ////    else
-        ////    {
-        ////        cleanLogs = commandLineTargets.Contains("logs", StringComparer.OrdinalIgnoreCase);
-        ////        cleanPackages = commandLineTargets.Contains("packages", StringComparer.OrdinalIgnoreCase);
-        ////        cleanState = commandLineTargets.Contains("state", StringComparer.OrdinalIgnoreCase);
-        ////    }
-
-        ////    if (cleanLogs || cleanPackages || cleanState)
-        ////    {
-        ////        targets = new CleanTargets(cleanLogs, cleanPackages, cleanState);
-        ////    }
-
-        ////    // return targets;
-        ////    return null;
-        ////}
-
         private static IList<string> ParseDelimitedValues(string parsedResult)
         {
             // Example Format:
@@ -979,18 +962,19 @@ namespace VirtualClient
             {
                 if (!string.IsNullOrWhiteSpace(token.Value))
                 {
-                    delimitedValues.AddRange(TextParsingExtensions.ParseVcDelimiteredParameters(token.Value));
+                    delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(token.Value));
                 }
             }
 
             return delimitedValues;
         }
 
-        private static DependencyStore ParseDependencyStore(ArgumentResult parsedResult, string storeName, IFileSystem fileSystem, string optionName)
+        private static DependencyStore ParseDependencyStore(ArgumentResult parsedResult, string storeName, IFileSystem fileSystem, ICertificateManager certificateManager, string optionName)
         {
             string argument = parsedResult.Tokens.First().Value;
 
             DependencyStore store = null;
+
             if (OptionFactory.IsBlobConnectionToken(argument))
             {
                 store = new DependencyBlobStore(storeName, argument);
@@ -1001,50 +985,86 @@ namespace VirtualClient
             }
             else
             {
-                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
-                TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
-                if (tokenCredential!= null)
+                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseDelimitedValues(argument);
+                TokenCredential tokenCredential = OptionFactory.GetTokenCredentialAsync(parameters, certificateManager)
+                    .GetAwaiter().GetResult();
+
+                if (tokenCredential != null
+                    && parameters.TryGetValue("EndpointUrl", out IConvertible endpointUrl)
+                    && !string.IsNullOrWhiteSpace(endpointUrl?.ToString()))
                 {
-                    string endpointUrl = parameters.GetValue<string>("EndpointUrl", "https://virtualclient.blob.core.windows.net/packages");
-                    store = new DependencyBlobStore(storeName, endpointUrl, tokenCredential);
+                    store = new DependencyBlobStore(storeName, endpointUrl.ToString(), tokenCredential);
                 }
-                else
-                {
-                    throw new ArgumentException(
-                    $"The value provided for the '{optionName}' option is not a valid. The value provided for a dependency store must be a " +
-                    $"valid storage account blob connection string, SAS URI or a directory path that exists on the system." +
-                    $"Or a delimitered parameter list that describes authentication using certificate or managed identity.");
-                }
+            }
+
+            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
+            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
+            if (store == null)
+            {
+                throw new ArgumentException(
+                    $"The value provided for the {optionName} option is not valid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
+                    $"2) A Microsoft Entra identifier/connection string using certificate-based authentication{Environment.NewLine}" +
+                    $"3) A Microsoft Azure Managed Identity identifier/connection string{Environment.NewLine}" +
+                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
             }
 
             return store;
         }
 
-        private static EventHubAuthenticationContext ParseEventHubAuthenticationContext(ArgumentResult parsedResult)
+        private static EventHubAuthenticationContext ParseEventHubAuthenticationContext(ArgumentResult parsedResult, string optionName, ICertificateManager certificateManager)
         {
-            EventHubAuthenticationContext authContext;
-            string argument = parsedResult.Tokens.First().Value;
-            if (argument.TrimStart('\'').TrimStart('\"').StartsWith("Endpoint=", StringComparison.OrdinalIgnoreCase))
+            EventHubAuthenticationContext authContext = null;
+
+            string argument = parsedResult.Tokens.First().Value?.Trim(new char[] { '\'', '\"' });
+
+            if (argument.Contains("Endpoint=", StringComparison.OrdinalIgnoreCase))
             {
-                // This is the older way of supplier connection string directly.
-                // --eventhub=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx
+                // e.g.
+                // --eventhub="Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx"
                 authContext = new EventHubAuthenticationContext(argument);
             }
             else
             {
-                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseVcDelimiteredParameters(argument);
-                if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString))
+                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseDelimitedValues(argument);
+
+                if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString)
+                    && !string.IsNullOrWhiteSpace(connectionString?.ToString()))
                 {
-                    // This is the new way of supplying connection string with declaration.
-                    // --eventhub=ConnectionString=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx
-                    authContext = new EventHubAuthenticationContext((string)connectionString);
+                    // e.g.
+                    // --eventhub="ConnectionString=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx"
+                    authContext = new EventHubAuthenticationContext(connectionString.ToString());
                 }
-                else
+                else if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.EventHubNamespace), out IConvertible eventHubNamespace)
+                    && !string.IsNullOrWhiteSpace(eventHubNamespace.ToString()))
                 {
-                    string eventHubNamespace = parameters.GetValue<string>(nameof(EventHubAuthenticationContext.EventHubNamespace));
-                    TokenCredential tokenCredential = OptionFactory.GetTokenCredential(parameters);
-                    authContext = new EventHubAuthenticationContext(eventHubNamespace, tokenCredential);
+                    // e.g.
+                    // --eventhub="CertificateIssuer=ABC;CertificateSubject=any.service.azure.com;ClientId=..."
+                    TokenCredential tokenCredential = OptionFactory.GetTokenCredentialAsync(parameters, certificateManager)
+                        .GetAwaiter().GetResult();
+
+                    if (tokenCredential != null)
+                    {
+                        authContext = new EventHubAuthenticationContext(eventHubNamespace.ToString(), tokenCredential);
+                    }
                 }
+            }
+
+            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
+            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
+            if (authContext == null)
+            {
+                throw new ArgumentException(
+                    $"The value provided for the {optionName} option is not valid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A Microsoft Entra identifier/connection string using certificate-based authentication{Environment.NewLine}" +
+                    $"3) A Microsoft Azure Managed Identity identifier/connection string{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
             }
 
             return authContext;
@@ -1213,9 +1233,9 @@ namespace VirtualClient
             }
         }
 
-        private static TokenCredential GetTokenCredential(IDictionary<string, IConvertible> parameters)
+        private static async Task<TokenCredential> GetTokenCredentialAsync(IDictionary<string, IConvertible> parameters, ICertificateManager certificateManager)
         {
-            TokenCredential credential;
+            TokenCredential credential = null;
 
             if (parameters.TryGetValue("ManagedIdentityId", out IConvertible managedIdentityId))
             {
@@ -1223,33 +1243,41 @@ namespace VirtualClient
             }
             else
             {
-                ICertificateManager certManager = OptionFactory.CertificateManager ?? new CertificateManager();
-                X509Certificate2 certificate;
+                X509Certificate2 certificate = null;
 
+                string certIssuer = parameters.GetValue<string>("CertificateIssuer", string.Empty);
                 string certSubject = parameters.GetValue<string>("CertificateSubject", string.Empty);
                 string certThumbprint = parameters.GetValue<string>("CertificateThumbprint", string.Empty);
-                string issuer = parameters.GetValue<string>("CertificateIssuer", string.Empty);
                 string clientId = parameters.GetValue<string>("ClientId", string.Empty);
                 string tenantId = parameters.GetValue<string>("TenantId", string.Empty);
 
-                // Using thumbprint if provided.
-                if (!string.IsNullOrEmpty(certThumbprint))
+                if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(tenantId))
                 {
-                    // Get the certificate from the store
-                    certificate = certManager.GetCertificateFromStoreAsync(certThumbprint).GetAwaiter().GetResult();
-                    credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+                    // Always search CurrentUser/My store first.
+                    StoreName storeName = StoreName.My;
+                    List<StoreLocation> storeLocations = new List<StoreLocation>
+                    {
+                        StoreLocation.CurrentUser
+                    };
+
+                    if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                    {
+                        // There is no local machine store on Unix/Linux systems. This store is available on
+                        // Windows only.
+                        storeLocations.Add(StoreLocation.LocalMachine);
+                    }
+
+                    if (!string.IsNullOrEmpty(certThumbprint))
+                    {
+                        certificate = await certificateManager.GetCertificateFromStoreAsync(certThumbprint, storeLocations, storeName);
+                        credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+                    }
+                    else if (!string.IsNullOrEmpty(certIssuer) && !string.IsNullOrEmpty(certSubject))
+                    {
+                        certificate = await certificateManager.GetCertificateFromStoreAsync(certIssuer, certSubject, storeLocations, storeName);
+                        credential = new ClientCertificateCredential(tenantId, clientId, certificate);
+                    }
                 }
-                else if (!string.IsNullOrEmpty(issuer) && !string.IsNullOrEmpty(certSubject))
-                {
-                    // Get the certificate from the store
-                    certificate = certManager.GetCertificateFromStoreAsync(issuer, certSubject).GetAwaiter().GetResult();
-                    credential = new ClientCertificateCredential(tenantId, clientId, certificate);
-                }
-                else
-                {
-                    // Assign null for the credential. Caller method should throw ArgumentException if needed.
-                    credential = null;
-                }              
             }
             
             return credential;
