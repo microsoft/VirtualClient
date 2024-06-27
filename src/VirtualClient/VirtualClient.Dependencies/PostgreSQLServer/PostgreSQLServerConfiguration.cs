@@ -11,18 +11,14 @@ namespace VirtualClient.Dependencies
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
-    using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Dependencies.MySqlServer;
-    using static VirtualClient.Dependencies.MySqlServer.MySQLServerConfiguration;
 
     /// <summary>
     /// Provides functionality for configuring PostgreSQL Server.
@@ -145,7 +141,7 @@ namespace VirtualClient.Dependencies
         {
             ProcessManager manager = this.SystemManager.ProcessManager;
             string stateId = $"{nameof(PostgreSQLServerConfiguration)}-{this.Action}-action-success";
-            ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>($"{nameof(ConfigurationState)}", cancellationToken)
+            ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
 
             DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
@@ -166,6 +162,10 @@ namespace VirtualClient.Dependencies
                             await this.ConfigurePostgreSQLServerAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
+                        case ConfigurationAction.SetupDatabase:
+                            await this.SetupPostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+                            break;
                         case ConfigurationAction.DistributeDatabase:
                             await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
@@ -181,7 +181,26 @@ namespace VirtualClient.Dependencies
         {
             string serverIp = this.GetServerIpAddress();
 
-            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port} --sharedMemoryBuffer {this.SharedMemoryBuffer} --serverIp {serverIp}";
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer}";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+               "python3",
+               arguments,
+               this.packageDirectory,
+               telemetryContext,
+               cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+                }
+            }
+        }
+
+        private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
@@ -202,7 +221,7 @@ namespace VirtualClient.Dependencies
         {
             string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
 
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories {innoDbDirs} --password {this.SuperUserPassword}";
+            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\" --password {this.SuperUserPassword}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,

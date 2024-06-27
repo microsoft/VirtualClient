@@ -8,6 +8,7 @@
     },
     "Parameters": {
         "DatabaseName": "hammerdb_tpcc",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Port": "5432",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
         "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
@@ -125,6 +126,7 @@
                 "Scenario": "DistributePostgreSQLDatabase",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "postgresql",
                 "Port": "$.Parameters.Port",
                 "Role": "Server"

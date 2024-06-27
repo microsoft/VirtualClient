@@ -54,7 +54,7 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
-                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+ --serverIp 1.2.3.5",
+                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --serverIp 1.2.3.5 --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+",
             };
 
             int commandNumber = 0;
@@ -164,12 +164,12 @@ namespace VirtualClient.Dependencies
 
             if (platform == PlatformID.Unix)
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName hammerdbtest --directories /dev/sdd1;/dev/sde1;/dev/sdf1; --password [A-Za-z0-9+/=]+";
+                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName hammerdbtest --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\" --password [A-Za-z0-9+/=]+";
             }
             else
             {
                 string tempPackagePath = this.packagePath.Replace(@"\", @"\\");
-                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories D:\\\\;E:\\\\;F:\\\\; --password [A-Za-z0-9+/=]+";
+                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"D:\\\\;E:\\\\;F:\\\\;\" --password [A-Za-z0-9+/=]+";
             }
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

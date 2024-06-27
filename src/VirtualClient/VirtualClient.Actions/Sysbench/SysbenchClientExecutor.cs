@@ -191,8 +191,8 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --serverType {this.ServerType} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string command = "python3";
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
@@ -220,8 +220,8 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --serverType {this.ServerType} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string command = "python3";
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";

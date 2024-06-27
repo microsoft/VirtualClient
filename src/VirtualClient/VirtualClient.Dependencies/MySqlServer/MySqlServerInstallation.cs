@@ -71,7 +71,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         {
             ProcessManager manager = this.SystemManager.ProcessManager;
             string stateId = $"{nameof(MySQLServerInstallation)}-{this.Action}-action-success";
-            InstallationState installationState = await this.stateManager.GetStateAsync<InstallationState>($"{nameof(InstallationState)}", cancellationToken)
+            InstallationState installationState = await this.stateManager.GetStateAsync<InstallationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
 
             DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
