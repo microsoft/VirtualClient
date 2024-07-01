@@ -334,7 +334,7 @@ namespace VirtualClient.Dependencies
             List<string> commands = new List<string>()
             {
                 $"wget {this.LinuxLocalRunFile}",
-                $"sh {runFileName} --silent"
+                $"sh {runFileName} --silent --toolkit"
             };
 
             switch (linuxDistribution)
@@ -343,7 +343,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                     commands.Add("apt update");
                     commands.Add("apt upgrade -y");
-                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion} nvidia-dkms-{this.LinuxDriverVersion} -y");
+                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion}-server nvidia-dkms-{this.LinuxDriverVersion}-server -y");
                     commands.Add($"apt install cuda-drivers-fabricmanager-{this.LinuxDriverVersion} -y");
 
                     break;
