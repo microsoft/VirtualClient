@@ -131,12 +131,14 @@ namespace VirtualClient.Actions
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            string preferences;
+            // If we are executing Geekbench6 (vs. Geekbench5), there is a requirement to unlock the license
+            // using a license file that is present only in Geekbench6.
+            string preferencesFilePath = this.Combine(workloadPackage.Path, "Geekbench_6.preferences");
 
-            if (this.PackageName == "geekbench6")
+            if (this.fileSystem.File.Exists(preferencesFilePath))
             {
-                string preferencesPath = Path.Combine(workloadPackage.Path, "Geekbench_6.preferences");
-                using (StreamReader sr = new StreamReader(preferencesPath))
+                string preferences = null;
+                using (StreamReader sr = new StreamReader(preferencesFilePath))
                 {
                     // Read the first line from the file
                     preferences = await sr.ReadLineAsync();
@@ -144,6 +146,13 @@ namespace VirtualClient.Actions
 
                 string licenseKey = Regex.Match(preferences, TextParsingExtensions.GUIDRegex).Groups[0].Value;
                 string email = Regex.Match(preferences, TextParsingExtensions.EmailRegex).Groups[0].Value;
+
+                if (string.IsNullOrWhiteSpace(preferences))
+                {
+                    throw new DependencyException(
+                        $"Invalid Geekbench6 licensing file. The licence file at the path '{preferencesFilePath}' does not have valid licensing information.",
+                        ErrorReason.InvalidOrMissingLicense);
+                }
 
                 try
                 {

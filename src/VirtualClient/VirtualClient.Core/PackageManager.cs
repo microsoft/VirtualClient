@@ -9,6 +9,7 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.IO.Compression;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
@@ -38,12 +39,6 @@ namespace VirtualClient
         public const string BuiltInSystemToolsPackageName = "systemtools";
 
         /// <summary>
-        /// The environment variable that can be used by the user to define the location of
-        /// VC packages.
-        /// </summary>
-        public const string UserDefinedPackageLocationVariable = "VCDependenciesPath";
-
-        /// <summary>
         /// Custom extension used for Virtual Client package descriptions.
         /// </summary>
         public const string VCPkgExtension = ".vcpkg";
@@ -62,6 +57,8 @@ namespace VirtualClient
             { ".tar.gzip", ArchiveType.Tgz },
             { ".tar", ArchiveType.Tar }
         };
+
+        private static Regex profileExtensionExpression = new Regex(@"\.json|\.yml|\.yaml", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private Semaphore semaphore;
         private bool disposed;
@@ -186,21 +183,9 @@ namespace VirtualClient
         /// Performs extensions package discovery on the system.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public Task<IEnumerable<DependencyPath>> DiscoverExtensionsAsync(CancellationToken cancellationToken)
+        public Task<PlatformExtensions> DiscoverExtensionsAsync(CancellationToken cancellationToken)
         {
-            List<string> packageDirectories = new List<string>
-            {
-                this.PlatformSpecifics.PackagesDirectory
-            };
-
-            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariable(PackageManager.UserDefinedPackageLocationVariable);
-            if (!string.IsNullOrWhiteSpace(userDefinedPath))
-            {
-                packageDirectories.Add(userDefinedPath);
-            }
-
-            EventContext telemetryContext = EventContext.Persisted()
-                .AddContext("packageDirectories", packageDirectories);
+            EventContext telemetryContext = EventContext.Persisted();
 
             return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.DiscoverExtensions", LogLevel.Trace, telemetryContext, async () =>
             {
@@ -208,44 +193,145 @@ namespace VirtualClient
 
                 try
                 {
-                    Dictionary<string, DependencyPath> discoveredPackages = new Dictionary<string, DependencyPath>(StringComparer.OrdinalIgnoreCase);
+                    List<IFileInfo> profileExtensions = new List<IFileInfo>();
+                    List<IFileInfo> binaryExtensions = new List<IFileInfo>();
 
-                    // 1) User-defined packages are highest priority.
-                    if (!string.IsNullOrWhiteSpace(userDefinedPath))
+                    // User-defined binaries locations. Similar to PATH environment variable, multiple directories can be
+                    // defined separated by a semi-colon.
+                    string userDefinedBinaryLocations = this.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_LIBRARY_PATH);
+
+                    // User-defined packages locations. Similar to PATH environment variable, multiple directories can be
+                    // defined separated by a semi-colon.
+                    string userDefinedPackageLocations = this.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH);
+
+                    List<string> binaryDirectories = new List<string>();
+                    List<string> profileDirectories = new List<string>();
+                    List<DependencyPath> extensionsPackages = new List<DependencyPath>();
+
+                    // 1) Default package locations.
+                    IEnumerable<DependencyPath> defaultExtensionsPackages = await this.DiscoverPackagesAsync(
+                        this.PlatformSpecifics.PackagesDirectory,
+                        cancellationToken,
+                        extensionsOnly: true);
+
+                    if (defaultExtensionsPackages?.Any() == true)
                     {
-                        IEnumerable<DependencyPath> userDefinedPackages = await this.DiscoverPackagesAsync(
-                            userDefinedPath,
-                            cancellationToken,
-                            extensionsOnly: true).ConfigureAwait(false);
+                        extensionsPackages.AddRange(defaultExtensionsPackages);
+                    }
 
-                        if (userDefinedPackages?.Any() == true)
+                    // 2) User-defined package locations. Packages can contain extensions assemblies/.dlls 
+                    //    as well as profiles.
+                    if (!string.IsNullOrWhiteSpace(userDefinedPackageLocations))
+                    {
+                        string[] packageDirectories = userDefinedPackageLocations.Split(
+                            VirtualClientComponent.CommonDelimiters,
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                        telemetryContext.AddContext("userDefinedPackagePaths", packageDirectories);
+
+                        foreach (string directory in packageDirectories)
                         {
-                            userDefinedPackages.ToList().ForEach(pkg => discoveredPackages.Add(pkg.Name, pkg));
+                            IEnumerable<DependencyPath> userDefinedExtensionsPackages = await this.DiscoverPackagesAsync(
+                                directory,
+                                cancellationToken,
+                                extensionsOnly: true);
+
+                            if (userDefinedExtensionsPackages?.Any() == true)
+                            {
+                                extensionsPackages.AddRange(userDefinedExtensionsPackages);
+                            }
                         }
                     }
 
-                    IEnumerable<DependencyPath> defaultLocationPackages = await this.DiscoverPackagesAsync(
-                        this.PlatformSpecifics.PackagesDirectory,
-                        cancellationToken,
-                        extensionsOnly: true).ConfigureAwait(false);
-
-                    // 2) Packages defined in the default location are second priority.
-                    if (defaultLocationPackages?.Any() == true)
+                    // 3) User-defined binary locations.
+                    if (!string.IsNullOrWhiteSpace(userDefinedBinaryLocations))
                     {
-                        defaultLocationPackages.ToList().ForEach(pkg =>
-                        {
-                            if (!discoveredPackages.ContainsKey(pkg.Name))
-                            {
-                                discoveredPackages.Add(pkg.Name, pkg);
-                            }
-                        });
+                        string[] userDefinedBinaries = userDefinedBinaryLocations
+                            .Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                        binaryDirectories.AddRange(userDefinedBinaries);
+                        telemetryContext.AddContext("userDefinedBinaryPaths", userDefinedBinaries);
                     }
 
-                    telemetryContext.AddContext(
-                        "packagesFound",
-                        discoveredPackages.Any() ? discoveredPackages.Keys.OrderBy(k => k) : null);
+                    // 4) Discover binaries/.dlls and profiles in the extensions packages.
+                    if (extensionsPackages?.Any() == true)
+                    {
+                        foreach (DependencyPath extensionsPackage in extensionsPackages)
+                        {
+                            DependencyPath platformSpecificExtensions = this.PlatformSpecifics.ToPlatformSpecificPath(extensionsPackage, this.PlatformSpecifics.Platform, this.PlatformSpecifics.CpuArchitecture);
 
-                    return discoveredPackages.Values.ToList() as IEnumerable<DependencyPath>;
+                            string binaryExtensionsPath = platformSpecificExtensions.Path;
+                            if (this.FileSystem.Directory.Exists(binaryExtensionsPath))
+                            {
+                                binaryDirectories.Add(binaryExtensionsPath);
+
+                                string profileExtensionsPath = this.PlatformSpecifics.Combine(platformSpecificExtensions.Path, "profiles");
+                                if (this.FileSystem.Directory.Exists(profileExtensionsPath))
+                                {
+                                    profileDirectories.Add(profileExtensionsPath);
+                                }
+                            }
+                        }
+                    }
+
+                    // 5) Combined extensions binaries (default + user-defined).
+                    if (binaryDirectories.Any())
+                    {
+                        foreach (string directory in binaryDirectories)
+                        {
+                            IEnumerable<string> extensionsAssemblies = this.FileSystem.Directory.EnumerateFiles(directory, "*.dll", SearchOption.TopDirectoryOnly);
+                            if (extensionsAssemblies?.Any() == true)
+                            {
+                                foreach (string filePath in extensionsAssemblies)
+                                {
+                                    binaryExtensions.Add(this.FileSystem.FileInfo.New(filePath));
+                                }
+                            }
+                        }
+                    }
+
+                    // 6) Combined extensions profiles (default + user-defined).
+                    if (profileDirectories.Any())
+                    {
+                        foreach (string directory in profileDirectories)
+                        {
+                            IEnumerable<string> extensionsProfiles = this.FileSystem.Directory.EnumerateFiles(directory, "*.*", SearchOption.TopDirectoryOnly)
+                                .Where(file => PackageManager.profileExtensionExpression.IsMatch(file));
+
+                            if (extensionsProfiles?.Any() == true)
+                            {
+                                foreach (string filePath in extensionsProfiles)
+                                {
+                                    profileExtensions.Add(this.FileSystem.FileInfo.New(filePath));
+                                }
+                            }
+                        }
+                    }
+
+                    telemetryContext.AddContext("binaryExtensionsFound", binaryExtensions.Any() ? binaryExtensions.Select(ext => ext.FullName) : null);
+                    telemetryContext.AddContext("profileExtensionsFound", profileExtensions.Any() ? profileExtensions.Select(ext => ext.FullName) : null);
+
+                    // Validate we do not have duplicate binaries defined.
+                    var duplicateBinaries = binaryExtensions.GroupBy(file => file.Name).Where(group => group.Count() > 1);
+                    if (duplicateBinaries?.Any() == true)
+                    {
+                        throw new DependencyException(
+                            $"Duplicate extensions binaries discovered. Extensions binaries must have unique names in relation to other binaries. The following binaries are " +
+                            $"duplicated: {string.Join(", ", duplicateBinaries.Select(g => g.Key))}",
+                            ErrorReason.DuplicateExtensionsFound);
+                    }
+
+                    // Validate we do not have duplicate profiles defined.
+                    var duplicateProfiles = profileExtensions.GroupBy(file => file.Name).Where(group => group.Count() > 1);
+                    if (duplicateProfiles?.Any() == true)
+                    {
+                        throw new DependencyException(
+                            $"Duplicate extensions profiles discovered. Extensions profiles must have unique names in relation to other profiles. The following profiles are " +
+                            $"duplicated: {string.Join(", ", duplicateProfiles.Select(g => g.Key))}",
+                            ErrorReason.DuplicateExtensionsFound);
+                    }
+
+                    return new PlatformExtensions(binaryExtensions, profileExtensions);
                 }
                 finally
                 {
@@ -260,17 +346,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         public Task<IEnumerable<DependencyPath>> DiscoverPackagesAsync(CancellationToken cancellationToken)
         {
-            List<string> packageDirectories = new List<string>();
-            packageDirectories.Add(this.PlatformSpecifics.PackagesDirectory);
-
-            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariable(PackageManager.UserDefinedPackageLocationVariable);
-            if (!string.IsNullOrWhiteSpace(userDefinedPath))
-            {
-                packageDirectories.Add(userDefinedPath);
-            }
-
-            EventContext telemetryContext = EventContext.Persisted()
-                .AddContext("packageDirectories", packageDirectories);
+            EventContext telemetryContext = EventContext.Persisted();
 
             return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.DiscoverPackages", LogLevel.Trace, telemetryContext, async () =>
             {
@@ -278,40 +354,51 @@ namespace VirtualClient
 
                 try
                 {
-                    Dictionary<string, DependencyPath> discoveredPackages = new Dictionary<string, DependencyPath>(StringComparer.OrdinalIgnoreCase);
+                    List<DependencyPath> discoveredPackages = new List<DependencyPath>();
 
-                    // 1) User-defined packages are highest priority.
-                    if (!string.IsNullOrWhiteSpace(userDefinedPath))
+                    // 1) Packages defined in the default location.
+                    IEnumerable<DependencyPath> defaultLocationPackages = await this.DiscoverPackagesAsync(this.PlatformSpecifics.PackagesDirectory, cancellationToken);
+
+                    if (defaultLocationPackages?.Any() == true)
                     {
-                        IEnumerable<DependencyPath> userDefinedPackages = await this.DiscoverPackagesAsync(userDefinedPath, cancellationToken)
-                            .ConfigureAwait(false);
+                        defaultLocationPackages.ToList().ForEach(pkg => discoveredPackages.Add(pkg));
+                    }
 
-                        if (userDefinedPackages?.Any() == true)
+                    // 2) User-defined packages
+                    string userDefinedPackageLocations = this.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH);
+
+                    if (!string.IsNullOrWhiteSpace(userDefinedPackageLocations))
+                    {
+                        string[] packageDirectories = userDefinedPackageLocations.Split(
+                            VirtualClientComponent.CommonDelimiters,
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                        telemetryContext.AddContext("userDefinedPackagePaths", packageDirectories);
+
+                        foreach (string packageDirectory in packageDirectories)
                         {
-                            userDefinedPackages.ToList().ForEach(pkg => discoveredPackages.Add(pkg.Name, pkg));
+                            IEnumerable<DependencyPath> userDefinedPackages = await this.DiscoverPackagesAsync(userDefinedPackageLocations, cancellationToken);
+
+                            if (userDefinedPackages?.Any() == true)
+                            {
+                                userDefinedPackages.ToList().ForEach(pkg => discoveredPackages.Add(pkg));
+                            }
                         }
                     }
 
-                    IEnumerable<DependencyPath> defaultLocationPackages = await this.DiscoverPackagesAsync(this.PlatformSpecifics.PackagesDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                    telemetryContext.AddContext("packagesFound", discoveredPackages.Any() ? discoveredPackages.Select(pkg => pkg.Path).OrderBy(p => p) : null);
 
-                    // 2) Packages defined in the default location are second priority.
-                    if (defaultLocationPackages?.Any() == true)
+                    // Validate we do not have duplicate binaries defined.
+                    var duplicatePackages = discoveredPackages.GroupBy(pkg => pkg.Name).Where(group => group.Count() > 1);
+                    if (duplicatePackages?.Any() == true)
                     {
-                        defaultLocationPackages.ToList().ForEach(pkg =>
-                        {
-                            if (!discoveredPackages.ContainsKey(pkg.Name))
-                            {
-                                discoveredPackages.Add(pkg.Name, pkg);
-                            }
-                        });
+                        throw new DependencyException(
+                            $"Duplicate packages discovered. Packages must have unique names in relation to other packages. The following packages have " +
+                            $"duplicates: {string.Join(", ", duplicatePackages.Select(g => g.Key))}",
+                            ErrorReason.DuplicatePackagesFound);
                     }
 
-                    telemetryContext.AddContext(
-                        "packagesFound",
-                        discoveredPackages.Any() ? discoveredPackages.Keys.OrderBy(k => k) : null);
-
-                    return discoveredPackages.Values.ToList() as IEnumerable<DependencyPath>;
+                    return discoveredPackages as IEnumerable<DependencyPath>;
                 }
                 finally
                 {
@@ -401,13 +488,16 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         public Task InitializePackagesAsync(CancellationToken cancellationToken)
         {
-            List<string> packageDirectories = new List<string>();
-            packageDirectories.Add(this.PlatformSpecifics.PackagesDirectory);
+            List<string> packageDirectories = new List<string> { this.PlatformSpecifics.PackagesDirectory };
 
-            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariable(PackageManager.UserDefinedPackageLocationVariable);
-            if (!string.IsNullOrWhiteSpace(userDefinedPath))
+            string userDefinedPackageLocations = this.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH);
+            if (!string.IsNullOrWhiteSpace(userDefinedPackageLocations))
             {
-                packageDirectories.Add(userDefinedPath);
+                string[] userDefinedDirectories = userDefinedPackageLocations.Split(
+                    VirtualClientComponent.CommonDelimiters,
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                packageDirectories.Add(userDefinedPackageLocations);
             }
 
             EventContext telemetryContext = EventContext.Persisted()
@@ -467,21 +557,18 @@ namespace VirtualClient
                         {
                             try
                             {
-                                await this.ExtractArchiveAsync(archiveFile, extractToDirectory, archiveType, cancellationToken)
-                                    .ConfigureAwait(false);
+                                await this.ExtractArchiveAsync(archiveFile, extractToDirectory, archiveType, cancellationToken);
                             }
                             catch (InvalidDataException)
                             {
                                 // This can happen if there is an invalid .zip file in the directory...perhaps the download failed
                                 // on the previous attempt. When this happens, the .zip file itself will have a corrupted file pointer.
                                 // For these scenarios, we will simply delete the file and move forward.
-                                await RetryPolicies.FileDelete.ExecuteAsync(() =>
-                                {
-                                    this.FileSystem.File.Delete(archiveFile);
-                                    return Task.CompletedTask;
-                                }).ConfigureAwait(false);
+                                await RetryPolicies.FileDelete.ExecuteAsync(async () => await this.FileSystem.File.DeleteAsync(archiveFile));
                             }
                         }
+
+                        await RetryPolicies.FileDelete.ExecuteAsync(async () => await this.FileSystem.File.DeleteAsync(archiveFile));
                     }
                 }
             });
@@ -616,80 +703,80 @@ namespace VirtualClient
             });
         }
 
-        /// <summary>
-        /// Installs extensions to the runtime platform.
-        /// </summary>
-        /// <param name="package">Describes the extensions package to install.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        public virtual Task InstallExtensionsAsync(DependencyPath package, CancellationToken cancellationToken)
-        {
-            package.ThrowIfNull(nameof(package));
+        /////// <summary>
+        /////// Installs extensions to the runtime platform.
+        /////// </summary>
+        /////// <param name="package">Describes the extensions package to install.</param>
+        /////// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        ////public virtual Task LoadExtensionsAsync(DependencyPath package, CancellationToken cancellationToken)
+        ////{
+        ////    package.ThrowIfNull(nameof(package));
 
-            EventContext telemetryContext = EventContext.Persisted()
-                .AddContext("extensions", package);
+        ////    EventContext telemetryContext = EventContext.Persisted()
+        ////        .AddContext("extensions", package);
 
-            return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InstallExtensions", LogLevel.Trace, telemetryContext, () =>
-            {
-                DependencyPath platformSpecificPackage = this.PlatformSpecifics.ToPlatformSpecificPath(
-                    package,
-                    this.PlatformSpecifics.Platform,
-                    this.PlatformSpecifics.CpuArchitecture);
+        ////    return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.InstallExtensions", LogLevel.Trace, telemetryContext, () =>
+        ////    {
+        ////        DependencyPath platformSpecificPackage = this.PlatformSpecifics.ToPlatformSpecificPath(
+        ////            package,
+        ////            this.PlatformSpecifics.Platform,
+        ////            this.PlatformSpecifics.CpuArchitecture);
 
-                // Install profile extensions first.
-                string profilesPath = this.PlatformSpecifics.GetProfilePath();
-                string profileExtensionsPath = this.PlatformSpecifics.Combine(platformSpecificPackage.Path, "profiles");
+        ////        // Install profile extensions first.
+        ////        string profilesPath = this.PlatformSpecifics.GetProfilePath();
+        ////        string profileExtensionsPath = this.PlatformSpecifics.Combine(platformSpecificPackage.Path, "profiles");
 
-                IEnumerable<string> profileExtensions = this.FileSystem.Directory.EnumerateFiles(profileExtensionsPath, "*.json", SearchOption.TopDirectoryOnly);
+        ////        IEnumerable<string> profileExtensions = this.FileSystem.Directory.EnumerateFiles(profileExtensionsPath, "*.json", SearchOption.TopDirectoryOnly);
 
-                if (profileExtensions?.Any() == true)
-                {
-                    telemetryContext.AddContext(nameof(profileExtensions), profileExtensions);
+        ////        if (profileExtensions?.Any() == true)
+        ////        {
+        ////            telemetryContext.AddContext(nameof(profileExtensions), profileExtensions);
 
-                    List<string> extensionsInstalled = new List<string>();
-                    foreach (string profileExtension in profileExtensions)
-                    {
-                        string profileName = Path.GetFileName(profileExtension);
-                        string targetProfilePath = this.PlatformSpecifics.Combine(profilesPath, profileName);
+        ////            List<string> extensionsInstalled = new List<string>();
+        ////            foreach (string profileExtension in profileExtensions)
+        ////            {
+        ////                string profileName = Path.GetFileName(profileExtension);
+        ////                string targetProfilePath = this.PlatformSpecifics.Combine(profilesPath, profileName);
 
-                        if (this.IsExtensionsFileNewer(targetProfilePath, profileExtension))
-                        {
-                            this.FileSystem.File.Copy(profileExtension, targetProfilePath, overwrite: true);
-                            extensionsInstalled.Add(targetProfilePath);
-                        }
-                    }
+        ////                if (this.IsExtensionsFileNewer(targetProfilePath, profileExtension))
+        ////                {
+        ////                    this.FileSystem.File.Copy(profileExtension, targetProfilePath, overwrite: true);
+        ////                    extensionsInstalled.Add(targetProfilePath);
+        ////                }
+        ////            }
 
-                    telemetryContext.AddContext("profileExtensionsInstalled", extensionsInstalled);
-                }
+        ////            telemetryContext.AddContext("profileExtensionsInstalled", extensionsInstalled);
+        ////        }
 
-                // Install binary extensions next.
-                string binariesPath = this.PlatformSpecifics.CurrentDirectory;
-                string binaryExtensionsPath = platformSpecificPackage.Path;
+        ////        // Install binary extensions next.
+        ////        string binariesPath = this.PlatformSpecifics.CurrentDirectory;
+        ////        string binaryExtensionsPath = platformSpecificPackage.Path;
 
-                IEnumerable<string> binaryExtensions = this.FileSystem.Directory.EnumerateFiles(binaryExtensionsPath, "*.*", SearchOption.TopDirectoryOnly);
+        ////        IEnumerable<string> binaryExtensions = this.FileSystem.Directory.EnumerateFiles(binaryExtensionsPath, "*.*", SearchOption.TopDirectoryOnly);
 
-                if (binaryExtensions?.Any() == true)
-                {
-                    telemetryContext.AddContext(nameof(binaryExtensions), binaryExtensions);
+        ////        if (binaryExtensions?.Any() == true)
+        ////        {
+        ////            telemetryContext.AddContext(nameof(binaryExtensions), binaryExtensions);
 
-                    List<string> extensionsInstalled = new List<string>();
-                    foreach (string binaryExtensionPath in binaryExtensions)
-                    {
-                        string binaryName = Path.GetFileName(binaryExtensionPath);
-                        string targetBinaryPath = this.PlatformSpecifics.Combine(binariesPath, binaryName);
+        ////            List<string> extensionsInstalled = new List<string>();
+        ////            foreach (string binaryExtensionPath in binaryExtensions)
+        ////            {
+        ////                string binaryName = Path.GetFileName(binaryExtensionPath);
+        ////                string targetBinaryPath = this.PlatformSpecifics.Combine(binariesPath, binaryName);
 
-                        if (this.IsExtensionsFileNewer(targetBinaryPath, binaryExtensionPath))
-                        {
-                            this.FileSystem.File.Copy(binaryExtensionPath, targetBinaryPath, overwrite: true);
-                            extensionsInstalled.Add(targetBinaryPath);
-                        }
-                    }
+        ////                if (this.IsExtensionsFileNewer(targetBinaryPath, binaryExtensionPath))
+        ////                {
+        ////                    this.FileSystem.File.Copy(binaryExtensionPath, targetBinaryPath, overwrite: true);
+        ////                    extensionsInstalled.Add(targetBinaryPath);
+        ////                }
+        ////            }
 
-                    telemetryContext.AddContext("binaryExtensionsInstalled", extensionsInstalled);
-                }
+        ////            telemetryContext.AddContext("binaryExtensionsInstalled", extensionsInstalled);
+        ////        }
 
-                return Task.CompletedTask;
-            });
-        }
+        ////        return Task.CompletedTask;
+        ////    });
+        ////}
 
         /// <summary>
         /// Registers/saves the path so that it can be used by dependencies, workloads and monitors. Paths registered

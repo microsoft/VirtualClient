@@ -117,43 +117,134 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseVcDelimeteredParameters()
+        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithTripleCommas()
         {
-            string example = "key1=value1;key2=value2;key3=value3";
-            var result = TextParsingExtensions.ParseVcDelimiteredParameters(example);
+            string example = "key1=value1,,,key2=value2,,,key3=value3";
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
             CollectionAssert.AreEqual(new Dictionary<string, string>
             {
                 { "key1", "value1" },
                 { "key2", "value2" },
                 { "key3", "value3" }
             }, result);
+        }
 
-            string exampleWithSemiColon = "key1=v1a;v1b,v1c;key2=value2;key3=v3a;v3b";
-            result = TextParsingExtensions.ParseVcDelimiteredParameters(exampleWithSemiColon);
+        [Test]
+        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithSemiColons()
+        {
+            string example = "key1=value1;key2=value2;key3=value3";
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
             CollectionAssert.AreEqual(new Dictionary<string, string>
             {
-                { "key1", "v1a;v1b,v1c" },
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", "value3" }
+            }, result);
+        }
+
+        [Test]
+        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithCommas()
+        {
+            string example = "key1=value1,key2=value2,key3=value3";
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", "value3" }
+            }, result);
+        }
+
+        [Test]
+        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsThatHaveValuesContainingDelimiters()
+        {
+            string example = "key1=v1a,v1b,v1c;key2=value2;key3=v3a,v3b";
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "v1a,v1b,v1c" },
+                { "key2", "value2" },
+                { "key3", "v3a,v3b" }
+            }, result);
+
+            example = "key1=v1a,v1b,v1c,,,key2=value2,,,key3=v3a,v3b";
+            result = TextParsingExtensions.ParseDelimitedValues(example);
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "v1a,v1b,v1c" },
+                { "key2", "value2" },
+                { "key3", "v3a,v3b" }
+            }, result);
+
+            example = "key1=v1a;v1b;v1c,,,key2=value2,,,key3=v3a;v3b";
+            result = TextParsingExtensions.ParseDelimitedValues(example);
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "v1a;v1b;v1c" },
                 { "key2", "value2" },
                 { "key3", "v3a;v3b" }
             }, result);
+        }
 
-            string exampleWithEqualSign = "key1=v1a;v1b,v1c,,,key2=value2a=value2b,,,key3=v3a;v3b";
-            result = TextParsingExtensions.ParseVcDelimiteredParameters(exampleWithEqualSign);
+        [Test]
+        public void TextParserExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateThumbprint()
+        {
+            string example =
+                "CertificateThumbprint=a7b126e40c1f80b40c1d8b2e1d27ac47da6a456f;ClientId=924796e9-a608-483f-9a9c-4f96dB865123;" +
+                "TenantId=fd456aa1-af19-48d2-8dbf-caeea9111712;EndpointUrl=https://any.blob.core.windows.net";
+
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
             CollectionAssert.AreEqual(new Dictionary<string, string>
             {
-                { "key1", "v1a;v1b,v1c" },
-                { "key2", "value2a=value2b" },
-                { "key3", "v3a;v3b" }
+                { "CertificateThumbprint", "a7b126e40c1f80b40c1d8b2e1d27ac47da6a456f" },
+                { "ClientId", "924796e9-a608-483f-9a9c-4f96dB865123" },
+                { "TenantId", "fd456aa1-af19-48d2-8dbf-caeea9111712" },
+                { "EndpointUrl", "https://any.blob.core.windows.net"}
             }, result);
+        }
 
-            string complexExample = "key1=v1a;v1b,v1 c;key2=value2;key3=v 3 a;;v3b;key4=v4a;v4b;v4c;;;v4d";
-            result = TextParsingExtensions.ParseVcDelimiteredParameters(complexExample);
+        [Test]
+        public void TextParserExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateIssuerAndSubject()
+        {
+            string example = 
+                "CertificateIssuer=Any Infra CA 01;CertificateSubject=any.service.azure.com;" +
+                "ClientId=924796e9-a608-483f-9a9c-4f96dB865123;TenantId=fd456aa1-af19-48d2-8dbf-caeea9111712;EndpointUrl=https://any.blob.core.windows.net";
+
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
             CollectionAssert.AreEqual(new Dictionary<string, string>
             {
-                { "key1", "v1a;v1b,v1 c" },
-                { "key2", "value2" },
-                { "key3", "v 3 a;;v3b" },
-                { "key4", "v4a;v4b;v4c;;;v4d" }
+                { "CertificateIssuer", "Any Infra CA 01" },
+                { "CertificateSubject", "any.service.azure.com" },
+                { "ClientId", "924796e9-a608-483f-9a9c-4f96dB865123" },
+                { "TenantId", "fd456aa1-af19-48d2-8dbf-caeea9111712" },
+                { "EndpointUrl", "https://any.blob.core.windows.net"}
+            }, result);
+        }
+
+        [Test]
+        public void TextParserExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateIssuerAndSubjectDistinguishedNames()
+        {
+            string example =
+                "CertificateIssuer=CN=Any Infra CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.service.azure.com;" +
+                "ClientId=924796e9-a608-483f-9a9c-4f96dB865123;TenantId=fd456aa1-af19-48d2-8dbf-caeea9111712;EndpointUrl=https://any.blob.core.windows.net";
+
+            var result = TextParsingExtensions.ParseDelimitedValues(example);
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "CertificateIssuer", "CN=Any Infra CA 01, DC=ABC, DC=COM" },
+                { "CertificateSubject", "CN=any.service.azure.com" },
+                { "ClientId", "924796e9-a608-483f-9a9c-4f96dB865123" },
+                { "TenantId", "fd456aa1-af19-48d2-8dbf-caeea9111712" },
+                { "EndpointUrl", "https://any.blob.core.windows.net"}
             }, result);
         }
     }

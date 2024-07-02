@@ -14,7 +14,6 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
@@ -76,11 +75,6 @@ namespace VirtualClient.Contracts
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
-
-            if (VirtualClientRuntime.Metadata?.Any() == true)
-            {
-                this.Metadata.AddRange(VirtualClientRuntime.Metadata, true);
-            }
 
             if (dependencies.TryGetService<ILogger>(out ILogger logger))
             {

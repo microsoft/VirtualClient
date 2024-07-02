@@ -10,6 +10,7 @@ namespace VirtualClient
     using System.CommandLine.Parsing;
     using System.Linq;
     using System.Reflection.Emit;
+    using System.Security;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
@@ -163,6 +164,24 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
+        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages\"")]
+        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
+        public void ContentStoreOptionSupportsCertificateAndManagedIdentities(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         public void ContentStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreateContentStoreOption();
@@ -202,7 +221,7 @@ namespace VirtualClient
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
-            ParseResult result = option.Parse($"{alias}=ConnectionString");
+            ParseResult result = option.Parse($"{alias}=Endpoint=ConnectionString");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -210,7 +229,7 @@ namespace VirtualClient
         [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net")]
         [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net\"")]
         [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net")]
-        public void EventHubOptionSupportsCertificateAndManagedIdentities(string argument)
+        public void EventHubOptionSupportsCertificatesAndManagedIdentities(string argument)
         {
             var mockCertManager = new Mock<ICertificateManager>();
             mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
@@ -219,11 +238,16 @@ namespace VirtualClient
             mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
-            OptionFactory.CertificateManager = mockCertManager.Object;
-
-            Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
+            Option option = OptionFactory.CreateEventHubAuthenticationContextOption(certificateManager: mockCertManager.Object);
             ParseResult result = option.Parse($"--eventhub={argument}");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void EventHubConnectionStringOptionValidatesTheConnectionTokenProvided()
+        {
+            Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"--eventHub=NotAValidValue"));
         }
 
         [Test]
@@ -421,11 +445,46 @@ namespace VirtualClient
         }
 
         [Test]
-        public void MetadataOptionSupportsDelimitedKeyValuePairs()
+        public void MetadataOptionSupportsTripleCommaDelimitedKeyValuePairs()
         {
             Option option = OptionFactory.CreateMetadataOption();
             ParseResult result = option.Parse("--metadata:Key1=Value1,,,Key2=Value2");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void MetadataOptionSupportsSemiColonDelimitedKeyValuePairs()
+        {
+
+            Option option = OptionFactory.CreateMetadataOption();
+            ParseResult result = option.Parse("--metadata=Key1=Value1;Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1;Key2=Value2", result.Tokens[1].Value);
+        }
+
+        [Test]
+        public void MetadataOptionSupportsCommaDelimitedKeyValuePairs()
+        {
+
+            Option option = OptionFactory.CreateMetadataOption();
+            ParseResult result = option.Parse("--metadata=Key1=Value1,Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1,Key2=Value2", result.Tokens[1].Value);
+        }
+
+        [Test]
+        public void MetadataOptionSupportsDelimitedPairsThatHaveValuesContainingDelimiters()
+        {
+            Option option = OptionFactory.CreateMetadataOption();
+            ParseResult result = option.Parse("--metadata=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C", result.Tokens[1].Value);
+
+            result = option.Parse("--metadata=Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C", result.Tokens[1].Value);
         }
 
         [Test]
@@ -484,9 +543,9 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
-        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages\"")]
-        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
+        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages")]
+        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages\"")]
+        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages")]
         public void PackageStoreOptionSupportsCertificateAndManagedIdentities(string argument)
         {
             var mockCertManager = new Mock<ICertificateManager>();
@@ -496,9 +555,7 @@ namespace VirtualClient
             mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
-            OptionFactory.CertificateManager = mockCertManager.Object;
-
-            Option option = OptionFactory.CreatePackageStoreOption();
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
             ParseResult result = option.Parse($"--packages={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
@@ -508,6 +565,30 @@ namespace VirtualClient
         {
             Option option = OptionFactory.CreatePackageStoreOption();
             Assert.Throws<ArgumentException>(() => option.Parse($"--packageStore=NotAValidConnectionStringOrSasTokenUri"));
+        }
+
+        [Test]
+        public void PackageStoreOptionThrowsTheExpectedExceptionWhenTheUserDoesNotHavePermissionsToAccessTheCertificateStore()
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .Throws(() => new CryptographicException($"Permissions to certificate store denied."));
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            Assert.Throws<CryptographicException>(() => option.Parse(
+                $"--packageStore=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
+        }
+
+        [Test]
+        public void PackageStoreOptionThrowsTheExpectedExceptionWhenTheUserDoesNotHavePermissionsToAccessTheCertificatesWithinTheStore()
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .Throws(() => new SecurityException($"Permissions to certificates denied."));
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            Assert.Throws<SecurityException>(() => option.Parse(
+                $"--packageStore=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
         }
 
         [Test]
@@ -521,27 +602,49 @@ namespace VirtualClient
         }
 
         [Test]
-        public void ParametersOptionSupportsThreeCommaDelimitedKeyValuePairs()
+        public void ParametersOptionSupportsTripleCommaDelimitedKeyValuePairs()
         {
             Option option = OptionFactory.CreateParametersOption();
             ParseResult result = option.Parse("--parameters:Key1=Value1,,,Key2=Value2");
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1,,,Key2=Value2", result.Tokens[1].Value);
         }
 
         [Test]
-        public void ParametersOptionSupportsSemicolonDelimitedKeyValuePairs()
+        public void ParametersOptionSupportsSemiColonDelimitedKeyValuePairs()
         {
 
             Option option = OptionFactory.CreateParametersOption();
             ParseResult result = option.Parse("--parameters=Key1=Value1;Key2=Value2");
             Assert.IsFalse(result.Errors.Any());
-
-            // Testing if the option factory supports semicolon delimited key value pairs when the values contains semicolon
-            result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A,V3B;V3C");
-            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1;Key2=Value2", result.Tokens[1].Value);
         }
 
-            [Test]
+        [Test]
+        public void ParametersOptionSupportsCommaDelimitedKeyValuePairs()
+        {
+            Option option = OptionFactory.CreateParametersOption();
+            ParseResult result = option.Parse("--parameters=Key1=Value1,Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1,Key2=Value2", result.Tokens[1].Value);
+        }
+
+        [Test]
+        public void ParametersOptionSupportsDelimitedPairsThatHaveValuesContainingDelimiters()
+        {
+            Option option = OptionFactory.CreateParametersOption();
+            ParseResult result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C", result.Tokens[1].Value);
+
+            result = option.Parse("--parameters=Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C", result.Tokens[1].Value);
+        }
+
+        [Test]
         [TestCase("--profile")]
         [TestCase("--p")]
         public void ProfileOptionSupportsExpectedAliases(string alias)
