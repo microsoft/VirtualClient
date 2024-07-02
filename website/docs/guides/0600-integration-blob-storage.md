@@ -71,7 +71,7 @@ Virtual Client supports the following authentication options for all blob stores
 [Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
 [Account Shared Access Signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN)
 
-  * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)** 
+  * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)**  
     The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Azure storage account resources
     (see the 'Authentication Preliminaries' section above). The following parameters are required:
 
@@ -101,7 +101,7 @@ Virtual Client supports the following authentication options for all blob stores
     --packages="CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
     ```
 
-  * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)** 
+  * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
     The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its issuer and subject name to authenticate with Azure storage account resources
     (see the 'Authentication Preliminaries' section above). The following parameters are required:
 
@@ -146,7 +146,7 @@ Virtual Client supports the following authentication options for all blob stores
     --content="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
     ```
 
-  * **Microsoft Azure Managed Identity** 
+  * **Microsoft Azure Managed Identity**  
     The following section shows how to use a Microsoft Azure managed identity to authenticate with Azure storage account namespace resources.
     The following parameters are required:
 
