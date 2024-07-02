@@ -34,6 +34,8 @@ namespace VirtualClient
             (int)HttpStatusCode.InternalServerError
         };
 
+        private static readonly char[] UriDelimiters = new char[] { '/', '\\' };
+
         private static IAsyncPolicy defaultRetryPolicy = Policy.Handle<RequestFailedException>(error =>
         {
             return error.Status < 400 || BlobManager.RetryableCodes.Contains(error.Status)
@@ -254,44 +256,11 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Downloads the blob to the stream provided.
+        /// Creates the blob container client used to interface with the storage account.
         /// </summary>
-        protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
-        {
-            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
-            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
-            BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
-
-            return blobClient.DownloadToAsync(stream, cancellationToken);
-        }
-
-        /// <summary>
-        /// Uploads the blob from the stream provided.
-        /// </summary>
-        protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
-        {
-            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
-            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
-            BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
-
-            try
-            { 
-                // Container-specific SAS URIs do not allow the client to access container existence, properties or
-                // to create the container. Furthermore, the container MUST already exist in order for this type of
-                // SAS URI to be created from it.
-                await containerClient.CreateIfNotExistsAsync(PublicAccessType.None)
-                    .ConfigureAwait(false);
-            }
-            catch
-            {
-                // Do nothing if identity doesn't have container access.
-            }
-
-            return await blobClient.UploadAsync(stream, uploadOptions, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        private BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
+        /// <param name="descriptor">Provides the blob container details.</param>
+        /// <param name="blobStore">Defines the target storage account information.</param>
+        protected BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
         {
             // [Authentication Options]
             // 1) Storage Account connection string
@@ -328,7 +297,7 @@ namespace VirtualClient
                 if (Uri.TryCreate(blobStore.ConnectionToken, UriKind.Absolute, out Uri sasUri))
                 {
                     Uri containerUri = sasUri;
-                    if (!sasUri.AbsolutePath.Contains(descriptor.ContainerName, StringComparison.OrdinalIgnoreCase))
+                    if (sasUri.AbsolutePath == "/")
                     {
                         // The connection authentication token is a blob service-specific SAS URI.
                         containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
@@ -345,15 +314,66 @@ namespace VirtualClient
             }
             else if (blobStore.TokenCredential != null)
             {
-                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), blobStore.TokenCredential);
+                Uri endpointUrl = new Uri(blobStore.EndpointUrl);
+                if (endpointUrl.AbsolutePath == "/")
+                {
+                    // The storage account URL does is to the blob service vs. a container within. We will need to
+                    // append the container name to the end of the URI.
+                    // 
+                    // e.g.
+                    // https://any.blob.core.windows.net vs. https://any.blob.core.windows.net/packages
+                    endpointUrl = new Uri(endpointUrl, descriptor.ContainerName);
+                }
+
+                containerClient = new BlobContainerClient(endpointUrl, blobStore.TokenCredential);
             }
             else
             {
                 throw new DependencyException(
-                    "Neither sas-url nor token credential was provided to the StorageBlobManager to uploaddownload from Blob storage.", ErrorReason.DependencyDescriptionInvalid);
+                    "Storage account authentication credentials not provided. Credentials are required to be supplied on the command line " +
+                    "in order to download content from a storage account.",
+                    ErrorReason.DependencyDescriptionInvalid);
             }
 
             return containerClient;
+        }
+
+        /// <summary>
+        /// Downloads the blob to the stream provided.
+        /// </summary>
+        protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
+        {
+            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
+            BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
+
+            return blobClient.DownloadToAsync(stream, cancellationToken);
+        }
+
+        /// <summary>
+        /// Uploads the blob from the stream provided.
+        /// </summary>
+        protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
+        {
+            DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
+            BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
+            BlobClient blobClient = containerClient.GetBlobClient(descriptor.Name);
+
+            try
+            { 
+                // Container-specific SAS URIs do not allow the client to access container existence, properties or
+                // to create the container. Furthermore, the container MUST already exist in order for this type of
+                // SAS URI to be created from it.
+                await containerClient.CreateIfNotExistsAsync(PublicAccessType.None)
+                    .ConfigureAwait(false);
+            }
+            catch
+            {
+                // Do nothing if identity doesn't have container access.
+            }
+
+            return await blobClient.UploadAsync(stream, uploadOptions, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private static string GetHttpStatusCodeName(int statusCode)
