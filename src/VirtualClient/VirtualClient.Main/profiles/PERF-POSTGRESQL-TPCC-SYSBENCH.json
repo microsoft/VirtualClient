@@ -27,7 +27,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "tpcc",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -69,7 +69,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.zip",
+                "BlobName": "sysbench-1.0.20.rev1.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -118,7 +118,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "WarehouseCount": 1,
@@ -143,7 +143,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",

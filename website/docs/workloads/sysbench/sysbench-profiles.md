@@ -166,7 +166,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. OLTP)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
   | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
-  | ServerType              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
+  | DatabaseSystem              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
 
@@ -225,7 +225,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. TPCC)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
   | Workload              | Required. Use "tpcc" workload.                                   | N/A          |
-  | ServerType              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
+  | DatabaseSystem              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
 

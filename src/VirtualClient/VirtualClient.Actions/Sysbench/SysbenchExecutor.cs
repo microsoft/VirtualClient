@@ -130,11 +130,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of records per table.
         /// </summary>
-        public string ServerType
+        public string DatabaseSystem
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.ServerType));
+                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.DatabaseSystem));
             }
         }
 
@@ -352,7 +352,7 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
                 string distribution = distributionInfo.LinuxDistribution.ToString();
 
-                string arguments = $"{this.SysbenchPackagePath}/configure-workload-generator.py --distro {distribution} --serverType {this.ServerType} --packagePath {this.SysbenchPackagePath}";
+                string arguments = $"{this.SysbenchPackagePath}/configure-workload-generator.py --distro {distribution} --databaseSystem {this.DatabaseSystem} --packagePath {this.SysbenchPackagePath}";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
                     "python3",

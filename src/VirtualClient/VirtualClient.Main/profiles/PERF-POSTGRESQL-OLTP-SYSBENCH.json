@@ -27,7 +27,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_write",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -41,7 +41,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_only",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -55,7 +55,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_write_only",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -69,7 +69,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_delete",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -83,7 +83,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_insert",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -97,7 +97,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_index",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -111,7 +111,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_update_non_index",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -125,7 +125,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_points",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -139,7 +139,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "select_random_ranges",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -181,7 +181,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.zip",
+                "BlobName": "sysbench-1.0.20.rev1.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -230,7 +230,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "RecordCount": 1,
@@ -255,7 +255,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
-                "ServerType": "PostgreSQL",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
