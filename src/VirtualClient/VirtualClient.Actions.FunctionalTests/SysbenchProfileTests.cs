@@ -474,13 +474,13 @@ namespace VirtualClient.Actions
                             "apt install python3 --yes --quiet",
 
                             $"python3 {this.mySQLPackagePath}/install.py --distro Ubuntu",
-                            $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
+                            $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
                             $"python3 {this.mySQLPackagePath}/setup-database.py --dbName sbtest",
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
 
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1 --threadCount 8 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
+                            $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8",
 
                             $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
@@ -500,13 +500,13 @@ namespace VirtualClient.Actions
                             "apt install python3 --yes --quiet",
 
                             $"python3 {this.mySQLPackagePath}/install.py --distro Ubuntu",
-                            $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
+                            $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
                             $"python3 {this.mySQLPackagePath}/setup-database.py --dbName sbtest",
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
 
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 10 --warehouses 1 --threadCount 8 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\"",
+                            $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --password [A-Za-z0-9+/=]+",
 
                             $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --workload tpcc --threadCount 8 --tableCount 10 --warehouses 100 --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
@@ -563,7 +563,7 @@ namespace VirtualClient.Actions
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
 
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --tableCount 10 --recordCount 1 --threadCount 8 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --password [A-Za-z0-9+/=]+",
 
                             $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
@@ -589,7 +589,7 @@ namespace VirtualClient.Actions
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
 
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --tableCount 10 --warehouses 1 --threadCount 8 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"{currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --password [A-Za-z0-9+/=]+",
 
                             $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --workload tpcc --threadCount 8 --tableCount 10 --warehouses 100 --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
