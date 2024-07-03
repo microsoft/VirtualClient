@@ -9,13 +9,10 @@ namespace VirtualClient
     using System.CommandLine.Builder;
     using System.CommandLine.Parsing;
     using System.Linq;
-    using System.Reflection.Emit;
     using System.Security;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
-    using System.Text;
     using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
@@ -153,10 +150,7 @@ namespace VirtualClient
         [TestCase("DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net")]
         [TestCase("\"DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net\"")]
         [TestCase("BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z")]
-        [TestCase("https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
-        [TestCase("https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
-        [TestCase("\"https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https\"")]
-        public void ContentStoreOptionSupportsValidConnectionStringsAndSasTokenUris(string connectionToken)
+        public void ContentStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreateContentStoreOption();
             ParseResult result = option.Parse($"--contentStore={connectionToken}");
@@ -164,16 +158,65 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
-        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages\"")]
-        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
-        public void ContentStoreOptionSupportsCertificateAndManagedIdentities(string argument)
+        [TestCase("https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
+        [TestCase("https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
+        [TestCase("\"https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https\"")]
+        public void ContentStoreOptionSupportsValidStorageAccountSasUris(string connectionToken)
+        {
+            Option option = OptionFactory.CreateContentStoreOption();
+            ParseResult result = option.Parse($"--contentStore={connectionToken}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        
+        [TestCase("EndpointUrl=https://anystorage.blob.core.windows.net/packages;ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")]
+        [TestCase("https://anystorage.blob.core.windows.net/packages/?miid=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")]
+        [TestCase("\"https://anystorage.blob.core.windows.net/packages/?miid=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA\"")]
+        public void ContentStoreOptionSupportsManagedIdentities(string argument)
         {
             var mockCertManager = new Mock<ICertificateManager>();
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("EndpointUrl=https://anystorage.blob.core.windows.net/packages;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789")]
+        [TestCase("\"EndpointUrl=https://anystorage.blob.core.windows.net/packages/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=aaa.bbb.com\"")]
+        [TestCase("https://anystorage.blob.core.windows.net/?cid=12345&tid=678912&crtt=123456789")]
+        [TestCase("https://anystorage.blob.core.windows.net/?cid=12345&tid=678912&crti=ABC&crts=aaa.bbb.com")]
+        public void ContentStoreOptionSupportsMicrosoftEntraAppsWithCertificates_1(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("ABC", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("\"EndpointUrl=https://anystorage.blob.core.windows.net/packages/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC CA 01;CertificateSubject=aaa.bbb.com\"")]
+        [TestCase("\"EndpointUrl=https://anystorage.blob.core.windows.net/packages/;ClientId=11223344;TenantId=55667788;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=aaa.bbb.com\"")]
+        [TestCase("\"https://anystorage.blob.core.windows.net/?cid=12345&tid=678912&crti=ABC CA 01&crts=aaa.bbb.com\"")]
+        [TestCase("\"https://anystorage.blob.core.windows.net/?cid=12345&tid=678912&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=aaa.bbb.com\"")]
+        public void ContentStoreOptionSupportsMicrosoftEntraAppsWithCertificates_2(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "aaa.bbb.com" || subject == "CN=aaa.bbb.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);

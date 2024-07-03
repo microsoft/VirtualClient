@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Net.Http;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
@@ -18,7 +19,6 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Polly;
-    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -27,10 +27,6 @@ namespace VirtualClient
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Validation;
     using VirtualClient.Metadata;
-    using YamlDotNet.Core;
-    using YamlDotNet.Serialization.NamingConventions;
-    using YamlDotNet.Serialization;
-    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the

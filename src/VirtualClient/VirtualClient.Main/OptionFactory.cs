@@ -27,6 +27,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
 
     /// <summary>
     /// Provides a factory for the creation of Command Options used by application command line operations.
@@ -193,15 +194,14 @@ namespace VirtualClient
             // are supported.
             Option<DependencyStore> option = new Option<DependencyStore>(
                 new string[] { "--content-store", "--contentStore", "--contentstore", "--content", "--cs" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(
+                new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,
-                    fileSystem ?? OptionFactory.defaultFileSystem,
                     certificateManager ?? OptionFactory.defaultCertificateManager,
-                    "content store")))
+                    fileSystem ?? OptionFactory.defaultFileSystem)))
             {
                 Name = "ContentStore",
-                Description = "Blob store access token for the store to which content/monitoring files will be uploaded.",
+                Description = "An endpoint URI or connection string to the Storage Account to which content logs/files can be uploaded.",
                 ArgumentHelpName = "connectionstring|sas",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -274,15 +274,15 @@ namespace VirtualClient
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
         public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
         {
-            Option<EventHubAuthenticationContext> option = new Option<EventHubAuthenticationContext>(
+            Option<DependencyEventHubStore> option = new Option<DependencyEventHubStore>(
                 new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventHubConnectionString" },
-                new ParseArgument<EventHubAuthenticationContext>(result => OptionFactory.ParseEventHubAuthenticationContext(
+                new ParseArgument<DependencyEventHubStore>(result => OptionFactory.ParseEventHubStore(
                     result,
-                    "Event Hub namespace",
+                    DependencyStore.Telemetry,
                     certificateManager ?? OptionFactory.defaultCertificateManager)))
             {
-                Name = "EventHubAuthenticationContext",
-                Description = "The connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
+                Name = "EventHubStore",
+                Description = "An endpoint URI or connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
                 ArgumentHelpName = "connectionstring",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -640,23 +640,18 @@ namespace VirtualClient
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
         public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, ICertificateManager certificateManager = null)
         {
-            // Note:
-            // We will be adding support for other cloud stores in the future (e.g. AWS, Google). The logic on the command
-            // line will handle this by creating different DependencyStore definitions to represent the various stores that 
-            // are supported.
             Option<DependencyStore> option = new Option<DependencyStore>(
                 new string[] { "--package-store", "--packageStore", "--packagestore", "--packages", "--ps" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseDependencyStore(
+                new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Packages,
-                    fileSystem ?? OptionFactory.defaultFileSystem,
                     certificateManager ?? OptionFactory.defaultCertificateManager,
-                    "package store")))
+                    fileSystem ?? OptionFactory.defaultFileSystem)))
             {
                 Name = "PackageStore",
-                Description = "Blob store access token for the store from which dependency/workload packages can be downloaded and installed.",
+                Description = "An endpoint URI or connection string to the Storage Account from which dependency packages can be downloaded and installed.",
                 ArgumentHelpName = "connectionstring|sas",
-                AllowMultipleArgumentsPerToken = true
+                AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -969,105 +964,119 @@ namespace VirtualClient
             return delimitedValues;
         }
 
-        private static DependencyStore ParseDependencyStore(ArgumentResult parsedResult, string storeName, IFileSystem fileSystem, ICertificateManager certificateManager, string optionName)
+        private static DependencyEventHubStore ParseEventHubStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager)
         {
-            string argument = parsedResult.Tokens.First().Value;
+            DependencyEventHubStore store = null;
+            string argumentValue = parsedResult.Tokens.First().Value?.Trim(new char[] { '\'', '\"' });
 
-            DependencyStore store = null;
-
-            if (OptionFactory.IsBlobConnectionToken(argument))
+            if (EndpointUtility.IsEventHubConnectionString(argumentValue))
             {
-                store = new DependencyBlobStore(storeName, argument);
+                // e.g.
+                // --eventhub="Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx"
+
+                store = new DependencyEventHubStore(storeName, argumentValue);
             }
-            else if (fileSystem.Directory.Exists(Path.GetFullPath(argument)))
+            else if (EndpointUtility.IsCustomConnectionString(argumentValue))
             {
-                store = new DependencyFileStore(storeName, Path.GetFullPath(argument));
-            }
-            else
-            {
-                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseDelimitedValues(argument);
-                TokenCredential tokenCredential = OptionFactory.GetTokenCredentialAsync(parameters, certificateManager)
-                    .GetAwaiter().GetResult();
+                // e.g.
+                // Endpoint=sb://any.servicebus.windows.net;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4
+                // EventHubNamespace=any.servicebus.windows.net;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4
 
-                if (tokenCredential != null
-                    && parameters.TryGetValue("EndpointUrl", out IConvertible endpointUrl)
-                    && !string.IsNullOrWhiteSpace(endpointUrl?.ToString()))
+                IDictionary<string, string> connectionProperties = TextParsingExtensions.ParseDelimitedValues(argumentValue)?.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value?.ToString(),
+                    StringComparer.OrdinalIgnoreCase);
+
+                // We support an 'EventHubNamespace' property in custom connection strings. To ensure consistency downstream,
+                // we define the endpoint to be a proper Event Hub namespace URI.
+                if (connectionProperties.TryGetValue(ConnectionParameter.EventHubNamespace, out string eventHubNamespace))
                 {
-                    store = new DependencyBlobStore(storeName, endpointUrl.ToString(), tokenCredential);
+                    connectionProperties[ConnectionParameter.EndpointUrl] = eventHubNamespace;
+                    if (!eventHubNamespace.Trim().StartsWith("sb://"))
+                    {
+                        connectionProperties[ConnectionParameter.EndpointUrl] = $"sb://{eventHubNamespace}";
+                    }
                 }
+
+                Uri endpointUri = EndpointUtility.ConvertToUri(connectionProperties);
+                store = EndpointUtility.CreateEventHubStoreReference(storeName, endpointUri, certificateManager);
+            }
+            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri) && EndpointUtility.IsCustomUri(endpointUri))
+            {
+                // e.g.
+                // sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789
+
+                store = EndpointUtility.CreateEventHubStoreReference(storeName, endpointUri, certificateManager);
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
+        {
+            DependencyStore store = null;
+            string argumentValue = parsedResult.Tokens.First().Value.Trim(new char[] { '\'', '"', ' ' });
+
+            if (EndpointUtility.IsStorageAccountConnectionString(argumentValue))
+            {
+                // e.g.
+                // DefaultEndpointsProtocol=https;AccountName=anystorage01;AccountKey=...;EndpointSuffix=core.windows.net
+                store = EndpointUtility.CreateBlobStoreReference(storeName, argumentValue);
+            }
+            else if (EndpointUtility.IsCustomConnectionString(argumentValue))
+            {
+                // e.g.
+                // EndpointUrl=anystorage01.blob.core.windows.net;ClientId=307591a4-abb2...;TenantId=985bbc17...
+                IDictionary<string, string> connectionProperties = TextParsingExtensions.ParseDelimitedValues(argumentValue)
+                    ?.ToDictionary(entry => entry.Key, entry => entry.Value?.ToString());
+
+                Uri endpointUri = EndpointUtility.ConvertToUri(connectionProperties);
+                store = EndpointUtility.CreateBlobStoreReference(storeName, endpointUri, certificateManager); 
+            }
+            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri))
+            {
+                // e.g.
+                // SAS URI
+                // https://any.service.azure.com?sv=2022-11-02&ss=b&srt=co&sp=rt&se=2024-07-02T22:26:42Z&st=2024-07-02T14:26:42Z&spr=https
+                // or
+                // Custom URI
+                // https://any.service.azure.com/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-E3A5-4fec-b0cb-40dbb8bc5959&crtt=1753429a8bc4f91d
+                store = EndpointUtility.CreateBlobStoreReference(storeName, endpointUri, certificateManager);
+            }
+            else if (fileSystem.Directory.Exists(Path.GetFullPath(argumentValue)))
+            {
+                store = new DependencyFileStore(storeName, Path.GetFullPath(argumentValue));
             }
 
             // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
             // here would happen if the user provided invalid information that precedes the search for the actual certificate.
             if (store == null)
             {
-                throw new ArgumentException(
-                    $"The value provided for the {optionName} option is not valid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                throw new SchemaException(
+                    $"The value provided for the Storage Account endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
                     $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
-                    $"2) A Microsoft Entra identifier/connection string using certificate-based authentication{Environment.NewLine}" +
-                    $"3) A Microsoft Azure Managed Identity identifier/connection string{Environment.NewLine}" +
-                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
+                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
                     $"See the following documentation for additional details and examples:{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
             }
 
+
             return store;
-        }
-
-        private static EventHubAuthenticationContext ParseEventHubAuthenticationContext(ArgumentResult parsedResult, string optionName, ICertificateManager certificateManager)
-        {
-            EventHubAuthenticationContext authContext = null;
-
-            string argument = parsedResult.Tokens.First().Value?.Trim(new char[] { '\'', '\"' });
-
-            if (argument.Contains("Endpoint=", StringComparison.OrdinalIgnoreCase))
-            {
-                // e.g.
-                // --eventhub="Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx"
-                authContext = new EventHubAuthenticationContext(argument);
-            }
-            else
-            {
-                IDictionary<string, IConvertible> parameters = TextParsingExtensions.ParseDelimitedValues(argument);
-
-                if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.ConnectionString), out IConvertible connectionString)
-                    && !string.IsNullOrWhiteSpace(connectionString?.ToString()))
-                {
-                    // e.g.
-                    // --eventhub="ConnectionString=Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx"
-                    authContext = new EventHubAuthenticationContext(connectionString.ToString());
-                }
-                else if (parameters.TryGetValue(nameof(EventHubAuthenticationContext.EventHubNamespace), out IConvertible eventHubNamespace)
-                    && !string.IsNullOrWhiteSpace(eventHubNamespace.ToString()))
-                {
-                    // e.g.
-                    // --eventhub="CertificateIssuer=ABC;CertificateSubject=any.service.azure.com;ClientId=..."
-                    TokenCredential tokenCredential = OptionFactory.GetTokenCredentialAsync(parameters, certificateManager)
-                        .GetAwaiter().GetResult();
-
-                    if (tokenCredential != null)
-                    {
-                        authContext = new EventHubAuthenticationContext(eventHubNamespace.ToString(), tokenCredential);
-                    }
-                }
-            }
-
-            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
-            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
-            if (authContext == null)
-            {
-                throw new ArgumentException(
-                    $"The value provided for the {optionName} option is not valid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A Microsoft Entra identifier/connection string using certificate-based authentication{Environment.NewLine}" +
-                    $"3) A Microsoft Azure Managed Identity identifier/connection string{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
-            }
-
-            return authContext;
         }
 
         private static TimeSpan ParseTimeSpan(ArgumentResult parsedResult)
@@ -1210,77 +1219,12 @@ namespace VirtualClient
             return option;
         }
 
-        private static bool IsBlobConnectionToken(string value)
-        {
-            bool isConnectionToken = false;
-            if (Uri.TryCreate(value, UriKind.Absolute, out Uri validUri))
-            {
-                isConnectionToken = true;
-            }
-            else if (value.Contains("DefaultEndpointsProtocol", StringComparison.OrdinalIgnoreCase) || value.Contains("BlobEndpoint", StringComparison.OrdinalIgnoreCase))
-            {
-                isConnectionToken = true;
-            }
-
-            return isConnectionToken;
-        }
-
         private static void ThrowIfOptionExists(OptionResult parsedResult, string optionName, string errorMessage)
         {
             if (parsedResult.Parent?.Children?.Any(option => string.Equals(option.Symbol.Name, optionName, StringComparison.OrdinalIgnoreCase)) == true)
             {
                 throw new ArgumentException(errorMessage);
             }
-        }
-
-        private static async Task<TokenCredential> GetTokenCredentialAsync(IDictionary<string, IConvertible> parameters, ICertificateManager certificateManager)
-        {
-            TokenCredential credential = null;
-
-            if (parameters.TryGetValue("ManagedIdentityId", out IConvertible managedIdentityId))
-            {
-                credential = new ManagedIdentityCredential((string)managedIdentityId);
-            }
-            else
-            {
-                X509Certificate2 certificate = null;
-
-                string certIssuer = parameters.GetValue<string>("CertificateIssuer", string.Empty);
-                string certSubject = parameters.GetValue<string>("CertificateSubject", string.Empty);
-                string certThumbprint = parameters.GetValue<string>("CertificateThumbprint", string.Empty);
-                string clientId = parameters.GetValue<string>("ClientId", string.Empty);
-                string tenantId = parameters.GetValue<string>("TenantId", string.Empty);
-
-                if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(tenantId))
-                {
-                    // Always search CurrentUser/My store first.
-                    StoreName storeName = StoreName.My;
-                    List<StoreLocation> storeLocations = new List<StoreLocation>
-                    {
-                        StoreLocation.CurrentUser
-                    };
-
-                    if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                    {
-                        // There is no local machine store on Unix/Linux systems. This store is available on
-                        // Windows only.
-                        storeLocations.Add(StoreLocation.LocalMachine);
-                    }
-
-                    if (!string.IsNullOrEmpty(certThumbprint))
-                    {
-                        certificate = await certificateManager.GetCertificateFromStoreAsync(certThumbprint, storeLocations, storeName);
-                        credential = new ClientCertificateCredential(tenantId, clientId, certificate);
-                    }
-                    else if (!string.IsNullOrEmpty(certIssuer) && !string.IsNullOrEmpty(certSubject))
-                    {
-                        certificate = await certificateManager.GetCertificateFromStoreAsync(certIssuer, certSubject, storeLocations, storeName);
-                        credential = new ClientCertificateCredential(tenantId, clientId, certificate);
-                    }
-                }
-            }
-            
-            return credential;
         }
     }
 }

@@ -66,10 +66,128 @@ describe where Virtual Client/.NET will search to find certificates:
   ```
 
 ## Blob Store Authentication
-Virtual Client supports the following authentication options for all blob stores:
+Virtual Client supports connection string-style as well as URI-style definitions. The the following sections covers authentication options for 
+storage account access.
 
-[Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
-[Account Shared Access Signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN)
+### URI-Style References
+The following documentation illustrates how to use URI-style references for accessing storage accounts.
+
+  * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)**  
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Azure storage account resources
+    (see the 'Authentication Preliminaries' section above). The following URI query string parameters are required:
+
+    * **crtt**  
+      The unique thumbprint (SHA1) of the certificate to use for authentication against the Microsoft Entra ID/App.
+
+    * **cid**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure storage account.
+
+    * **tid**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
+    
+    # Reference full Issuer and Subject
+    --packages="https://anystorageaccount.blob.core.windows.net?crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    ```
+
+  * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its issuer and subject name to authenticate with Azure storage account resources
+    (see the 'Authentication Preliminaries' section above). The following parameters are required:
+
+    * **crti**  
+      The issuer defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=ABC CA Authority 01, DC=ABC, DC=COM).
+
+    * **crts**  
+      The subject name defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=any.domain.com).
+
+    * **cid**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure storage account.
+
+    * **tid**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Issuer    = CN=ABC CA 01, DC=ABC, DC=COM
+    # Certificate Subject   = CN=any.domain.com
+
+    # Reference full Issuer and Subject
+    --packages="https://anystorageaccount.blob.core.windows.net?crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    --content="https://anystorageaccount.blob.core.windows.net?cri=CN=ABC CA 01, DC=ABC, DC=COM&crs=CN=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+
+    # Reference parts of the Issuer and Subject (e.g. COM, ABC, ABC CA 01). Note that the full value of the part (e.g. CN=, DC=)
+    # must be defined. A substring is not valid.
+    --packages="https://anystorageaccount.blob.core.windows.net?crti=COM&crts=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    --packages="https://anystorageaccount.blob.core.windows.net?crti=ABC&crts=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    --packages="https://anystorageaccount.blob.core.windows.net?crti=ABC CA 01&crts=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    ```
+
+  * **Microsoft Azure Managed Identity**  
+    The following section shows how to use a Microsoft Azure managed identity to authenticate with Azure storage account namespace resources.
+    The following parameters are required:
+
+    * **miid**  
+      The client ID of the managed identity to use for authentication against the storage account.
+    
+    ``` bash
+    # Given a Microsoft Azure Managed Identity with the following properties:
+    # Managed Identity Client ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
+
+    --packages="https://anystorageaccount.blob.core.windows.net?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
+    ```
+
+  * **Storage Account Blob Service SAS URI**  
+    This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.
+
+    ``` bash
+    --packages="https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El..."
+    ```
+
+    Use the following recommendations when creating shared access keys in the blob store to ensure the right amount of privileges
+    are granted to the Virtual Client application for uploading and downloading blobs.
+
+    Select the following options when defining shared access signatures at the Blob service level:
+    * Allowed services = Blob
+    * Allowed resource types = Container, Object
+    * Allowed permissions = Read (allow Write and Create permissions if the storage account will be used for log/content uploads)
+    * Allowed protocols = HTTPS only
+
+    ![](./img/blob-service-sas-1.png)
+
+  * **Storage Account Blob Container SAS URI**  
+    This is a SAS URI to a single blob container within the storage account. This is the most restrictive way of providing privileges but is also the most secure because it
+    provides the least amount of access to the application. This is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container 
+    within the blob store.
+
+    * [Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
+    * [Account Shared Access Signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/create-account-sas?redirectedfrom=MSDN)
+
+    ``` bash
+    --packages="https://anystorageaccount.blob.core.windows.net/packages?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH..."
+    ```
+    
+    Select the following options when defining shared access signatures at the Blob container level:
+    * Signing method = Account key
+    * Permissions = Read (allow Write and Create permissions if the storage account will be used for log/content uploads)
+    * Allowed protocols = HTTPS only
+
+    ![](./img/blob-container-sas-1.png)
+
+### Connection String-Style References
+The following documentation illustrates how to use connection string-style references for accessing storage accounts.
 
   * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)**  
     The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Azure storage account resources
@@ -140,10 +258,6 @@ Virtual Client supports the following authentication options for all blob stores
     --packages="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
     --packages="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
     --packages="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
-
-    --content="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
-    --content="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
-    --content="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
     ```
 
   * **Microsoft Azure Managed Identity**  
@@ -163,40 +277,6 @@ Virtual Client supports the following authentication options for all blob stores
 
     --packages="ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6;EndpointUrl=https://yourblobstore.blob.core.windows.net"
     ```
-
-  * **Storage Account Blob Service SAS URI**  
-    This is a SAS URI to the Blob service in the storage account. This provides exactly the same types of privileges as the Blob service-level connection string noted above.
-
-    ``` bash
-    --packages="https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El..."
-    ```
-
-    Use the following recommendations when creating shared access keys in the blob store to ensure the right amount of privileges
-    are granted to the Virtual Client application for uploading and downloading blobs.
-
-    Select the following options when defining shared access signatures at the Blob service level:
-    * Allowed services = Blob
-    * Allowed resource types = Container, Object
-    * Allowed permissions = Read (allow Write and Create permissions if the storage account will be used for log/content uploads)
-    * Allowed protocols = HTTPS only
-
-    ![](./img/blob-service-sas-1.png)
-
-  * **Storage Account Blob Container SAS URI**  
-    This is a SAS URI to a single blob container within the storage account. This is the most restrictive way of providing privileges but is also the most secure because it
-    provides the least amount of access to the application. This is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container 
-    within the blob store.
-
-    ``` bash
-    --packages="https://anystorageaccount.blob.core.windows.net/packages?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH..."
-    ```
-    
-    Select the following options when defining shared access signatures at the Blob container level:
-    * Signing method = Account key
-    * Permissions = Read (allow Write and Create permissions if the storage account will be used for log/content uploads)
-    * Allowed protocols = HTTPS only
-
-    ![](./img/blob-container-sas-1.png)
 
 ## Storage Account Blob Conventions for Content/File Uploads
 In order to ensure that files/content uploaded (e.g. --content usages) are easy to find in the blob stores, Virtual Client supports defining a flexible blob path template. The virtual path 

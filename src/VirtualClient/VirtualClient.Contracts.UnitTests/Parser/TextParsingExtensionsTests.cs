@@ -11,7 +11,7 @@ namespace VirtualClient.Contracts.Parser
 
     [TestFixture]
     [Category("Unit")]
-    public class TextParserExtensionsTests
+    public class TextParsingExtensionsTests
     {
         [Test]
         [TestCase("100kb", "102400")]
@@ -19,7 +19,7 @@ namespace VirtualClient.Contracts.Parser
         [TestCase("1gb", "1073741824")]
         [TestCase("1tb", "1099511627776")]
         [TestCase("1pb", "1125899906842624")]
-        public void TextParserExtensionsTranslateByteUnitAsExpected(string originalText, string expectedOutput)
+        public void TextParsingExtensionsTranslateByteUnitAsExpected(string originalText, string expectedOutput)
         {
             Assert.IsTrue(string.Equals(TextParsingExtensions.TranslateByteUnit(originalText), expectedOutput));
         }
@@ -36,7 +36,7 @@ namespace VirtualClient.Contracts.Parser
         [TestCase("100tb", MetricUnit.Gigabytes, "102400")]
         [TestCase("100pb", MetricUnit.Terabytes, "102400")]
         [TestCase("1tb", MetricUnit.Kilobytes, "1073741824")]
-        public void TextParserExtensionsTranslateStorageByUnitAsExpected(string originalText, string metricUnit, string expectedOutput)
+        public void TextParsingExtensionsTranslateStorageByUnitAsExpected(string originalText, string metricUnit, string expectedOutput)
         {
             Assert.IsTrue(string.Equals(TextParsingExtensions.TranslateStorageByUnit(originalText, metricUnit), expectedOutput));
         }
@@ -44,7 +44,7 @@ namespace VirtualClient.Contracts.Parser
         [Test]
         [TestCase("100k", "100000")]
         [TestCase("100m", "100000000")]
-        public void TextParserExtensionsTranslateNumericUnitAsExpected(string originalText, string expectedOutput)
+        public void TextParsingExtensionsTranslateNumericUnitAsExpected(string originalText, string expectedOutput)
         {
             Assert.IsTrue(string.Equals(TextParsingExtensions.TranslateNumericUnit(originalText), expectedOutput));
         }
@@ -79,7 +79,7 @@ namespace VirtualClient.Contracts.Parser
         [TestCase("1s", "1")]
         [TestCase("1second", "1")]
         [TestCase("2seconds", "2")]
-        public void TextParserExtensionsTranslateTimeUnitToSecondAsExpected(string originalText, string expectedOutput)
+        public void TextParsingExtensionsTranslateTimeUnitToSecondAsExpected(string originalText, string expectedOutput)
         {
             string result = TextParsingExtensions.TranslateToSecondUnit(originalText);
             Assert.AreEqual(result, expectedOutput);
@@ -88,7 +88,7 @@ namespace VirtualClient.Contracts.Parser
         [Test]
         [TestCase(" -2seconds ")]
         [TestCase("-1minute")]
-        public void TextParserExtensionsDoesNotSupportNegativeTime(string originalText)
+        public void TextParsingExtensionsDoesNotSupportNegativeTime(string originalText)
         {
             Assert.Throws<NotSupportedException>(() => 
             {
@@ -111,13 +111,28 @@ namespace VirtualClient.Contracts.Parser
         [TestCase("1000ms", MetricUnit.Seconds, "1")]
         [TestCase("1000000000nanoseconds", MetricUnit.Microseconds, "1000000")]
         [TestCase("1000000.00us", MetricUnit.Seconds, "1")]
-        public void TextParserExtensionsTranslateTimeUnitAsExpected(string originalText, string metricUnit, string expectedOutput)
+        public void TextParsingExtensionsTranslateTimeUnitAsExpected(string originalText, string metricUnit, string expectedOutput)
         {
             Assert.AreEqual(TextParsingExtensions.TranslateTimeByUnit(originalText, metricUnit), expectedOutput);
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithTripleCommas()
+        [TestCase("\"key1=value1,,,key2=value2,,,key3=value3\"")]
+        [TestCase("\'key1=value1,,,key2=value2,,,key3=value3\'")]
+        public void TextParsingExtensionsHandlesQuotationsSurroundingDelimitedStrings(string delimitedString)
+        {
+            var result = TextParsingExtensions.ParseDelimitedValues(delimitedString);
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", "value3" }
+            }, result);
+        }
+
+        [Test]
+        public void TextParsingExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithTripleCommas()
         {
             string example = "key1=value1,,,key2=value2,,,key3=value3";
             var result = TextParsingExtensions.ParseDelimitedValues(example);
@@ -131,7 +146,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithSemiColons()
+        public void TextParsingExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithSemiColons()
         {
             string example = "key1=value1;key2=value2;key3=value3";
             var result = TextParsingExtensions.ParseDelimitedValues(example);
@@ -145,7 +160,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithCommas()
+        public void TextParsingExtensionsParseDelimitedValuesHandlesKeyValuePairsDelimitedWithCommas()
         {
             string example = "key1=value1,key2=value2,key3=value3";
             var result = TextParsingExtensions.ParseDelimitedValues(example);
@@ -159,7 +174,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesKeyValuePairsThatHaveValuesContainingDelimiters()
+        public void TextParsingExtensionsParseDelimitedValuesHandlesKeyValuePairsThatHaveValuesContainingDelimiters()
         {
             string example = "key1=v1a,v1b,v1c;key2=value2;key3=v3a,v3b";
             var result = TextParsingExtensions.ParseDelimitedValues(example);
@@ -193,7 +208,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateThumbprint()
+        public void TextParsingExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateThumbprint()
         {
             string example =
                 "CertificateThumbprint=a7b126e40c1f80b40c1d8b2e1d27ac47da6a456f;ClientId=924796e9-a608-483f-9a9c-4f96dB865123;" +
@@ -211,7 +226,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateIssuerAndSubject()
+        public void TextParsingExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateIssuerAndSubject()
         {
             string example = 
                 "CertificateIssuer=Any Infra CA 01;CertificateSubject=any.service.azure.com;" +
@@ -230,7 +245,7 @@ namespace VirtualClient.Contracts.Parser
         }
 
         [Test]
-        public void TextParserExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateIssuerAndSubjectDistinguishedNames()
+        public void TextParsingExtensionsParseDelimitedValuesHandlesConnectionStringsWithCertificateIssuerAndSubjectDistinguishedNames()
         {
             string example =
                 "CertificateIssuer=CN=Any Infra CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.service.azure.com;" +
@@ -245,6 +260,17 @@ namespace VirtualClient.Contracts.Parser
                 { "ClientId", "924796e9-a608-483f-9a9c-4f96dB865123" },
                 { "TenantId", "fd456aa1-af19-48d2-8dbf-caeea9111712" },
                 { "EndpointUrl", "https://any.blob.core.windows.net"}
+            }, result);
+        }
+
+        [Test]
+        public void TextParsingExtensionsHandlesSinglePairStrings()
+        {
+            var result = TextParsingExtensions.ParseDelimitedValues("single=pair");
+
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                { "single", "pair" }
             }, result);
         }
     }
