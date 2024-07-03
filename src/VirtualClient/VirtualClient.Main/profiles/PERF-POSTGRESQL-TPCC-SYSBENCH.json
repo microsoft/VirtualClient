@@ -50,6 +50,7 @@
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
+                "MountLocation": "Root",
                 "Role": "Server"
             }
         },

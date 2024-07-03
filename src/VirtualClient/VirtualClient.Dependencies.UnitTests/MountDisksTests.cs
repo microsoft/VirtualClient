@@ -107,7 +107,10 @@ namespace VirtualClient.Dependencies
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
-            
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MountDisks.MountPointPrefix), "/mockmountpath" }
