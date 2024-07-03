@@ -91,6 +91,11 @@ namespace VirtualClient
         public Mock<IApiClientManager> ApiClientManager { get; set; }
 
         /// <summary>
+        /// A mock certificate manager.
+        /// </summary>
+        public Mock<ICertificateManager> CertificateManager { get; set; }
+
+        /// <summary>
         /// Mimics the current directory of the running application (e.g. the VC root directory).
         /// </summary>
         public string CurrentDirectory
@@ -375,6 +380,7 @@ namespace VirtualClient
 
             this.ApiClient = new Mock<IApiClient>();
             this.ApiClientManager = new Mock<IApiClientManager>();
+            this.CertificateManager = new Mock<ICertificateManager>();
             this.FileSystem = new Mock<IFileSystem>();
             this.File = new Mock<IFile>();
             this.FileInfo = new Mock<IFileInfoFactory>();
@@ -530,6 +536,7 @@ namespace VirtualClient
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+            this.Dependencies.AddSingleton<ICertificateManager>((p) => this.CertificateManager.Object);
             this.Dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<ISystemInfo>((p) => this.SystemManagement.Object);

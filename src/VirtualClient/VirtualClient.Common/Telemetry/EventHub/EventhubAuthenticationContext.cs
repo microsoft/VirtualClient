@@ -3,10 +3,7 @@
 
 namespace VirtualClient.Common.Telemetry
 {
-    using System;
-    using System.Collections.Generic;
     using Azure.Core;
-    using global::Azure.Messaging.EventHubs;
 
     /// <summary>
     /// Represents context to authenticate with Azure Event Hub.

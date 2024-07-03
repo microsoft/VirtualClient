@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-
 namespace VirtualClient
 {
+    using System.Collections.Generic;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Interface for certificate manager
     /// </summary>
