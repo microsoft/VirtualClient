@@ -22,6 +22,11 @@ namespace VirtualClient
         public const string Packages = nameof(DependencyStore.Packages);
 
         /// <summary>
+        /// Profiles store name.
+        /// </summary>
+        public const string Profiles = nameof(DependencyStore.Profiles);
+
+        /// <summary>
         /// Store Type = AzureStorageBlob
         /// </summary>
         public const string StoreTypeAzureStorageBlob = "AzureStorageBlob";

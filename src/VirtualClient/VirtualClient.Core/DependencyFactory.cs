@@ -11,8 +11,10 @@ namespace VirtualClient
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+    using Azure;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
+    using Azure.Storage.Blobs;
     using Microsoft.Extensions.Logging;
     using Serilog;
     using VirtualClient.Common;

@@ -7,7 +7,6 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -96,7 +95,7 @@ namespace VirtualClient
                     {
                         throw new RequestFailedException(
                             response.Status,
-                            $"Blob download failed for blob '{blobDescriptor.Name}' (status code={response.Status}-{BlobManager.GetHttpStatusCodeName(response.Status)}).");
+                            $"Download failed for blob '{blobDescriptor.Name}' (status code={response.Status}-{BlobManager.GetHttpStatusCodeName(response.Status)}).");
                     }
 
                     if (response.Headers.ETag != null)
@@ -201,8 +200,7 @@ namespace VirtualClient
                     {
                         throw new RequestFailedException(
                             rawResponse.Status,
-                            $"Upload failed for blob '{blobDescriptor.Name}' and container '{blobDescriptor.ContainerName}' " +
-                            $"(status code={rawResponse.Status}-{BlobManager.GetHttpStatusCodeName(rawResponse.Status)}).");
+                            $"Upload failed for blob '{blobDescriptor.Name}' (status code={rawResponse.Status}-{BlobManager.GetHttpStatusCodeName(rawResponse.Status)}).");
                     }
 
                     if (rawResponse.Headers.ETag != null)

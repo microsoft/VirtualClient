@@ -238,6 +238,22 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default profiles folder path.
+        /// </summary>
+        public string GetProfilesPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetProfilePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid default profile downloads folder path.
+        /// </summary>
+        public string GetProfileDownloadsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetProfileDownloadsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid state file path.
         /// </summary>
         public string GetStatePath(params string[] pathSegments)

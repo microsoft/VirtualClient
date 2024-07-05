@@ -10,6 +10,7 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Command executes the operations to bootstrap/install dependencies on the system
@@ -57,7 +58,10 @@ namespace VirtualClient
                     { "Package", this.Package },
                     { "RegisterAsName", this.Name }
                 },
-                Profiles = new List<string> { "BOOTSTRAP-DEPENDENCIES.json" },
+                Profiles = new List<DependencyProfileReference>
+                {
+                    new DependencyProfileReference("BOOTSTRAP-DEPENDENCIES.json")
+                },
                 ProxyApiUri = this.ProxyApiUri
             };
 

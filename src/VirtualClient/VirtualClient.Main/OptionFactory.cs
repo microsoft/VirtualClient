@@ -12,20 +12,10 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Security;
-    using System.Security.Cryptography;
-    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
-    using Azure.Core;
-    using Azure.Identity;
-    using Azure.Messaging.EventHubs.Producer;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
 
@@ -184,9 +174,9 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
-        public static Option CreateContentStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, ICertificateManager certificateManager = null)
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        public static Option CreateContentStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
             // Note:
             // We will be adding support for other cloud stores in the future (e.g. AWS, Google). The logic on the command
@@ -272,7 +262,7 @@ namespace VirtualClient
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
-        public static Option CreateEventHubAuthenticationContextOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
+        public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
         {
             Option<DependencyEventHubStore> option = new Option<DependencyEventHubStore>(
                 new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventHubConnectionString" },
@@ -636,9 +626,9 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
-        public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, ICertificateManager certificateManager = null)
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
             Option<DependencyStore> option = new Option<DependencyStore>(
                 new string[] { "--package-store", "--packageStore", "--packagestore", "--packages", "--ps" },
@@ -714,11 +704,16 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        /// <param name="validator">Custom validation to perform on the command line argument.</param>
-        public static Option CreateProfileOption(bool required = true, object defaultValue = null, ValidateSymbol<OptionResult> validator = null)
+        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        public static Option CreateProfileOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
-            Option<IList<string>> option = new Option<IList<string>>(
-                new string[] { "--profile", "--p" })
+            Option<IEnumerable<DependencyProfileReference>> option = new Option<IEnumerable<DependencyProfileReference>>(
+                new string[] { "--profile", "--p" },
+                new ParseArgument<IEnumerable<DependencyProfileReference>>(result => OptionFactory.ParseProfiles(
+                    result,
+                    certificateManager ?? OptionFactory.defaultCertificateManager,
+                    fileSystem ?? OptionFactory.defaultFileSystem)))
             {
                 Name = "Profiles",
                 Description = "The workload or monitoring profile(s) to execute.",
@@ -726,7 +721,7 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = true
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue, validator);
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
             return option;
         }
@@ -766,8 +761,8 @@ namespace VirtualClient
 
                 OptionFactory.ThrowIfOptionExists(
                     result,
-                    "EventHubAuthenticationContext",
-                    "Invalid usage. An Event Hub connection string option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
+                    "EventHubStore",
+                    "Invalid usage. An Event Hub option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
 
                 return string.Empty;
             });
@@ -964,100 +959,18 @@ namespace VirtualClient
             return delimitedValues;
         }
 
-        private static DependencyEventHubStore ParseEventHubStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager)
-        {
-            DependencyEventHubStore store = null;
-            string argumentValue = parsedResult.Tokens.First().Value?.Trim(new char[] { '\'', '\"' });
-
-            if (EndpointUtility.IsEventHubConnectionString(argumentValue))
-            {
-                // e.g.
-                // --eventhub="Endpoint=sb://xxx.servicebus.windows.net/;SharedAccessKeyName=xxx"
-
-                store = new DependencyEventHubStore(storeName, argumentValue);
-            }
-            else if (EndpointUtility.IsCustomConnectionString(argumentValue))
-            {
-                // e.g.
-                // Endpoint=sb://any.servicebus.windows.net;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4
-                // EventHubNamespace=any.servicebus.windows.net;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4
-
-                IDictionary<string, string> connectionProperties = TextParsingExtensions.ParseDelimitedValues(argumentValue)?.ToDictionary(
-                    entry => entry.Key,
-                    entry => entry.Value?.ToString(),
-                    StringComparer.OrdinalIgnoreCase);
-
-                // We support an 'EventHubNamespace' property in custom connection strings. To ensure consistency downstream,
-                // we define the endpoint to be a proper Event Hub namespace URI.
-                if (connectionProperties.TryGetValue(ConnectionParameter.EventHubNamespace, out string eventHubNamespace))
-                {
-                    connectionProperties[ConnectionParameter.EndpointUrl] = eventHubNamespace;
-                    if (!eventHubNamespace.Trim().StartsWith("sb://"))
-                    {
-                        connectionProperties[ConnectionParameter.EndpointUrl] = $"sb://{eventHubNamespace}";
-                    }
-                }
-
-                Uri endpointUri = EndpointUtility.ConvertToUri(connectionProperties);
-                store = EndpointUtility.CreateEventHubStoreReference(storeName, endpointUri, certificateManager);
-            }
-            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri) && EndpointUtility.IsCustomUri(endpointUri))
-            {
-                // e.g.
-                // sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789
-
-                store = EndpointUtility.CreateEventHubStoreReference(storeName, endpointUri, certificateManager);
-            }
-
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
-            }
-
-            return store;
-        }
-
         private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
         {
             DependencyStore store = null;
-            string argumentValue = parsedResult.Tokens.First().Value.Trim(new char[] { '\'', '"', ' ' });
+            string endpoint = parsedResult.Tokens.First().Value.Trim(new char[] { '\'', '"', ' ' });
 
-            if (EndpointUtility.IsStorageAccountConnectionString(argumentValue))
+            if (EndpointUtility.IsFullyQualifiedFilePath(endpoint))
             {
-                // e.g.
-                // DefaultEndpointsProtocol=https;AccountName=anystorage01;AccountKey=...;EndpointSuffix=core.windows.net
-                store = EndpointUtility.CreateBlobStoreReference(storeName, argumentValue);
+                store = new DependencyFileStore(storeName, Path.GetFullPath(endpoint));
             }
-            else if (EndpointUtility.IsCustomConnectionString(argumentValue))
+            else
             {
-                // e.g.
-                // EndpointUrl=anystorage01.blob.core.windows.net;ClientId=307591a4-abb2...;TenantId=985bbc17...
-                IDictionary<string, string> connectionProperties = TextParsingExtensions.ParseDelimitedValues(argumentValue)
-                    ?.ToDictionary(entry => entry.Key, entry => entry.Value?.ToString());
-
-                Uri endpointUri = EndpointUtility.ConvertToUri(connectionProperties);
-                store = EndpointUtility.CreateBlobStoreReference(storeName, endpointUri, certificateManager); 
-            }
-            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri))
-            {
-                // e.g.
-                // SAS URI
-                // https://any.service.azure.com?sv=2022-11-02&ss=b&srt=co&sp=rt&se=2024-07-02T22:26:42Z&st=2024-07-02T14:26:42Z&spr=https
-                // or
-                // Custom URI
-                // https://any.service.azure.com/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-E3A5-4fec-b0cb-40dbb8bc5959&crtt=1753429a8bc4f91d
-                store = EndpointUtility.CreateBlobStoreReference(storeName, endpointUri, certificateManager);
-            }
-            else if (fileSystem.Directory.Exists(Path.GetFullPath(argumentValue)))
-            {
-                store = new DependencyFileStore(storeName, Path.GetFullPath(argumentValue));
+                store = EndpointUtility.CreateBlobStoreReference(storeName, endpoint, certificateManager);
             }
 
             // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
@@ -1077,6 +990,69 @@ namespace VirtualClient
 
 
             return store;
+        }
+
+        private static DependencyEventHubStore ParseEventHubStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager)
+        {
+            string endpoint = parsedResult.Tokens.First().Value.Trim(new char[] { '\'', '"', ' ' });
+            DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(storeName, endpoint, certificateManager);
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static IEnumerable<DependencyProfileReference> ParseProfiles(ArgumentResult parsedResult, ICertificateManager certificateManager, IFileSystem fileSystem)
+        {
+            List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
+
+            foreach (Token argument in parsedResult.Tokens)
+            {
+                string profileReference = argument.Value?.Trim(new char[] { '\'', '"', ' ' });
+
+                if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
+                {
+                    profiles.Add(new DependencyProfileReference(profileReference));
+                }
+                else if (!Uri.TryCreate(profileReference, UriKind.Absolute, out Uri profileUri)
+                    && !EndpointUtility.IsCustomConnectionString(profileReference)
+                    && !EndpointUtility.IsStorageAccountConnectionString(profileReference))
+                {
+                    if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
+                    {
+                        profiles.Add(new DependencyProfileReference(profileReference));
+                    }
+                    else
+                    {
+                        string directoryName = Path.GetDirectoryName(profileReference);
+                        if (string.IsNullOrWhiteSpace(directoryName))
+                        {
+                            profiles.Add(new DependencyProfileReference(profileReference));
+                        }
+                        else
+                        {
+                            string fullPath = Path.GetFullPath(profileReference);
+                            profiles.Add(new DependencyProfileReference(fullPath));
+                        }
+                    } 
+                }
+                else
+                {
+                    profiles.Add(EndpointUtility.CreateProfileReference(profileReference, certificateManager));
+                }
+            }
+
+            return profiles;
         }
 
         private static TimeSpan ParseTimeSpan(ArgumentResult parsedResult)

@@ -94,8 +94,23 @@ The following documentation illustrates how to use URI-style references for acce
     # ...and a certificate with the following properties:
     # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
     
-    # Reference full Issuer and Subject
-    --packages="https://anystorageaccount.blob.core.windows.net?crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    # Reference certificate by thumbprint
+    --packages="https://anystorageaccount.blob.core.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
+    
+    # Reference certificate by thumbprint
+    --profile="https://anystorageaccount.blob.core.windows.net/profiles/ANY-PROFILE.json?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
     ```
 
   * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
@@ -124,15 +139,31 @@ The following documentation illustrates how to use URI-style references for acce
     # Certificate Issuer    = CN=ABC CA 01, DC=ABC, DC=COM
     # Certificate Subject   = CN=any.domain.com
 
-    # Reference full Issuer and Subject
-    --packages="https://anystorageaccount.blob.core.windows.net?crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
-    --content="https://anystorageaccount.blob.core.windows.net?cri=CN=ABC CA 01, DC=ABC, DC=COM&crs=CN=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    # Reference certificate by issuer and subject
+    --packages="https://anystorageaccount.blob.core.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com"
+    --content="https://anystorageaccount.blob.core.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&cri=CN=ABC CA 01, DC=ABC, DC=COM&crs=CN=any.domain.com"
 
-    # Reference parts of the Issuer and Subject (e.g. COM, ABC, ABC CA 01). Note that the full value of the part (e.g. CN=, DC=)
-    # must be defined. A substring is not valid.
-    --packages="https://anystorageaccount.blob.core.windows.net?crti=COM&crts=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
-    --packages="https://anystorageaccount.blob.core.windows.net?crti=ABC&crts=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
-    --packages="https://anystorageaccount.blob.core.windows.net?crti=ABC CA 01&crts=any.domain.com&cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B"
+    # Reference parts of the certificate issuer and subject (e.g. COM, ABC, ABC CA 01).
+    --packages="https://anystorageaccount.blob.core.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=COM&crts=any.domain.com"
+    --packages="https://anystorageaccount.blob.core.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC&crts=any.domain.com"
+    --packages="https://anystorageaccount.blob.core.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC CA 01&crts=any.domain.com"
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Issuer    = CN=ABC CA 01, DC=ABC, DC=COM
+    # Certificate Subject   = CN=any.domain.com
+
+    # Reference certificate by issuer and subject
+    --profile="https://anystorageaccount.blob.core.windows.net/profiles/ANY-PROFILE.json?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com"
+    --profile="https://anystorageaccount.blob.core.windows.net/profiles/any/virtual/path/ANY-PROFILE.json?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com"
     ```
 
   * **Microsoft Azure Managed Identity**  
@@ -147,6 +178,16 @@ The following documentation illustrates how to use URI-style references for acce
     # Managed Identity Client ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
 
     --packages="https://anystorageaccount.blob.core.windows.net?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    # Given a Microsoft Azure Managed Identity with the following properties:
+    # Managed Identity Client ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
+
+    --profile="https://anystorageaccount.blob.core.windows.net/profiles/ANY-PROFILE.json?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
+    --profile="https://anystorageaccount.blob.core.windows.net/profiles/any/virtual/path/ANY-PROFILE.json?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
     ```
 
   * **Storage Account Blob Service SAS URI**  
@@ -177,6 +218,12 @@ The following documentation illustrates how to use URI-style references for acce
 
     ``` bash
     --packages="https://anystorageaccount.blob.core.windows.net/packages?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH..."
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    --profile="https://anystorageaccount.blob.core.windows.net/profiles/ANY-PROFILE.json?sp=r&st=2021-11-23T18:22:49Z&se=2021-11-24T02:22:49Z&spr=https&sv=2020-08-04&sr=c&sig=ndyPRH..."
     ```
     
     Select the following options when defining shared access signatures at the Blob container level:
@@ -215,8 +262,23 @@ The following documentation illustrates how to use connection string-style refer
     # ...and a certificate with the following properties:
     # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
     
-    # Reference full Issuer and Subject
-    --packages="CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    # Reference certificate by thumbprint
+    --packages="EndpointUrl=https://anystorageaccount.blob.core.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
+    
+    # Reference certificate by thumbprint
+    --profile="EndpointUrl=https://anystorageaccount.blob.core.windows.net/profiles/ANY-PROFILE.json;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
     ```
 
   * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
@@ -249,15 +311,31 @@ The following documentation illustrates how to use connection string-style refer
     # Certificate Issuer    = CN=ABC CA Authority 01, DC=ABC, DC=COM
     # Certificate Subject   = CN=any.domain.com
 
-    # Reference full Issuer and Subject
-    --packages="CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
-    --content="CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    # Reference certificate by issuer and subject
+    --packages="EndpointUrl=https://anystorageaccount.blob.core.windows.net/;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com"
+    --content="EndpointUrl=https://anystorageaccount.blob.core.windows.net/;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com"
 
-    # Reference parts of the Issuer and Subject (e.g. COM, ABC, ABC CA Authority 01). Note that the full value of the part (e.g. CN=, DC=)
-    # must be defined. A substring is not valid.
-    --packages="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
-    --packages="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
-    --packages="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EndpointUrl=https://anystorageaccount.blob.core.windows.net"
+    # Reference parts of the certificate issuer and subject (e.g. COM, ABC, ABC CA Authority 01).
+    --packages="EndpointUrl=https://anystorageaccount.blob.core.windows.net/;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=COM;CertificateSubject=any.domain.com"
+    --packages="EndpointUrl=https://anystorageaccount.blob.core.windows.net/;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
+    --packages="EndpointUrl=https://anystorageaccount.blob.core.windows.net/;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com"
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Issuer    = CN=ABC CA Authority 01, DC=ABC, DC=COM
+    # Certificate Subject   = CN=any.domain.com
+
+    # Reference certificate by issuer and subject
+    --profile="EndpointUrl=https://anystorageaccount.blob.core.windows.net/profiles/ANY-PROFILE.json;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
+    --profile="EndpointUrl=https://anystorageaccount.blob.core.windows.net/profiles/any/virtual/path/ANY-PROFILE.json;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
     ```
 
   * **Microsoft Azure Managed Identity**  
@@ -275,7 +353,16 @@ The following documentation illustrates how to use connection string-style refer
     # Given a Microsoft Azure Managed Identity with the following properties:
     # Managed Identity ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
 
-    --packages="ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6;EndpointUrl=https://yourblobstore.blob.core.windows.net"
+    --packages="EndpointUrl=https://yourblobstore.blob.core.windows.net/;ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
+    ```
+
+    The same format can be used to download custom profiles from target Storage Account location.
+
+    ``` bash
+    # Given a Microsoft Azure Managed Identity with the following properties:
+    # Managed Identity ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
+
+    --profile="EndpointUrl=https://yourblobstore.blob.core.windows.net/profiles/ANY-PROFILE.json;ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
     ```
 
 ## Storage Account Blob Conventions for Content/File Uploads

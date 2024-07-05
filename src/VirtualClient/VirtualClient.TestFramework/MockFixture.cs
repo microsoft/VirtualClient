@@ -355,6 +355,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default profile downloads folder path.
+        /// </summary>
+        public string GetProfileDownloadsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetProfileDownloadsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Sets the environment variable value in the underlying <see cref="PlatformSpecifics"/> instance.
         /// </summary>
         public void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
