@@ -165,21 +165,56 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MemtierBenchmarkClientExecutorExecutesExpectedCommands2ClientInstances()
         {
+            // Setup:
+            // Two Memcached server instances running on ports 6379 and 6380 with affinity to 4 logical processors
+            this.mockFixture.ApiClient.OnGetState(nameof(ServerState))
+               .ReturnsAsync(this.mockFixture.CreateHttpResponse(
+                   HttpStatusCode.OK,
+                   new Item<ServerState>(nameof(ServerState), new ServerState(new List<PortDescription>
+                   {
+                        new PortDescription
+                        {
+                            CpuAffinity = "0,1,2,3",
+                            Port = 6379
+                        },
+                        new PortDescription
+                        {
+                            CpuAffinity = "0,1,2,3",
+                            Port = 6380
+                        }
+                   }))));
+
+            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
+                .Returns<string, ClientInstance>((id, instance) => this.mockFixture.ApiClient.Object);
+
+            this.mockFixture.ApiClient.OnGetHeartbeat()
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.OnGetServerOnline()
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                // 2 client instances running in-parallel to target the server.
+                // 2 client instances running in-parallel to target 2 server 
                 executor.Parameters[nameof(executor.ClientInstances)] = 2;
+                executor.Parameters[nameof(executor.ClientsMax)] = 6;
 
                 List<string> expectedCommands = new List<string>()
                 {
                     // Make the benchmark toolset executable
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
-                    // Client instance #1
-                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    // Client instance #1 hitting server #1
+                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
-                     // Client instance #2
-                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
+                     // Client instance #2 hitting server #1
+                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+
+                    // Client instance #1 hitting server #2
+                    $"sudo bash -c \"numactl -C 3 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6380 {executor.CommandLine}\"",
+
+                     // Client instance #2 hitting server #2
+                    $"sudo bash -c \"numactl -C 3 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6380 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -198,10 +233,39 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MemtierBenchmarkClientExecutorExecutesExpectedCommands4ClientInstances()
         {
+            // Setup:
+            // Two Memcached server instances running on ports 6379 and 6380 with affinity to 4 logical processors
+            this.mockFixture.ApiClient.OnGetState(nameof(ServerState))
+               .ReturnsAsync(this.mockFixture.CreateHttpResponse(
+                   HttpStatusCode.OK,
+                   new Item<ServerState>(nameof(ServerState), new ServerState(new List<PortDescription>
+                   {
+                        new PortDescription
+                        {
+                            CpuAffinity = "0,1,2,3",
+                            Port = 6379
+                        },
+                        new PortDescription
+                        {
+                            CpuAffinity = "0,1,2,3",
+                            Port = 6380
+                        }
+                   }))));
+
+            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
+                .Returns<string, ClientInstance>((id, instance) => this.mockFixture.ApiClient.Object);
+
+            this.mockFixture.ApiClient.OnGetHeartbeat()
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.OnGetServerOnline()
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                // 4 client instances running in-parallel to target the server.
+                // 4 client instances running in-parallel to target 1 server as the other server will sit idle because ClientsMax = 4, If we Set ClientsMax >= 8 both the servers will be engaged . 
                 executor.Parameters[nameof(executor.ClientInstances)] = 4;
+                executor.Parameters[nameof(executor.ClientsMax)] = 4;
 
                 List<string> expectedCommands = new List<string>()
                 {
@@ -209,16 +273,16 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1
-                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #2
-                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                     // Client instance #3
-                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #4
-                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
+                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
