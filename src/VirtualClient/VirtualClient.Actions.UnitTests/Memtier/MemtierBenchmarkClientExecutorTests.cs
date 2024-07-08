@@ -195,7 +195,7 @@ namespace VirtualClient.Actions
 
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                // 2 client instances running in-parallel to target 2 server 
+                // 2 client instances running in-parallel to target each of the 2 servers
                 executor.Parameters[nameof(executor.ClientInstances)] = 2;
                 executor.Parameters[nameof(executor.ClientsMax)] = 6;
 
