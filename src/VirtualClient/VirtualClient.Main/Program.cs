@@ -4,7 +4,6 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
@@ -22,8 +21,6 @@ namespace VirtualClient
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
@@ -72,6 +69,7 @@ namespace VirtualClient
                         };
 
                         CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
+
                         ParseResult parseResult = commandBuilder.Build().Parse(args);
                         parseResult.ThrowOnUsageError();
 
@@ -177,7 +175,6 @@ namespace VirtualClient
         /// </summary>
         internal static CommandLineBuilder SetupCommandLine(string[] args, CancellationTokenSource cancellationTokenSource)
         {
-            IFileSystem fileSystem = new FileSystem();
             RootCommand rootCommand = new RootCommand("Executes workload and monitoring profiles on the system.")
             {
                 // Required
@@ -209,7 +206,7 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --eventHubConnectionString
-                OptionFactory.CreateEventHubAuthenticationContextOption(required: false),
+                OptionFactory.CreateEventHubStoreOption(required: false),
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
@@ -321,7 +318,7 @@ namespace VirtualClient
                 OptionFactory.CreateDebugFlag(required: false, false),
 
                 // --eventhub
-                OptionFactory.CreateEventHubAuthenticationContextOption(required: false),
+                OptionFactory.CreateEventHubStoreOption(required: false),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),

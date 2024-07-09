@@ -65,6 +65,12 @@ namespace VirtualClient.Dependencies
             this.SetupDefaultBehavior(platform, architecture);
             this.fixture.Parameters["Action"] = "InstallServer";
             DependencyPath dependencyPath;
+
+            List<string> expectedCommands = new List<string>
+            {
+                $"python3 {this.packagePath}/install-server.py"
+            };
+
             if (platform == PlatformID.Unix)
             {
                 dependencyPath = new DependencyPath("postgresql", this.mockPackage.Path, null, null, new Dictionary<string, IConvertible>() { { $"InstallationPath-{platformArchitecture}", "/etc/postgresql/14/main" } });
@@ -75,11 +81,6 @@ namespace VirtualClient.Dependencies
             }
 
             this.fixture.SetupWorkloadPackage(dependencyPath);
-                
-            string[] expectedCommands =
-            {
-                $"python3 {this.packagePath}/install-server.py",
-            };
 
             int commandNumber = 0;
 
