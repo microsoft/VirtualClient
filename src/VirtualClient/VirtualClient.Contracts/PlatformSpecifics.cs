@@ -75,6 +75,7 @@ namespace VirtualClient.Contracts
             this.ContentUploadsDirectory = this.Combine(standardizedCurrentDirectory, "contentuploads");
             this.PackagesDirectory = this.Combine(standardizedCurrentDirectory, "packages");
             this.ProfilesDirectory = this.Combine(standardizedCurrentDirectory, "profiles");
+            this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
             this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
             this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
             
@@ -109,6 +110,11 @@ namespace VirtualClient.Contracts
         /// The directory where profiles are stored.
         /// </summary>
         public string ProfilesDirectory { get; }
+
+        /// <summary>
+        /// The directory where profiles downloaded are stored.
+        /// </summary>
+        public string ProfileDownloadsDirectory { get; }
 
         /// <summary>
         /// The OS platform (e.g. Windows, Unix).
@@ -207,6 +213,18 @@ namespace VirtualClient.Contracts
             platformSpecificProfileName = $"{platformSpecificProfileName} ({platformSpecificName})";
 
             return platformSpecificProfileName;
+        }
+
+        /// <summary>
+        /// Returns true/false whether the path provided is a full path location on the
+        /// local file system.
+        /// </summary>
+        /// <param name="path">The path to evaluate.</param>
+        /// <returns>True if the path is a fully qualified path (e.g. C:\Users\any\path, home/user/any/path). False if not.</returns>
+        public static bool IsFullyQualifiedPath(string path)
+        {
+            path.ThrowIfNull(nameof(path));
+            return Regex.IsMatch(path, "[A-Z]+:\\\\|^/", RegexOptions.IgnoreCase);
         }
 
         /// <summary>
@@ -350,14 +368,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Combines the path segments provided with path to the directory where packages
-        /// downloaded exist.
+        /// Combines the path segments provided with path to the directory where profiles exist.
         /// </summary>
         public string GetProfilePath(params string[] additionalPathSegments)
         {
             return additionalPathSegments?.Any() != true
                 ? this.ProfilesDirectory
                 : this.Combine(this.ProfilesDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Combines the path segments provided with path to the directory where profiles downloaded exist.
+        /// </summary>
+        public string GetProfileDownloadsPath(params string[] additionalPathSegments)
+        {
+            return additionalPathSegments?.Any() != true
+                ? this.ProfileDownloadsDirectory
+                : this.Combine(this.ProfileDownloadsDirectory, this.Combine(additionalPathSegments));
         }
 
         /// <summary>

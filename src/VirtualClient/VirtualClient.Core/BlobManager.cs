@@ -12,6 +12,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Azure.Core;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
     using Polly;
@@ -94,7 +95,7 @@ namespace VirtualClient
                     {
                         throw new RequestFailedException(
                             response.Status,
-                            $"Blob download failed for blob '{blobDescriptor.Name}' (status code={response.Status}-{BlobManager.GetHttpStatusCodeName(response.Status)}).");
+                            $"Download failed for blob '{blobDescriptor.Name}' (status code={response.Status}-{BlobManager.GetHttpStatusCodeName(response.Status)}).");
                     }
 
                     if (response.Headers.ETag != null)
@@ -199,8 +200,7 @@ namespace VirtualClient
                     {
                         throw new RequestFailedException(
                             rawResponse.Status,
-                            $"Upload failed for blob '{blobDescriptor.Name}' and container '{blobDescriptor.ContainerName}' " +
-                            $"(status code={rawResponse.Status}-{BlobManager.GetHttpStatusCodeName(rawResponse.Status)}).");
+                            $"Upload failed for blob '{blobDescriptor.Name}' (status code={rawResponse.Status}-{BlobManager.GetHttpStatusCodeName(rawResponse.Status)}).");
                     }
 
                     if (rawResponse.Headers.ETag != null)
@@ -292,46 +292,35 @@ namespace VirtualClient
             //    e.g. https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
 
             BlobContainerClient containerClient = null;
-            if (!string.IsNullOrEmpty(blobStore.ConnectionToken))
+            if (blobStore.EndpointUri != null)
             {
-                if (Uri.TryCreate(blobStore.ConnectionToken, UriKind.Absolute, out Uri sasUri))
+                Uri containerUri = blobStore.EndpointUri;
+                if (blobStore.EndpointUri.AbsolutePath == "/")
                 {
-                    Uri containerUri = sasUri;
-                    if (sasUri.AbsolutePath == "/")
-                    {
-                        // The connection authentication token is a blob service-specific SAS URI.
-                        containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
-                    }
+                    containerUri = new Uri($"{blobStore.EndpointUri.Scheme}://{blobStore.EndpointUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{blobStore.EndpointUri.Query}");
+                }
 
-                    containerClient = new BlobContainerClient(containerUri);
+                if (blobStore.Credentials != null)
+                {
+                    containerClient = new BlobContainerClient(containerUri, blobStore.Credentials);
                 }
                 else
                 {
-                    // The connection authentication token is either a storage account-level connection string
-                    // or a Blob service-level connection string.
-                    containerClient = new BlobContainerClient(blobStore.ConnectionToken, descriptor.ContainerName.ToLowerInvariant());
+                    containerClient = new BlobContainerClient(containerUri);
                 }
             }
-            else if (blobStore.TokenCredential != null)
+            else if (!string.IsNullOrWhiteSpace(blobStore.ConnectionString))
             {
-                Uri endpointUrl = new Uri(blobStore.EndpointUrl);
-                if (endpointUrl.AbsolutePath == "/")
-                {
-                    // The storage account URL does is to the blob service vs. a container within. We will need to
-                    // append the container name to the end of the URI.
-                    // 
-                    // e.g.
-                    // https://any.blob.core.windows.net vs. https://any.blob.core.windows.net/packages
-                    endpointUrl = new Uri(endpointUrl, descriptor.ContainerName);
-                }
-
-                containerClient = new BlobContainerClient(endpointUrl, blobStore.TokenCredential);
+                // The endpoint is either a storage account-level connection string
+                // or a Blob service-level connection string.
+                containerClient = new BlobContainerClient(blobStore.ConnectionString, descriptor.ContainerName.ToLowerInvariant());
             }
-            else
+
+            if (containerClient == null)
             {
                 throw new DependencyException(
                     "Storage account authentication credentials not provided. Credentials are required to be supplied on the command line " +
-                    "in order to download content from a storage account.",
+                    "in order to access content within a storage account.",
                     ErrorReason.DependencyDescriptionInvalid);
             }
 

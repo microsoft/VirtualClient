@@ -18,7 +18,7 @@ few preliminary expectations to consider when using certificates.
 ### Referencing Certificates on Linux
 Virtual Client is a .NET application. Certificates used on a Linux system must be X.509 certificates containing a private key (e.g. PKCS#12, *.pfx). Additionally, the
 certificates must be installed on the system in the expected location for the user in which Virtual Client is running. The following locations
-describe where Virtual Client/.NET will search to find certificates:
+describe where Virtual Client/.NET will search to find certificates.
 
 * **Root**  
   When running the Virtual Client application as root (e.g. sudo ./VirtualClient), the application (.NET) will search for certificates
@@ -28,6 +28,11 @@ describe where Virtual Client/.NET will search to find certificates:
   When running the Virtual Client application as a specific user (e.g. /home/\{user\} ./VirtualClient), the application (.NET) will search for certificates
   in `/{user}/.dotnet/corefx/cryptography/x509stores/my/` directory location. The directory MUST allow at least read/write access for the user to this directory and the
   certificate files within it or Virtual Client will hit a permissions issue.
+
+  <mark>
+  Installation involves simply copying the certificate file (*.pfx) into the directory. In fact, it is generally recommended that certificate files (e.g. *.pfx) be copied into this user-specific
+  directory for Virtual Client use cases.
+  </mark>
 
   If you experience a permissions issue when running Virtual Client and trying to access certificates, you can attribute permissions on the
   directory using the following command option:
@@ -39,8 +44,105 @@ describe where Virtual Client/.NET will search to find certificates:
   sudo chmod -R 700 /anyuser/.dotnet/corefx/cryptography/x509stores/my/
   ```
 
+### Referencing Certificates on Windows
+Virtual Client will look for certificates in the following store locations on Windows systems.
+
+* **CurrentUser/Personal**  
+  The personal certificate store for current user logged into the system. This is the first certificate store in which Virtual Client will search for
+  certificates.
+
+  <mark>
+  It is generally recommended that certificate files (e.g. *.pfx) be installed into this user-specific certificate store for Virtual Client use cases.
+  </mark>
+
+* **LocalMachine/Personal**  
+  The local machine certificate store for the system. This is the second certificate store in which Virtual Client will search for
+  certificates.
+
 ## Event Hubs Authentication
-Virtual Client supports the following authentication options for eventhubs:
+Virtual Client supports connection string-style as well as URI-style definitions. The the following sections covers authentication options for 
+Azure Event Hub namespace access.
+
+### URI-Style References
+The following documentation illustrates how to use URI-style references for accessing Event Hub namespaces.
+
+  * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)**  
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Azure Event Hub resources
+    (see the 'Authentication Preliminaries' section above). The following URI query string parameters are required:
+
+    * **crtt**  
+      The unique thumbprint (SHA1) of the certificate to use for authentication against the Microsoft Entra ID/App.
+
+    * **cid**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure Event Hub namespace.
+
+    * **tid**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
+    
+    # Reference certificate by thumbprint
+    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
+    ```
+
+  * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
+    The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its issuer and subject name to authenticate with Azure Event Hub resources
+    (see the 'Authentication Preliminaries' section above). The following parameters are required:
+
+    * **crti**  
+      The issuer defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=ABC CA 01, DC=ABC, DC=COM).
+
+    * **crts**  
+      The subject name defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=any.domain.com).
+
+    * **cid**  
+      The client ID of the Microsoft Entra ID/App to use for authentication against the Azure Event Hub namespace.
+
+    * **tid**  
+      The ID of the Azure tenant/directory in which the Microsoft Entra ID/App exists.
+
+    ``` bash
+    # e.g.
+    # Given a Microsoft Entra ID/App with the following properties:
+    # Application Client ID = 08331e3b-1458-4de2-b1d6-7007bc7221d5
+    # Azure Tenant ID       = 573b5dBbe-c477-4a10-8986-a7fe10e2d79B
+    #
+    # ...and a certificate with the following properties:
+    # Certificate Issuer    = CN=ABC CA 01, DC=ABC, DC=COM
+    # Certificate Subject   = CN=any.domain.com
+
+    # Reference certificate by issuer and subject
+    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com"
+
+    # Reference parts of the certificate issuer and subject (e.g. COM, ABC, ABC CA 01).
+    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=COM&crts=any.domain.com"
+    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC&crts=any.domain.com"
+    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC CA 01&crts=any.domain.com"
+    ```
+
+  * **Microsoft Azure Managed Identity**  
+    The following section shows how to use a Microsoft Azure managed identity to authenticate with Azure Event Hub namespace resources.
+    The following parameters are required:
+
+    * **miid**  
+      The client ID of the managed identity to use for authentication against the storage account.
+    
+    ``` bash
+    # Given a Microsoft Azure Managed Identity with the following properties:
+    # Managed Identity Client ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
+
+    --packages="sb://any.servicebus.windows.net?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
+    ```
+
+### Connection String-Style References
+The following documentation illustrates how to use connection string-style references for accessing Event Hub namespaces.
 
   * **Microsoft Entra ID/App With Certificate (referenced by thumbprint)**  
     The following section shows how to use a Microsoft Entra ID/App and a certificate referenced by its thumbprint to authenticate with Event Hub namespace resources
@@ -67,7 +169,8 @@ Virtual Client supports the following authentication options for eventhubs:
     # ...and a certificate with the following properties:
     # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
 
-    --eventhub="CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    # Reference certificate by thumbprint
+    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
     ```
 
   * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
@@ -75,7 +178,7 @@ Virtual Client supports the following authentication options for eventhubs:
     (see the 'Authentication Preliminaries' section above). The following parameters are required:
 
     * **CertificateIssuer**  
-      The issuer defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=ABC CA Authority 01, DC=ABC, DC=COM).
+      The issuer defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=ABC CA 01, DC=ABC, DC=COM).
 
     * **CertificateSubject**  
       The subject name defined in the certificate to use for authentication against the Microsoft Entra ID/App (e.g. CN=any.domain.com).
@@ -99,14 +202,13 @@ Virtual Client supports the following authentication options for eventhubs:
     # Certificate Issuer    = CN=ABC CA Authority 01, DC=ABC, DC=COM
     # Certificate Subject   = CN=any.domain.com
     
-    # Reference full Issuer and Subject
-    --eventhub="CertificateIssuer=CN=ABC CA Authority 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    # Reference certificate by issuer and subject
+    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com"
 
-    # Reference parts of the Issuer and Subject (e.g. COM, ABC, ABC CA Authority 01). Note that the full value of the part (e.g. CN=, DC=)
-    # must be defined. A substring is not valid.
-    --eventhub="CertificateIssuer=COM;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
-    --eventhub="CertificateIssuer=ABC;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
-    --eventhub="CertificateIssuer=ABC CA Authority 01;CertificateSubject=any.domain.com;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;EventHubNamespace=any.servicebus.windows.net"
+    # Reference parts of the certificate issuer and subject (e.g. COM, ABC, ABC CA 01).
+    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=COM;CertificateSubject=any.domain.com"
+    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
+    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC CA 01;CertificateSubject=any.domain.com"
     ```
 
   * **Microsoft Azure Managed Identity**  
@@ -124,7 +226,7 @@ Virtual Client supports the following authentication options for eventhubs:
     # Given a Microsoft Azure Managed Identity with the following properties:
     # Managed Identity ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
 
-    --eventhub="ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6;EventHubNamespace=any.servicebus.windows.net"
+    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
     ```
 
   * **Event Hub Namespace Shared Access Policies**  

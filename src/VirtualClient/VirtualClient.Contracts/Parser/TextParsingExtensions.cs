@@ -122,21 +122,26 @@ namespace VirtualClient.Contracts
             // 3) Comma Delimited        (e.g. key1=value1,key2=value2)
 
             string[] delimitedKeyValuePairs = null;
+            string normalizedText = text.Trim(new char[] { '\'', '"' });
 
-            if (TextParsingExtensions.TripleCommaDelimitedExpression.IsMatch(text))
+            if (TextParsingExtensions.TripleCommaDelimitedExpression.IsMatch(normalizedText))
             {
                 // Triple-comma delimiting
-                delimitedKeyValuePairs = TextParsingExtensions.TripleCommaDelimitedExpression.Split(text);
+                delimitedKeyValuePairs = TextParsingExtensions.TripleCommaDelimitedExpression.Split(normalizedText);
             }
-            else if (TextParsingExtensions.SemiColonDelimitedExpression.IsMatch(text))
+            else if (TextParsingExtensions.SemiColonDelimitedExpression.IsMatch(normalizedText))
             {
                 // Semi-Colon delimiting
-                delimitedKeyValuePairs = TextParsingExtensions.SemiColonDelimitedExpression.Split(text);
+                delimitedKeyValuePairs = TextParsingExtensions.SemiColonDelimitedExpression.Split(normalizedText);
             }
-            else if (TextParsingExtensions.CommaDelimitedExpression.IsMatch(text))
+            else if (TextParsingExtensions.CommaDelimitedExpression.IsMatch(normalizedText))
             {
                 // Comma delimiting
-                delimitedKeyValuePairs = TextParsingExtensions.CommaDelimitedExpression.Split(text);
+                delimitedKeyValuePairs = TextParsingExtensions.CommaDelimitedExpression.Split(normalizedText);
+            }
+            else
+            {
+                delimitedKeyValuePairs = new string[] { normalizedText };
             }
 
             if (delimitedKeyValuePairs?.Any() == true)
