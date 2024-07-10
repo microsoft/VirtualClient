@@ -797,7 +797,7 @@ namespace VirtualClient
                 Name = "Scenarios",
                 Description = "A set of one or more scenarios defined within a workload profile to execute or exclude. " +
                     "To include specific scenarios, the names should be comma-delimited (e.g. scenario1,scenario2,scenario3). " +
-                    "To include exlude scenarios, each names should be prefixed with a minus (-) character and be comma-delimited (e.g. -scenario1,-scenario2,-scenario3). " +
+                    "To exclude scenarios, each names should be prefixed with a minus (-) character and be comma-delimited (e.g. -scenario1,-scenario2,-scenario3). " +
                     "Scenarios included take priority over scenarios excluded in the case of a matching name.",
                 ArgumentHelpName = "name,name...",
                 AllowMultipleArgumentsPerToken = true
