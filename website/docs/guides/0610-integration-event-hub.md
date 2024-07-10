@@ -18,7 +18,7 @@ few preliminary expectations to consider when using certificates.
 ### Referencing Certificates on Linux
 Virtual Client is a .NET application. Certificates used on a Linux system must be X.509 certificates containing a private key (e.g. PKCS#12, *.pfx). Additionally, the
 certificates must be installed on the system in the expected location for the user in which Virtual Client is running. The following locations
-describe where Virtual Client/.NET will search to find certificates:
+describe where Virtual Client/.NET will search to find certificates.
 
 * **Root**  
   When running the Virtual Client application as root (e.g. sudo ./VirtualClient), the application (.NET) will search for certificates
@@ -29,6 +29,11 @@ describe where Virtual Client/.NET will search to find certificates:
   in `/{user}/.dotnet/corefx/cryptography/x509stores/my/` directory location. The directory MUST allow at least read/write access for the user to this directory and the
   certificate files within it or Virtual Client will hit a permissions issue.
 
+  <mark>
+  Installation involves simply copying the certificate file (*.pfx) into the directory. In fact, it is generally recommended that certificate files (e.g. *.pfx) be copied into this user-specific
+  directory for Virtual Client use cases.
+  </mark>
+
   If you experience a permissions issue when running Virtual Client and trying to access certificates, you can attribute permissions on the
   directory using the following command option:
 
@@ -38,6 +43,21 @@ describe where Virtual Client/.NET will search to find certificates:
   # e.g.
   sudo chmod -R 700 /anyuser/.dotnet/corefx/cryptography/x509stores/my/
   ```
+
+### Referencing Certificates on Windows
+Virtual Client will look for certificates in the following store locations on Windows systems.
+
+* **CurrentUser/Personal**  
+  The personal certificate store for current user logged into the system. This is the first certificate store in which Virtual Client will search for
+  certificates.
+
+  <mark>
+  It is generally recommended that certificate files (e.g. *.pfx) be installed into this user-specific certificate store for Virtual Client use cases.
+  </mark>
+
+* **LocalMachine/Personal**  
+  The local machine certificate store for the system. This is the second certificate store in which Virtual Client will search for
+  certificates.
 
 ## Event Hubs Authentication
 Virtual Client supports connection string-style as well as URI-style definitions. The the following sections covers authentication options for 
