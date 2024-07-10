@@ -158,11 +158,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the maximum number of memtier processes.
         /// </summary>
-        public int ClientsMax
+        public int MaxClients
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ClientsMax), int.MaxValue);
+                return this.Parameters.GetValue<int>(nameof(this.MaxClients), int.MaxValue);
             }
         }
 
@@ -454,7 +454,7 @@ namespace VirtualClient.Actions
                     CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
                     int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
 
-                    int serverInstancesMax = this.ClientsMax / this.ClientInstances;
+                    int serverInstancesMax = this.MaxClients / this.ClientInstances;
 
                     for (int i = 0; i < Math.Min(serverInstancesMax, serverprocesscount); i++)
                     {
