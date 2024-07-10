@@ -1,13 +1,14 @@
-using Azure.Core;
-using VirtualClient.Common.Extensions;
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
 {
+    using System;
+    using Azure.Core;
+    using VirtualClient.Common.Extensions;
+
     /// <summary>
-    /// Represents an Azure storage account blob store.
+    /// Represents an Azure Storage Account blob store.
     /// </summary>
     public class DependencyBlobStore : DependencyStore
     {
@@ -15,40 +16,52 @@ namespace VirtualClient
         /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.
         /// </summary>
         /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>
-        /// <param name="connectionToken">A connection string or SAS token used to authenticate/authorize with the blob store.</param>
-        public DependencyBlobStore(string storeName, string connectionToken)
+        /// <param name="connectionString">A connection string to the target Storage Account.</param>
+        public DependencyBlobStore(string storeName, string connectionString)
             : base(storeName, DependencyStore.StoreTypeAzureStorageBlob)
         {
-            connectionToken.ThrowIfNullOrWhiteSpace(nameof(connectionToken));
-            this.ConnectionToken = connectionToken;
+            connectionString.ThrowIfNullOrWhiteSpace(nameof(connectionString));
+            this.ConnectionString = connectionString;
         }
 
         /// <summary>
         /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.
         /// </summary>
         /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>
-        /// <param name="endpointUrl"></param>
-        /// <param name="tokenCredential"></param>
-        public DependencyBlobStore(string storeName, string endpointUrl, TokenCredential tokenCredential)
+        /// <param name="endpointUri">The endpoint URI to the target Storage Account (e.g. SAS URI).</param>
+        public DependencyBlobStore(string storeName, Uri endpointUri)
             : base(storeName, DependencyStore.StoreTypeAzureStorageBlob)
         {
-            this.EndpointUrl = endpointUrl;
-            this.TokenCredential = tokenCredential;
+            endpointUri.ThrowIfNull(nameof(endpointUri));
+            this.EndpointUri = endpointUri;
         }
 
         /// <summary>
-        /// A connection string or SAS token used to authenticate/authorize with the blob store.
+        /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.
         /// </summary>
-        public string ConnectionToken { get; }
+        /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>
+        /// <param name="endpointUri">The endpoint URI to the target Storage Account (e.g. SAS URI).</param>
+        /// <param name="credentials">An identity token credential to use for authentication against the Storage Account.</param>
+        public DependencyBlobStore(string storeName, Uri endpointUri, TokenCredential credentials)
+            : this(storeName, endpointUri)
+        {
+            credentials.ThrowIfNull(nameof(credentials));
+            this.Credentials = credentials;
+        }
 
         /// <summary>
-        /// Endpoint for Azure Storage url
+        /// The endpoint connection string used to access the target Storage Account.
         /// </summary>
-        public string EndpointUrl { get; }
+        public string ConnectionString { get; }
 
         /// <summary>
-        /// TokenCredential for Azure Storage
+        /// The endpoint URI or SAS URI used to access the target Storage Account.
         /// </summary>
-        public TokenCredential TokenCredential { get; }
+        public Uri EndpointUri { get; }
+
+        /// <summary>
+        /// An identity token credential to use for authentication against the Storage Account. 
+        /// </summary>
+        public TokenCredential Credentials { get; }
     }
 }

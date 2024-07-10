@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using VirtualClient.Common.Extensions;
-
-namespace VirtualClient
+namespace VirtualClient.Identity
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Security;
+    using System.Security.Cryptography;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using VirtualClient.Common.Extensions;
+
     /// <summary>
     /// Manager for certificate management.
     /// </summary>

@@ -9,16 +9,18 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net;
     using System.Net.Http;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Storage.Blobs;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Polly;
-    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -27,10 +29,6 @@ namespace VirtualClient
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Validation;
     using VirtualClient.Metadata;
-    using YamlDotNet.Core;
-    using YamlDotNet.Serialization.NamingConventions;
-    using YamlDotNet.Serialization;
-    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -67,7 +65,7 @@ namespace VirtualClient
         /// <summary>
         /// The workload/monitoring profiles to execute (e.g. PERF-CPU-OPENSSL.json).
         /// </summary>
-        public List<string> Profiles { get; set; }
+        public IEnumerable<DependencyProfileReference> Profiles { get; set; }
 
         /// <summary>
         /// A seed that can be used to guarantee identical randomization bases for workloads that
@@ -161,11 +159,11 @@ namespace VirtualClient
                     await this.LoadExtensionsBinariesAsync(this.Extensions, cancellationToken);
                 }
 
-                IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
+                IEnumerable<string> profileNames = await this.EvaluateProfilesAsync(dependencies);
                 this.SetGlobalTelemetryProperties(profileNames, dependencies);
                 this.SetHostMetadataTelemetryProperties(profileNames, dependencies);
 
-                IEnumerable<string> effectiveProfiles = await this.InitializeProfilesAsync(dependencies, cancellationToken);
+                IEnumerable<string> effectiveProfiles = await this.EvaluateProfilesAsync(dependencies, true, cancellationToken);
 
                 if (this.InstallDependencies)
                 {
@@ -246,41 +244,89 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Returns the full paths to the profiles specified on the command line.
+        /// Downloads the profile from a remote location to the local profile downloads folder.
         /// </summary>
-        protected IEnumerable<string> GetProfilePaths(IServiceCollection dependencies)
+        /// <param name="dependencies">Provides components used to access external dependencies.</param>
+        /// <param name="profile">Describes the endpoint target profile (and authentication requirements) to download to the local system.</param>
+        /// <param name="profilePath">The full file path to which the profile should be downloaded.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        protected virtual async Task DownloadProfileAsync(IServiceCollection dependencies, DependencyProfileReference profile, string profilePath, CancellationToken cancellationToken)
+        {
+            IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
+            IProfileManager profileManager = dependencies.GetService<IProfileManager>();
+
+            string downloadDirectory = Path.GetDirectoryName(profilePath);
+            if (!fileSystem.Directory.Exists(downloadDirectory))
+            {
+                fileSystem.Directory.CreateDirectory(downloadDirectory);
+            }
+
+            using (var fs = new FileStream(profilePath, FileMode.Create, FileAccess.Write, FileShare.Write))
+            {
+                await profileManager.DownloadProfileAsync(profile.ProfileUri, fs, cancellationToken, profile.Credentials);
+            }
+        }
+
+        /// <summary>
+        /// Initializes the profiles specified on the command line and returns the full path location for
+        /// each of the files.
+        /// </summary>
+        /// <param name="dependencies">Provides components for accessing external system resources.</param>
+        /// <param name="initialize">True to perform any initialization steps required to make the profiles available.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        protected async Task<IEnumerable<string>> EvaluateProfilesAsync(IServiceCollection dependencies, bool initialize = false, CancellationToken cancellationToken = default(CancellationToken))
         {
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             IFileSystem fileSystem = systemManagement.FileSystem;
 
             List<string> effectiveProfiles = new List<string>();
-            foreach (string path in this.Profiles)
+            foreach (DependencyProfileReference profileReference in this.Profiles)
             {
                 string profileFullPath = null;
-                if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                if (profileReference.ProfileUri != null)
                 {
-                    var profileUri = new Uri(path);
-                    string profileName = Path.GetFileName(profileUri.AbsolutePath);
-                    profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
+                    // The profile downloaded from internet will live in /profiles/downloads directory and not
+                    // interfere with the out-of-box or extensions profiles.
+                    profileFullPath = systemManagement.PlatformSpecifics.GetProfileDownloadsPath(profileReference.ProfileName);
+
+                    if (initialize && !cancellationToken.IsCancellationRequested)
+                    {
+                        await this.DownloadProfileAsync(dependencies, profileReference, profileFullPath, cancellationToken);
+                    }
+                }
+                else if (profileReference.IsFullPath)
+                {
+                    profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(profileReference.ProfileName);
                 }
                 else
                 {
-                    profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(path);
+                    string profileName = profileReference.ProfileName;
 
-                    if (BackwardsCompatibility.TryMapProfile(profileFullPath, out string remappedProfile))
+                    if (BackwardsCompatibility.TryMapProfile(profileName, out string remappedProfile))
                     {
-                        profileFullPath = remappedProfile;
+                        profileName = remappedProfile;
                     }
 
                     // If the profile defined is not a full path to a profile located on the system, then we
                     // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
                     // parent directory itself or in any platform extensions locations.
                     string pathFound;
-                    if (this.TryGetProfileFromDefaultLocation(systemManagement, path, out pathFound)
-                        || this.TryGetProfileFromExtensionsLocation(systemManagement, path, out pathFound))
+                    if (this.TryGetProfileFromDefaultLocation(systemManagement, profileName, out pathFound)
+                        || this.TryGetProfileFromDownloadsLocation(systemManagement, profileName, out pathFound)
+                        || this.TryGetProfileFromExtensionsLocation(profileName, out pathFound))
                     {
                         profileFullPath = pathFound;
                     }
+                }
+
+                if (initialize && !fileSystem.File.Exists(profileFullPath))
+                {
+                    // If the profile defined is not a full path to a profile located on the system, then we
+                    // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
+                    // parent directory itself or in any platform extensions locations.
+                    throw new DependencyException(
+                        $"Profile not found. Profile does not exist at the path '{profileFullPath}' nor in any extensions location.",
+                        ErrorReason.ProfileNotFound);
                 }
 
                 effectiveProfiles.Add(profileFullPath);
@@ -307,6 +353,7 @@ namespace VirtualClient
                 logger);
 
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
+            IProfileManager profileManager = new ProfileManager();
 
             // Note that a bug was found in the version of "lshw" (B.02.18) that is installed on some Ubuntu images. The bug causes the
             // lshw application to return a "Segmentation Fault" error. We built the "lshw" command from the
@@ -338,6 +385,7 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemInfo>(systemManagement);
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<IApiManager>(apiManager);
+            dependencies.AddSingleton<IProfileManager>(profileManager);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
             dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
             dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
@@ -358,7 +406,7 @@ namespace VirtualClient
         /// <summary>
         /// Initializes the profile that will be executed.
         /// </summary>
-        protected async Task<ExecutionProfile> InitializeProfileAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
+        protected async Task<ExecutionProfile> InitializeProfilesAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
         {
             List<string> allProfiles = new List<string>();
             ExecutionProfile profile = await this.ReadExecutionProfileAsync(profiles.First(), dependencies, cancellationToken)
@@ -415,87 +463,6 @@ namespace VirtualClient
                 MetadataContractCategory.Default);
 
             return profile;
-        }
-
-        /// <summary>
-        /// Validates the existence of the profiles specified downloading them as needed.
-        /// </summary>
-        protected async Task<IEnumerable<string>> InitializeProfilesAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-            PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
-            IFileSystem fileSystem = systemManagement.FileSystem;
-
-            List<string> effectiveProfiles = new List<string>();
-            foreach (string path in this.Profiles)
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    // Virtual Client profiles can be downloaded from a cloud storage location using a simple URI reference. This reference
-                    // can additionally include a SAS URI for authentication where desired.
-                    // 
-                    // e.g.
-                    // Anonymous Read: https://any.blob.core.windows.net/profiles/ANY-PROFILE.json
-                    // Authenticated:  https://any.blob.core.windows.net/profiles/ANY-PROFILE.json?sp=r&st=2022-09-11T19:28:36Z&se=2022-09-12T03:28:36Z&spr=https&sv=2021-06-08&sr=c&...
-
-                    string profileFullPath = null;
-                    if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // The profile downloaded from internet will live in /profiles/downloaded/ directory and not interfere with the ones in the repo.
-                        var profileUri = new Uri(path);
-                        string profileName = Path.GetFileName(profileUri.AbsolutePath);
-                        profileFullPath = platformSpecifics.GetProfilePath("downloaded", profileName);
-
-                        string downloadDirectory = Path.GetDirectoryName(profileFullPath);
-                        if (!fileSystem.Directory.Exists(downloadDirectory))
-                        {
-                            fileSystem.Directory.CreateDirectory(downloadDirectory);
-                        }
-
-                        using (var client = new HttpClient())
-                        {
-                            await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
-                            {
-                                var response = await client.GetAsync(profileUri);
-                                using (var fs = new FileStream(profileFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
-                                {
-                                    await response.Content.CopyToAsync(fs);
-                                }
-                            });
-                        }
-                    }
-                    else
-                    {
-                        profileFullPath = platformSpecifics.StandardizePath(path);
-
-                        if (BackwardsCompatibility.TryMapProfile(profileFullPath, out string remappedProfile))
-                        {
-                            profileFullPath = remappedProfile;
-                        }
-
-                        if (!fileSystem.File.Exists(profileFullPath))
-                        {
-                            // If the profile defined is not a full path to a profile located on the system, then we
-                            // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
-                            // parent directory itself or in any platform extensions locations.
-                            string pathFound;
-                            if (!this.TryGetProfileFromDefaultLocation(systemManagement, path, out pathFound) 
-                                && !this.TryGetProfileFromExtensionsLocation(systemManagement, path, out pathFound))
-                            {
-                                throw new DependencyException(
-                                    $"Profile does not exist at the path '{path}' nor in any extensions locations.",
-                                    ErrorReason.ProfileNotFound);
-                            }
-
-                            profileFullPath = pathFound;
-                        }
-                    }
-
-                    effectiveProfiles.Add(profileFullPath);
-                }
-            }
-
-            return effectiveProfiles;
         }
 
         /// <summary>
@@ -582,8 +549,9 @@ namespace VirtualClient
 
             base.SetGlobalTelemetryProperties(args);
 
-            string profile = this.Profiles.First();
-            string profileName = Path.GetFileName(profile);
+            DependencyProfileReference profile = this.Profiles.First();
+            string profilePath = profile.ProfileName;
+            string profileName = Path.GetFileName(profilePath);
             string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
             // Additional persistent/global telemetry properties in addition to the ones
@@ -712,7 +680,7 @@ namespace VirtualClient
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
-            ExecutionProfile profile = await this.InitializeProfileAsync(profiles, dependencies, cancellationToken)
+            ExecutionProfile profile = await this.InitializeProfilesAsync(profiles, dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
             telemetryContext.AddContext("executionProfileActions", profile.Actions?.Select(d => new
@@ -787,7 +755,7 @@ namespace VirtualClient
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
-            ExecutionProfile profile = await this.InitializeProfileAsync(profiles, dependencies, cancellationToken)
+            ExecutionProfile profile = await this.InitializeProfilesAsync(profiles, dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
             telemetryContext.AddContext("executionProfileActions", profile.Actions?.Select(d => new
@@ -968,14 +936,27 @@ namespace VirtualClient
             return profilePath != null;
         }
 
-        private bool TryGetProfileFromExtensionsLocation(ISystemManagement systemManagement, string profileName, out string profilePath)
+        private bool TryGetProfileFromDownloadsLocation(ISystemManagement systemManagement, string profileName, out string profilePath)
+        {
+            profilePath = null;
+            string filePath = systemManagement.PlatformSpecifics.GetProfileDownloadsPath(profileName);
+
+            if (systemManagement.FileSystem.File.Exists(filePath))
+            {
+                profilePath = filePath;
+            }
+
+            return profilePath != null;
+        }
+
+        private bool TryGetProfileFromExtensionsLocation(string profileName, out string profilePath)
         {
             profilePath = null;
             if (this.Extensions?.Profiles?.Any() == true)
             {
                 IFileInfo file = this.Extensions.Profiles.FirstOrDefault(p => string.Equals(p.Name, profileName));
 
-                if (file != null && systemManagement.FileSystem.File.Exists(file.FullName))
+                if (file != null && file.Exists)
                 {
                     profilePath = file.FullName;
                 }
