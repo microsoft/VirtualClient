@@ -27,6 +27,7 @@ namespace VirtualClient
     {
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
         private static readonly IFileSystem defaultFileSystem = new FileSystem();
+        private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
 
         /// <summary>
         /// Command line option defines the ID of the agent to use with telemetry data reported from the system.
@@ -62,7 +63,8 @@ namespace VirtualClient
                 new ParseArgument<IDictionary<string, int>>(result =>
                 {
                     IDictionary<string, int> apiPorts = new Dictionary<string, int>();
-                    string portsSpecified = result.Tokens.First().Value;
+                    string portsSpecified = OptionFactory.GetValue(result);
+
                     if (int.TryParse(portsSpecified, out int singlePort))
                     {
                         apiPorts.Add(nameof(ApiClientManager.DefaultApiPort), singlePort);
@@ -685,7 +687,7 @@ namespace VirtualClient
                 new string[] { "--port" },
                 new ParseArgument<IEnumerable<int>>(result =>
                 {
-                    return result.Tokens.FirstOrDefault()?.Value.Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(port => int.Parse(port.Trim()));
+                    return OptionFactory.ParseDelimitedValues(result)?.Select(port => int.Parse(port.Trim()));
                 }))
             {
                 Name = "Ports",
@@ -783,13 +785,19 @@ namespace VirtualClient
                 new string[] { "--scenarios", "--sc" },
                 new ParseArgument<IEnumerable<string>>(result =>
                 {
-                    return result.Tokens.FirstOrDefault()?.Value.Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    IEnumerable<string> scenarios = null;
+                    if (result.Tokens?.Any() == true)
+                    {
+                        scenarios = OptionFactory.ParseDelimitedValues(result.Tokens.First().Value);
+                    }
+
+                    return scenarios;
                 }))
             {
                 Name = "Scenarios",
                 Description = "A set of one or more scenarios defined within a workload profile to execute or exclude. " +
                     "To include specific scenarios, the names should be comma-delimited (e.g. scenario1,scenario2,scenario3). " +
-                    "To include exlude scenarios, each names should be prefixed with a minus (-) character and be comma-delimited (e.g. -scenario1,-scenario2,-scenario3). " +
+                    "To exclude scenarios, each names should be prefixed with a minus (-) character and be comma-delimited (e.g. -scenario1,-scenario2,-scenario3). " +
                     "Scenarios included take priority over scenarios excluded in the case of a matching name.",
                 ArgumentHelpName = "name,name...",
                 AllowMultipleArgumentsPerToken = true
@@ -895,6 +903,16 @@ namespace VirtualClient
             return option;
         }
 
+        private static string GetValue(ArgumentResult result)
+        {
+            return result.Tokens?.FirstOrDefault()?.Value?.Trim(OptionFactory.argumentTrimChars);
+        }
+
+        private static string GetValue(Token token)
+        {
+            return token?.Value?.Trim(OptionFactory.argumentTrimChars);
+        }
+
         private static IList<string> ParseDelimitedValues(string parsedResult)
         {
             // Example Format:
@@ -909,7 +927,7 @@ namespace VirtualClient
                 {
                     foreach (string value in delimitedValues)
                     {
-                        values.Add(value.Trim());
+                        values.Add(value.Trim(OptionFactory.argumentTrimChars));
                     }
                 }
             }
@@ -923,17 +941,20 @@ namespace VirtualClient
             // --name=package1.zip,package2.zip
 
             List<string> values = new List<string>();
-            foreach (Token token in parsedResult.Tokens)
+            if (parsedResult.Tokens?.Any() == true)
             {
-                if (!string.IsNullOrWhiteSpace(token.Value))
+                foreach (Token token in parsedResult.Tokens)
                 {
-                    string[] delimitedValues = token.Value.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
-
-                    if (delimitedValues?.Any() == true)
+                    if (!string.IsNullOrWhiteSpace(token.Value))
                     {
-                        foreach (string value in delimitedValues)
+                        string[] delimitedValues = OptionFactory.GetValue(token)?.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (delimitedValues?.Any() == true)
                         {
-                            values.Add(value.Trim());
+                            foreach (string value in delimitedValues)
+                            {
+                                values.Add(value.Trim(OptionFactory.argumentTrimChars));
+                            }
                         }
                     }
                 }
@@ -948,11 +969,15 @@ namespace VirtualClient
             // --metadata=Property1=true,,,Property2=1234,,,Property3=value1,value2
 
             IDictionary<string, IConvertible> delimitedValues = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            foreach (Token token in parsedResult.Tokens)
+
+            if (parsedResult.Tokens?.Any() == true)
             {
-                if (!string.IsNullOrWhiteSpace(token.Value))
+                foreach (Token token in parsedResult.Tokens)
                 {
-                    delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(token.Value));
+                    if (!string.IsNullOrWhiteSpace(token.Value))
+                    {
+                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(token.Value));
+                    }
                 }
             }
 
@@ -962,7 +987,7 @@ namespace VirtualClient
         private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
         {
             DependencyStore store = null;
-            string endpoint = parsedResult.Tokens.First().Value.Trim(new char[] { '\'', '"', ' ' });
+            string endpoint = OptionFactory.GetValue(parsedResult);
 
             if (EndpointUtility.IsFullyQualifiedFilePath(endpoint))
             {
@@ -994,7 +1019,7 @@ namespace VirtualClient
 
         private static DependencyEventHubStore ParseEventHubStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager)
         {
-            string endpoint = parsedResult.Tokens.First().Value.Trim(new char[] { '\'', '"', ' ' });
+            string endpoint = OptionFactory.GetValue(parsedResult);
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(storeName, endpoint, certificateManager);
 
             if (store == null)
@@ -1018,7 +1043,7 @@ namespace VirtualClient
 
             foreach (Token argument in parsedResult.Tokens)
             {
-                string profileReference = argument.Value?.Trim(new char[] { '\'', '"', ' ' });
+                string profileReference = OptionFactory.GetValue(argument);
 
                 if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
                 {
@@ -1061,7 +1086,7 @@ namespace VirtualClient
             // --flush-wait=00:10:00
             // --flush-wait=60
 
-            string argument = parsedResult.Tokens.First().Value;
+            string argument = OptionFactory.GetValue(parsedResult);
             TimeSpan timeout = TimeSpan.Zero;
 
             try
@@ -1089,7 +1114,7 @@ namespace VirtualClient
 
         private static ProfileTiming ParseProfileIterations(ArgumentResult parsedResult)
         {
-            string argument = parsedResult.Tokens.First().Value;
+            string argument = OptionFactory.GetValue(parsedResult);
             if (!int.TryParse(argument, out int iterations))
             {
                 throw new ArgumentException(
@@ -1118,7 +1143,7 @@ namespace VirtualClient
             // --timeout=01:00:00,deterministic*
 
             ProfileTiming timing = null;
-            string argument = parsedResult.Tokens.First().Value;
+            string argument = OptionFactory.GetValue(parsedResult);
             string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
 
             TimeSpan timeout = TimeSpan.Zero;
