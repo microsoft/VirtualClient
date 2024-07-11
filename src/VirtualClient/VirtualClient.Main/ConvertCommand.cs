@@ -66,7 +66,7 @@ namespace VirtualClient
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IServiceCollection dependencies = this.InitializeDependencies(args);
-            IEnumerable<string> profiles = await this.InitializeProfilesAsync(dependencies, cancellationToken);
+            IEnumerable<string> profiles = await this.EvaluateProfilesAsync(dependencies);
 
             if (profiles?.Any() == true)
             {

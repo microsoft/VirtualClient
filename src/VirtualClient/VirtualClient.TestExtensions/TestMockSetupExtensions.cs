@@ -8,11 +8,14 @@ namespace VirtualClient.TestExtensions
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
+    using System.IO.Abstractions;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Moq;
     using Moq.Language;
     using Moq.Language.Flow;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Extensions to help setup common mock class instances and behaviors.
@@ -20,6 +23,41 @@ namespace VirtualClient.TestExtensions
     public static class TestMockSetupExtensions
     {
         private static Random randomGen = new Random();
+
+        /// <summary>
+        /// Setup default properties and behaviors for a mock <see cref="IFileInfo"/> object.
+        /// </summary>
+        public static Mock<IFileInfo> Setup(this Mock<IFileInfo> mockFileInfo, string filePath, bool exists = true, long length = 12345, DateTime? creationTime = null, DateTime? lastModified = null)
+        {
+            string directoryPath = MockFixture.GetDirectoryName(filePath);
+
+            Mock<IDirectoryInfo> mockDirectoryInfo = new Mock<IDirectoryInfo>();
+            mockDirectoryInfo.Setup(dir => dir.Name).Returns(Path.GetFileName(filePath));
+            mockDirectoryInfo.Setup(dir => dir.Exists).Returns(exists);
+            mockDirectoryInfo.Setup(dir => dir.FullName).Returns(directoryPath);
+            mockDirectoryInfo.Setup(dir => dir.CreationTime).Returns(creationTime != null ? creationTime.Value : DateTime.Now.AddMinutes(-5));
+            mockDirectoryInfo.Setup(dir => dir.CreationTimeUtc).Returns(creationTime != null ? creationTime.Value : DateTime.UtcNow.AddMinutes(-5));
+            mockDirectoryInfo.Setup(dir => dir.LastAccessTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockDirectoryInfo.Setup(dir => dir.LastAccessTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+            mockDirectoryInfo.Setup(dir => dir.LastWriteTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockDirectoryInfo.Setup(dir => dir.LastWriteTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+
+            mockFileInfo.Setup(file => file.Name).Returns(Path.GetFileName(filePath));
+            mockFileInfo.Setup(file => file.Exists).Returns(exists);
+            mockFileInfo.Setup(file => file.FullName).Returns(filePath);
+            mockFileInfo.Setup(file => file.Directory).Returns(mockDirectoryInfo.Object);
+            mockFileInfo.Setup(file => file.DirectoryName).Returns(directoryPath);
+            mockFileInfo.Setup(file => file.Extension).Returns(Path.GetExtension(filePath));
+            mockFileInfo.Setup(file => file.CreationTime).Returns(creationTime != null ? creationTime.Value : DateTime.Now.AddMinutes(-5));
+            mockFileInfo.Setup(file => file.CreationTimeUtc).Returns(creationTime != null ? creationTime.Value : DateTime.UtcNow.AddMinutes(-5));
+            mockFileInfo.Setup(file => file.LastAccessTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockFileInfo.Setup(file => file.LastAccessTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+            mockFileInfo.Setup(file => file.LastWriteTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockFileInfo.Setup(file => file.LastWriteTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+            mockFileInfo.Setup(file => file.Length).Returns(12345);
+
+            return mockFileInfo;
+        }
 
         /// <summary>
         /// Setup default property values and behaviors for a mock system/OS process.

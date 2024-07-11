@@ -86,6 +86,7 @@ stages:
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
     - task: EsrpCodeSigning@1
+      condition: and(succeeded(), eq(variables['CODE_SIGNING'], true))
       inputs:
         ConnectedServiceName: 'virtualclient-esrp'
         FolderPath: '$(Build.ArtifactStagingDirectory)'
