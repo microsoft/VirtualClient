@@ -5,14 +5,17 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
     using global::VirtualClient.Contracts;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Utilities;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -23,26 +26,58 @@ namespace VirtualClient.Monitors
     public class AmdSmiMonitor : VirtualClientIntervalBasedMonitor
     {
         /// <summary>
+        /// Name of Metric subsystem.
+        /// </summary>
+        protected const string Metric = "metric";
+
+        /// <summary>
+        /// Name of XGMI subsystem.
+        /// </summary>
+        protected const string XGMI = "xgmi";
+
+        private ISystemManagement systemManagement;
+        private IFileSystem fileSystem;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AmdSmiMonitor"/> class.
         /// </summary>
         public AmdSmiMonitor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
+            this.fileSystem = this.systemManagement.FileSystem;
+        }
+
+        /// <summary>
+        /// AMDSMI Subsystem Name.
+        /// </summary>
+        public string Subsystem
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(AmdSmiMonitor.Subsystem), out IConvertible subsystem);
+                return subsystem?.ToString();
+            }
         }
 
         /// <inheritdoc/>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            switch (this.Platform)
+            if (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
             {
-                case PlatformID.Win32NT:
-                    await this.QueryGpuAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                    break;
+                var tasks = new List<Task>();
 
-                case PlatformID.Unix:
-                    // not supported at the moment
-                    break;
+                if (this.Subsystem == AmdSmiMonitor.Metric)
+                {
+                    tasks.Add(this.QueryGpuMetricAsync(telemetryContext, cancellationToken));
+                }
+
+                if (this.Subsystem == AmdSmiMonitor.XGMI)
+                {
+                    tasks.Add(this.QueryGpuXGMIAsync(telemetryContext, cancellationToken));
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
             }
         }
 
@@ -58,19 +93,59 @@ namespace VirtualClient.Monitors
             }
         }
 
+        private string GetAmdSmiCommand()
+        {
+            string command = string.Empty;
+            switch (this.Platform)
+            {
+                case PlatformID.Win32NT:
+                    command = "amdsmi";
+                    break;
+
+                case PlatformID.Unix:
+                    command = "amd-smi";
+                    break;
+            }
+
+            return command;
+        }
+
+        private IList<Metric> AmdSmiXGMIBandwidthAggregator(IList<Metric> metrics1, IList<Metric> metrics2, long time)
+        {
+            List<Metric> aggregatedMetrics = new List<Metric>();
+
+            if (metrics1.Any() && metrics2.Any())
+            {
+                foreach (Metric counter1 in metrics1)
+                {
+                    foreach (Metric counter2 in metrics2)
+                    {
+                        if (counter1.Metadata["gpu.id"] == counter2.Metadata["gpu.id"] &&
+                            counter1.Name == counter2.Name)
+                        {
+                            if (counter1.Metadata["gpu.id"] == counter2.Metadata["gpu.id"] && counter1.Name == counter2.Name)
+                            {
+                                int i = int.Parse(counter1.Name.Substring(counter1.Name.Length - 1));
+                                double bandwidth = Math.Round((counter2.Value - counter1.Value) / (((double)time) / 1000.0));
+                                aggregatedMetrics.Add(new Metric($"xgmi.bw.{i}", bandwidth, unit: "KB/s", metadata: counter1.Metadata));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return aggregatedMetrics;
+        }
+
         /// <summary>
-        /// Query the gpu for utilization information
+        /// Query the gpu for metrics information
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
-        private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task QueryGpuMetricAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-            IFileSystem fileSystem = systemManagement.FileSystem;
-
             int totalSamples = (int)this.MonitorFrequency.TotalSeconds;
-            string command = "amdsmi";
             string commandArguments = "metric --csv";
 
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
@@ -80,7 +155,7 @@ namespace VirtualClient.Monitors
             {
                 try
                 {
-                    using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, this.GetAmdSmiCommand(), $"{commandArguments}", Environment.CurrentDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -99,7 +174,7 @@ namespace VirtualClient.Monitors
 
                                 if (process.StandardOutput.Length > 0)
                                 {
-                                    AmdSmiQueryGpuParser parser = new AmdSmiQueryGpuParser(process.StandardOutput.ToString());
+                                    AmdSmiMetricQueryGpuParser parser = new AmdSmiMetricQueryGpuParser(process.StandardOutput.ToString());
                                     IList<Metric> metrics = parser.Parse();
 
                                     if (metrics?.Any() == true)
@@ -117,6 +192,77 @@ namespace VirtualClient.Monitors
 
                         await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected whenever ctrl-C is used.
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                }
+            }
+        }
+
+        private async Task QueryGpuXGMIAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int totalSamples = (int)this.MonitorFrequency.TotalSeconds;
+            string commandArguments = "xgmi -m --json";
+            DateTime startTime1, endTime1, startTime2, endTime2;
+            IList<Metric> metrics1, metrics2, aggregatedMetrics;
+
+            Stopwatch stopwatch;
+            long elapsedMilliseconds;
+
+            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
+                .ConfigureAwait(false);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, this.GetAmdSmiCommand(), $"{commandArguments}", Environment.CurrentDirectory))
+                    {
+                        this.CleanupTasks.Add(() => process.SafeKill());
+
+                        stopwatch = Stopwatch.StartNew();
+
+                        startTime1 = DateTime.UtcNow;
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
+
+                        endTime1 = DateTime.UtcNow;
+
+                        AmdSmiXGMIQueryGpuParser parser = new AmdSmiXGMIQueryGpuParser(process.StandardOutput.ToString());
+                        metrics1 = parser.Parse();
+                    }
+
+                    await Task.Delay(500).ConfigureAwait(false);
+
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, this.GetAmdSmiCommand(), $"{commandArguments}", Environment.CurrentDirectory))
+                    {
+                        this.CleanupTasks.Add(() => process.SafeKill());
+
+                        startTime2 = DateTime.UtcNow;
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
+
+                        endTime2 = DateTime.UtcNow;
+                        stopwatch.Stop();
+                        elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                        AmdSmiXGMIQueryGpuParser parser = new AmdSmiXGMIQueryGpuParser(process.StandardOutput.ToString());
+                        metrics2 = parser.Parse();
+                    }
+
+                    aggregatedMetrics = this.AmdSmiXGMIBandwidthAggregator(metrics1, metrics2, time: elapsedMilliseconds);
+
+                    if (aggregatedMetrics?.Any() == true)
+                    {
+                        this.Logger.LogPerformanceCounters("amd", aggregatedMetrics, startTime1, endTime2, telemetryContext);
+                    }
+
+                    await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
