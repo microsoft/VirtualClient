@@ -43,7 +43,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(DiskSpdExecutor.PackageName), "diskspd" },
                 { nameof(DiskSpdExecutor.CommandLine), "-c4G -b4K -r4K -t1 -o1 -w100" },
                 { nameof(DiskSpdExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
-                { nameof(DiskSpdExecutor.TestName), "diskspd_randwrite_4GB_direct" }
+                { nameof(DiskSpdExecutor.MetricScenario), "diskspd_randwrite_4GB_direct" }
             };
 
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -63,7 +63,7 @@ namespace VirtualClient.Actions.DiskPerformance
         public void DiskSpdExecutorAppliesConfigurationParametersCorrectly()
         {
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "-c{FileSize} -b8K -r4K -t{ThreadCount} -o{QueueDepth} -w0 -d480 -Suw -W15 -D -L -Rtext";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "diskspd_randread_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}";
+            this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "diskspd_randread_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}";
             this.profileParameters[nameof(DiskSpdExecutor.FileSize)] = "496G";
             this.profileParameters[nameof(DiskSpdExecutor.QueueDepth)] = 16;
             this.profileParameters[nameof(DiskSpdExecutor.ThreadCount)] = 32;
@@ -73,7 +73,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 executor.EvaluateParametersAsync(EventContext.None);
 
                 string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
+                string testName = executor.Parameters[nameof(DiskSpdExecutor.MetricScenario)].ToString();
 
                 Assert.AreEqual($"-c496G -b8K -r4K -t32 -o16 -w0 -d480 -Suw -W15 -D -L -Rtext", commandLine);
                 Assert.AreEqual($"diskspd_randread_496G_8k_d16_th32", testName);
@@ -84,7 +84,7 @@ namespace VirtualClient.Actions.DiskPerformance
         public void DiskSpdExecutorAppliesConfigurationParametersCorrectly_DiskFillScenario1()
         {
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "-c{DiskFillSize} -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "disk_fill";
+            this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "disk_fill";
             this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = "496G";
 
             using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
@@ -92,7 +92,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 executor.EvaluateParametersAsync(EventContext.None);
 
                 string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
+                string testName = executor.Parameters[nameof(DiskSpdExecutor.MetricScenario)].ToString();
 
                 Assert.AreEqual($"-c496G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L", commandLine);
                 Assert.AreEqual($"disk_fill", testName);
@@ -108,7 +108,7 @@ namespace VirtualClient.Actions.DiskPerformance
             // Note that this is not a valid DiskSpd command line. This is used ONLY to ensure
             // the file sizes are corrected.
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "-c{DiskFillSize} -c{FileSize} -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "disk_fill";
+            this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "disk_fill";
 
             // The disk fill size '496GB' is not supported. It should be formatted to '496G'.
             this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = size;
@@ -119,49 +119,10 @@ namespace VirtualClient.Actions.DiskPerformance
                 executor.EvaluateParametersAsync(EventContext.None);
 
                 string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
+                string testName = executor.Parameters[nameof(DiskSpdExecutor.MetricScenario)].ToString();
 
                 Assert.AreEqual($"-c{correctedSize} -c{correctedSize} -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L", commandLine);
                 Assert.AreEqual($"disk_fill", testName);
-            }
-        }
-
-        [Test]
-        public void DiskSpdExecutorAppliesConfigurationParametersCorrectly_StressConfiguration()
-        {
-            // Stress Configuration -> Stress Profile
-            this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "-c{FileSize} -b8K -r4K -t{ThreadCount} -o{QueueDepth} -w0 -d480 -Suw -W15 -D -L -Rtext";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "diskspd_randread_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}";
-            this.profileParameters[nameof(DiskSpdExecutor.FileSize)] = "496G";
-            this.profileParameters[nameof(DiskSpdExecutor.Configuration)] = "Stress";
-
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
-            {
-                executor.EvaluateParametersAsync(EventContext.None);
-
-                string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
-
-                int logicalCores = Environment.ProcessorCount;
-                int threads = logicalCores / 2;
-                int queueDepth = 512 / threads;
-
-                Assert.AreEqual($"-c496G -b8K -r4K -t{threads} -o{queueDepth} -w0 -d480 -Suw -W15 -D -L -Rtext", commandLine);
-                Assert.AreEqual($"diskspd_randread_496G_8k_d{queueDepth}_th{threads}", testName);
-            }
-        }
-
-        [Test]
-        public void DiskSpdExecutorThrowsIfAnUnsupportedConfigurationIsDefined()
-        {
-            this.profileParameters[nameof(DiskSpdExecutor.Configuration)] = "ConfigurationNotSupported";
-
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
-            {
-                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.EvaluateParametersAsync(EventContext.None));
-
-                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
             }
         }
 
