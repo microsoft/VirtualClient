@@ -254,6 +254,7 @@
             "Parameters": {
                 "Scenario": "DistributeMySQLDatabase",
                 "Action": "DistributeDatabase",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
                 "Role": "Server"

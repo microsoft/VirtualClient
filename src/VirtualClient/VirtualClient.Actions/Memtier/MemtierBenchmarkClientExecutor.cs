@@ -156,6 +156,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Parameter defines the maximum number of memtier processes.
+        /// </summary>
+        public int MaxClients
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MaxClients), int.MaxValue);
+            }
+        }
+
+        /// <summary>
         /// The benchmark target server (e.g. Redis, Memcached).
         /// </summary>
         protected string Benchmark { get; private set; }
@@ -338,7 +349,7 @@ namespace VirtualClient.Actions
             {
                 return false;
             }
-            
+
         }
 
         private void CaptureMetrics(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -443,7 +454,9 @@ namespace VirtualClient.Actions
                     CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
                     int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
 
-                    for (int i = 0; i < serverState.Ports.Count(); i++)
+                    int serverInstancesMax = this.MaxClients / this.ClientInstances;
+
+                    for (int i = 0; i < Math.Min(serverInstancesMax, serverprocesscount); i++)
                     {
                         PortDescription portDescription = serverState.Ports.ElementAt(i);
                         int serverPort = portDescription.Port;
@@ -578,8 +591,8 @@ namespace VirtualClient.Actions
                     @".*\/memtier_benchmark",
                     @"--port\s+\d+",
                     @"--key-prefix\s+\w+",
-                    @"--key-prefix\s+\w+", 
-                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+", 
+                    @"--key-prefix\s+\w+",
+                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+",
                     @"--cert\s+.*\.crt",
                     @"--key\s+.*\.key",
                     @"--cacert\s+.*\.crt",

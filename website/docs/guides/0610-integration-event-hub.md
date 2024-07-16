@@ -26,7 +26,7 @@ describe where Virtual Client/.NET will search to find certificates.
 
 * **Specific User**  
   When running the Virtual Client application as a specific user (e.g. /home/\{user\} ./VirtualClient), the application (.NET) will search for certificates
-  in `/{user}/.dotnet/corefx/cryptography/x509stores/my/` directory location. The directory MUST allow at least read/write access for the user to this directory and the
+  in `/home/{user}/.dotnet/corefx/cryptography/x509stores/my/` directory location. The directory MUST allow at least read/write access for the user to this directory and the
   certificate files within it or Virtual Client will hit a permissions issue.
 
   <mark>
@@ -38,10 +38,10 @@ describe where Virtual Client/.NET will search to find certificates.
   directory using the following command option:
 
   ``` bash
-  sudo chmod -R 700 /{user}/.dotnet/corefx/cryptography/x509stores/my/
+  sudo chmod -R 700 /home/{user}/.dotnet/corefx/cryptography/x509stores/my/
 
   # e.g.
-  sudo chmod -R 700 /anyuser/.dotnet/corefx/cryptography/x509stores/my/
+  sudo chmod -R 700 /home/anyuser/.dotnet/corefx/cryptography/x509stores/my/
   ```
 
 ### Referencing Certificates on Windows

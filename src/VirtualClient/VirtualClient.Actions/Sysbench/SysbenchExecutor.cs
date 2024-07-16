@@ -233,6 +233,8 @@ namespace VirtualClient.Actions
                 ? (int)Math.Log2(coreCount)
                 : (int)Math.Log2(coreCount) + 2;
 
+            recordCountExponent = Math.Max(3, recordCountExponent);
+
             int recordEstimate = (int)Math.Pow(10, recordCountExponent);
 
             int recordCount = records.GetValueOrDefault(recordEstimate);
