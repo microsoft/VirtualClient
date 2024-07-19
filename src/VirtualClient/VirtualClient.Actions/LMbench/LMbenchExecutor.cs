@@ -93,7 +93,7 @@ namespace VirtualClient.Actions
             try
             {
                 this.Cleanup();
-                await this.ExecuteWorkloadAsync("make", $"results {this.CompilerFlags}", telemetryContext, cancellationToken).ConfigureAwait();
+                await this.ExecuteWorkloadAsync("bash", $"-c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results {this.CompilerFlags}\"", telemetryContext, cancellationToken).ConfigureAwait();
 
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("make", "see", this.LMbenchDirectory))
                 {
