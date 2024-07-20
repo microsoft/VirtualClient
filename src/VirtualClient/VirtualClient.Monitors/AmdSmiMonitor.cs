@@ -120,15 +120,10 @@ namespace VirtualClient.Monitors
                 {
                     foreach (Metric counter2 in metrics2)
                     {
-                        if (counter1.Metadata["gpu.id"] == counter2.Metadata["gpu.id"] &&
-                            counter1.Name == counter2.Name)
+                        if (counter1.Metadata["gpu.id"] == counter2.Metadata["gpu.id"])
                         {
-                            if (counter1.Metadata["gpu.id"] == counter2.Metadata["gpu.id"] && counter1.Name == counter2.Name)
-                            {
-                                int i = int.Parse(counter1.Name.Substring(counter1.Name.Length - 1));
-                                double bandwidth = Math.Round((counter2.Value - counter1.Value) / (((double)time) / 1000.0));
-                                aggregatedMetrics.Add(new Metric($"xgmi.bw.{i}", bandwidth, unit: "KB/s", metadata: counter1.Metadata));
-                            }
+                            double bandwidth = (counter2.Value - counter1.Value) / (((double)time) / 1000.0);
+                            aggregatedMetrics.Add(new Metric($"xgmi.bw", (bandwidth / 1024), unit: "MB/s", metadata: counter1.Metadata));
                         }
                     }
                 }
@@ -138,7 +133,7 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
-        /// Query the gpu for metrics information
+        /// Query the gpu for utilization information
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>

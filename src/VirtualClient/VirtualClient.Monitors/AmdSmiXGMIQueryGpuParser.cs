@@ -41,28 +41,28 @@ namespace VirtualClient.Monitors
             dt.Columns.Add("gpu", typeof(int));
 
             int numGPUs = gpuDataList.Count;
-
             for (int i = 0; i < numGPUs; i++)
             {
-                dt.Columns.Add($"gpu{i}_read_value", typeof(double));
-                dt.Columns.Add($"gpu{i}_write_value", typeof(double));
+                dt.Columns.Add($"xgmi_{i}_data", typeof(double));
             }
 
+            int id = 0;
             foreach (dynamic gpuData in gpuDataList)
             {
+                double data = 0;
                 DataRow row = dt.NewRow();
                 row["gpu"] = gpuData.gpu;
-
                 foreach (var link in gpuData.link_metrics.links)
                 {
-                    int gpuIndex = link.gpu;
-                    row[$"gpu{gpuIndex}_read_value"] = link.read.value.Value;
-                    row[$"gpu{gpuIndex}_write_value"] = link.write.value.Value;
+                    data += (link.read.value.Value + link.write.value.Value);
                 }
 
+                row[$"xgmi_{id}_data"] = data;
                 dt.Rows.Add(row);
+                id++;
             }
 
+            int gpuId = 0;
             foreach (DataRow row in dt.Rows)
             {
                 Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
@@ -70,14 +70,8 @@ namespace VirtualClient.Monitors
                     { "gpu.id", Convert.ToString(SafeGet(row, "gpu")) },
                 };
 
-                for (int i = 0; i < numGPUs; i++)
-                {
-                    // metrics.Add(new Metric($"xgmi.readData.to{i}", Convert.ToDouble(SafeGet(row, $"gpu{i}_read_value")), unit: "KB", metadata: metadata));
-                    // metrics.Add(new Metric($"xgmi.writeData.to{i}", Convert.ToDouble(SafeGet(row, $"gpu{i}_read_value")), unit: "KB", metadata: metadata));
-
-                    // Bidirectional Data Transferred
-                    metrics.Add(new Metric($"xgmi.bidata.{i}", (Convert.ToDouble(SafeGet(row, $"gpu{i}_read_value")) + Convert.ToDouble(SafeGet(row, $"gpu{i}_read_value"))), unit: "KB", metadata: metadata));
-                }
+                metrics.Add(new Metric($"xgmi_{gpuId}_data", Convert.ToDouble(SafeGet(row, $"xgmi_{gpuId}_data")), unit: "KB", metadata: metadata));
+                gpuId++;
             }
 
             return metrics;

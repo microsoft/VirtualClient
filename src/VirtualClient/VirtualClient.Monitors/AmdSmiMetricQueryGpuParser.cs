@@ -40,6 +40,11 @@ namespace VirtualClient.Monitors
                     { "gpu.id", Convert.ToString(SafeGet(row, "gpu")) }
                 };
 
+                metrics.Add(new Metric("utilization.gpu [%]", Convert.ToDouble(SafeGet(row, "gfx_usage")), unit: "%", metadata: metadata));
+                metrics.Add(new Metric("framebuffer.total [MB]", Convert.ToDouble(SafeGet(row, "fb_total")), unit: "MB", metadata: metadata));
+                metrics.Add(new Metric("framebuffer.used [MB]", Convert.ToDouble(SafeGet(row, "fb_used")), unit: "MB", metadata: metadata));
+
+                // AMD MI300X
                 metrics.Add(new Metric("utilization.gpu", Convert.ToDouble(SafeGet(row, "gfx_activity")), unit: "%", metadata: metadata));
                 double value = 100 * Convert.ToDouble(SafeGet(row, "used_vram")) / Convert.ToDouble(SafeGet(row, "total_vram"));
                 int roundedValue = Convert.ToInt32(Math.Round(value));
@@ -47,27 +52,25 @@ namespace VirtualClient.Monitors
                 metrics.Add(new Metric("temperature.gpu", Convert.ToDouble(SafeGet(row, "hotspot")), unit: "celsius", metadata: metadata));
                 metrics.Add(new Metric("temperature.memory", Convert.ToDouble(SafeGet(row, "mem")), unit: "celsius", metadata: metadata));
                 metrics.Add(new Metric("power.draw.average", Convert.ToDouble(SafeGet(row, "socket_power")), unit: "W", metadata: metadata));
-                metrics.Add(new Metric("gfx_0_clk", Convert.ToDouble(SafeGet(row, "gfx_0_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_1_clk", Convert.ToDouble(SafeGet(row, "gfx_1_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_2_clk", Convert.ToDouble(SafeGet(row, "gfx_2_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_3_clk", Convert.ToDouble(SafeGet(row, "gfx_3_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_4_clk", Convert.ToDouble(SafeGet(row, "gfx_4_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_5_clk", Convert.ToDouble(SafeGet(row, "gfx_5_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_6_clk", Convert.ToDouble(SafeGet(row, "gfx_6_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("gfx_7_clk", Convert.ToDouble(SafeGet(row, "gfx_7_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("mem_0_clk", Convert.ToDouble(SafeGet(row, "mem_0_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("vclk_0_clk", Convert.ToDouble(SafeGet(row, "vclk_0_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("vclk_1_clk", Convert.ToDouble(SafeGet(row, "vclk_1_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("vclk_2_clk", Convert.ToDouble(SafeGet(row, "vclk_2_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("vclk_3_clk", Convert.ToDouble(SafeGet(row, "vclk_3_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("dclk_0_clk", Convert.ToDouble(SafeGet(row, "dclk_0_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("dclk_1_clk", Convert.ToDouble(SafeGet(row, "dclk_1_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("dclk_2_clk", Convert.ToDouble(SafeGet(row, "dclk_2_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("dclk_3_clk", Convert.ToDouble(SafeGet(row, "dclk_3_clk")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("pcie_bw", Convert.ToDouble(SafeGet(row, "bandwidth")), unit: "Mb/s", metadata: metadata));
-                // metrics.Add(new Metric("memory.total", Convert.ToDouble(SafeGet(row, "total_vram")), unit: "MiB", metadata: metadata));
-                // metrics.Add(new Metric("memory.free", Convert.ToDouble(SafeGet(row, "free_vram")), unit: "MiB", metadata: metadata));
-                // metrics.Add(new Metric("memory.used", Convert.ToDouble(SafeGet(row, "used_vram")), unit: "MiB", metadata: metadata));
+
+                double gfx_clk_avg = (Convert.ToDouble(SafeGet(row, "gfx_0_clk")) + Convert.ToDouble(SafeGet(row, "gfx_1_clk")) +
+                    Convert.ToDouble(SafeGet(row, "gfx_2_clk")) + Convert.ToDouble(SafeGet(row, "gfx_3_clk")) +
+                    Convert.ToDouble(SafeGet(row, "gfx_4_clk")) + Convert.ToDouble(SafeGet(row, "gfx_5_clk")) +
+                    Convert.ToDouble(SafeGet(row, "gfx_6_clk")) + Convert.ToDouble(SafeGet(row, "gfx_7_clk"))) / 8;
+
+                metrics.Add(new Metric("gfx_clk_avg", gfx_clk_avg, unit: "MHz", metadata: metadata));
+                metrics.Add(new Metric("mem_clk", Convert.ToDouble(SafeGet(row, "mem_0_clk")), unit: "MHz", metadata: metadata));
+
+                double video_vclk_avg = (Convert.ToDouble(SafeGet(row, "vclk_0_clk")) + Convert.ToDouble(SafeGet(row, "vclk_1_clk")) +
+                    Convert.ToDouble(SafeGet(row, "vclk_2_clk")) + Convert.ToDouble(SafeGet(row, "vclk_3_clk"))) / 4;
+
+                metrics.Add(new Metric("video_vclk_avg", video_vclk_avg, unit: "MHz", metadata: metadata));
+
+                double video_dclk_avg = (Convert.ToDouble(SafeGet(row, "dclk_0_clk")) + Convert.ToDouble(SafeGet(row, "dclk_1_clk")) +
+                    Convert.ToDouble(SafeGet(row, "dclk_2_clk")) + Convert.ToDouble(SafeGet(row, "dclk_3_clk"))) / 4;
+
+                metrics.Add(new Metric("video_dclk_avg", video_dclk_avg, unit: "MHz", metadata: metadata));
+                metrics.Add(new Metric("pcie_bw", Convert.ToDouble(SafeGet(row, "bandwidth")) / 8, unit: "MB/s", metadata: metadata));
             }
 
             return metrics;
@@ -79,6 +82,8 @@ namespace VirtualClient.Monitors
             this.PreprocessedText = this.RawText.Replace("\r\n", Environment.NewLine);
             Regex quotedPattern = new Regex("\"([^\"]*)\"");
             this.PreprocessedText = quotedPattern.Replace(this.PreprocessedText, "N/A");
+            Regex quotedPattern2 = new Regex("\\[.*?\\]");
+            this.PreprocessedText = quotedPattern2.Replace(this.PreprocessedText, "N/A");
         }
 
         private static IConvertible SafeGet(DataRow row, string columnName)

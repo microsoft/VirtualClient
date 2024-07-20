@@ -28,16 +28,15 @@ namespace VirtualClient.Monitors
             AmdSmiXGMIQueryGpuParser testParser = new AmdSmiXGMIQueryGpuParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
-            Assert.AreEqual(64, metrics.Count);
-            MetricAssert.Exists(metrics, "xgmi.bidata.0", 0, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.1", 0, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.2", 2, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.3", 2, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.4", 2, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.5", 2, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.6", 2, "KB");
-            MetricAssert.Exists(metrics, "xgmi.bidata.7", 2, "KB");
-
+            Assert.AreEqual(8, metrics.Count);
+            MetricAssert.Exists(metrics, "xgmi_0_data", 14, "KB");
+            MetricAssert.Exists(metrics, "xgmi_1_data", 12, "KB");
+            MetricAssert.Exists(metrics, "xgmi_2_data", 10, "KB");
+            MetricAssert.Exists(metrics, "xgmi_3_data", 9, "KB");
+            MetricAssert.Exists(metrics, "xgmi_4_data", 9, "KB");
+            MetricAssert.Exists(metrics, "xgmi_5_data", 8, "KB");
+            MetricAssert.Exists(metrics, "xgmi_6_data", 6, "KB");
+            MetricAssert.Exists(metrics, "xgmi_7_data", 6, "KB");
         }
     }
 }
