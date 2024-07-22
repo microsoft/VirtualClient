@@ -611,7 +611,6 @@ namespace VirtualClient
                 // We take as many passes through to ensure that all placeholders/expressions have been evaluated. This allows
                 // placeholders that are themselves contained/nested within parent placeholders to be successfully resolved.
                 ProfileExpressionEvaluator.EvaluateParameterSpecificExpressions(dependencies, parameters, cancellationToken);
-                await ProfileExpressionEvaluator.EvaluateWellKnownExpressionsAsync(dependencies, parameters, cancellationToken);
             }
 
             iterations = 0;
