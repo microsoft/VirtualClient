@@ -60,10 +60,14 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd $(VcVersion)$(VersionSuffix)
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@1
-  condition: and(succeeded(), eq(variables['CODE_SIGNING'], true))
+- task: EsrpCodeSigning@5
   inputs:
-    ConnectedServiceName: 'virtualclient-esrp'
+    ConnectedServiceName: 'virtualclient-esrp-ame'
+    AppRegistrationClientId: 'cc6b4c30-84b7-457a-b280-79683f2dff33'
+    AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+    AuthAKVName: 'virtualclient-vault-esrp'
+    AuthCertName: 'virtualclient-esrp-cert-auth'
+    AuthSignCertName: 'virtualclient-esrp-cert-sign'
     FolderPath: '$(System.DefaultWorkingDirectory)'
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'
@@ -87,6 +91,7 @@ steps:
     SessionTimeout: '60'
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
+    PendingAnalysisWaitTimeoutMinutes: '5'
 
 - task: NuGetAuthenticate@1
   displayName: 'Authenticate with NuGet feed'
