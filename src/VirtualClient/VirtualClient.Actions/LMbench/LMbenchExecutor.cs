@@ -122,10 +122,7 @@ namespace VirtualClient.Actions
 
                         process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
 
-                        if (process.StandardOutput.Length > 0)
-                        {
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                        }
+                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                     }
                 }
             }
@@ -202,7 +199,7 @@ namespace VirtualClient.Actions
             }   
         }
 
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -213,7 +210,11 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
+                string resultsPath = this.PlatformSpecifics.Combine(this.LMbenchDirectory, "results", "summary.out");
+
+                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+
+                LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(
