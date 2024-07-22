@@ -613,6 +613,13 @@ namespace VirtualClient
                 ProfileExpressionEvaluator.EvaluateParameterSpecificExpressions(dependencies, parameters, cancellationToken);
                 await ProfileExpressionEvaluator.EvaluateWellKnownExpressionsAsync(dependencies, parameters, cancellationToken);
             }
+
+            iterations = 0;
+            while (this.ContainsReferences(parameters) && iterations < maxIterations)
+            {
+                iterations++;
+                await ProfileExpressionEvaluator.EvaluateWellKnownExpressionsAsync(dependencies, parameters, cancellationToken);
+            }
         }
 
         private static async Task<EvaluationResult> EvaluateExpressionAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, string text, CancellationToken cancellationToken)
