@@ -63,7 +63,7 @@ steps:
 - task: EsrpCodeSigning@5
   inputs:
     ConnectedServiceName: 'virtualclient-esrp-ame'
-    AppRegistrationClientId: 'cc6b4c30-84b7-457a-b280-79683f2dff33'
+    AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
     AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
     AuthAKVName: 'virtualclient-vault-esrp'
     AuthCertName: 'virtualclient-esrp-cert-auth'
