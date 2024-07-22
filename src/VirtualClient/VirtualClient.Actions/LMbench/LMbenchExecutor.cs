@@ -188,7 +188,7 @@ namespace VirtualClient.Actions
             {
                 FileSystemExtensions.ThrowIfFileDoesNotExist(this.fileSystem.File, buildFilePath);
                 string fileContent = await this.fileSystem.File.ReadAllTextAsync(buildFilePath, cancellationToken)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 Regex regexPattern = new Regex(@"LDLIBS=(.*)");
 
