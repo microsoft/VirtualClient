@@ -27,15 +27,14 @@ namespace VirtualClient.Dependencies
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Disposed in tear down.")]
     public class NvidiaContainerToolkitInstallationTests
     {
-        private const string SetupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && " +
-            "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | " +
-            "sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg --yes --no-tty && " +
-            "curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | " +
-            "sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | " +
-            " sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
+        private const string SetupCommand = "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey "
+            + "| sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\\n  "
+            + "&& curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \\\n "
+            + "   sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\\n  "
+            + "  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
 
         private const string UpdateCommand = "apt-get update";
-        private const string NvidiaDockerInstallationCommand = "apt-get install -y nvidia-docker2";
+        private const string NvidiaDockerInstallationCommand = "apt-get install -y nvidia-container-toolkit";
         private const string RestartDockerCommand = "systemctl restart docker";
 
         private MockFixture fixture;

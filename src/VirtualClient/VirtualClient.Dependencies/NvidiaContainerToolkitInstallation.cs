@@ -114,67 +114,62 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
 
-                    string setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && " +
-                        "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | " +
-                        "sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg --yes --no-tty && " +
-                        "curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | " +
-                        "sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' |  " +
-                        "sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
+                    string setupCommand = "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey " +
+                        "| sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\\n  " +
+                        "&& curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \\\n " +
+                        "   sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\\n  " +
+                        "  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
 
                     commands.Add($"bash -c \"{setupCommand}\"");
                     commands.Add("apt-get update");
-                    commands.Add("apt-get install -y nvidia-docker2");
+                    commands.Add("apt-get install -y nvidia-container-toolkit");
                     commands.Add("systemctl restart docker");
                     
                     break;
 
                 case LinuxDistribution.CentOS7:
 
-                    setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID && " +
-                        "curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.repo | " +
-                        "sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
+                    setupCommand = "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \\" +
+                        "  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
 
                     commands.Add($"bash -c \"{setupCommand}\"");
                     commands.Add("yum clean expire-cache");
-                    commands.Add("yum install -y nvidia-docker2");
+                    commands.Add("yum install -y nvidia-container-toolkit");
                     commands.Add("systemctl restart docker");
 
                     break;
 
                 case LinuxDistribution.CentOS8:
 
-                    setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID && " +
-                        "curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.repo | " +
-                        "sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
+                    setupCommand = "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \\" +
+                       "  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
 
                     commands.Add($"bash -c \"{setupCommand}\"");
-                    commands.Add("dnf clean expire-cache --refresh");
-                    commands.Add("dnf install -y nvidia-docker2");
+                    commands.Add("yum clean expire-cache");
+                    commands.Add("yum install -y nvidia-container-toolkit");
                     commands.Add("systemctl restart docker");
 
                     break;
 
                 case LinuxDistribution.RHEL7:
 
-                    setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) " +
-                        "&& curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.repo | " +
-                        "sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
+                    setupCommand = "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \\" +
+                       "  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
 
                     commands.Add($"bash -c \"{setupCommand}\"");
                     commands.Add("yum clean expire-cache");
-                    commands.Add("yum install nvidia-container-toolkit -y");
+                    commands.Add("yum install -y nvidia-container-toolkit");
                     commands.Add("systemctl restart docker");
 
                     break;
 
                 case LinuxDistribution.SUSE:
 
-                    setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) &&" +
-                        " sudo zypper ar https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.repo";
+                    setupCommand = "zypper ar https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo";
 
                     commands.Add($"bash -c \"{setupCommand}\"");
                     commands.Add("zypper refresh");
-                    commands.Add("zypper install -y nvidia-docker2");
+                    commands.Add("zypper --gpg-auto-import-keys install -y nvidia-container-toolkit");
                     commands.Add("systemctl restart docker");
 
                     break;
