@@ -112,7 +112,11 @@ namespace VirtualClient.Dependencies
             {
                 metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/x86_64/cuda-keyring_1.0-1_all.deb""";
             }
-            else
+            else if (this.PlatformSpecifics.CpuArchitecture == Architecture.Arm64) 
+            {
+                metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/sbsa/cuda-keyring_1.0-1_all.deb""";
+            }
+            else if (this.PlatformSpecifics.CpuArchitecture == Architecture.Ppc64le)
             {
                 metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/sbsa/cuda-keyring_1.0-1_all.deb""";
             }
