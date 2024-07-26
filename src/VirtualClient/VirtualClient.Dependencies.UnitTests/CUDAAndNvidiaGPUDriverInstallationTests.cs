@@ -28,7 +28,7 @@ namespace VirtualClient.Dependencies
         private const string UpdateCommand = "apt update";
         private const string BuildEssentialInstallationCommand = "apt install build-essential -yq";
         private const string GetRunFileCommand = "wget https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run";
-        private const string RunRunFileCommand = "sh cuda_11.6.0_510.39.01_linux.run --silent";
+        private const string RunRunFileCommand = "sh cuda_11.6.0_510.39.01_linux.run --silent --toolkit";
 
         private const string ExportPathCommand = $"bash -c \"echo 'export PATH=/usr/local/cuda-11.6/bin${{PATH:+:${{PATH}}}}' | " +
             $"sudo tee -a /home/anyuser/.bashrc\"";
@@ -37,7 +37,7 @@ namespace VirtualClient.Dependencies
             $"sudo tee -a /home/anyuser/.bashrc\"";
 
         private const string UpgradeCommand = "apt upgrade -y";
-        private const string InstallDriverCommand = "apt install nvidia-driver-510 nvidia-dkms-510 -y";
+        private const string InstallDriverCommand = "apt install nvidia-driver-510-server nvidia-dkms-510-server -y";
         private const string InstallFabricManagerCommand = "apt install cuda-drivers-fabricmanager-510 -y";
 
         private MockFixture fixture;
