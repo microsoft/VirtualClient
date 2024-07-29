@@ -93,7 +93,22 @@ namespace VirtualClient.Actions
             try
             {
                 this.Cleanup();
-                await this.ExecuteWorkloadAsync("make", $"results {this.CompilerFlags}", telemetryContext, cancellationToken).ConfigureAwait();
+
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("make", $"build {this.CompilerFlags}", this.LMbenchDirectory))
+                {
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    }
+                }
+
+                await this.ExecuteWorkloadAsync("bash", "-c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results\"", telemetryContext, cancellationToken).ConfigureAwait();
 
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("make", "see", this.LMbenchDirectory))
                 {
@@ -102,13 +117,12 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
+                            .ConfigureAwait(false);
 
-                        if (process.StandardOutput.Length > 0)
-                        {
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                        }
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                     }
                 }
             }
@@ -174,7 +188,7 @@ namespace VirtualClient.Actions
             {
                 FileSystemExtensions.ThrowIfFileDoesNotExist(this.fileSystem.File, buildFilePath);
                 string fileContent = await this.fileSystem.File.ReadAllTextAsync(buildFilePath, cancellationToken)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 Regex regexPattern = new Regex(@"LDLIBS=(.*)");
 
@@ -185,7 +199,7 @@ namespace VirtualClient.Actions
             }   
         }
 
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -196,7 +210,11 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
+                string resultsPath = this.PlatformSpecifics.Combine(this.LMbenchDirectory, "results", "summary.out");
+
+                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+
+                LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(
