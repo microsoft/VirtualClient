@@ -203,7 +203,7 @@ namespace VirtualClient.Actions
                 // 2 client instances running in-parallel to target each of the 2 servers
                 executor.Parameters[nameof(executor.ClientInstances)] = 2;
                 executor.Parameters[nameof(executor.MaxClients)] = 6;
-                executor.Parameters[nameof(executor.Delta)] = 1;
+                executor.Parameters[nameof(executor.MemtiercpuaffinityDelta)] = 1;
 
                 List<string> expectedCommands = new List<string>()
                 {
@@ -247,7 +247,7 @@ namespace VirtualClient.Actions
                 // 4 client instances running in-parallel to target 1 server as the other server will sit idle because MaxClients = 4, If we Set MaxClients >= 8 both the servers will be engaged . 
                 executor.Parameters[nameof(executor.ClientInstances)] = 4;
                 executor.Parameters[nameof(executor.MaxClients)] = 4;
-                executor.Parameters[nameof(executor.Delta)] = 1;
+                executor.Parameters[nameof(executor.MemtiercpuaffinityDelta)] = 1;
 
                 List<string> expectedCommands = new List<string>()
                 {

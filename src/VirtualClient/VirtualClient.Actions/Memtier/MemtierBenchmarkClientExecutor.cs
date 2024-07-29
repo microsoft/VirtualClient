@@ -169,11 +169,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the Delta.
         /// </summary>
-        public int Delta
+        public int MemtiercpuaffinityDelta
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Delta), 1);
+                return this.Parameters.GetValue<int>(nameof(this.MemtiercpuaffinityDelta), 1);
             }
         }
 
@@ -480,7 +480,7 @@ namespace VirtualClient.Actions
 
                         for (int instances = 0; instances < this.ClientInstances; instances++)
                         {
-                            memtiercpuaffinity = (memtiercpuaffinity + this.Delta) % logicalProcessorCount;
+                            memtiercpuaffinity = (memtiercpuaffinity + this.MemtiercpuaffinityDelta) % logicalProcessorCount;
 
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
