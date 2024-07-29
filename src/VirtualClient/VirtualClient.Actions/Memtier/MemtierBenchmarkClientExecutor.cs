@@ -167,13 +167,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the Delta.
+        /// Parameter defines the increment step for the Memtier cpu affinity
         /// </summary>
-        public int MemtiercpuaffinityDelta
+        public int MemtierCpuAffinityDelta
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MemtiercpuaffinityDelta), 1);
+                return this.Parameters.GetValue<int>(nameof(this.MemtierCpuAffinityDelta), 1);
             }
         }
 
@@ -465,7 +465,7 @@ namespace VirtualClient.Actions
                     CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
                     int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
                     int memtierProcessesCount = 0;
-                    int memtiercpuaffinity = 0;
+                    int memtierCpuAffinity = 0;
 
                     for (int i = 0; i < serverprocesscount; i++)
                     {
@@ -480,12 +480,12 @@ namespace VirtualClient.Actions
 
                         for (int instances = 0; instances < this.ClientInstances; instances++)
                         {
-                            memtiercpuaffinity = (memtiercpuaffinity + this.MemtiercpuaffinityDelta) % logicalProcessorCount;
+                            memtierCpuAffinity = (memtierCpuAffinity + this.MemtierCpuAffinityDelta) % logicalProcessorCount;
 
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            commandArguments = $"-c \"numactl -C {memtiercpuaffinity} {command} --server {serverIPAddress} --port {serverPort}";
+                            commandArguments = $"-c \"numactl -C {memtierCpuAffinity} {command} --server {serverIPAddress} --port {serverPort}";
 
                             if (this.IsTLSEnabled)
                             {
