@@ -46,7 +46,7 @@
       "Parameters": {
         "Scenario": "InstallLMbenchPackages",
         "BlobContainer": "packages",
-        "BlobName": "lmbench.1.0.0-2alpha8.zip",
+        "BlobName": "lmbench.3.0.0-a9.zip",
         "PackageName": "lmbench",
         "Extract": true
       }
