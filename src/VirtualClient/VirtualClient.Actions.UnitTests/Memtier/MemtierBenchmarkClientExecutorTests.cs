@@ -203,6 +203,7 @@ namespace VirtualClient.Actions
                 // 2 client instances running in-parallel to target each of the 2 servers
                 executor.Parameters[nameof(executor.ClientInstances)] = 2;
                 executor.Parameters[nameof(executor.MaxClients)] = 6;
+                executor.Parameters[nameof(executor.Delta)] = 1;
 
                 List<string> expectedCommands = new List<string>()
                 {
@@ -210,7 +211,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1 hitting server #1
-                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #2 hitting server #1
                     $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
@@ -219,7 +220,7 @@ namespace VirtualClient.Actions
                     $"sudo bash -c \"numactl -C 3 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6380 {executor.CommandLine}\"",
 
                      // Client instance #2 hitting server #2
-                    $"sudo bash -c \"numactl -C 3 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6380 {executor.CommandLine}\""
+                    $"sudo bash -c \"numactl -C 4 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6380 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -246,6 +247,7 @@ namespace VirtualClient.Actions
                 // 4 client instances running in-parallel to target 1 server as the other server will sit idle because MaxClients = 4, If we Set MaxClients >= 8 both the servers will be engaged . 
                 executor.Parameters[nameof(executor.ClientInstances)] = 4;
                 executor.Parameters[nameof(executor.MaxClients)] = 4;
+                executor.Parameters[nameof(executor.Delta)] = 1;
 
                 List<string> expectedCommands = new List<string>()
                 {
@@ -253,16 +255,16 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1
-                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #2
                     $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                     // Client instance #3
-                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"numactl -C 3 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\"",
 
                      // Client instance #4
-                    $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
+                    $"sudo bash -c \"numactl -C 4 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
