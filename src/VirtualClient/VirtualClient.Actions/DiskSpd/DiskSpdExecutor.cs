@@ -10,7 +10,6 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -41,19 +40,6 @@ namespace VirtualClient.Actions
         public DiskSpdExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            // Ensure that the Duration parameter is in "seconds" format.
-            this.Parameters[nameof(this.Duration)] = this.Duration.TotalSeconds;
-        }
-
-        /// <summary>
-        /// Parameter defines the Duration (in seconds) for running the DiskSpd workload.
-        /// </summary>
-        public TimeSpan Duration
-        {
-            get
-            {
-                return this.Parameters.GetTimeSpanValue(nameof(DiskSpdExecutor.Duration), TimeSpan.FromSeconds(60));
-            }
         }
 
         /// <summary>
@@ -84,36 +70,10 @@ namespace VirtualClient.Actions
                     this.DiskFillSize = this.SanitizeFileSize(diskFillSize);
                 }
 
-                if (this.Configuration != null)
-                {
-                    switch (this.Configuration)
-                    {
-                        case "Stress":
-                            int logicalCores = Environment.ProcessorCount;
-                            int threads = logicalCores / 2;
-                            int queueDepth = 512 / threads;
-
-                            this.Parameters["ThreadCount"] = threads;
-                            this.Parameters["QueueDepth"] = queueDepth;
-
-                            relatedContext.AddContext("configuration", this.Configuration);
-                            relatedContext.AddContext(nameof(logicalCores), logicalCores);
-                            relatedContext.AddContext(nameof(threads), threads);
-                            relatedContext.AddContext(nameof(queueDepth), queueDepth);
-
-                            break;
-
-                        default:
-                            throw new WorkloadException(
-                                $"Invalid configuration. The configuration '{this.Configuration}' defined in the profile arguments is not a supported configuration.",
-                                ErrorReason.InvalidProfileDefinition);
-                    }
-                }
-
                 await this.EvaluateParametersAsync(CancellationToken.None, true);
 
                 relatedContext.AddContext("commandLine", this.CommandLine);
-                relatedContext.AddContext("testName", this.TestName);
+                relatedContext.AddContext("testScenario", this.MetricScenario);
             });
         }
 
@@ -379,11 +339,11 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (string.IsNullOrWhiteSpace(this.TestName))
+            if (string.IsNullOrWhiteSpace(this.MetricScenario))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
-                    $"required '{nameof(DiskSpdExecutor.TestName)}' arguments defined.",
+                    $"required '{nameof(DiskSpdExecutor.MetricScenario)}' arguments defined.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -411,7 +371,7 @@ namespace VirtualClient.Actions
 
             this.Logger.LogMetrics(
                 "DiskSpd",
-                this.TestName,
+                (this.MetricScenario ?? this.Scenario),
                 workload.Process.StartTime,
                 workload.Process.ExitTime,
                 metrics,
