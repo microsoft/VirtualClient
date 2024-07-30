@@ -167,7 +167,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the increment step for the Memtier cpu affinity
+        /// Parameter defines the increment step for the memtier cpu affinity.
         /// </summary>
         public int MemtierCpuAffinityDelta
         {
