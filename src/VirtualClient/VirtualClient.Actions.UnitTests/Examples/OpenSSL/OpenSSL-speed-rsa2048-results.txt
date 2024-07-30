@@ -5,3 +5,5 @@ compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODE
 CPUINFO: OPENSSL_ia32cap=0xfeda32235f8bffff:0xd09e2fb9
                   sign    verify    sign/s verify/s
 rsa 2048 bits 0.000790s 0.000015s   1316.7  42004.9
+              keygen    encaps    decaps keygens/s  encaps/s  decaps/s
+rsa 2048 bits 0.000319s 0.000004s 0.000004s   3132.4 254999.2 252626.6

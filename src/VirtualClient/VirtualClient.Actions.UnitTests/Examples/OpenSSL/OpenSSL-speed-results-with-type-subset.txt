@@ -21,72 +21,129 @@ ghash           8812728.05k
 rand            5279181.48k
                   sign    verify    sign/s verify/s
 rsa  512 bits 0.000038s 0.000002s  26538.8 432400.4
+                  sign    verify    sign/s verify/s
 rsa 1024 bits 0.000099s 0.000006s  10096.9 172208.4
+                  sign    verify    sign/s verify/s
 rsa 2048 bits 0.000320s 0.000019s   3121.9  52842.2
+                  sign    verify    sign/s verify/s
 rsa 3072 bits 0.001967s 0.000040s    508.3  24786.9
+                  sign    verify    sign/s verify/s
 rsa 4096 bits 0.004418s 0.000068s    226.4  14620.4
+                  sign    verify    sign/s verify/s
 rsa 7680 bits 0.041450s 0.000231s     24.1   4323.9
+                  sign    verify    sign/s verify/s
 rsa 15360 bits 0.210629s 0.000914s      4.7   1094.3
                   sign    verify    sign/s verify/s
 dsa  512 bits 0.000052s 0.000030s  19127.1  33303.0
+                  sign    verify    sign/s verify/s
 dsa 1024 bits 0.000098s 0.000095s  10219.1  10559.9
+                  sign    verify    sign/s verify/s
 dsa 2048 bits 0.000341s 0.000296s   2931.9   3382.5
                               sign    verify    sign/s verify/s
  160 bits ecdsa (secp160r1)   0.0003s   0.0002s   3931.7   4060.9
+                               sign    verify    sign/s verify/s
  192 bits ecdsa (nistp192)   0.0003s   0.0003s   3220.9   3473.1
+                               sign    verify    sign/s verify/s
  224 bits ecdsa (nistp224)   0.0005s   0.0004s   2157.4   2383.0
+                               sign    verify    sign/s verify/s
  256 bits ecdsa (nistp256)   0.0000s   0.0001s  34201.9  11082.7
+                               sign    verify    sign/s verify/s
  384 bits ecdsa (nistp384)   0.0013s   0.0008s    794.5   1333.2
+                               sign    verify    sign/s verify/s
  521 bits ecdsa (nistp521)   0.0020s   0.0016s    495.9    634.2
+                               sign    verify    sign/s verify/s
  163 bits ecdsa (nistk163)   0.0002s   0.0004s   5091.6   2570.8
+                               sign    verify    sign/s verify/s
  233 bits ecdsa (nistk233)   0.0002s   0.0005s   4056.9   2081.6
+                               sign    verify    sign/s verify/s
  283 bits ecdsa (nistk283)   0.0004s   0.0009s   2244.4   1142.1
+                               sign    verify    sign/s verify/s
  409 bits ecdsa (nistk409)   0.0007s   0.0014s   1422.7    732.1
+                               sign    verify    sign/s verify/s
  571 bits ecdsa (nistk571)   0.0016s   0.0032s    618.9    313.3
+                               sign    verify    sign/s verify/s
  163 bits ecdsa (nistb163)   0.0002s   0.0004s   4889.4   2475.7
+                               sign    verify    sign/s verify/s
  233 bits ecdsa (nistb233)   0.0003s   0.0005s   3894.9   1981.1
+                               sign    verify    sign/s verify/s
  283 bits ecdsa (nistb283)   0.0005s   0.0009s   2141.8   1089.7
+                               sign    verify    sign/s verify/s
  409 bits ecdsa (nistb409)   0.0007s   0.0015s   1345.8    686.6
+                               sign    verify    sign/s verify/s
  571 bits ecdsa (nistb571)   0.0024s   0.0047s    413.0    214.1
+                               sign    verify    sign/s verify/s
  256 bits ecdsa (brainpoolP256r1)   0.0005s   0.0005s   2063.3   2128.6
+                               sign    verify    sign/s verify/s
  256 bits ecdsa (brainpoolP256t1)   0.0005s   0.0004s   2083.1   2240.6
+                               sign    verify    sign/s verify/s
  384 bits ecdsa (brainpoolP384r1)   0.0012s   0.0010s    845.6    963.8
+                               sign    verify    sign/s verify/s
  384 bits ecdsa (brainpoolP384t1)   0.0012s   0.0010s    853.6   1042.7
+                               sign    verify    sign/s verify/s
  512 bits ecdsa (brainpoolP512r1)   0.0017s   0.0014s    587.6    702.0
+                               sign    verify    sign/s verify/s
  512 bits ecdsa (brainpoolP512t1)   0.0017s   0.0013s    600.2    751.8
                               op      op/s
  160 bits ecdh (secp160r1)   0.0002s   4447.2
+                               op      op/s
  192 bits ecdh (nistp192)   0.0003s   3619.5
+                               op      op/s
  224 bits ecdh (nistp224)   0.0004s   2427.1
+                               op      op/s
  256 bits ecdh (nistp256)   0.0001s  15245.8
+                               op      op/s
  384 bits ecdh (nistp384)   0.0011s    888.2
+                               op      op/s
  521 bits ecdh (nistp521)   0.0026s    385.9
+                               op      op/s
  163 bits ecdh (nistk163)   0.0004s   2670.5
+                               op      op/s
  233 bits ecdh (nistk233)   0.0004s   2596.3
+                               op      op/s
  283 bits ecdh (nistk283)   0.0005s   1892.0
+                               op      op/s
  409 bits ecdh (nistk409)   0.0008s   1213.9
+                               op      op/s
  571 bits ecdh (nistk571)   0.0030s    338.3
+                               op      op/s
  163 bits ecdh (nistb163)   0.0003s   3050.4
+                               op      op/s
  233 bits ecdh (nistb233)   0.0003s   3330.4
+                               op      op/s
  283 bits ecdh (nistb283)   0.0006s   1798.8
+                               op      op/s
  409 bits ecdh (nistb409)   0.0014s    718.2
+                               op      op/s
  571 bits ecdh (nistb571)   0.0027s    373.8
+                               op      op/s
  256 bits ecdh (brainpoolP256r1)   0.0004s   2482.3
+                               op      op/s
  256 bits ecdh (brainpoolP256t1)   0.0004s   2456.3
+                               op      op/s
  384 bits ecdh (brainpoolP384r1)   0.0015s    653.8
+                               op      op/s
  384 bits ecdh (brainpoolP384t1)   0.0013s    766.1
+                               op      op/s
  512 bits ecdh (brainpoolP512r1)   0.0015s    666.6
+                               op      op/s
  512 bits ecdh (brainpoolP512t1)   0.0015s    676.8
+                               op      op/s
  253 bits ecdh (X25519)   0.0001s  17662.0
+                               op      op/s
  448 bits ecdh (X448)   0.0003s   3477.0
                               sign    verify    sign/s verify/s
  253 bits EdDSA (Ed25519)   0.0000s   0.0001s  25270.2   7743.6
+                               sign    verify    sign/s verify/s
  456 bits EdDSA (Ed448)   0.0002s   0.0002s   4538.8   4671.2
                               sign    verify    sign/s verify/s
  256 bits SM2 (CurveSM2)   0.0003s   0.0003s   2862.3   3079.5
-                       op     op/s
+                        op     op/s
 2048 bits ffdh   0.0020s    488.0
+                        op     op/s
 3072 bits ffdh   0.0065s    155.0
+                        op     op/s
 4096 bits ffdh   0.0150s     66.9
+                        op     op/s
 6144 bits ffdh   0.0504s     19.8
+                        op     op/s
 8192 bits ffdh   0.1181s      8.5

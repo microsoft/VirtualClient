@@ -184,14 +184,20 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.IsTrue(metrics.Count() == 4);
+            Assert.IsTrue(metrics.Count() == 10);
 
             OpenSslMetricsParserTests.AssertMetricsMatch("rsa 2048 bits", metrics, new Dictionary<string, double>
             {
                 { "rsa 2048 bits sign", 0.000790 },
                 { "rsa 2048 bits verify", 0.000015 },
                 { "rsa 2048 bits sign/s", 1316.7 },
-                { "rsa 2048 bits verify/s", 42004.9 }
+                { "rsa 2048 bits verify/s", 42004.9 },
+                { "rsa 2048 bits keygen", 0.000319 },
+                { "rsa 2048 bits encaps", 0.000004 },
+                { "rsa 2048 bits decaps", 0.000004 },
+                { "rsa 2048 bits keygens/s", 3132.4 },
+                { "rsa 2048 bits encaps/s", 254999.2 },
+                { "rsa 2048 bits decaps/s", 252626.6 }
             });
         }
 
@@ -268,7 +274,7 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.AreEqual(224, metrics.Count());
+            Assert.AreEqual(282, metrics.Count());
             // Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond)); --> changed with inclusion of RSA coverage
 
             OpenSslMetricsParserTests.AssertMetricsMatch("md5", metrics, new Dictionary<string, double>
@@ -487,7 +493,7 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.AreEqual(154, metrics.Count());
+            Assert.AreEqual(212, metrics.Count());
             // Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond)); --> changed with inclusion of RSA coverage
 
             OpenSslMetricsParserTests.AssertMetricsMatch("md5", metrics, new Dictionary<string, double>
@@ -581,7 +587,7 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.AreEqual(206, metrics.Count());
+            Assert.AreEqual(264, metrics.Count());
             // Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond)); --> changed with inclusion of RSA coverage
 
             OpenSslMetricsParserTests.AssertMetricsMatch("md5", metrics, new Dictionary<string, double>
