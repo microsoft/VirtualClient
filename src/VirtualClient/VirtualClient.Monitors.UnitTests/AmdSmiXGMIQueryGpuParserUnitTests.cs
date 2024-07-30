@@ -22,7 +22,7 @@ namespace VirtualClient.Monitors
         public void AmdSmiXGMIQueryGpuParserParsesMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "amd-smi", "result2.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "amd-smi", "xgmi-8xMI300X.json");
             string rawText = File.ReadAllText(outputPath);
 
             AmdSmiXGMIQueryGpuParser testParser = new AmdSmiXGMIQueryGpuParser(rawText);

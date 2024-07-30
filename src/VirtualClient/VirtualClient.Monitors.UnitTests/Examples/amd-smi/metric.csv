@@ -1,0 +1,2 @@
+gpu,gfx_usage,mem_usage,mm_usage_list,fb_total,fb_used,gfx_cur_clk,mem_cur_clk,mm1_cur_clk,mm2_cur_clk
+0,98,1,[0, 0],14928,363,N/A,N/A,N/A,N/A

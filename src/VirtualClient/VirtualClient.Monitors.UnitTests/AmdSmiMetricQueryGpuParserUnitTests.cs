@@ -22,7 +22,7 @@ namespace VirtualClient.Monitors
         public void AmdSmiMetricQueryGpuParserParsesMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "amd-smi", "result.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "amd-smi", "metric.csv");
             string rawText = File.ReadAllText(outputPath);
 
             AmdSmiMetricQueryGpuParser testParser = new AmdSmiMetricQueryGpuParser(rawText);
@@ -38,7 +38,7 @@ namespace VirtualClient.Monitors
         public void AmdSmiMetricQueryGpuParserParsesMetricsCorrectly_MI300X()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "amd-smi", "result1.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "amd-smi", "metric-8xMI300X.csv");
             string rawText = File.ReadAllText(outputPath);
 
             AmdSmiMetricQueryGpuParser testParser = new AmdSmiMetricQueryGpuParser(rawText);
