@@ -127,6 +127,7 @@ namespace VirtualClient.Actions
 
                 // After the disk fill, we execute the DiskSpd commands.
                 // Random Write tests
+                // e.g. -c496G -b4K -r4K -t4 -o128 -w100 -d300 -Suw -W15 -D -L -Rtext D:\\diskspd-test.dat E:\\diskspd-test.dat F:\\diskspd-test.dat
                 $"-c496G -b4K -r4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext",
                 $"-c496G -b8K -r4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext",
                 $"-c496G -b12K -r4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext",

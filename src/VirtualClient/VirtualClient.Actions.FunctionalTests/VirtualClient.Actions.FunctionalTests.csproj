@@ -202,10 +202,10 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-MEMCACHED.json" Link="Profiles\PERF-MEMCACHED.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-OLTP-SYSBENCH.json" Link="Profiles\PERF-MYSQL-OLTP-SYSBENCH.json">
+        <Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-SYSBENCH-OLTP.json" Link="Profiles\PERF-MYSQL-SYSBENCH-OLTP.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	   </Content>
-		<Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-TPCC-SYSBENCH.json" Link="Profiles\PERF-MYSQL-TPCC-SYSBENCH.json">
+		<Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-SYSBENCH-TPCC.json" Link="Profiles\PERF-MYSQL-SYSBENCH-TPCC.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-DEATHSTARBENCH.json" Link="Profiles\PERF-NETWORK-DEATHSTARBENCH.json">
@@ -223,10 +223,10 @@
       <Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json" Link="Profiles\PERF-POSTGRESQL-HAMMERDB-TPCC.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-		<Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-OLTP-SYSBENCH.json" Link="Profiles\PERF-POSTGRESQL-OLTP-SYSBENCH.json">
+		<Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-SYSBENCH-OLTP.json" Link="Profiles\PERF-POSTGRESQL-SYSBENCH-OLTP.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-		<Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-TPCC-SYSBENCH.json" Link="Profiles\PERF-POSTGRESQL-TPCC-SYSBENCH.json">
+		<Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL-SYSBENCH-TPCC.json" Link="Profiles\PERF-POSTGRESQL-SYSBENCH-TPCC.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-SPECCPU-FPRATE.json" Link="Profiles\PERF-SPECCPU-FPRATE.json">

@@ -13,7 +13,6 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient.Common;
@@ -45,8 +44,6 @@ namespace VirtualClient.Actions
         public FioExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            // Ensure that the Duration parameter is in "seconds" format.
-            this.Parameters[nameof(this.Duration)] = this.Duration.TotalSeconds;
         }
 
         /// <summary>
@@ -193,22 +190,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Name of the test defined in profile.
-        /// </summary>
-        public string TestName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(DiskWorkloadExecutor.TestName));
-            }
-
-            set
-            {
-                this.Parameters[nameof(DiskWorkloadExecutor.TestName)] = value;
-            }
-        }
-
-        /// <summary>
         /// The specific focus of the test if applicable (e.g. DataIntegrity).
         /// </summary>
         public string TestFocus
@@ -222,17 +203,6 @@ namespace VirtualClient.Actions
             set
             {
                 this.Parameters[nameof(DiskWorkloadExecutor.TestFocus)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Parameter defines the Duration (in seconds) for running the DiskSpd workload.
-        /// </summary>
-        public TimeSpan Duration
-        {
-            get
-            {
-                return this.Parameters.GetTimeSpanValue(nameof(DiskSpdExecutor.Duration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -382,7 +352,7 @@ namespace VirtualClient.Actions
                     {
                         foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                         {
-                            fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, this.TestName, telemetryContext, cancellationToken));
+                            fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, this.MetricScenario, telemetryContext, cancellationToken));
                         }
 
                         if (!cancellationToken.IsCancellationRequested)
@@ -528,36 +498,10 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.EvaluateParameters", relatedContext, async () =>
             {
-                if (this.Configuration != null)
-                {
-                    switch (this.Configuration)
-                    {
-                        case "Stress":
-                            int logicalCores = Environment.ProcessorCount;
-                            int threads = logicalCores / 2;
-                            int queueDepth = 512 / threads;
-
-                            this.Parameters["ThreadCount"] = threads;
-                            this.Parameters["QueueDepth"] = queueDepth;
-
-                            relatedContext.AddContext("configuration", this.Configuration);
-                            relatedContext.AddContext(nameof(logicalCores), logicalCores);
-                            relatedContext.AddContext(nameof(threads), threads);
-                            relatedContext.AddContext(nameof(queueDepth), queueDepth);
-
-                            break;
-
-                        default:
-                            throw new WorkloadException(
-                                $"Invalid configuration. The configuration '{this.Configuration}' defined in the profile arguments is not a supported configuration.",
-                                ErrorReason.InvalidProfileDefinition);
-                    }
-                }
-
                 await this.EvaluateParametersAsync(CancellationToken.None, true);
 
                 relatedContext.AddContext("commandLine", this.CommandLine);
-                relatedContext.AddContext("testName", this.TestName);
+                relatedContext.AddContext("testScenario", this.MetricScenario);
             });
         }
 
@@ -833,7 +777,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the provided workload.
         /// </summary>
-        protected async Task ExecuteWorkloadAsync(DiskWorkloadProcess workload, string testName, EventContext telemetryContext, CancellationToken cancellationToken, Dictionary<string, IConvertible> metricMetadata = null)
+        protected async Task ExecuteWorkloadAsync(DiskWorkloadProcess workload, string testScenario, EventContext telemetryContext, CancellationToken cancellationToken, Dictionary<string, IConvertible> metricMetadata = null)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -866,7 +810,7 @@ namespace VirtualClient.Actions
                                 workload.Process.ThrowIfWorkloadFailed();
                             }
 
-                            this.CaptureMetrics(workload.Process, testName, workload.Categorization, workload.CommandArguments, telemetryContext, metricMetadata);
+                            this.CaptureMetrics(workload.Process, testScenario, workload.Categorization, workload.CommandArguments, telemetryContext, metricMetadata);
                         }
                     }
                 });
@@ -877,7 +821,7 @@ namespace VirtualClient.Actions
         /// Log Metrics to Kusto Cluster.
         /// </summary>
         protected virtual void CaptureMetrics(
-            IProcessProxy workloadProcess, string testName, string metricCategorization, string commandArguments, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+            IProcessProxy workloadProcess, string testScenario, string metricCategorization, string commandArguments, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
             FioMetricsParser parser = null;
             if (this.TestFocus == FioExecutor.TestFocusDataIntegrity)
@@ -920,7 +864,7 @@ namespace VirtualClient.Actions
 
             this.Logger.LogMetrics(
                "FIO",
-               testName,
+               testScenario,
                workloadProcess.StartTime,
                workloadProcess.ExitTime,
                metrics,
@@ -983,11 +927,11 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (string.IsNullOrWhiteSpace(this.TestName))
+            if (string.IsNullOrWhiteSpace(this.MetricScenario))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
-                    $"required '{nameof(FioExecutor.TestName)}' arguments defined.",
+                    $"required '{nameof(FioExecutor.MetricScenario)}' arguments defined.",
                     ErrorReason.InvalidProfileDefinition);
             }
 

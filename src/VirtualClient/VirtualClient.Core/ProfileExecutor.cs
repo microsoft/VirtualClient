@@ -413,6 +413,8 @@ namespace VirtualClient
 
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
+                                        VirtualClientComponent action = null;
+
                                         try
                                         {
                                             // The context persisted here will be picked up by the individual component. This allows
@@ -420,7 +422,7 @@ namespace VirtualClient
                                             // also being correlated with each round of profile actions processing.
                                             EventContext.Persist(Guid.NewGuid(), actionExecutionContext.ActivityId);
 
-                                            VirtualClientComponent action = this.ProfileActions.ElementAt(i);
+                                            action = this.ProfileActions.ElementAt(i);
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
                                             
@@ -436,7 +438,7 @@ namespace VirtualClient
                                                 this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                             }
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast)
+                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || action?.FailFast == true)
                                         {
                                             // Error reasons have numeric/integer values that indicate their severity. Error reasons
                                             // with a value >= 500 are terminal situations where the workload cannot run successfully

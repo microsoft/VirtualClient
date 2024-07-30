@@ -36,7 +36,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-OLTP-SYSBENCH.json")]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json")]
         public void MySQLSysbenchOLTPWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-OLTP-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public void MySQLSysbenchOLTPWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform);
@@ -62,7 +62,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-OLTP-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public async Task MySQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -96,7 +96,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-OLTP-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public async Task MySQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -142,7 +142,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-TPCC-SYSBENCH.json")]
+        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json")]
         public void MySQLSysbenchTPCCWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-TPCC-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
         public void MySQLSysbenchTPCCWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform);
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-TPCC-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
         public async Task MySQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -202,7 +202,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-MYSQL-TPCC-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
         public async Task MySQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnMySQLSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -248,7 +248,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-OLTP-SYSBENCH.json")]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json")]
         public void PostgreSQLSysbenchOLTPWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -258,7 +258,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-OLTP-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public void PostgreSQLSysbenchOLTPWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform);
@@ -274,7 +274,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-OLTP-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public async Task PostgreSQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -308,7 +308,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-OLTP-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public async Task PostgreSQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -354,7 +354,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-TPCC-SYSBENCH.json")]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json")]
         public void PostgreSQLSysbenchTPCCWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -364,7 +364,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-TPCC-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
         public void PostgreSQLSysbenchTPCCWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform);
@@ -380,7 +380,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-TPCC-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
         public async Task PostgreSQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
@@ -414,7 +414,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL-TPCC-SYSBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
         public async Task PostgreSQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(

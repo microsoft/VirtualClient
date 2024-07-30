@@ -1,218 +1,218 @@
 {
-  "Description": "FIO I/O Stress Performance Workload",
-  "Metadata": {
-    "RecommendedMinimumExecutionTime": "00:30:00",
-    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
-    "Notes": "This profile uses FIO job files (e.g. *.jobfile). The job file paths should be comma/semicolon-delimited under 'JobFiles'.",
-    "Documentation": "FIO documentation: https://fio.readthedocs.io/en/latest/fio_doc.html FIO Job File documentation: https://fio.readthedocs.io/en/latest/fio_doc.html#job-file-format"
-  },
-  "Parameters": {
-    "RandomIOFileSize": "124G",
-    "SequentialIOFileSize": "20G",
-    "DiskFilter": "BiggestSize",
-    "ProcessModel": "SingleProcess"
-  },
-  "Actions": [
-    {
-      "Type": "FioExecutor",
-      "Parameters": {
-        "Scenario": "DiskFill",
-        "PackageName": "fio",
-        "ProcessModel": "SingleProcessPerDisk",
-        "TestName": "disk_fill",
-        "JobFiles": "{ScriptPath:fio}/oltp-c2-diskfill.fio.jobfile",
-        "FileName": "fio-test.dat",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "DirectIO": 1,
-        "DiskFill": true,
-        "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
-        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize"
-      }
+    "Description": "FIO I/O Stress Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "Notes": "This profile uses FIO job files (e.g. *.jobfile). The job file paths should be comma/semicolon-delimited under 'JobFiles'.",
+        "Documentation": "FIO documentation: https://fio.readthedocs.io/en/latest/fio_doc.html FIO Job File documentation: https://fio.readthedocs.io/en/latest/fio_doc.html#job-file-format"
     },
-    {
-      "Type": "FioExecutor",
-      "Parameters": {
-        "Scenario": "FioExecutorJobFile_4K_BlockSize",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "TestName": "read_write_operations_4k_blocksize",
-        "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
-        "FileName": "fio-test.dat",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "DirectIO": 1,
-        "DurationSec": "180",
-        "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
-        "RandomReadBlockSize": "4K",
-        "RandomReadNumJobs": 1,
-        "RandomWriteBlockSize": "4K",
-        "RandomWriteNumJobs": 1,
-        "SequentialDiskCount": "1",
-        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-        "SequentialReadBlockSize": "4K",
-        "SequentialReadNumJobs": 1,
-        "SequentialWriteBlockSize": "4K",
-        "SequentialWriteNumJobs": 1,
-        "SequentialWriteIODepth": 64,
-        "RandomReadIODepth": 512,
-        "RandomWriteIODepth": 512,
-        "SequentialReadIODepth": 64,
-        "Tags": "IO,FIO,OLTP"
-      }
+    "Parameters": {
+        "RandomIOFileSize": "124G",
+        "SequentialIOFileSize": "20G",
+        "DiskFilter": "BiggestSize",
+        "ProcessModel": "SingleProcess"
     },
-    {
-      "Type": "FioExecutor",
-      "Parameters": {
-        "Scenario": "FioExecutorJobFile_8K_BlockSize",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "TestName": "read_write_operations_8k_blocksize",
-        "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
-        "FileName": "fio-test.dat",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "DirectIO": 1,
-        "DurationSec": "180",
-        "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
-        "RandomReadBlockSize": "8K",
-        "RandomReadNumJobs": 1,
-        "RandomReadIODepth": 512,
-        "RandomWriteBlockSize": "8K",
-        "RandomWriteNumJobs": 1,
-        "RandomWriteIODepth": 512,
-        "SequentialDiskCount": "1",
-        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-        "SequentialReadBlockSize": "8K",
-        "SequentialReadNumJobs": 1,
-        "SequentialReadIODepth": 64,
-        "SequentialWriteBlockSize": "8K",
-        "SequentialWriteNumJobs": 1,
-        "SequentialWriteIODepth": 64,
-        "Tags": "IO,FIO,OLTP"
-      }
-    },
-    {
-      "Type": "FioExecutor",
-      "Parameters": {
-        "Scenario": "FioExecutorJobFile_12K_BlockSize",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "TestName": "read_write_operations_12k_blocksize",
-        "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
-        "FileName": "fio-test.dat",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "DirectIO": 1,
-        "DurationSec": "180",
-        "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
-        "RandomReadBlockSize": "12K",
-        "RandomReadNumJobs": 1,
-        "RandomReadIODepth": 512,
-        "RandomWriteBlockSize": "12K",
-        "RandomWriteNumJobs": 1,
-        "RandomWriteIODepth": 512,
-        "SequentialDiskCount": "1",
-        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-        "SequentialReadBlockSize": "12K",
-        "SequentialReadNumJobs": 1,
-        "SequentialReadIODepth": 64,
-        "SequentialWriteBlockSize": "12K",
-        "SequentialWriteNumJobs": 1,
-        "SequentialWriteIODepth": 64,
-        "Tags": "IO,FIO,OLTP"
-      }
-    },
-    {
-      "Type": "FioExecutor",
-      "Parameters": {
-        "Scenario": "FioExecutorJobFile_16K_BlockSize",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "TestName": "read_write_operations_16k_blocksize",
-        "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
-        "FileName": "fio-test.dat",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "DirectIO": 1,
-        "DurationSec": "180",
-        "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
-        "RandomReadBlockSize": "16K",
-        "RandomReadNumJobs": 1,
-        "RandomReadIODepth": 512,
-        "RandomWriteBlockSize": "16K",
-        "RandomWriteNumJobs": 1,
-        "RandomWriteIODepth": 512,
-        "SequentialDiskCount": "1",
-        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-        "SequentialReadBlockSize": "16K",
-        "SequentialReadNumJobs": 1,
-        "SequentialReadIODepth": 64,
-        "SequentialWriteBlockSize": "16K",
-        "SequentialWriteNumJobs": 1,
-        "SequentialWriteIODepth": 64,
-        "Tags": "IO,FIO,OLTP"
-      }
-    },
-    {
-      "Type": "FioExecutor",
-      "Parameters": {
-        "Scenario": "FioExecutorJobFile_1024K_BlockSize",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "TestName": "read_write_operations_1024k_blocksize",
-        "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
-        "FileName": "fio-test.dat",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "DirectIO": 1,
-        "DurationSec": "180",
-        "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
-        "RandomReadBlockSize": "1024K",
-        "RandomReadNumJobs": 1,
-        "RandomReadIODepth": 512,
-        "RandomWriteBlockSize": "1024K",
-        "RandomWriteNumJobs": 1,
-        "RandomWriteIODepth": 512,
-        "SequentialDiskCount": "1",
-        "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-        "SequentialReadBlockSize": "1024K",
-        "SequentialReadNumJobs": 1,
-        "SequentialReadIODepth": 64,
-        "SequentialWriteBlockSize": "1024K",
-        "SequentialWriteNumJobs": 1,
-        "SequentialWriteIODepth": 64,
-        "Tags": "IO,FIO,OLTP"
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "FormatDisks",
-      "Parameters": {
-        "Scenario": "InitializeDisks"
-      }
-    },
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallLinuxPackages",
-        "Packages-Apt": "libaio1,libaio-dev",
-        "Packages-Dnf": "libaio,libaio-devel",
-        "Packages-Yum": "libaio,libaio-devel",
-        "Packages-Zypper": "libaio1,libaio-dev"
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallFIOPackage",
-        "BlobContainer": "packages",
-        "BlobName": "fio.3.30.0.zip",
-        "PackageName": "fio",
-        "Extract": true
-      }
-    }
-  ]
+    "Actions": [
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "DiskFill",
+                "MetricScenario": "disk_fill",
+                "PackageName": "fio",
+                "ProcessModel": "SingleProcessPerDisk",
+                "JobFiles": "{ScriptPath:fio}/oltp-c2-diskfill.fio.jobfile",
+                "FileName": "fio-test.dat",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DirectIO": 1,
+                "DiskFill": true,
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_4K_BlockSize",
+                "MetricScenario": "read_write_operations_4k_blocksize",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
+                "FileName": "fio-test.dat",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DirectIO": 1,
+                "DurationSec": "180",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "RandomReadBlockSize": "4K",
+                "RandomReadNumJobs": 1,
+                "RandomWriteBlockSize": "4K",
+                "RandomWriteNumJobs": 1,
+                "SequentialDiskCount": "1",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialReadBlockSize": "4K",
+                "SequentialReadNumJobs": 1,
+                "SequentialWriteBlockSize": "4K",
+                "SequentialWriteNumJobs": 1,
+                "SequentialWriteIODepth": 64,
+                "RandomReadIODepth": 512,
+                "RandomWriteIODepth": 512,
+                "SequentialReadIODepth": 64,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_8K_BlockSize",
+                "MetricScenario": "read_write_operations_8k_blocksize",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
+                "FileName": "fio-test.dat",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DirectIO": 1,
+                "DurationSec": "180",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "RandomReadBlockSize": "8K",
+                "RandomReadNumJobs": 1,
+                "RandomReadIODepth": 512,
+                "RandomWriteBlockSize": "8K",
+                "RandomWriteNumJobs": 1,
+                "RandomWriteIODepth": 512,
+                "SequentialDiskCount": "1",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialReadBlockSize": "8K",
+                "SequentialReadNumJobs": 1,
+                "SequentialReadIODepth": 64,
+                "SequentialWriteBlockSize": "8K",
+                "SequentialWriteNumJobs": 1,
+                "SequentialWriteIODepth": 64,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_12K_BlockSize",
+                "MetricScenario": "read_write_operations_12k_blocksize",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
+                "FileName": "fio-test.dat",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DirectIO": 1,
+                "DurationSec": "180",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "RandomReadBlockSize": "12K",
+                "RandomReadNumJobs": 1,
+                "RandomReadIODepth": 512,
+                "RandomWriteBlockSize": "12K",
+                "RandomWriteNumJobs": 1,
+                "RandomWriteIODepth": 512,
+                "SequentialDiskCount": "1",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialReadBlockSize": "12K",
+                "SequentialReadNumJobs": 1,
+                "SequentialReadIODepth": 64,
+                "SequentialWriteBlockSize": "12K",
+                "SequentialWriteNumJobs": 1,
+                "SequentialWriteIODepth": 64,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_16K_BlockSize",
+                "MetricScenario": "read_write_operations_16k_blocksize",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
+                "FileName": "fio-test.dat",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DirectIO": 1,
+                "DurationSec": "180",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "RandomReadBlockSize": "16K",
+                "RandomReadNumJobs": 1,
+                "RandomReadIODepth": 512,
+                "RandomWriteBlockSize": "16K",
+                "RandomWriteNumJobs": 1,
+                "RandomWriteIODepth": 512,
+                "SequentialDiskCount": "1",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialReadBlockSize": "16K",
+                "SequentialReadNumJobs": 1,
+                "SequentialReadIODepth": 64,
+                "SequentialWriteBlockSize": "16K",
+                "SequentialWriteNumJobs": 1,
+                "SequentialWriteIODepth": 64,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_1024K_BlockSize",
+                "MetricScenario": "read_write_operations_1024k_blocksize",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "JobFiles": "{ScriptPath:fio}/oltp-c2-operations.fio.jobfile",
+                "FileName": "fio-test.dat",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DirectIO": 1,
+                "DurationSec": "180",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "RandomReadBlockSize": "1024K",
+                "RandomReadNumJobs": 1,
+                "RandomReadIODepth": 512,
+                "RandomWriteBlockSize": "1024K",
+                "RandomWriteNumJobs": 1,
+                "RandomWriteIODepth": 512,
+                "SequentialDiskCount": "1",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialReadBlockSize": "1024K",
+                "SequentialReadNumJobs": 1,
+                "SequentialReadIODepth": 64,
+                "SequentialWriteBlockSize": "1024K",
+                "SequentialWriteNumJobs": 1,
+                "SequentialWriteIODepth": 64,
+                "Tags": "IO,FIO,OLTP"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "libaio1,libaio-dev",
+                "Packages-Dnf": "libaio,libaio-devel",
+                "Packages-Yum": "libaio,libaio-devel",
+                "Packages-Zypper": "libaio1,libaio-dev"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFIOPackage",
+                "BlobContainer": "packages",
+                "BlobName": "fio.3.30.0.zip",
+                "PackageName": "fio",
+                "Extract": true
+            }
+        }
+    ]
 }
