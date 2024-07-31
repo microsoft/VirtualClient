@@ -344,9 +344,9 @@ namespace VirtualClient.Actions
         private IList<Metric> CalculateTimeSpyAggregates(IList<Metric> metrics)
         {
             IList<Metric> aggregates = new List<Metric>();
-            double tsgt1 = 0;
-            double tsgt2 = 0;
-            double tsct = 0;
+            double? tsgt1 = 0;
+            double? tsgt2 = 0;
+            double? tsct = 0;
             foreach (Metric metric in metrics)
             {
                 if (metric.Name == "timespy.graphics.1")
@@ -366,9 +366,9 @@ namespace VirtualClient.Actions
             // Weighted Harmonic Mean of Individual Scores
             if (tsgt1 != 0 && tsgt2 != 0 && tsct != 0)
             {
-                double graphicsScore = 165 * (2 / ((1 / tsgt1) + (1 / tsgt2)));
-                double cpuScore = 298 * tsct;
-                double aggScore = 1 / ((0.85 / graphicsScore) + (0.15 / cpuScore));
+                double? graphicsScore = 165 * (2 / ((1 / tsgt1) + (1 / tsgt2)));
+                double? cpuScore = 298 * tsct;
+                double? aggScore = 1 / ((0.85 / graphicsScore) + (0.15 / cpuScore));
                 aggregates.Add(new Metric("timespy.graphics.agg", graphicsScore, "score", MetricRelativity.HigherIsBetter));
                 aggregates.Add(new Metric("timespy.cpu.agg", cpuScore, "score", MetricRelativity.HigherIsBetter));
                 aggregates.Add(new Metric("timespy.finalscore", aggScore, "score", MetricRelativity.HigherIsBetter));

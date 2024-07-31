@@ -1,0 +1,277 @@
+﻿
+SPECjbb2015 Java Business Benchmark
+ (c) Standard Performance Evaluation Corporation, 2015
+
+Preparing to launch SPECjbb2015 reporter.
+
+Reading property file: /home/junovmadmin/nuget/packages/virtualclient/1.13.2568.1195/content/linux-x64/packages/specjbb.2015.0.0/./config/specjbb2015.props
+Report directory is result/specjbb2015-C-20240711-00001/report-00001
+  6613s: Building report...
+
+       461 msec: Pre-reading source
+         0 msec: Validation
+         0 msec: Printing JbbProperties
+         0 msec: Controller time verification
+         1 msec: Build report with HW/SW parameters
+         2 msec: Dump run logs
+        17 msec: Parsing attributes
+         2 msec: Parsing agent names
+        24 msec: Building throughput - response time curve
+RUN RESULT: hbIR (max attempted) = 304872, hbIR (settled) = N/A, max-jOPS = 234751, critical-jOPS = N/A
+        15 msec: Primary metrics calculation
+        42 msec: Render Allowed Failures
+       140 msec: [FAILED] Render IR by probes tasks
+java.lang.InternalError: java.lang.reflect.InvocationTargetException
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:87)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.FontManagerFactory.getInstance(FontManagerFactory.java:75)
+\tat java.desktop/sun.font.SunFontManager.getInstance(SunFontManager.java:248)
+\tat java.desktop/sun.font.FontDesignMetrics.getMetrics(FontDesignMetrics.java:266)
+\tat java.desktop/sun.java2d.SunGraphics2D.getFontMetrics(SunGraphics2D.java:863)
+\tat org.jfree.text.G2TextMeasurer.getStringWidth(G2TextMeasurer.java:79)
+\tat org.jfree.text.TextUtilities.nextLineBreak(TextUtilities.java:306)
+\tat org.jfree.text.TextUtilities.createTextBlock(TextUtilities.java:247)
+\tat org.jfree.chart.title.TextTitle.arrangeRR(TextTitle.java:628)
+\tat org.jfree.chart.title.TextTitle.arrange(TextTitle.java:496)
+\tat org.jfree.chart.JFreeChart.drawTitle(JFreeChart.java:1311)
+\tat org.jfree.chart.JFreeChart.draw(JFreeChart.java:1203)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1399)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1379)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1364)
+\tat org.spec.jbb.reporter.Reporter.render(Reporter.java:817)
+\tat org.spec.jbb.reporter.tasks.RenderRTTask$RenderIRByProbesTask.innerCompute(RenderRTTask.java:591)
+\tat org.spec.jbb.reporter.tasks.AbstractReporterTask.compute(AbstractReporterTask.java:37)
+\tat java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)
+\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)
+\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)
+\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)
+\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+       125 msec: [FAILED] Request Mix accuracy
+Caused by: java.lang.reflect.InvocationTargetException
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+\tat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+\tat java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:85)
+\t... 24 more
+Caused by: java.lang.RuntimeException: Fontconfig head is null, check your fonts or fonts configuration
+\tat java.desktop/sun.awt.FontConfiguration.getVersion(FontConfiguration.java:1271)
+\tat java.desktop/sun.awt.FontConfiguration.readFontConfigFile(FontConfiguration.java:224)
+\tat java.desktop/sun.awt.FontConfiguration.init(FontConfiguration.java:106)
+\tat java.desktop/sun.awt.X11FontManager.createFontConfiguration(X11FontManager.java:706)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:358)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:315)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.SunFontManager.<init>(SunFontManager.java:315)
+\tat java.desktop/sun.awt.FcFontManager.<init>(FcFontManager.java:35)
+\tat java.desktop/sun.awt.X11FontManager.<init>(X11FontManager.java:56)
+\t... 30 more
+java.lang.InternalError: java.lang.reflect.InvocationTargetException
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:87)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.FontManagerFactory.getInstance(FontManagerFactory.java:75)
+\tat java.desktop/sun.font.SunFontManager.getInstance(SunFontManager.java:248)
+\tat java.desktop/sun.font.FontDesignMetrics.getMetrics(FontDesignMetrics.java:266)
+\tat java.desktop/sun.java2d.SunGraphics2D.getFontMetrics(SunGraphics2D.java:863)
+\tat org.jfree.text.G2TextMeasurer.getStringWidth(G2TextMeasurer.java:79)
+\tat org.jfree.text.TextUtilities.nextLineBreak(TextUtilities.java:306)
+\tat org.jfree.text.TextUtilities.createTextBlock(TextUtilities.java:247)
+\tat org.jfree.chart.title.TextTitle.arrangeRR(TextTitle.java:628)
+\tat org.jfree.chart.title.TextTitle.arrange(TextTitle.java:496)
+\tat org.jfree.chart.JFreeChart.drawTitle(JFreeChart.java:1311)
+\tat org.jfree.chart.JFreeChart.draw(JFreeChart.java:1203)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1399)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1379)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1364)
+       165 msec: [FAILED] Render IR/PR Accuracy
+\tat org.spec.jbb.reporter.Reporter.render(Reporter.java:817)
+\tat org.spec.jbb.reporter.tasks.RequestMixValidation.innerCompute(RequestMixValidation.java:222)
+\tat org.spec.jbb.reporter.tasks.AbstractReporterTask.compute(AbstractReporterTask.java:37)
+\tat java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)
+\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)
+\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)
+\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)
+\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+Caused by: java.lang.reflect.InvocationTargetException
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+\tat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+\tat java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:85)
+\t... 24 more
+Caused by: java.lang.RuntimeException: Fontconfig head is null, check your fonts or fonts configuration
+\tat java.desktop/sun.awt.FontConfiguration.getVersion(FontConfiguration.java:1271)
+\tat java.desktop/sun.awt.FontConfiguration.readFontConfigFile(FontConfiguration.java:224)
+\tat java.desktop/sun.awt.FontConfiguration.init(FontConfiguration.java:106)
+\tat java.desktop/sun.awt.X11FontManager.createFontConfiguration(X11FontManager.java:706)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:358)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:315)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.SunFontManager.<init>(SunFontManager.java:315)
+\tat java.desktop/sun.awt.FcFontManager.<init>(FcFontManager.java:35)
+\tat java.desktop/sun.awt.X11FontManager.<init>(X11FontManager.java:56)
+\t... 30 more
+java.lang.InternalError: java.lang.reflect.InvocationTargetException
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:87)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.FontManagerFactory.getInstance(FontManagerFactory.java:75)
+\tat java.desktop/sun.font.SunFontManager.getInstance(SunFontManager.java:248)
+\tat java.desktop/sun.font.FontDesignMetrics.getMetrics(FontDesignMetrics.java:266)
+\tat java.desktop/sun.java2d.SunGraphics2D.getFontMetrics(SunGraphics2D.java:863)
+\tat org.jfree.text.G2TextMeasurer.getStringWidth(G2TextMeasurer.java:79)
+       141 msec: [FAILED] Overall RT curves
+\tat org.jfree.text.TextUtilities.nextLineBreak(TextUtilities.java:306)
+\tat org.jfree.text.TextUtilities.createTextBlock(TextUtilities.java:247)
+\tat org.jfree.chart.title.TextTitle.arrangeRR(TextTitle.java:628)
+\tat org.jfree.chart.title.TextTitle.arrange(TextTitle.java:496)
+\tat org.jfree.chart.JFreeChart.drawTitle(JFreeChart.java:1311)
+\tat org.jfree.chart.JFreeChart.draw(JFreeChart.java:1203)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1399)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1379)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1364)
+\tat org.spec.jbb.reporter.Reporter.render(Reporter.java:817)
+\tat org.spec.jbb.reporter.tasks.IRPRAccuracyTask.innerCompute(IRPRAccuracyTask.java:157)
+\tat org.spec.jbb.reporter.tasks.AbstractReporterTask.compute(AbstractReporterTask.java:37)
+\tat java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)
+\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)
+\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)
+\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)
+\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+Caused by: java.lang.reflect.InvocationTargetException
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+       106 msec: [FAILED] Max Delay during RT curve building
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+\tat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+\tat java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:85)
+\t... 24 more
+Caused by: java.lang.RuntimeException: Fontconfig head is null, check your fonts or fonts configuration
+\tat java.desktop/sun.awt.FontConfiguration.getVersion(FontConfiguration.java:1271)
+\tat java.desktop/sun.awt.FontConfiguration.readFontConfigFile(FontConfiguration.java:224)
+\tat java.desktop/sun.awt.FontConfiguration.init(FontConfiguration.java:106)
+\tat java.desktop/sun.awt.X11FontManager.createFontConfiguration(X11FontManager.java:706)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:358)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:315)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.SunFontManager.<init>(SunFontManager.java:315)
+\tat java.desktop/sun.awt.FcFontManager.<init>(FcFontManager.java:35)
+\tat java.desktop/sun.awt.X11FontManager.<init>(X11FontManager.java:56)
+\t... 30 more
+java.lang.InternalError: java.lang.reflect.InvocationTargetException
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:87)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.FontManagerFactory.getInstance(FontManagerFactory.java:75)
+\tat java.desktop/sun.font.SunFontManager.getInstance(SunFontManager.java:248)
+\tat java.desktop/sun.font.FontDesignMetrics.getMetrics(FontDesignMetrics.java:266)
+\tat java.desktop/sun.java2d.SunGraphics2D.getFontMetrics(SunGraphics2D.java:863)
+\tat org.jfree.text.G2TextMeasurer.getStringWidth(G2TextMeasurer.java:79)
+\tat org.jfree.text.TextUtilities.nextLineBreak(TextUtilities.java:306)
+\tat org.jfree.text.TextUtilities.createTextBlock(TextUtilities.java:247)
+\tat org.jfree.chart.title.TextTitle.arrangeRR(TextTitle.java:628)
+\tat org.jfree.chart.title.TextTitle.arrange(TextTitle.java:496)
+\tat org.jfree.chart.JFreeChart.drawTitle(JFreeChart.java:1311)
+\tat org.jfree.chart.JFreeChart.draw(JFreeChart.java:1203)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1399)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1379)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1364)
+\tat org.spec.jbb.reporter.Reporter.render(Reporter.java:817)
+\tat org.spec.jbb.reporter.tasks.RenderGetPerfDelay.generateChart(RenderGetPerfDelay.java:155)
+\tat org.spec.jbb.reporter.tasks.RenderGetPerfDelay.innerCompute(RenderGetPerfDelay.java:103)
+\tat org.spec.jbb.reporter.tasks.AbstractReporterTask.compute(AbstractReporterTask.java:37)
+\tat java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)
+\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)
+\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)
+\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)
+\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+Caused by: java.lang.reflect.InvocationTargetException
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+\tat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+\tat java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:85)
+\t... 25 more
+Caused by: java.lang.RuntimeException: Fontconfig head is null, check your fonts or fonts configuration
+\tat java.desktop/sun.awt.FontConfiguration.getVersion(FontConfiguration.java:1271)
+\tat java.desktop/sun.awt.FontConfiguration.readFontConfigFile(FontConfiguration.java:224)
+\tat java.desktop/sun.awt.FontConfiguration.init(FontConfiguration.java:106)
+\tat java.desktop/sun.awt.X11FontManager.createFontConfiguration(X11FontManager.java:706)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:358)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:315)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.SunFontManager.<init>(SunFontManager.java:315)
+\tat java.desktop/sun.awt.FcFontManager.<init>(FcFontManager.java:35)
+\tat java.desktop/sun.awt.X11FontManager.<init>(X11FontManager.java:56)
+\t... 31 more
+java.lang.InternalError: java.lang.reflect.InvocationTargetException
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:87)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.FontManagerFactory.getInstance(FontManagerFactory.java:75)
+\tat java.desktop/sun.font.SunFontManager.getInstance(SunFontManager.java:248)
+\tat java.desktop/sun.font.FontDesignMetrics.getMetrics(FontDesignMetrics.java:266)
+\tat java.desktop/sun.java2d.SunGraphics2D.getFontMetrics(SunGraphics2D.java:871)
+\tat org.jfree.text.TextFragment.calculateDimensions(TextFragment.java:230)
+\tat org.jfree.text.TextLine.calculateDimensions(TextLine.java:194)
+\tat org.jfree.text.TextBlock.calculateDimensions(TextBlock.java:171)
+\tat org.jfree.chart.block.LabelBlock.arrange(LabelBlock.java:313)
+\tat org.jfree.chart.block.BorderArrangement.arrangeNN(BorderArrangement.java:215)
+\tat org.jfree.chart.block.BorderArrangement.arrange(BorderArrangement.java:141)
+\tat org.jfree.chart.block.BlockContainer.arrange(BlockContainer.java:178)
+\tat org.jfree.chart.block.CenterArrangement.arrangeNN(CenterArrangement.java:286)
+\tat org.jfree.chart.block.CenterArrangement.arrange(CenterArrangement.java:100)
+\tat org.jfree.chart.block.BlockContainer.arrange(BlockContainer.java:178)
+\tat org.jfree.chart.block.FlowArrangement.arrangeNN(FlowArrangement.java:367)
+\tat org.jfree.chart.block.FlowArrangement.arrangeRR(FlowArrangement.java:285)
+\tat org.jfree.chart.block.FlowArrangement.arrange(FlowArrangement.java:160)
+\tat org.jfree.chart.block.BlockContainer.arrange(BlockContainer.java:178)
+\tat org.jfree.chart.title.LegendTitle.arrange(LegendTitle.java:540)
+\tat org.jfree.chart.JFreeChart.drawTitle(JFreeChart.java:1320)
+\tat org.jfree.chart.JFreeChart.draw(JFreeChart.java:1214)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1399)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1379)
+\tat org.jfree.chart.JFreeChart.createBufferedImage(JFreeChart.java:1364)
+\tat org.spec.jbb.reporter.Reporter.render(Reporter.java:817)
+\tat org.spec.jbb.reporter.tasks.RenderRTTask$RenderRTCurvesTask.innerCompute(RenderRTTask.java:279)
+\tat org.spec.jbb.reporter.tasks.AbstractReporterTask.compute(AbstractReporterTask.java:37)
+\tat java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)
+\tat java.base/java.util.concurrent.ForkJoinTask.invokeAll(ForkJoinTask.java:814)
+\tat org.spec.jbb.reporter.tasks.RenderRTTask.innerCompute(RenderRTTask.java:76)
+\tat org.spec.jbb.reporter.tasks.AbstractReporterTask.compute(AbstractReporterTask.java:37)
+\tat java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)
+\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)
+\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)
+\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)
+\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+Caused by: java.lang.reflect.InvocationTargetException
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+\tat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+\tat java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)
+\tat java.desktop/sun.font.FontManagerFactory$1.run(FontManagerFactory.java:85)
+\t... 39 more
+Caused by: java.lang.RuntimeException: Fontconfig head is null, check your fonts or fonts configuration
+\tat java.desktop/sun.awt.FontConfiguration.getVersion(FontConfiguration.java:1271)
+\tat java.desktop/sun.awt.FontConfiguration.readFontConfigFile(FontConfiguration.java:224)
+\tat java.desktop/sun.awt.FontConfiguration.init(FontConfiguration.java:106)
+\tat java.desktop/sun.awt.X11FontManager.createFontConfiguration(X11FontManager.java:706)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:358)
+\tat java.desktop/sun.font.SunFontManager$2.run(SunFontManager.java:315)
+\tat java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+\tat java.desktop/sun.font.SunFontManager.<init>(SunFontManager.java:315)
+\tat java.desktop/sun.awt.FcFontManager.<init>(FcFontManager.java:35)
+\tat java.desktop/sun.awt.X11FontManager.<init>(X11FontManager.java:56)
+\t... 45 more
+         0 msec: Render RT
+         3 msec: Render template to file result/specjbb2015-C-20240711-00001/report-00001/data/specjbb2015-C-20240711-00001-runProperties.txt
+        15 msec: Render template to file result/specjbb2015-C-20240711-00001/report-00001/specjbb2015-C-20240711-00001.html
+Report generation finished. Wallclock = 767 msecs, real = 1259 msecs, parallelism = 1.64x

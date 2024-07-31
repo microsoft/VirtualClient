@@ -18,7 +18,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
-        public Metric(string name, double value)
+        public Metric(string name, double? value)
         {
             this.Name = name;
             this.Value = value;
@@ -30,7 +30,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
-        public Metric(string name, double value, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+        public Metric(string name, double? value, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
             : this(name, value)
         {
             this.Description = description;
@@ -51,7 +51,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
-        public Metric(string name, double value, MetricRelativity relativity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+        public Metric(string name, double? value, MetricRelativity relativity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
             : this(name, value, tags: tags, description: description, metadata: metadata)
         {
             this.Relativity = relativity;
@@ -60,7 +60,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
-        public Metric(string name, double value, string unit, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+        public Metric(string name, double? value, string unit, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
             : this(name, value, tags: tags, description: description, metadata: metadata)
         {
             this.Unit = unit;
@@ -69,7 +69,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
-        public Metric(string name, double value, string unit, MetricRelativity relativity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+        public Metric(string name, double? value, string unit, MetricRelativity relativity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
             : this(name, value, unit, tags: tags, description: description, metadata: metadata)
         {
             this.Relativity = relativity;
@@ -99,7 +99,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Result of test
         /// </summary>
-        public double Value { get; }
+        public double? Value { get; }
 
         /// <summary>
         /// Unit of result

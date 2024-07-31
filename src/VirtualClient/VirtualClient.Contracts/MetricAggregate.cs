@@ -12,7 +12,7 @@ namespace VirtualClient.Contracts
     /// Provides features for capturing Windows performance counter values over a period
     /// of time.
     /// </summary>
-    public class MetricAggregate : ConcurrentBag<double>
+    public class MetricAggregate : ConcurrentBag<double?>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricAggregate"/> class.
@@ -115,11 +115,11 @@ namespace VirtualClient.Contracts
                 return Metric.None;
             }
 
-            double value = 0;
+            double? value = 0;
             switch (aggregateType)
             {
                 case MetricAggregateType.Average:
-                    double sum = this.Sum();
+                    double? sum = this.Sum();
                     value = sum / this.Count;
                     break;
 

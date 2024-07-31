@@ -744,7 +744,7 @@ namespace VirtualClient.Contracts
             DateTime scenarioStartTime,
             DateTime scenarioEndTime,
             string metricName,
-            double metricValue,
+            double? metricValue,
             string metricUnits,
             string metricCategorization,
             string scenarioArguments,
