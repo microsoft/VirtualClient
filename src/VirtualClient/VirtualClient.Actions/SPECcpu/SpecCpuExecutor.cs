@@ -97,6 +97,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Iterations.
+        /// Recommand Default: 2
+        /// </summary>
+        public int Iterations
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Iterations), 2);
+            }
+        }
+
+        /// <summary>
         /// Peak optimizing flags.
         /// Recommand Default:-g -Ofast -march=native -flto
         /// </summary>
@@ -383,10 +395,12 @@ namespace VirtualClient.Actions
             string configurationFile = this.GetConfigurationFileName();
             int coreCount = Environment.ProcessorCount;
 
-            string cmd = @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
+            string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
-            cmd = (this.Platform == PlatformID.Unix) ? $"{cmd} --reportable" : $"{cmd} --noreportable";
+            // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
+            bool reportable = (this.Platform == PlatformID.Unix) && (this.Iterations == 2 || this.Iterations == 3);
+            cmd = reportable ? $"{cmd} --reportable" : $"{cmd} --noreportable";
             cmd = $"{cmd} {this.SpecProfile}";
             return cmd;
         }
