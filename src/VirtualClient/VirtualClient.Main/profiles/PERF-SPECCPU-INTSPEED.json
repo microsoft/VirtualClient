@@ -10,6 +10,7 @@
     "Parameters": {
         "CompilerName": "gcc",
         "CompilerVersion": "10",
+        "Iterations": 2,
         "SpecProfile": "intspeed",
         "RunPeak": false,
         "BaseOptimizingFlags": "-g -O3 -march=native",
@@ -21,6 +22,7 @@
             "Parameters": {
                 "Scenario": "ExecuteSPECBenchmark",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
+                "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "$.Parameters.SpecProfile",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",

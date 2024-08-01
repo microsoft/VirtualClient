@@ -89,10 +89,10 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username), string.Empty);
+                string username = this.Parameters.GetValue<string>(nameof(SuperBenchmarkExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = Environment.UserName;
+                    username = this.systemManager.GetLoggedInUserName();
                 }
 
                 return username;
