@@ -46,7 +46,8 @@ namespace VirtualClient.Identity
             }
 
             X509Certificate2 result = null;
-
+            string errorMessage = $"Certificate not found. A certificate for user '{Environment.UserName}' with matching thumbprint '{thumbprint}' " +
+                $"was not found in any one of the following expected certificate stores: ";
             foreach (StoreLocation storeLocation in storeLocations)
             {
                 try
@@ -66,6 +67,10 @@ namespace VirtualClient.Identity
                     // Certificate access permissions issue
                     throw;
                 }
+                catch (Exception exc)
+                {
+                    errorMessage = errorMessage + $"Message from location '{storeLocation.ToString()}': {exc.Message}.";
+                }
 
                 if (result != null)
                 {
@@ -75,9 +80,7 @@ namespace VirtualClient.Identity
 
             if (result == null)
             {
-                throw new CryptographicException(
-                    $"Certificate not found. A certificate for user '{Environment.UserName}' with matching thumbprint '{thumbprint}' was not found in any one of the following expected certificate stores: " +
-                    $"{string.Join(", ", storeLocations.Select(loc => $"{loc}/{storeName}"))}");
+                throw new CryptographicException(errorMessage);
             }
 
             return result;
@@ -95,7 +98,8 @@ namespace VirtualClient.Identity
             }
 
             X509Certificate2 result = null;
-
+            string errorMessage = $"Certificate not found. A certificate for user '{Environment.UserName}' with matching issuer '{issuer}' and subject '{subject}' " +
+                $"was not found in any one of the following expected certificate stores: ";
             foreach (StoreLocation storeLocation in storeLocations)
             {
                 try
@@ -115,6 +119,10 @@ namespace VirtualClient.Identity
                     // Certificate access permissions issue
                     throw;
                 }
+                catch (Exception exc)
+                {
+                    errorMessage = errorMessage + $"Message from location '{storeLocation.ToString()}': {exc.Message}.";
+                }
 
                 if (result != null)
                 {
@@ -124,9 +132,7 @@ namespace VirtualClient.Identity
 
             if (result == null)
             {
-                throw new CryptographicException(
-                    $"Certificate not found. A certificate for user '{Environment.UserName}' with matching issuer '{issuer}' and subject '{subject}' was not found in any one of the following expected certificate stores: " +
-                    $"{string.Join(", ", storeLocations.Select(loc => $"{loc}/{storeName}"))}");
+                throw new CryptographicException(errorMessage);
             }
 
             return result;

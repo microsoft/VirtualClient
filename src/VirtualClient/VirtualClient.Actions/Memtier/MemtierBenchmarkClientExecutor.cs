@@ -167,6 +167,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Parameter defines the increment step for the memtier cpu affinity.
+        /// </summary>
+        public int MemtierCpuAffinityDelta
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MemtierCpuAffinityDelta), 1);
+            }
+        }
+
+        /// <summary>
         /// The benchmark target server (e.g. Redis, Memcached).
         /// </summary>
         protected string Benchmark { get; private set; }
@@ -453,21 +464,28 @@ namespace VirtualClient.Actions
                     int serverprocesscount = serverState.Ports.Count();
                     CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
                     int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
+                    int memtierProcessesCount = 0;
+                    int memtierCpuAffinity = 0;
 
-                    int serverInstancesMax = this.MaxClients / this.ClientInstances;
-
-                    for (int i = 0; i < Math.Min(serverInstancesMax, serverprocesscount); i++)
+                    for (int i = 0; i < serverprocesscount; i++)
                     {
                         PortDescription portDescription = serverState.Ports.ElementAt(i);
                         int serverPort = portDescription.Port;
 
-                        int memtiercpuaffinity = (serverprocesscount + i) % logicalProcessorCount;
+                        // Check if we can run all the ClientInstances for the next Server Process
+                        if (memtierProcessesCount + this.ClientInstances > this.MaxClients)
+                        {
+                            break;
+                        }
+
                         for (int instances = 0; instances < this.ClientInstances; instances++)
                         {
+                            memtierCpuAffinity = (memtierCpuAffinity + this.MemtierCpuAffinityDelta) % logicalProcessorCount;
+
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            commandArguments = $"-c \"numactl -C {memtiercpuaffinity} {command} --server {serverIPAddress} --port {serverPort}";
+                            commandArguments = $"-c \"numactl -C {memtierCpuAffinity} {command} --server {serverIPAddress} --port {serverPort}";
 
                             if (this.IsTLSEnabled)
                             {
@@ -480,6 +498,7 @@ namespace VirtualClient.Actions
 
                             commands.Add(commandArguments);
                             workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, precommand, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
+                            memtierProcessesCount++;
 
                             if (this.WarmUp)
                             {
