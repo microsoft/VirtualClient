@@ -122,7 +122,7 @@ namespace VirtualClient.Actions
                 this.CipherResults = cipherResults;
             }
 
-            if (this.TryParsePerformanceResults(out DataTable signVerifyResults))
+            if (this.TryParseSignVerifyOpsPerformanceResults(out DataTable signVerifyResults))
             {
                 signVerifyResultsValid = true;
                 this.SignVerifyResults = signVerifyResults;
@@ -280,7 +280,7 @@ namespace VirtualClient.Actions
             return parsedSuccessfully;
         }
 
-        private bool TryParsePerformanceResults(out DataTable results)
+        private bool TryParseSignVerifyOpsPerformanceResults(out DataTable results)
         {
             results = null;
             bool parsedSuccessfully = false;
@@ -292,17 +292,17 @@ namespace VirtualClient.Actions
             // rsa 2048 bits 0.000319s 0.000004s 0.000004s 0.000320s   3132.4 254999.2 252626.6   3127.0
             //                           op      op/s
             // 448 bits ecdh(X448)   0.0000s  42896.0
-            MatchCollection performanceResults = Regex.Matches(this.RawText, $@"(?m)^\s*(\d+\s+bits\s+\w+(?:\s+\(\w+\))?|[a-zA-Z]+\s+\d+\s+bits(?:\s+\w+(?:\s+\(\w+\))?)?\s)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            if (performanceResults?.Any() == true)
+            MatchCollection signsVerifyOpsPerformanceResults = Regex.Matches(this.RawText, $@"(?m)^\s*(\d+\s+bits\s+\w+(?:\s+\(\w+\))?|[a-zA-Z]+\s+\d+\s+bits(?:\s+\w+(?:\s+\(\w+\))?)?\s)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            if (signsVerifyOpsPerformanceResults?.Any() == true)
             {
                 string headerPattern = @"(?m)^(.*)(?=\n(.*)(\s)bits)";
                 MatchCollection headerResults = Regex.Matches(this.RawText, headerPattern);
 
-                if (headerResults?.Any() == true && performanceResults.Count() == headerResults.Count())
+                if (headerResults?.Any() == true && signsVerifyOpsPerformanceResults.Count() == headerResults.Count())
                 {
                     // return datatable with rsa name, column, value per row
-                    DataTable svResults = new DataTable();
-                    svResults.Columns.AddRange(new DataColumn[]
+                    DataTable parsedResults = new DataTable();
+                    parsedResults.Columns.AddRange(new DataColumn[]
                     {
                     new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
                     new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
@@ -317,8 +317,8 @@ namespace VirtualClient.Actions
                         // Output the array as a list of strings
                         List<string> columnNamesList = new List<string>(columnNamesArray);
 
-                        string algorithm = performanceResults[j].Groups[1].Value.Trim();
-                        string rsaResultMatchString = performanceResults[j].Value;
+                        string algorithm = signsVerifyOpsPerformanceResults[j].Groups[1].Value.Trim();
+                        string rsaResultMatchString = signsVerifyOpsPerformanceResults[j].Value;
                         // Regular expression headerPattern to match the values
                         string rsaResultPattern = @"(\d+\.\d+)(s)?|\d+\.?\d*e[+-]\d+(s)?";
 
@@ -341,14 +341,14 @@ namespace VirtualClient.Actions
                                 if (double.TryParse(rsaResultValues[i], out double value))
                                 {
                                     parsedSuccessfully = true;
-                                    svResults.Rows.Add(algorithm, columnNamesList[i], value);
+                                    parsedResults.Rows.Add(algorithm, columnNamesList[i], value);
                                 }
                             }
                         }
 
                         if (parsedSuccessfully)
                         {
-                            results = svResults;
+                            results = parsedResults;
                         }
 
                     }
