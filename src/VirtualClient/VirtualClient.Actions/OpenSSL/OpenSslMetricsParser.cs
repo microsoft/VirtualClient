@@ -122,7 +122,7 @@ namespace VirtualClient.Actions
                 this.CipherResults = cipherResults;
             }
 
-            if (this.TryParseSignVerifyPerformanceResults(out DataTable signVerifyResults))
+            if (this.TryParsePerformanceResults(out DataTable signVerifyResults))
             {
                 signVerifyResultsValid = true;
                 this.SignVerifyResults = signVerifyResults;
@@ -280,7 +280,7 @@ namespace VirtualClient.Actions
             return parsedSuccessfully;
         }
 
-        private bool TryParseSignVerifyPerformanceResults(out DataTable results)
+        private bool TryParsePerformanceResults(out DataTable results)
         {
             results = null;
             bool parsedSuccessfully = false;
@@ -290,13 +290,15 @@ namespace VirtualClient.Actions
             //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
             //                    sign    verify    encrypt   decrypt   sign/s verify/s  encr./s  decr./s
             // rsa 2048 bits 0.000319s 0.000004s 0.000004s 0.000320s   3132.4 254999.2 252626.6   3127.0
-            MatchCollection signVerifyPerformanceResults = Regex.Matches(this.RawText, $@"(?m)^\s*(\d+\s+bits\s+\w+(?:\s+\(\w+\))?|[a-zA-Z]+\s+\d+\s+bits(?:\s+\w+(?:\s+\(\w+\))?)?\s)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            if (signVerifyPerformanceResults?.Any() == true)
+            //                           op      op/s
+            // 448 bits ecdh(X448)   0.0000s  42896.0
+            MatchCollection performanceResults = Regex.Matches(this.RawText, $@"(?m)^\s*(\d+\s+bits\s+\w+(?:\s+\(\w+\))?|[a-zA-Z]+\s+\d+\s+bits(?:\s+\w+(?:\s+\(\w+\))?)?\s)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?(\s*[0-9\.]+s?)?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            if (performanceResults?.Any() == true)
             {
                 string headerPattern = @"(?m)^(.*)(?=\n(.*)(\s)bits)";
                 MatchCollection headerResults = Regex.Matches(this.RawText, headerPattern);
 
-                if (headerResults?.Any() == true && signVerifyPerformanceResults.Count() == headerResults.Count())
+                if (headerResults?.Any() == true && performanceResults.Count() == headerResults.Count())
                 {
                     // return datatable with rsa name, column, value per row
                     DataTable svResults = new DataTable();
@@ -315,19 +317,19 @@ namespace VirtualClient.Actions
                         // Output the array as a list of strings
                         List<string> columnNamesList = new List<string>(columnNamesArray);
 
-                        string algorithm = signVerifyPerformanceResults[j].Groups[1].Value.Trim();
-                        string rsaResultMatchString = signVerifyPerformanceResults[j].Value;
+                        string algorithm = performanceResults[j].Groups[1].Value.Trim();
+                        string rsaResultMatchString = performanceResults[j].Value;
                         // Regular expression headerPattern to match the values
                         string rsaResultPattern = @"(\d+\.\d+)(s)?|\d+\.?\d*e[+-]\d+(s)?";
 
                         // Find matches
-                        MatchCollection rsaResultMatches = Regex.Matches(rsaResultMatchString, rsaResultPattern);
+                        MatchCollection resultMatches = Regex.Matches(rsaResultMatchString, rsaResultPattern);
 
                         // Create a list to hold the values
                         List<string> rsaResultValues = new List<string>();
 
                         // Add matches to the list
-                        foreach (Match match in rsaResultMatches)
+                        foreach (Match match in resultMatches)
                         {
                             rsaResultValues.Add(match.Groups[1].Value);
                         }
@@ -350,66 +352,6 @@ namespace VirtualClient.Actions
                         }
 
                     }
-                }
-            }
-
-            return parsedSuccessfully;
-        }
-
-        private bool TryParseOpsPerformanceResults(out DataTable results)
-        {
-            results = null;
-            bool parsedSuccessfully = false;
-
-            IEnumerable<string> ecdhColumns = new List<string>()
-            {
-                "op",
-                "op/s"
-            };
-
-            // Example:
-            //                           op      op/s
-            // 448 bits ecdh(X448)   0.0000s  42896.0
-
-            MatchCollection opsPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-            if (opsPerformanceResults?.Any() == true)
-            {
-                // return datatable with rsa name, column, value per row
-                DataTable opsResults = new DataTable();
-                opsResults.Columns.AddRange(new DataColumn[]
-                {
-                    new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
-                    new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
-                    new DataColumn(OpenSslMetricsParser.ColumnValue, typeof(double)),
-                });
-
-                foreach (Match match in opsPerformanceResults)
-                {
-                    // Match results for op, op/s
-                    if (match.Groups.Count == 4
-                       && match.Groups[2].Captures?.Any() == true)
-                    {
-                        int typeIndex = 0;
-                        string opsAlgorithm = match.Groups[1].Value.Trim();
-                        for (int i = 2; i < 4; i++)
-                        {
-                            Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
-                            if (numericMatch.Success)
-                            {
-                                parsedSuccessfully = true;
-                                double value = double.Parse(numericMatch.Value.Trim());
-                                opsResults.Rows.Add(opsAlgorithm, ecdhColumns.ElementAt(typeIndex), value);
-                            }
-
-                            typeIndex++;
-                        }
-                    }
-                }
-
-                if (parsedSuccessfully)
-                {
-                    results = opsResults;
                 }
             }
 
