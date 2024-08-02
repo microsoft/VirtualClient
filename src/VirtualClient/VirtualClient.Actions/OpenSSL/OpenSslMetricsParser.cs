@@ -424,8 +424,8 @@ namespace VirtualClient.Actions
                     };
 
                 // return datatable with rsa name, column, value per row
-                DataTable svResults = new DataTable();
-                svResults.Columns.AddRange(new DataColumn[]
+                DataTable parseResults = new DataTable();
+                parseResults.Columns.AddRange(new DataColumn[]
                 {
                     new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
                     new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
@@ -447,7 +447,7 @@ namespace VirtualClient.Actions
                             {
                                 parsedSuccessfully = true;
                                 double value = double.Parse(numericMatch.Value.Trim());
-                                svResults.Rows.Add(algorithm, columns.ElementAt(typeIndex), value);
+                                parseResults.Rows.Add(algorithm, columns.ElementAt(typeIndex), value);
                             }
 
                             typeIndex++;
@@ -457,7 +457,7 @@ namespace VirtualClient.Actions
 
                 if (parsedSuccessfully)
                 {
-                    results = svResults;
+                    results = parseResults;
                 }
             }
 
