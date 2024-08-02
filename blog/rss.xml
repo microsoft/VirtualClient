@@ -4,7 +4,7 @@
         <title>Virtual Client Platform Blog</title>
         <link>https://microsoft.github.io/VirtualClient/blog/</link>
         <description>Virtual Client Platform Blog</description>
-        <lastBuildDate>Fri, 02 Aug 2024 00:09:05 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 02 Aug 2024 19:23:32 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
@@ -12,7 +12,7 @@
             <title><![CDATA[VirtualClient at OpenComputeProject Summit 2023]]></title>
             <link>https://microsoft.github.io/VirtualClient/blog/ocp-summit-2023/</link>
             <guid>https://microsoft.github.io/VirtualClient/blog/ocp-summit-2023/</guid>
-            <pubDate>Fri, 02 Aug 2024 00:09:05 GMT</pubDate>
+            <pubDate>Fri, 02 Aug 2024 19:23:32 GMT</pubDate>
             <category>virtualclient</category>
             <category>opencomputeproject</category>
             <category>ocp</category>
