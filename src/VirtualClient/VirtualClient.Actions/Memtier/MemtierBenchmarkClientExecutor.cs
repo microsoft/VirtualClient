@@ -464,8 +464,14 @@ namespace VirtualClient.Actions
                     int serverprocesscount = serverState.Ports.Count();
                     CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
                     int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
+                    int maxClients = this.MaxClients;
                     int memtierProcessesCount = 0;
                     int memtierCpuAffinity = 0;
+
+                    if (maxClients == int.MaxValue)
+                    {
+                        maxClients = serverprocesscount * this.ClientInstances;
+                    }
 
                     for (int i = 0; i < serverprocesscount; i++)
                     {
@@ -473,7 +479,7 @@ namespace VirtualClient.Actions
                         int serverPort = portDescription.Port;
 
                         // Check if we can run all the ClientInstances for the next Server Process
-                        if (memtierProcessesCount + this.ClientInstances > this.MaxClients)
+                        if (memtierProcessesCount + this.ClientInstances > maxClients)
                         {
                             break;
                         }
