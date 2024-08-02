@@ -348,7 +348,7 @@ namespace VirtualClient.Actions
             // Example:
             //                    sign verify    sign/s verify/s
             //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
-            MatchCollection signVerifyPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s\s)(\s*[0-9\.]+s\s)(\s*[0-9\.]+\s)(\s*[0-9\.]+\s)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            MatchCollection signVerifyPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s\s)(\s*[0-9\.]+s\s)(\s*[0-9\.]+\s)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             if (signVerifyPerformanceResults?.Any() == true)
             {
                 IEnumerable<string> columns = new List<string>()
