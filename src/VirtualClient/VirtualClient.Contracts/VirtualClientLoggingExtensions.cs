@@ -803,6 +803,72 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Log metrics with metricsFilter and also with strict filtering option.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="metricFilters">List of filters that needs to be logged.</param>
+        /// <param name="toolName">The name of the workload tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
+        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
+        /// <param name="scenarioStartTime">The time at which the test began.</param>
+        /// <param name="scenarioEndTime">The time at which the test ended.</param>
+        /// <param name="metrics">List of the test metrics to log.</param>
+        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
+        /// <param name="scenarioArguments">The command line parameters provided to the workload tool.</param>
+        /// <param name="tags">Tags associated with the test.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
+        /// <param name="toolVersion">The version of the tool/toolset.</param>
+        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
+        /// <param name="isStrictFiltering">True to filter the metrics down to those whose names exactly matches the filter terms (case-sensitive) and false to filter the set of metrics down to those whose names match or contain the filter terms provided (case-insensitive). Default = false.</param>
+        public static void LogMetrics(
+            this ILogger logger,
+            IEnumerable<string> metricFilters,
+            string toolName,
+            string scenarioName,
+            DateTime scenarioStartTime,
+            DateTime scenarioEndTime,
+            IEnumerable<Metric> metrics,
+            string metricCategorization,
+            string scenarioArguments,
+            IEnumerable<string> tags,
+            EventContext eventContext,
+            string toolResults = null,
+            string toolVersion = null,
+            bool supportOriginalSchema = false,
+            bool isStrictFiltering = false)
+        {
+            logger.ThrowIfNull(nameof(logger));
+
+            if (metricFilters?.Any() == true)
+            {
+                metrics = metrics.FilterBy(metricFilters, isStrictFiltering).ToList();
+            }
+
+            foreach (Metric metric in metrics)
+            {
+                VirtualClientLoggingExtensions.LogMetrics(
+                    logger,
+                    toolName,
+                    scenarioName,
+                    metric.StartTime == DateTime.MinValue ? scenarioStartTime : metric.StartTime,
+                    metric.EndTime == DateTime.MinValue ? scenarioEndTime : metric.EndTime,
+                    metric.Name,
+                    metric.Value,
+                    metric.Unit,
+                    metricCategorization,
+                    scenarioArguments,
+                    tags,
+                    eventContext,
+                    metric.Relativity,
+                    metric.Description,
+                    toolResults,
+                    toolVersion,
+                    metric.Metadata,
+                    supportOriginalSchema);
+            }
+        }
+
+        /// <summary>
         /// Extension logs a message indicating the component, toolset or scenario is not supported.
         /// </summary>
         /// <param name="logger">The logger instance.</param>

@@ -7,16 +7,18 @@
         "Notes_ConnectionLimits": "Each Memtier benchmark action will establish (--threads * --clients) connections against the Memcached server for each client instance/process. Ensure that the server-side OS does not place a limit on connections that might exceed this (e.g. ulimit -Sn on Linux).",
         "Notes_AggregateMetrics": "When EmitAggregateMetrics = true, the metrics produced by each individual client instance against an individual Redis server will be aggregated into min, max, avg, stddev etc."
     },
-    "Parameters": {
-        "ServerPort": 6379,
-        "ServerThreadCount": 4,
-        "ServerInstances": "{LogicalCoreCount}",
-        "ClientInstances": 1,
-        "IsTLSEnabled": false,
-        "EmitAggregateMetrics": false,
-        "EmitRawMetrics": true,
-        "Duration": "00:02:00"
-    },
+  "Parameters": {
+    "ServerPort": 6379,
+    "ServerThreadCount": 4,
+    "ServerInstances": "{LogicalCoreCount}",
+    "ClientInstances": 1,
+    "IsTLSEnabled": false,
+    "EmitAggregateMetrics": false,
+    "EmitRawMetrics": true,
+    "Duration": "00:02:00",
+    "MetricFilters": "\\bBandwidth Avg\\b,Throughput Avg,Latency-P99 Max",
+    "IsStrictFiltering":  true
+  },
     "Actions": [
         {
             "Type": "RedisServerExecutor",
@@ -35,183 +37,207 @@
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "warmup_32b_pool",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "WarmUp": true,
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "warmup_32b_pool",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "WarmUp": true,
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "warmup_1kb_pool",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "WarmUp": true,
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "warmup_1kb_pool",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "WarmUp": true,
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "warmup_10kb_pool",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "WarmUp": true,
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "warmup_10kb_pool",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "WarmUp": true,
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_8t_16c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 8 --clients 16  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_8t_16c_32b_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 8 --clients 16  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_8t_16c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_8t_16c_1kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_8t_16c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "  --protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_8t_16c_10kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "  --protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_16t_16c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_16t_16c_32b_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_16t_16c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_16t_16c_1kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_16t_16c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_16t_16c_10kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_16c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_32t_16c_32b_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_16c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_32t_16c_1kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_16c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-                "RedisResourcesPackageName": "redisresources",
-                "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
-                "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_32t_16c_10kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+            "RedisResourcesPackageName": "redisresources",
+            "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
+            "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+            "MetricFilters": "$.Parameters.MetricFilters",
+            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
+            "Role": "Client"
+          }
         }
     ],
     "Dependencies": [

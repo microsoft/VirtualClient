@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
                 ["CommandLine"] = "--protocol memcache-text --threads 8 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R",
                 ["ClientInstances"] = 1,
                 ["Duration"] = "00:03:00",
-                ["Username"] = "testuser"
+                ["Username"] = "testuser",
             };
 
             this.mockFixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -520,6 +520,165 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        public async Task MemtierBenchmarkClientExecutorEmitsTheExpectedMetricsAggregateMetricsWithStrictFilteringScenario1()
+        {
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = false;
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = true;
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.MetricFilters)] = "\\bbandwidth\\b,throughput,^Latency-P99.*,get-Throughput Avg";
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.IsStrictFiltering)] = true;
+
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // Setup:
+                // Set the standard output for the Memtier process to valid results.
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    if (process.FullCommand().Contains("memtier_benchmark"))
+                    {
+                        process.StandardOutput.Append(this.results);
+                    }
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                Assert.AreEqual(9, metricsEmitted.Count());
+
+                IEnumerable<string> expectedMetrics = new List<string>
+                {
+                    "Latency-P99 Avg",
+                    "Latency-P99 Min",
+                    "Latency-P99 Max",
+                    "Latency-P99 Stddev",
+                    "Latency-P99.9 Avg",
+                    "Latency-P99.9 Min",
+                    "Latency-P99.9 Max",
+                    "Latency-P99.9 Stddev",
+                    "Succeeded"
+                };
+
+                IEnumerable<string> actualMetrics = metricsEmitted.Select(e => (e.Item3 as EventContext).Properties["metricName"].ToString());
+                foreach (string expectedMetric in expectedMetrics)
+                {
+                    Assert.IsTrue(
+                        metricsEmitted.Count(e => (e.Item3 as EventContext).Properties["metricName"].ToString() == expectedMetric) == 1,
+                        $"Expected metric '{expectedMetric}' not found in metrics emitted.");
+                }
+            }
+        }
+
+        [Test]
+        public async Task MemtierBenchmarkClientExecutorEmitsTheExpectedMetricsAggregateMetricsWithStrictFilteringScenario2()
+        {
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = false;
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = true;
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.MetricFilters)] = "\\bBandwidth\\b,throughput,^Latency-P99.9.*,GET-Throughput.*";
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.IsStrictFiltering)] = true;
+
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // Setup:
+                // Set the standard output for the Memtier process to valid results.
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    if (process.FullCommand().Contains("memtier_benchmark"))
+                    {
+                        process.StandardOutput.Append(this.results);
+                    }
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                Assert.AreEqual(13, metricsEmitted.Count());
+
+                IEnumerable<string> expectedMetrics = new List<string>
+                {
+                    "Latency-P99.9 Avg",
+                    "Latency-P99.9 Min",
+                    "Latency-P99.9 Max",
+                    "Latency-P99.9 Stddev",
+                    "GET-Throughput Avg",
+                    "GET-Throughput Min",
+                    "GET-Throughput Max",
+                    "GET-Throughput Stddev",
+                    "GET-Throughput P20",
+                    "GET-Throughput P50",
+                    "GET-Throughput P80",
+                    "GET-Throughput Total",
+                    "Succeeded"
+                };
+
+                IEnumerable<string> actualMetrics = metricsEmitted.Select(e => (e.Item3 as EventContext).Properties["metricName"].ToString());
+                foreach (string expectedMetric in expectedMetrics)
+                {
+                    Assert.IsTrue(
+                        metricsEmitted.Count(e => (e.Item3 as EventContext).Properties["metricName"].ToString() == expectedMetric) == 1,
+                        $"Expected metric '{expectedMetric}' not found in metrics emitted.");
+                }
+            }
+        }
+
+        [Test]
+        public async Task MemtierBenchmarkClientExecutorEmitsTheExpectedMetricsAggregateMetricsWithStrictFilteringScenario3()
+        {
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = false;
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = true;
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.MetricFilters)] = "\\bBandwidth.*,throughput,^Latency-P99.9.*,GET-Throughput.*";
+            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.IsStrictFiltering)] = true;
+
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // Setup:
+                // Set the standard output for the Memtier process to valid results.
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    if (process.FullCommand().Contains("memtier_benchmark"))
+                    {
+                        process.StandardOutput.Append(this.results);
+                    }
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                Assert.AreEqual(21, metricsEmitted.Count());
+
+                IEnumerable<string> expectedMetrics = new List<string>
+                {
+                    "Bandwidth Avg",
+                    "Bandwidth Min",
+                    "Bandwidth Max",
+                    "Bandwidth Stddev",
+                    "Bandwidth P20",
+                    "Bandwidth P50",
+                    "Bandwidth P80",
+                    "Bandwidth Total",
+                    "Latency-P99.9 Avg",
+                    "Latency-P99.9 Min",
+                    "Latency-P99.9 Max",
+                    "Latency-P99.9 Stddev",
+                    "GET-Throughput Avg",
+                    "GET-Throughput Min",
+                    "GET-Throughput Max",
+                    "GET-Throughput Stddev",
+                    "GET-Throughput P20",
+                    "GET-Throughput P50",
+                    "GET-Throughput P80",
+                    "GET-Throughput Total",
+                    "Succeeded"
+                };
+
+                IEnumerable<string> actualMetrics = metricsEmitted.Select(e => (e.Item3 as EventContext).Properties["metricName"].ToString());
+                foreach (string expectedMetric in expectedMetrics)
+                {
+                    Assert.IsTrue(
+                        metricsEmitted.Count(e => (e.Item3 as EventContext).Properties["metricName"].ToString() == expectedMetric) == 1,
+                        $"Expected metric '{expectedMetric}' not found in metrics emitted.");
+                }
+            }
+        }
 
         private class TestMemtierBenchmarkClientExecutor : MemtierBenchmarkClientExecutor
         {
@@ -535,6 +694,5 @@ namespace VirtualClient.Actions
             }
 
         }
-
     }
 }

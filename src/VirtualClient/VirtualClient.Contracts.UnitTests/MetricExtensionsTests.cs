@@ -127,6 +127,43 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void FilterByExtensionReturnsTheExpectedFilteredSetOfMetricsWhenStrictFilteringIsEnabled_Scenario5()
+        {
+            List<string> filters = new List<string>
+            {
+                // An actual regular expression
+                "read_completionlatency.*",
+                "write_iops"
+            };
+
+            IEnumerable<Metric> expectedMetrics = this.metrics.Where(m => m.Name.StartsWith("read_completionlatency") || m.Name.Equals("write_iops"));
+            IEnumerable<Metric> actualMetrics = this.metrics.FilterBy(filters, true);
+
+            Assert.IsNotNull(actualMetrics);
+            Assert.IsNotEmpty(actualMetrics);
+            CollectionAssert.AreEquivalent(expectedMetrics, actualMetrics);
+        }
+
+        [Test]
+        public void FilterByExtensionReturnsTheExpectedFilteredSetOfMetricsWithRegexWhenStrictFilteringIsEnabled_Scenario5()
+        {
+            List<string> filters = new List<string>
+            {
+                // An actual regular expression
+                "^write.*",
+                "\\bread_\\b",
+                ".*bandwidth$"
+            };
+
+            IEnumerable<Metric> expectedMetrics = this.metrics.Where(m => m.Name.StartsWith("write") || m.Name.Equals("read_") || m.Name.EndsWith("bandwidth"));
+            IEnumerable<Metric> actualMetrics = this.metrics.FilterBy(filters, true);
+
+            Assert.IsNotNull(actualMetrics);
+            Assert.IsNotEmpty(actualMetrics);
+            CollectionAssert.AreEquivalent(expectedMetrics, actualMetrics);
+        }
+
+        [Test]
         public void FilterByExtensionIsNotCaseSensitive()
         {
             List<string> filters = new List<string>
@@ -142,5 +179,6 @@ namespace VirtualClient.Contracts
             Assert.IsNotEmpty(actualMetrics);
             CollectionAssert.AreEquivalent(expectedMetrics, actualMetrics);
         }
+
     }
 }

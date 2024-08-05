@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
@@ -387,23 +388,18 @@ namespace VirtualClient.Actions
                         {
                             IDictionary<string, IConvertible> metadata = MemtierMetricsParser.ParseMetadata(processInfo.Command, processInfo.CpuAffinity);
 
-                            foreach (Metric metric in metrics)
-                            {
-                                this.Logger.LogMetrics(
+                            this.Logger.LogMetrics(
+                                    this.MetricFilters,
                                     $"Memtier-{this.Benchmark}",
                                     this.MetricScenario ?? this.Scenario,
                                     processInfo.StartTime,
                                     processInfo.EndTime,
-                                    metric.Name,
-                                    metric.Value,
-                                    metric.Unit,
-                                    null,
+                                    metrics,
+                                    string.Empty,
                                     processInfo.Command,
                                     this.Tags,
                                     telemetryContext,
-                                    metric.Relativity,
-                                    metricMetadata: metadata);
-                            }
+                                    isStrictFiltering: this.IsStrictFiltering);
                         }
                     }
 
@@ -413,23 +409,18 @@ namespace VirtualClient.Actions
                         IList<Metric> aggregateMetrics = MemtierMetricsParser.Aggregate(allMetrics);
                         IDictionary<string, IConvertible> metadata = MemtierMetricsParser.ParseMetadata(processReference.Command);
 
-                        foreach (Metric metric in aggregateMetrics)
-                        {
-                            this.Logger.LogMetrics(
+                        this.Logger.LogMetrics(
+                                this.MetricFilters,
                                 $"Memtier-{this.Benchmark}",
                                 this.MetricScenario ?? this.Scenario,
                                 processReference.StartTime,
                                 processReference.EndTime,
-                                metric.Name,
-                                metric.Value,
-                                metric.Unit,
-                                null,
+                                aggregateMetrics,
+                                string.Empty,
                                 processReference.Command,
                                 this.Tags,
                                 telemetryContext,
-                                metric.Relativity,
-                                metricMetadata: metadata);
-                        }
+                                isStrictFiltering: this.IsStrictFiltering);
                     }
                 }
                 catch (SchemaException exc)
