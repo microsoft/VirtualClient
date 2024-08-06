@@ -105,7 +105,7 @@ Runs the Memtier workload against to generate various network traffic patterns a
   | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
   | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
   | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
-  | MaxClients                | Optional. Defines the maximum number of memtier processes. This allows the user to control the Memtier processes irrespective of the number of server processes | int.MaxValue |
+  | MaxClients                | Optional. Defines the maximum number of memtier processes. This allows the user to control the Memtier processes irrespective of the number of server processes | -1 |
   | MemtierCpuAffinityDelta   | Optional. Defines the increment step for the Memtier CPU affinity, allowing for pseudo-equivalent load balancing across cores.<br/><br/>It is the user's responsibility to avoid harmonic repetitions when setting this parameter. Here are some guidelines: The Default value is '1' which always work reasonably well, setting it to '17' is often a good choice, while '32' is usually a poor choice and should be avoided. Setting it to a small power of two, e.g. 2 or 4, might work well if the total number of Memtier processes is smaller than number of cores. | 1 |
 
 * **Profile Runtimes**  
