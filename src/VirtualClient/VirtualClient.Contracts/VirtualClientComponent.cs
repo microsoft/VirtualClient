@@ -224,7 +224,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Defines the metric filter as provided in the profile. This defines the list of metrics to include in 
         /// the output of a particular workload executor or monitor. The terms can be partial terms depending
-        /// upon if user enables strict filtering or not.
+        /// on if user enables strict filtering or not.
         /// </summary>
         public IEnumerable<string> MetricFilters
         {
@@ -241,10 +241,6 @@ namespace VirtualClient.Contracts
                 return filters != null
                     ? filters.ToString().Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries)
                     : Array.Empty<string>();
-
-                /*var regexFilterTerms = this.StrictFiltering
-                    ? filterTerms.Select(term => new Regex(term, RegexOptions.Compiled))
-                    : filterTerms.Select(term => new Regex(term, RegexOptions.IgnoreCase | RegexOptions.Compiled));*/
             }
 
             set
@@ -253,73 +249,8 @@ namespace VirtualClient.Contracts
             }
         }
 
-        /*/// <summary>
-        /// Defines the metric filter as provided in the profile. This defines the list of metrics to include in 
-        /// the output of a particular workload executor or monitor. The terms can be partial terms depending
-        /// upon how the executor or monitor implements filtering.
-        /// </summary>
-        public IEnumerable<string> MetricFiltersRegex
-        {
-            get
-            {
-                IConvertible filters;
-                if (!this.Parameters.TryGetValue(nameof(this.MetricFiltersRegex), out filters))
-                {
-                    // Note:
-                    // The original profile parameters was called 'MetricFilter'
-                    this.Parameters.TryGetValue("MetricFilter", out filters);
-                }
-
-                return filters != null
-                    ? filters.ToString().Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries)
-                    : Array.Empty<string>();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.MetricFiltersRegex)] = string.Join(VirtualClientComponent.CommonDelimiters.First(), value);
-            }
-        }*/
-
-        /*/// <summary>
-        /// Defines the metric filter regex as provided in the profile.
-        /// </summary>
-        public IEnumerable<Regex> MetricFiltersRegex
-        {
-            get
-            {
-                IConvertible filters;
-                this.Parameters.TryGetValue(nameof(this.MetricFiltersRegex), out filters);
-
-                if (filters != null)
-                {
-                    var filterStrings = filters.ToString().Split(
-                        VirtualClientComponent.CommonDelimiters,
-                        StringSplitOptions.RemoveEmptyEntries);
-
-                    if (this.IsStrictFiltering)
-                    {
-                        return filterStrings.Select(pattern => new Regex(pattern, RegexOptions.Compiled));
-                    }
-                    else
-                    {
-                        return filterStrings.Select(pattern => new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
-                    }
-                }
-
-                return Enumerable.Empty<Regex>();
-            }
-
-            set
-            {
-                var regexStrings = value.Select(regex => regex.ToString());
-                this.Parameters[nameof(this.MetricFiltersRegex)] = string.Join(
-                    VirtualClientComponent.CommonDelimiters.First(), regexStrings);
-            }
-        }*/
-
         /// <summary>
-        /// strict filtering
+        /// Strict filtering enabling user to exactly match the regex or metrics (case-sensitive)
         /// </summary>
         public bool IsStrictFiltering
         {

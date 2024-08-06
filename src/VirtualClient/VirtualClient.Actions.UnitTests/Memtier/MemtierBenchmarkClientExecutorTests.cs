@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
                 ["CommandLine"] = "--protocol memcache-text --threads 8 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R",
                 ["ClientInstances"] = 1,
                 ["Duration"] = "00:03:00",
-                ["Username"] = "testuser",
+                ["Username"] = "testuser"
             };
 
             this.mockFixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

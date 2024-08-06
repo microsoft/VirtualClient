@@ -52,8 +52,7 @@ namespace VirtualClient.Contracts
                 var regexFilterTerms = strictFiltering
                     ? filterTerms.Select(term => new Regex(term, RegexOptions.Compiled))
                     : filterTerms.Select(term => new Regex(term, RegexOptions.IgnoreCase | RegexOptions.Compiled));
-                // filteredMetrics = metrics.Where(m => filterTerms.Contains(m.Name, MetricFilterComparer.Instance)).ToList();
-                // filteredMetrics = metrics.Where(metric => regexFilterTerms.Any(regex => regex.IsMatch(metric.Name)));
+
                 filteredMetrics = strictFiltering
                     ? metrics.Where(metric =>
                         regexFilterTerms.Any(regex => regex.IsMatch(metric.Name) && regex.Match(metric.Name).Value == metric.Name))
@@ -63,29 +62,6 @@ namespace VirtualClient.Contracts
 
             return filteredMetrics;
         }
-
-        /*/// <summary>
-        /// Filters the set of metrics down to those whose names exactly matches the filter terms which can be filter names and regex (case-sensitive)
-        /// </summary>
-        /// <param name="metrics">The set of metrics to filter down.</param>
-        /// <param name="filterTerms">A set of terms to match against the metric names.</param>
-        /// <returns>
-        /// A set of metrics whose names exactly matches filter terms (case-sensitive).
-        /// </returns>
-        public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<Regex> filterTerms)
-        {
-            metrics.ThrowIfNull(nameof(metrics));
-
-            IEnumerable<Metric> filteredMetrics = new List<Metric>();
-
-            if (filterTerms?.Any() == true)
-            {
-                // filteredMetrics = metrics.Where(metric => filterTerms.Any(regex => regex.IsMatch(metric.Name) && regex.Match(metric.Name).Value == metric.Name));
-                filteredMetrics = metrics.Where(metric => filterTerms.Any(regex => regex.IsMatch(metric.Name)));
-            }
-
-            return filteredMetrics;
-        }*/
 
         private class MetricFilterComparer : IEqualityComparer<string>
         {

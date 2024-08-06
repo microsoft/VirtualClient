@@ -48,7 +48,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -65,7 +64,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -82,7 +80,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -99,7 +96,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -116,7 +112,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -133,7 +128,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -150,7 +144,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -167,7 +160,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -184,7 +176,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -201,7 +192,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -218,7 +208,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         },
@@ -235,7 +224,6 @@
             "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
             "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
             "MetricFilters": "$.Parameters.MetricFilters",
-            "MetricFiltersRegex": "$.Parameters.MetricFiltersRegex",
             "Role": "Client"
           }
         }
