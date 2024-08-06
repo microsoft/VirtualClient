@@ -162,7 +162,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MaxClients), int.MaxValue);
+                return this.Parameters.GetValue<int>(nameof(this.MaxClients), -1);
             }
         }
 
@@ -468,7 +468,7 @@ namespace VirtualClient.Actions
                     int memtierProcessesCount = 0;
                     int memtierCpuAffinity = 0;
 
-                    if (maxClients == int.MaxValue)
+                    if (maxClients == -1)
                     {
                         maxClients = serverprocesscount * this.ClientInstances;
                     }
