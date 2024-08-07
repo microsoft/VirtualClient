@@ -114,3 +114,46 @@ The monitor profile designed for Nvidia GPU systems. The profile captures counte
   ./VirtualClient --profile=PERF-GPU-MLPERF.json --profile=MONITORS-GPU-NVIDIA.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   ```
+
+
+## MONITORS-GPU-AMD-SMI.json
+The monitor profile designed for AMD GPU systems. The profile captures metrics on systems of AMD GPUs with amd-smi.
+
+* **Supported Platform/Architectures**  
+  * linux-x64
+  * win-x64
+
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+
+* **Dependencies**  
+  * The system needs to have AMD GPU with ROCM installed.
+
+* **Scenarios**  
+  * Captures metrics on systems using [amd-smi](./0500-amd-smi.md)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to change this default behavior.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Optional. A description of the purpose of the monitor within the overall profile workflow. |    |
+  | MonitorFrequency          | Optional. Defines the frequency (timespan) at which performance counters will be captured/emitted (e.g. 00:01:00). | 00:05:00 |
+  | MonitorWarmupPeriod       | Optional. Defines a period of time (timespan) to wait before starting to track/capture performance counters (e.g. 00:03:00). This allows the system to get to a more typical operational state and generally results better representation for the counters captured. | 00:05:00 |
+  | MetricFilter              | Optional. A comma-delimited list of performance counter names to capture. The default behavior is to capture/emit all performance counters (e.g. \Processor Information(_Total)\% System Time,\Processor Information(_Total)\% User Time). This allows the profile author to focus on a smaller/specific subset of the counters. This is typically used when a lower monitor frequency is required for higher sample precision to keep the size of the data sets emitted by the Virtual Client to a minimum. | |
+
+* **Usage Examples**  
+  The following section provides a few basic examples of how to use the monitor profile. Additional usage examples can be found in the
+  'Usage Scenarios/Examples' link at the top.
+
+  ``` bash
+  # Run the monitoring facilities only.
+  ./VirtualClient --profile=MONITORS-GPU-AMD-SMI.json
+
+  # Monitor profile explicitly defined.
+  ./VirtualClient --profile=PERF-GPU-3DMARK-AMD.json --profile=MONITORS-GPU-AMD-SMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+
+  ```
+
