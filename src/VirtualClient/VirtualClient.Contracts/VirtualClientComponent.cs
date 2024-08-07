@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -223,7 +224,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Defines the metric filter as provided in the profile. This defines the list of metrics to include in 
         /// the output of a particular workload executor or monitor. The terms can be partial terms depending
-        /// upon how the executor or monitor implements filtering.
+        /// on if user enables strict filtering or not.
         /// </summary>
         public IEnumerable<string> MetricFilters
         {
@@ -245,6 +246,17 @@ namespace VirtualClient.Contracts
             set
             {
                 this.Parameters[nameof(this.MetricFilters)] = string.Join(VirtualClientComponent.CommonDelimiters.First(), value);
+            }
+        }
+
+        /// <summary>
+        /// Strict filtering enabling user to exactly match the regex or metrics (case-sensitive)
+        /// </summary>
+        public bool IsStrictFiltering
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.IsStrictFiltering), false);
             }
         }
 

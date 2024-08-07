@@ -169,7 +169,7 @@ namespace VirtualClient.Actions
             this.ThrowIfPlatformIsNotSupported();
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
             this.coreCount = this.cpuInfo.LogicalProcessorCount;
-
+            
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
             this.totalMemoryKiloBytes = memoryInfo.TotalMemory;
 
