@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// SockPerf Executor
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SockPerfExecutor2 : VirtualClientComponent
     {
         private const string OutputFileName = "sockperf-results.txt";

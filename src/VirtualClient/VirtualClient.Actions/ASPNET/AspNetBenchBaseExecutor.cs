@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -21,6 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The AspNetBench workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public abstract class AspNetBenchBaseExecutor : VirtualClientMultiRoleComponent
     {
         private IFileSystem fileSystem;

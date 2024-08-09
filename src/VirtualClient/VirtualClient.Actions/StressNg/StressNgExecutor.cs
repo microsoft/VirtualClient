@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -19,6 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The StressNg workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class StressNgExecutor : VirtualClientComponent
     {
         private const int DefaultRuntimeInSeconds = 60;

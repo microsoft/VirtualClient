@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -19,6 +20,7 @@ namespace VirtualClient.Actions
     /// An example Virtual Client component responsible for executing a workload or a test on
     /// the system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ExampleWorkloadExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;

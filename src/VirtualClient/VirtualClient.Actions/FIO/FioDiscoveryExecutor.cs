@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Manages the execution runtime of the FIO workload for Perf Engineering Discovery Scenario.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class FioDiscoveryExecutor : FioExecutor
     {
         private static readonly object VariationLock = new object();

@@ -25,8 +25,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Manages the execution runtime of the FIO workload.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class FioExecutor : VirtualClientComponent
     {
         /// <summary>

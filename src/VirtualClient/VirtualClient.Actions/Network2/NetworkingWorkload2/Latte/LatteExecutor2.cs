@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Latte Executor
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteExecutor2 : VirtualClientComponent
     {
         private const string OutputFileName = "latte-results.txt";

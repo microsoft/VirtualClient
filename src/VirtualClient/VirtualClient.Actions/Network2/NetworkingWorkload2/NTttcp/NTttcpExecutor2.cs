@@ -29,8 +29,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// NTttcp Executor
     /// </summary>
-    [WindowsCompatible]
-    [UnixCompatible]
     public class NTttcpExecutor2 : VirtualClientComponent
     {
         /// <summary>

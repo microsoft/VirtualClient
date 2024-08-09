@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// Random IO represents Database transactions.
     /// Sequential IO represents Logger transactions.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class FioMultiThroughputExecutor : FioExecutor
     {
         private static readonly object VariationLock = new object();

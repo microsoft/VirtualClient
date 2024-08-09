@@ -24,8 +24,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Executes the SPEC Power workload used to stress the system.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class SPECPowerExecutor : VirtualClientComponent
     {
         private readonly SPECPowerDirector directorComponent;

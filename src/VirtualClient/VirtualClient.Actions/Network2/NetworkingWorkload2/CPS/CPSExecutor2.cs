@@ -26,8 +26,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// CPS Executor
     /// </summary>
-    [WindowsCompatible]
-    [UnixCompatible]
     public class CPSExecutor2 : VirtualClientComponent
     {
         private const string OutputFileName = "cps-results.txt";

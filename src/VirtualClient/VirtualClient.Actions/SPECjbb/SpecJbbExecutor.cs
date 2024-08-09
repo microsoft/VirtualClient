@@ -24,8 +24,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SPECJbb workload executor.
     /// </summary>
-    [WindowsCompatible]
-    [UnixCompatible]
     public class SpecJbbExecutor : VirtualClientComponent
     {
         private const string GcLogName = "gc.log";

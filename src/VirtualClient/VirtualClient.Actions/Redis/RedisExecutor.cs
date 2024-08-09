@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Redis workload executor
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class RedisExecutor : VirtualClientComponent
     {
         /// <summary>

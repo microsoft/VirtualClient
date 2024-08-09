@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The pbzip2 workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class Pbzip2Executor : VirtualClientComponent
     {
         private IFileSystem fileSystem;

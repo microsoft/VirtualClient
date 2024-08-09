@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Graph500 Workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class Graph500Executor : VirtualClientComponent
     {
         private IFileSystem fileSystem;

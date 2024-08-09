@@ -30,8 +30,6 @@ namespace VirtualClient.Actions
     /// </item>
     /// </list>
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class OpenSslExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -84,8 +82,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
-
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 

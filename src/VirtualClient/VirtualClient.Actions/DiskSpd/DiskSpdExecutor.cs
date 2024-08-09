@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
     /// DiskSpd Command Line Parameters
     /// https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters
     /// </remarks>
-    [WindowsCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class DiskSpdExecutor : DiskWorkloadExecutor
     {
         private readonly List<DiskWorkloadProcess> workloadProcesses = new List<DiskWorkloadProcess>();

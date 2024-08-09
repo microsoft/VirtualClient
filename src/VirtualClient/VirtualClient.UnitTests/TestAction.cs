@@ -13,7 +13,6 @@ namespace VirtualClient.UnitTests
     using VirtualClient.Contracts;
     using VirtualClient.Common.Telemetry;
 
-    [PlatformAgnostic]
     public class TestAction : VirtualClientComponent
     {
         public static string FilePath = Path.Combine(Path.GetTempPath(), "testaction.txt");

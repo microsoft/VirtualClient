@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Gzip workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class GzipExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -126,24 +126,6 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<GzipState>($"{nameof(GzipState)}", state, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Gzip", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
