@@ -22,7 +22,7 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// Provides functionality for installing latest version of Redis from Apt package manager on specific OS distribution version.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class RedisPackageInstallation : VirtualClientComponent
     {
         private IFileSystem fileSystem;

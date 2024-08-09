@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The 7zip compression workload executor.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-x64,win-arm64")]
     public class Compression7zipExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -127,24 +127,6 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<Compression7zipState>($"{nameof(Compression7zipState)}", state, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && this.Platform == PlatformID.Win32NT
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Compressor7zip", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, string commandArguments)

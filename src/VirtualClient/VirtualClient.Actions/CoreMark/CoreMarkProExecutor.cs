@@ -19,8 +19,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The CoreMarkPro workload executor.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CoreMarkProExecutor : VirtualClientComponent
     {
         private ISystemManagement systemManagement;

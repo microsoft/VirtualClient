@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Redis/Memcached Memtier Client Executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class MemtierBenchmarkClientExecutor : MemcachedExecutor
     {
         private readonly object lockObject = new object();
@@ -336,31 +337,6 @@ namespace VirtualClient.Actions
                     $"See the documentation on Memtier for supported protocols.",
                     ErrorReason.InvalidProfileDefinition);
             }
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            if (base.IsSupported())
-            {
-                bool isSupported = (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-                if (!isSupported)
-                {
-                    this.Logger.LogNotSupported("MemtierBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-                }
-
-                return isSupported;
-            }
-            else
-            {
-                return false;
-            }
-
         }
 
         private void CaptureMetrics(EventContext telemetryContext, CancellationToken cancellationToken)

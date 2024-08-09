@@ -23,8 +23,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// PostgreSQL Executor
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class HammerDBExecutor : VirtualClientComponent
     {
         private readonly IStateManager stateManager;

@@ -59,33 +59,14 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task MsmpiInstallationDoesNotExecuteOnLinuxSystems()
+        public void MsmpiInstallationDoesNotExecuteOnLinuxSystems()
         {
             this.SetupMockFixture(PlatformID.Unix);
 
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-
-            int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                commandExecuted++;
-
-                IProcessProxy process = new InMemoryProcess()
-                {
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-                
-                return process;
-            };
-
             using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await installation.ExecuteAsync(CancellationToken.None);
+                Assert.IsFalse(VirtualClientComponent.IsSupported(installation));
             }
-
-            Assert.AreEqual(0, commandExecuted);
         }
 
         private void SetupMockFixture(PlatformID platform)

@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The pbzip2 workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class Pbzip2Executor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -130,24 +130,6 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<Pbzip2State>($"{nameof(Pbzip2State)}", state, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Pbzip2", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
