@@ -24,8 +24,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SPECJbb workload executor.
     /// </summary>
-    [WindowsCompatible]
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SpecJbbExecutor : VirtualClientComponent
     {
         private const string GcLogName = "gc.log";
@@ -146,24 +145,6 @@ namespace VirtualClient.Actions
 
             this.javaExecutableDirectory = javaExecutable.Metadata[PackageMetadata.ExecutablePath].ToString();
             this.gcLogPath = this.PlatformSpecifics.Combine(this.packageDirectory, SpecJbbExecutor.GcLogName);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("SpecJbb", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)

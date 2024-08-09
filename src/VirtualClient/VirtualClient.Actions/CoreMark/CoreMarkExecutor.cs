@@ -22,8 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The CoreMark workload executor.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CoreMarkExecutor : VirtualClientComponent
     {
         private const string CoreMarkOutputFile1 = "run1.log";
@@ -144,24 +143,6 @@ namespace VirtualClient.Actions
             this.OutputFile2Path = this.Combine(this.PackagePath, CoreMarkExecutor.CoreMarkOutputFile2);
 
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("CoreMark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private string GetCommandLineArguments()

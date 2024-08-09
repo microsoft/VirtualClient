@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SuperBenchmark workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-x64", true)]
     public class SuperBenchmarkExecutor : VirtualClientComponent
     {
         private const string SuperBenchmarkRunShell = "RunSuperBenchmark.sh";
@@ -180,24 +180,6 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("SuperBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task ExecuteSbCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, bool runElevated)

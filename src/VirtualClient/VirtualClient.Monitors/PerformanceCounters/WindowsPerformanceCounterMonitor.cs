@@ -13,6 +13,7 @@ namespace VirtualClient.Monitors
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -20,6 +21,7 @@ namespace VirtualClient.Monitors
     /// <summary>
     /// Monitor captures performance counters from Windows systems.
     /// </summary>
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class WindowsPerformanceCounterMonitor : VirtualClientIntervalBasedMonitor
     {
         private static readonly TimeSpan DefaultCaptureInterval = TimeSpan.FromSeconds(1);
@@ -229,21 +231,6 @@ namespace VirtualClient.Monitors
             this.Descriptors.AddRange(descriptors);
 
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Return true/false whether the monitor is supported on the platform/system. Supported on
-        /// Windows platforms only.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = this.Platform == PlatformID.Win32NT;
-            if (isSupported)
-            {
-                isSupported = base.IsSupported();
-            }
-
-            return isSupported;
         }
 
         /// <summary>

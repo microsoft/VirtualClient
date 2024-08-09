@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
     /// Class encapsulating logic to execute and collect metrics for
     /// NASA Advanced Supercomputing parallel benchmarks. (NAS parallel benchmarks)
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class NASParallelBenchExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -122,24 +122,6 @@ namespace VirtualClient.Actions
         protected virtual VirtualClientComponent CreateNASParallelBenchServer()
         {
             return new NASParallelBenchServerExecutor(this.Dependencies, this.Parameters);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("NASParallel", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

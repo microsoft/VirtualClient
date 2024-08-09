@@ -17,8 +17,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Manages the SPEC Power "CCS" server. (Control and Collect System)
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class SPECPowerCCSServer : SPECPowerProcess
     {
         private const string WindowsClassPath = "./ccs.jar;./check.jar;../ssj/ssj.jar;../ssj/lib/jfreechart-1.0.13.jar;../ssj/lib/jcommon-1.0.16.jar";

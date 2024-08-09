@@ -19,6 +19,7 @@ namespace VirtualClient.Dependencies
     /// Provides functionality for downloading and installing Yum packages
     /// on the system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class YumPackageInstallation : VirtualClientComponent
     {
         private const string YumCommand = "yum";
@@ -158,18 +159,6 @@ namespace VirtualClient.Dependencies
                     $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
                     ErrorReason.DependencyInstallationFailed);
             }
-        }
-
-        /// <inheritdoc />
-        protected override bool IsSupported()
-        {
-            bool shouldExecute = false;
-            if (base.IsSupported())
-            {
-                shouldExecute = this.Platform == PlatformID.Unix;
-            }
-
-            return shouldExecute;
         }
 
         private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)

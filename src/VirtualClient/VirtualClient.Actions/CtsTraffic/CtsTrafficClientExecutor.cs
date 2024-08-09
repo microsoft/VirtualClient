@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// CtsTraffic Client executor.
     /// Executes the transactions to the server.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class CtsTrafficClientExecutor : CtsTrafficExecutor
     {
         /// <summary>

@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// OpenFOAM workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class OpenFOAMExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -161,24 +161,6 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             this.ThrowIfExeNotPresent();
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("OpenFOAM", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task InitializeExecutorPropertiesAsync(CancellationToken cancellationToken, EventContext telemetryContext)

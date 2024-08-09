@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Latte Executor
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteExecutor2 : VirtualClientComponent
     {
         private const string OutputFileName = "latte-results.txt";
@@ -262,17 +262,6 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
             }
 
-        }
-
-        /// <summary>
-        /// Returns true/false whether the workload should execute on the system/platform.
-        /// </summary>
-        /// <returns></returns>
-        protected override bool IsSupported()
-        {
-            bool isSupported = this.Platform == PlatformID.Win32NT;
-
-            return isSupported;
         }
 
         private void InitializeApiClients()

@@ -18,8 +18,6 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// An abstract virtual client action that formats the disks before execution
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class FormatDisks : VirtualClientComponent
     {
         /// <summary>

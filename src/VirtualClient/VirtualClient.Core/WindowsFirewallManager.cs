@@ -23,7 +23,7 @@ namespace VirtualClient
     /// Windows netsh.exe firewall vs. netsh.exe firewall
     /// https://support.microsoft.com/en-us/topic/44af15a8-72a1-e699-7290-569726b39d4a#:~:text=The%20netsh%20advfirewall%20firewall%20command-line%20context%20is%20available,netsh%20firewall%20context%20in%20earlier%20Windows%20operating%20systems.
     /// </remarks>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class WindowsFirewallManager : FirewallManager
     {
         /// <summary>

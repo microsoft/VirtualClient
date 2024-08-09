@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// CtsTraffic Server executor.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class CtsTrafficServerExecutor : CtsTrafficExecutor
     {
         private Item<CtsTrafficServerState> serverState;

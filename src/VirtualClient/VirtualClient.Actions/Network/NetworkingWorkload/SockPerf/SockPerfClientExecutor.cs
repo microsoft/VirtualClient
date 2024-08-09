@@ -20,7 +20,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// Socket Performance Tool Client Executor. 
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SockPerfClientExecutor : SockPerfExecutor
     {
         /// <summary>

@@ -20,6 +20,7 @@ namespace VirtualClient.Dependencies
     /// on the system.
     /// https://man7.org/linux/man-pages/man8/dnf.8.html
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class DnfPackageInstallation : VirtualClientComponent
     {
         /// <summary>
@@ -164,18 +165,6 @@ namespace VirtualClient.Dependencies
                     $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
                     ErrorReason.DependencyInstallationFailed);
             }
-        }
-
-        /// <inheritdoc />
-        protected override bool IsSupported()
-        {
-            bool shouldExecute = false;
-            if (base.IsSupported())
-            {
-                shouldExecute = this.Platform == PlatformID.Unix;
-            }
-
-            return shouldExecute;
         }
 
         private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)

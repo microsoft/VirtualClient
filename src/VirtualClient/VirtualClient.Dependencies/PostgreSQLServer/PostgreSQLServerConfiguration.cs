@@ -23,8 +23,6 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// Provides functionality for configuring PostgreSQL Server.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class PostgreSQLServerConfiguration : ExecuteCommand
     {
         private const string PythonCommand = "python3";

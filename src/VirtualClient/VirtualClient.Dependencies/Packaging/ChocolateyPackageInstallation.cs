@@ -19,6 +19,7 @@ namespace VirtualClient.Dependencies
     /// Provides functionality for downloading and installing Choco packages
     /// on the system.
     /// </summary>
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class ChocolateyPackageInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
@@ -135,18 +136,6 @@ namespace VirtualClient.Dependencies
             // https://docs.chocolatey.org/en-us/choco/commands/list
             // Need to add the list/verify function once chocolatey releases 2.0
             this.Logger.LogTraceMessage($"VirtualClient installed choco package(s): '[{string.Join(' ', packages)}]'.", EventContext.Persisted());
-        }
-
-        /// <inheritdoc />
-        protected override bool IsSupported()
-        {
-            bool shouldExecute = false;
-            if (base.IsSupported())
-            {
-                shouldExecute = this.Platform == PlatformID.Win32NT;
-            }
-
-            return shouldExecute;
         }
     }
 }

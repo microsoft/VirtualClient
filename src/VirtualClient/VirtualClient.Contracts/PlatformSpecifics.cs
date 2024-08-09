@@ -78,7 +78,6 @@ namespace VirtualClient.Contracts
             this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
             this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
             this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
-            
         }
 
         /// <summary>

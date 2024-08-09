@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -19,6 +20,7 @@ namespace VirtualClient.Actions
     /// An example Virtual Client component responsible for executing a workload or a test on
     /// the system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ExampleWorkloadExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -261,21 +263,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override bool IsSupported()
         {
-            // Overview:
-            // ----------------------------------------------------------------------------------------------------------------------
-            // When the ProfileExecutor is determining which components defined in a profile to execute, it will call this method.
-            // This is typically used to ensure the component does not execute on platforms or CPU architectures for which it is not
-            // supported. For example, the component may only have support for Linux OS platform and x64 architecture.
-
-            bool shouldExecute = base.IsSupported();
-
-            if (shouldExecute)
-            {
-                // Example: Maybe this component only works on Windows and Unix/Linux platforms.
-                shouldExecute = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
-            }
-
-            return shouldExecute;
+            return base.IsSupported();
         }
 
         /// <summary>

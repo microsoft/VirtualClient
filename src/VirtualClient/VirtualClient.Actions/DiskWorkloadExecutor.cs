@@ -23,8 +23,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Provides base functionality and features for running I/O-targeted workloads.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public abstract class DiskWorkloadExecutor : VirtualClientComponent
     {
         /// <summary>

@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The StressAppTest workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class StressAppTestExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -155,24 +156,6 @@ namespace VirtualClient.Actions
                     $"-l parameter. That is being appended programatically",
                     ErrorReason.InvalidProfileDefinition);
             }
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("StressAppTest", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

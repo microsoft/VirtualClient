@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// CtsTraffic Executor
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-x64,win-arm64")]
     public class CtsTrafficExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -313,24 +313,6 @@ namespace VirtualClient.Actions
 
             this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverInstance);
             this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && this.Platform == PlatformID.Win32NT
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("CtsTraffic", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)

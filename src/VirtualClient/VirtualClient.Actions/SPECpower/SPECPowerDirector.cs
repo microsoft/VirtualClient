@@ -17,8 +17,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Manages the SPEC Power "Director" program.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class SPECPowerDirector : SPECPowerProcess
     {
         private const string SSJFolder = "ssj";

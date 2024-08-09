@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Lzbench workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class LzbenchExecutor : VirtualClientComponent
     {
         private const string LzBench = nameof(LzbenchExecutor.LzBench);
@@ -157,24 +157,6 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<LzbenchState>($"{nameof(LzbenchState)}", state, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Lzbench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)

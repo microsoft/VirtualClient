@@ -18,7 +18,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// Latte server-side workload executor.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteServerExecutor : LatteExecutor
     {
         /// <summary>

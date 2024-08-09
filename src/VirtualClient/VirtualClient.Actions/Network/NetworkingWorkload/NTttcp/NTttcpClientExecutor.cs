@@ -11,8 +11,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// NTttcp(Test Bandwith and Throughput) Tool Client Executor. 
     /// </summary>
-    [WindowsCompatible]
-    [UnixCompatible]
     public class NTttcpClientExecutor : NTttcpExecutor
     {
         /// <summary>

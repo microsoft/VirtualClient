@@ -25,8 +25,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Geekbench executor.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class GeekbenchExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;

@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Executes the FLOPS workload.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-x64,win-arm64")]
     public class DXFLOPSExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -108,8 +108,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
-
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 

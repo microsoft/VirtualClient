@@ -15,7 +15,7 @@ namespace VirtualClient
     /// <summary>
     /// Provides methods for managing Unix/Linux system/OS firewall operations.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class UnixFirewallManager : FirewallManager
     {
         /// <summary>

@@ -92,36 +92,15 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task ChocolateyPackageInstallationRunsNothingInLinux()
+        public void ChocolateyPackageInstallationRunsNothingInLinux()
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { "PackageName", "choco" },
-                { nameof(ChocolateyPackageInstallation.Packages), "pack1,pack2" }
-            };
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                commandExecuted++;
-                IProcessProxy process = new InMemoryProcess()
-                {
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-                return process;
-            };
 
             using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await installation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsFalse(VirtualClientComponent.IsSupported(installation));
             }
-
-            Assert.AreEqual(0, commandExecuted);
         }
 
         private void SetupDefaultMockBehaviors()
