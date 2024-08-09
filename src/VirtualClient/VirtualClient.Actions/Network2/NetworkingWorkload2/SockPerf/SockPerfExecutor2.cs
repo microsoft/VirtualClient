@@ -275,18 +275,6 @@ namespace VirtualClient.Actions
                 await this.SystemManager.FileSystem.File.DeleteAsync(this.ResultsPath)
                     .ConfigureAwait(false);
             }
-
-        }
-
-        /// <summary>
-        /// Returns true/false whether the workload should execute on the system/platform.
-        /// </summary>
-        /// <returns></returns>
-        protected override bool IsSupported()
-        {
-            bool isSupported = this.Platform == PlatformID.Unix;
-
-            return isSupported;
         }
 
         private void InitializeApiClients()

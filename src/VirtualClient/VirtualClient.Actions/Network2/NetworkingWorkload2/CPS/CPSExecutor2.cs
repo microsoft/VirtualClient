@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// CPS Executor
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CPSExecutor2 : VirtualClientComponent
     {
         private const string OutputFileName = "cps-results.txt";
@@ -377,17 +378,6 @@ namespace VirtualClient.Actions
 
                 return process;
             });
-        }
-
-        /// <summary>
-        /// Returns true/false whether the workload should execute on the system/platform.
-        /// </summary>
-        /// <returns></returns>
-        protected override bool IsSupported()
-        {
-            bool isSupported = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
-
-            return isSupported;
         }
 
         private void InitializeApiClients()

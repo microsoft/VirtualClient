@@ -140,30 +140,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            if (base.IsSupported())
-            {
-                bool isSupported = (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-                if (!isSupported)
-                {
-                    this.Logger.LogNotSupported("Redis", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-                }
-
-                return isSupported;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Initializes API client.
         /// </summary>
         protected void InitializeApiClients()

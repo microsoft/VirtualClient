@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Platform
+namespace VirtualClient.Common
 {
     using System;
     using System.Collections.Generic;
@@ -14,7 +14,7 @@ namespace VirtualClient.Common.Platform
     public class SupportedPlatformsAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SystemCompatibilityAttribute"/> class.
+        /// Initializes a new instance of the <see cref="SupportedPlatformsAttribute"/> class.
         /// </summary>
         /// <param name="throwError">Throw error when not supported.</param>
         /// <param name="platforms">The platform to be tested against.</param>

@@ -29,6 +29,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// NTttcp Executor
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class NTttcpExecutor2 : VirtualClientComponent
     {
         /// <summary>
@@ -502,17 +503,6 @@ namespace VirtualClient.Actions
 
                 return results;
             });
-        }
-
-        /// <summary>
-        /// Returns true/false whether the workload should execute on the system/platform.
-        /// </summary>
-        /// <returns></returns>
-        protected override bool IsSupported()
-        {
-            bool isSupported = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
-
-            return isSupported;
         }
 
         private void InitializeApiClients()

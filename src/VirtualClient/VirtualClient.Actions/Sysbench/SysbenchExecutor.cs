@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Sysbench workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SysbenchExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -374,24 +375,6 @@ namespace VirtualClient.Actions
             }
            
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Sysbench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)

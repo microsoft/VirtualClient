@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
     /// DiskSpd Command Line Parameters
     /// https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters
     /// </remarks>
-    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class DiskSpdExecutor : DiskWorkloadExecutor
     {
         private readonly List<DiskWorkloadProcess> workloadProcesses = new List<DiskWorkloadProcess>();
@@ -252,24 +252,6 @@ namespace VirtualClient.Actions
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
 
             return new DiskWorkloadProcess(process, testedInstance, testFiles);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("DiskSpd", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The StressNg workload executor.
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64")]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class StressNgExecutor : VirtualClientComponent
     {
         private const int DefaultRuntimeInSeconds = 60;
@@ -100,24 +100,6 @@ namespace VirtualClient.Actions
             this.stressNgOutputFilePath = this.PlatformSpecifics.Combine(this.stressNgDirectory, "vcStressNg.yaml");
 
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("StressNg", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

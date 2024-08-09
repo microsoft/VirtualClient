@@ -19,6 +19,7 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -544,7 +545,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Returns true if the component is supported on the current system.
+        /// Returns true if the component is supported on the current platform.
         /// </summary>
         /// <param name="component">The component to validate.</param>
         public static bool IsSupported(VirtualClientComponent component)

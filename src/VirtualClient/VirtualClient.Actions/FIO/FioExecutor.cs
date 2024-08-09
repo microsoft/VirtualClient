@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Manages the execution runtime of the FIO workload.
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64")]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class FioExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -871,25 +871,6 @@ namespace VirtualClient.Actions
                commandArguments,
                this.Tags,
                telemetryContext);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && 
-                ((this.Platform == PlatformID.Win32NT && this.CpuArchitecture == Architecture.X64) || 
-                (this.Platform == PlatformID.Unix && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64)));
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Fio", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

@@ -16,6 +16,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
