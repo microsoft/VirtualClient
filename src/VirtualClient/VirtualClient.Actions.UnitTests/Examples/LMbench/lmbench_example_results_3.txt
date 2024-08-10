@@ -1,0 +1,89 @@
+
+                 L M B E N C H  3 . 0   S U M M A R Y
+                 ------------------------------------
+                 (Alpha software, do not distribute)
+
+Basic system parameters
+------------------------------------------------------------------------------
+Host                 OS Description              Mhz  tlb  cache  mem   scal
+                                                     pages line   par   load
+                                                           bytes
+--------- ------------- ----------------------- ---- ----- ----- ------ ----
+demo-vm04 Linux 5.15.0-           aarch64-Linux 2998    48   128   11.1    1
+
+Processor, Processes - times in microseconds - smaller is better
+------------------------------------------------------------------------------
+Host                 OS  Mhz null null      open slct sig  sig  fork exec sh
+                             call  I/O stat clos TCP  inst hndl proc proc proc
+--------- ------------- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+demo-vm04 Linux 5.15.0- 2998 0.28 0.32 0.92 1.80 2.61 0.32 1.21 310. 843. 1996
+
+Basic integer operations - times in nanoseconds - smaller is better
+-------------------------------------------------------------------
+Host                 OS  intgr intgr  intgr  intgr  intgr
+                          bit   add    mul    div    mod
+--------- ------------- ------ ------ ------ ------ ------
+demo-vm04 Linux 5.15.0- 0.2500 0.1700 0.6800 2.6700 2.7600
+
+Basic uint64 operations - times in nanoseconds - smaller is better
+------------------------------------------------------------------
+Host                 OS int64  int64  int64  int64  int64
+                         bit    add    mul    div    mod
+--------- ------------- ------ ------ ------ ------ ------
+demo-vm04 Linux 5.15.0-  0.250        1.3600 2.1700 3.4200
+
+Basic float operations - times in nanoseconds - smaller is better
+-----------------------------------------------------------------
+Host                 OS  float  float  float  float
+                         add    mul    div    bogo
+--------- ------------- ------ ------ ------ ------
+demo-vm04 Linux 5.15.0- 0.6700 1.0000 2.6700 0.9200
+
+Basic double operations - times in nanoseconds - smaller is better
+------------------------------------------------------------------
+Host                 OS  double double double double
+                         add    mul    div    bogo
+--------- ------------- ------  ------ ------ ------
+demo-vm04 Linux 5.15.0- 0.6700 1.0000 4.0100 1.8000
+
+Context switching - times in microseconds - smaller is better
+-------------------------------------------------------------------------
+Host                 OS  2p/0K 2p/16K 2p/64K 8p/16K 8p/64K 16p/16K 16p/64K
+                         ctxsw  ctxsw  ctxsw ctxsw  ctxsw   ctxsw   ctxsw
+--------- ------------- ------ ------ ------ ------ ------ ------- -------
+demo-vm04 Linux 5.15.0- 7.7400 9.0700 8.8900   10.1 9.3800 9.88000    10.2
+
+*Local* Communication latencies in microseconds - smaller is better
+---------------------------------------------------------------------
+Host                 OS 2p/0K  Pipe AF     UDP  RPC/   TCP  RPC/ TCP
+                        ctxsw       UNIX         UDP         TCP conn
+--------- ------------- ----- ----- ---- ----- ----- ----- ----- ----
+demo-vm04 Linux 5.15.0- 7.740  19.6 20.3  30.1        34.2        24.
+
+*Remote* Communication latencies in microseconds - smaller is better
+---------------------------------------------------------------------
+Host                 OS   UDP  RPC/  TCP   RPC/ TCP
+                               UDP         TCP  conn
+--------- ------------- ----- ----- ----- ----- ----
+demo-vm04 Linux 5.15.0-
+
+File & VM system latencies in microseconds - smaller is better
+-------------------------------------------------------------------------------
+Host                 OS   0K File      10K File     Mmap    Prot   Page   100fd
+                        Create Delete Create Delete Latency Fault  Fault  selct
+--------- ------------- ------ ------ ------ ------ ------- ----- ------- -----
+demo-vm04 Linux 5.15.0- 8.2808 5.2870   16.3 8.6565   11.0K 0.178 1.62190 1.320
+
+*Local* Communication bandwidths in MB/s - bigger is better
+-----------------------------------------------------------------------------
+Host                OS  Pipe AF    TCP  File   Mmap  Bcopy  Bcopy  Mem   Mem
+                             UNIX      reread reread (libc) (hand) read write
+--------- ------------- ---- ---- ---- ------ ------ ------ ------ ---- -----
+demo-vm04 Linux 5.15.0- 1988 6484 4311 5350.5  12.5K  12.0K 9079.4 10.K 23.6K
+
+Memory latencies in nanoseconds - smaller is better
+    (WARNING - may not be correct, check graphs)
+------------------------------------------------------------------------------
+Host                 OS   Mhz   L1 $   L2 $    Main mem    Rand mem    Guesses
+--------- -------------   ---   ----   ----    --------    --------    -------
+demo-vm04 Linux 5.15.0-  2998 1.3350 2.2470    9.063000       131.0

@@ -112,61 +112,61 @@ namespace VirtualClient.Actions
 
             for (int index = 2; index < this.ProcessorTimes.Columns.Count; index++)
             {
-                metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ProcessorTimes-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Processor_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.BasicInt.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicInt-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Integer_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.BasicFloat.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicFloat-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Float_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.BasicDouble.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicDouble-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Double_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.ContextSwitching.Columns.Count; index++)
             {
-                metrics.AddRange(this.ContextSwitching.GetMetrics(valueIndex: index, name: this.ContextSwitching.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ContextSwitching-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.ContextSwitching.GetMetrics(valueIndex: index, name: this.ContextSwitching.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Context_Switching_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.CommunicationLatency.Columns.Count; index++)
             {
-                metrics.AddRange(this.CommunicationLatency.GetMetrics(valueIndex: index, name: this.CommunicationLatency.Columns[index].ColumnName, unit: "microseconds", namePrefix: "CommunicationLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.CommunicationLatency.GetMetrics(valueIndex: index, name: this.CommunicationLatency.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Communications_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.FileVmLatency.Columns.Count; index++)
             {
-                metrics.AddRange(this.FileVmLatency.GetMetrics(valueIndex: index, name: this.FileVmLatency.Columns[index].ColumnName, unit: "microseconds", namePrefix: "FileVmLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.FileVmLatency.GetMetrics(valueIndex: index, name: this.FileVmLatency.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "File_System_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.CommunicationBandwidth.Columns.Count; index++)
             {
-                metrics.AddRange(this.CommunicationBandwidth.GetMetrics(valueIndex: index, name: this.CommunicationBandwidth.Columns[index].ColumnName, unit: "MB/s", namePrefix: "CommunicationBandwidth-", metricRelativity: MetricRelativity.HigherIsBetter));
+                metrics.AddRange(this.CommunicationBandwidth.GetMetrics(valueIndex: index, name: this.CommunicationBandwidth.Columns[index].ColumnName, unit: MetricUnit.MegabytesPerSecond, namePrefix: "Communications_Bandwidth_", metricRelativity: MetricRelativity.HigherIsBetter));
             }
 
             for (int index = 2; index < this.MemoryLatency.Columns.Count - 1; index++)
             {
                 // The last column is "Guesses" which is not a metric.
-                metrics.AddRange(this.MemoryLatency.GetMetrics(valueIndex: index, name: this.MemoryLatency.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "MemoryLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.MemoryLatency.GetMetrics(valueIndex: index, name: this.MemoryLatency.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Memory_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             // The unit is not totally consistent in the output. Adjusting to correct units.
-            metrics.Where(m => m.Name == "FileVmLatency-Prot Fault").FirstOrDefault().Unit = "Count";
-            metrics.Where(m => m.Name == "FileVmLatency-Page Fault").FirstOrDefault().Unit = "Count";
-            metrics.Where(m => m.Name == "MemoryLatency-Mhz").FirstOrDefault().Unit = "Mhz";
-            if (metrics.Any(m => m.Name == "ProcessorTimes-Mhz"))
+            metrics.ForEach(m => 
             {
-                metrics.Where(m => m.Name == "ProcessorTimes-Mhz").First().Unit = "Mhz";
-            }
-            
+                if (m.Name.EndsWith("_Mhz"))
+                {
+                    m.Unit = MetricUnit.Megahertz;
+                }
+            });
+
             // The Mhz sometimes fail to estimate Mhz and return -1. Those need to be filtered out.
-            metrics.Remove(metrics.Where(m => m.Name == "MemoryLatency-Mhz" && m.Value == -1).FirstOrDefault());
+            metrics.Remove(metrics.Where(m => m.Name == "Memory_Latency_Mhz" && m.Value < 0).FirstOrDefault());
 
             return metrics;
         }
@@ -184,14 +184,19 @@ namespace VirtualClient.Actions
             // Remove the extra label line to make parsing easier.
             Regex ctxswLine = new Regex(@"(ctxsw)", RegexOptions.ExplicitCapture);
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, ctxswLine);
+
             Regex createLine = new Regex(@"(Create)", RegexOptions.ExplicitCapture);
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, createLine);
+
             Regex rereadLine = new Regex(@"(reread)", RegexOptions.ExplicitCapture);
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, rereadLine);
+
             Regex warningLine = new Regex(@"(WARNING)", RegexOptions.ExplicitCapture);
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, warningLine);
+
             Regex hndlLine = new Regex(@"(hndl)", RegexOptions.ExplicitCapture);
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, hndlLine);
+
             Regex addLine = new Regex(@"(add)", RegexOptions.ExplicitCapture);
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, addLine);
         }
@@ -207,16 +212,16 @@ namespace VirtualClient.Actions
                     "Host",
                     "OS",
                     "Mhz",
-                    "null call",
-                    "null I/O",
-                    "stat",
-                    "open clos",
-                    "slct TCP",
-                    "sig inst",
-                    "sig hndl",
-                    "fork proc",
-                    "exec proc",
-                    "sh proc",
+                    "Null_Call",
+                    "Null_I/O",
+                    "Stat",
+                    "Open_Close",
+                    "Slct_TCP",
+                    "Sig_Inst",
+                    "Sig_Hndl",
+                    "Fork_Proc",
+                    "Exec_Proc",
+                    "Sh_Proc",
                 };
                 IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
@@ -240,7 +245,7 @@ namespace VirtualClient.Actions
                 // Remove the first row which is the duplicated column names.
                 this.ProcessorTimes.Rows.RemoveAt(0);
                 this.ProcessorTimes.TranslateUnits();
-                this.ProcessorTimes.ReplaceEmptyCell();
+                this.ProcessorTimes.ReplaceEmptyCell(replacement: null);
             }
             else
             {
@@ -257,11 +262,11 @@ namespace VirtualClient.Actions
                 {
                     "Host",
                     "OS",
-                    "intgr bit",
-                    "intgr add",
-                    "intgr mul",
-                    "intgr div",
-                    "intgr mod"
+                    "Bit",
+                    "Add",
+                    "Multiply",
+                    "Divide",
+                    "Mod"
                 };
                 IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
@@ -279,7 +284,7 @@ namespace VirtualClient.Actions
                 // Remove the first row which is the duplicated column names.
                 this.BasicInt.Rows.RemoveAt(0);
                 this.BasicInt.TranslateUnits();
-                this.BasicInt.ReplaceEmptyCell();
+                this.BasicInt.ReplaceEmptyCell(replacement: null);
             }
             else
             {
@@ -296,10 +301,10 @@ namespace VirtualClient.Actions
                 {
                     "Host",
                     "OS",
-                    "float add",
-                    "float mul",
-                    "float div",
-                    "float bogo"
+                    "Add",
+                    "Multiply",
+                    "Divide",
+                    "Bogo"
                 };
                 IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
@@ -316,7 +321,7 @@ namespace VirtualClient.Actions
                 // Remove the first row which is the duplicated column names.
                 this.BasicFloat.Rows.RemoveAt(0);
                 this.BasicFloat.TranslateUnits();
-                this.BasicFloat.ReplaceEmptyCell();
+                this.BasicFloat.ReplaceEmptyCell(replacement: null);
             }
             else
             {
@@ -333,10 +338,10 @@ namespace VirtualClient.Actions
                 {
                     "Host",
                     "OS",
-                    "double add",
-                    "double mul",
-                    "double div",
-                    "double bogo"
+                    "Add",
+                    "Multiply",
+                    "Divide",
+                    "Bogo"
                 };
                 IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
@@ -353,7 +358,7 @@ namespace VirtualClient.Actions
                 // Remove the first row which is the duplicated column names.
                 this.BasicDouble.Rows.RemoveAt(0);
                 this.BasicDouble.TranslateUnits();
-                this.BasicDouble.ReplaceEmptyCell();
+                this.BasicDouble.ReplaceEmptyCell(replacement: null);
             }
             else
             {
@@ -368,13 +373,13 @@ namespace VirtualClient.Actions
             { 
                 "Host", 
                 "OS", 
-                "2p/0K ctxsw",
-                "2p/16K ctxsw",
-                "2p/64K ctxsw",
-                "8p/16K ctxsw",
-                "8p/64K ctxsw",
-                "16p/16K ctxsw",
-                "16p/64K ctxsw",
+                "2p/0K",
+                "2p/16K",
+                "2p/64K",
+                "8p/16K",
+                "8p/64K",
+                "16p/16K",
+                "16p/64K",
             };
             IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
             {
@@ -394,7 +399,7 @@ namespace VirtualClient.Actions
             // Remove the first row which is the duplicated column names.
             this.ContextSwitching.Rows.RemoveAt(0);
             this.ContextSwitching.TranslateUnits();
-            this.ContextSwitching.ReplaceEmptyCell();
+            this.ContextSwitching.ReplaceEmptyCell(replacement: null);
         }
 
         private void ParseCommunicationLatency()
@@ -404,14 +409,14 @@ namespace VirtualClient.Actions
             {
                 "Host",
                 "OS",
-                "2p/0K ctxsw",
+                "2p/0K",
                 "Pipe",
-                "AF UNIX",
+                "AF_Unix",
                 "UDP",
                 "RPC/UDP",
                 "TCP",
                 "RPC/TCP",
-                "TCP conn"
+                "TCP_Conn"
             };
 
             IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
@@ -433,7 +438,7 @@ namespace VirtualClient.Actions
             // Remove the first row which is the duplicated column names.
             this.CommunicationLatency.Rows.RemoveAt(0);
             this.CommunicationLatency.TranslateUnits();
-            this.CommunicationLatency.ReplaceEmptyCell();
+            this.CommunicationLatency.ReplaceEmptyCell(replacement: null);
         }
 
         private void ParseFileVMLatency()
@@ -443,14 +448,14 @@ namespace VirtualClient.Actions
             {
                 "Host",
                 "OS",
-                "0K File Create",
-                "0K File Delete",
-                "10K File Create",
-                "10K File Delete",
-                "Mmap Latency",
-                "Prot Fault",
-                "Page Fault",
-                "100fd select"
+                "0K_Create",
+                "0K_Delete",
+                "10K_Create",
+                "10K_Delete",
+                "Mmap_Latency",
+                "Prot_Fault",
+                "Page_Fault",
+                "100fd_Select"
             };
 
             IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
@@ -472,7 +477,7 @@ namespace VirtualClient.Actions
             // Remove the first row which is the duplicated column names.
             this.FileVmLatency.Rows.RemoveAt(0);
             this.FileVmLatency.TranslateUnits();
-            this.FileVmLatency.ReplaceEmptyCell();
+            this.FileVmLatency.ReplaceEmptyCell(replacement: null);
         }
 
         private void ParseCommnunicationBandwidth()
@@ -483,14 +488,14 @@ namespace VirtualClient.Actions
                 "Host",
                 "OS",
                 "Pipe",
-                "AF UNIX",
+                "AF_Unix",
                 "TCP",
-                "File reread",
-                "Mmap reread",
-                "Bcopy (libc)",
-                "Bcopy (hand)",
-                "Mem reread",
-                "Mem write"
+                "File_Reread",
+                "Mmap_Reread",
+                "Bcopy(libc)",
+                "Bcopy(hand)",
+                "Mem_Reread",
+                "Mem_Write"
             };
 
             IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
@@ -513,7 +518,7 @@ namespace VirtualClient.Actions
             // Remove the first row which is the duplicated column names.
             this.CommunicationBandwidth.Rows.RemoveAt(0);
             this.CommunicationBandwidth.TranslateUnits();
-            this.CommunicationBandwidth.ReplaceEmptyCell();
+            this.CommunicationBandwidth.ReplaceEmptyCell(replacement: null);
         }
 
         private void ParseMemoryLatency()
@@ -526,8 +531,8 @@ namespace VirtualClient.Actions
                 "Mhz",
                 "L1",
                 "L2",
-                "Main mem",
-                "Rand mem",
+                "Main_Mem",
+                "Random_Mem",
                 "Guesses"
             };
 
@@ -548,7 +553,7 @@ namespace VirtualClient.Actions
             // Remove the first row which is the duplicated column names.
             this.MemoryLatency.Rows.RemoveAt(0);
             this.MemoryLatency.TranslateUnits();
-            this.MemoryLatency.ReplaceEmptyCell();
+            this.MemoryLatency.ReplaceEmptyCell(replacement: null);
         }
     }
 }
