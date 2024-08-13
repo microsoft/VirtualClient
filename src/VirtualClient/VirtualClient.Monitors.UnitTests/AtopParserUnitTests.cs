@@ -13,7 +13,6 @@ namespace VirtualClient.Monitors
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
-    using YamlDotNet.Core.Tokens;
 
     [TestFixture]
     [Category("Unit")]
@@ -26,7 +25,7 @@ namespace VirtualClient.Monitors
             string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample1.txt");
             string rawText = File.ReadAllText(outputPath);
 
-            // Single distinct sample group
+            // Single distinct sample group. If there is only one record we consider it.
             AtopParser testParser = new AtopParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
@@ -148,7 +147,7 @@ namespace VirtualClient.Monitors
             string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample2.txt");
             string rawText = File.ReadAllText(outputPath);
 
-            // Single distinct sample group
+            // Single distinct sample group. If there is only one record we consider it.
             AtopParser testParser = new AtopParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
@@ -264,7 +263,7 @@ namespace VirtualClient.Monitors
             string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample-1s-5s.txt");
             string rawText = File.ReadAllText(outputPath);
 
-            // 1 second sample rate, 5 intervals = 5 distinct sample groups
+            // 1 second sample rate, 5 intervals = 4 distinct sample groups as we don't consider first atop sample.
             AtopParser testParser = new AtopParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
@@ -425,7 +424,7 @@ namespace VirtualClient.Monitors
             string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample-1s-60s.txt");
             string rawText = File.ReadAllText(outputPath);
 
-            // 1 second sample rate, 60 intervals = 60 distinct sample groups
+            // 1 second sample rate, 60 intervals = 59 distinct sample groups as we don't consider first atop sample.
             AtopParser testParser = new AtopParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 

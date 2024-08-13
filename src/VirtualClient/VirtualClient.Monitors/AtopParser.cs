@@ -9,7 +9,6 @@ namespace VirtualClient.Monitors
     using System.Text.RegularExpressions;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
-    using static System.Net.Mime.MediaTypeNames;
 
     /// <summary>
     /// Parser for Atop output document (https://www.systutorials.com/docs/linux/man/1-pcp-atop/).
