@@ -440,7 +440,7 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         string function = match.Groups[1].Value;
-                        int result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<int>(function);
+                        long result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<long>(function);
 
                         evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
                     }
@@ -611,6 +611,12 @@ namespace VirtualClient
                 // We take as many passes through to ensure that all placeholders/expressions have been evaluated. This allows
                 // placeholders that are themselves contained/nested within parent placeholders to be successfully resolved.
                 ProfileExpressionEvaluator.EvaluateParameterSpecificExpressions(dependencies, parameters, cancellationToken);
+            }
+
+            iterations = 0;
+            while (this.ContainsReferences(parameters) && iterations < maxIterations)
+            {
+                iterations++;
                 await ProfileExpressionEvaluator.EvaluateWellKnownExpressionsAsync(dependencies, parameters, cancellationToken);
             }
         }

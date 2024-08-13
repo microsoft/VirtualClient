@@ -30,6 +30,11 @@ namespace VirtualClient.Contracts
         public const string Megabytes = "megabytes";
 
         /// <summary>
+        /// Megahertz
+        /// </summary>
+        public const string Megahertz = "megahertz";
+
+        /// <summary>
         /// Kilobytes
         /// </summary>
         public const string Kilobytes = "kilobytes";

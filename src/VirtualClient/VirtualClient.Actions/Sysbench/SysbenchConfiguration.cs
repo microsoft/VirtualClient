@@ -65,7 +65,7 @@ namespace VirtualClient.Actions
                     }
                 });
 
-                if (this.RecordCount > 1)
+                if (this.RecordCount > 1 || this.WarehouseCount > 1)
                 {
                     state.DatabasePopulated = true;
                     await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
@@ -79,7 +79,7 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
-            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
 
             string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
-            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount}";
+            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
 
             string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";

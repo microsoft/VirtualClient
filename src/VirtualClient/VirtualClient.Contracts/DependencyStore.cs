@@ -1,10 +1,10 @@
-using VirtualClient.Common.Extensions;
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
 {
+    using VirtualClient.Common.Extensions;
+
     /// <summary>
     /// Represents a store that can host dependencies and extensions for download to the
     /// platform runtime.
@@ -22,9 +22,19 @@ namespace VirtualClient
         public const string Packages = nameof(DependencyStore.Packages);
 
         /// <summary>
+        /// Profiles store name.
+        /// </summary>
+        public const string Profiles = nameof(DependencyStore.Profiles);
+
+        /// <summary>
         /// Store Type = AzureStorageBlob
         /// </summary>
         public const string StoreTypeAzureStorageBlob = "AzureStorageBlob";
+
+        /// <summary>
+        /// Store Type = AzureStorageBlob
+        /// </summary>
+        public const string StoreTypeAzureEventHubNamespace = "AzureEventHubNamespace";
 
         /// <summary>
         /// Store Type = FileSystem
@@ -35,6 +45,11 @@ namespace VirtualClient
         /// Store Type = ProxyApi
         /// </summary>
         public const string StoreTypeProxyApi = "ProxyApi";
+
+        /// <summary>
+        /// Telemetry store name.
+        /// </summary>
+        public const string Telemetry = nameof(DependencyStore.Telemetry);
 
         /// <summary>
         /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.

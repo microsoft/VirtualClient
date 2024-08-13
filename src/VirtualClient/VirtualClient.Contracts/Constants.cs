@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace VirtualClient.Contracts
 {
+    using System.Diagnostics.CodeAnalysis;
+
     /// <summary>
     /// Constants defining different types roles that can be present in a layout.
     /// </summary>
@@ -24,6 +24,78 @@ namespace VirtualClient.Contracts
         /// Server role.
         /// </summary>
         public const string Server = "Server";
+    }
+
+    /// <summary>
+    /// Constants used to describe parameters used in resource connection definitions
+    /// (e.g. storage accounts, Event Hub namespaces).
+    /// </summary>
+    public static class ConnectionParameter
+    {
+        /// <summary>
+        /// Parameter = BlobEndpoint. A storage account blob endpoint/URL (e.g. https://anystorage.blob.core.windows.net).
+        /// </summary>
+        public const string BlobEndpoint = nameof(BlobEndpoint);
+
+        /// <summary>
+        /// Parameter = ClientId. A Microsoft Entra ID/App client ID.
+        /// </summary>
+        public const string ClientId = nameof(ClientId);
+
+        /// <summary>
+        /// Parameter = CertificateIssuer. The issuer for a certificate (e.g. CN=ABC Infra AC, DC=ABC, DC=COM).
+        /// </summary>
+        public const string CertificateIssuer = nameof(CertificateIssuer);
+
+        /// <summary>
+        /// Parameter = CertificateSubject. The subject name for a certificate (e.g. CN=anyservice.abc.com).
+        /// </summary>
+        public const string CertificateSubject = nameof(CertificateSubject);
+
+        /// <summary>
+        /// Parameter = CertificateThumbprint. The SHA1 thumbprint for a certificate.
+        /// </summary>
+        public const string CertificateThumbprint = nameof(CertificateThumbprint);
+
+        /// <summary>
+        /// Parameter = DefaultEndpointsProtocol. The default communication protocol for a storage account (e.g. https).
+        /// </summary>
+        public const string DefaultEndpointsProtocol = nameof(DefaultEndpointsProtocol);
+
+        /// <summary>
+        /// Parameter = Directory. The directory/path.
+        /// </summary>
+        public const string Directory = nameof(Directory);
+
+        /// <summary>
+        /// Parameter = Endpoint. The target endpoint/URI (e.g. https://anystorage.blob.core.windows.net).
+        /// </summary>
+        public const string Endpoint = nameof(Endpoint);
+
+        /// <summary>
+        /// Parameter = EndpointUrl. The target endpoint URL (e.g. https://anystorage.blob.core.windows.net).
+        /// </summary>
+        public const string EndpointUrl = nameof(EndpointUrl);
+
+        /// <summary>
+        /// Parameter = EventHubNamespace. The target Event Hub Namespace or URI (e.g. any.servicebus.windows.net, sb://any.servicebus.windows.net).
+        /// </summary>
+        public const string EventHubNamespace = nameof(EventHubNamespace);
+
+        /// <summary>
+        /// Parameter = ManagedIdentityId. The client ID for an Azure Managed Identity.
+        /// </summary>
+        public const string ManagedIdentityId = nameof(ManagedIdentityId);
+
+        /// <summary>
+        /// Parameter = SharedAccessKeyName. A name for a storage account shared access key.
+        /// </summary>
+        public const string SharedAccessKeyName = nameof(SharedAccessKeyName);
+
+        /// <summary>
+        /// Parameter = TenantId. The Microsoft Entra tenant/directory ID.
+        /// </summary>
+        public const string TenantId = nameof(TenantId);
     }
 
     /// <summary>
@@ -92,6 +164,16 @@ namespace VirtualClient.Contracts
         /// Name = VC_PASSWORD
         /// </summary>
         public const string VC_PASSWORD = nameof(VC_PASSWORD);
+
+        /// <summary>
+        /// Name = VC_LIBRARY_PATH
+        /// </summary>
+        public const string VC_LIBRARY_PATH = nameof(VC_LIBRARY_PATH);
+
+        /// <summary>
+        /// Name = VC_PACKAGES_PATH
+        /// </summary>
+        public const string VC_PACKAGES_PATH = nameof(VC_PACKAGES_PATH);
     }
 
     /// <summary>
@@ -145,5 +227,42 @@ namespace VirtualClient.Contracts
         /// Metadata = SupportsIterations
         /// </summary>
         public const string SupportsIterations = nameof(SupportsIterations);
+    }
+
+    /// <summary>
+    /// Constants used to describe parameters used in resource connection definitions
+    /// (e.g. storage accounts, Event Hub namespaces).
+    /// </summary>
+    public static class UriParameter
+    {
+        /// <summary>
+        /// URI Parameter = crtt. The issuer for a certificate (e.g. CN=ABC Infra AC, DC=ABC, DC=COM).
+        /// </summary>
+        public const string CertificateIssuer = "crti";
+
+        /// <summary>
+        /// URI Parameter = crts. The subject name for a certificate (e.g. CN=anyservice.abc.com).
+        /// </summary>
+        public const string CertificateSubject = "crts";
+
+        /// <summary>
+        /// URI Parameter = crtt. The SHA1 thumbprint for a certificate.
+        /// </summary>
+        public const string CertificateThumbprint = "crtt";
+
+        /// <summary>
+        /// URI Parameter = cid. The Microsoft Entra ID/App client ID.
+        /// </summary>
+        public const string ClientId = "cid";
+
+        /// <summary>
+        /// URI Parameter = miid. The Azure Managed Identity client ID.
+        /// </summary>
+        public const string ManagedIdentityId = "miid";
+
+        /// <summary>
+        /// URI Parameter = tid. The Azure tenant/directory ID.
+        /// </summary>
+        public const string TenantId = "tid";
     }
 }

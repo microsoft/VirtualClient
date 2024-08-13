@@ -23,7 +23,7 @@ namespace VirtualClient
     public class ProfileExecutor : IDisposable
     {
         private static int currentIteration;
-        private MetadataContract metadataContact;
+        private MetadataContract metadataContract;
         private bool disposed;
         
         /// <summary>
@@ -48,7 +48,7 @@ namespace VirtualClient
             this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
 
-            this.metadataContact = new MetadataContract();
+            this.metadataContract = new MetadataContract();
             this.ExecutionMinimumInterval = profile.MinimumExecutionInterval;
         }
 
@@ -203,7 +203,7 @@ namespace VirtualClient
                     // activity ID of the parent to enable correlation of events all the way down the
                     // callstack.
                     EventContext parentContext = EventContext.Persist(Guid.NewGuid());
-                    this.metadataContact.Apply(parentContext);
+                    this.metadataContract.Apply(parentContext);
 
                     this.Initialize();
 
@@ -413,6 +413,8 @@ namespace VirtualClient
 
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
+                                        VirtualClientComponent action = null;
+
                                         try
                                         {
                                             // The context persisted here will be picked up by the individual component. This allows
@@ -420,7 +422,7 @@ namespace VirtualClient
                                             // also being correlated with each round of profile actions processing.
                                             EventContext.Persist(Guid.NewGuid(), actionExecutionContext.ActivityId);
 
-                                            VirtualClientComponent action = this.ProfileActions.ElementAt(i);
+                                            action = this.ProfileActions.ElementAt(i);
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
                                             
@@ -436,7 +438,7 @@ namespace VirtualClient
                                                 this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                             }
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast)
+                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || action?.FailFast == true)
                                         {
                                             // Error reasons have numeric/integer values that indicate their severity. Error reasons
                                             // with a value >= 500 are terminal situations where the workload cannot run successfully
@@ -715,7 +717,33 @@ namespace VirtualClient
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
                         runtimeComponent.FailFast = this.FailFast;
 
-                        // Metadata: Profile Component-level (overrides global)
+                        // Global metadata. Supplied on the command line.
+                        //
+                        // e.g.
+                        // VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --metadata="Meta1=Value1,,,Meta2=1234"
+                        if (VirtualClientRuntime.Metadata?.Any() == true)
+                        {
+                            runtimeComponent.Metadata.AddRange(
+                                VirtualClientRuntime.Metadata.Select(entry => new KeyValuePair<string, IConvertible>(entry.Key.CamelCased(), entry.Value)),
+                                true);
+                        }
+
+                        // Profile Component-level metadata. Defined in the individual component within the profile (overrides global).
+                        //
+                        // e.g.
+                        // {
+                        //    "Type": "GeekbenchExecutor",
+                        //    "Metadata": {
+                        //        "ComponentMetadata1": 98765,
+                        //        "ComponentMetadata2": true,
+                        //        "ComponentMetadata3": "ValueX"
+                        //    },
+                        //    "Parameters": {
+                        //        "Scenario": "ExecuteGeekBench6Benchmark",
+                        //        "CommandLine": "--no-upload",
+                        //        "PackageName": "geekbench6"
+                        //    }
+                        // }
                         if (component.Metadata?.Any() == true)
                         {
                             runtimeComponent.Metadata.AddRange(component.Metadata, true);
@@ -728,6 +756,25 @@ namespace VirtualClient
 
                         if (executeComponent)
                         {
+                            // Profile component-level extensions metadata. Defined in the individual component within the profile.
+                            //
+                            // e.g.
+                            // {
+                            //    "Type": "GeekbenchExecutor",
+                            //    "Parameters": {
+                            //        "Scenario": "ExecuteGeekBench6Benchmark",
+                            //        "CommandLine": "--no-upload",
+                            //        "PackageName": "geekbench6"
+                            //    },
+                            //    "ExtensionsSection": {
+                            //        "CustomValue": "Custom1",
+                            //        "CustomList": [ "Item1", "Item2", "Item3" ],
+                            //        "CustomDictionary": {
+                            //            "Key1": "Value1",
+                            //            "Key2": 445566
+                            //        }
+                            //    }
+                            // }
                             if (component.Extensions?.Any() == true)
                             {
                                 runtimeComponent.Extensions.AddRange(component.Extensions, withReplace: true);

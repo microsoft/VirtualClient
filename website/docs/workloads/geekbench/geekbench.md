@@ -1,69 +1,32 @@
-# GeekBench5
-Geekbench5 is a third party tool that runs its own, pre-defined set of workloads to measure CPU performance. GeekBench5 is often used to compare cloud 
-performance.
+# GeekBench
+GeekBench5 and GeekBench6 are third party tools that runs its own, pre-defined set of workloads to measure CPU performance. GeekBench is often used to compare
+performance of systems for different cloud service provider (e.g. Gartner Reporting).
 
 * [GeekBench Documentation](https://www.geekbench.com/)
-* [GeekBench Workloads](https://www.geekbench.com/doc/geekbench5-compute-workloads.pdf)
+* [GeekBench5 Workloads](https://www.geekbench.com/doc/geekbench5-compute-workloads.pdf)
+* [GeekBench6 Workloads](https://www.geekbench.com/doc/geekbench6-compute-workloads.pdf)
 
+The following sections cover the details for Geekbench5 and GeekBench6 indendently of one another.
 
-## How to package GeekBench5
-:::info
-GeekBench5 is a commercial workload. VirtualClient cannot distribute the license and binary. You need to follow the following steps to package this workload and make it available locally or in a storage that you own.
-:::
-1. GeekBench can be downloaded here https://www.geekbench.com/download/.
-2. You need to purchase a license for it to run properly https://www.primatelabs.com/store/.
-3. `Geekbench 5.preferences` is the license file you get after purchasing. Package the binaries and license in this structure. You only need to pack the runtimes you are going to run. (You don't need "win-arm64, win-x64" if you don't plan on running on Windows).
-  ```treeview
-  geekbench-5.1.0
-  ├───geekbench5.vcpkg
-  │
-  ├───linux-x64/
-  │       Geekbench 5.preferences
-  │       geekbench.plar
-  │       geekbench5
-  │       geekbench_x86_64
-  │
-  ├───win-arm64/
-  │       Geekbench 5.preferences
-  │       geekbench.plar
-  │       geekbench5.exe
-  │       geekbench_aarch64.exe
-  │
-  └───win-x64/
-          amd_ags_x64.dll
-          cpuidsdk64.dll
-          Geekbench 5.preferences
-          geekbench.plar
-          geekbench5.exe
-          geekbench_x86_64.exe
-          pl_opencl_x86_64.dll
-  ```
-4. Zip the geekbench-5.1.0 directory into `geekbench-5.1.0.zip`, make sure the runtimes folders are the top level after extraction, and no extra `/geekbench-5.1.0/` top directory is created.
-  ```bash
-  7z a geekbench-5.1.0.zip ./geekbench-5.1.0/*
-  ```
-    or 
-  ```bash
-  cd geekbench-5.1.0; zip -r ../geekbench-5.1.0.zip *
-  ```
-5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH5.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
+## What is Being Measured With GeekBench5?
+GeekBench5 reports four different types of scores, a value that's calculated by comparing the device's performance against a baseline. The baseline score 
+is 1000 with higher numbers being better and double the score indicating double the performance.
 
+1. **GeekBench score**   
+   This is the overall score, calculated using the single-core and multi-core scores.
 
-## What is Being Measured?
-Geekbench5 reports four different types of scores, a value that's calculated by comparing the device's performance against a baseline. The baseline score 
-is 1000, with higher numbers being better and double the score indicating double the performance.
+2. **Single-core and multi-core score**   
+   This is calculated using the corresponding single-core and multi-core scores from the three subsections detailed below.
 
-1. Geekbench score. This is the overall score, calculated using the single-core and multi-core scores.
+3. **Subsection score**   
+   The workloads are grouped by how the workload exercise the system, and are calculated using the individual workload scores. The subsections are 
+   Cryptography, Integer, and Floating-Point workloads.
 
-2. Single-core and multi-core score. This is calculated using the corresponding single-core and multi-core scores from the three subsections detailed below.
+4. **Workload score**   
+   Each individual workload reports a score. Additionally, each individual workload reports the numerical result of 
+   the workload - 5 GB/sec, 35 images/sec, etc.
 
-3. Subsection score. The workloads are grouped by how the workload exercise the system, and are calculated using the individual workload scores. The subsections are Cryptography, 
-   Integer, and Floating-Point workloads.
-
-4. Workload score. Each individual workload reports a score. Additionally, each individual workload reports the numerical result of 
-  the workload - 5 GB/sec, 35 images/sec, etc.
-
-Geekbench runs a corresponding single-core and multi-core version for each of the following common CPU-intensive algorithms. 
+GeekBench5 runs a corresponding single-core and multi-core version for each of the following common CPU-intensive algorithms. 
 
 | Name                  | Description                                                                                                                                  |
 |-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
@@ -89,7 +52,7 @@ Geekbench runs a corresponding single-core and multi-core version for each of th
 | Speech Recognition    | Performs recognition of arbitrary English speech using PocketSphinx                                                                          |
 | Machine Learning      | Executes a  Convolutional Neural Network to perform an image classification task                                                             |
 
-## Workload Metrics
+## Workload Metrics for GeekBench5
 The following metrics are examples of those captured by the Virtual Client when running the GeekBench5 workload.
 
 | Scenario | Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
@@ -189,78 +152,75 @@ The following metrics are examples of those captured by the Virtual Client when 
 | Text Rendering Score (Multi-Core) | Test Score | 447.0 | 869.0 | 823.4541259500543 | score |
 | Text Rendering Score (Single-Core) | Test Score | 404.0 | 841.0 | 789.1682953311618 | score |
 
-# GeekBench6
-Geekbench6 is a third party tool that runs its own, pre-defined set of workloads to measure CPU performance. GeekBench6 is often used to compare cloud 
-performance, so it's valuable to see how our changes impact GeekBench6 results.
-
-* [GeekBench Documentation](https://www.geekbench.com/)
-* [GeekBench Workloads](https://www.geekbench.com/doc/geekbench6-compute-workloads.pdf)
-
-
-## How to package GeekBench6
+## How to Package GeekBench5
 :::info
-GeekBench6 is a commercial workload. VirtualClient cannot distribute the license and binary. You need to follow the following steps to package this workload and make it available locally or in a storage that you own.
+GeekBench5 is a commercial workload. Virtual Client cannot distribute the license and binary. You need to follow the following steps to package this workload and 
+make it available locally or in a storage that you own.
 :::
-1. GeekBench can be downloaded here https://www.geekbench.com/download/.
+
+1. GeekBench5 can be downloaded here https://www.geekbench.com/download/.
 2. You need to purchase a license for it to run properly https://www.primatelabs.com/store/.
-3. `Geekbench 5.preferences` is the license file you get after purchasing. Package the binaries and license in this structure. You only need to pack the runtimes you are going to run. (You don't need "win-arm64, win-x64" if you don't plan on running on Windows).
-  ```treeview
-  geekbench-5.1.0
-  ├───geekbench6.vcpkg
-  │
-  ├───linux-arm64/
-  │       Geekbench 6.preferences
-  │       geekbench.plar
-  │       geekbench6
-  │       geekbench_aarch64
-  │
-  ├───linux-x64/
-  │       Geekbench 6.preferences
-  │       geekbench.plar
-  │       geekbench6
-  │       geekbench_x86_64
-  │
-  ├───win-arm64/
-  │       Geekbench 6.preferences
-  │       geekbench.plar
-  │       geekbench6.exe
-  │       geekbench_aarch64.exe
-  │
-  └───win-x64/
-          amd_ags_x64.dll
-          cpuidsdk64.dll
-          Geekbench 6.preferences
-          geekbench.plar
-          geekbench6.exe
-          geekbench_x86_64.exe
-          pl_opencl_x86_64.dll
-  ```
-4. Zip the geekbench-6.2.2 directory into `geekbench-6.2.2.zip`, make sure the runtimes folders are the top level after extraction, and no extra `/geekbench-6.2.2/` top directory is created.
-  ```bash
-  7z a geekbench-6.2.2.zip ./geekbench-6.2.2/*
-  ```
+3. `GeekBench 5.preferences` is the license file you get after purchasing. Package the binaries and license in this structure. You only need to pack the runtimes you 
+   are going to run. (You don't need "win-arm64, win-x64" if you don't plan on running on Windows).
+
+   ``` treeview
+   geekbench.5.1.0
+   ├───geekbench5.vcpkg
+   │
+   ├───linux-x64/
+   │       Geekbench 5.preferences
+   │       geekbench.plar
+   │       geekbench5
+   │       geekbench_x86_64
+   │
+   ├───win-arm64/
+   │       Geekbench 5.preferences
+   │       geekbench.plar
+   │       geekbench5.exe
+   │       geekbench_aarch64.exe
+   │
+   └───win-x64/
+           amd_ags_x64.dll
+           cpuidsdk64.dll
+           Geekbench 5.preferences
+           geekbench.plar
+           geekbench5.exe
+           geekbench_x86_64.exe
+           pl_opencl_x86_64.dll
+   ```
+4. Zip the geekbench.5.1.0 directory into `geekbench.5.1.0.zip`, make sure the runtimes folders are the top level after extraction, and no extra `/geekbench.5.1.0/` top directory is created.
+
+   ```bash
+   7z a geekbench.5.1.0.zip ./geekbench.5.1.0/*
+   ```
     or 
-  ```bash
-  cd geekbench-6.2.2; zip -r ../geekbench-6.2.2.zip *
-  ```
-5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
 
+   ```bash
+   cd geekbench.5.1.0; zip -r ../geekbench.5.1.0.zip *
+   ```
 
-## What is Being Measured?
-Geekbench6 reports four different types of scores, a value that's calculated by comparing the device's performance against a baseline. The baseline score 
-is 1000, with higher numbers being better and double the score indicating double the performance.
+5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH5.json) as needed. If you are using your own blob 
+   storage, you can use the profile as-is. If you are copying the zip file locally to the Virtual Client `packages` directory, you can simply remove the `DependencyPackageInstallation` step.
 
-1. Geekbench score. This is the overall score, calculated using the single-core and multi-core scores.
+## What is Being Measured With GeekBench6?
+GeekBench6 reports four different types of scores, a value that's calculated by comparing the device's performance against a baseline. The baseline score 
+is 1000 with higher numbers being better and double the score indicating double the performance.
 
-2. Single-core and multi-core score. This is calculated using the corresponding single-core and multi-core scores from the two subsections detailed below.
+1. **GeekBench score**  
+   This is the overall score, calculated using the single-core and multi-core scores.
 
-3. Subsection score. The workloads are grouped by how the workload exercise the system, and are calculated using the individual workload scores. The subsections are Integer,
+2. **Single-core and multi-core score**  
+   This is calculated using the corresponding single-core and multi-core scores from the two subsections detailed below.
+
+3. **Subsection score**  
+   The workloads are grouped by how the workload exercise the system, and are calculated using the individual workload scores. The subsections are Integer,
    and Floating-Point workloads.
 
-4. Workload score. Each individual workload reports a score. Additionally, each individual workload reports the numerical result of 
-  the workload - 5 GB/sec, 35 images/sec, etc.
+4. **Workload score**  
+   Each individual workload reports a score. Additionally, each individual workload reports the numerical result of 
+   the workload - 5 GB/sec, 35 images/sec, etc.
 
-Geekbench runs a corresponding single-core and multi-core version for each of the following common CPU-intensive algorithms. 
+GeekBench6 runs a corresponding single-core and multi-core version for each of the following common CPU-intensive algorithms. 
 
 | Name                  | Description                                                                                                                                  |
 |-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
@@ -285,7 +245,7 @@ Geekbench runs a corresponding single-core and multi-core version for each of th
 | Ray Tracer            | Generates an image by tracing the path of light through an image plane and simulating the effects of its encounters with virtual objects     |
 | Structure from Motion | Takes two 2D images of the same scene and constructs an estimate of the 3D coordinates of the points visible in both images                  |
 
-## Workload Metrics
+## Workload Metrics for GeekBench6
 The following metrics are examples of those captured by the Virtual Client when running the GeekBench6 workload.
 
 | MetricName                                | MetricValue | MetricUnit    |
@@ -360,3 +320,65 @@ The following metrics are examples of those captured by the Virtual Client when 
 | MultiCoreSummary-Multi-Core Score         | 4308        | Score         |
 | MultiCoreSummary-Integer Score            | 4061        | Score         |
 | MultiCoreSummary-Floating Point Score     | 4808        | Score         |
+
+## How to Package GeekBench6
+:::info
+GeekBench6 is a commercial workload. Virtual Client cannot distribute the license and binary. You need to follow the following steps to package this workload and make 
+it available locally or in a storage that you own.
+:::
+
+1. GeekBench6  can be downloaded here https://www.geekbench.com/download/.
+2. You need to purchase a license for it to run properly https://www.primatelabs.com/store/.
+3. `Geekbench_6.preferences` is the license file you get after purchasing. Package the binaries and license in this structure. You only need to pack the runtimes you 
+   are going to run. (You don't need "win-arm64, win-x64" if you don't plan on running on Windows).
+
+   ```treeview
+   geekbench.6.2.2
+   ├───geekbench6.vcpkg
+   │
+   ├───linux-arm64/
+   │       Geekbench_6.preferences
+   │       geekbench.plar 
+   │       geekbench6
+   │       geekbench_aarch64
+   │
+   ├───linux-x64/
+   │       Geekbench_6.preferences
+   │       geekbench.plar
+   |       geekbench_avx2
+   │       geekbench6
+   │       geekbench_x86_64
+   │
+   ├───win-arm64/
+   │       Geekbench_6.preferences
+   │       geekbench.plar
+   │       geekbench6.exe
+   │       geekbench_aarch64.exe
+   |       pl_opencl_aarch64.dll
+   │
+   └───win-x64/
+           amd_ags_x64.dll
+           cpuidsdk64.dll
+           Geekbench 6.preferences
+           geekbench.plar
+           geekbench6.exe
+           geekbench_avx2.exe
+           geekbench_x86_64.exe
+           pl_opencl_x86_64.dll
+   ```
+
+4. Zip the geekbench.6.2.2 directory into `geekbench.6.2.2.zip`, make sure the runtimes folders are the top level after extraction, and no extra `/geekbench.6.2.2/` 
+   top directory is created.
+
+   ```bash
+   7z a geekbench.6.2.2.zip ./geekbench.6.2.2/*
+   ```
+    or 
+
+   ```bash
+   cd geekbench.6.2.2; zip -r ../geekbench.6.2.2.zip *
+   ```
+
+5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) as needed. If you are using your own 
+   blob storage, you can use the profile as-is. If you are copying the zip file locally to the Virtual Client `packages` directory, you can simply remove the `DependencyPackageInstallation` step.
+

@@ -1,0 +1,275 @@
+{
+    "Description": "Sysbench OLTP PostgreSQL Database Server Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "04:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DatabaseName": "sbtest",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "Port": "5432",
+        "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}",
+        "DatabaseScenario": "Balanced",
+        "Duration": "00:05:00"
+    },
+    "Actions": [
+        {
+            "Type": "SysbenchServerExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteServer",
+                "PackageName": "sysbench",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_read_write",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_read_write",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_read_only",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_read_only",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_write_only",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_write_only",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_delete",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_delete",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_insert",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_insert",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_update_index",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_update_index",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_update_non_index",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_update_non_index",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "select_random_points",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "select_random_points",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "select_random_ranges",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "select_random_ranges",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "MountLocation": "Root",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadPostgreSQLServerPackage",
+                "BlobContainer": "packages",
+                "BlobName": "postgresql.14.0.0.rev1.zip",
+                "PackageName": "postgresql",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadSysbenchPackage",
+                "BlobContainer": "packages",
+                "BlobName": "sysbench-1.0.20.rev1.zip",
+                "PackageName": "sysbench",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerInstallation",
+            "Parameters": {
+                "Scenario": "InstallPostgreSQLServer",
+                "Action": "InstallServer",
+                "PackageName": "postgresql",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigurePostgreSQLServer",
+                "Action": "ConfigureServer",
+                "PackageName": "postgresql",
+                "Role": "Server",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigurePostgreSQLServer",
+                "Action": "SetupDatabase",
+                "PackageName": "postgresql",
+                "Role": "Server",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration",
+            "Parameters": {
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "RecordCount": 1,
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "DistributePostgreSQLDatabase",
+                "Action": "DistributeDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "postgresql",
+                "Port": "$.Parameters.Port",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration",
+            "Parameters": {
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "DatabaseSystem": "PostgreSQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}

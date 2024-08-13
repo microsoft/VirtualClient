@@ -11,7 +11,6 @@ namespace VirtualClient
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
-    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -72,7 +71,7 @@ namespace VirtualClient
         public MockFixture()
         {
             this.experimentId = Guid.NewGuid().ToString();
-            this.Setup(Environment.OSVersion.Platform, Architecture.X64);
+            this.Setup(Environment.OSVersion.Platform, Architecture.X64, useUnixStylePathsOnly: false);
         }
 
         /// <summary>
@@ -90,6 +89,11 @@ namespace VirtualClient
         /// A mock API client manager.
         /// </summary>
         public Mock<IApiClientManager> ApiClientManager { get; set; }
+
+        /// <summary>
+        /// A mock certificate manager.
+        /// </summary>
+        public Mock<ICertificateManager> CertificateManager { get; set; }
 
         /// <summary>
         /// Mimics the current directory of the running application (e.g. the VC root directory).
@@ -351,6 +355,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default profile downloads folder path.
+        /// </summary>
+        public string GetProfileDownloadsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetProfileDownloadsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Sets the environment variable value in the underlying <see cref="PlatformSpecifics"/> instance.
         /// </summary>
         public void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
@@ -359,14 +371,24 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Standardizes the path per the requirements of the current targeted
+        /// OS platform (e.g. Windows, Linux).
+        /// </summary>
+        public string StandardizePath(string path)
+        {
+            return this.PlatformSpecifics.StandardizePath(path);
+        }
+
+        /// <summary>
         /// Sets up or resets the fixture to default mock behaviors.
         /// </summary>
-        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null)
+        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false)
         {
             this.SetupMocks(true);
 
             this.ApiClient = new Mock<IApiClient>();
             this.ApiClientManager = new Mock<IApiClientManager>();
+            this.CertificateManager = new Mock<ICertificateManager>();
             this.FileSystem = new Mock<IFileSystem>();
             this.File = new Mock<IFile>();
             this.FileInfo = new Mock<IFileInfoFactory>();
@@ -396,7 +418,7 @@ namespace VirtualClient
             this.DiskManager = new Mock<IDiskManager>();
             this.Logger = new InMemoryLogger();
             this.FirewallManager = new Mock<IFirewallManager>();
-            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
+            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly: useUnixStylePathsOnly);
             this.ProcessManager = new InMemoryProcessManager(platform);
             this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();
@@ -522,6 +544,7 @@ namespace VirtualClient
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+            this.Dependencies.AddSingleton<ICertificateManager>((p) => this.CertificateManager.Object);
             this.Dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<ISystemInfo>((p) => this.SystemManagement.Object);

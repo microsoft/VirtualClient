@@ -18,7 +18,7 @@ pool:
   vmImage: windows-latest
 
 variables:
-  VcVersion : 1.14.31
+  VcVersion : 1.0.0
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -40,12 +40,13 @@ steps:
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
 
-#- task: GitVersion@5
-#  inputs:
-#    runtime: 'core'
-#    configFilePath: 'GitVersion.yml'
-#    updateAssemblyInfo: true
-
+- powershell: |
+    # Read the content of VERSION
+    $version=Get-Content $(Build.SourcesDirectory)\VERSION
+    $version
+    # Set the file content as a pipeline variable
+    Write-Host "##vso[task.setvariable variable=VcVersion]$version"
+  displayName: 'Set VC Version'
 
   # Ensure the artifact output/bin/obj directories are clean.
 - script: $(Build.SourcesDirectory)\clean.cmd
@@ -59,9 +60,14 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd $(VcVersion)$(VersionSuffix)
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@1
+- task: EsrpCodeSigning@5
   inputs:
-    ConnectedServiceName: 'virtualclient-esrp'
+    ConnectedServiceName: 'virtualclient-esrp-ame'
+    AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
+    AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+    AuthAKVName: 'virtualclient-vault-esrp'
+    AuthCertName: 'virtualclient-esrp-cert-auth'
+    AuthSignCertName: 'virtualclient-esrp-cert-sign'
     FolderPath: '$(System.DefaultWorkingDirectory)'
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'
@@ -85,6 +91,7 @@ steps:
     SessionTimeout: '60'
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
+    PendingAnalysisWaitTimeoutMinutes: '5'
 
 - task: NuGetAuthenticate@1
   displayName: 'Authenticate with NuGet feed'

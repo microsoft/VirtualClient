@@ -11,11 +11,12 @@ namespace VirtualClient
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+    using Azure;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
+    using Azure.Storage.Blobs;
     using Microsoft.Extensions.Logging;
     using Serilog;
-    using Serilog.Events;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
@@ -23,6 +24,7 @@ namespace VirtualClient
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
+    using VirtualClient.Identity;
     using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
@@ -131,71 +133,89 @@ namespace VirtualClient
         /// <summary>
         /// Creates logger providers for writing telemetry to Event Hub targets.
         /// </summary>
-        /// <param name="eventHubAuthContext">Information to authenticate with eventhub.</param>
+        /// <param name="eventHubStore">Describes the Event Hub namespace dependency store.</param>
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
         /// <param name="level">The logging severity level.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(EventHubAuthenticationContext eventHubAuthContext, EventHubLogSettings settings, LogLevel level)
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
-            // Proceed if either connectionstring or token credentail is provided.
-            if ((!string.IsNullOrEmpty(eventHubAuthContext.ConnectionString) || eventHubAuthContext.TokenCredential != null) && settings != null)
+            if (settings != null)
             {
-                // Logs/Traces
-                EventHubTelemetryChannel tracesChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                    eventHubName: settings.TracesHubName,
-                    eventHubNameSpace: eventHubAuthContext.EventHubNamespace,
-                    eventHubAuthContext.TokenCredential,
-                    eventHubAuthContext.ConnectionString);
+                EventHubAuthenticationContext authenticationContext = null;
 
-                tracesChannel.EventTransmissionError += (sender, args) =>
+                if (!string.IsNullOrWhiteSpace(eventHubStore.ConnectionString))
                 {
-                    ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (traces): {args.Error.Message}");
-                };
-
-                // Traces logging is affected by --log-level values defined on the command line.
-                ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
-                    .HandleTraceEvents();
-
-                loggerProviders.Add(tracesLoggerProvider);
-
-                // Test Metrics/Results
-                EventHubTelemetryChannel metricsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                    eventHubName: settings.MetricsHubName,
-                    eventHubNameSpace: eventHubAuthContext.EventHubNamespace,
-                    eventHubAuthContext.TokenCredential,
-                    eventHubAuthContext.ConnectionString);
-
-                metricsChannel.EventTransmissionError += (sender, args) =>
+                    // The endpoint is a standard access policy.
+                    authenticationContext = new EventHubAuthenticationContext(eventHubStore.ConnectionString);
+                }
+                else if (eventHubStore.EndpointUri != null && eventHubStore.Credentials != null)
                 {
-                    ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (metrics): {args.Error.Message}");
-                };
-
-                // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
-                // always written.
-                ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
-                    .HandleMetricsEvents();
-
-                loggerProviders.Add(metricsLoggerProvider);
-
-                // System Events
-                EventHubTelemetryChannel systemEventsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
-                    eventHubName: settings.EventsHubName,
-                    eventHubNameSpace: eventHubAuthContext.EventHubNamespace,
-                    eventHubAuthContext.TokenCredential,
-                    eventHubAuthContext.ConnectionString);
-
-                systemEventsChannel.EventTransmissionError += (sender, args) =>
+                    authenticationContext = new EventHubAuthenticationContext(eventHubStore.EndpointUri.Host, eventHubStore.Credentials);
+                }
+                else if (eventHubStore.EndpointUri != null)
                 {
-                    ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (events): {args.Error.Message}");
-                };
+                    authenticationContext = new EventHubAuthenticationContext(eventHubStore.EndpointUri.Host);
+                }
 
-                // System Events are NOT affected by --log-level values defined on the command line. Events are
-                // always written.
-                ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace)
-                    .HandleSystemEvents();
+                if (authenticationContext != null)
+                {
+                    // Logs/Traces
+                    EventHubTelemetryChannel tracesChannel = DependencyFactory.CreateEventHubTelemetryChannel(
+                        eventHubName: settings.TracesHubName,
+                        eventHubNameSpace: authenticationContext.EventHubNamespace,
+                        authenticationContext.TokenCredential,
+                        authenticationContext.ConnectionString);
 
-                loggerProviders.Add(eventsLoggerProvider);
+                    tracesChannel.EventTransmissionError += (sender, args) =>
+                    {
+                        ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (traces): {args.Error.Message}");
+                    };
+
+                    // Traces logging is affected by --log-level values defined on the command line.
+                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
+                        .HandleTraceEvents();
+
+                    loggerProviders.Add(tracesLoggerProvider);
+
+                    // Test Metrics/Results
+                    EventHubTelemetryChannel metricsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
+                        eventHubName: settings.MetricsHubName,
+                        eventHubNameSpace: authenticationContext.EventHubNamespace,
+                        authenticationContext.TokenCredential,
+                        authenticationContext.ConnectionString);
+
+                    metricsChannel.EventTransmissionError += (sender, args) =>
+                    {
+                        ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (metrics): {args.Error.Message}");
+                    };
+
+                    // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
+                    // always written.
+                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
+                        .HandleMetricsEvents();
+
+                    loggerProviders.Add(metricsLoggerProvider);
+
+                    // System Events
+                    EventHubTelemetryChannel systemEventsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
+                        eventHubName: settings.EventsHubName,
+                        eventHubNameSpace: authenticationContext.EventHubNamespace,
+                        authenticationContext.TokenCredential,
+                        authenticationContext.ConnectionString);
+
+                    systemEventsChannel.EventTransmissionError += (sender, args) =>
+                    {
+                        ConsoleLogger.Default.LogWarning($"Event Hub Transmission Error (events): {args.Error.Message}");
+                    };
+
+                    // System Events are NOT affected by --log-level values defined on the command line. Events are
+                    // always written.
+                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace)
+                        .HandleSystemEvents();
+
+                    loggerProviders.Add(eventsLoggerProvider);
+                }
             }
 
             return loggerProviders;
@@ -267,35 +287,18 @@ namespace VirtualClient
         public static IEnumerable<ILoggerProvider> CreateFileLoggerProviders(string logFileDirectory, FileLogSettings settings, LogLevel level)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
-            List<string> excludes = new List<string>
-            {
-                "executionPlatform",
-                "executionProfile",
-                "executionProfileDescription",
-                "executionProfileParameters",
-                "profileFriendlyName"
-            };
-
-            List<string> metricsExcludes = new List<string>(excludes)
-            {
-                "binaryVersion",
-                "transactionId",
-                "durationMs",
-                "executionArguments",
-                "operatingSystemPlatform"
-            };
 
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
-                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), level, excludes)
+                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), level)
                     .HandleTraceEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), LogLevel.Trace, metricsExcludes)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), LogLevel.Trace)
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
@@ -309,14 +312,14 @@ namespace VirtualClient
                 loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Performance Counters
-                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), LogLevel.Trace, metricsExcludes)
+                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .HandlePerformanceCounterEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => countersLoggerProvider.Dispose()));
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), LogLevel.Trace, excludes)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .HandleSystemEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));

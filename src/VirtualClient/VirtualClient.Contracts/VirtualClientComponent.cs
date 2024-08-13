@@ -5,17 +5,23 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
+    using System.Runtime.Versioning;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
-    using VirtualClient.Common.Contracts;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
 
@@ -76,11 +82,6 @@ namespace VirtualClient.Contracts
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
-
-            if (VirtualClientRuntime.Metadata?.Any() == true)
-            {
-                this.Metadata.AddRange(VirtualClientRuntime.Metadata, true);
-            }
 
             if (dependencies.TryGetService<ILogger>(out ILogger logger))
             {
@@ -544,12 +545,30 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Returns true if the component is supported on the current system.
+        /// Returns true if the component is supported on the current platform.
         /// </summary>
         /// <param name="component">The component to validate.</param>
         public static bool IsSupported(VirtualClientComponent component)
         {
-            return component.IsSupported();
+            SupportedPlatformsAttribute attribute = (SupportedPlatformsAttribute)component.GetType().GetCustomAttribute(typeof(SupportedPlatformsAttribute), true);
+            bool platformSupported = true;
+            if (attribute != null)
+            {
+                platformSupported = attribute.CompatiblePlatforms.Contains(component.PlatformArchitectureName);
+
+                if (!platformSupported)
+                {
+                    component.Logger.LogNotSupported(component.GetType().Name, component.Platform, component.CpuArchitecture, EventContext.Persisted());
+
+                    if (attribute.ThrowError)
+                    {
+                        throw new PlatformNotSupportedException($"'{component.GetType().Name}' is not supported on current platform '{component.PlatformArchitectureName}'." +
+                        $"Supported platforms are '{string.Join(',', attribute.CompatiblePlatforms)}'.");
+                    }
+                }
+            }
+
+            return platformSupported && component.IsSupported();
         }
 
         /// <summary>

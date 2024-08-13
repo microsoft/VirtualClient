@@ -41,8 +41,11 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Initializes a new version of the <see cref="PlatformSpecifics"/> class.
         /// </summary>
-        public PlatformSpecifics(PlatformID platform, Architecture architecture)
-            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location))
+        /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
+        /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
+        public PlatformSpecifics(PlatformID platform, Architecture architecture, bool useUnixStylePathsOnly = false)
+            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location), useUnixStylePathsOnly)
         {
         }
 
@@ -52,24 +55,29 @@ namespace VirtualClient.Contracts
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
         /// <param name="currentDirectory">The directory to use as the current working directory.</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
         /// paths on a system that are expected to be in a different format than is typical for the
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        protected PlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory)
+        protected PlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory, bool useUnixStylePathsOnly = false)
         {
             this.Platform = platform;
             this.PlatformArchitectureName = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
             this.CpuArchitecture = architecture;
-            this.CurrentDirectory = currentDirectory;
-            this.LogsDirectory = this.Combine(currentDirectory, "logs");
-            this.ContentUploadsDirectory = this.Combine(currentDirectory, "contentuploads");
-            this.PackagesDirectory = this.Combine(currentDirectory, "packages");
-            this.ProfilesDirectory = this.Combine(currentDirectory, "profiles");
-            this.ScriptsDirectory = this.Combine(currentDirectory, "scripts");
-            this.StateDirectory = this.Combine(currentDirectory, "state");
+            this.UseUnixStylePathsOnly = useUnixStylePathsOnly;
+
+            string standardizedCurrentDirectory = this.StandardizePath(currentDirectory);
+            this.CurrentDirectory = standardizedCurrentDirectory;
+            this.LogsDirectory = this.Combine(standardizedCurrentDirectory, "logs");
+            this.ContentUploadsDirectory = this.Combine(standardizedCurrentDirectory, "contentuploads");
+            this.PackagesDirectory = this.Combine(standardizedCurrentDirectory, "packages");
+            this.ProfilesDirectory = this.Combine(standardizedCurrentDirectory, "profiles");
+            this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
+            this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
+            this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
         }
 
         /// <summary>
@@ -103,6 +111,11 @@ namespace VirtualClient.Contracts
         public string ProfilesDirectory { get; }
 
         /// <summary>
+        /// The directory where profiles downloaded are stored.
+        /// </summary>
+        public string ProfileDownloadsDirectory { get; }
+
+        /// <summary>
         /// The OS platform (e.g. Windows, Unix).
         /// </summary>
         public PlatformID Platform { get; }
@@ -122,6 +135,12 @@ namespace VirtualClient.Contracts
         /// The directory where state objects are stored.
         /// </summary>
         public string StateDirectory { get; }
+
+        /// <summary>
+        /// True to standardize paths using Unix-style conventions (e.g. forward slashes '/')
+        /// only. When 'true' all paths (including Windows-formatted) will use forward slashes.
+        /// </summary>
+        public bool UseUnixStylePathsOnly { get; }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
@@ -196,6 +215,18 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Returns true/false whether the path provided is a full path location on the
+        /// local file system.
+        /// </summary>
+        /// <param name="path">The path to evaluate.</param>
+        /// <returns>True if the path is a fully qualified path (e.g. C:\Users\any\path, home/user/any/path). False if not.</returns>
+        public static bool IsFullyQualifiedPath(string path)
+        {
+            path.ThrowIfNull(nameof(path));
+            return Regex.IsMatch(path, "[A-Z]+:\\\\|^/", RegexOptions.IgnoreCase);
+        }
+
+        /// <summary>
         /// Return whether the VC is running in container.
         /// </summary>
         /// https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-environment-variables#dotnet_running_in_container-and-dotnet_running_in_containers
@@ -211,8 +242,9 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="platform">The platform for which to standardize the path.</param>
         /// <param name="path">The path to standardize.</param>
+        /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <returns>A path standardized for the OS platform.</returns>
-        public static string StandardizePath(PlatformID platform, string path)
+        public static string StandardizePath(PlatformID platform, string path, bool useUnixStylePathsOnly = false)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -222,11 +254,16 @@ namespace VirtualClient.Contracts
             string standardizedPath = path?.Trim();
             if ((platform == PlatformID.Unix && standardizedPath == "/") || (platform == PlatformID.Win32NT && standardizedPath == @"\"))
             {
+                if (useUnixStylePathsOnly)
+                {
+                    standardizedPath = "/";
+                }
+
                 return standardizedPath;
             }
 
             standardizedPath = path.TrimEnd('\\', '/');
-            if (platform == PlatformID.Unix)
+            if (platform == PlatformID.Unix || useUnixStylePathsOnly)
             {
                 standardizedPath = Regex.Replace(standardizedPath.Replace('\\', '/'), "/{2,}", "/");
             }
@@ -330,14 +367,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Combines the path segments provided with path to the directory where packages
-        /// downloaded exist.
+        /// Combines the path segments provided with path to the directory where profiles exist.
         /// </summary>
         public string GetProfilePath(params string[] additionalPathSegments)
         {
             return additionalPathSegments?.Any() != true
                 ? this.ProfilesDirectory
                 : this.Combine(this.ProfilesDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Combines the path segments provided with path to the directory where profiles downloaded exist.
+        /// </summary>
+        public string GetProfileDownloadsPath(params string[] additionalPathSegments)
+        {
+            return additionalPathSegments?.Any() != true
+                ? this.ProfileDownloadsDirectory
+                : this.Combine(this.ProfileDownloadsDirectory, this.Combine(additionalPathSegments));
         }
 
         /// <summary>
@@ -433,7 +479,7 @@ namespace VirtualClient.Contracts
         /// <returns>A path standardized for the OS platform.</returns>
         public string StandardizePath(string path)
         {
-            return PlatformSpecifics.StandardizePath(this.Platform, path);
+            return PlatformSpecifics.StandardizePath(this.Platform, path, this.UseUnixStylePathsOnly);
         }
 
         /// <summary>

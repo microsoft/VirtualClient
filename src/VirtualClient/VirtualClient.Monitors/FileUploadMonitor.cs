@@ -25,8 +25,6 @@ namespace VirtualClient.Monitors
     /// This monitor processes content/file uploads requested by Virtual Client
     /// workload, monitoring and dependency components.
     /// </summary>
-    [WindowsCompatible]
-    [UnixCompatible]
     public class FileUploadMonitor : VirtualClientComponent
     {
         private IFileSystem fileSystem;

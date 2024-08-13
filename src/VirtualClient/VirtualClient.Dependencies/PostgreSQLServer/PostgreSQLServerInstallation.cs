@@ -14,13 +14,10 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.MySqlServer;
 
     /// <summary>
     /// Provides functionality for installing specific version of PostgreSQL.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class PostgreSQLServerInstallation : ExecuteCommand
     {
         private readonly IStateManager stateManager;
@@ -138,8 +135,8 @@ namespace VirtualClient.Dependencies
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             ProcessManager manager = this.SystemManager.ProcessManager;
-            string stateId = $"{nameof(MySQLServerInstallation)}-{this.Action}-action-success";
-            InstallationState installationState = await this.stateManager.GetStateAsync<InstallationState>($"{nameof(InstallationState)}", cancellationToken)
+            string stateId = $"{nameof(PostgreSQLServerConfiguration)}-{this.Action}-action-success";
+            InstallationState installationState = await this.stateManager.GetStateAsync<InstallationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
 
             telemetryContext.AddContext(nameof(installationState), installationState);

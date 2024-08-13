@@ -9,12 +9,10 @@ namespace VirtualClient
     using System.CommandLine.Builder;
     using System.CommandLine.Parsing;
     using System.Linq;
-    using System.Reflection.Emit;
+    using System.Security;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
-    using System.Text;
     using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
@@ -149,13 +147,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net")]
-        [TestCase("\"DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net\"")]
-        [TestCase("BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z")]
-        [TestCase("https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
-        [TestCase("https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
-        [TestCase("\"https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https\"")]
-        public void ContentStoreOptionSupportsValidConnectionStringsAndSasTokenUris(string connectionToken)
+        [TestCaseSource(nameof(GetExampleStorageAccountConnectionStrings))]
+        public void ContentStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreateContentStoreOption();
             ParseResult result = option.Parse($"--contentStore={connectionToken}");
@@ -163,10 +156,97 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCaseSource(nameof(GetExampleStorageAccountSasUris))]
+        public void ContentStoreOptionSupportsValidStorageAccountSasUris(string uri)
+        {
+            Option option = OptionFactory.CreateContentStoreOption();
+            ParseResult result = option.Parse($"--contentStore={uri}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityConnectionStrings), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void ContentStoreOptionSupportsConnectionStringsWithManagedIdentyReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityUris), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void ContentStoreOptionSupportsUrisWithManagedIdentityReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdConnectionStrings), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void ContentStoreOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdUris), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void ContentStoreOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--contentStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         public void ContentStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreateContentStoreOption();
-            Assert.Throws<ArgumentException>(() => option.Parse($"--contentStore=NotAValidConnectionStringOrSasTokenUri"));
+            Assert.Throws<SchemaException>(() => option.Parse($"--contentStore=NotAValidConnectionStringOrSasTokenUri"));
         }
 
         [Test]
@@ -201,29 +281,99 @@ namespace VirtualClient
         [TestCase("--eh")]
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
-            ParseResult result = option.Parse($"{alias}=ConnectionString");
+            Option option = OptionFactory.CreateEventHubStoreOption();
+            ParseResult result = option.Parse($"{alias}=Endpoint=ConnectionString");
             Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]
-        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net")]
-        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EventHubNamespace=aaa.servicebus.windows.net\"")]
-        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EventHubNamespace=aaa.servicebus.windows.net")]
-        public void EventHubOptionSupportsCertificateAndManagedIdentities(string argument)
+        [TestCaseSource(nameof(GetExampleEventHubConnectionStrings))]
+        public void EventHubConnectionStringOptionSupportsAccessPolicyConnectionStrings(string connectionToken)
         {
-            var mockCertManager = new Mock<ICertificateManager>();
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
-                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+            Option option = OptionFactory.CreateEventHubStoreOption();
+            ParseResult result = option.Parse($"--eventhub={connectionToken}");
+            Assert.IsFalse(result.Errors.Any());
+        }
 
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
-                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
-
-            OptionFactory.CertificateManager = mockCertManager.Object;
-
-            Option option = OptionFactory.CreateEventHubAuthenticationContextOption();
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityConnectionStrings), new object[] { DependencyStore.StoreTypeAzureEventHubNamespace })]
+        public void EventHubConnectionStringOptionSupportsConnectionStringsWithManagedIdentyReferences(string argument)
+        {
+            Option option = OptionFactory.CreateEventHubStoreOption();
             ParseResult result = option.Parse($"--eventhub={argument}");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityUris), new object[] { DependencyStore.StoreTypeAzureEventHubNamespace })]
+        public void EventHubConnectionStringOptionSupportsUrisWithManagedIdentityReferences(string argument)
+        {
+            Option option = OptionFactory.CreateEventHubStoreOption();
+            ParseResult result = option.Parse($"--eventhub={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdConnectionStrings), new object[] { DependencyStore.StoreTypeAzureEventHubNamespace })]
+        public void EventHubConnectionStringOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateEventHubStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--eventhub={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdUris), new object[] { DependencyStore.StoreTypeAzureEventHubNamespace })]
+        public void EventHubConnectionStringOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateEventHubStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--eventhub={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void EventHubConnectionStringOptionValidatesTheConnectionTokenProvided()
+        {
+            Option option = OptionFactory.CreateEventHubStoreOption();
+            Assert.Throws<SchemaException>(() => option.Parse($"--eventHub=NotAValidValue"));
         }
 
         [Test]
@@ -421,11 +571,46 @@ namespace VirtualClient
         }
 
         [Test]
-        public void MetadataOptionSupportsDelimitedKeyValuePairs()
+        public void MetadataOptionSupportsTripleCommaDelimitedKeyValuePairs()
         {
             Option option = OptionFactory.CreateMetadataOption();
             ParseResult result = option.Parse("--metadata:Key1=Value1,,,Key2=Value2");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void MetadataOptionSupportsSemiColonDelimitedKeyValuePairs()
+        {
+
+            Option option = OptionFactory.CreateMetadataOption();
+            ParseResult result = option.Parse("--metadata=Key1=Value1;Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1;Key2=Value2", result.Tokens[1].Value);
+        }
+
+        [Test]
+        public void MetadataOptionSupportsCommaDelimitedKeyValuePairs()
+        {
+
+            Option option = OptionFactory.CreateMetadataOption();
+            ParseResult result = option.Parse("--metadata=Key1=Value1,Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1,Key2=Value2", result.Tokens[1].Value);
+        }
+
+        [Test]
+        public void MetadataOptionSupportsDelimitedPairsThatHaveValuesContainingDelimiters()
+        {
+            Option option = OptionFactory.CreateMetadataOption();
+            ParseResult result = option.Parse("--metadata=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C", result.Tokens[1].Value);
+
+            result = option.Parse("--metadata=Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C", result.Tokens[1].Value);
         }
 
         [Test]
@@ -472,34 +657,98 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net")]
-        [TestCase("BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z")]
-        [TestCase("https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
-        [TestCase("https://anystorageaccount.blob.core.windows.net/packages?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https")]
-        public void PackageStoreOptionSupportsValidConnectionStringsAndSasTokenUris(string connectionToken)
+        [TestCaseSource(nameof(GetExampleStorageAccountConnectionStrings))]
+        public void PackageStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreatePackageStoreOption();
-            ParseResult result = option.Parse($"--packages={connectionToken}");
+            ParseResult result = option.Parse($"--packageStore={connectionToken}");
             Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]
-        [TestCase("CertificateThumbprint=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
-        [TestCase("\"CertificateIssuer=XXX CA Authority;CertificateSubject=aaa.bbb.com;ClientId=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB;TenantId=CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages\"")]
-        [TestCase("ManagedIdentityId=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA;EndpointUrl=https://yourblobstore.blob.core.windows.net/packages")]
-        public void PackageStoreOptionSupportsCertificateAndManagedIdentities(string argument)
+        [TestCaseSource(nameof(GetExampleStorageAccountSasUris))]
+        public void PackageStoreOptionSupportsValidStorageAccountSasUris(string uri)
+        {
+            Option option = OptionFactory.CreatePackageStoreOption();
+            ParseResult result = option.Parse($"--packageStore={uri}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityConnectionStrings), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void PackageStoreOptionSupportsConnectionStringsWithManagedIdentyReferences(string argument)
         {
             var mockCertManager = new Mock<ICertificateManager>();
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--packageStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityUris), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void PackageStoreOptionSupportsUrisWithManagedIdentityReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--packageStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdConnectionStrings), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void PackageStoreOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync("XXX CA Authority", "aaa.bbb.com", It.IsAny<IEnumerable<StoreLocation>>(), StoreName.My))
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
-            OptionFactory.CertificateManager = mockCertManager.Object;
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--packageStore={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
 
-            Option option = OptionFactory.CreatePackageStoreOption();
-            ParseResult result = option.Parse($"--packages={argument}");
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdUris), new object[] { DependencyStore.StoreTypeAzureStorageBlob })]
+        public void PackageStoreOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--packageStore={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -507,7 +756,31 @@ namespace VirtualClient
         public void PackageStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreatePackageStoreOption();
-            Assert.Throws<ArgumentException>(() => option.Parse($"--packageStore=NotAValidConnectionStringOrSasTokenUri"));
+            Assert.Throws<SchemaException>(() => option.Parse($"--packageStore=NotAValidConnectionStringOrSasTokenUri"));
+        }
+
+        [Test]
+        public void PackageStoreOptionThrowsTheExpectedExceptionWhenTheUserDoesNotHavePermissionsToAccessTheCertificateStore()
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .Throws(() => new CryptographicException($"Permissions to certificate store denied."));
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            Assert.Throws<CryptographicException>(() => option.Parse(
+                $"--packageStore=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
+        }
+
+        [Test]
+        public void PackageStoreOptionThrowsTheExpectedExceptionWhenTheUserDoesNotHavePermissionsToAccessTheCertificatesWithinTheStore()
+        {
+            var mockCertManager = new Mock<ICertificateManager>();
+            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .Throws(() => new SecurityException($"Permissions to certificates denied."));
+
+            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
+            Assert.Throws<SecurityException>(() => option.Parse(
+                $"--packageStore=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
         }
 
         [Test]
@@ -521,27 +794,49 @@ namespace VirtualClient
         }
 
         [Test]
-        public void ParametersOptionSupportsThreeCommaDelimitedKeyValuePairs()
+        public void ParametersOptionSupportsTripleCommaDelimitedKeyValuePairs()
         {
             Option option = OptionFactory.CreateParametersOption();
             ParseResult result = option.Parse("--parameters:Key1=Value1,,,Key2=Value2");
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1,,,Key2=Value2", result.Tokens[1].Value);
         }
 
         [Test]
-        public void ParametersOptionSupportsSemicolonDelimitedKeyValuePairs()
+        public void ParametersOptionSupportsSemiColonDelimitedKeyValuePairs()
         {
 
             Option option = OptionFactory.CreateParametersOption();
             ParseResult result = option.Parse("--parameters=Key1=Value1;Key2=Value2");
             Assert.IsFalse(result.Errors.Any());
-
-            // Testing if the option factory supports semicolon delimited key value pairs when the values contains semicolon
-            result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A,V3B;V3C");
-            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1;Key2=Value2", result.Tokens[1].Value);
         }
 
-            [Test]
+        [Test]
+        public void ParametersOptionSupportsCommaDelimitedKeyValuePairs()
+        {
+            Option option = OptionFactory.CreateParametersOption();
+            ParseResult result = option.Parse("--parameters=Key1=Value1,Key2=Value2");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1,Key2=Value2", result.Tokens[1].Value);
+        }
+
+        [Test]
+        public void ParametersOptionSupportsDelimitedPairsThatHaveValuesContainingDelimiters()
+        {
+            Option option = OptionFactory.CreateParametersOption();
+            ParseResult result = option.Parse("--parameters=Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A;Value1B;Value1C;Key2=Value2,,,Key3=V3A;V3B;V3C", result.Tokens[1].Value);
+
+            result = option.Parse("--parameters=Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("Key1=Value1A,Value1B,Value1C,Key2=Value2,,,Key3=V3A,V3B,V3C", result.Tokens[1].Value);
+        }
+
+        [Test]
         [TestCase("--profile")]
         [TestCase("--p")]
         public void ProfileOptionSupportsExpectedAliases(string alias)
@@ -590,11 +885,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--packageStore=anystore", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--packageStore=anystore --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--packageStore=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--packageStore=https://any.blob.store --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--packageStore=anystore" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --packageStore=anystore"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--packageStore=https://any.blob.store" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --packageStore=https://any.blob.store"));
             }
         }
 
@@ -605,11 +900,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--contentStore=anystore", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--contentStore=anystore --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--contentStore=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--contentStore=https://any.blob.store --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--contentStore=anystore" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --contentStore=anystore"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--contentStore=https://any.blob.store" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --contentStore=https://any.blob.store"));
             }
         }
 
@@ -620,11 +915,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123 --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHub=sb://any.servicebus.hub?miid=1234567 --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHub=EventHubNamespace=anyconnectionstring;ManagedIdentityId=123"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHub=sb://any.servicebus.hub?miid=1234567"));
             }
         }
 
@@ -807,6 +1102,168 @@ namespace VirtualClient
 
                 return new X509Certificate2(certBytes, "password");
             }
+        }
+
+        private static IEnumerable<string> GetExampleEventHubConnectionStrings()
+        {
+            return new List<string>
+            {
+                "Endpoint=sb://any.servicebus.windows.net/;SharedAccessKeyName=AnyAccessPolicy;SharedAccessKey=9876",
+                "Endpoint=sb://any.servicebus.windows.net/;SharedAccessKeyName=AnyAccessPolicy;SharedAccessKey=9876;EntityPath=telemetry-logs"
+            };
+        }
+
+        private static IEnumerable<string> GetExampleManagedIdentityConnectionStrings(string storeType)
+        {
+            IEnumerable<string> examples = null;
+            if (storeType == DependencyStore.StoreTypeAzureStorageBlob)
+            {
+                examples = new List<string>
+                {
+                    "EndpointUrl=https://anystorage.blob.core.windows.net;ManagedIdentityId=11223344",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/;ManagedIdentityId=11223344",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/container;ManagedIdentityId=11223344",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/container/;ManagedIdentityId=11223344"
+                };
+            }
+            else if (storeType == DependencyStore.StoreTypeAzureEventHubNamespace)
+            {
+                examples = new List<string>
+                {
+                    "EndpointUrl=sb://any.servicebus.windows.net;ManagedIdentityId=11223344",
+                    "EndpointUrl=sb://any.servicebus.windows.net/;ManagedIdentityId=11223344",
+                    "EventHubNamespace=any.servicebus.windows.net/;ManagedIdentityId=11223344"
+                };
+            }
+
+            return examples;
+        }
+
+        private static IEnumerable<string> GetExampleManagedIdentityUris(string storeType)
+        {
+            IEnumerable<string> examples = null;
+            if (storeType == DependencyStore.StoreTypeAzureStorageBlob)
+            {
+                examples = new List<string>
+                {
+                    "https://anystorage.blob.core.windows.net?miid=11223344",
+                    "https://anystorage.blob.core.windows.net/?miid=11223344",
+                    "https://anystorage.blob.core.windows.net/container?miid=11223344",
+                    "https://anystorage.blob.core.windows.net/container/?miid=11223344"
+                };
+            }
+            else if (storeType == DependencyStore.StoreTypeAzureEventHubNamespace)
+            {
+                examples = new List<string>
+                {
+                    "sb://any.servicebus.windows.net?miid=11223344",
+                    "sb://any.servicebus.windows.net/?miid=11223344"
+                };
+            }
+
+            return examples;
+        }
+
+        private static IEnumerable<string> GetExampleMicrosoftEntraIdConnectionStrings(string storeType)
+        {
+            IEnumerable<string> examples = null;
+            if (storeType == DependencyStore.StoreTypeAzureStorageBlob)
+            {
+                examples = new List<string>
+                {
+                    // Microsoft Entra IDs with certificates thumbprint references
+                    "EndpointUrl=https://anystorage.blob.core.windows.net;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/container;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/container/;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+
+                    // Microsoft Entra IDs with certificates issuer and subject name references.
+                    "EndpointUrl=https://anystorage.blob.core.windows.net;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com",
+                    "EndpointUrl=https://anystorage.blob.core.windows.net/container;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com",
+                    "\"EndpointUrl=https://anystorage.blob.core.windows.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC CA 01;CertificateSubject=any.domain.com\"",
+                    "\"EndpointUrl=https://anystorage.blob.core.windows.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com\""
+                };
+            }
+            else if (storeType == DependencyStore.StoreTypeAzureEventHubNamespace)
+            {
+                examples = new List<string>
+                {
+                    // Microsoft Entra IDs with certificates thumbprint references
+                    "EndpointUrl=sb://any.servicebus.windows.net;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+                    "EndpointUrl=sb://any.servicebus.windows.net/;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+                    "EventHubNamespace=any.servicebus.windows.net/;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+
+                    // Microsoft Entra IDs with certificates issuer and subject name references.
+                    "EndpointUrl=sb://any.servicebus.windows.net;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com",
+                    "EndpointUrl=sb://any.servicebus.windows.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com",
+                    "EventHubNamespace=any.servicebus.windows.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
+                };
+            }
+
+            return examples;
+        }
+
+        private static IEnumerable<string> GetExampleMicrosoftEntraIdUris(string storeType)
+        {
+            IEnumerable<string> examples = null;
+            if (storeType == DependencyStore.StoreTypeAzureStorageBlob)
+            {
+                examples = new List<string>
+                {
+                    // Microsoft Entra IDs with certificates thumbprint references
+                    "https://anystorage.blob.core.windows.net?cid=11223344&tid=55667788&crtt=123456789",
+                    "https://anystorage.blob.core.windows.net/?cid=11223344&tid=55667788&crtt=123456789",
+                    "https://anystorage.blob.core.windows.net/container?cid=11223344&tid=55667788&crtt=123456789",
+                    "https://anystorage.blob.core.windows.net/container/?cid=11223344&tid=55667788&crtt=123456789",
+
+                    // Microsoft Entra IDs with certificates issuer and subject name references.
+                    "https://anystorage.blob.core.windows.net?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
+                    "https://anystorage.blob.core.windows.net/?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
+                    "https://anystorage.blob.core.windows.net/container?cid=12345&tid=55667788&crti=ABC&crts=CN=any.domain.com",
+                    "\"https://anystorage.blob.core.windows.net/?cid=12345&tid=55667788&crti=ABC CA 01&crts=CN=any.domain.com\"",
+                    "\"https://anystorage.blob.core.windows.net/?cid=12345&tid=55667788&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com\""
+                };
+            }
+            else if (storeType == DependencyStore.StoreTypeAzureEventHubNamespace)
+            {
+                examples = new List<string>
+                {
+                    // Microsoft Entra IDs with certificates thumbprint references
+                    "sb://any.servicebus.windows.net?cid=11223344&tid=55667788&crtt=123456789",
+                    "sb://any.servicebus.windows.net/?cid=11223344&tid=55667788&crtt=123456789",
+                    "sb://any.servicebus.windows.net/container?cid=11223344&tid=55667788&crtt=123456789",
+                    "sb://any.servicebus.windows.net/container/?cid=11223344&tid=55667788&crtt=123456789",
+
+                    // Microsoft Entra IDs with certificates issuer and subject name references.
+                    "sb://any.servicebus.windows.net?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
+                    "sb://any.servicebus.windows.net/?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
+                    "\"sb://any.servicebus.windows.net?cid=12345&tid=55667788&crti=ABC CA 01&crts=CN=any.domain.com\"",
+                    "\"sb://any.servicebus.windows.net/?cid=12345&tid=55667788&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com\""
+                };
+            }
+
+            return examples;
+        }
+
+        private static IEnumerable<string> GetExampleStorageAccountConnectionStrings()
+        {
+            return new List<string>
+            {
+                "DefaultEndpointsProtocol=https;AccountName=anystorageaccount;EndpointSuffix=core.windows.net",
+                "BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z"
+            };
+        }
+
+        private static IEnumerable<string> GetExampleStorageAccountSasUris()
+        {
+            return new List<string>
+            {
+                "https://anystorageaccount.blob.core.windows.net?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https",
+                "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https",
+                "https://anystorageaccount.blob.core.windows.net/container?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https",
+                "https://anystorageaccount.blob.core.windows.net/container/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https"
+            };
         }
     }
 }

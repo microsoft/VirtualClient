@@ -8,16 +8,13 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Net;
-    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
     using Azure.Core;
-    using Azure.Identity;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -37,6 +34,8 @@ namespace VirtualClient
             (int)HttpStatusCode.GatewayTimeout,
             (int)HttpStatusCode.InternalServerError
         };
+
+        private static readonly char[] UriDelimiters = new char[] { '/', '\\' };
 
         private static IAsyncPolicy defaultRetryPolicy = Policy.Handle<RequestFailedException>(error =>
         {
@@ -96,7 +95,7 @@ namespace VirtualClient
                     {
                         throw new RequestFailedException(
                             response.Status,
-                            $"Blob download failed for blob '{blobDescriptor.Name}' (status code={response.Status}-{BlobManager.GetHttpStatusCodeName(response.Status)}).");
+                            $"Download failed for blob '{blobDescriptor.Name}' (status code={response.Status}-{BlobManager.GetHttpStatusCodeName(response.Status)}).");
                     }
 
                     if (response.Headers.ETag != null)
@@ -201,8 +200,7 @@ namespace VirtualClient
                     {
                         throw new RequestFailedException(
                             rawResponse.Status,
-                            $"Upload failed for blob '{blobDescriptor.Name}' and container '{blobDescriptor.ContainerName}' " +
-                            $"(status code={rawResponse.Status}-{BlobManager.GetHttpStatusCodeName(rawResponse.Status)}).");
+                            $"Upload failed for blob '{blobDescriptor.Name}' (status code={rawResponse.Status}-{BlobManager.GetHttpStatusCodeName(rawResponse.Status)}).");
                     }
 
                     if (rawResponse.Headers.ETag != null)
@@ -258,6 +256,78 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates the blob container client used to interface with the storage account.
+        /// </summary>
+        /// <param name="descriptor">Provides the blob container details.</param>
+        /// <param name="blobStore">Defines the target storage account information.</param>
+        protected BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
+        {
+            // [Authentication Options]
+            // 1) Storage Account connection string
+            //    The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
+            //    storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
+            //    SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
+            //    account that the application should be able to access.
+            //
+            //    e.g.
+            //    DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net
+            //
+            // 2) Blob Service connection string
+            //    User-defined/restricted access to all containers within the blob store. This is a good fit for scenarios where
+            //    content (e.g. from different monitors) is uploaded to different containers within the blob store and thus the application
+            //    needs access to all containers.
+            //
+            //    e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
+            //
+            // 3) Blob Service SAS URI
+            //    Provides the same type of access/restrictions as the Blob service connection string.
+            //
+            //    e.g. https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
+            //
+            // 4) Blob Container SAS URI
+            //    Provides access to a specific container within the Blob service. This is the least privileged and most secure option. This
+            //    is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container within the blob
+            //    store.
+            //
+            //    e.g. https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
+
+            BlobContainerClient containerClient = null;
+            if (blobStore.EndpointUri != null)
+            {
+                Uri containerUri = blobStore.EndpointUri;
+                if (blobStore.EndpointUri.AbsolutePath == "/")
+                {
+                    containerUri = new Uri($"{blobStore.EndpointUri.Scheme}://{blobStore.EndpointUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{blobStore.EndpointUri.Query}");
+                }
+
+                if (blobStore.Credentials != null)
+                {
+                    containerClient = new BlobContainerClient(containerUri, blobStore.Credentials);
+                }
+                else
+                {
+                    containerClient = new BlobContainerClient(containerUri);
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(blobStore.ConnectionString))
+            {
+                // The endpoint is either a storage account-level connection string
+                // or a Blob service-level connection string.
+                containerClient = new BlobContainerClient(blobStore.ConnectionString, descriptor.ContainerName.ToLowerInvariant());
+            }
+
+            if (containerClient == null)
+            {
+                throw new DependencyException(
+                    "Storage account authentication credentials not provided. Credentials are required to be supplied on the command line " +
+                    "in order to access content within a storage account.",
+                    ErrorReason.DependencyDescriptionInvalid);
+            }
+
+            return containerClient;
+        }
+
+        /// <summary>
         /// Downloads the blob to the stream provided.
         /// </summary>
         protected virtual Task<Response> DownloadToStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken)
@@ -293,71 +363,6 @@ namespace VirtualClient
 
             return await blobClient.UploadAsync(stream, uploadOptions, cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        private BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
-        {
-            // [Authentication Options]
-            // 1) Storage Account connection string
-            //    The primary or secondary connection string to the Azure storage account. This provides full access privileges to the entire
-            //    storage account but the least amount of security. This is generally recommended only for testing scenarios. The use of a
-            //    SAS URI or connection string is preferred because it enables finer grained control of the exact resources within the storage
-            //    account that the application should be able to access.
-            //
-            //    e.g.
-            //    DefaultEndpointsProtocol=https;AccountName=anystorageaccount;AccountKey=w7Q+BxLw...;EndpointSuffix=core.windows.net
-            //
-            // 2) Blob Service connection string
-            //    User-defined/restricted access to all containers within the blob store. This is a good fit for scenarios where
-            //    content (e.g. from different monitors) is uploaded to different containers within the blob store and thus the application
-            //    needs access to all containers.
-            //
-            //    e.g. BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
-            //
-            // 3) Blob Service SAS URI
-            //    Provides the same type of access/restrictions as the Blob service connection string.
-            //
-            //    e.g. https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
-            //
-            // 4) Blob Container SAS URI
-            //    Provides access to a specific container within the Blob service. This is the least privileged and most secure option. This
-            //    is a good fit for scenarios where all content (e.g. across all monitors) is uploaded to a single container within the blob
-            //    store.
-            //
-            //    e.g. https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
-
-            BlobContainerClient containerClient = null;
-            if (!string.IsNullOrEmpty(blobStore.ConnectionToken))
-            {
-                if (Uri.TryCreate(blobStore.ConnectionToken, UriKind.Absolute, out Uri sasUri))
-                {
-                    Uri containerUri = sasUri;
-                    if (!sasUri.AbsolutePath.Contains(descriptor.ContainerName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // The connection authentication token is a blob service-specific SAS URI.
-                        containerUri = new Uri($"{sasUri.Scheme}://{sasUri.Host}/{descriptor.ContainerName.ToLowerInvariant()}{sasUri.Query}");
-                    }
-
-                    containerClient = new BlobContainerClient(containerUri);
-                }
-                else
-                {
-                    // The connection authentication token is either a storage account-level connection string
-                    // or a Blob service-level connection string.
-                    containerClient = new BlobContainerClient(blobStore.ConnectionToken, descriptor.ContainerName.ToLowerInvariant());
-                }
-            }
-            else if (blobStore.TokenCredential != null)
-            {
-                containerClient = new BlobContainerClient(new Uri(blobStore.EndpointUrl), blobStore.TokenCredential);
-            }
-            else
-            {
-                throw new DependencyException(
-                    "Neither sas-url nor token credential was provided to the StorageBlobManager to uploaddownload from Blob storage.", ErrorReason.DependencyDescriptionInvalid);
-            }
-
-            return containerClient;
         }
 
         private static string GetHttpStatusCodeName(int statusCode)

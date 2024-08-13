@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The MLPerf workload executor.
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-x64")]
     public class MLPerfExecutor : VirtualClientComponent
     {
         private const string AccuracySummary = nameof(MLPerfExecutor.AccuracySummary);
@@ -332,11 +332,9 @@ namespace VirtualClient.Actions
         {
             string dockerExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()}";
 
-            await this.ExecuteCommandAsync(
-                "bash", 
-                $"-c \"{this.ExportScratchSpace} && mkdir $MLPERF_SCRATCH_PATH/data $MLPERF_SCRATCH_PATH/models $MLPERF_SCRATCH_PATH/preprocessed_data\"", 
-                this.NvidiaDirectory, 
-                cancellationToken);
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "data"));
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "models"));
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "preprocessed_data"));
 
             await this.ExecuteCommandAsync(
                 "sudo", 
@@ -390,24 +388,6 @@ namespace VirtualClient.Actions
                 this.NvidiaDirectory, 
                 cancellationToken);
 
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)

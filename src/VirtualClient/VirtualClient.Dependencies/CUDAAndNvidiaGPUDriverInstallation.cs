@@ -334,7 +334,7 @@ namespace VirtualClient.Dependencies
             List<string> commands = new List<string>()
             {
                 $"wget {this.LinuxLocalRunFile}",
-                $"sh {runFileName} --silent"
+                $"sh {runFileName} --silent --toolkit"
             };
 
             switch (linuxDistribution)

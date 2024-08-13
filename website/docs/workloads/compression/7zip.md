@@ -15,14 +15,14 @@ The main features of 7-Zip are:
 * Plugin for FAR Manager
 * Localizations for 87 languages
 
-### Documentation
+## Documentation
 * [7zip](https://www.7-zip.org/)
 
-### Supported Platforms and Architectures
+## Supported Platforms and Architectures
 * win-x64
 * win-arm64
 
-### Package Dependencies
+## Package Dependencies
 The following package dependencies are required to be installed on the Windows system in order to support the requirements
 of the 7zip workload. Note that the Virtual Client will handle the installation of any required dependencies.
 
@@ -30,7 +30,9 @@ of the 7zip workload. Note that the Virtual Client will handle the installation 
 * unzip
 * wget
 
-### Workload Usage 
+## Workload Usage 
+
+``` bash
 7z  [switches...] [file_names...] [@listfile]
 
 
@@ -93,9 +95,10 @@ of the 7zip workload. Note that the Virtual Client will handle the installation 
   -w[(path)] : assign Work directory. Empty path means a temporary directory <br/>
   -x[r[-|0]](@listfile|!wildcard) : eXclude filenames <br/>
   -y : assume Yes on all queries
+```
 
 
-### What is Being Tested?
+## What is Being Tested?
 7zip is used to measure performance in terms of compressionTime, and ratio of compressed size and original size. Below are the metrics measured by 7zip Workload.
 
 | Name                                  |   Unit     |
@@ -103,5 +106,5 @@ of the 7zip workload. Note that the Virtual Client will handle the installation 
 | Compressed size and Original size ratio        | -  |
 | CompressionTime   | seconds |
 
-# References
+## References
 * [7zip](https://www.7-zip.org/)

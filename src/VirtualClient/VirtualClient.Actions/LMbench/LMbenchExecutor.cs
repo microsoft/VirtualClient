@@ -5,17 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
+    using System.Globalization;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Mvc.Razor;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.FileSystemGlobbing.Internal;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Options;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -26,13 +23,39 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The LMbench workload virtual client action
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class LMbenchExecutor : VirtualClientComponent
     {
+        private static readonly List<string> DefaultBenchmarks = new List<string>
+        {
+            "BENCHMARK_BCOPY",
+            "BENCHMARK_MEM",
+            "BENCHMARK_MMAP",
+            "BENCHMARK_FILE",
+
+            // BENCHMARK_HARDWARE
+            // BENCHMARK_OS
+            // BENCHMARK_DEVELOPMENT
+            // BENCHMARK_CONNECT
+            // BENCHMARK_CTX
+            // BENCHMARK_HTTP
+            // BENCHMARK_OPS
+            // BENCHMARK_PAGEFAULT
+            // BENCHMARK_PIPE
+            // BENCHMARK_PROC
+            // BENCHMARK_RPC
+            // BENCHMARK_SELECT
+            // BENCHMARK_SIG
+            // BENCHMARK_SYSCALL
+            // BENCHMARK_TCP
+            // BENCHMARK_UDP
+            // BENCHMARK_UNIX
+        };
+
         private IFileSystem fileSystem;
+        private IPackageManager packageManager;
+        private ProcessManager processManager;
         private ISystemManagement systemManagement;
-        private string resultsDirectory;
-        private string buildFilePath;
 
         /// <summary>
         /// Constructor
@@ -42,22 +65,22 @@ namespace VirtualClient.Actions
         public LMbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.fileSystem = this.systemManagement.FileSystem;
+            this.packageManager = this.systemManagement.PackageManager;
+            this.processManager = this.systemManagement.ProcessManager;
         }
 
         /// <summary>
-        /// The path where the LMbench JSON results file should be output.
+        /// The set of benchmarks to execute. Each of these is an environment variable that is
+        /// recognized by the LMbench software. See the set of benchmarks noted above.
         /// </summary>
-        public string LMbenchDirectory { get; set; }
-
-        /// <summary>
-        /// The identifier to use as the tested instance.
-        /// </summary>
-        public string TestedInstance
+        public IEnumerable<string> Benchmarks
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(LMbenchExecutor.TestedInstance), out IConvertible testedInstance);
-                return testedInstance?.ToString();
+                this.Parameters.TryGetCollection(nameof(this.Benchmarks), out IEnumerable<string> benchmarks);
+                return benchmarks ?? LMbenchExecutor.DefaultBenchmarks;
             }
         }
 
@@ -74,48 +97,29 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Libraries that should be linked with a program during the linking phase of compilation of lmbench.
+        /// The amount of memory to use for the target memory benchmarks (in megabytes).
         /// </summary>
-        public string LDLIBS
+        public long? MemorySizeMB
         {
             get
-            {
-                this.Parameters.TryGetValue(nameof(LMbenchExecutor.LDLIBS), out IConvertible ldlibs);
-                return ldlibs?.ToString();
+            { 
+                this.Parameters.TryGetValue(nameof(LMbenchExecutor.MemorySizeMB), out IConvertible memory);
+                return memory?.ToInt64(CultureInfo.InvariantCulture);
             }
         }
+
+        /// <summary>
+        /// The path where the LMbench JSON results file should be output.
+        /// </summary>
+        protected DependencyPath LMbenchPackage { get; set; }
 
         /// <summary>
         /// Executes LMbench
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            try
-            {
-                this.Cleanup();
-                await this.ExecuteWorkloadAsync("make", $"results {this.CompilerFlags}", telemetryContext, cancellationToken).ConfigureAwait();
-
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("make", "see", this.LMbenchDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-
-                        if (process.StandardOutput.Length > 0)
-                        {
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                this.Cleanup();
-            }
+            await this.BuildSourceCodeAsync(telemetryContext, cancellationToken);
+            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -123,31 +127,14 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
-            this.fileSystem = this.Dependencies.GetService<IFileSystem>();
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-
-            DependencyPath workloadPackage = await packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (workloadPackage == null)
-            {
-                throw new DependencyException(
-                    $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
-
-            workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+            // The LMbench package contains source code. It is compiled on system and thus does not have platform/architecture
+            // subdirectories
+            this.LMbenchPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
 
             // On Linux systems, in order to allow the various GCC executables to be used in compilation (e.g. make, config),
             // they must be attributed as executable.
-            await this.systemManagement.MakeFilesExecutableAsync(this.PlatformSpecifics.Combine(workloadPackage.Path, "scripts"), this.Platform, cancellationToken)
-                .ConfigureAwait(false);
-
-            this.LMbenchDirectory = workloadPackage.Path;
-            this.resultsDirectory = this.PlatformSpecifics.Combine(this.LMbenchDirectory, "results");
-            this.buildFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "scripts", "build");
-            await this.ConfigureBuild(this.buildFilePath, cancellationToken);
+            string scriptsPath = this.Combine(this.LMbenchPackage.Path, "scripts");
+            await this.systemManagement.MakeFilesExecutableAsync(scriptsPath, this.Platform, cancellationToken);
         }
 
         /// <summary>
@@ -168,95 +155,120 @@ namespace VirtualClient.Actions
             return isSupported;
         }
 
-        private async Task ConfigureBuild(string buildFilePath, CancellationToken cancellationToken)
+        private Task BuildSourceCodeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            string command = "make";
+            string commandArguments = $"build {this.CompilerFlags}".Trim();
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("command", command)
+                .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.BuildSourceCode", relatedContext, async () =>
             {
-                FileSystemExtensions.ThrowIfFileDoesNotExist(this.fileSystem.File, buildFilePath);
-                string fileContent = await this.fileSystem.File.ReadAllTextAsync(buildFilePath, cancellationToken)
-                .ConfigureAwait(false);
-
-                Regex regexPattern = new Regex(@"LDLIBS=(.*)");
-
-                fileContent = regexPattern.Replace(fileContent, $"LDLIBS=\"{this.LDLIBS}\"", 1);
-
-                await this.fileSystem.File.WriteAllTextAsync(buildFilePath, fileContent, cancellationToken)
-                    .ConfigureAwait(false);
-            }   
-        }
-
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.MetadataContract.AddForScenario(
-                    "LMbench",
-                    process.FullCommand(),
-                    toolVersion: null);
-
-                this.MetadataContract.Apply(telemetryContext);
-
-                LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
-                IList<Metric> metrics = parser.Parse();
-
-                this.Logger.LogMetrics(
-                    toolName: "LMbench",
-                    scenarioName: "LMbench",
-                    process.StartTime,
-                    process.ExitTime,
-                    metrics,
-                    metricCategorization: null,
-                    scenarioArguments: "make results",
-                    this.Tags,
-                    telemetryContext);
-            }
-        }
-
-        private void Cleanup()
-        {
-            // We cleanup any directories in the 'results' parent directory but leave the Makefile.
-            string[] directories = this.fileSystem.Directory.GetDirectories(this.resultsDirectory, "*", SearchOption.TopDirectoryOnly);
-            if (directories?.Any() == true)
-            {
-                foreach (string directory in directories)
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(command, commandArguments, this.LMbenchPackage.Path))
                 {
-                    try
+                    this.CleanupTasks.Add(() => process?.SafeKill());
+                    await process.StartAndWaitAsync(cancellationToken);
+
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.fileSystem.Directory.Delete(directory, true);
-                    }
-                    catch (Exception exc)
-                    {
-                        // Best Effort
-                        this.Logger.LogErrorMessage(exc, EventContext.Persisted(), LogLevel.Warning);
+                        await this.LogProcessDetailsAsync(process, relatedContext, "LMbench_Build");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                     }
                 }
-            }
+            });
         }
 
-        private Task ExecuteWorkloadAsync(string pathToExe, string commandLineArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
         {
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", pathToExe)
-                .AddContext("commandArguments", commandLineArguments);
+            this.MetadataContract.AddForScenario(
+                "LMbench",
+                process.FullCommand(),
+                toolVersion: null);
 
-            return this.Logger.LogMessageAsync($"{nameof(LMbenchExecutor)}.ExecuteWorkload", relatedContext, async () =>
+            this.MetadataContract.Apply(telemetryContext);
+
+            LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
+            IList<Metric> metrics = parser.Parse();
+
+            this.Logger.LogMetrics(
+                toolName: "LMbench",
+                scenarioName: "Memory Benchmark",
+                process.StartTime,
+                process.ExitTime,
+                metrics,
+                metricCategorization: null,
+                scenarioArguments: process.FullCommand(),
+                this.Tags,
+                telemetryContext);
+        }
+
+        private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string command = "bash";
+            string commandArguments = "-c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results\"";
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("command", command)
+                .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, this.LMbenchDirectory))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(command, commandArguments, this.LMbenchPackage.Path))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        if (this.MemorySizeMB != null)
+                        {
+                            // The $MB environment variable sets the size of the memory to run each
+                            // benchmark against.
+                            process.EnvironmentVariables["MB"] = this.MemorySizeMB.ToString();
+                        }
 
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        if (this.Benchmarks?.Any() == true)
+                        {
+                            foreach (string benchmarkVariable in this.Benchmarks)
+                            {
+                                // e.g.
+                                // BENCHMARK_MEM, BENCHMARK_MMAP, BENCHMARK_FILE
+                                process.EnvironmentVariables[benchmarkVariable.Trim()] = "YES";
+                            }
+                        }
+
+                        this.CleanupTasks.Add(() => process?.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
-                                .ConfigureAwait(false);
-
+                            await this.LogProcessDetailsAsync(process, relatedContext, "LMbench");
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
+                }
+
+                command = "make";
+                commandArguments = $"summary";
+                string resultsPath = this.Combine(this.LMbenchPackage.Path, "results");
+
+                EventContext relatedContext2 = telemetryContext.Clone()
+                    .AddContext("command", command)
+                    .AddContext("commandArguments", commandArguments);
+
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(command, commandArguments, resultsPath))
+                {
+                    this.CleanupTasks.Add(() => process?.SafeKill());
+                    await process.StartAndWaitAsync(cancellationToken);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, relatedContext2, "LMbench_Summary");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    }
+
+                    // The use of the original telemetry context created at the top
+                    // is purposeful.
+                    this.CaptureMetrics(process, relatedContext);
                 }
             });
         }

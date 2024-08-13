@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient
+namespace VirtualClient.Identity
 {
     using System;
     using System.Collections.Generic;
@@ -36,6 +36,7 @@ namespace VirtualClient
         {
             Assert.Throws<ArgumentException>(() => this.testCertificateManager.GetCertificateFromStoreAsync(null)
                 .GetAwaiter().GetResult());
+
             Assert.Throws<ArgumentException>(() => this.testCertificateManager.GetCertificateFromStoreAsync(string.Empty)
                 .GetAwaiter().GetResult());
         }
@@ -143,70 +144,11 @@ namespace VirtualClient
                 .GetAwaiter().GetResult());
         }
 
-        [Test]
-        public void VerifyCertificateReturnsFalseOnNullCertificate()
-        {
-            Assert.IsFalse(this.testCertificateManager.VerifyCertificate(null, string.Empty, string.Empty, string.Empty));
-        }
-
-        [Test]
-        public void VerifyCertificateAreFieldsEqualReturnsTrueOnExactSameAttributes()
-        {
-            Assert.IsTrue(TestCertificateManager.AreFieldsEqual(
-                "CN=Test, OU=MockText",
-                "CN=Test, OU=MockText"));
-        }
-
-        [Test]
-        public void VerifyCertificateAreFieldsEqualReturnsTrueOnSameAttributesInDifferentOrder()
-        {
-            Assert.IsTrue(TestCertificateManager.AreFieldsEqual(
-                "CN=Test, OU=MockText",
-                "OU=MockText, CN=Test"));
-        }
-
-        [Test]
-        public void VerifyCertificateAreFieldsEqualReturnsTrueOnSameAttributesWithSpacingDifferences()
-        {
-            Assert.IsTrue(TestCertificateManager.AreFieldsEqual(
-                "CN=Test,OU=MockText",
-                "CN=Test , OU = MockText"));
-        }
-
-        [Test]
-        public void VerifyCertificateAreFieldsEqualReturnsFalseOnDifferentAttributeValue()
-        {
-            Assert.IsFalse(TestCertificateManager.AreFieldsEqual(
-                "CN=Test, OU=MockText",
-                "CN=Test2, OU=MockText"));
-        }
-
-        [Test]
-        public void VerifyCertificateAreFieldsEqualReturnsFalseOnDifferentNumberOfAttributes()
-        {
-            Assert.IsFalse(TestCertificateManager.AreFieldsEqual(
-                "CN=Test, OU=MockText",
-                "CN=Test, OU=MockText, O=MSFT"));
-        }
-
-        [Test]
-        public void VerifyCertificateAreFieldsEqualIsCaseInsensitive()
-        {
-            Assert.IsTrue(TestCertificateManager.AreFieldsEqual(
-                "cn=test, Ou=MockText",
-                "CN=Test, OU=mOckText"));
-        }
-
         private class TestCertificateManager : CertificateManager
         {
             public Func<X509Store, string, bool, X509Certificate2> OnGetCertificateFromStoreAsync { get; set; }
 
             public Func<X509Store, string, string, bool, X509Certificate2> OnGetCertificateByIssuerFromStoreAsync { get; set; }
-
-            internal static new bool AreFieldsEqual(string field1, string field2)
-            {
-                return CertificateManager.AreFieldsEqual(field1, field2);
-            }
 
             protected override Task<X509Certificate2> GetCertificateFromStoreAsync(X509Store store, string thumbprint, bool validCertificateOnly = false)
             {

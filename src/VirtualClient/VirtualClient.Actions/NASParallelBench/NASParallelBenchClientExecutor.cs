@@ -27,6 +27,7 @@ namespace VirtualClient.Actions
     public class NASParallelBenchClientExecutor : NASParallelBenchExecutor
     {
         private List<IApiClient> apiClients;
+        private ISystemManagement systemManagement;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NASParallelBenchClientExecutor"/> class.
@@ -37,6 +38,7 @@ namespace VirtualClient.Actions
             : base(dependencies, parameters)
         {
             this.ClientHeartbeatPollingTimeout = TimeSpan.FromMinutes(20);
+            this.systemManagement = dependencies.GetService<ISystemManagement>();
             this.apiClients = new List<IApiClient>();
         }
 
@@ -48,7 +50,19 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The user who has the ssh identity registered for.
         /// </summary>
-        public string Username => this.Parameters.GetValue<string>(nameof(NASParallelBenchClientExecutor.Username));
+        public string Username
+        {
+            get
+            {
+                string username = this.Parameters.GetValue<string>(nameof(NASParallelBenchClientExecutor.Username), string.Empty);
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.systemManagement.GetLoggedInUserName();
+                }
+
+                return username;
+            }
+        }
 
         /// <summary>
         /// The timeout to apply to polling for individual/target client instances

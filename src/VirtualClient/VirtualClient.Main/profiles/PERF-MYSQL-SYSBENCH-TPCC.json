@@ -1,5 +1,5 @@
 {
-    "Description": "Sysbench OLTP MySQL Database Server Performance Workload",
+    "Description": "Sysbench TPCC MySQL Database Server Performance Workload",
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "04:00:00",
@@ -9,7 +9,8 @@
     "Parameters": {
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Balanced",
-        "Duration": "00:05:00"
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "Duration": "00:30:00"
     },
     "Actions": [
         {
@@ -23,116 +24,13 @@
         {
             "Type": "SysbenchClientExecutor",
             "Parameters": {
-                "Scenario": "oltp_read_write",
-                "Benchmark": "OLTP",
+                "Scenario": "tpcc",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_read_write",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "oltp_read_only",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_read_only",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "oltp_write_only",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_write_only",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "oltp_delete",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_delete",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "oltp_insert",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_insert",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "oltp_update_index",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_update_index",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "oltp_update_non_index",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "oltp_update_non_index",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "select_random_points",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "select_random_points",
-                "PackageName": "sysbench",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "Scenario": "select_random_ranges",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Duration": "$.Parameters.Duration",
-                "Workload": "select_random_ranges",
+                "Workload": "tpcc",
                 "PackageName": "sysbench",
                 "Role": "Client"
             }
@@ -150,6 +48,7 @@
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
+                "MountLocation": "Root",
                 "Role": "Server"
             }
         },
@@ -169,7 +68,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.zip",
+                "BlobName": "sysbench-1.0.20.rev1.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -186,7 +85,7 @@
             "Parameters": {
                 "Scenario": "InstallMySQLServer",
                 "Action": "InstallServer",
-                "Benchmark": "OLTP",
+                "Benchmark": "TPCC",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -196,7 +95,8 @@
             "Parameters": {
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
-                "Benchmark": "OLTP",
+                "Benchmark": "TPCC",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -206,7 +106,7 @@
             "Parameters": {
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
-                "Benchmark": "OLTP",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
                 "Role": "Server"
@@ -217,7 +117,7 @@
             "Parameters": {
                 "Scenario": "SetMySQLGlobalVariables",
                 "Action": "SetGlobalVariables",
-                "Benchmark": "OLTP",
+                "Benchmark": "TPCC",
                 "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
                 "PackageName": "mysql-server",
                 "Role": "Server"
@@ -227,9 +127,10 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
-                "Benchmark": "OLTP",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "RecordCount": 1,
+                "WarehouseCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
                 "Role": "Server"
@@ -239,9 +140,9 @@
             "Type": "MySQLServerConfiguration",
             "Parameters": {
                 "Scenario": "DistributeMySQLDatabase",
-                "Benchmark": "OLTP",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -250,7 +151,8 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
-                "Benchmark": "OLTP",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",

@@ -30,16 +30,13 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task DeathStarBenchExecutorDoesNotRunOnUnsupportedPlatformAsync()
+        public void DeathStarBenchExecutorDoesNotRunOnUnsupportedPlatformAsync()
         {
             this.SetupDefaultMockBehavior(PlatformID.Win32NT);
 
             using (TestDeathStarBenchExecutor deathStarBenchExecutor = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await deathStarBenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-
-                Assert.IsTrue(!deathStarBenchExecutor.IsDeathStarBenchClientExecuted);
-                Assert.IsTrue(!deathStarBenchExecutor.IsDeathStarBenchServerExecuted);
+                Assert.IsFalse(VirtualClientComponent.IsSupported(deathStarBenchExecutor));
             }
         }
 

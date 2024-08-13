@@ -44,7 +44,8 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            var variablePairs = TextParsingExtensions.ParseVcDelimiteredParameters(this.EnvironmentVariables);
+            var variablePairs = TextParsingExtensions.ParseDelimitedValues(this.EnvironmentVariables);
+
             foreach (var parameter in variablePairs)
             {
                 this.SetEnvironmentVariable(parameter.Key, (string)parameter.Value);

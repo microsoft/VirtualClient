@@ -28,7 +28,7 @@ namespace VirtualClient.Dependencies
         private const string UpdateCommand = "apt update";
         private const string BuildEssentialInstallationCommand = "apt install build-essential -yq";
         private const string GetRunFileCommand = "wget https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run";
-        private const string RunRunFileCommand = "sh cuda_11.6.0_510.39.01_linux.run --silent";
+        private const string RunRunFileCommand = "sh cuda_11.6.0_510.39.01_linux.run --silent --toolkit";
 
         private const string ExportPathCommand = $"bash -c \"echo 'export PATH=/usr/local/cuda-11.6/bin${{PATH:+:${{PATH}}}}' | " +
             $"sudo tee -a /home/anyuser/.bashrc\"";

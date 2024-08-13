@@ -51,7 +51,7 @@ namespace VirtualClient
         /// </summary>
         public DependencyFixture(PlatformID? platform = null, Architecture? architecture = null)
         {
-            this.Setup(platform ?? PlatformID.Win32NT, architecture ?? Architecture.X64);
+            this.Setup(platform ?? PlatformID.Win32NT, architecture ?? Architecture.X64, useUnixStylePathsOnly: false);
         }
 
         /// <summary>
@@ -238,6 +238,22 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default profiles folder path.
+        /// </summary>
+        public string GetProfilesPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetProfilePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid default profile downloads folder path.
+        /// </summary>
+        public string GetProfileDownloadsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetProfileDownloadsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid state file path.
         /// </summary>
         public string GetStatePath(params string[] pathSegments)
@@ -256,7 +272,7 @@ namespace VirtualClient
         /// <summary>
         /// Sets up or resets the fixture to default mock behaviors.
         /// </summary>
-        public virtual DependencyFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null)
+        public virtual DependencyFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false)
         {
             this.SetupMocks(true);
 
@@ -266,7 +282,7 @@ namespace VirtualClient
             this.ApiClient = new InMemoryApiClient(ipAddress);
             this.ApiClientManager = new InMemoryApiClientManager();
             this.ApiManager = new InMemoryApiManager();
-            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
+            this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly);
             this.Configuration = new ConfigurationBuilder().Build();
             this.DiskManager = new InMemoryDiskManager();
             this.FileSystem = new InMemoryFileSystem(this.PlatformSpecifics);

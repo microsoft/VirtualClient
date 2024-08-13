@@ -50,7 +50,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(FioExecutor.CommandLine), this.mockCommandLine },
                 { nameof(FioExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
                 { nameof(FioExecutor.DeleteTestFilesOnFinish), "true" },
-                { nameof(FioExecutor.TestName), "fio_test_1" },
+                { nameof(FioExecutor.MetricScenario), "fio_test_1" },
                 { nameof(FioExecutor.PackageName), "fio" }
             };
 
@@ -86,7 +86,7 @@ namespace VirtualClient.Actions.DiskPerformance
         public void FioExecutorAppliesConfigurationParametersCorrectly()
         {
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct --size=496GB --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth}";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct";
+            this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct";
             this.profileParameters[nameof(DiskSpdExecutor.FileSize)] = "496GB";
             this.profileParameters[nameof(DiskSpdExecutor.QueueDepth)] = 16;
             this.profileParameters[nameof(DiskSpdExecutor.ThreadCount)] = 32;
@@ -96,7 +96,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 executor.EvaluateParametersAsync(EventContext.None);
 
                 string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
+                string testName = executor.Parameters[nameof(DiskSpdExecutor.MetricScenario)].ToString();
 
                 Assert.AreEqual(
                     $"--name=fio_randwrite_496GB_4k_d16_th32_direct --size=496GB --numjobs=32 --rw=randwrite --bs=4k --iodepth=16",
@@ -178,7 +178,7 @@ namespace VirtualClient.Actions.DiskPerformance
         public void FioExecutorAppliesConfigurationParametersCorrectly_DiskFillScenario()
         {
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "--name=disk_fill --size={DiskFillSize} --numjobs=1 --rw=write --bs=256k --iodepth=64 --direct=1 --thread";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "disk_fill";
+            this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "disk_fill";
             this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = "496GB";
 
             using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
@@ -186,52 +186,10 @@ namespace VirtualClient.Actions.DiskPerformance
                 executor.EvaluateParametersAsync(EventContext.None);
 
                 string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
+                string testName = executor.Parameters[nameof(DiskSpdExecutor.MetricScenario)].ToString();
 
                 Assert.AreEqual($"--name=disk_fill --size=496GB --numjobs=1 --rw=write --bs=256k --iodepth=64 --direct=1 --thread", commandLine);
                 Assert.AreEqual($"disk_fill", testName);
-            }
-        }
-
-        [Test]
-        public void FioExecutorAppliesConfigurationParametersCorrectly_StressConfiguration()
-        {
-            // Stress Configuration -> Stress Profile
-            this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct --size=496GB --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth}";
-            this.profileParameters[nameof(DiskSpdExecutor.TestName)] = "fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct";
-            this.profileParameters[nameof(DiskSpdExecutor.FileSize)] = "496GB";
-            this.profileParameters[nameof(DiskSpdExecutor.Configuration)] = "Stress";
-
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
-            {
-                executor.EvaluateParametersAsync(EventContext.None);
-
-                string commandLine = executor.Parameters[nameof(DiskSpdExecutor.CommandLine)].ToString();
-                string testName = executor.Parameters[nameof(DiskSpdExecutor.TestName)].ToString();
-
-                int logicalCores = Environment.ProcessorCount;
-                int threads = logicalCores / 2;
-                int queueDepth = 512 / threads;
-
-                Assert.AreEqual(
-                    $"--name=fio_randwrite_496GB_4k_d{queueDepth}_th{threads}_direct --size=496GB --numjobs={threads} --rw=randwrite --bs=4k --iodepth={queueDepth}",
-                    commandLine);
-
-                Assert.AreEqual($"fio_randwrite_496GB_4k_d{queueDepth}_th{threads}_direct", testName);
-            }
-        }
-
-        [Test]
-        public void FioExecutorThrowsIfAnUnsupportedConfigurationIsDefined()
-        {
-            this.profileParameters[nameof(DiskSpdExecutor.Configuration)] = "ConfigurationNotSupported";
-
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
-            {
-                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.EvaluateParametersAsync(EventContext.None));
-
-                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
             }
         }
 

@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -17,8 +18,6 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// A dependency to mount each volume of each disk at a user specified mount point.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class MountDisks : VirtualClientComponent
     {
         private ISystemManagement systemManager;
@@ -53,6 +52,18 @@ namespace VirtualClient.Dependencies
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.MountPointPrefix), "mnt_vc");
+            }
+        }
+
+        /// <summary>
+        /// Optional Parameter to make Mount Location at the Root
+        /// </summary>
+        public string? MountLocation
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(MountDisks.MountLocation), out IConvertible mountLocation);
+                return mountLocation?.ToString();
             }
         }
 
@@ -135,7 +146,14 @@ namespace VirtualClient.Dependencies
                 // mount every volume that doesn't have an accessPath.
                 foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
                 {
-                    string newMountPoint = this.PlatformSpecifics.Combine(this.PlatformSpecifics.CurrentDirectory, $"{this.MountPointPrefix}_{counter++}");
+                    string newMountPoint = this.PlatformSpecifics.Combine(this.PlatformSpecifics.CurrentDirectory, $"{this.MountPointPrefix}_{counter}");
+
+                    if (this.MountLocation == "Root" && this.Platform == PlatformID.Unix)
+                    {
+                        newMountPoint = $"/{this.MountPointPrefix}_{counter}";
+                    }
+
+                    counter++;
 
                     if (!systemManager.FileSystem.Directory.Exists(newMountPoint))
                     {
@@ -143,6 +161,8 @@ namespace VirtualClient.Dependencies
                     }
 
                     await this.diskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken);
+
+                    await this.systemManager.MakeFilesExecutableAsync(newMountPoint, this.Platform, cancellationToken);
 
                     mountPointsCreated = true;
                 }

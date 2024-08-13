@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Redis/Memcached Memtier Client Executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class MemtierBenchmarkClientExecutor : MemcachedExecutor
     {
         private readonly object lockObject = new object();
@@ -152,6 +153,28 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.RedisResourcesPackageName));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the maximum number of memtier processes.
+        /// </summary>
+        public int MaxClients
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MaxClients), -1);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the increment step for the memtier cpu affinity.
+        /// </summary>
+        public int MemtierCpuAffinityDelta
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MemtierCpuAffinityDelta), 1);
             }
         }
 
@@ -316,31 +339,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            if (base.IsSupported())
-            {
-                bool isSupported = (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-                if (!isSupported)
-                {
-                    this.Logger.LogNotSupported("MemtierBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-                }
-
-                return isSupported;
-            }
-            else
-            {
-                return false;
-            }
-            
-        }
-
         private void CaptureMetrics(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested && this.processOutputDescriptions?.Any() == true)
@@ -442,19 +440,34 @@ namespace VirtualClient.Actions
                     int serverprocesscount = serverState.Ports.Count();
                     CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
                     int logicalProcessorCount = cpuInfo.LogicalProcessorCount;
+                    int maxClients = this.MaxClients;
+                    int memtierProcessesCount = 0;
+                    int memtierCpuAffinity = 0;
 
-                    for (int i = 0; i < serverState.Ports.Count(); i++)
+                    if (maxClients == -1)
+                    {
+                        maxClients = serverprocesscount * this.ClientInstances;
+                    }
+
+                    for (int i = 0; i < serverprocesscount; i++)
                     {
                         PortDescription portDescription = serverState.Ports.ElementAt(i);
                         int serverPort = portDescription.Port;
 
-                        int memtiercpuaffinity = (serverprocesscount + i) % logicalProcessorCount;
+                        // Check if we can run all the ClientInstances for the next Server Process
+                        if (memtierProcessesCount + this.ClientInstances > maxClients)
+                        {
+                            break;
+                        }
+
                         for (int instances = 0; instances < this.ClientInstances; instances++)
                         {
+                            memtierCpuAffinity = (memtierCpuAffinity + this.MemtierCpuAffinityDelta) % logicalProcessorCount;
+
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            commandArguments = $"-c \"numactl -C {memtiercpuaffinity} {command} --server {serverIPAddress} --port {serverPort}";
+                            commandArguments = $"-c \"numactl -C {memtierCpuAffinity} {command} --server {serverIPAddress} --port {serverPort}";
 
                             if (this.IsTLSEnabled)
                             {
@@ -467,6 +480,7 @@ namespace VirtualClient.Actions
 
                             commands.Add(commandArguments);
                             workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, precommand, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
+                            memtierProcessesCount++;
 
                             if (this.WarmUp)
                             {
@@ -578,8 +592,8 @@ namespace VirtualClient.Actions
                     @".*\/memtier_benchmark",
                     @"--port\s+\d+",
                     @"--key-prefix\s+\w+",
-                    @"--key-prefix\s+\w+", 
-                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+", 
+                    @"--key-prefix\s+\w+",
+                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+",
                     @"--cert\s+.*\.crt",
                     @"--key\s+.*\.key",
                     @"--cacert\s+.*\.crt",

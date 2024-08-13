@@ -46,8 +46,8 @@ namespace VirtualClient.Actions
             {
                 $"sudo apt update",
                 $"sudo apt install build-essential -yq",
-                $"sudo wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run",
-                $"sudo sh cuda_12.4.1_550.54.15_linux.run --silent",
+                $"sudo wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+                $"sudo sh cuda_12.0.0_525.60.13_linux.run --silent",
                 $"sudo bash -c \"echo 'export PATH=/usr/local/cuda-12.0/bin${{PATH:+:${{PATH}}}}' | sudo tee -a /home/[a-z]+/.bashrc\"",
                 $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.0/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
                 $"sudo tee -a /home/[a-z]+/.bashrc\""
@@ -112,18 +112,17 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform)
         {
-            string setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && " +
-                "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | " +
-                "sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg --yes --no-tty && " +
-                "curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | " +
-                "sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' |  " +
-                "sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
+            string setupCommand = "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey "
+            + "| sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\\n  "
+            + "&& curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \\\n "
+            + "   sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\\n  "
+            + "  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
 
             return new List<string>
             {
                 $"sudo bash -c \"{setupCommand}\"",
                 $"sudo apt-get update",
-                $"sudo apt-get install -y nvidia-docker2",
+                $"sudo apt-get install -y nvidia-container-toolkit",
                 $"sudo systemctl restart docker",
                 $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient\"",
                 $"sudo git clone -b v0.9.0 https://github.com/microsoft/superbenchmark",

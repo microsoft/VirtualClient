@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// DeathStarBench Executor
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class DeathStarBenchExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -163,6 +163,12 @@ namespace VirtualClient.Actions
                     this.Combine(this.MakefileDirectory, "wrk"),
                     this.Platform,
                     cancellationToken);
+
+                await this.SystemManager.MakeFileExecutableAsync(
+                    this.Combine(this.MakefileDirectory, "deps", "luajit", "src", "luajit"),
+                    this.Platform,
+                    cancellationToken);
+
             }
 
             await this.InstallDependenciesAsync(cancellationToken)
@@ -390,24 +396,6 @@ namespace VirtualClient.Actions
         protected virtual VirtualClientComponent CreateWorkloadServer()
         {
             return new DeathStarBenchServerExecutor(this.Dependencies, this.Parameters);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("DeathStarBench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

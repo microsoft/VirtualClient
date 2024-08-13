@@ -8,6 +8,9 @@
     },
     "Parameters": {
         "DatabaseName": "sbtest",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "Port": "5432",
+        "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}",
         "DatabaseScenario": "Balanced",
         "Duration": "00:30:00"
     },
@@ -24,6 +27,7 @@
             "Type": "SysbenchClientExecutor",
             "Parameters": {
                 "Scenario": "tpcc",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
@@ -46,16 +50,17 @@
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
+                "MountLocation": "Root",
                 "Role": "Server"
             }
         },
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "DownloadMySqlServerPackage",
+                "Scenario": "DownloadPostgreSQLServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql-server-8.0.36.zip",
-                "PackageName": "mysql-server",
+                "BlobName": "postgresql.14.0.0.rev1.zip",
+                "PackageName": "postgresql",
                 "Extract": true,
                 "Role": "Server"
             }
@@ -65,7 +70,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.zip",
+                "BlobName": "sysbench-1.0.20.rev1.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -78,51 +83,43 @@
             }
         },
         {
-            "Type": "MySQLServerInstallation",
+            "Type": "PostgreSQLServerInstallation",
             "Parameters": {
-                "Scenario": "InstallMySQLServer",
+                "Scenario": "InstallPostgreSQLServer",
                 "Action": "InstallServer",
-                "Benchmark": "TPCC",
-                "PackageName": "mysql-server",
+                "PackageName": "postgresql",
                 "Role": "Server"
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
-                "Scenario": "ConfigureMySQLServer",
+                "Scenario": "ConfigurePostgreSQLServer",
                 "Action": "ConfigureServer",
-                "Benchmark": "TPCC",
-                "PackageName": "mysql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "CreateMySQLDatabase",
-                "Action": "CreateDatabase",
-                "Benchmark": "TPCC",
+                "PackageName": "postgresql",
+                "Role": "Server",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "mysql-server",
-                "Role": "Server"
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
-                "Scenario": "SetMySQLGlobalVariables",
-                "Action": "SetGlobalVariables",
-                "Benchmark": "TPCC",
-                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
-                "PackageName": "mysql-server",
-                "Role": "Server"
+                "Scenario": "ConfigurePostgreSQLServer",
+                "Action": "SetupDatabase",
+                "PackageName": "postgresql",
+                "Role": "Server",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
             }
         },
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "WarehouseCount": 1,
@@ -132,20 +129,22 @@
             }
         },
         {
-            "Type": "MySQLServerConfiguration",
+            "Type": "PostgreSQLServerConfiguration",
             "Parameters": {
-                "Scenario": "DistributeMySQLDatabase",
-                "Benchmark": "TPCC",
+                "Scenario": "DistributePostgreSQLDatabase",
                 "Action": "DistributeDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "PackageName": "mysql-server",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "postgresql",
+                "Port": "$.Parameters.Port",
                 "Role": "Server"
             }
         },
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",

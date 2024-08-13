@@ -20,8 +20,14 @@ namespace VirtualClient.Dependencies
     /// on the system.
     /// https://man7.org/linux/man-pages/man8/dnf.8.html
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class DnfPackageInstallation : VirtualClientComponent
     {
+        /// <summary>
+        /// The list of exit codes that dnf could return.
+        /// </summary>
+        public static readonly IEnumerable<int> DnfSuccessfulCodes = new int[] { 0, 100 };
+
         private const string DnfCommand = "dnf";
         private ISystemManagement systemManagement;
 
@@ -138,7 +144,7 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Dnf update first.
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"check-update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
                 // Runs the installation command with retries and throws if the command fails after all
@@ -159,18 +165,6 @@ namespace VirtualClient.Dependencies
                     $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
                     ErrorReason.DependencyInstallationFailed);
             }
-        }
-
-        /// <inheritdoc />
-        protected override bool IsSupported()
-        {
-            bool shouldExecute = false;
-            if (base.IsSupported())
-            {
-                shouldExecute = this.Platform == PlatformID.Unix;
-            }
-
-            return shouldExecute;
         }
 
         private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)
@@ -214,7 +208,7 @@ namespace VirtualClient.Dependencies
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Dnf")
                             .ConfigureAwait(false);
 
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                        process.ThrowIfErrored<DependencyException>(DnfPackageInstallation.DnfSuccessfulCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

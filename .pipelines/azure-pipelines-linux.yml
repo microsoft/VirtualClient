@@ -16,7 +16,7 @@ resources:
     options: --entrypoint=""
 
 variables:
-  VcVersion : 1.14.31
+  VcVersion : 1.0.0
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -33,10 +33,24 @@ stages:
       continueOnError: false
       inputs:
         packageType: 'sdk'
+        version: '2.1.x'
+
+    - task: UseDotNet@2
+      continueOnError: false
+      inputs:
+        packageType: 'sdk'
         version: '8.0.101'
         useGlobalJson: false
         performMultiLevelLookup: true
         workingDirectory: '$(Build.SourcesDirectory)'
+
+    - script: |
+        # Read the content of VERSION
+        version=$(cat $(Build.SourcesDirectory)/VERSION)
+
+        # Set the file content as a pipeline variable
+        echo "##vso[task.setvariable variable=VcVersion]$version"
+      displayName: 'Set VC Version'
 
     - script: chmod -R +x $(Build.SourcesDirectory)
       displayName: 'Allow scripts to be executable on Linux'
@@ -72,6 +86,7 @@ stages:
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
     - task: EsrpCodeSigning@1
+      condition: and(succeeded(), eq(variables['CODE_SIGNING'], true))
       inputs:
         ConnectedServiceName: 'virtualclient-esrp'
         FolderPath: '$(Build.ArtifactStagingDirectory)'
@@ -149,25 +164,49 @@ stages:
 
     # AzLinux
     - task: PublishLinuxPackagesPMC@0
-      displayName: 'Mariner 2.0 rpm publish'
+      displayName: 'Mariner 2.0 rpm publish x64'
+      enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'cbl-mariner-2.0-prod'
+        repository: 'cbl-mariner-2.0-prod-Microsoft-x86_64-yum'
+      
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Mariner 2.0 rpm publish aarch64'
+      enabled: false
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'cbl-mariner-2.0-prod-Microsoft-aarch64-yum'
     
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
+      enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'cbl-mariner-1.0-prod'
+        repository: 'cbl-mariner-1.0-prod-Microsoft-aarch64-rpms-yum'
         
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Mariner 1.0 rpm publish'
+      enabled: false
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'cbl-mariner-1.0-prod-Microsoft-x86_64-rpms-yum'
+
     # Centos
     - task: PublishLinuxPackagesPMC@0
       displayName: 'CentOS 7 rpm publish'
