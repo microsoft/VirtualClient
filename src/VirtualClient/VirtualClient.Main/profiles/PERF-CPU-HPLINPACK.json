@@ -11,7 +11,8 @@
     "ProblemSizeN": null,
     "BlockSizeNB": "256",
     "NumberOfProcesses": "{LogicalCoreCount}",
-    "UsePerformanceLibraries": false,
+    "PerformanceLibrary": "ARM",
+    "PerformanceLibraryVersion": "23.04.1",
     "BindToCores": false,
     "CCFLAGS": "-O3 -march=native"
   },
@@ -24,7 +25,8 @@
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
         "CCFLAGS": "$.Parameters.CCFLAGS",
-        "UsePerformanceLibraries": "$.Parameters.UsePerformanceLibraries",
+        "PerformanceLibrary": "$.Parameters.PerformanceLibrary",
+        "PerformanceLibraryVersion": "$.Parameters.PerformanceLibraryVersion",
         "BindToCores": "$.Parameters.BindToCores",
         "PackageName": "hplinpack"
       }

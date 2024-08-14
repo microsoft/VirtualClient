@@ -76,7 +76,7 @@ This profile is designed to identify general/broad regressions when compared aga
   If you want to use performance libraries for the supported platforms and distribution run following command.
 
   ``` bash
-  sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=UsePerformanceLibraries=true
+  sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=PerformanceLibrary=ARM,,,PerformanceLibraryVersion=23.04.1
 
   ```
 

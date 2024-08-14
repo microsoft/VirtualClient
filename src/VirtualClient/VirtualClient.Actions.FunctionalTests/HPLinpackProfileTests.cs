@@ -202,7 +202,8 @@ namespace VirtualClient.Actions
                 ["Scenario"] = "ProcessorSpeed",
                 ["NumberOfProcesses"] = "2",
                 ["BindToCores"] = false,
-                ["UsePerformanceLibraries"] = false
+                ["PerformanceLibrary"] = "ARM",
+                ["PerformanceLibraryVersion"] = "24.04"
             };
 
             return new List<string>
