@@ -440,7 +440,7 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         string function = match.Groups[1].Value;
-                        int result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<int>(function);
+                        long result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<long>(function);
 
                         evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
                     }

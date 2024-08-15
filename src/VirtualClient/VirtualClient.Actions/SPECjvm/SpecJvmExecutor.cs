@@ -20,6 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SPECjvm workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SpecJvmExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -114,24 +115,6 @@ namespace VirtualClient.Actions
             }
 
             this.javaExecutableDirectory = javaExecutable.Metadata[PackageMetadata.ExecutablePath].ToString();
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("SpecJvm", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private async Task ExecuteWorkloadAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)

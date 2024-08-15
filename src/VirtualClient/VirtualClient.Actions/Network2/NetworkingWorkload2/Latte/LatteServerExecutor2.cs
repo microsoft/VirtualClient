@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Latte server executor.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteServerExecutor2 : LatteExecutor2
     {
         private static readonly object LockObject = new object();

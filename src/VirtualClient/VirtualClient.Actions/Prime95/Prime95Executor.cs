@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Prime95 workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-x64,win-x64")]
     public class Prime95Executor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -234,24 +235,6 @@ namespace VirtualClient.Actions
                 await this.CreatePrime95SettingsFileAsync(this.SettingsFilePath);
                 await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
             }
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Prime95", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

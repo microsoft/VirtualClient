@@ -19,7 +19,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// NTttcp(Test Bandwith and Throughput) Tool Server Executor. 
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SockPerfServerExecutor : SockPerfExecutor
     {
         /// <summary>

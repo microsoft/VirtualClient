@@ -18,8 +18,6 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// Provides functionality for installing specific version of PostgreSQL.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class PostgreSQLServerInstallation : ExecuteCommand
     {
         private readonly IStateManager stateManager;
