@@ -45,7 +45,7 @@ namespace VirtualClient.Contracts
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
         /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         public PlatformSpecifics(PlatformID platform, Architecture architecture, bool useUnixStylePathsOnly = false)
-            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location), useUnixStylePathsOnly)
+            : this(platform, architecture, AppDomain.CurrentDomain.BaseDirectory, useUnixStylePathsOnly)
         {
         }
 

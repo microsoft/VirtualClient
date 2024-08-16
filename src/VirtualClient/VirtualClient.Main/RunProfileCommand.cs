@@ -149,7 +149,7 @@ namespace VirtualClient
                 await this.InitializePackagesAsync(packageManager, cancellationToken);
 
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
-                ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
+                ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
                 // Installs any extensions that are pre-existing on the system (e.g. they exist in
                 // the 'packages' directory already).
@@ -301,6 +301,7 @@ namespace VirtualClient
                 else
                 {
                     string profileName = profileReference.ProfileName;
+                    profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
 
                     if (BackwardsCompatibility.TryMapProfile(profileName, out string remappedProfile))
                     {
