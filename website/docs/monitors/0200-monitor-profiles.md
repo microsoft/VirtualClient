@@ -116,7 +116,7 @@ The monitor profile designed for Nvidia GPU systems. The profile captures counte
   ```
 
 
-## MONITORS-GPU-AMD-SMI.json
+## MONITORS-GPU-AMD.json
 The monitor profile designed for AMD GPU systems. The profile captures metrics on systems of AMD GPUs with amd-smi.
 
 * **Supported Platform/Architectures**  
@@ -150,10 +150,10 @@ The monitor profile designed for AMD GPU systems. The profile captures metrics o
 
   ``` bash
   # Run the monitoring facilities only.
-  ./VirtualClient --profile=MONITORS-GPU-AMD-SMI.json
+  ./VirtualClient --profile=MONITORS-GPU-AMD.json
 
   # Monitor profile explicitly defined.
-  ./VirtualClient --profile=PERF-GPU-3DMARK-AMD.json --profile=MONITORS-GPU-AMD-SMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-GPU-3DMARK-AMD.json --profile=MONITORS-GPU-AMD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   ```
 

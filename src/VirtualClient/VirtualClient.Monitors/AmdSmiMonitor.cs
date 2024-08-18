@@ -63,21 +63,14 @@ namespace VirtualClient.Monitors
         /// <inheritdoc/>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+            if (this.Subsystem == AmdSmiMonitor.Metric)
             {
-                var tasks = new List<Task>();
+                await this.QueryGpuMetricAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            }
 
-                if (this.Subsystem == AmdSmiMonitor.Metric)
-                {
-                    tasks.Add(this.QueryGpuMetricAsync(telemetryContext, cancellationToken));
-                }
-
-                if (this.Subsystem == AmdSmiMonitor.XGMI)
-                {
-                    tasks.Add(this.QueryGpuXGMIAsync(telemetryContext, cancellationToken));
-                }
-
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+            if (this.Subsystem == AmdSmiMonitor.XGMI)
+            {
+                await this.QueryGpuXGMIAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             }
         }
 

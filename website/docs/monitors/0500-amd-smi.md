@@ -54,8 +54,8 @@ Remove the monitor with xgmi subsystem if GPU topology does not include xgmi lin
     "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
   },
   "Parameters": {
-    "MonitorFrequency": "00:00:01",
-    "MonitorWarmupPeriod": "00:00:01"
+    "MonitorFrequency": "00:01:00",
+    "MonitorWarmupPeriod": "00:01:00"
   },
   "Monitors": [
     {
