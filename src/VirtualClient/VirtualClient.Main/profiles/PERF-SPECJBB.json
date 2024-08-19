@@ -1,47 +1,47 @@
 {
-    "Description": "SPECjbb2015 workload",
-    "MinimumExecutionInterval": "00:01:00",
-    "MinimumRequiredExecutionTime": "02:00:00",
-    "Metadata": {
-        "RecommendedMinimumExecutionTime": "(4-cores)=05:00:00,(16-cores)=03:00:00,(64-cores)=02:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  "Description": "SPECjbb2015 workload",
+  "MinimumExecutionInterval": "00:01:00",
+  "MinimumRequiredExecutionTime": "02:00:00",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "(4-cores)=05:00:00,(16-cores)=03:00:00,(64-cores)=02:00:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "JavaFlags": "-XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC"
+  },
+  "Actions": [
+    {
+      "Type": "SpecJbbExecutor",
+      "Parameters": {
+        "Scenario": "ExecuteJavaPerformanceBenchmark",
+        "JavaFlags": "$.Parameters.JavaFlags",
+        "PackageName": "specjbb2015",
+        "JdkPackageName": "javadevelopmentkit",
+        "Tags": "Java"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECjbbPackage",
+        "BlobContainer": "packages",
+        "BlobName": "specjbb2015-1.04.zip",
+        "PackageName": "specjbb2015",
+        "Extract": true
+      }
     },
-    "Parameters": {
-        "JavaFlags": "-XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC"
-    },
-    "Actions": [
-        {
-            "Type": "SpecJbbExecutor",
-            "Parameters": {
-                "Scenario": "ExecuteJavaPerformanceBenchmark",
-                "JavaFlags": "$.Parameters.JavaFlags",
-                "PackageName": "specjbb2015",
-                "JdkPackageName": "javadevelopmentkit",
-                "Tags": "Java"
-            }
-        }
-    ],
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallSPECjbbPackage",
-                "BlobContainer": "packages",
-                "BlobName": "specjbb.2015.0.0.zip",
-                "PackageName": "specjbb2015",
-                "Extract": true
-            }
-        },
-        {
-          "Type": "JDKPackageDependencyInstallation",
-          "Parameters": {
-            "Scenario": "InstallJDKPackage",
-            "BlobContainer": "packages",
-            "BlobName": "microsoft-jdk-17.0.9.zip",
-            "PackageName": "javadevelopmentkit",
-            "Extract": true
-          }
-        }
-    ]
+    {
+      "Type": "JDKPackageDependencyInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-17.0.9.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    }
+  ]
 }
