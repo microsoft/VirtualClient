@@ -45,7 +45,7 @@ namespace VirtualClient.Contracts
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
         /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         public PlatformSpecifics(PlatformID platform, Architecture architecture, bool useUnixStylePathsOnly = false)
-            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location), useUnixStylePathsOnly)
+            : this(platform, architecture, AppDomain.CurrentDomain.BaseDirectory, useUnixStylePathsOnly)
         {
         }
 
@@ -83,7 +83,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory for file/content upload notifications (e.g. /logs/contentuploads).
         /// </summary>
-        public string ContentUploadsDirectory { get; }
+        public string ContentUploadsDirectory { get; internal set; }
 
         /// <summary>
         /// The CPU architecture (e.g. x64, arm64).
@@ -98,22 +98,22 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory where log files are are written.
         /// </summary>
-        public string LogsDirectory { get; }
+        public string LogsDirectory { get; internal set; }
 
         /// <summary>
         /// The directory where packages are stored.
         /// </summary>
-        public string PackagesDirectory { get; }
+        public string PackagesDirectory { get; internal set; }
 
         /// <summary>
         /// The directory where profiles are stored.
         /// </summary>
-        public string ProfilesDirectory { get; }
+        public string ProfilesDirectory { get; internal set; }
 
         /// <summary>
         /// The directory where profiles downloaded are stored.
         /// </summary>
-        public string ProfileDownloadsDirectory { get; }
+        public string ProfileDownloadsDirectory { get; internal set; }
 
         /// <summary>
         /// The OS platform (e.g. Windows, Unix).
@@ -129,18 +129,18 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory where scripts related to workloads exist.
         /// </summary>
-        public string ScriptsDirectory { get; }
+        public string ScriptsDirectory { get; internal set; }
 
         /// <summary>
         /// The directory where state objects are stored.
         /// </summary>
-        public string StateDirectory { get; }
+        public string StateDirectory { get; internal set; }
 
         /// <summary>
         /// True to standardize paths using Unix-style conventions (e.g. forward slashes '/')
         /// only. When 'true' all paths (including Windows-formatted) will use forward slashes.
         /// </summary>
-        public bool UseUnixStylePathsOnly { get; }
+        public bool UseUnixStylePathsOnly { get; internal set; }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
