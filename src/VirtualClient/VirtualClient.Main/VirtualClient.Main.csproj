@@ -29,6 +29,10 @@
 
     <ItemGroup>
         <Folder Include="Properties\" />
+
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
     
     <!--
