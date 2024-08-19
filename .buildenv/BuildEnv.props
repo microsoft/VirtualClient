@@ -190,7 +190,6 @@
     -->
     <PropertyGroup>
         <IntermediateOutputPath>$(BuildIntermediatesPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</IntermediateOutputPath>
-        <IntDir>$(IntermediateOutputPath)</IntDir>
     </PropertyGroup>
 
     <!-- 
