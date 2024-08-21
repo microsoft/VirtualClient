@@ -7,14 +7,14 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     public class SuperBenchmarkExecutor : VirtualClientComponent
     {
         private const string SuperBenchmarkRunShell = "RunSuperBenchmark.sh";
+        private string configFileFullPath;
 
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -180,6 +181,32 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
+
+            // download config file if a link is provided - do this everytime in case the config file is saved online and has changed.
+            if (this.ConfigurationFile.StartsWith("http"))
+            {
+                var configFileUri = new Uri(this.ConfigurationFile);
+                string configFileName = Path.GetFileName(configFileUri.AbsolutePath);
+                string configFullPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, configFileName);
+
+                using (var client = new HttpClient())
+                {
+                    await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
+                    {
+                        var response = await client.GetAsync(configFileUri);
+                        using (var fs = new FileStream(configFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
+                        {
+                            await response.Content.CopyToAsync(fs);
+                        }
+                    });
+                }
+
+                this.configFileFullPath = configFullPath;
+            }
+            else
+            {
+                this.configFileFullPath = this.ConfigurationFile;
+            }
         }
 
         private async Task ExecuteSbCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, bool runElevated)
@@ -220,7 +247,7 @@ namespace VirtualClient.Actions
                         process.StartTime,
                         process.ExitTime,
                         metrics,
-                        metricCategorization: $"{this.ConfigurationFile}",
+                        metricCategorization: $"{this.configFileFullPath}",
                         scenarioArguments: commandArguments,
                         this.Tags,
                         telemetryContext);
@@ -232,7 +259,7 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            return @$"run --host-list localhost -c {this.ConfigurationFile}";
+            return @$"run --host-list localhost -c {this.configFileFullPath}";
         }
 
         internal class SuperBenchmarkState : State
