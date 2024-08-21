@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     public class SuperBenchmarkExecutor : VirtualClientComponent
     {
         private const string SuperBenchmarkRunShell = "RunSuperBenchmark.sh";
+        private const string DefaultSBRepoLink = "https://github.com/microsoft/superbenchmark";
         private string configFileFullPath;
 
         private IFileSystem fileSystem;
@@ -80,6 +81,17 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(SuperBenchmarkExecutor.ConfigurationFile), out IConvertible config);
                 return config?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Link to the superbench repo.
+        /// </summary>
+        public string RepositoryLink
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SuperBenchmarkExecutor.RepositoryLink), DefaultSBRepoLink);
             }
         }
 
@@ -163,7 +175,7 @@ namespace VirtualClient.Actions
                 string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
                 if (!this.fileSystem.Directory.Exists(cloneDir))
                 {
-                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
+                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} {this.RepositoryLink}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
                 }
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
