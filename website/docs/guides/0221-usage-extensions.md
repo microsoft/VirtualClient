@@ -101,15 +101,15 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   ~/virtualclient.1.15.0/linux-x64$ VirtualClient --profile=PERF-CUSTOM-WORKLOAD-1.json ...
   ```
 
-* **Define an Alternate Location for the Extensions Folder Location**  
-  Virtual Client supports allowing a user to define an alternate/secondary location to discover extensions. To define an alternate location for discovering extensions packages, 
-  define the path to the directory where the packages exist using a `VC_PACKAGES_PATH` environment variable. Multiple alternate locations can be defined (similar to the PATH 
-  environment variable) by delimiting the paths with a semi-colon (e.g. /home/user/extensions_packages1;/home/user/extensions_packages1). During startup, the runtime will search 
-  for packages in both the default 'packages' directory as well as in the alternate location.
+ * **Use an Alternate Location for Extensions Packages**    
+  Virtual Client supports the ability to override the default packages directory location (e.g. /packages). To override the default location, the user can define the path to 
+  the desired directory using the `VC_PACKAGES_DIR` environment variable (e.g. /home/user/packages/extensions_packages1). During execution, the runtime will use this 
+  alternate location for discovery of packages (including extensions packages) and for downloading packages.
 
   :::tip
 
-  Note that there may not be duplicate binaries or profiles (by name) in the target location. If duplicates (by name) are found, a runtime error will occur.
+  Note that ONLY a single directory is supported. The runtime requires a single location for downloading and discovering packages. Additionally there must not be duplicate 
+  binaries or profiles (by name) across the target locations. If duplicates (by name) are found, a runtime error will occur.
 
   :::
 
@@ -140,23 +140,21 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles/PERF-CUSTOM-WORKLOAD-1.json
 
   # Virtual Client can be instructed to search for extensions in this alternate
-  # location in addition to the default 'packages' folder location.
-  ~/virtualclient.1.15.0/linux-x64$ export VC_PACKAGES_PATH=/home/user/extensions_packages
+  # location overriding the use of the default 'packages' folder location.
+  ~/virtualclient.1.15.0/linux-x64$ export VC_PACKAGES_DIR=/home/user/extensions_packages
   ~/virtualclient.1.15.0/linux-x64$ VirtualClient --profile=PERF-CUSTOM-WORKLOAD-1.json ...
   ```
-
+ 
 * **Define an Alternate Location for the Extensions Binaries/.dlls Location**  
-  Virtual Client supports allowing a user to define an alternate/secondary location to discover extensions binaries/.dlls specifically. To define an alternate location for 
-  discovering extensions binaries/.dlls, define the path to the directory where the binaries exist using a `VC_LIBRARY_PATH` environment variable. During startup,
-  the runtime will search for packages in both the default 'packages' directory as well as in the alternate location. Multiple alternate locations can be defined 
-  (similar to the PATH environment variable) by delimiting the paths with a semi-colon (e.g. /home/user/extensions_binaries1;/home/user/extensions_binaries1).  
-  This is particularly helpful in testing/debugging scenarios where developers are compiling extensions binaries on the same system enabling a fast inner-development 
-  loop.
+  Virtual Client supports allowing a user to define an alternate/secondary location to discover extensions binaries/.dlls specifically. To define an alternate location for discovering extensions binaries/.dlls, 
+  define the path to the directory where the binaries exist using a `VC_LIBRARY_PATH` environment variable. During startup, the runtime will search for packages in both the default 'packages' directory as well 
+  as in the alternate location. Multiple alternate locations can be defined (similar to the PATH environment variable) by delimiting the paths with a semi-colon (e.g. /home/user/extensions_binaries1;/home/user/extensions_binaries1).
+  This is particularly helpful in testing/debugging scenarios where developers are compiling extensions binaries on the same system enabling a fast inner-development loop.
   
   :::tip
 
-  Note that there may not be duplicate binaries (by name) in the target location. If duplicates (by name) are found, a runtime error will occur.
-
+  Note that there may not be duplicate binaries (by name) across the target locations. If duplicates (by name) are found, a runtime error will occur.
+  
   :::
 
   ``` bash
@@ -294,11 +292,16 @@ how to incorporate script-based extensions.
 
   ```
 
-* **Define an Alternate Location for the Script Extensions Folder Location**  
-  Another way to integrate script-based extension is to define an alternate/secondary location to discover extensions. To define an alternate location for discovering 
-  extensions packages, define the path to the directory where the packages exist using a `VC_PACKAGES_PATH` environment variable. Multiple alternate locations can be defined 
-  (similar to the PATH environment variable) by delimiting the paths with a semi-colon (e.g. /home/user/extensions_packages1;/home/user/extensions_packages1). 
-  During startup, the runtime will search for packages in both the default 'packages' directory as well as in the alternate location.
+* **Use an Alternate Location for Script-Based Extensions Packages**   
+  Virtual Client supports the ability to override the default packages directory location (e.g. /packages). To override the default location, the user can define the path to 
+  the desired directory using the `VC_PACKAGES_DIR` environment variable (e.g. /home/user/packages/extensions_packages1). During execution, the runtime will use this 
+  alternate location for discovery of packages (including extensions packages) and for downloading packages.
+
+  :::tip
+
+  Note that ONLY a single directory is supported. The runtime requires a single location for downloading and discovering packages..
+
+  :::
 
   ``` bash
   # e.g.

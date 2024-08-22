@@ -54,26 +54,21 @@ namespace VirtualClient.Cleanup
 
             if (fileSystem.Directory.Exists(packagesDirectory))
             {
-                IEnumerable<string> packageRegistrations = fileSystem.Directory.EnumerateFiles(packagesDirectory, "*.vcpkgreg", System.IO.SearchOption.AllDirectories);
-
-                if (packageRegistrations?.Any() == true)
+                IEnumerable<string> directories = fileSystem.Directory.EnumerateDirectories(packagesDirectory, "*.*", System.IO.SearchOption.TopDirectoryOnly);
+                if (directories?.Any() == true)
                 {
-                    foreach (string file in packageRegistrations)
+                    foreach (string directory in directories)
                     {
-                        DependencyPath packageInfo = (await fileSystem.File.ReadAllTextAsync(file)).FromJson<DependencyPath>();
-                        bool isBuiltIn = packageInfo.Metadata.GetValue<bool>("built-in", false);
+                        await fileSystem.Directory.DeleteAsync(directory, true);
+                    }
+                }
 
-                        if (!isBuiltIn)
-                        {
-                            if (fileSystem.Directory.Exists(packageInfo.Path) && packageInfo.Path.StartsWith(packagesDirectory))
-                            {
-                                IEnumerable<string> packageFiles = fileSystem.Directory.EnumerateFiles(packageInfo.Path, "*.*", System.IO.SearchOption.AllDirectories);
-                                await CleanupExtensions.DeleteFilesAsync(fileSystem, packageFiles, null, cancellationToken);
-                                await fileSystem.Directory.DeleteAsync(packageInfo.Path, true);
-                            }
-
-                            await fileSystem.File.DeleteAsync(file);
-                        }
+                IEnumerable<string> files = fileSystem.Directory.EnumerateFiles(packagesDirectory, "*.*", System.IO.SearchOption.TopDirectoryOnly);
+                if (files?.Any() == true)
+                {
+                    foreach (string file in files)
+                    {
+                        await fileSystem.File.DeleteAsync(file);
                     }
                 }
             }

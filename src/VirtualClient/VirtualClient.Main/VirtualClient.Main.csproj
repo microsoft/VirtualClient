@@ -28,6 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Folder Include="tools\" />
         <Folder Include="Properties\" />
 
         <None Update="appsettings.json">
@@ -56,23 +57,6 @@
 
         <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
-            
-    <!--
-    Copies "built-in" packages into the target output directory. These packages contain toolsets that
-    we carry with a VC build so that they never need to be downloaded. In practice these are typically
-    toolsets that are used often by the platform runtime itself or across numerous workload or monitoring
-    components.
-    -->
-    <Target Name="CopyPackagesToOutputDirectory" AfterTargets="Build">
-        <ItemGroup>
-            <PackageFiles Include="packages\**\*.*" />
-            <PackageFiles Include="packages\**\$(RuntimeIdentifier)\**\*.*" Condition="'$(RuntimeIdentifier)' != ''" />
-            <VcpkgFiles Include="packages\**\*.vcpkg" />
-        </ItemGroup>
-
-        <Copy SourceFiles="@(PackageFiles)" DestinationFiles="@(PackageFiles->'$(OutputPath)packages\%(RecursiveDir)%(Filename)%(Extension)')" />
-        <Copy SourceFiles="@(VcpkgFiles)" DestinationFiles="@(VcpkgFiles->'$(OutputPath)packages\%(RecursiveDir)%(Filename)%(Extension)')" />
-    </Target>
     
     <!--
     Copies script/content files into the target output directory.
@@ -83,6 +67,27 @@
         </ItemGroup>
 
         <Copy SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+
+    <!--
+    Copies "built-in" toolsets into the target output directory. These contain toolsets that
+    we carry with a VC build so that they never need to be downloaded. In practice these are typically
+    toolsets that are used often by the platform runtime itself or across numerous workload or monitoring
+    components.
+    -->
+    <Target Name="CopyToolsToOutputDirectory" AfterTargets="Build">
+        <ItemGroup>
+            <ToolsetFiles Include="tools\**\*.*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(ToolsetFiles)" DestinationFiles="@(ToolsetFiles->'$(OutputPath)tools\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+
+    <!--
+    Creates the "packages" directory in the target output directory.
+    -->
+    <Target Name="CreatePackagesOutputDirectory" AfterTargets="Build">
+        <MakeDir Directories="$(OutputPath)packages" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

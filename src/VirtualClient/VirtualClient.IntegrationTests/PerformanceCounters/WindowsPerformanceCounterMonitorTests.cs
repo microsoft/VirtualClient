@@ -35,8 +35,7 @@ namespace VirtualClient
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
                 Environment.MachineName,
                 Guid.NewGuid().ToString(),
-                Environment.OSVersion.Platform,
-                RuntimeInformation.ProcessArchitecture,
+                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 logger);
 
             this.dependencies = new ServiceCollection()

@@ -125,14 +125,13 @@ namespace VirtualClient.Dependencies.Packaging
                 MetadataContractCategory.Dependencies,
                 true);
 
-            telemetryContext.AddContext("packageDirectory", this.PlatformSpecifics.PackagesDirectory);
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             IFileSystem fileSystem = this.Dependencies.GetService<IFileSystem>();
 
             DependencyPath existingPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
                 .ConfigureAwait(false);
 
-            telemetryContext.AddContext("packageDirectory", this.PlatformSpecifics.PackagesDirectory);
+            telemetryContext.AddContext("packageDirectory", this.PlatformSpecifics.GetPackagePath());
             telemetryContext.AddContext("packageExists", existingPackage != null);
             telemetryContext.AddContext("package", existingPackage);
 

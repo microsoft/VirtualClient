@@ -237,74 +237,15 @@ are used, the package name <u>MUST match the name in the profile dependencies</u
 ```
 </div>
 
-## Package Search Locations and Priority
+## Package Search + Download Locations
 The Virtual Client application supports both packages that exist on the file system as well as the ability to download packages from a store as is
 described in the sections that follow. In some cases, it is desirable to deploy packages with the Virtual Client application. The following details 
 describes the order by which Virtual Client searches for packages and the requirements of each search. Note that packages downloaded from a package
 store will be downloaded to the 'packages' folder and registered (version included).
 
-* **1) Registered package locations**  
-  The Virtual Client allows a developer to register a package/dependency path at runtime. There are cases where this is useful or convenient
-  for certain scenarios (e.g. installers, installations). A registered package will have a corresponding .vcpkgreg document/definition in the
-  'packages' directory of the Virtual Client application.
-
-  <div class="code-section">
-
-  ```
-  e.g.
-  # Location Registered at Runtime: C:\any\custom\package\registration\location\customtoolset\1.0.0
-
-  C:\any\custom\package\registration\location\customtoolset.1.0.0
-  C:\any\custom\package\registration\location\customtoolset.1.0.0\linux-x64
-  C:\any\custom\package\registration\location\customtoolset.1.0.0\linux-arm64
-  C:\any\custom\package\registration\location\customtoolset.1.0.0\win-x64
-  C:\any\custom\package\registration\location\customtoolset.1.0.0\win-arm64
-
-  # Example of the corresponding registration document in the 'packages' directory
-  # C:\VirtualClient\state\customtoolset.vcpkgreg
-  {
-      "name": "CustomToolset",
-      "description": "Custom toolset to use with other workload binaries.",
-      "path": "C:\any\custom\package\registration\location\customtoolset.1.0.0",
-      "archivePath": null,
-      "specifics": {}
-  }
-  ```
-  </div>
-
-* **2) Search the folder location defined by a user-defined environment variable**  
-  A user of the Virtual Client can define an environment variable called `VC_PACKAGES_PATH`. This directory will be used
-  to discover packages in addition to the default 'packages' folder location.
-
-  <div class="code-section">
-
-  ```
-  # e.g.
-  # Windows example
-  set VC_PACKAGES_PATH=C:\any\custom\packages\location
-
-  C:\any\custom\packages\location\geekbench5
-  C:\any\custom\packages\location\geekbench5\geekbench5.vcpkg
-  C:\any\custom\packages\location\geekbench5\linux-x64
-  C:\any\custom\packages\location\geekbench5\linux-arm64
-  C:\any\custom\packages\location\geekbench5\win-x64
-  C:\any\custom\packages\location\geekbench5\win-arm64
-
-  # Linux example
-  export VC_PACKAGES_PATH=/home/user/any/custom/packages/location
-
-  /home/user/any/custom/packages/location/geekbench5
-  /home/user/any/custom/packages/location/geekbench5/geekbench5.vcpkg
-  /home/user/any/custom/packages/location/geekbench5/linux-x64
-  /home/user/any/custom/packages/location/geekbench5/linux-arm64
-  /home/user/any/custom/packages/location/geekbench5/win-x64
-  /home/user/any/custom/packages/location/geekbench5/win-arm64
-  ```
-  </div>
-
-* **3) Search 'packages' folder location.**  
+* **1) Default Search Location**  
   The default package store location is the 'packages' folder within the Virtual Client parent directory. Packages can be placed here
-  (or downloaded...see below) into this location. The package .vcpkg definition will be used to register the package in the 'packages'
+  (or downloaded) into this location. The package .vcpkg definition will be used to register the package in the 'packages'
   directory. You can see that a package has been registered by the existence of a .vcpkgreg file in the same directory.
 
   <div class="code-section">
@@ -319,20 +260,35 @@ store will be downloaded to the 'packages' folder and registered (version includ
   ```
   </div>
 
-* **4) Packages downloaded to the 'packages' folder**
-  If Virtual Client does not find a package pre-existing on the system in the locations noted above, it will download the package into the 'packages' directory.
-  The package will be registered with a .vcpkgreg file in the same directory.
+* **2) Search the folder location defined by a user-defined environment variable**  
+  A user of the Virtual Client can define an environment variable called `VC_PACKAGES_DIR` to override the default packages location. The directory defined
+  will be used (instead of the default 'packages' folder location) to discover packages when defined. Similarly to the default packages location, 
+  package .vcpkg definitions will be used to register the package in this directory. You can see that a package has been registered by the existence of a 
+  .vcpkgreg file in the same directory.
 
   <div class="code-section">
 
   ```
-  # Package Name = geekbench5.1.0.0.zip
-  # Would be downloaded to the following location.
-  C:\VirtualClient\packages\geekbench5.1.0.0\linux-x64
-  C:\VirtualClient\packages\geekbench5.1.0.0\linux-arm64
-  C:\VirtualClient\packages\geekbench5.1.0.0\win-x64
-  C:\VirtualClient\packages\geekbench5.1.0.0\win-arm64
-  C:\VirtualClient\packages\geekbench5.vcpkgreg
+  # e.g.
+  # Windows example
+  set VC_PACKAGES_DIR=C:\any\custom\packages\location
+
+  C:\any\custom\packages\location\geekbench5
+  C:\any\custom\packages\location\geekbench5\geekbench5.vcpkg
+  C:\any\custom\packages\location\geekbench5\linux-x64
+  C:\any\custom\packages\location\geekbench5\linux-arm64
+  C:\any\custom\packages\location\geekbench5\win-x64
+  C:\any\custom\packages\location\geekbench5\win-arm64
+
+  # Linux example
+  export VC_PACKAGES_DIR=/home/user/any/custom/packages/location
+
+  /home/user/any/custom/packages/location/geekbench5
+  /home/user/any/custom/packages/location/geekbench5/geekbench5.vcpkg
+  /home/user/any/custom/packages/location/geekbench5/linux-x64
+  /home/user/any/custom/packages/location/geekbench5/linux-arm64
+  /home/user/any/custom/packages/location/geekbench5/win-x64
+  /home/user/any/custom/packages/location/geekbench5/win-arm64
   ```
   </div>
 

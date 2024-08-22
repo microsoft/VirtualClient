@@ -31,7 +31,7 @@ namespace VirtualClient
             this.platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
             Environment.SetEnvironmentVariable(EnvironmentVariable.VC_LIBRARY_PATH, null);
-            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, null);
+            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR, null);
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace VirtualClient
             //
             // Note that the project build will output 1 or more example extensions packages
             // to a 'packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
                 PlatformExtensions extensions = await packageManager.DiscoverExtensionsAsync(CancellationToken.None);
 
@@ -65,39 +65,35 @@ namespace VirtualClient
 
         [Test]
         [Order(1)]
-        public async Task PackageManagerDiscoversExtensionsInADirectoryDefinedByThe_VC_PACKAGES_PATH_EnvironmentVariable()
+        public async Task PackageManagerDiscoversExtensionsInADirectoryDefinedByThe_VC_PACKAGES_DIR_EnvironmentVariable()
         {
             // Expected:
             // The package manager will discover the extensions packages (related binaries/.dlls and profiles)
-            // in a directory defined in the VC_PACKAGES_PATH environment variable.
+            // in a directory defined in the VC_PACKAGES_DIR environment variable.
             //
             // Note that the project build will output 1 or more example extensions packages
             // to an 'extensions_packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
+            string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
+            string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions_packages", "extensions_package_2");
+
+            // The VC_PACKAGES_DIR environment variable is used to allow a user to define the directory where
+            // packages exist (including extensions) and to which packages should be downloaded. In practice this
+            // directory is overridable on the PlatformSpecifics instance on application startup.
+            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR, extensionsPackageDirectory);
+            this.platformSpecifics.PackagesDirectory = extensionsPackageDirectory;
+
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
-                string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
-                string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions_packages", "extensions_package_2");
-
-                // The VC_PACKAGES_PATH environment variable allows a user to define 1 or more paths
-                // delimited by a semi-colon ';' where packages exist.
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, extensionsPackageDirectory);
-
                 PlatformExtensions extensions = await packageManager.DiscoverExtensionsAsync(CancellationToken.None);
 
                 // See the 'packages' and 'extensions_packages/extensions_package_2' directories in the build
                 // output location.
                 Assert.IsNotNull(extensions?.Binaries);
                 Assert.IsNotEmpty(extensions.Binaries);
-                Assert.IsTrue(extensions?.Binaries?.Count() == 2);
+                Assert.IsTrue(extensions?.Binaries?.Count() == 1);
                 Assert.IsNotNull(extensions?.Profiles);
                 Assert.IsNotEmpty(extensions.Profiles);
-                Assert.IsTrue(extensions?.Profiles?.Count() == 4);
-
-                // Default 'packages' location extensions
-                Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_1.dll") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.json") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.yml") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-2.yaml") == 1);
+                Assert.IsTrue(extensions?.Profiles?.Count() == 1);
 
                 // Extensions in the environment variable-defined location.
                 Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_2.dll") == 1);
@@ -107,82 +103,38 @@ namespace VirtualClient
 
         [Test]
         [Order(2)]
-        public async Task PackageManagerDiscoversExtensionsInADirectoryDefinedByThe_VC_PACKAGES_PATH_EnvironmentVariable_Multiple_Packages()
+        public async Task PackageManagerDiscoversExtensionsInADirectoryDefinedByThe_VC_PACKAGES_DIR_EnvironmentVariable_Multiple_Packages()
         {
             // Expected:
             // The package manager will discover the extensions packages (related binaries/.dlls and profiles)
-            // in a directory defined in the VC_PACKAGES_PATH environment variable.
+            // in a directory defined in the VC_PACKAGES_DIR environment variable.
             //
             // Note that the project build will output 1 or more example extensions packages
             // to an 'extensions_packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
-            {
-                string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
-                string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions_packages");
+            string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
+            string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions_packages");
 
+            // The VC_PACKAGES_DIR environment variable is used to allow a user to define the directory where
+            // packages exist (including extensions) and to which packages should be downloaded. In practice this
+            // directory is overridable on the PlatformSpecifics instance on application startup.
+            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR, extensionsPackageDirectory);
+            this.platformSpecifics.PackagesDirectory = extensionsPackageDirectory;
+
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
+            {
                 // The VC_PACKAGES_PATH environment variable allows a user to define 1 or more paths
                 // delimited by a semi-colon ';' where packages exist.
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, extensionsPackageDirectory);
+                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR, extensionsPackageDirectory);
 
                 PlatformExtensions extensions = await packageManager.DiscoverExtensionsAsync(CancellationToken.None);
 
                 // See the 'packages' and 'extensions_packages' directories in the build output location.
                 Assert.IsNotNull(extensions?.Binaries);
                 Assert.IsNotEmpty(extensions.Binaries);
-                Assert.IsTrue(extensions?.Binaries?.Count() == 3);
+                Assert.IsTrue(extensions?.Binaries?.Count() == 2);
                 Assert.IsNotNull(extensions?.Profiles);
                 Assert.IsNotEmpty(extensions.Profiles);
-                Assert.IsTrue(extensions?.Profiles?.Count() == 5);
-
-                // Default 'packages' location extensions
-                Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_1.dll") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.json") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.yml") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-2.yaml") == 1);
-
-                // Extensions in the environment variable-defined locations.
-                Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_2.dll") == 1);
-                Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_3.dll") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-2.json") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-3.yml") == 1);
-            }
-        }
-
-        [Test]
-        [Order(3)]
-        public async Task PackageManagerDiscoversExtensionsInADirectoryDefinedByThe_VC_PACKAGES_PATH_EnvironmentVariable_Multiple_Locations()
-        {
-            // Expected:
-            // The package manager will discover the extensions packages (related binaries/.dlls and profiles)
-            // in a directory defined in the VC_PACKAGES_PATH environment variable.
-            //
-            // Note that the project build will output 1 or more example extensions packages
-            // to an 'extensions_packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
-            {
-                string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
-                string extensionsPackageDirectory1 = Path.Combine(testOutputDirectory, "extensions_packages", "extensions_package_2");
-                string extensionsPackageDirectory2 = Path.Combine(testOutputDirectory, "extensions_packages", "extensions_package_3");
-
-                // The VC_PACKAGES_PATH environment variable allows a user to define 1 or more paths
-                // delimited by a semi-colon ';' where packages exist.
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, $"{extensionsPackageDirectory1};{extensionsPackageDirectory2}");
-                PlatformExtensions extensions = await packageManager.DiscoverExtensionsAsync(CancellationToken.None);
-
-                // See the 'packages', 'extensions_packages/extensions_package_2', and 'extensions_packages/extensions_package_3'
-                // directories in the build output location.
-                Assert.IsNotNull(extensions?.Binaries);
-                Assert.IsNotEmpty(extensions.Binaries);
-                Assert.IsTrue(extensions?.Binaries?.Count() == 3);
-                Assert.IsNotNull(extensions?.Profiles);
-                Assert.IsNotEmpty(extensions.Profiles);
-                Assert.IsTrue(extensions?.Profiles?.Count() == 5);
-
-                // Default 'packages' location extensions
-                Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_1.dll") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.json") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.yml") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-2.yaml") == 1);
+                Assert.IsTrue(extensions?.Profiles?.Count() == 2);
 
                 // Extensions in the environment variable-defined locations.
                 Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_2.dll") == 1);
@@ -202,7 +154,7 @@ namespace VirtualClient
             //
             // Note that the project build will output 1 or more example binary extensions 
             // to an 'extensions' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
                 string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
                 string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions", "extensions_1");
@@ -237,7 +189,7 @@ namespace VirtualClient
             //
             // Note that the project build will output 1 or more example binary extensions 
             // to an 'extensions' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
                 string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
                 string extensionsDirectory1 = Path.Combine(testOutputDirectory, "extensions", "extensions_1");
@@ -270,37 +222,34 @@ namespace VirtualClient
         {
             // Expected:
             // The package manager will discover the extensions packages (related binaries/.dlls and profiles)
-            // in a directory defined in the VC_PACKAGES_PATH environment variable.
+            // in a directory defined in the VC_PACKAGES_DIR environment variable.
             //
             // The package manager will discover binary extensions packages in a directory defined in
             // the VC_LIBRARY_PATH environment variable.
+            string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
+            string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions_packages");
+            string extensionsDirectory1 = Path.Combine(testOutputDirectory, "extensions", "extensions_1");
+            string extensionsDirectory2 = Path.Combine(testOutputDirectory, "extensions", "extensions_2");
 
-            using (PackageManager packageManager = this.CreatePackageManager())
+            // The VC_PACKAGES_DIR environment variable is used to allow a user to define the directory where
+            // packages exist (including extensions) and to which packages should be downloaded. In practice this
+            // directory is overridable on the PlatformSpecifics instance on application startup.
+            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_LIBRARY_PATH, $"{extensionsDirectory1};{extensionsDirectory2}");
+            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR, extensionsPackageDirectory);
+            this.platformSpecifics.PackagesDirectory = extensionsPackageDirectory;
+
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
-                string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
-                string extensionsPackageDirectory = Path.Combine(testOutputDirectory, "extensions_packages");
-                string extensionsDirectory1 = Path.Combine(testOutputDirectory, "extensions", "extensions_1");
-                string extensionsDirectory2 = Path.Combine(testOutputDirectory, "extensions", "extensions_2");
-
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_LIBRARY_PATH, $"{extensionsDirectory1};{extensionsDirectory2}");
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, extensionsPackageDirectory);
-
                 PlatformExtensions extensions = await packageManager.DiscoverExtensionsAsync(CancellationToken.None);
 
                 // See the 'packages', 'extensions', and 'extensions_packages' directories in the build
                 // output location.
                 Assert.IsNotNull(extensions?.Binaries);
                 Assert.IsNotEmpty(extensions.Binaries);
-                Assert.IsTrue(extensions?.Binaries?.Count() == 5);
+                Assert.IsTrue(extensions?.Binaries?.Count() == 4);
                 Assert.IsNotNull(extensions?.Profiles);
                 Assert.IsNotEmpty(extensions.Profiles);
-                Assert.IsTrue(extensions?.Profiles?.Count() == 5);
-
-                // Default 'packages' location extensions
-                Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_1.dll") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.json") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-1.yml") == 1);
-                Assert.IsTrue(extensions.Profiles.Count(bin => bin.Name == "EXAMPLE-EXTENSIONS-2.yaml") == 1);
+                Assert.IsTrue(extensions?.Profiles?.Count() == 2);
 
                 // Extensions in the environment variable-defined locations.
                 Assert.IsTrue(extensions.Binaries.Count(bin => bin.Name == "Example.VirtualClient.Extensions_2.dll") == 1);
@@ -322,7 +271,7 @@ namespace VirtualClient
             //
             // Note that the project build will output 1 or more example extensions packages
             // to a 'packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
                 IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(CancellationToken.None);
 
@@ -336,79 +285,35 @@ namespace VirtualClient
 
         [Test]
         [Order(21)]
-        public async Task PackageManagerDiscoversPackagesInADirectoryDefinedByThe_VC_PACKAGES_PATH_EnvironmentVariable()
+        public async Task PackageManagerDiscoversPackagesInADirectoryDefinedByThe_VC_PACKAGES_DIR_EnvironmentVariable()
         {
             // Expected:
             // The package manager will discover the extensions packages (related binaries/.dlls and profiles)
-            // in the default 'packages' directory.
+            // in the directory defined by the VC_PACKAGES_DIR environment variable.
             //
             // Note that the project build will output 1 or more example extensions packages
             // to a 'packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
+            string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
+            string packageDirectory = Path.Combine(testOutputDirectory, "extensions_packages", "extensions_package_2");
+
+            // The VC_PACKAGES_DIR environment variable is used to allow a user to define the directory where
+            // packages exist (including extensions) and to which packages should be downloaded. In practice this
+            // directory is overridable on the PlatformSpecifics instance on application startup.
+            Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR, packageDirectory);
+            this.platformSpecifics.PackagesDirectory = packageDirectory;
+
+            using (PackageManager packageManager = new PackageManager(this.platformSpecifics, this.fileSystem))
             {
-                string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
-                string packageDirectory = Path.Combine(testOutputDirectory, "extensions_packages", "extensions_package_2");
-
-                // The VC_PACKAGES_PATH environment variable allows a user to define 1 or more paths
-                // delimited by a semi-colon ';' where packages exist.
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, packageDirectory);
-
                 IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(CancellationToken.None);
 
                 // See the 'packages' directory in the build output location.
                 Assert.IsNotNull(packages);
                 Assert.IsNotEmpty(packages);
-                Assert.IsTrue(packages.Count() == 2);
-
-                // Packages in the default 'packages' directory.
-                Assert.IsTrue(packages.Count(pkg => pkg.Name == "extensions_package_1") == 1);
+                Assert.IsTrue(packages.Count() == 1);
 
                 // Packages in the VC_PACKAGES_PATH environment variable locations.
                 Assert.IsTrue(packages.Count(pkg => pkg.Name == "extensions_package_2") == 1);
             }
-        }
-
-        [Test]
-        [Order(22)]
-        public async Task PackageManagerDiscoversPackagesInADirectoryDefinedByThe_VC_PACKAGES_PATH_EnvironmentVariable_Multiple_Locations()
-        {
-            // Expected:
-            // The package manager will discover the extensions packages (related binaries/.dlls and profiles)
-            // in the default 'packages' directory.
-            //
-            // Note that the project build will output 1 or more example extensions packages
-            // to a 'packages' directory for the sake of testing in this project.
-            using (PackageManager packageManager = this.CreatePackageManager())
-            {
-                string testOutputDirectory = Path.GetDirectoryName(ExtensionsDiscoveryTests.TestAssembly.Location);
-                string packageDirectory = Path.Combine(testOutputDirectory, "extensions_packages");
-
-                // The VC_PACKAGES_PATH environment variable allows a user to define 1 or more paths
-                // delimited by a semi-colon ';' where packages exist.
-                Environment.SetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_PATH, packageDirectory);
-
-                IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(CancellationToken.None);
-
-                // See the 'packages' directory in the build output location.
-                Assert.IsNotNull(packages);
-                Assert.IsNotEmpty(packages);
-                Assert.IsTrue(packages.Count() == 3);
-
-                // Packages in the default 'packages' directory.
-                Assert.IsTrue(packages.Count(pkg => pkg.Name == "extensions_package_1") == 1);
-
-                // Packages in the VC_PACKAGES_PATH environment variable locations.
-                Assert.IsTrue(packages.Count(pkg => pkg.Name == "extensions_package_2") == 1);
-                Assert.IsTrue(packages.Count(pkg => pkg.Name == "extensions_package_3") == 1);
-            }
-        }
-
-        private PackageManager CreatePackageManager()
-        {
-            return new PackageManager(
-                new PackageStateManager(this.fileSystem, this.platformSpecifics),
-                this.fileSystem,
-                this.platformSpecifics);
         }
     }
 }

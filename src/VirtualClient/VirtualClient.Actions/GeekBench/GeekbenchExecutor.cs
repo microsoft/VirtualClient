@@ -4,18 +4,15 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.CodeDom;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
     using global::VirtualClient.Common;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using global::VirtualClient.Contracts.Metadata;
@@ -101,20 +98,24 @@ namespace VirtualClient.Actions
             {
                 case "win-x64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe");
+                    this.SupportingExecutables.Add("geekbench_x86_64.exe");
                     break;
 
                 case "win-arm64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64.exe");
+                    this.SupportingExecutables.Add("geekbench_aarch64.exe");
                     break;
 
                 case "linux-x64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64");
+                    this.SupportingExecutables.Add("geekbench_x86_64");
                     await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
                     break;
 
                 case "linux-arm64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64");
+                    this.SupportingExecutables.Add("geekbench_aarch64");
                     await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
                     break;

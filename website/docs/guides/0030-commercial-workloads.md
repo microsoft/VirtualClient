@@ -68,7 +68,7 @@ This example vcpkg file
 User also have the option to put in workload packages under `virtualclient/packages` directory. Any directory with a `.vcpkg` inside will be registered as a VC package.
 
 ### Define alternative package directory using environment variable
-A user of the Virtual Client can define an environment variable called `VC_PACKAGES_PATH`. This directory will be used to discover packages in addition to the 
+A user of the Virtual Client can define an environment variable called `VC_PACKAGES_DIR`. This directory will be used as an override to the 
 default 'packages' folder location.
 
 It is recommended that package directory names ALWAYS be lower-cased (e.g. geekbench5 vs. Geekbench5).
@@ -76,7 +76,7 @@ It is recommended that package directory names ALWAYS be lower-cased (e.g. geekb
 ```
 e.g.
  # Windows example
-  set VC_PACKAGES_PATH=C:\any\custom\packages\location
+  set VC_PACKAGES_DIR=C:\any\custom\packages\location
 
   C:\any\custom\packages\location\geekbench5
   C:\any\custom\packages\location\geekbench5\geekbench5.vcpkg
@@ -86,7 +86,7 @@ e.g.
   C:\any\custom\packages\location\geekbench5\win-arm64
 
   # Linux example
-  export VC_PACKAGES_PATH=/home/user/any/custom/packages/location
+  export VC_PACKAGES_DIR=/home/user/any/custom/packages/location
 
   /home/user/any/custom/packages/location/geekbench5
   /home/user/any/custom/packages/location/geekbench5/geekbench5.vcpkg
