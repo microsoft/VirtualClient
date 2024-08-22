@@ -548,25 +548,22 @@ namespace VirtualClient
         /// </summary>
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
-        /// <param name="platform">The OS/system platform hosting the application (e.g. Windows, Unix).</param>
-        /// <param name="architecture">The CPU/processor architecture (e.g. amd64, arm, x86).</param>
+        /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
         /// <param name="logger">A logger used to capture telemetry.</param>
         public static ISystemManagement CreateSystemManager(
             string agentId,
             string experimentId,
-            PlatformID platform,
-            Architecture architecture,
+            PlatformSpecifics platformSpecifics,
             Microsoft.Extensions.Logging.ILogger logger = null)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
 
-            PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
+            PlatformID platform = platformSpecifics.Platform;
             IFileSystem fileSystem = new FileSystem();
             ProcessManager processManager = ProcessManager.Create(platform);
             ISshClientManager sshClientManager = new SshClientManager();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
-            IStateManager packageStateManager = new PackageStateManager(fileSystem, platformSpecifics);
 
             return new SystemManagement
             {
@@ -575,7 +572,7 @@ namespace VirtualClient
                 DiskManager = DependencyFactory.CreateDiskManager(platform, logger),
                 FileSystem = fileSystem,
                 FirewallManager = DependencyFactory.CreateFirewallManager(platform, processManager),
-                PackageManager = new PackageManager(packageStateManager, fileSystem, platformSpecifics, logger),
+                PackageManager = new PackageManager(platformSpecifics, fileSystem, logger),
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
                 SshClientManager = sshClientManager,

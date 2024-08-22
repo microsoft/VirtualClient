@@ -284,6 +284,15 @@ namespace VirtualClient
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
+            // Users can override the default packages directory using the 'VC_PACKAGES_DIR'
+            // environment variable. When defined, VC will download packages to this directory
+            // instead of the default location.
+            string userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
+            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
+            {
+                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
+            }
+
             if (this.Debug)
             {
                 this.LoggingLevel = LogLevel.Trace;

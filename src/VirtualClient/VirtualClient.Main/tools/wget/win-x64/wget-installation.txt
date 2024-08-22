@@ -1,0 +1,9 @@
+Compiling Wget2 (on Ubuntu)
+
+For Windows (x64 and ARM64):
+-----------------------------------------------------
+# Use Chocolatey to install the wget toolset.
+choco install wget
+
+# Binary location
+The installed binary is installed in C:\ProgramData\chocolatey\lib\Wget\tools -> wget.exe
