@@ -5,9 +5,7 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using VirtualClient.Common.Extensions;
@@ -78,12 +76,13 @@ namespace VirtualClient.Contracts
             this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
             this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
             this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
+            this.ToolsDirectory = this.Combine(standardizedCurrentDirectory, "tools");
         }
 
         /// <summary>
         /// The directory for file/content upload notifications (e.g. /logs/contentuploads).
         /// </summary>
-        public string ContentUploadsDirectory { get; internal set; }
+        public string ContentUploadsDirectory { get; }
 
         /// <summary>
         /// The CPU architecture (e.g. x64, arm64).
@@ -96,24 +95,24 @@ namespace VirtualClient.Contracts
         public string CurrentDirectory { get; }
 
         /// <summary>
-        /// The directory where log files are are written.
+        /// The directory where log files are are written. Overridable.
         /// </summary>
-        public string LogsDirectory { get; internal set; }
+        public string LogsDirectory { get; set; }
 
         /// <summary>
-        /// The directory where packages are stored.
+        /// The directory where packages are stored. Overridable.
         /// </summary>
-        public string PackagesDirectory { get; internal set; }
+        public string PackagesDirectory { get; set; }
 
         /// <summary>
         /// The directory where profiles are stored.
         /// </summary>
-        public string ProfilesDirectory { get; internal set; }
+        public string ProfilesDirectory { get; }
 
         /// <summary>
         /// The directory where profiles downloaded are stored.
         /// </summary>
-        public string ProfileDownloadsDirectory { get; internal set; }
+        public string ProfileDownloadsDirectory { get; }
 
         /// <summary>
         /// The OS platform (e.g. Windows, Unix).
@@ -129,18 +128,23 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory where scripts related to workloads exist.
         /// </summary>
-        public string ScriptsDirectory { get; internal set; }
+        public string ScriptsDirectory { get; }
 
         /// <summary>
         /// The directory where state objects are stored.
         /// </summary>
-        public string StateDirectory { get; internal set; }
+        public string StateDirectory { get; }
+
+        /// <summary>
+        /// The directory where built-in tools/toolsets are stored.
+        /// </summary>
+        public string ToolsDirectory { get; }
 
         /// <summary>
         /// True to standardize paths using Unix-style conventions (e.g. forward slashes '/')
         /// only. When 'true' all paths (including Windows-formatted) will use forward slashes.
         /// </summary>
-        public bool UseUnixStylePathsOnly { get; internal set; }
+        public bool UseUnixStylePathsOnly { get; }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
@@ -433,6 +437,16 @@ namespace VirtualClient.Contracts
             return additionalPathSegments?.Any() != true
                 ? this.StateDirectory
                 : this.Combine(this.StateDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Combines the path segments provided with path where built-in tools/toolsets are stored.
+        /// </summary>
+        public string GetToolsPath(params string[] additionalPathSegments)
+        {
+            return additionalPathSegments?.Any() != true
+                ? this.ToolsDirectory
+                : this.Combine(this.ToolsDirectory, this.Combine(additionalPathSegments));
         }
 
         /// <summary>

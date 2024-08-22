@@ -363,6 +363,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default tools path.
+        /// </summary>
+        public string GetToolsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetToolsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Sets the environment variable value in the underlying <see cref="PlatformSpecifics"/> instance.
         /// </summary>
         public void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
