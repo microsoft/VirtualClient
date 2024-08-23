@@ -28,6 +28,7 @@ namespace VirtualClient.Actions
         private const string SuperBenchmarkRunShell = "RunSuperBenchmark.sh";
         private const string DefaultSBRepoLink = "https://github.com/microsoft/superbenchmark";
         private string configFileFullPath;
+        private string repositoryName;
 
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -119,7 +120,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
+                return this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, this.repositoryName);
             }
         }
 
@@ -169,16 +170,19 @@ namespace VirtualClient.Actions
 
             if (!state.SuperBenchmarkInitialized)
             {
+                var repositoryLinkUri = new Uri(this.ConfigurationFile);
+                this.repositoryName = Path.GetFileName(repositoryLinkUri.AbsolutePath);
+
                 // This is to grant directory folders for 
                 await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
 
-                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
+                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "this.repositoryName");
                 if (!this.fileSystem.Directory.Exists(cloneDir))
                 {
                     await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} {this.RepositoryLink}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
                 }
 
-                foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
+                foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("this.repositoryName")))
                 {
                     this.fileSystem.File.Copy(
                         file,
@@ -237,7 +241,7 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.MetadataContract.AddForScenario(
-                    "SuperBenchmark",
+                    this.repositoryName,
                     process.FullCommand(),
                     toolVersion: null);
 
@@ -254,8 +258,8 @@ namespace VirtualClient.Actions
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
-                        toolName: "SuperBenchmark",
-                        scenarioName: "SuperBenchmark",
+                        toolName: this.repositoryName,
+                        scenarioName: this.repositoryName,
                         process.StartTime,
                         process.ExitTime,
                         metrics,
