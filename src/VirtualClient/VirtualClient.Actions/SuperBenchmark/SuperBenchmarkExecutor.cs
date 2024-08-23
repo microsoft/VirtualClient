@@ -170,19 +170,19 @@ namespace VirtualClient.Actions
 
             if (!state.SuperBenchmarkInitialized)
             {
-                var repositoryLinkUri = new Uri(this.ConfigurationFile);
+                var repositoryLinkUri = new Uri(this.RepositoryLink);
                 this.repositoryName = Path.GetFileName(repositoryLinkUri.AbsolutePath);
 
                 // This is to grant directory folders for 
                 await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
 
-                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "this.repositoryName");
+                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, this.repositoryName);
                 if (!this.fileSystem.Directory.Exists(cloneDir))
                 {
                     await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} {this.RepositoryLink}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
                 }
 
-                foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("this.repositoryName")))
+                foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
                 {
                     this.fileSystem.File.Copy(
                         file,
