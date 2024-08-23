@@ -22,7 +22,6 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class WgetPackageInstallation : VirtualClientComponent
     {
-        private static readonly string WgetPackageName = "wget";
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
         private ISystemManagement systemManagement;
@@ -93,12 +92,12 @@ namespace VirtualClient.Dependencies
                     {
                         try
                         {
-                            wgetPackage = await this.GetPlatformSpecificPackageAsync(WgetPackageInstallation.WgetPackageName, cancellationToken);
+                            wgetPackage = await this.GetPlatformSpecificPackageAsync(PackageManager.BuiltInWgetPackageName, cancellationToken);
                         }
                         catch (DependencyException exc)
                         {
                             throw new DependencyException(
-                                $"Missing required package. The '{WgetPackageInstallation.WgetPackageName}' package does not exist. This package is expected " +
+                                $"Missing required package. The '{PackageManager.BuiltInWgetPackageName}' package does not exist. This package is expected " +
                                 $"to be included with the Virtual Client. It may be necessary to use a newer version of the Virtual Client.",
                                 exc,
                                 ErrorReason.DependencyNotFound);

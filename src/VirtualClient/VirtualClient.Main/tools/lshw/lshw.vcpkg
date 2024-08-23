@@ -1,0 +1,9 @@
+﻿{
+    "name": "lshw",
+    "description": "Hardware lister for Linux toolset.",
+    "version": "B.02.19.59 ",
+    "metadata": {
+        "built-in": true,
+        "commit": "https://github.com/lyonel/lshw/commit/996aaad9c760efa6b6ffef8518999ec226af049a"
+    }
+}

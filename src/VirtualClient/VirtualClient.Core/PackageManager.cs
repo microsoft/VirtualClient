@@ -38,6 +38,11 @@ namespace VirtualClient
         public const string BuiltInSystemToolsPackageName = "systemtools";
 
         /// <summary>
+        /// The name of the built-in package containing the wget toolsets.
+        /// </summary>
+        public const string BuiltInWgetPackageName = "wget";
+
+        /// <summary>
         /// Custom extension used for Virtual Client package descriptions.
         /// </summary>
         public const string VCPkgExtension = ".vcpkg";

@@ -76,18 +76,46 @@
     components.
     -->
     <Target Name="CopyToolsToOutputDirectory" AfterTargets="Build">
-        <ItemGroup>
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
             <ToolsetFiles Include="tools\**\*.*" />
         </ItemGroup>
 
-        <Copy SourceFiles="@(ToolsetFiles)" DestinationFiles="@(ToolsetFiles->'$(OutputPath)tools\%(RecursiveDir)%(Filename)%(Extension)')" />
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
+            <!-- ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" / -->
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
+            <ToolsetFiles Include="tools\**\lshw\*.vcpkg" />
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
+            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
+            <ToolsetFiles Include="tools\**\systemtools\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\visualstudiocruntime\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\wget\*.vcpkg" />
+        </ItemGroup>
+        
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
+            <ToolsetFiles Include="tools\**\lspci\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\systemtools\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\visualstudiocruntime\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\wget\*.vcpkg" />
+        </ItemGroup>
+
+        <Copy
+            SourceFiles="@(ToolsetFiles)"
+            DestinationFiles="@(ToolsetFiles->'$(OutputPath)tools\%(RecursiveDir)%(Filename)%(Extension)')" 
+            />
     </Target>
 
     <!--
     Creates the "packages" directory in the target output directory.
     -->
-    <Target Name="CreatePackagesOutputDirectory" AfterTargets="Build">
+    <Target Name="CreatePackagesAndToolsOutputDirectory" AfterTargets="Build">
         <MakeDir Directories="$(OutputPath)packages" />
+        <MakeDir Directories="$(OutputPath)tools" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
