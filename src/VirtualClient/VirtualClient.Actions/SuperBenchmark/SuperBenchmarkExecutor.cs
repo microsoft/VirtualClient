@@ -165,6 +165,32 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // download config file if a link is provided
+            if (this.ConfigurationFile.StartsWith("http"))
+            {                
+                var configFileUri = new Uri(this.ConfigurationFile);
+                string configFileName = Path.GetFileName(configFileUri.AbsolutePath);
+                string configFullPath = this.PlatformSpecifics.Combine(this.SuperBenchmarkDirectory, configFileName);
+
+                using (var client = new HttpClient())
+                {
+                    await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
+                    {
+                        var response = await client.GetAsync(configFileUri);
+                        using (var fs = new FileStream(configFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
+                        {
+                            await response.Content.CopyToAsync(fs);
+                        }
+                    });
+                }
+
+                this.configFileFullPath = configFullPath;
+            }
+            else
+            {
+                this.configFileFullPath = this.ConfigurationFile;
+            }
+
             SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", cancellationToken)
                 ?? new SuperBenchmarkState();
 
@@ -197,32 +223,6 @@ namespace VirtualClient.Actions
             }
 
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
-
-            // download config file if a link is provided - do this everytime in case the config file is saved online and has changed.
-            if (this.ConfigurationFile.StartsWith("http"))
-            {
-                var configFileUri = new Uri(this.ConfigurationFile);
-                string configFileName = Path.GetFileName(configFileUri.AbsolutePath);
-                string configFullPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, configFileName);
-
-                using (var client = new HttpClient())
-                {
-                    await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
-                    {
-                        var response = await client.GetAsync(configFileUri);
-                        using (var fs = new FileStream(configFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
-                        {
-                            await response.Content.CopyToAsync(fs);
-                        }
-                    });
-                }
-
-                this.configFileFullPath = configFullPath;
-            }
-            else
-            {
-                this.configFileFullPath = this.ConfigurationFile;
-            }
         }
 
         private async Task ExecuteSbCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, bool runElevated)
