@@ -165,6 +165,9 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            var repositoryLinkUri = new Uri(this.RepositoryLink);
+            this.repositoryName = Path.GetFileName(repositoryLinkUri.AbsolutePath);
+            
             // download config file if a link is provided
             if (this.ConfigurationFile.StartsWith("http"))
             {                
@@ -191,14 +194,11 @@ namespace VirtualClient.Actions
                 this.configFileFullPath = this.ConfigurationFile;
             }
 
-            SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", cancellationToken)
+            SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>(this.repositoryName, cancellationToken)
                 ?? new SuperBenchmarkState();
 
             if (!state.SuperBenchmarkInitialized)
             {
-                var repositoryLinkUri = new Uri(this.RepositoryLink);
-                this.repositoryName = Path.GetFileName(repositoryLinkUri.AbsolutePath);
-
                 // This is to grant directory folders for 
                 await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
 
@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
                 state.SuperBenchmarkInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
+            await this.stateManager.SaveStateAsync<SuperBenchmarkState>(this.repositoryName, state, cancellationToken);
         }
 
         private async Task ExecuteSbCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, bool runElevated)
