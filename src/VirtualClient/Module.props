@@ -123,7 +123,7 @@
         <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
 
         <!-- SSH.Net -->
-        <SSH_Net_PackageVersion>2020.0.2</SSH_Net_PackageVersion>
+        <SSH_Net_PackageVersion>2024.0.0</SSH_Net_PackageVersion>
 
         <!-- System.CommandLine -->
         <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>

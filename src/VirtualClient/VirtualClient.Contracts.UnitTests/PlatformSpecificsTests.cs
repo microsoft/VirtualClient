@@ -139,6 +139,28 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void GetToolsPathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/tools", platformSpecifics.GetToolsPath());
+            Assert.AreEqual("/home/anyuser/virtualclient/tools/lshw", platformSpecifics.GetToolsPath("lshw"));
+            Assert.AreEqual("/home/anyuser/virtualclient/tools/lshw/linux-x64", platformSpecifics.GetToolsPath("lshw", "linux-x64"));
+            Assert.AreEqual("/home/anyuser/virtualclient/tools/lshw/linux-x64/lshw", platformSpecifics.GetToolsPath("lshw", "linux-x64", "lshw"));
+        }
+
+        [Test]
+        public void GetToolsPathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\tools", platformSpecifics.GetToolsPath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\tools\systemtools", platformSpecifics.GetToolsPath("systemtools"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\tools\systemtools\win-x64", platformSpecifics.GetToolsPath("systemtools", "win-x64"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\tools\systemtools\win-x64\coreinfo.exe", platformSpecifics.GetToolsPath("systemtools", "win-x64", "coreinfo.exe"));
+        }
+
+        [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]

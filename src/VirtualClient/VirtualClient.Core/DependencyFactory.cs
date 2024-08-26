@@ -15,8 +15,11 @@ namespace VirtualClient
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
     using Azure.Storage.Blobs;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Serilog;
+    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
@@ -548,34 +551,31 @@ namespace VirtualClient
         /// </summary>
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
-        /// <param name="platform">The OS/system platform hosting the application (e.g. Windows, Unix).</param>
-        /// <param name="architecture">The CPU/processor architecture (e.g. amd64, arm, x86).</param>
-        /// <param name="logger">A logger used to capture telemetry.</param>
-        public static ISystemManagement CreateSystemManager(
-            string agentId,
-            string experimentId,
-            PlatformID platform,
-            Architecture architecture,
-            Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
+        /// <param name="logger">The logger to use for capturing telemetry.</param>
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
+            platformSpecifics.ThrowIfNull(nameof(platformSpecifics));
 
-            PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
-            IFileSystem fileSystem = new FileSystem();
+            PlatformID platform = platformSpecifics.Platform;
             ProcessManager processManager = ProcessManager.Create(platform);
+            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform, logger);
+            IFileSystem fileSystem = new FileSystem();
+            IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
+            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
             ISshClientManager sshClientManager = new SshClientManager();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
-            IStateManager packageStateManager = new PackageStateManager(fileSystem, platformSpecifics);
 
             return new SystemManagement
             {
                 AgentId = agentId,
                 ExperimentId = experimentId.ToLowerInvariant(),
-                DiskManager = DependencyFactory.CreateDiskManager(platform, logger),
+                DiskManager = diskManager,
                 FileSystem = fileSystem,
-                FirewallManager = DependencyFactory.CreateFirewallManager(platform, processManager),
-                PackageManager = new PackageManager(packageStateManager, fileSystem, platformSpecifics, logger),
+                FirewallManager = firewallManager,
+                PackageManager = packageManager,
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
                 SshClientManager = sshClientManager,

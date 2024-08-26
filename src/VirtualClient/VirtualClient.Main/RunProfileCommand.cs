@@ -42,11 +42,6 @@ namespace VirtualClient
         private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
 
         /// <summary>
-        /// The ID to use for the experiment and to include in telemetry output.
-        /// </summary>
-        public string ExperimentId { get; set; }
-
-        /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of their severity. Default = false.
         /// </summary>
         public bool FailFast { get; set; }
@@ -343,18 +338,11 @@ namespace VirtualClient
         {
             IServiceCollection dependencies = base.InitializeDependencies(args);
             PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             ILogger logger = dependencies.GetService<ILogger>();
             Program.Logger = logger;
 
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
-                this.AgentId,
-                this.ExperimentId,
-                platformSpecifics.Platform,
-                platformSpecifics.CpuArchitecture,
-                logger);
-
-            IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
-            IProfileManager profileManager = new ProfileManager();
+            dependencies.AddSingleton<ProfileTiming>(this.Timeout ?? this.Iterations);
 
             // Note that a bug was found in the version of "lshw" (B.02.18) that is installed on some Ubuntu images. The bug causes the
             // lshw application to return a "Segmentation Fault" error. We built the "lshw" command from the
@@ -382,18 +370,6 @@ namespace VirtualClient
                     }
                 }
             }
-
-            dependencies.AddSingleton<ISystemInfo>(systemManagement);
-            dependencies.AddSingleton<ISystemManagement>(systemManagement);
-            dependencies.AddSingleton<IApiManager>(apiManager);
-            dependencies.AddSingleton<IProfileManager>(profileManager);
-            dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
-            dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
-            dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
-            dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
-            dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
-            dependencies.AddSingleton<IStateManager>(systemManagement.StateManager);
-            dependencies.AddSingleton<ProfileTiming>(this.Timeout ?? this.Iterations);
 
             // Ensure profiles can be validated as correct.
             ExecutionProfileValidation.Instance.AddRange(new List<IValidationRule<ExecutionProfile>>()
@@ -846,19 +822,6 @@ namespace VirtualClient
             ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
             result.ThrowIfInvalid();
             profile.Inline();
-        }
-
-        private async Task InitializePackagesAsync(IPackageManager packageManager, CancellationToken cancellationToken)
-        {
-            // 3) Initialize, discover and register any pre-existing packages on the system.
-            await packageManager.InitializePackagesAsync(cancellationToken);
-
-            IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken);
-
-            if (packages?.Any() == true)
-            {
-                await packageManager.RegisterPackagesAsync(packages, cancellationToken);
-            }
         }
 
         private Task LoadExtensionsBinariesAsync(PlatformExtensions extensions, CancellationToken cancellationToken)
