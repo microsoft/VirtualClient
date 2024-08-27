@@ -26,25 +26,25 @@
         win-x64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\**\*" target="content\win-x64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\**\*" exclude="**\*.pdb;*.xml" target="content\win-x64" />
 
         <!-- 
         win-arm64
         =============================================================================================
         -->
 
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\**\*" target="content\win-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\win-arm64" />
 
         <!-- 
         linux-x64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\**\*" target="content\linux-x64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-x64" />
 
         <!-- 
         linux-arm64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\**\*" target="content\linux-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-arm64" />
     </files>
 </package>
