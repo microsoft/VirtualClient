@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.IO.Compression;
@@ -27,6 +28,11 @@ namespace VirtualClient
     /// </summary>
     public class PackageManager : IPackageManager, IDisposable
     {
+        /// <summary>
+        /// The metadata key for built-it toolsets/packages.
+        /// </summary>
+        public const string BuiltIn = "built-in";
+
         /// <summary>
         /// The name of the built-in package containing the lshw toolset.
         /// </summary>
@@ -369,6 +375,7 @@ namespace VirtualClient
 
                     if (toolsPackages?.Any() == true)
                     {
+                        PackageManager.SetAsBuiltInToolset(toolsPackages?.ToArray());
                         discoveredPackages.AddRange(toolsPackages);
                     }
 
@@ -703,9 +710,16 @@ namespace VirtualClient
 
             return this.Logger.LogMessageAsync($"{nameof(PackageManager)}.RegisterPackage", LogLevel.Trace, telemetryContext, async () =>
             {
-                string packageDirectory = Path.GetDirectoryName(package.Path);
+                // We register packages in the packages directory by default. Built-in toolsets are registered
+                // in the tools directory.
+                string registrationDirectory = this.PlatformSpecifics.GetPackagePath();
+                if (PackageManager.IsBuiltInToolset(package))
+                {
+                    registrationDirectory = this.PlatformSpecifics.GetToolsPath();
+                }
+
                 string registrationFileName = $"{package.Name.ToLowerInvariant()}{PackageManager.VCPkgRegExtension}";
-                string registrationFilePath = this.PlatformSpecifics.Combine(packageDirectory, registrationFileName);
+                string registrationFilePath = this.PlatformSpecifics.Combine(registrationDirectory, registrationFileName);
                 string registrationFileContent = package.ToJson();
 
                 await RetryPolicies.FileOperations.ExecuteAsync(() =>
@@ -870,6 +884,27 @@ namespace VirtualClient
                 {
                     this.Logger.LogProcessDetails(process, nameof(PackageManager), EventContext.Persisted(), "Tar");
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.SystemOperationFailed);
+                }
+            }
+        }
+
+        private static bool IsBuiltInToolset(DependencyPath package)
+        {
+            if (package.Metadata.TryGetValue(PackageManager.BuiltIn, out IConvertible builtIn))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void SetAsBuiltInToolset(params DependencyPath[] packages)
+        {
+            if (packages?.Any() == true)
+            {
+                foreach (DependencyPath package in packages)
+                {
+                    package.Metadata[PackageManager.BuiltIn] = true;
                 }
             }
         }
