@@ -171,9 +171,9 @@ namespace VirtualClient.Contracts
         public const string VC_LIBRARY_PATH = nameof(VC_LIBRARY_PATH);
 
         /// <summary>
-        /// Name = VC_PACKAGES_PATH
+        /// Name = VC_PACKAGES_DIR
         /// </summary>
-        public const string VC_PACKAGES_PATH = nameof(VC_PACKAGES_PATH);
+        public const string VC_PACKAGES_DIR = nameof(VC_PACKAGES_DIR);
     }
 
     /// <summary>

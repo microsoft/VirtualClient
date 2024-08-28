@@ -34,11 +34,10 @@ namespace VirtualClient
         {
             this.fileSystem = new FileSystem();
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-            IStateManager stateManager = new PackageStateManager(fileSystem, platformSpecifics);
 
             this.resourcesDirectory = platformSpecifics.Combine(DependencyFixture.TestAssemblyDirectory, "Resources");
             this.packagesDirectory = platformSpecifics.PackagesDirectory;
-            this.packageManager = new PackageManager(new PackageStateManager(fileSystem, platformSpecifics), fileSystem, platformSpecifics);
+            this.packageManager = new PackageManager(platformSpecifics, fileSystem);
 
             // Note:
             // The name of the packages MUST match the names of the .zip files in the

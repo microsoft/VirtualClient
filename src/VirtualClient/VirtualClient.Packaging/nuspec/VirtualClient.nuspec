@@ -26,37 +26,25 @@
         win-x64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\publish\**\*" target="content\win-x64" />
-        <file src="$ToolsOutDir$\win-x64\visualstudiocruntime\**\*" target="content\win-x64\packages\visualstudiocruntime\win-x64" />
-        <file src="$ToolsOutDir$\visualstudiocruntime.vcpkg" target="content\win-x64\packages\visualstudiocruntime" />
-        <file src="$ToolsOutDir$\win-x64\lspci\**\*" target="content\win-x64\packages\lspci\win-x64" />
-        <file src="$ToolsOutDir$\lspci.vcpkg" target="content\win-x64\packages\lspci" />
-        <file src="$ToolsOutDir$\win-x64\systemtools\**\*" target="content\win-x64\packages\systemtools\win-x64" />
-        <file src="$ToolsOutDir$\systemtools.vcpkg" target="content\win-x64\packages\systemtools" />
+        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\**\*" exclude="**\*.pdb;*.xml" target="content\win-x64" />
 
         <!-- 
         win-arm64
         =============================================================================================
         -->
 
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\**\*" target="content\win-arm64" />
-        <file src="$ToolsOutDir$\win-arm64\visualstudiocruntime\**\*" target="content\win-arm64\packages\visualstudiocruntime\win-arm64" />
-        <file src="$ToolsOutDir$\visualstudiocruntime.vcpkg" target="content\win-arm64\packages\visualstudiocruntime" />
-        <file src="$ToolsOutDir$\win-arm64\systemtools\**\*" target="content\win-arm64\packages\systemtools\win-arm64" />
-        <file src="$ToolsOutDir$\systemtools.vcpkg" target="content\win-arm64\packages\systemtools" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\win-arm64" />
 
         <!-- 
         linux-x64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\publish\**\*" target="content\linux-x64" />
-        <file src="$ToolsOutDir$\linux-x64\lshw\**\*" target="content\linux-x64\packages\lshw\linux-x64" />
-        <file src="$ToolsOutDir$\lshw.vcpkg" target="content\linux-x64\packages\lshw" />
+        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-x64" />
 
         <!-- 
         linux-arm64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\**\*" target="content\linux-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-arm64" />
     </files>
 </package>

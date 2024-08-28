@@ -12,13 +12,13 @@
     },
     "Actions": [
         {
-            "Type": "SpecJbbExecutor",
-            "Parameters": {
-                "Scenario": "ExecuteJavaPerformanceBenchmark",
-                "JavaFlags": "$.Parameters.JavaFlags",
-                "PackageName": "specjbb2015",
-                "JdkPackageName": "javadevelopmentkit",
-                "Tags": "Java"
+        "Type": "SpecJbbExecutor",
+        "Parameters": {
+            "Scenario": "ExecuteJavaPerformanceBenchmark",
+            "JavaFlags": "$.Parameters.JavaFlags",
+            "PackageName": "specjbb2015",
+            "JdkPackageName": "javadevelopmentkit",
+            "Tags": "Java"
             }
         }
     ],
@@ -28,20 +28,20 @@
             "Parameters": {
                 "Scenario": "InstallSPECjbbPackage",
                 "BlobContainer": "packages",
-                "BlobName": "specjbb.2015.0.0.zip",
+                "BlobName": "specjbb2015-1.04.zip",
                 "PackageName": "specjbb2015",
                 "Extract": true
             }
         },
         {
-          "Type": "JDKPackageDependencyInstallation",
-          "Parameters": {
-            "Scenario": "InstallJDKPackage",
-            "BlobContainer": "packages",
-            "BlobName": "microsoft-jdk-17.0.9.zip",
-            "PackageName": "javadevelopmentkit",
-            "Extract": true
-          }
+            "Type": "JDKPackageDependencyInstallation",
+            "Parameters": {
+                "Scenario": "InstallJDKPackage",
+                "BlobContainer": "packages",
+                "BlobName": "microsoft-jdk-17.0.9.zip",
+                "PackageName": "javadevelopmentkit",
+                "Extract": true
+            }
         }
     ]
 }

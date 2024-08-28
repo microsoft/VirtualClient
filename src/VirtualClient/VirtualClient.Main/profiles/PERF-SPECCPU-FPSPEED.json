@@ -13,8 +13,8 @@
         "Iterations": 2,
         "SpecProfile": "fpspeed",
         "RunPeak": false,
-        "BaseOptimizingFlags": "-g -O3 -march=native",
-        "PeakOptimizingFlags": "-g -Ofast -march=native -flto"
+        "BaseOptimizingFlags": "-g -O3 -march=native -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-g -Ofast -march=native -flto -frecord-gcc-switches"
     },
     "Actions": [
         {
