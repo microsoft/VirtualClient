@@ -19,21 +19,21 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class DiskFiltersTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private IEnumerable<Disk> disks;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupMocks();
         }
 
         [Test]
         public void DiskFiltersCanFilterOnNoneFilter()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = 1 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = 2 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
@@ -51,7 +51,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersAlwaysFiltersOutCDROMDevices()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             Disk cdRom1 = new Disk(4, "/dev/dvd");
             Disk cdRom2 = new Disk(5, "/dev/cdrom");
             this.disks = this.disks.Append(cdRom1).Append(cdRom2);
@@ -68,7 +68,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersAlwaysFiltersOutOfflineDisksOnWindows()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
             this.disks.ElementAt(0).Properties["Status"] = "Online";
             this.disks.ElementAt(1).Properties["Status"] = "Online";
             this.disks.ElementAt(2).Properties["Status"] = "Offline (Policy)";
@@ -84,7 +84,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersAlwaysFiltersOutReadOnlyDisksOnWindows()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
             this.disks.ElementAt(2).Properties["Read-only"] = "Yes";
             this.disks.ElementAt(3).Properties["Current Read-only State"] = "Yes";
 
@@ -98,7 +98,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnBiggestDisksOnLinux()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = 1 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
@@ -114,7 +114,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnBiggestDisksOnWindows()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
             this.disks.ElementAt(0).Properties["Size"] = "6 GB";
             this.disks.ElementAt(1).Properties["Size"] = "4 TB";
             this.disks.ElementAt(2).Properties["Size"] = "5TB";
@@ -129,7 +129,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnSmallestDisksOnLinux()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = 1 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
@@ -145,7 +145,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnSmallestDisksOnWindows()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
             this.disks.ElementAt(0).Properties["Size"] = "6 GB";
             this.disks.ElementAt(1).Properties["Size"] = "4 TB";
             this.disks.ElementAt(2).Properties["Size"] = "5TB";
@@ -160,7 +160,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnOsDisk()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
 
             string filterString = "osdisk";
             IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
@@ -183,7 +183,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnBiggestNonOsDisk()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = 1 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
@@ -199,7 +199,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnSizeBiggerThan()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
@@ -215,7 +215,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnSizeLessThan()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
@@ -231,7 +231,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnSizeLessThanAndNonOs()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = (long)4 * 1024 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
@@ -245,7 +245,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnSizeEqualTo()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = (long)(3.1 * 1024 * 1024 * 1024);
@@ -261,7 +261,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnDiskPathInLinux()
         {
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
 
             // The disks are sdc, sdd, sde, sdf
             string filterString = "DiskPath:/dev/sdd,/dev/sdf/";
@@ -274,8 +274,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void DiskFiltersCanFilterOnDiskPathInWindows()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
 
             // The disks C, D, E, F
             string filterString = "DiskPath:C:/,E:";

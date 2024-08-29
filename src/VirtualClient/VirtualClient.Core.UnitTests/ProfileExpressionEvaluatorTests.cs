@@ -20,22 +20,22 @@ namespace VirtualClient
     [Category("Unit")]
     internal class ProfileExpressionEvaluatorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         public void SetupDefaults(PlatformID platform, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform, architecture);
         }
 
         [Test]
         public async Task ProfileExpressionEvaluatorSupportsPackagePathLocationReferencesOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -46,7 +46,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -55,10 +55,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPackagePathLocationReferencesOnUnixSystems_MoreAdvancedScenarios()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -75,7 +75,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -88,10 +88,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPackagePathLocationReferencesThatIncludeSupportedNonAlphanumericCharactersOnUnixSystems(string packageName)
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath(packageName);
+            string packagePath = this.fixture.GetPackagePath(packageName);
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage(packageName).ReturnsAsync(new DependencyPath(packageName, packagePath));
+            this.fixture.PackageManager.OnGetPackage(packageName).ReturnsAsync(new DependencyPath(packageName, packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -102,7 +102,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -111,10 +111,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPackagePathLocationReferencesOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -125,7 +125,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -134,10 +134,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPackagePathLocationReferencesOnWindowsSystems_MoreAdvancedScenarios()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -154,7 +154,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -163,10 +163,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorPackagePathLocationReferenceExpressionsAreNotCaseSensitive()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -178,7 +178,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -191,10 +191,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPackagePathLocationReferencesThatIncludeSupportedNonAlphanumericCharactersOnWindowsSystems(string packageName)
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath(packageName);
+            string packagePath = this.fixture.GetPackagePath(packageName);
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage(packageName).ReturnsAsync(new DependencyPath(packageName, packagePath));
+            this.fixture.PackageManager.OnGetPackage(packageName).ReturnsAsync(new DependencyPath(packageName, packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -205,7 +205,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -214,13 +214,13 @@ namespace VirtualClient
         public void ProfileExpressionEvaluatorThrowsOnEvaluationOfPackagePathsWhenThePackageDoesNotExist()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package is NOT registered with VC (i.e. does not exist).
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
             DependencyException error = Assert.ThrowsAsync<DependencyException>(
-                () => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, "{PackagePath:anyPackage}"));
+                () => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, "{PackagePath:anyPackage}"));
 
             Assert.AreEqual(ErrorReason.DependencyNotFound, error.Reason);
         }
@@ -229,11 +229,11 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPlatformSpecificPackagePathLocationReferencesOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "linux-x64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -244,7 +244,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -253,11 +253,11 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPlatformSpecificPackagePathLocationReferencesOnUnixSystems_MoreAdvancedScenarios()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "linux-x64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -274,7 +274,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -283,11 +283,11 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorPlatformSpecificPackagePathLocationReferenceExpressionsAreNotCaseSensitive()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "linux-x64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -299,7 +299,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -312,11 +312,11 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPlatformSpecificPackagePathLocationReferencesThatIncludeSupportedNonAlphanumericCharactersOnUnixSystems(string packageName)
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath(packageName);
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+            string packagePath = this.fixture.GetPackagePath(packageName);
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "linux-x64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage(packageName).ReturnsAsync(new DependencyPath(packageName, packagePath));
+            this.fixture.PackageManager.OnGetPackage(packageName).ReturnsAsync(new DependencyPath(packageName, packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -327,7 +327,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -336,11 +336,11 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPlatformSpecificPackagePathLocationReferencesOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "win-x64");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "win-x64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -351,7 +351,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -360,11 +360,11 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsPlatformSpecificPackagePathLocationReferencesOnWindowsSystems_MoreAdvancedScenarios()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "win-x64");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "win-x64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -381,7 +381,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -402,7 +402,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -423,7 +423,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -432,12 +432,12 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorHandlesCasesWherePlatformSpecificPackagePathAndPlatformAreUsedTogether()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
             string platform = "linux-arm64";
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, platform);
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, platform);
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -454,7 +454,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -463,10 +463,10 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorHandlesCasesWherePackagePathAndPlatformAreUsedTogether_AdvancedScenario()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage.linux-arm64");
+            string packagePath = this.fixture.GetPackagePath("anypackage.linux-arm64");
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
@@ -483,7 +483,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -492,13 +492,13 @@ namespace VirtualClient
         public void ProfileExpressionEvaluatorThrowsOnEvaluationOfPlatformSpecificPackagePathsWhenThePackageDoesNotExist()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
 
             // The package is NOT registered with VC (i.e. does not exist).
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
             DependencyException error = Assert.ThrowsAsync<DependencyException>(
-                () => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, "{PackagePath/Platform:anyPackage}"));
+                () => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, "{PackagePath/Platform:anyPackage}"));
 
             Assert.AreEqual(ErrorReason.DependencyNotFound, error.Reason);
         }
@@ -523,7 +523,7 @@ namespace VirtualClient
                 { "CommandLine2", $"--timeout={{Timeout.{unitOfTime}}}" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters, CancellationToken.None);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters, CancellationToken.None);
             Assert.AreEqual($"--duration={expectedValue}", parameters["CommandLine1"].ToString());
             Assert.AreEqual($"--timeout={expectedValue}", parameters["CommandLine2"].ToString());
         }
@@ -539,7 +539,7 @@ namespace VirtualClient
                 { "CommandLine1", $"--duration={{Duration.TotalSeconds}}" }
             };
 
-            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters, CancellationToken.None));
+            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters, CancellationToken.None));
             Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
         }
 
@@ -549,7 +549,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 4;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
@@ -571,7 +571,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -588,13 +588,13 @@ namespace VirtualClient
                 { "--port=1234 --threads={PhysicalCoreCount} --someFlag --clients={PhysicalCoreCount}", $"--port=1234 --threads=4 --someFlag --clients=4" }
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any CPU", "Any description", physicalCoreCount: 4, logicalCoreCount: 8, socketCount: 2, numaNodeCount: 1, hyperThreadingEnabled: true));
 
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -614,13 +614,13 @@ namespace VirtualClient
                 { "--min-memory={SystemMemoryBytes} --someFlag --max-memory={SystemMemoryBytes}", $"--min-memory={expectedBytes} --someFlag --max-memory={expectedBytes}" }
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
 
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -639,13 +639,13 @@ namespace VirtualClient
                 { "--min-memory={SystemMemoryKilobytes} --someFlag --max-memory={SystemMemoryKilobytes}", $"--min-memory={expectedKilobytes} --someFlag --max-memory={expectedKilobytes}" }
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
 
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -665,13 +665,13 @@ namespace VirtualClient
                 { "--min-memory={SystemMemoryMegabytes} --someFlag --max-memory={SystemMemoryMegabytes}", $"--min-memory={expectedMegabytes} --someFlag --max-memory={expectedMegabytes}" }
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
 
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -691,13 +691,13 @@ namespace VirtualClient
                 { "--min-memory={SystemMemoryGigabytes} --someFlag --max-memory={SystemMemoryGigabytes}", $"--min-memory={expectedGigabytes} --someFlag --max-memory={expectedGigabytes}" }
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
 
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -721,7 +721,7 @@ namespace VirtualClient
             foreach (var entry in expressions)
             {
                 string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, entry.Key);
                 Assert.AreEqual(expectedExpression, actualExpression);
             }
         }
@@ -737,7 +737,7 @@ namespace VirtualClient
                 { "ThreadCount" , 8 }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("--port=1234 --threads=8", parameters["CommandLine"].ToString());
             Assert.AreEqual(1234, parameters["Port"]);
@@ -762,7 +762,7 @@ namespace VirtualClient
                 { "DateTime", now }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual(
                 $"--int=1234 --double=8.15 --decimal=10.55 --byte=128 --char=a --bool=True --dateTime={now.ToString()}",
@@ -781,7 +781,7 @@ namespace VirtualClient
                 { "ThreadCount" , 8 }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("--port=1234 --threads=8 --serverPort=1234 --clients=8", parameters["CommandLine"].ToString());
             Assert.AreEqual(1234, parameters["Port"]);
@@ -792,22 +792,22 @@ namespace VirtualClient
         public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionReferencesInParameterSets()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
-            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+            string packagePath = this.fixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.fixture.Combine(packagePath, "linux-x64");
 
             int expectedLogicalCores = 4;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             // The package MUST be actually registered with VC.
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
             IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
                 { "CommandLine", "--port=1234 --threads={LogicalCoreCount} --package={PackagePath:anypackage} --package2={PackagePath/Platform:anypackage}" },
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual(
                 $"--port=1234 --threads={expectedLogicalCores} --package={packagePath} --package2={packagePath}/linux-x64",
@@ -833,11 +833,11 @@ namespace VirtualClient
             };
 
             // Match
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters1);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters1);
             Assert.AreEqual("--port=1234", parameters1["CommandLine"].ToString());
 
             // No Match because of the casing difference
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters2);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters2);
             Assert.AreEqual("--port={port}", parameters2["CommandLine"].ToString());
 
             // Not case-sensitive
@@ -855,11 +855,11 @@ namespace VirtualClient
             };
 
             // Match
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters1);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters1);
             Assert.AreEqual("--port=1234", parameters1["CommandLine"].ToString());
 
             // Match
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters2);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters2);
             Assert.AreEqual("--port=1234", parameters2["CommandLine"].ToString());
         }
 
@@ -876,7 +876,7 @@ namespace VirtualClient
                 { "IsTLSEnabled" , true }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("yes", parameters["BUILD_TLS"]);
             Assert.AreEqual(true, parameters["IsTLSEnabled"]);
@@ -894,7 +894,7 @@ namespace VirtualClient
                 { "IsTLSEnabled" , true }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("No", parameters["BUILD_TLS"]);
             Assert.AreEqual(true, parameters["IsTLSEnabled"]);
@@ -912,7 +912,7 @@ namespace VirtualClient
                 { "IsTLSEnabled" , true }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("Yes", parameters["BUILD_TLS"]);
             Assert.AreEqual(true, parameters["IsTLSEnabled"]);
@@ -930,7 +930,7 @@ namespace VirtualClient
                 { "IsTLSEnabled" , true }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("Yes", parameters["BUILD_TLS"]);
             Assert.AreEqual(true, parameters["IsTLSEnabled"]);
@@ -948,7 +948,7 @@ namespace VirtualClient
                 { "IsTLSEnabled" , true }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("No", parameters["BUILD_TLS"]);
             Assert.AreEqual(true, parameters["IsTLSEnabled"]);
@@ -960,7 +960,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 4;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -971,7 +971,7 @@ namespace VirtualClient
 
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("-c496G -b4K -r4K -t256 -o64 -w100", parameters["CommandLine"]);
             Assert.AreEqual("128", parameters["ThreadCount"]);
@@ -984,7 +984,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 4;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -994,7 +994,7 @@ namespace VirtualClient
                 { "QueueDepth", "{calculate(512/({LogicalCoreCount}/2))}" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("-c496G -b4K -r4K -t2 -o256 -w100", parameters["CommandLine"]);
             Assert.AreEqual("2", parameters["ThreadCount"]);
@@ -1007,7 +1007,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1017,7 +1017,7 @@ namespace VirtualClient
                 { "QueueDepth", "{calculate(512/({LogicalCoreCount}/2))}" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("-c496G -b4K -r4K -t8 -o64 -w100", parameters["CommandLine"]);
             Assert.AreEqual("8", parameters["ThreadCount"]);
@@ -1030,7 +1030,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1040,7 +1040,7 @@ namespace VirtualClient
                 { "CommandLine", "-c496G -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("-c496G -b4K -r4K -t8 -o64 -w100", parameters["CommandLine"]);
             Assert.AreEqual("8", parameters["ThreadCount"]);
@@ -1053,7 +1053,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1073,7 +1073,7 @@ namespace VirtualClient
                 { "Tags", "IO,DiskSpd,randwrite" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", parameters["Scenario"]);
             Assert.AreEqual("diskspd", parameters["PackageName"]);
@@ -1095,7 +1095,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1116,7 +1116,7 @@ namespace VirtualClient
                 { "Tags", "IO,DiskSpd,randwrite" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", parameters["Scenario"]);
             Assert.AreEqual("diskspd", parameters["PackageName"]);
@@ -1149,7 +1149,7 @@ namespace VirtualClient
             // parameters does NOT affect the outcome.
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1173,7 +1173,7 @@ namespace VirtualClient
             Dictionary<string, IConvertible> shuffledParameters = new Dictionary<string, IConvertible>(parameters.Skip(take));
             shuffledParameters.AddRange(parameters.Take(take));
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, shuffledParameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, shuffledParameters);
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", shuffledParameters["Scenario"]);
             Assert.AreEqual("diskspd", shuffledParameters["PackageName"]);
@@ -1206,7 +1206,7 @@ namespace VirtualClient
             // parameters does NOT affect the outcome.
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1231,7 +1231,7 @@ namespace VirtualClient
             Dictionary<string, IConvertible> shuffledParameters = new Dictionary<string, IConvertible>(parameters.Skip(take).Reverse());
             shuffledParameters.AddRange(parameters.Take(take));
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, shuffledParameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, shuffledParameters);
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", shuffledParameters["Scenario"]);
             Assert.AreEqual("diskspd", shuffledParameters["PackageName"]);
@@ -1253,7 +1253,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 16;
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 2, expectedLogicalCores, 1, 0, true));
 
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
@@ -1277,7 +1277,7 @@ namespace VirtualClient
                 { "Tags", "IO,DiskSpd,randwrite" }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", parameters["Scenario"]);
             Assert.AreEqual("diskspd", parameters["PackageName"]);

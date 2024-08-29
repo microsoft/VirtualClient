@@ -16,12 +16,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class OpenSslProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -29,8 +29,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-OPENSSL.json")]
         public void OpenSslWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Win32NT);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -40,16 +40,16 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-OPENSSL.json")]
         public async Task OpenSslWorkloadProfileInstallsTheExpectedDependenciesOnWindowsPlatform(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.SetupDisks(withRemoteDisks: false);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
                 // The workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "openssl");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "openssl");
             }
         }
 
@@ -57,16 +57,16 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-OPENSSL.json")]
         public async Task OpenSslWorkloadProfileInstallsTheExpectedDependenciesOnUnixPlatform(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: false);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
                 // The workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "openssl");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "openssl");
             }
         }
 
@@ -80,13 +80,13 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("openssl", expectedFiles: @"win-x64\bin\openssl.exe");
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupWorkloadPackage("openssl", expectedFiles: @"win-x64\bin\openssl.exe");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("openssl", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results-OpenSSL-Speed.txt"));
@@ -95,11 +95,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -113,13 +113,13 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("openssl", expectedFiles: @"linux-x64/bin/openssl");
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupWorkloadPackage("openssl", expectedFiles: @"linux-x64/bin/openssl");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("openssl", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results-OpenSSL-Speed.txt"));
@@ -128,11 +128,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -142,19 +142,19 @@ namespace VirtualClient.Actions
         {
             // Setup disks the expected scenarios:
             // - Disks are formatted and ready
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: false);
 
             // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
                 Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Contains("openssl"));
+                Assert.IsFalse(this.fixture.ProcessManager.Commands.Contains("openssl"));
             }
         }
 

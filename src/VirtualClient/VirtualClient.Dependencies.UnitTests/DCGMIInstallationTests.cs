@@ -21,15 +21,15 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class DCGMIInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
         }
 
         [Test]
@@ -40,9 +40,9 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestUbuntu",
                 LinuxDistribution = LinuxDistribution.AzLinux
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            using (TestDCGMIInstallation testDCGMIInstallation = new TestDCGMIInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIInstallation testDCGMIInstallation = new TestDCGMIInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
                     () => testDCGMIInstallation.ExecuteAsync(CancellationToken.None));
@@ -53,9 +53,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public void DCGMIInstallationThrowsIfPlatformNotSupported()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
 
-            using (TestDCGMIInstallation testDCGMIInstallation = new TestDCGMIInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIInstallation testDCGMIInstallation = new TestDCGMIInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
                     () => testDCGMIInstallation.ExecuteAsync(CancellationToken.None));
@@ -71,7 +71,7 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestUbuntu",
                 LinuxDistribution = LinuxDistribution.Ubuntu
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
             List<string> expectedCommands = new List<string>()
             {
@@ -84,7 +84,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -105,7 +105,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestDCGMIInstallation testDCGMIInstallation = new TestDCGMIInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIInstallation testDCGMIInstallation = new TestDCGMIInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

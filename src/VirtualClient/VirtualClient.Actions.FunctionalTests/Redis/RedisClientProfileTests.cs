@@ -19,32 +19,32 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class RedisClientProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
         private string clientAgentId;
         private string serverAgentId;
 
         [SetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.mockFixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
+            this.fixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
         }
 
         [Test]
         [TestCase("PERF-REDIS.json")]
         public void RedisMemtierWorkloadProfileActionsWillNotBeExecutedIfTheClientWorkloadPackageDoesNotExist(string profile)
         {
-            this.mockFixture.PackageManager.Clear();
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.PackageManager.Clear();
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
@@ -67,14 +67,14 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - Expected processes are executed.
-            this.mockFixture.SetupFile(@"/home/user/tools/VirtualClient/scripts/Redis/RunClient.sh");
-            this.mockFixture.SetupFile(@"/home/user/tools/VirtualClient/packages/redis-6.2.1/src/redis-benchmark");
+            this.fixture.SetupFile(@"/home/user/tools/VirtualClient/scripts/Redis/RunClient.sh");
+            this.fixture.SetupFile(@"/home/user/tools/VirtualClient/packages/redis-6.2.1/src/redis-benchmark");
 
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
 
                 if (arguments.Contains("memtier_benchmark --server", StringComparison.OrdinalIgnoreCase))
                 {
@@ -88,18 +88,18 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
         private void SetupApiClient(string serverName, string serverIPAddress)
         {
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
-            IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
+            IApiClient apiClient = this.fixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
 
             ServerState state = new ServerState(new List<PortDescription>
             {

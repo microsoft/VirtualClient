@@ -22,14 +22,14 @@ namespace VirtualClient.Proxy
     [Category("Unit")]
     internal class ProxyTelemetryChannelTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private Mock<IProxyApiClient> mockProxyApiClient;
         private TestProxyTelemetryChannel testChannel;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.mockProxyApiClient = new Mock<IProxyApiClient>();
 
             this.mockProxyApiClient
@@ -37,7 +37,7 @@ namespace VirtualClient.Proxy
                     It.IsAny<IEnumerable<ProxyTelemetryMessage>>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             this.testChannel = new TestProxyTelemetryChannel(this.mockProxyApiClient.Object);
             this.testChannel.TransmissionFailureWaitTime = TimeSpan.Zero;
@@ -61,11 +61,11 @@ namespace VirtualClient.Proxy
         {
             List<ProxyTelemetryMessage> expectedEvents = new List<ProxyTelemetryMessage>
             {
-                this.mockFixture.Create<ProxyTelemetryMessage>(),
-                this.mockFixture.Create<ProxyTelemetryMessage>(),
-                this.mockFixture.Create<ProxyTelemetryMessage>(),
-                this.mockFixture.Create<ProxyTelemetryMessage>(),
-                this.mockFixture.Create<ProxyTelemetryMessage>()
+                this.fixture.Create<ProxyTelemetryMessage>(),
+                this.fixture.Create<ProxyTelemetryMessage>(),
+                this.fixture.Create<ProxyTelemetryMessage>(),
+                this.fixture.Create<ProxyTelemetryMessage>(),
+                this.fixture.Create<ProxyTelemetryMessage>()
             };
 
             expectedEvents.ForEach(message => this.testChannel.Add(message));
@@ -85,7 +85,7 @@ namespace VirtualClient.Proxy
 
             for (int i = 0; i < this.testChannel.MessageBatchSize * 3; i++)
             {
-                expectedMessages.Add(this.mockFixture.Create<ProxyTelemetryMessage>());
+                expectedMessages.Add(this.fixture.Create<ProxyTelemetryMessage>());
             }
 
             expectedMessages.ForEach(msg => this.testChannel.Add(msg));
@@ -107,7 +107,7 @@ namespace VirtualClient.Proxy
                         expectedMessages.Remove(message);
                     }
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             await this.testChannel.TransmitEventsAsync(CancellationToken.None)
                 .ConfigureAwait(false);
@@ -130,7 +130,7 @@ namespace VirtualClient.Proxy
                 {
                     messages.ToList().ForEach(msg => messagesTransmitted.Add(msg));
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             this.testChannel.BeginMessageTransmission();
 
@@ -171,7 +171,7 @@ namespace VirtualClient.Proxy
                 {
                     messages.ToList().ForEach(msg => messagesTransmitted.Add(msg));
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             this.testChannel.BeginMessageTransmission();
 
@@ -230,11 +230,11 @@ namespace VirtualClient.Proxy
                         if (numTransmissionFailures >= 3)
                         {
                             // Mimic finally recovering from the transmission failures.
-                            return this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK);
+                            return this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK);
                         }
 
                         // Mimic a REST API response failure
-                        return this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden);
+                        return this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden);
                     });
 
                 // Log messages for transmission, single logging thread/caller.
@@ -288,11 +288,11 @@ namespace VirtualClient.Proxy
                         if (numTransmissionFailures >= 10)
                         {
                             // Mimic finally recovering from the transmission failures.
-                            return this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK);
+                            return this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK);
                         }
 
                         // Mimic a REST API response failure
-                        return this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden);
+                        return this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden);
                     });
 
                 // Log messages for transmission, multiple logging threads/callers at the same time.
@@ -347,7 +347,7 @@ namespace VirtualClient.Proxy
                         messages.ToList().ForEach(msg => messagesTransmitted.Add(msg));
                     }
                 })
-                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(currentStatusCode));
+                .ReturnsAsync(() => this.fixture.CreateHttpResponse(currentStatusCode));
 
             // Log messages for transmission, single logging thread/caller.
             this.LogMessages(0, messageCount);
@@ -487,7 +487,7 @@ namespace VirtualClient.Proxy
                        statusCode = System.Net.HttpStatusCode.ServiceUnavailable;
                    }
 
-                   return this.mockFixture.CreateHttpResponse(statusCode);
+                   return this.fixture.CreateHttpResponse(statusCode);
                });
 
             List<ProxyTelemetryMessage> messagesBuffered = this.LogMessages(0, 1);

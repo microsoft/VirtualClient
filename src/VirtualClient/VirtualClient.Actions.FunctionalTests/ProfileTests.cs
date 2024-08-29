@@ -14,12 +14,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class ProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 bool parametersSet = false;
                 bool metadataSet = false;
@@ -59,9 +59,9 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehaviors()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupWorkloadPackage("exampleworkload", expectedFiles: @"win-x64\exampleworkload.exe");
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.SetupWorkloadPackage("exampleworkload", expectedFiles: @"win-x64\exampleworkload.exe");
+            this.fixture.SetupDisks(withRemoteDisks: false);
         }
     }
 }

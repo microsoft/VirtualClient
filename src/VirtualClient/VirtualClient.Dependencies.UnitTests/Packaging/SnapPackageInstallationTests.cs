@@ -20,29 +20,29 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class SnapPackageInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
         }
 
         [Test]
         public async Task SnapPackageInstallationRunsTheExpectedCommandForSinglePackage()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SnapPackageInstallation.Packages), "pack1" },
                 { nameof(SnapPackageInstallation.AllowUpgrades), "true" }
@@ -57,7 +57,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -78,7 +78,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await snapPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -89,9 +89,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task SnapPackageInstallationRunsTheExpectedCommandForMultiplePackages()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SnapPackageInstallation.Packages), "pack1,pack2" },
                 { nameof(SnapPackageInstallation.AllowUpgrades), "true" }
@@ -107,7 +107,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -128,7 +128,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await snapPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -139,9 +139,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task SnapPackageInstallationRunsTheExpectedCommandForNullPackages()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SnapPackageInstallation.Packages), null },
                 { nameof(SnapPackageInstallation.AllowUpgrades), "true" }
@@ -156,7 +156,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -177,7 +177,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await snapPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -188,9 +188,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task SnapPackageInstallationRunsTheExpectedCommandForDuplicatePackages()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SnapPackageInstallation.Packages), "pack1,pack1" },
                 { nameof(SnapPackageInstallation.AllowUpgrades), "true" }
@@ -205,7 +205,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -226,7 +226,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await snapPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -242,11 +242,11 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestCentOS7",
                 LinuxDistribution = LinuxDistribution.CentOS7
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SnapPackageInstallation.Packages), "pack1" },
                 { nameof(SnapPackageInstallation.AllowUpgrades), "true" }
@@ -262,7 +262,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -283,7 +283,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await snapPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -299,11 +299,11 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestSUSE",
                 LinuxDistribution = LinuxDistribution.SUSE
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SnapPackageInstallation.Packages), "pack1" },
                 { nameof(SnapPackageInstallation.AllowUpgrades), "true" }
@@ -320,7 +320,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -341,7 +341,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSnapPackageInstallation snapPackageInstallation = new TestSnapPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await snapPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

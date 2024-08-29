@@ -19,12 +19,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class StateTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
@@ -74,8 +74,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void StateObjectsCorrectlyImplementsEqualitySemantics()
         {
-            State instance1 = this.mockFixture.Create<State>();
-            State instance2 = this.mockFixture.Create<State>();
+            State instance1 = this.fixture.Create<State>();
+            State instance2 = this.fixture.Create<State>();
 
             EqualityAssert.CorrectlyImplementsEqualitySemantics(() => instance1, () => instance2);
         }
@@ -83,8 +83,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void StateObjectsCorrectlyImplementsHashcodeSemantics()
         {
-            State instance1 = this.mockFixture.Create<State>();
-            State instance2 = this.mockFixture.Create<State>();
+            State instance1 = this.fixture.Create<State>();
+            State instance2 = this.fixture.Create<State>();
 
             EqualityAssert.CorrectlyImplementsHashcodeSemantics(() => instance1, () => instance2);
         }

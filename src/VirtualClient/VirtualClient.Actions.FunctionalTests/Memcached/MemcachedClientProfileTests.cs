@@ -19,24 +19,24 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class MemcachedClientProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
         private string clientAgentId;
         private string serverAgentId;
 
         [SetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.mockFixture.SetupWorkloadPackage("memtier", expectedFiles: "memtier_benchmark");
+            this.fixture.SetupWorkloadPackage("memtier", expectedFiles: "memtier_benchmark");
         }
 
         [Test]
@@ -44,9 +44,9 @@ namespace VirtualClient.Actions
         public void MemcachedMemtierWorkloadProfileActionsWillNotBeExecutedIfTheClientWorkloadPackageDoesNotExist(string profile)
         {
             // We ensure the Client workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
@@ -81,9 +81,9 @@ namespace VirtualClient.Actions
             // - Expected processes are executed.
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
 
                 if (arguments?.Contains("memtier_benchmark", StringComparison.OrdinalIgnoreCase) == true)
                 {
@@ -93,19 +93,19 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
         private void SetupApiClient(string serverName, string serverIPAddress)
         {
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
-            IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
+            IApiClient apiClient = this.fixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
 
             ServerState state = new ServerState(new List<PortDescription>
             {

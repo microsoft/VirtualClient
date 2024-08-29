@@ -17,12 +17,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class HpcgProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -30,8 +30,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-HPCG.json")]
         public void HpcgWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -48,9 +48,9 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("runhpcg.sh", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_Hpcg.txt"));
@@ -59,14 +59,14 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 executor.ExecutionMinimumInterval = TimeSpan.Zero;
 
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -89,19 +89,19 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehaviors(PlatformID platform)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture.Setup(PlatformID.Unix);
 
             Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
             {
                 { PackageMetadata.ExecutablePath, "spack" }
             };
-            this.mockFixture.SetupWorkloadPackage("spack", specifics, expectedFiles: @"spack");
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupWorkloadPackage("spack", specifics, expectedFiles: @"spack");
+            this.fixture.SetupDisks(withRemoteDisks: false);
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, 8, 9, 10, false));
         }
     }

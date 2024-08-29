@@ -17,18 +17,18 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class DeathStarBenchProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
 
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, "ClientAgent").SetupLayout(
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64, "ClientAgent").SetupLayout(
                 new ClientInstance("ClientAgent", "1.2.3.4", "Client"),
                 new ClientInstance("ServerAgent", "1.2.3.5", "Server"));
 
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupDisks(withRemoteDisks: false);
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-NETWORK-DEATHSTARBENCH.json")]
         public void DeathStarBenchWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -48,14 +48,14 @@ namespace VirtualClient.Actions
         public void DeathStarBenchWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
         {
             // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
                 Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Any());
+                Assert.IsFalse(this.fixture.ProcessManager.Commands.Any());
             }
         }
     }

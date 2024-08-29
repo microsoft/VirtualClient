@@ -51,11 +51,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// 3DMark enterprise lisence key
         /// </summary>
-        public string LisenceKey
+        public string LicenseKey
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(ThreeDMarkExecutor.LisenceKey));
+                return this.Parameters.GetValue<string>(nameof(ThreeDMarkExecutor.LicenseKey));
             }
         }
 
@@ -218,8 +218,8 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                // Lisence Registry
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LisenceKey}", this.psexecDir))
+                // License Registry
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LicenseKey}", this.psexecDir))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
 

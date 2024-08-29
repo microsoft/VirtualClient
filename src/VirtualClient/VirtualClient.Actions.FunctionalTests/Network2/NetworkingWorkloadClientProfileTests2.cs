@@ -27,14 +27,14 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class NetworkingWorkloadClientProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
         private string clientAgentId;
         private string serverAgentId;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
 
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
@@ -56,13 +56,13 @@ namespace VirtualClient.Actions
             this.SetupApiClient(serverIPAddress: serverIPAddress);
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
 
-            await this.mockFixture.StateManager.SaveStateAsync<State>(nameof(Dependencies.NetworkConfigurationSetup), new State(), CancellationToken.None)
+            await this.fixture.StateManager.SaveStateAsync<State>(nameof(Dependencies.NetworkConfigurationSetup), new State(), CancellationToken.None)
              .ConfigureAwait(false);
 
             this.SetupCreateProcess();
             int count = 0;
 
-            InMemoryApiClient apiClient = (InMemoryApiClient)this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
+            InMemoryApiClient apiClient = (InMemoryApiClient)this.fixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
 
             apiClient.OnGetState = (stateId) =>
             {
@@ -106,19 +106,19 @@ namespace VirtualClient.Actions
                 }
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
         private void SetupCreateProcess()
         {
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (command.Contains("NTttcp.exe", StringComparison.OrdinalIgnoreCase) || command.Contains("NTttcp", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("ntttcp-results.xml"));
@@ -145,11 +145,11 @@ namespace VirtualClient.Actions
 
         private void SetupFixtureBasedOnPlatformAndArchitecture(PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture, this.clientAgentId).SetupLayout(
+            this.fixture.Setup(platformID, architecture, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupDisks(withRemoteDisks: false);
             string platformArch = PlatformSpecifics.GetPlatformArchitectureName(platformID, architecture);
 
             this.SetupWorkloadPackages(platformID, platformArch);
@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
             if (platformID == PlatformID.Unix)
             {
                 string expectedFile = "/etc/rc.local";
-                this.mockFixture.SetupFile(expectedFile);
+                this.fixture.SetupFile(expectedFile);
             }
 
             this.SetupResultsFiles(platformArch);
@@ -165,35 +165,35 @@ namespace VirtualClient.Actions
 
         private void SetupResultsFiles(string platformArch)
         {
-            string packagePath = this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.PackagesDirectory, "networking");
+            string packagePath = this.fixture.PlatformSpecifics.Combine(this.fixture.PackagesDirectory, "networking");
             byte[] ntttcpContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("ntttcp-results.xml"));
             byte[] cpsContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("cps-results.txt"));
             byte[] latteContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("latte-results.txt"));
             byte[] sockPerfContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("sockperf-results.txt"));
 
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_256K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_256K_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T256/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T256/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_256K_Buffer_T256/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_UDP_1400B_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_UDP_1400B_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/CPS_T16/cps-results.txt"), cpsContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/Latte_UDP/latte-results.txt"), latteContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/Latte_TCP/latte-results.txt"), latteContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_TCP_Ping_Pong/sockperf-results.txt"), sockPerfContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_UDP_Ping_Pong/sockperf-results.txt"), sockPerfContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_TCP_Under_Load/sockperf-results.txt"), sockPerfContent);
-            this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_UDP_Under_Load/sockperf-results.txt"), sockPerfContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_256K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_256K_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T256/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T256/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_256K_Buffer_T256/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_UDP_1400B_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_UDP_1400B_Buffer_T32/ntttcp-results.xml"), ntttcpContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/CPS_T16/cps-results.txt"), cpsContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/Latte_UDP/latte-results.txt"), latteContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/Latte_TCP/latte-results.txt"), latteContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_TCP_Ping_Pong/sockperf-results.txt"), sockPerfContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_UDP_Ping_Pong/sockperf-results.txt"), sockPerfContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_TCP_Under_Load/sockperf-results.txt"), sockPerfContent);
+            this.fixture.SetupFile(this.fixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/SockPerf_UDP_Under_Load/sockperf-results.txt"), sockPerfContent);
         }
 
         private void SetupWorkloadPackages(PlatformID platformID, string platformArch)
         {
-            this.mockFixture.SetupWorkloadPackage("visualstudiocruntime");
+            this.fixture.SetupWorkloadPackage("visualstudiocruntime");
 
             string ntttcpExe = platformID == PlatformID.Win32NT ? "NTttcp.exe" : "ntttcp";
             string cpsExe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
@@ -208,7 +208,7 @@ namespace VirtualClient.Actions
                 $"{platformArch}/{latteExe}",
             };
 
-            this.mockFixture.SetupWorkloadPackage("networking", expectedFiles: expectedFiles.ToArray());
+            this.fixture.SetupWorkloadPackage("networking", expectedFiles: expectedFiles.ToArray());
         }
 
         private IEnumerable<string> GetCommands(PlatformID platformID, Architecture arch)
@@ -304,7 +304,7 @@ namespace VirtualClient.Actions
         private void SetupApiClient(string serverIPAddress)
         {
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
-            IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
+            IApiClient apiClient = this.fixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
 
             CPSWorkloadState expectedCPSState = new CPSWorkloadState(ClientServerStatus.Ready);
             NTttcpWorkloadState expectedNTttcpState = new NTttcpWorkloadState(ClientServerStatus.Ready);

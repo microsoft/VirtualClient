@@ -14,18 +14,18 @@ namespace VirtualClient.Actions.NetworkPerformance
     [Category("Unit")]
     public class CPSMetricsParserTests2
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         [Test]
         public void CpsParserParsesExpectedMetricsFromValidServerSideResults()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
             string results = CPSMetricsParserTests2.GetFileContents("CPS_Example_Results_Server.txt");
 
             CPSMetricsParser parser = new CPSMetricsParser(results, 90, 10);
@@ -66,7 +66,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         [Test]
         public void CpsParserParsesExpectedMetricsFromValidClientSideResults()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
             string results = CPSMetricsParserTests2.GetFileContents("CPS_Example_Results_Client.txt");
 
             CPSMetricsParser parser = new CPSMetricsParser(results, 90, 30);

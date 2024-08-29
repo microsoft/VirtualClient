@@ -17,13 +17,13 @@ namespace VirtualClient.Proxy
     [Category("Integration")]
     internal class ProxyTelemetryChannelTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private Mock<IProxyApiClient> proxyApiClient;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.proxyApiClient = new Mock<IProxyApiClient>();
 
             this.proxyApiClient
@@ -31,13 +31,13 @@ namespace VirtualClient.Proxy
                     It.IsAny<IEnumerable<ProxyTelemetryMessage>>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
         [Test]
         public void ProxyTelemetryChannelMessagesTransmitted()
         {
-            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.mockFixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
+            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.fixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
                 .CreateLogger("Proxy");
 
             using (ProxyTelemetryChannel channel = DependencyFactory.CreateProxyTelemetryChannel(this.proxyApiClient.Object, logger))
@@ -57,7 +57,7 @@ namespace VirtualClient.Proxy
         [Test]
         public void ProxyTelemetryChannelFlushMessages()
         {
-            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.mockFixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
+            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.fixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
                 .CreateLogger("Proxy");
 
             using (ProxyTelemetryChannel channel = DependencyFactory.CreateProxyTelemetryChannel(this.proxyApiClient.Object, logger))
@@ -89,10 +89,10 @@ namespace VirtualClient.Proxy
                         statusCode = System.Net.HttpStatusCode.InternalServerError;
                     }
 
-                    return this.mockFixture.CreateHttpResponse(statusCode);
+                    return this.fixture.CreateHttpResponse(statusCode);
                 });
 
-            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.mockFixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
+            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.fixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
                 .CreateLogger("Proxy");
 
             using (ProxyTelemetryChannel channel = DependencyFactory.CreateProxyTelemetryChannel(this.proxyApiClient.Object, logger))
@@ -112,7 +112,7 @@ namespace VirtualClient.Proxy
         [Test]
         public void ProxyTelemetryChannelMessagesDropped()
         {
-            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.mockFixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
+            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.fixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
                 .CreateLogger("Proxy");
 
             using (ProxyTelemetryChannel channel = DependencyFactory.CreateProxyTelemetryChannel(this.proxyApiClient.Object, logger))
@@ -133,7 +133,7 @@ namespace VirtualClient.Proxy
         [Test]
         public void ProxyTelemetryChannelMessagesDroppedOnFlushing()
         {
-            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.mockFixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
+            ILogger logger = DependencyFactory.CreateFileLoggerProvider(this.fixture.Combine(MockFixture.TestAssemblyDirectory, "logs", "traces-proxy.log"), TimeSpan.FromSeconds(2), LogLevel.Trace)
                 .CreateLogger("Proxy");
 
             using (ProxyTelemetryChannel channel = DependencyFactory.CreateProxyTelemetryChannel(this.proxyApiClient.Object, logger))

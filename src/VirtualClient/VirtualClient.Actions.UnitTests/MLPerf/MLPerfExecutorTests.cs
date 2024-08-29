@@ -24,14 +24,14 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MLPerfExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
         private IEnumerable<Disk> disks;
 
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
 
@@ -40,7 +40,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
                 {
@@ -48,7 +48,7 @@ namespace VirtualClient.Actions
                     LinuxDistribution = LinuxDistribution.Flatcar
                 };
 
-                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+                this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
                 var workloadException = Assert.ThrowsAsync<WorkloadException>(() => MLPerfExecutor.ExecuteAsync(CancellationToken.None));
                 Assert.IsTrue(workloadException.Reason == ErrorReason.LinuxDistributionNotSupported);
             }
@@ -74,22 +74,22 @@ namespace VirtualClient.Actions
         {
             bool disksFetched = false;
             this.SetupDefaultMockBehavior(PlatformID.Unix);
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
 
-            this.mockFixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
             .Callback<CancellationToken>((CancellationToken) =>
             {
                 disksFetched = true;
             })
             .ReturnsAsync(this.disks);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },
             };
 
-            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await mlperfExecutor.CreateScratchSpace(CancellationToken.None).ConfigureAwait(false);
             }
@@ -102,7 +102,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },
@@ -110,10 +110,10 @@ namespace VirtualClient.Actions
 
             this.disks = null;
 
-            this.mockFixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
 
-            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 var workloadException = Assert.ThrowsAsync<WorkloadException>(() => MLPerfExecutor.CreateScratchSpace(CancellationToken.None));
                 Assert.IsTrue(workloadException.Reason == ErrorReason.WorkloadUnexpectedAnomaly);
@@ -125,13 +125,13 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfExecutor.DiskFilter), "SizeEqualTo:3072gb" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },
             };
 
-            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 var workloadException = Assert.ThrowsAsync<WorkloadException>(() => MLPerfExecutor.CreateScratchSpace(CancellationToken.None));
                 Assert.IsTrue(workloadException.Reason == ErrorReason.DependencyNotFound);
@@ -143,7 +143,7 @@ namespace VirtualClient.Actions
         {
             bool fileVisited = false;
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
 
             string makeFileString = "mock Makefile";
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Callback<string, CancellationToken>((file, canToken) =>
             {
                 fileVisited = true;
@@ -201,19 +201,19 @@ namespace VirtualClient.Actions
                 "/dev/sdd1/scratch/preprocessed_data"
             };
 
-            this.mockFixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
+            this.fixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
             {
                 Assert.IsTrue(expectedDirectories.Select(ed => directory.Contains(ed)).Any());
             });
 
             List<string> commandsExecuted = new List<string>();
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await mlperfExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
@@ -227,7 +227,7 @@ namespace VirtualClient.Actions
         {
             bool initializationVerified = false;
 
-            this.mockFixture.StateManager.OnGetState()
+            this.fixture.StateManager.OnGetState()
             .Callback<String, CancellationToken, IAsyncPolicy>((stateId, cancellationToken, policy) =>
             {
                 initializationVerified = true;
@@ -237,7 +237,7 @@ namespace VirtualClient.Actions
                 Initialized = true
             }));
 
-            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await mlperfExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
@@ -252,7 +252,7 @@ namespace VirtualClient.Actions
 
             string makeFileString = "mock Makefile";
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(makeFileString);
 
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
@@ -263,20 +263,20 @@ namespace VirtualClient.Actions
                 "/dev/sdd1/scratch/preprocessed_data"
             };
 
-            this.mockFixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
+            this.fixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
             {
                 Assert.IsTrue(expectedDirectories.Select(ed => directory.Contains(ed)).Any());
             });
 
             List<string> commandsExecuted = new List<string>();
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfExecutor mlperfExecutor = new TestMLPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await mlperfExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
                 await mlperfExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
@@ -287,25 +287,25 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehavior(PlatformID platformID)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platformID);
-            this.mockPackage = new DependencyPath("MLPerf", this.mockFixture.PlatformSpecifics.GetPackagePath("mlperf"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platformID);
+            this.mockPackage = new DependencyPath("MLPerf", this.fixture.PlatformSpecifics.GetPackagePath("mlperf"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.mockFixture.File.Reset();
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.File.Reset();
 
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
 
-            this.mockFixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },

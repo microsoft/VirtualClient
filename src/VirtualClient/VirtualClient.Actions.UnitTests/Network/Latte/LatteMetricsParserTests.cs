@@ -15,18 +15,18 @@ namespace VirtualClient.Actions.NetworkPerformance
     [Category("Unit")]
     public class LatteMetricsParserTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         [Test]
         public void LatteParserParsesExpectedMetricsFromValidResults()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
             string results = LatteMetricsParserTests.GetFileContents("Latte_Results_Example.txt");
 
             LatteMetricsParser parser = new LatteMetricsParser(results);
@@ -54,7 +54,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         [Test]
         public void LatteParserThrowsIfTheResultsAreInvalid()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
             string results = LatteMetricsParserTests.GetFileContents("Latte_Results_Example.txt").Substring(0, 10);
             LatteMetricsParser parser = new LatteMetricsParser(results);
             Assert.Throws<WorkloadResultsException>(() => parser.Parse());
@@ -63,7 +63,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         [Test]
         public void LatteParserThrowsIfTheExpectedLatencyMeasurementsAreNotDefinedInTheResults()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
             string results = Regex.Replace(
                 LatteMetricsParserTests.GetFileContents("Latte_Results_Example.txt"),
                 @"\s*(?<Interval>\d+)\s*(?<Frequency>\d+)", 
@@ -77,7 +77,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         [Test]
         public void LatteParserThrowsIfTheExpectedLatencyHistogramMeasurementsAreNotDefinedInTheResults()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
             string results = Regex.Replace(
                 LatteMetricsParserTests.GetFileContents("Latte_Results_Example.txt"),
                 @"(?<=\s*Interval\(usec\)\s*Frequency\s*)(\s*[0-9]+\s+[0-9]+\s*$)+",

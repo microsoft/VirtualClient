@@ -18,12 +18,12 @@ namespace VirtualClient
     [Category("Unit")]
     internal class VirtualClientComponentExtensionsTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         public void SetupDefaults(PlatformID platform)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform);
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 using (IProcessProxy process = await component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None))
                 {
@@ -57,7 +57,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 using (IProcessProxy process = await component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, runElevated: true))
                 {
@@ -78,7 +78,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 using (IProcessProxy process = await component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None))
                 {
@@ -99,7 +99,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 using (IProcessProxy process = await component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, runElevated: true))
                 {
@@ -121,7 +121,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 using (IProcessProxy process = await component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, runElevated: true, username: username))
                 {
@@ -142,7 +142,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 Assert.ThrowsAsync<NotSupportedException>(
                     () => component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, username: "notsupported"));
@@ -158,7 +158,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 Assert.ThrowsAsync<NotSupportedException>(
                     () => component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, username: "notsupported"));

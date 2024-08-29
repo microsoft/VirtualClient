@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MLPerfTrainingExecutorTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
         private DependencyPath mockPackage;
         private IEnumerable<Disk> disks;
         private string output;
@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
 
@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
                 "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model"
             };
 
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await MLPerfTrainingExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
@@ -62,7 +62,7 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
             
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await MLPerfTrainingExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
                 await MLPerfTrainingExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
@@ -74,15 +74,15 @@ namespace VirtualClient.Actions
         private void SetupDefaultMockBehavior(PlatformID platformID)
         {
             this.commandsExecuted = new List<string>();
-            this.mockFixture = new DependencyFixture();
-            this.mockFixture.Setup(platformID);
-            this.mockPackage = new DependencyPath("MLPerfTraining", this.mockFixture.PlatformSpecifics.GetPackagePath("mlperf"));
+            this.fixture = new DependencyFixture();
+            this.fixture.Setup(platformID);
+            this.mockPackage = new DependencyPath("MLPerfTraining", this.fixture.PlatformSpecifics.GetPackagePath("mlperf"));
 
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
-            this.mockFixture.DiskManager.AddRange(this.disks);
-            this.mockFixture.SetupWorkloadPackage("mlperftraining", expectedFiles: @"win-x64\diskspd.exe");
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+            this.fixture.DiskManager.AddRange(this.disks);
+            this.fixture.SetupWorkloadPackage("mlperftraining", expectedFiles: @"win-x64\diskspd.exe");
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
                 { nameof(MLPerfTrainingExecutor.Model), "bert" },
@@ -100,9 +100,9 @@ namespace VirtualClient.Actions
             string outputPath = Path.Combine(workingDirectory, "Examples", "MLPerfTraining", "Example_bert_real_output.txt");
             this.output = File.ReadAllText(outputPath);
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 this.commandsExecuted.Add($"{command} {arguments}".Trim());
                 process.StandardOutput.Append(this.output);
 

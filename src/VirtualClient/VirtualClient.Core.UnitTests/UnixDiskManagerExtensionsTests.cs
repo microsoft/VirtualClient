@@ -24,7 +24,7 @@ namespace VirtualClient
     [Category("Unit")]
     public class UnixDiskManagerExtensionsTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private UnixDiskManager diskManager;
         private InMemoryProcessManager processManager;
         private InMemoryProcess testProcess;
@@ -33,8 +33,8 @@ namespace VirtualClient
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.SetupMocks();
 
             this.processManager = new InMemoryProcessManager(PlatformID.Unix)
             {
@@ -68,7 +68,7 @@ namespace VirtualClient
 
             IEnumerable<Disk> disks = await this.diskManager.GetDisksAsync(CancellationToken.None).ConfigureAwait(false);
 
-            bool mountPointsCreated = await this.diskManager.CreateMountPointsAsync(disks, this.mockFixture.SystemManagement.Object, CancellationToken.None)
+            bool mountPointsCreated = await this.diskManager.CreateMountPointsAsync(disks, this.fixture.SystemManagement.Object, CancellationToken.None)
                 .ConfigureAwait(false);
 
             Assert.IsTrue(mountPointsCreated);

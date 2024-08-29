@@ -13,12 +13,12 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     internal class WaitExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         public void SetupDefaults(PlatformID platform, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform, architecture);
         }
 
         [Ignore("Flaky test that sometimes fail.")]
@@ -27,15 +27,15 @@ namespace VirtualClient.Dependencies
         public async Task BufferTimeWaiterWaitsForExpectedAmountOfTime(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaults(platform, architecture);
-            this.mockFixture.Parameters[nameof(WaitExecutor.Duration)] = new TimeSpan(0, 0, 0, 0, 10).ToString();
+            this.fixture.Parameters[nameof(WaitExecutor.Duration)] = new TimeSpan(0, 0, 0, 0, 10).ToString();
 
-            using (TestWaitExecutor testBufferTimeWaiter = new TestWaitExecutor(this.mockFixture))
+            using (TestWaitExecutor testBufferTimeWaiter = new TestWaitExecutor(this.fixture))
             {
                 DateTime startTime = DateTime.Now;
                 await testBufferTimeWaiter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 DateTime endTime = DateTime.Now;
 
-                if ((endTime - startTime) >= TimeSpan.Parse(this.mockFixture.Parameters[nameof(WaitExecutor.Duration)].ToString()))
+                if ((endTime - startTime) >= TimeSpan.Parse(this.fixture.Parameters[nameof(WaitExecutor.Duration)].ToString()))
                 {
                     Assert.IsTrue(true);
                 }
@@ -48,8 +48,8 @@ namespace VirtualClient.Dependencies
 
         private class TestWaitExecutor : WaitExecutor
         {
-            public TestWaitExecutor(MockFixture mockFixture)
-                : base(mockFixture?.Dependencies, mockFixture?.Parameters)
+            public TestWaitExecutor(MockFixture fixture)
+                : base(fixture?.Dependencies, fixture?.Parameters)
             {
             }
         }

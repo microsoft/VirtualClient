@@ -16,14 +16,14 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class NetworkConfigurationSetupTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private string[] exampleLimitsConfigFile;
         private string[] exampleRcLocalFile;
 
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture().Setup(PlatformID.Unix);
+            this.fixture = new MockFixture().Setup(PlatformID.Unix);
 
             this.exampleLimitsConfigFile = new string[]
             {
@@ -105,7 +105,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleLimitsConfigFile, cleanedSettings);
@@ -128,7 +128,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleLimitsConfigFile, cleanedSettings);
@@ -151,7 +151,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleLimitsConfigFile, cleanedSettings);
@@ -180,7 +180,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleLimitsConfigFile, cleanedSettings);
@@ -210,7 +210,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleRcLocalFile, cleanedSettings);
@@ -240,7 +240,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleRcLocalFile, cleanedSettings);
@@ -278,7 +278,7 @@ namespace VirtualClient.Dependencies
                 "# VC Settings End",
             });
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleRcLocalFile, cleanedSettings);
@@ -288,7 +288,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public void NetworkConfigurationSetupHandlesEmptyContentOrFileswWhenRemovingPreviouslyAppliedSettings()
         {
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(null);
                 Assert.IsNotNull(cleanedSettings);
@@ -305,7 +305,7 @@ namespace VirtualClient.Dependencies
         {
             List<string> previousContent = new List<string>(this.exampleLimitsConfigFile);
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleLimitsConfigFile, cleanedSettings);
@@ -315,19 +315,19 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task NetworkConfigurationSetsTheExpectedSettingsInTheSystemConfigFile_UnixSystems()
         {
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture.Setup(PlatformID.Unix);
             string systemConf = File.ReadAllText(MockFixture.GetDirectory(typeof(NetworkConfigurationSetupTests), "Examples", "example-system.conf"));
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
-                this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("system.conf"))))
+                this.fixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("system.conf"))))
                     .Returns(true);
 
-                this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<CancellationToken>()))
+                this.fixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(systemConf);
 
                 bool verified = false;
-                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                this.fixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Callback<string, string, CancellationToken>((path, content, token) =>
                     {
                         Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
@@ -342,19 +342,19 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task NetworkConfigurationSetsTheExpectedSettingsInTheUserConfigFile_UnixSystems()
         {
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture.Setup(PlatformID.Unix);
             string systemConf = File.ReadAllText(MockFixture.GetDirectory(typeof(NetworkConfigurationSetupTests), "Examples", "example-system.conf"));
 
-            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.fixture))
             {
-                this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("user.conf"))))
+                this.fixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("user.conf"))))
                     .Returns(true);
 
-                this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<CancellationToken>()))
+                this.fixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(systemConf);
 
                 bool verified = false;
-                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                this.fixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Callback<string, string, CancellationToken>((path, content, token) =>
                     {
                         Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
@@ -368,8 +368,8 @@ namespace VirtualClient.Dependencies
 
         private class TestNetworkConfigurationSetup : NetworkConfigurationSetup
         {
-            public TestNetworkConfigurationSetup(MockFixture mockFixture)
-                : base(mockFixture.Dependencies, mockFixture.Parameters)
+            public TestNetworkConfigurationSetup(MockFixture fixture)
+                : base(fixture.Dependencies, fixture.Parameters)
             {
             }
 

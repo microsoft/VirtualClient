@@ -20,12 +20,12 @@ namespace VirtualClient.Metadata
     public class MetadataExtensionsTests
     {
         private static readonly string LspciExamples = Path.Combine(MockFixture.TestResourcesDirectory, "Unix", "lspci");
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         public void SetupFixture(PlatformID platform, Architecture architecture = Architecture.X64)
         {
-            mockFixture = new MockFixture();
-            mockFixture.Setup(platform, architecture);
+            fixture = new MockFixture();
+            fixture.Setup(platform, architecture);
         }
 
 
@@ -56,7 +56,7 @@ namespace VirtualClient.Metadata
                 $"This is free software; see the source for copying conditions.  There is NO{newLine}" +
                 $"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.{newLine}";
 
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+            this.fixture.ProcessManager.OnProcessCreated = (process) =>
             {
                 if (process.FullCommand().StartsWith("cc"))
                 {
@@ -72,7 +72,7 @@ namespace VirtualClient.Metadata
                 }
             };
 
-            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetInstalledCompilerMetadataAsync();
+            IDictionary<string, object> metadata = await this.fixture.SystemManagement.Object.GetInstalledCompilerMetadataAsync();
             Assert.IsTrue(metadata.Count == 3);
 
             object value;
@@ -85,8 +85,8 @@ namespace VirtualClient.Metadata
         public void GetInstalledCompilerMetadataExtensionHandlesProcessErrors()
         {
             this.SetupFixture(PlatformID.Win32NT);
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => (process as InMemoryProcess).ExitCode = 12345;
-            Assert.DoesNotThrowAsync(() => this.mockFixture.SystemManagement.Object.GetInstalledCompilerMetadataAsync());
+            this.fixture.ProcessManager.OnProcessCreated = (process) => (process as InMemoryProcess).ExitCode = 12345;
+            Assert.DoesNotThrowAsync(() => this.fixture.SystemManagement.Object.GetInstalledCompilerMetadataAsync());
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace VirtualClient.Metadata
         {
             this.SetupFixture(platform, architecture);
 
-            IDictionary<string, object> metadata = await mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await fixture.SystemManagement.Object.GetHostMetadataAsync();
 
             object value;
             Assert.IsTrue(metadata.TryGetValue("computerName", out value) && value.ToString() == Environment.MachineName);
@@ -114,14 +114,14 @@ namespace VirtualClient.Metadata
         {
             this.SetupFixture(platform, architecture);
 
-            this.mockFixture.SystemManagement.Setup(mgmt => mgmt.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgmt => mgmt.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new LinuxDistributionInfo
                 {
                     LinuxDistribution = LinuxDistribution.Ubuntu,
                     OperationSystemFullName = "Ubuntu 20.01 build 1234"
                 });
 
-            IDictionary<string, object> metadata = await mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await fixture.SystemManagement.Object.GetHostMetadataAsync();
 
             object value;
             Assert.IsTrue(metadata.TryGetValue("computerName", out value) && value.ToString() == Environment.MachineName);
@@ -150,13 +150,13 @@ namespace VirtualClient.Metadata
 
             MemoryInfo memoryInfo = new MemoryInfo(123456789);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await this.fixture.SystemManagement.Object.GetHostMetadataAsync();
             Assert.IsTrue(metadata.Count == 14);
 
             object value;
@@ -206,13 +206,13 @@ namespace VirtualClient.Metadata
 
             MemoryInfo memoryInfo = new MemoryInfo(123456789);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await this.fixture.SystemManagement.Object.GetHostMetadataAsync();
             Assert.IsTrue(metadata.Count == 20);
 
             object value;
@@ -266,13 +266,13 @@ namespace VirtualClient.Metadata
 
             MemoryInfo memoryInfo = new MemoryInfo(123456789);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await this.fixture.SystemManagement.Object.GetHostMetadataAsync();
             Assert.IsTrue(metadata.Count == 18);
 
             object value;
@@ -320,13 +320,13 @@ namespace VirtualClient.Metadata
 
             MemoryInfo memoryInfo = new MemoryInfo(123456789);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await this.fixture.SystemManagement.Object.GetHostMetadataAsync();
             Assert.IsTrue(metadata.Count == 14);
 
             object value;
@@ -373,13 +373,13 @@ namespace VirtualClient.Metadata
 
             MemoryInfo memoryInfo = new MemoryInfo(123456789);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetHostMetadataAsync();
+            IDictionary<string, object> metadata = await this.fixture.SystemManagement.Object.GetHostMetadataAsync();
             Assert.IsTrue(metadata.Count == 17);
 
             // Host/OS Metadata
@@ -421,10 +421,10 @@ namespace VirtualClient.Metadata
                 numaNodeCount: 1,
                 true);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetCpuPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetCpuPartsMetadataAsync();
             Assert.IsNotEmpty(parts);
             Assert.IsTrue(parts.Count() == 1);
 
@@ -454,10 +454,10 @@ namespace VirtualClient.Metadata
                 // No CPU cache information
                 caches: null);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetCpuPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetCpuPartsMetadataAsync();
             Assert.IsNotEmpty(parts);
             Assert.IsTrue(parts.Count() == 1);
 
@@ -486,10 +486,10 @@ namespace VirtualClient.Metadata
                 numaNodeCount: 2,
                 true);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cpuInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetCpuPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetCpuPartsMetadataAsync();
             Assert.IsNotEmpty(parts);
             Assert.IsTrue(parts.Count() == 1);
 
@@ -511,10 +511,10 @@ namespace VirtualClient.Metadata
             // No memory chip sets available
             MemoryInfo memoryInfo = new MemoryInfo(123456789);
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetMemoryPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetMemoryPartsMetadataAsync();
             Assert.IsEmpty(parts);
         }
 
@@ -532,10 +532,10 @@ namespace VirtualClient.Metadata
                     new MemoryChipInfo("Memory_2", "Memory", 223344556, 2432, "Micron", "M987654")
                 });
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(memoryInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetMemoryPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetMemoryPartsMetadataAsync();
             Assert.IsNotEmpty(parts);
             Assert.IsTrue(parts.Count() == 2);
 
@@ -565,10 +565,10 @@ namespace VirtualClient.Metadata
             // No network interfaces sets available
             NetworkInfo networkInfo = new NetworkInfo(Array.Empty<NetworkInterfaceInfo>());
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(networkInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetNetworkPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetNetworkPartsMetadataAsync();
             Assert.IsEmpty(parts);
         }
 
@@ -588,10 +588,10 @@ namespace VirtualClient.Metadata
                     "Realtek Semiconductor Co., Ltd. RTL810xE PCI Express Fast Ethernet controller (rev 07)")
             });
 
-            this.mockFixture.SystemManagement.Setup(sys => sys.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sys => sys.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(networkInfo);
 
-            IEnumerable<IDictionary<string, object>> parts = await this.mockFixture.SystemManagement.Object.GetNetworkPartsMetadataAsync();
+            IEnumerable<IDictionary<string, object>> parts = await this.fixture.SystemManagement.Object.GetNetworkPartsMetadataAsync();
             Assert.IsNotEmpty(parts);
             Assert.IsTrue(parts.Count() == 2);
 

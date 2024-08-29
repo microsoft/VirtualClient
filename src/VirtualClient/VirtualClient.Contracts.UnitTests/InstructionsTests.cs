@@ -18,12 +18,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class InstructionsTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
@@ -70,8 +70,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void InstructionsObjectsCorrectlyImplementsEqualitySemantics()
         {
-            Instructions instance1 = this.mockFixture.Create<Instructions>();
-            Instructions instance2 = this.mockFixture.Create<Instructions>();
+            Instructions instance1 = this.fixture.Create<Instructions>();
+            Instructions instance2 = this.fixture.Create<Instructions>();
 
             EqualityAssert.CorrectlyImplementsEqualitySemantics(() => instance1, () => instance2);
         }
@@ -79,8 +79,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void InstructionsObjectsCorrectlyImplementsHashcodeSemantics()
         {
-            Instructions instance1 = this.mockFixture.Create<Instructions>();
-            Instructions instance2 = this.mockFixture.Create<Instructions>();
+            Instructions instance1 = this.fixture.Create<Instructions>();
+            Instructions instance2 = this.fixture.Create<Instructions>();
 
             EqualityAssert.CorrectlyImplementsHashcodeSemantics(() => instance1, () => instance2);
         }

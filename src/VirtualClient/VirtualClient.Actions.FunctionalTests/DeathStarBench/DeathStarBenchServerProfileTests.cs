@@ -17,14 +17,14 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class DeathStarBenchServerProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
         private string clientAgentId;
         private string serverAgentId;
 
         [SetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
@@ -38,14 +38,14 @@ namespace VirtualClient.Actions
         [TestCase("PERF-NETWORK-DEATHSTARBENCH.json")]
         public async Task DeathStarBenchWorkloadProfileInstallsTheExpectedDependenciesOfServerOnUnixPlatform(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
-            this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
+            this.fixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
+            this.fixture.SetupFile(@"/usr/local/bin/docker-compose");
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteActions = false;
 
@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 // Workload dependency package expectations  
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "deathstarbench");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "deathstarbench");
             }
         }
 
@@ -73,11 +73,11 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - Expected processes are executed.
-            this.mockFixture
+            this.fixture
                 .Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId)
                 .SetupLayout(new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
+            this.fixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
 
             string[] expectedFiles = new string[]
             {
@@ -88,12 +88,12 @@ namespace VirtualClient.Actions
                 @"linux-x64/hotelreservation/wrk2",
             };
 
-            this.mockFixture.SetupWorkloadPackage("deathstarbench", expectedFiles: expectedFiles);
-            this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
+            this.fixture.SetupWorkloadPackage("deathstarbench", expectedFiles: expectedFiles);
+            this.fixture.SetupFile(@"/usr/local/bin/docker-compose");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments == "bash -c \"docker ps | wc -l\"")
                 {
                     process.StandardOutput.Append("1");
@@ -102,10 +102,10 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -113,13 +113,13 @@ namespace VirtualClient.Actions
         [TestCase("PERF-NETWORK-DEATHSTARBENCH.json")]
         public void DeathStarBenchWorkloadProfileActionsWillNotBeExecutedIfTheClientWorkloadPackageDoesNotExist(string profile)
         {
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
                 Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);

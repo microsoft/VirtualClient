@@ -19,13 +19,13 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class RedisPackageInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         [Test]
@@ -38,10 +38,10 @@ namespace VirtualClient.Dependencies
                 LinuxDistribution = LinuxDistribution.SUSE
             };
 
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockInfo);
 
-            using (TestRedisPackageInstallation installation = new TestRedisPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestRedisPackageInstallation installation = new TestRedisPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => installation.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exception.Reason);
@@ -61,29 +61,29 @@ namespace VirtualClient.Dependencies
                 LinuxDistribution = LinuxDistribution.Ubuntu
             };
 
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockInfo);
 
-            using (TestRedisPackageInstallation installation = new TestRedisPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestRedisPackageInstallation installation = new TestRedisPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None);
 
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"apt update"));
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"apt install redis -y"));
+                Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted($"apt update"));
+                Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted($"apt install redis -y"));
             }
         }
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture.Setup(platform, architecture);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Setup(platform, architecture);
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "redis" }
             };
 
-            this.mockPackage = new DependencyPath("redis", this.mockFixture.GetPackagePath("redis"));
-            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.mockPackage = new DependencyPath("redis", this.fixture.GetPackagePath("redis"));
+            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
         }
 
         private class TestRedisPackageInstallation : RedisPackageInstallation

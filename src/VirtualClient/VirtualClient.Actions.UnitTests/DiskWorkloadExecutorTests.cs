@@ -22,7 +22,7 @@ namespace VirtualClient.Actions.DiskPerformance
     {
         private static string dllPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(DiskWorkloadExecutorTests)).Location);
 
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private IDictionary<string, IConvertible> profileParameters;
         private IEnumerable<Disk> disks;
         private string mockCommandLine;
@@ -30,9 +30,9 @@ namespace VirtualClient.Actions.DiskPerformance
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupMocks();
 
             // Setup default profile parameter values.
             this.mockCommandLine = "--name=fio_test_1 --ioengine=libaio";
@@ -43,7 +43,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(DiskWorkloadExecutor.DeleteTestFilesOnFinish), "true" }
             };
 
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
         }
 
         [Test]
@@ -51,7 +51,7 @@ namespace VirtualClient.Actions.DiskPerformance
         {
             IEnumerable<Disk> expectedDisks = this.disks.Where(disk => !disk.IsOperatingSystem());
 
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
                 CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
@@ -64,7 +64,7 @@ namespace VirtualClient.Actions.DiskPerformance
             IEnumerable<Disk> expectedDisks = this.disks.Where(disk => disk.IsOperatingSystem());
             this.profileParameters[nameof(DiskWorkloadExecutor.DiskFilter)] = "osdisk";
 
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
                 CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
@@ -76,7 +76,7 @@ namespace VirtualClient.Actions.DiskPerformance
         {
             IEnumerable<Disk> expectedDisks = this.disks;
             this.profileParameters[nameof(DiskWorkloadExecutor.DiskFilter)] = "none";
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
                 CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
@@ -91,7 +91,7 @@ namespace VirtualClient.Actions.DiskPerformance
 
             string expectedTestFilesSeperatedByWhitesapce = "D:/any/test-1.dat D:/any/test-2.dat D:/any/test-3.dat";
 
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 string testFilesSeperatedByWhitesapce = workloadExecutor.GetTestFiles(mountPoint);
                 IEnumerable<string> testFiles = testFilesSeperatedByWhitesapce.Split(" ");
@@ -106,7 +106,7 @@ namespace VirtualClient.Actions.DiskPerformance
             string expectedCommand = "/home/any/path/to/fio";
             IEnumerable<Disk> remoteDisks = this.SetupWorkloadScenario(testRemoteDisks: true);
 
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<DiskWorkloadProcess> processes = workloadExecutor.CreateWorkloadProcesses(expectedCommand, this.mockCommandLine, remoteDisks, "SingleProcess");
 
@@ -135,7 +135,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 testOSDisk: true,
                 processModel: "SingleProcessPerDisk");
 
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<DiskWorkloadProcess> processes = workloadExecutor.CreateWorkloadProcesses(expectedCommand, this.mockCommandLine, allDisks, "SingleProcessPerDisk");
 
@@ -185,11 +185,11 @@ namespace VirtualClient.Actions.DiskPerformance
             // F:
             //
             // We are looking for the first 2 when we define the TestDisks -> C,D
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
 
             this.profileParameters["DiskFilter"] = "DiskPath:C,D";
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> disksToTest = workloadExecutor.GetDisksToTest(this.disks);
 
@@ -210,10 +210,10 @@ namespace VirtualClient.Actions.DiskPerformance
             // /dev/sdf
             //
             // We are looking for the first 2 when we define the TestDisks -> /dev/sdd,/dev/sde
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
 
             this.profileParameters["DiskFilter"] = "DiskPath:/dev/sdd,/dev/sde";
-            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> disksToTest = workloadExecutor.GetDisksToTest(this.disks);
 

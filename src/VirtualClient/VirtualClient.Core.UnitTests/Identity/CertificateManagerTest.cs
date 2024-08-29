@@ -21,13 +21,13 @@ namespace VirtualClient.Identity
     public class CertificateManagerTest
     {
         private TestCertificateManager testCertificateManager;
-        private Fixture mockFixture;
+        private Fixture fixture;
 
         [SetUp]
         public void InitializeTest()
         {
-            this.mockFixture = new Fixture();
-            this.mockFixture.SetupCertificateMocks();
+            this.fixture = new Fixture();
+            this.fixture.SetupCertificateMocks();
             this.testCertificateManager = new TestCertificateManager();
         }
 
@@ -50,7 +50,7 @@ namespace VirtualClient.Identity
                 isExpectedStore = store.Name == StoreName.My.ToString() && store.Location == StoreLocation.LocalMachine;
 
                 // Return a match
-                return this.mockFixture.Create<X509Certificate2>();
+                return this.fixture.Create<X509Certificate2>();
             };
 
             this.testCertificateManager.GetCertificateFromStoreAsync("c3rt1f1c4t3thum6pr1nt", new List<StoreLocation>() { StoreLocation.LocalMachine })
@@ -69,7 +69,7 @@ namespace VirtualClient.Identity
                 isExpectedCertificate.Add(thumbprint == expectedThumbprint);
 
                 // Return a match
-                return this.mockFixture.Create<X509Certificate2>();
+                return this.fixture.Create<X509Certificate2>();
             };
 
             this.testCertificateManager.GetCertificateFromStoreAsync(expectedThumbprint)
@@ -87,7 +87,7 @@ namespace VirtualClient.Identity
             string expectedIssuer = "CN=test.certificate";
             string expectedSubjectName = "CN=test.certificate";
 
-            X509Certificate2 expectedCertificate = this.mockFixture.Create<X509Certificate2>();
+            X509Certificate2 expectedCertificate = this.fixture.Create<X509Certificate2>();
 
             List<bool> isExpectedCertificate = new List<bool>();
             this.testCertificateManager.OnGetCertificateByIssuerFromStoreAsync = (store, issuer, subjectName, validOnly) =>
@@ -116,7 +116,7 @@ namespace VirtualClient.Identity
             {
                 allCerts.Add(validOnly == false);
 
-                return this.mockFixture.Create<X509Certificate2>();
+                return this.fixture.Create<X509Certificate2>();
             };
 
             this.testCertificateManager.GetCertificateFromStoreAsync("c3rt1f1c4t3thum6pr1nt")

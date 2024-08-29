@@ -16,12 +16,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class LAPACKProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [SetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -29,8 +29,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-LAPACK.json")]
         public void LAPACKWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -40,18 +40,18 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-LAPACK.json")]
         public async Task LAPACKWorkloadProfileInstallsTheExpectedDependenciesOnWindowsPlatform(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
 
-            string cygwinPath = this.mockFixture.PlatformSpecifics.Combine("C:", "tools", "cygwin");
-            this.mockFixture.SetupFile(cygwinPath);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            string cygwinPath = this.fixture.PlatformSpecifics.Combine("C:", "tools", "cygwin");
+            this.fixture.SetupFile(cygwinPath);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
                 // The workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "lapack");
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "cygwin");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "lapack");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "cygwin");
             }
         }
 
@@ -59,23 +59,23 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-LAPACK.json")]
         public async Task LAPACKWorkloadProfileInstallsTheExpectedDependenciesOnUnixPlatform(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
                 process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
                 // The workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "lapack");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "lapack");
             }
         }
 
@@ -90,32 +90,32 @@ namespace VirtualClient.Actions
                     @"win-x64/LapackTestScript.sh", @"win-x64/lapack_testing.py",
                     @"win-x64/TESTING/testing_results.txt"
                 };
-            string cygwinPath = this.mockFixture.PlatformSpecifics.Combine("C:", "tools", "cygwin");
+            string cygwinPath = this.fixture.PlatformSpecifics.Combine("C:", "tools", "cygwin");
 
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupFile(cygwinPath);
-            this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: expectedFiles);
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.SetupFile(cygwinPath);
+            this.fixture.SetupWorkloadPackage("lapack", expectedFiles: expectedFiles);
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("LapackTestScript.sh", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_LAPACK.txt"));
-                    this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: @"win-x64\TESTING\testing_results.txt");
+                    this.fixture.SetupWorkloadPackage("lapack", expectedFiles: @"win-x64\TESTING\testing_results.txt");
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -135,15 +135,15 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: expectedFiles);
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupWorkloadPackage("lapack", expectedFiles: expectedFiles);
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("LapackTestScript.sh", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_LAPACK.txt"));
-                    this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: @"linux-x64/TESTING/testing_results.txt");
+                    this.fixture.SetupWorkloadPackage("lapack", expectedFiles: @"linux-x64/TESTING/testing_results.txt");
                 }
                 else if (arguments.Contains("--version", StringComparison.OrdinalIgnoreCase))
                 {
@@ -154,11 +154,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 

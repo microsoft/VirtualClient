@@ -24,14 +24,14 @@ namespace VirtualClient.Actions.NASParallelBench
     {
         private const string ExampleBenchmark = "bt.S.x";
         private const string ExampleUsername = "my-username";
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
         private State expectedState;
 
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
 
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
@@ -39,11 +39,11 @@ namespace VirtualClient.Actions.NASParallelBench
         [Test]
         public void NASParallelBenchClientExecutorThrowsWhenABenchmarkIsNotFound()
         {
-            this.mockFixture.FileSystem.Setup(d => d.File.Exists(It.IsAny<string>()))
+            this.fixture.FileSystem.Setup(d => d.File.Exists(It.IsAny<string>()))
                 .Returns(false);
 
             using (NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(
-                this.mockFixture.Dependencies, this.mockFixture.Parameters))
+                this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exc.Reason);
@@ -62,20 +62,20 @@ namespace VirtualClient.Actions.NASParallelBench
         {
             if (!MultiTierScenario)
             {
-                this.mockFixture.Layout = null;
+                this.fixture.Layout = null;
             }
-            this.mockFixture.Parameters["Benchmark"] = Benchmark;
+            this.fixture.Parameters["Benchmark"] = Benchmark;
 
             int executionCount = 0;
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 executionCount++;
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
             using (NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(
-                this.mockFixture.Dependencies, this.mockFixture.Parameters))
+                this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None);
             }
@@ -86,18 +86,18 @@ namespace VirtualClient.Actions.NASParallelBench
         [Test]
         public async Task NASParallelBenchClientExecutorUsesMPIOptionInMultiSystemScenarios()
         {
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual(cmd, "sudo");
                 Assert.AreEqual(args, $"bash -c \"runuser -l my-username -c 'export OMP_NUM_THREADS" +
                     $"={Environment.ProcessorCount} && export NPB_NPROCS_STRICT=off && mpiexec -np 2 " +
-                    $"--host 1.2.3.4,1.2.3.5 {this.mockFixture.GetPackagePath()}/nasparallelbench/" +
+                    $"--host 1.2.3.4,1.2.3.5 {this.fixture.GetPackagePath()}/nasparallelbench/" +
                     $"linux-x64/NPB-MPI/bin/bt.S.x'\"");
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
             using (NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(
-                this.mockFixture.Dependencies, this.mockFixture.Parameters))
+                this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None);
             }
@@ -106,18 +106,18 @@ namespace VirtualClient.Actions.NASParallelBench
         [Test]
         public async Task NASParallelBenchClientExecutorUsesOMPOptionInSingleSystemScenarios()
         {
-            this.mockFixture.Layout = null;
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            this.fixture.Layout = null;
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual(cmd, "sudo");
                 Assert.AreEqual(args, $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} " +
-                    $"&& {this.mockFixture.GetPackagePath()}/nasparallelbench/linux-x64/NPB-OMP/bin/" +
+                    $"&& {this.fixture.GetPackagePath()}/nasparallelbench/linux-x64/NPB-OMP/bin/" +
                     $"bt.S.x\"");
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
             using NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(
-                this.mockFixture.Dependencies, this.mockFixture.Parameters);
+                this.fixture.Dependencies, this.fixture.Parameters);
             {
                 await executor.ExecuteAsync(CancellationToken.None);
             }
@@ -125,22 +125,22 @@ namespace VirtualClient.Actions.NASParallelBench
 
         private void SetupDefaultMockBehavior(PlatformID platformID)
         {
-            this.mockFixture.Setup(platformID);
+            this.fixture.Setup(platformID);
 
-            this.mockPath = this.mockFixture.Create<DependencyPath>();
+            this.mockPath = this.fixture.Create<DependencyPath>();
             DependencyPath mockPackage = new DependencyPath(
-                "nasparallelbench", this.mockFixture.PlatformSpecifics.GetPackagePath("nasparallelbench"));
+                "nasparallelbench", this.fixture.PlatformSpecifics.GetPackagePath("nasparallelbench"));
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 ["PackageName"] = this.mockPath.Name,
                 ["Benchmark"] = NASParallelBenchClientExecutorTests.ExampleBenchmark,
                 ["Username"] = NASParallelBenchClientExecutorTests.ExampleUsername
             };
 
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.mockFixture.Process;
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(mockPackage);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(mockPackage);
 
             string npbBuildState = "NpbBuildState";
             this.expectedState = new State(new Dictionary<string, IConvertible>
@@ -150,9 +150,9 @@ namespace VirtualClient.Actions.NASParallelBench
 
             Item<JObject> expectedStateItem = new Item<JObject>(npbBuildState, JObject.FromObject(this.expectedState));
 
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(
+            this.fixture.ApiClient.Setup(client => client.GetStateAsync(
                 It.IsAny<String>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
         }
     }
 }

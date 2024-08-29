@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class NetworkingWorkloadProxyTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
 
         [OneTimeSetUp]
@@ -39,25 +39,25 @@ namespace VirtualClient.Actions
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
 
         }
 
         public void SetupDefaultMockApiBehavior(PlatformID platformID)
         {
-            this.mockFixture.Setup(platformID);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Setup(platformID);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.fixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.fixture.Parameters["PackageName"] = "Networking";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
             string results = File.ReadAllText(resultsPath);
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(results);
         }
 
@@ -69,9 +69,9 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockApiBehavior(platformID);
  
             string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            TestNetworkingWorkloadServerExecutor component = new TestNetworkingWorkloadServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestNetworkingWorkloadServerExecutor component = new TestNetworkingWorkloadServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             Mock<object> mockSender = new Mock<object>();
 

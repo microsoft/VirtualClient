@@ -29,13 +29,13 @@ namespace VirtualClient.Actions
     public class
         SockPerfClientExecutorTests2
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
 
         }
 
@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
         {
             int sendInstructionsExecuted = 0;
             this.SetupDefaultMockApiBehavior(platformID, architecture);
-            this.mockFixture.ApiClient.Setup(client => client.SendInstructionsAsync(It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+            this.fixture.ApiClient.Setup(client => client.SendInstructionsAsync(It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .Callback<JObject, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((obj, can, pol) =>
                 {
                     Item<Instructions> stateItem = obj.ToObject<Item<Instructions>>();
@@ -67,9 +67,9 @@ namespace VirtualClient.Actions
                         sendInstructionsExecuted++;
                     }
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            TestSockPerfClientExecutor component = new TestSockPerfClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestSockPerfClientExecutor component = new TestSockPerfClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             Assert.AreEqual(sendInstructionsExecuted, 3);
@@ -82,16 +82,16 @@ namespace VirtualClient.Actions
         {
             int processExecuted = 0;
             this.SetupDefaultMockApiBehavior(platformID, architecture);
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            string expectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 processExecuted++;
                 commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            TestSockPerfClientExecutor component = new TestSockPerfClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestSockPerfClientExecutor component = new TestSockPerfClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
@@ -100,27 +100,27 @@ namespace VirtualClient.Actions
             CollectionAssert.AreEqual(
             new List<string>
             {
-                "sudo chmod +x \"" + this.mockFixture.Combine(expectedPath, exe) + "\"",
-                this.mockFixture.Combine(expectedPath, exe) + " mockMode -i 1.2.3.5 -p 6100 --tcp -t 300 --mps=max --full-rtt --msg-size 44 --client_ip 1.2.3.4 --full-log " + this.mockFixture.Combine(expectedPath, "AnyScenario", "sockperf-results.txt")
+                "sudo chmod +x \"" + this.fixture.Combine(expectedPath, exe) + "\"",
+                this.fixture.Combine(expectedPath, exe) + " mockMode -i 1.2.3.5 -p 6100 --tcp -t 300 --mps=max --full-rtt --msg-size 44 --client_ip 1.2.3.4 --full-log " + this.fixture.Combine(expectedPath, "AnyScenario", "sockperf-results.txt")
             },
             commandsExecuted) ;
         }
 
         private void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Setup(platformID, architecture);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.fixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
-            this.mockFixture.Parameters["TestMode"] = "mockMode";
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["MessageSize"] = 44;
-            this.mockFixture.Parameters["MessagesPerSecond"] = "max";
-            this.mockFixture.Parameters["ConfidenceLevel"] = "99";
+            this.fixture.Parameters["PackageName"] = "Networking";
+            this.fixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
+            this.fixture.Parameters["TestMode"] = "mockMode";
+            this.fixture.Parameters["TestDuration"] = 300;
+            this.fixture.Parameters["MessageSize"] = 44;
+            this.fixture.Parameters["MessagesPerSecond"] = "max";
+            this.fixture.Parameters["ConfidenceLevel"] = "99";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory, "Examples", "SockPerf", "SockPerfClientExample1.txt");
@@ -129,20 +129,20 @@ namespace VirtualClient.Actions
             SockPerfWorkloadState executionStartedState = new SockPerfWorkloadState(ClientServerStatus.ExecutionStarted);
             Item<SockPerfWorkloadState> expectedStateItem = new Item<SockPerfWorkloadState>(nameof(SockPerfWorkloadState), executionStartedState);
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(results);
 
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(SockPerfWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
+            this.fixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(SockPerfWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
         }
 
         private class TestSockPerfClientExecutor : SockPerfClientExecutor2

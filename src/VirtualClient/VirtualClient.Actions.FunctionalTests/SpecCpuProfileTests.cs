@@ -15,12 +15,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class SpecCpuProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -31,8 +31,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-SPECCPU-INTSPEED.json")]
         public void SpecCpuWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -46,19 +46,19 @@ namespace VirtualClient.Actions
         [TestCase("PERF-SPECCPU-INTSPEED.json")]
         public async Task SpecCpuWorkloadProfileInstallsTheExpectedDependenciesOnLinuxPlatforms(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
             {
                 { "gcc", "10" }, // Should match profile defaults.
                 { "cc", "10" }
             });
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "speccpu2017", pkg =>
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "speccpu2017", pkg =>
                 {
                     pkg.Path.EndsWith($"/speccpu2017.[\x20-\x7E]+.zip");
                 });

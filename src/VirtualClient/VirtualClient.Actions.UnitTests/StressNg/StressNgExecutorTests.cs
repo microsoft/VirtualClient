@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class StressNgExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         [TestCase("--timeout 90 --cpu 16", "--timeout 90 --cpu 16 --metrics")]
@@ -31,19 +31,19 @@ namespace VirtualClient.Actions
         public async Task StressNgExecutorRunsTheExpectedWorkloadCommandInLinux(string inputCommandLineArgs, string expectedArgsInCommand)
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            this.mockFixture.Parameters[nameof(StressNgExecutor.CommandLine)] = inputCommandLineArgs;
+            this.fixture.Parameters[nameof(StressNgExecutor.CommandLine)] = inputCommandLineArgs;
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
             string expectedArgs = expectedArgsInCommand.Replace("coreCount", Environment.ProcessorCount.ToString());
-            string expectedCommand = @$"sudo stress-ng {expectedArgs} --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
+            string expectedCommand = @$"sudo stress-ng {expectedArgs} --yaml {this.fixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestStressNgExecutor StressNgExecutor = new TestStressNgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestStressNgExecutor StressNgExecutor = new TestStressNgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await StressNgExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -77,8 +77,8 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors(platform);
 
-            this.mockFixture.Parameters[nameof(StressNgExecutor.CommandLine)] = "--cpu 16 --yaml output.yaml";
-            using (TestStressNgExecutor executor = new TestStressNgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Parameters[nameof(StressNgExecutor.CommandLine)] = "--cpu 16 --yaml output.yaml";
+            using (TestStressNgExecutor executor = new TestStressNgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
@@ -104,25 +104,25 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehaviors(PlatformID platform)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory,"Examples", "StressNg", "StressNgCpuExample.yaml");
             string results = File.ReadAllText(resultsPath);
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(results);
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(results);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(StressNgExecutor.CommandLine), "--cpu 16 --timeout 60" },
                 { nameof(StressNgExecutor.Scenario), "CaptureSystemThroughput" }

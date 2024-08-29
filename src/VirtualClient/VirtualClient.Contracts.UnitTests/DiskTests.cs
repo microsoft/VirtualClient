@@ -18,18 +18,18 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class DiskTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
         public void DiskObjectsAreJsonSerializable()
         {
-            SerializationAssert.IsJsonSerializable<Disk>(this.mockFixture.Create<Disk>());
+            SerializationAssert.IsJsonSerializable<Disk>(this.fixture.Create<Disk>());
         }
     }
 }

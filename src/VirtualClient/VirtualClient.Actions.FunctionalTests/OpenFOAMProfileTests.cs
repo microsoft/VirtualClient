@@ -17,12 +17,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class OpenFOAMProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
         public void OpenFOAMWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -49,9 +49,9 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.EndsWith("Allrun\"", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("OpenFoamResults.txt"));
@@ -60,11 +60,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -75,9 +75,9 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
@@ -117,7 +117,7 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture.Setup(platform, architecture);
+            this.fixture.Setup(platform, architecture);
             string platformArch = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
 
             List<string> expectedFiles = new List<string>
@@ -145,14 +145,14 @@ namespace VirtualClient.Actions
                 $"{platformArch}/pitzDaily/log.simpleFoam"
             };
 
-            this.mockFixture.SetupWorkloadPackage("openfoam", expectedFiles: expectedFiles.ToArray());
+            this.fixture.SetupWorkloadPackage("openfoam", expectedFiles: expectedFiles.ToArray());
 
             string resultsFileContent = TestDependencies.GetResourceFileContents("OpenFoamResults.txt");
-            this.mockFixture.SetupFile("openfoam", $"{platformArch}/airFoil2D/log.simpleFoam", resultsFileContent);
-            this.mockFixture.SetupFile("openfoam", $"{platformArch}/elbow/log.icoFoam", resultsFileContent);
-            this.mockFixture.SetupFile("openfoam", $"{platformArch}/lockExchange/log.twoLiquidMixingFoam", resultsFileContent);
-            this.mockFixture.SetupFile("openfoam", $"{platformArch}/motorBike/log.simpleFoam", resultsFileContent);
-            this.mockFixture.SetupFile("openfoam", $"{platformArch}/pitzDaily/log.simpleFoam", resultsFileContent);
+            this.fixture.SetupFile("openfoam", $"{platformArch}/airFoil2D/log.simpleFoam", resultsFileContent);
+            this.fixture.SetupFile("openfoam", $"{platformArch}/elbow/log.icoFoam", resultsFileContent);
+            this.fixture.SetupFile("openfoam", $"{platformArch}/lockExchange/log.twoLiquidMixingFoam", resultsFileContent);
+            this.fixture.SetupFile("openfoam", $"{platformArch}/motorBike/log.simpleFoam", resultsFileContent);
+            this.fixture.SetupFile("openfoam", $"{platformArch}/pitzDaily/log.simpleFoam", resultsFileContent);
         }
     }
 }

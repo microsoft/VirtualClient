@@ -18,13 +18,13 @@ namespace VirtualClient
     [Category("Unit")]
     internal class EndpointUtilityTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void Initialize()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.SetupCertificateMocks();
+            this.fixture = new MockFixture();
+            this.fixture.SetupCertificateMocks();
         }
 
         ////[Test]
@@ -131,7 +131,7 @@ namespace VirtualClient
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -146,7 +146,7 @@ namespace VirtualClient
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 "Not=A;Valid=ConnectionString",
-                this.mockFixture.CertificateManager.Object));
+                this.fixture.CertificateManager.Object));
         }
 
         [Test]
@@ -166,7 +166,7 @@ namespace VirtualClient
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -185,7 +185,7 @@ namespace VirtualClient
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -203,7 +203,7 @@ namespace VirtualClient
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -222,13 +222,13 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            this.fixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -245,13 +245,13 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            this.fixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -285,18 +285,18 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager
+            this.fixture.CertificateManager
                 .Setup(c => c.GetCertificateFromStoreAsync(
                     It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
                     It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
                     It.IsAny<IEnumerable<StoreLocation>>(),
                     StoreName.My))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -314,18 +314,18 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager
+            this.fixture.CertificateManager
                 .Setup(c => c.GetCertificateFromStoreAsync(
                     It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
                     It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
                     It.IsAny<IEnumerable<StoreLocation>>(),
                     StoreName.My))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Packages, store.StoreName);
@@ -345,7 +345,7 @@ namespace VirtualClient
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Packages,
                 invalidEndpoint,
-                this.mockFixture.CertificateManager.Object));
+                this.fixture.CertificateManager.Object));
         }
 
         [Test]
@@ -356,7 +356,7 @@ namespace VirtualClient
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 accessPolicy,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -377,7 +377,7 @@ namespace VirtualClient
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -395,7 +395,7 @@ namespace VirtualClient
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -414,13 +414,13 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            this.fixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -436,13 +436,13 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            this.fixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -476,18 +476,18 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager
+            this.fixture.CertificateManager
                 .Setup(c => c.GetCertificateFromStoreAsync(
                     It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
                     It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
                     It.IsAny<IEnumerable<StoreLocation>>(),
                     StoreName.My))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -505,18 +505,18 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager
+            this.fixture.CertificateManager
                 .Setup(c => c.GetCertificateFromStoreAsync(
                     It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
                     It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
                     It.IsAny<IEnumerable<StoreLocation>>(),
                     StoreName.My))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(store);
             Assert.AreEqual(DependencyStore.Telemetry, store.StoreName);
@@ -536,7 +536,7 @@ namespace VirtualClient
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateEventHubStoreReference(
                 DependencyStore.Telemetry,
                 invalidEndpoint,
-                this.mockFixture.CertificateManager.Object));
+                this.fixture.CertificateManager.Object));
         }
 
         [Test]
@@ -553,7 +553,7 @@ namespace VirtualClient
         {
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -575,7 +575,7 @@ namespace VirtualClient
         {
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -598,7 +598,7 @@ namespace VirtualClient
         {
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -621,12 +621,12 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            this.fixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -649,12 +649,12 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            this.fixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("123456789", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -688,17 +688,17 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager
+            this.fixture.CertificateManager
                 .Setup(c => c.GetCertificateFromStoreAsync(
                     It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
                     It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
                     It.IsAny<IEnumerable<StoreLocation>>(),
                     StoreName.My))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 connectionString,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -732,17 +732,17 @@ namespace VirtualClient
         {
             // Setup:
             // A matching certificate is found in the local store.
-            this.mockFixture.CertificateManager
+            this.fixture.CertificateManager
                 .Setup(c => c.GetCertificateFromStoreAsync(
                     It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
                     It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
                     It.IsAny<IEnumerable<StoreLocation>>(),
                     StoreName.My))
-                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+                .ReturnsAsync(this.fixture.Create<X509Certificate2>());
 
             DependencyProfileReference profileReference = EndpointUtility.CreateProfileReference(
                 uri,
-                this.mockFixture.CertificateManager.Object);
+                this.fixture.CertificateManager.Object);
 
             Assert.IsNotNull(profileReference);
             Assert.AreEqual(new Uri(expectedUri).ToString(), profileReference.ProfileUri.ToString());
@@ -761,7 +761,7 @@ namespace VirtualClient
         {
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateProfileReference(
                 invalidEndpoint,
-                this.mockFixture.CertificateManager.Object));
+                this.fixture.CertificateManager.Object));
         }
     }
 }

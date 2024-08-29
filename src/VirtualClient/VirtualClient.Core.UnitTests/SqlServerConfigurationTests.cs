@@ -13,13 +13,13 @@ namespace VirtualClient
     [Category("Unit")]
     public class SqlServerConfigurationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private List<Disk> mockDisks;
 
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.mockDisks = new List<Disk>
             {
                 // OS disk

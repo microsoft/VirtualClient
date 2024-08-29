@@ -17,12 +17,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class NASParallelBenchProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -46,10 +46,10 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "nasparallelbench");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "nasparallelbench");
             }
         }
 
@@ -63,19 +63,19 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.SetupDefaultMockBehavior(platform, architecture);
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 var expectedCommands = this.GetProfileExpectedCommands(platform, architecture);
                 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -87,9 +87,9 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehavior(platform, architecture);
             // We ensure the workload package does not exist.
            
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
@@ -138,7 +138,7 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture.Setup(platform, architecture);
+            this.fixture.Setup(platform, architecture);
             string[] expectedFiles = null;
 
             if (architecture == Architecture.X64)
@@ -176,7 +176,7 @@ namespace VirtualClient.Actions
                 };
             }
 
-            this.mockFixture.SetupWorkloadPackage("nasparallelbench", expectedFiles: expectedFiles);
+            this.fixture.SetupWorkloadPackage("nasparallelbench", expectedFiles: expectedFiles);
         }
     }
 }

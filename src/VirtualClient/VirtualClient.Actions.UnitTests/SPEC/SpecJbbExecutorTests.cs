@@ -19,15 +19,15 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SpecJbbExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public void SpecJbbExecutorThrowsIfCannotFindSpecJbbPackage()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
-            this.mockFixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(value: null);
+            this.fixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(value: null);
 
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => specJbbExecutor.ExecuteAsync(CancellationToken.None));
             }
@@ -37,9 +37,9 @@ namespace VirtualClient.Actions
         public void SpecJbbExecutorThrowsIfCannotFindJdkPackage()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            this.mockFixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(value: null);
+            this.fixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(value: null);
 
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => specJbbExecutor.ExecuteAsync(CancellationToken.None));
             }
@@ -50,7 +50,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
@@ -60,7 +60,7 @@ namespace VirtualClient.Actions
                 $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -94,7 +94,7 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
@@ -103,7 +103,7 @@ namespace VirtualClient.Actions
                 $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -137,7 +137,7 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
@@ -145,10 +145,10 @@ namespace VirtualClient.Actions
                 @$"sudo java -Flag1 -Flag2 -Xms1234m -XX:ParallelGCThreads={Environment.ProcessorCount} -Xmx87040m " +
                 $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
 
-            this.mockFixture.Parameters["JavaFlags"] = "-Flag1 -Flag2 -Xms1234m";
+            this.fixture.Parameters["JavaFlags"] = "-Flag1 -Flag2 -Xms1234m";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -193,8 +193,8 @@ namespace VirtualClient.Actions
         {
             if (platform == PlatformID.Win32NT)
             {
-                this.mockFixture = new MockFixture();
-                this.mockFixture.Setup(PlatformID.Win32NT);
+                this.fixture = new MockFixture();
+                this.fixture.Setup(PlatformID.Win32NT);
 
                 Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
                 {
@@ -203,18 +203,18 @@ namespace VirtualClient.Actions
 
                 DependencyPath mockJdkPackage = new DependencyPath(
                     "javadevelopmentkit",
-                    this.mockFixture.PlatformSpecifics.GetPackagePath("javadevelopmentkit"),
+                    this.fixture.PlatformSpecifics.GetPackagePath("javadevelopmentkit"),
                     metadata: specifics);
 
-                DependencyPath mockJbbPackage = new DependencyPath("specjbb2015", this.mockFixture.PlatformSpecifics.GetPackagePath("specjbb2015"));
+                DependencyPath mockJbbPackage = new DependencyPath("specjbb2015", this.fixture.PlatformSpecifics.GetPackagePath("specjbb2015"));
 
-                this.mockFixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(mockJdkPackage);
-                this.mockFixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(mockJbbPackage);
+                this.fixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(mockJdkPackage);
+                this.fixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(mockJbbPackage);
             }
             else
             {
-                this.mockFixture = new MockFixture();
-                this.mockFixture.Setup(PlatformID.Unix);
+                this.fixture = new MockFixture();
+                this.fixture.Setup(PlatformID.Unix);
 
                 Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
                 {
@@ -223,25 +223,25 @@ namespace VirtualClient.Actions
 
                 DependencyPath mockJdkPackage = new DependencyPath(
                     "javadevelopmentkit",
-                    this.mockFixture.PlatformSpecifics.GetPackagePath("javadevelopmentkit"),
+                    this.fixture.PlatformSpecifics.GetPackagePath("javadevelopmentkit"),
                     metadata: specifics);
 
-                DependencyPath mockJbbPackage = new DependencyPath("specjbb2015", this.mockFixture.PlatformSpecifics.GetPackagePath("specjbb2015"));
+                DependencyPath mockJbbPackage = new DependencyPath("specjbb2015", this.fixture.PlatformSpecifics.GetPackagePath("specjbb2015"));
 
-                this.mockFixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(mockJdkPackage);
-                this.mockFixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(mockJbbPackage);
+                this.fixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(mockJdkPackage);
+                this.fixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(mockJbbPackage);
             }
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecJbbExecutor.PackageName), "specjbb2015" },
                 { nameof(SpecJbbExecutor.JdkPackageName), "javadevelopmentkit" }
@@ -249,8 +249,8 @@ namespace VirtualClient.Actions
 
             // Remove any mock blob managers so that we do not evaluate the code paths that
             // upload log files by default.
-            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
-            this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
+            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+            this.fixture.ProcessManager.OnGetProcess = (id) => null;
         }
     }
 }

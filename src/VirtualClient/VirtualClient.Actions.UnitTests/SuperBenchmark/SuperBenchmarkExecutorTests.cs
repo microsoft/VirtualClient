@@ -22,29 +22,29 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SuperBenchmarkExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
 
         [SetUp]
         public void SetupDefaultBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("SuperBenchmark", this.mockFixture.PlatformSpecifics.GetPackagePath("superbenchmark"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("SuperBenchmark", this.fixture.PlatformSpecifics.GetPackagePath("superbenchmark"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsRegex("superbenchmark")))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsRegex("superbenchmark")))
                 .Returns(false);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SuperBenchmarkExecutor.Version), "0.0.1" },
                 { nameof(SuperBenchmarkExecutor.ContainerVersion), "testContainer" },
@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
         public async Task SuperBenchmarkExecutorClonesTheExpectedRepoContents()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SuperBenchmarkExecutor.Version), "1.2.3" },
                 { nameof(SuperBenchmarkExecutor.ContainerVersion), "testContainer" },
@@ -82,7 +82,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sudo git clone -b v1.2.3 https://github.com/microsoft/superbenchmark";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -102,7 +102,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -117,7 +117,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sudo bash initialize.sh testuser";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -137,7 +137,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sb deploy --host-list localhost -i testContainer";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -172,7 +172,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sb run --host-list localhost -c Test.yaml";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -207,7 +207,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -221,7 +221,7 @@ namespace VirtualClient.Actions
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>
             {
-                $"sudo chmod -R 2777 \"{this.mockFixture.PlatformSpecifics.CurrentDirectory}\"",
+                $"sudo chmod -R 2777 \"{this.fixture.PlatformSpecifics.CurrentDirectory}\"",
                 $"sudo git clone -b v0.0.1 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh testuser",
                 $"sb deploy --host-list localhost -i testContainer",
@@ -229,7 +229,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -247,12 +247,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SuperBenchmarkExecutor.SuperBenchmarkState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SuperBenchmarkExecutor.SuperBenchmarkState()
             {
                 SuperBenchmarkInitialized = false
             }));
 
-            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -270,7 +270,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -288,12 +288,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SuperBenchmarkExecutor.SuperBenchmarkState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SuperBenchmarkExecutor.SuperBenchmarkState()
             {
                 SuperBenchmarkInitialized = true
             }));
 
-            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

@@ -18,12 +18,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class MLPerfProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -31,8 +31,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-GPU-MLPERF.json")]
         public void MLPerfWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -53,20 +53,20 @@ namespace VirtualClient.Actions
                 "| sudo tee -a /home/[a-z]+/.bashrc\""
             };
 
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("mlperf");
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupWorkloadPackage("mlperf");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
 
             VirtualClientRuntime.IsRebootRequested = false;
@@ -78,17 +78,17 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
 
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: true);
-            this.mockFixture.SetupWorkloadPackage("mlperf", expectedFiles: @"closed/NVIDIA/Makefile");
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: true);
+            this.fixture.SetupWorkloadPackage("mlperf", expectedFiles: @"closed/NVIDIA/Makefile");
 
             string expectedStateId = nameof(CudaAndNvidiaGPUDriverInstallation);
-            await this.mockFixture.StateManager.SaveStateAsync(expectedStateId, JObject.Parse("{ \"any\": \"state\" }"), CancellationToken.None)
+            await this.fixture.StateManager.SaveStateAsync(expectedStateId, JObject.Parse("{ \"any\": \"state\" }"), CancellationToken.None)
                 .ConfigureAwait(false);
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_MLPerf_Harness_Summary.json"));
@@ -98,10 +98,10 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 

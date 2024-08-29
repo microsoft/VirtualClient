@@ -20,12 +20,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class ClientInstanceTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void ClientInstanceObjectsAreJsonSerializable()
         {
-            SerializationAssert.IsJsonSerializable<ClientInstance>(this.mockFixture.Create<ClientInstance>());
+            SerializationAssert.IsJsonSerializable<ClientInstance>(this.fixture.Create<ClientInstance>());
         }
 
         [Test]
@@ -102,8 +102,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void ClientInstanceCorrectlyImplementsEqualitySemantics()
         {
-            ClientInstance instance1 = this.mockFixture.Create<ClientInstance>();
-            ClientInstance instance2 = this.mockFixture.Create<ClientInstance>();
+            ClientInstance instance1 = this.fixture.Create<ClientInstance>();
+            ClientInstance instance2 = this.fixture.Create<ClientInstance>();
 
             EqualityAssert.CorrectlyImplementsEqualitySemantics(() => instance1, () => instance2);
         }
@@ -111,8 +111,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void ClientInstanceCorrectlyImplementsHashcodeSemantics()
         {
-            ClientInstance instance1 = this.mockFixture.Create<ClientInstance>();
-            ClientInstance instance2 = this.mockFixture.Create<ClientInstance>();
+            ClientInstance instance1 = this.fixture.Create<ClientInstance>();
+            ClientInstance instance2 = this.fixture.Create<ClientInstance>();
 
             EqualityAssert.CorrectlyImplementsHashcodeSemantics(() => instance1, () => instance2);
         }
@@ -120,7 +120,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void ClientInstanceHashCodesAreNotCaseSensitive()
         {
-            ClientInstance template = this.mockFixture.Create<ClientInstance>();
+            ClientInstance template = this.fixture.Create<ClientInstance>();
             ClientInstance instance1 = new ClientInstance(
                 template.Name.ToLowerInvariant(),
                 template.IPAddress.ToLowerInvariant(),

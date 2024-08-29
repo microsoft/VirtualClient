@@ -21,7 +21,7 @@ namespace VirtualClient.Proxy
     [Category("Unit")]
     internal class ProxyBlobManagerTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private Mock<IProxyApiClient> mockProxyApiClient;
         private MemoryStream mockStream;
         private DependencyProxyStore mockContentStore;
@@ -30,7 +30,7 @@ namespace VirtualClient.Proxy
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.mockProxyApiClient = new Mock<IProxyApiClient>();
             this.mockStream = new MemoryStream(Encoding.UTF8.GetBytes("Any blob"));
             this.mockContentStore = new DependencyProxyStore(DependencyProxyStore.Content, new Uri("http://any.proxy:4600"));
@@ -43,7 +43,7 @@ namespace VirtualClient.Proxy
                     It.IsAny<Stream>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             this.mockProxyApiClient
                 .Setup(client => client.UploadBlobAsync(
@@ -51,7 +51,7 @@ namespace VirtualClient.Proxy
                     It.IsAny<Stream>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
         [TearDown]
@@ -86,7 +86,7 @@ namespace VirtualClient.Proxy
                     Assert.IsNotNull(blobDescriptor);
                     Assert.AreEqual(expectedSource, blobDescriptor.Source);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -117,7 +117,7 @@ namespace VirtualClient.Proxy
                     Assert.IsNotNull(blobDescriptor);
                     Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -152,7 +152,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual(Encoding.UTF8.WebName, blobDescriptor.ContentEncoding);
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -188,7 +188,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                     Assert.AreEqual(Encoding.ASCII.WebName, blobDescriptor.ContentEncoding);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -213,7 +213,7 @@ namespace VirtualClient.Proxy
                     It.IsAny<Stream>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden));
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None));
                 Assert.AreEqual(ErrorReason.DependencyInstallationFailed, error.Reason);
@@ -246,7 +246,7 @@ namespace VirtualClient.Proxy
                         Assert.IsNotNull(blobDescriptor);
                         Assert.AreEqual(expectedSource, blobDescriptor.Source);
                     })
-                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                    .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -277,7 +277,7 @@ namespace VirtualClient.Proxy
                         Assert.IsNotNull(blobDescriptor);
                         Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
                     })
-                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                    .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -312,7 +312,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual(Encoding.UTF8.WebName, blobDescriptor.ContentEncoding);
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -348,7 +348,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual(Encoding.UTF8.WebName, blobDescriptor.ContentEncoding);
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -385,7 +385,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                     Assert.AreEqual(Encoding.ASCII.WebName, blobDescriptor.ContentEncoding);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -423,7 +423,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                     Assert.AreEqual(Encoding.ASCII.WebName, blobDescriptor.ContentEncoding);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -448,7 +448,7 @@ namespace VirtualClient.Proxy
                     It.IsAny<Stream>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden));
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None));
                 Assert.AreEqual(ErrorReason.ApiRequestFailed, error.Reason);

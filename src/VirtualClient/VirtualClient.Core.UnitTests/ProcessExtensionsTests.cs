@@ -12,12 +12,12 @@ namespace VirtualClient
     [Category("Unit")]
     internal class ProcessExtensionsTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         public void SetupDefaults(PlatformID platform)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform);
         }
 
         [Test]
@@ -29,7 +29,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (IProcessProxy process = this.mockFixture.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, command, commandArguments, workingDirectory))
+            using (IProcessProxy process = this.fixture.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, command, commandArguments, workingDirectory))
             {
                 Assert.IsNotNull(process.StartInfo);
                 Assert.AreEqual(command, process.StartInfo.FileName);
@@ -47,7 +47,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (IProcessProxy process = this.mockFixture.ProcessManager.CreateElevatedProcess(PlatformID.Unix, command, commandArguments, workingDirectory))
+            using (IProcessProxy process = this.fixture.ProcessManager.CreateElevatedProcess(PlatformID.Unix, command, commandArguments, workingDirectory))
             {
                 Assert.IsNotNull(process.StartInfo);
                 Assert.AreEqual("sudo", process.StartInfo.FileName);
@@ -66,7 +66,7 @@ namespace VirtualClient
             string commandArguments = "--option1=123 --option2=456";
             string workingDirectory = MockFixture.TestAssemblyDirectory;
 
-            using (IProcessProxy process = this.mockFixture.ProcessManager.CreateElevatedProcess(PlatformID.Unix, command, commandArguments, workingDirectory, username))
+            using (IProcessProxy process = this.fixture.ProcessManager.CreateElevatedProcess(PlatformID.Unix, command, commandArguments, workingDirectory, username))
             {
                 Assert.IsNotNull(process.StartInfo);
                 Assert.AreEqual("sudo", process.StartInfo.FileName);
@@ -81,7 +81,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Win32NT);
 
             Assert.Throws<NotSupportedException>(
-                () => this.mockFixture.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "anycommand", "anyarguments", "anydir", "anyusername"));
+                () => this.fixture.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "anycommand", "anyarguments", "anydir", "anyusername"));
         }
 
         [Test]
@@ -89,19 +89,19 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardError.Append("An error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardError.Append("An error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>());
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>());
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
 
             Assert.AreEqual(
-                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Process execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -110,19 +110,19 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardError.Append("An error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardError.Append("An error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed."));
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed."));
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
 
             Assert.AreEqual(
-                $"Command execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Command execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -131,19 +131,19 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardError.Append("An error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardError.Append("An error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed.", ErrorReason.WorkloadFailed));
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed.", ErrorReason.WorkloadFailed));
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
 
             Assert.AreEqual(
-                $"Command execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Command execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -152,22 +152,22 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardOutput.Append("Unable to complete operation.");
-            this.mockFixture.Process.StandardError.Append("An error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardOutput.Append("Unable to complete operation.");
+            this.fixture.Process.StandardError.Append("An error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>());
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>());
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
 
             Assert.AreEqual(
-                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Process execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardOutput: {this.mockFixture.Process.StandardOutput}" +
+                $"StandardOutput: {this.fixture.Process.StandardOutput}" +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -176,22 +176,22 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardOutput.Append("Unable to complete operation.");
-            this.mockFixture.Process.StandardError.Append("An error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardOutput.Append("Unable to complete operation.");
+            this.fixture.Process.StandardError.Append("An error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed."));
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed."));
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
 
             Assert.AreEqual(
-                $"Command execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Command execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardOutput: {this.mockFixture.Process.StandardOutput}" +
+                $"StandardOutput: {this.fixture.Process.StandardOutput}" +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -200,19 +200,19 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardError.Append("A specific error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardError.Append("A specific error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>(expressions: new Regex("specific error")));
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>(expressions: new Regex("specific error")));
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
 
             Assert.AreEqual(
-                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Process execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -221,19 +221,19 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardError.Append("A specific error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardError.Append("A specific error occurred.");
 
             WorkloadException exception = Assert.Throws<WorkloadException>(
-                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>(errorReason: ErrorReason.WorkloadFailed, expressions: new Regex("specific error")));
+                () => this.fixture.Process.ThrowOnStandardError<WorkloadException>(errorReason: ErrorReason.WorkloadFailed, expressions: new Regex("specific error")));
 
             Assert.IsNotNull(exception);
             Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
 
             Assert.AreEqual(
-                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"Process execution failed (error/exit code=1, command={this.fixture.Process.StartInfo.FileName} {this.fixture.Process.StartInfo.Arguments})." +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"StandardError: {this.mockFixture.Process.StandardError}",
+                $"StandardError: {this.fixture.Process.StandardError}",
                 exception.Message);
         }
 
@@ -242,10 +242,10 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            this.mockFixture.Process.ExitCode = 1;
-            this.mockFixture.Process.StandardError.Append("A specific error occurred.");
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.StandardError.Append("A specific error occurred.");
 
-            Assert.DoesNotThrow(() => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>(expressions: new Regex("some other error")));
+            Assert.DoesNotThrow(() => this.fixture.Process.ThrowOnStandardError<WorkloadException>(expressions: new Regex("some other error")));
         }
     }
 }

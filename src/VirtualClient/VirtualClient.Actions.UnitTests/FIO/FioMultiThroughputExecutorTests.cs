@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     class FioMultiThroughputExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
         private static readonly string ExamplesPath = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(FioMetricsParserTests)).Location),
@@ -36,12 +36,12 @@ namespace VirtualClient.Actions
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPath = this.mockFixture.Create<DependencyPath>();
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPath = this.fixture.Create<DependencyPath>();
+            this.fixture.SetupMocks();
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(FioMultiThroughputExecutor.TemplateJobFile), "oltp-c.fio.jobfile" },
                 { nameof(FioMultiThroughputExecutor.GroupReporting), 1 },
@@ -70,18 +70,18 @@ namespace VirtualClient.Actions
                 { nameof(FioMultiThroughputExecutor.PackageName), "fio" }
             };
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
 
             string rawtext = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "Results_FIO.json"));
             string templateJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "oltp-c.fio.jobfile"));
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>())).Returns(templateJobFile);
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>())).Returns(templateJobFile);
 
             this.defaultOutput.Clear();
             this.defaultOutput.Append(rawtext);
 
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
 
             this.defaultMemoryProcess = new InMemoryProcess
             {
@@ -100,10 +100,10 @@ namespace VirtualClient.Actions
         [Test]
         public async Task FioMultiThroughputExecutorInitializeAsExpected()
         {
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.DiskFill), "True");
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Parameters.Add(nameof(FioMultiThroughputExecutor.DiskFill), "True");
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     if (!arguments.Contains("chmod"))
                     {
@@ -125,11 +125,11 @@ namespace VirtualClient.Actions
         public async Task FioMultiThroughputExecutorRunsExpectedExecutions()
         {
             int executions = 0;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.TargetPercents)] = "10,20,30,50,70,100,110";
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.TargetPercents)] = "10,20,30,50,70,100,110";
 
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     if (!arguments.Contains("chmod"))
                     {
@@ -150,11 +150,11 @@ namespace VirtualClient.Actions
         {
             // Scenario:
             // The disks selected includes the OS disk only (i.e. the disk filter specified pointed at the OS disk)
-            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks.Where(d => d.IsOperatingSystem()));
 
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
@@ -166,9 +166,9 @@ namespace VirtualClient.Actions
         {
             // Scenario:
             // The disks selected includes the OS disk with others (i.e. the disk filter specified pointed at the OS disk)
-            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+            this.fixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
 
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
@@ -179,9 +179,9 @@ namespace VirtualClient.Actions
         public async Task FioMultiThroughputExecutorExecutesExpectedCommandLine()
         {
             int executions = 0;
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     if (!arguments.Contains("chmod"))
                     {
@@ -217,13 +217,13 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
             };
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
             string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio1.jobfile"));
 
-            using (TestFioMultiThroughputExecutor fioMultiThroughputExecutor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor fioMultiThroughputExecutor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.fixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         createdExpectedJobFile = true;
@@ -252,14 +252,14 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
             };
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialDiskCount), "2");
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+            this.fixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialDiskCount), "2");
             string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio2.jobfile"));
 
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.fixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         createdExpectedJobFile = true;
@@ -283,13 +283,13 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
             };
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
             string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio3.jobfile"));
 
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.fixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         createdExpectedJobFile = true;
@@ -305,14 +305,14 @@ namespace VirtualClient.Actions
         [Test]
         public async Task FioMultiThroughputExecutorCreatesExpectedJobFile_Anomalous_Scenario_1()
         {
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomReadNumJobs)] = 8;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomReadQueueDepth)] = 2048;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomWriteNumJobs)] = 8;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomWriteQueueDepth)] = 2048;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.SequentialWriteNumJobs)] = 2;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.SequentialWriteQueueDepth)] = 128;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.TargetIOPS)] = 400000;
-            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.TargetPercents)] = "10,40,80,90,98,100,102,110";
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.RandomReadNumJobs)] = 8;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.RandomReadQueueDepth)] = 2048;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.RandomWriteNumJobs)] = 8;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.RandomWriteQueueDepth)] = 2048;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.SequentialWriteNumJobs)] = 2;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.SequentialWriteQueueDepth)] = 128;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.TargetIOPS)] = 400000;
+            this.fixture.Parameters[nameof(FioMultiThroughputExecutor.TargetPercents)] = "10,40,80,90,98,100,102,110";
 
             this.disks = new List<Disk>
             {
@@ -320,15 +320,15 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
             };
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
 
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 List<int> iopsValues = new List<int>();
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.fixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         MatchCollection rateIops = Regex.Matches(contents, "rate_iops=(-*[0-9]+)");
@@ -352,11 +352,11 @@ namespace VirtualClient.Actions
         public async Task FioMultiThroughputSucceedsIfGroupIDIsRemoved()
         {
             int executions = 0;
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 executor.Metadata.Remove("GroupId".CamelCased());
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     if (!arguments.Contains("chmod"))
                     {
@@ -379,12 +379,12 @@ namespace VirtualClient.Actions
         public async Task FioMultiThroughputSucceedsIfGroupIDHasBadCasing()
         {
             int executions = 0;
-            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 executor.Metadata.Remove("GroupId");
                 executor.Metadata.Add("grouPId", string.Empty);
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     if (!arguments.Contains("chmod"))
                     {

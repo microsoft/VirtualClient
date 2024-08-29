@@ -20,21 +20,21 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class ChocolateyPackageInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public async Task ChocolateyPackageInstallationRunsTheExpectedCommandInWindows()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.SetupDefaultMockBehaviors();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                $@"{this.mockFixture.GetPackagePath()}\choco\choco.exe install pack1 pack2 --yes"
+                $@"{this.fixture.GetPackagePath()}\choco\choco.exe install pack1 pack2 --yes"
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -50,7 +50,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -61,9 +61,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task ChocolateyPackageInstallationRunsIfPackageIsEmpty()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.SetupDefaultMockBehaviors();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "choco" },
                 { nameof(ChocolateyPackageInstallation.Packages), " " }
@@ -71,7 +71,7 @@ namespace VirtualClient.Dependencies
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandExecuted++;
                 IProcessProxy process = new InMemoryProcess()
@@ -83,7 +83,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -94,9 +94,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task ChocolateyPackageInstallationRunsNothingInLinux()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "choco" },
                 { nameof(ChocolateyPackageInstallation.Packages), "pack1,pack2" }
@@ -104,7 +104,7 @@ namespace VirtualClient.Dependencies
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandExecuted++;
                 IProcessProxy process = new InMemoryProcess()
@@ -116,7 +116,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -126,21 +126,21 @@ namespace VirtualClient.Dependencies
 
         private void SetupDefaultMockBehaviors()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
 
-            DependencyPath package = new DependencyPath("choco", this.mockFixture.PlatformSpecifics.GetPackagePath("choco"));
+            DependencyPath package = new DependencyPath("choco", this.fixture.PlatformSpecifics.GetPackagePath("choco"));
 
-            this.mockFixture.PackageManager.OnGetPackage("choco").ReturnsAsync(package);
+            this.fixture.PackageManager.OnGetPackage("choco").ReturnsAsync(package);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "choco" },
                 { nameof(ChocolateyPackageInstallation.Packages), "pack1,pack2" }

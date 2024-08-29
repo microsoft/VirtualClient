@@ -26,13 +26,13 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LatteClientExecutorTests2
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             int sendInstructionsExecuted = 0;
             this.SetupDefaultMockApiBehavior(platformID, architecture);
 
-            this.mockFixture.ApiClient.Setup(client => client.SendInstructionsAsync(It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+            this.fixture.ApiClient.Setup(client => client.SendInstructionsAsync(It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .Callback<JObject, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((obj, can, pol) =>
                 {
                     Item<Instructions> stateItem = obj.ToObject<Item<Instructions>>();
@@ -64,9 +64,9 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
                     Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 300);
                 })
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            TestLatteClientExecutor component = new TestLatteClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestLatteClientExecutor component = new TestLatteClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             Assert.AreEqual(sendInstructionsExecuted, 3);
@@ -79,16 +79,16 @@ namespace VirtualClient.Actions
         {
             int processExecuted = 0;
             this.SetupDefaultMockApiBehavior(platformID, architecture);
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            string expectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 processExecuted++;
                 commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            TestLatteClientExecutor component = new TestLatteClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestLatteClientExecutor component = new TestLatteClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
@@ -98,23 +98,23 @@ namespace VirtualClient.Actions
             CollectionAssert.AreEqual(
             new List<string>
             {
-                this.mockFixture.Combine(expectedPath, exe) + " -so -c -a 1.2.3.5:6100 -rio -i 100100 -riopoll 100000 -tcp -hist -hl 1 -hc 9998 -bl 1.2.3.4"
+                this.fixture.Combine(expectedPath, exe) + " -so -c -a 1.2.3.5:6100 -rio -i 100100 -riopoll 100000 -tcp -hist -hl 1 -hc 9998 -bl 1.2.3.4"
             },
             commandsExecuted);
         }
 
         private void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Setup(platformID, architecture);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.fixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "latte";
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 300;
-            this.mockFixture.Parameters["Protocol"] = "Tcp";
+            this.fixture.Parameters["PackageName"] = "latte";
+            this.fixture.Parameters["TestDuration"] = 300;
+            this.fixture.Parameters["WarmupTime"] = 300;
+            this.fixture.Parameters["Protocol"] = "Tcp";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory, "Examples", "Latte", "Latte_Results_Example.txt");
@@ -123,21 +123,21 @@ namespace VirtualClient.Actions
             LatteWorkloadState executionStartedState = new LatteWorkloadState(ClientServerStatus.ExecutionStarted);
             Item<LatteWorkloadState> expectedStateItem = new Item<LatteWorkloadState>(nameof(LatteWorkloadState), executionStartedState);
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(results);
 
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(LatteWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
+            this.fixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(LatteWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
         }
 
         private class TestLatteClientExecutor : LatteClientExecutor2

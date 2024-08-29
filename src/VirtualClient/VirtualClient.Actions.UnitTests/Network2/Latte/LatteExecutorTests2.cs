@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LatteExecutorTests2
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
         private DependencyPath currentDirectoryPath;
         private string apiClientId;
@@ -35,40 +35,40 @@ namespace VirtualClient.Actions
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();            
+            this.fixture = new MockFixture();            
         }
 
         private void SetupDefaultMockApiBehavior()
         {
-            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
+            this.fixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
                 .Returns<string, IPAddress, int?>((id, ip, port) =>
                 {
                     this.apiClientId = id;
                     this.ipAddress = ip;
-                    return this.mockFixture.ApiClient.Object;
+                    return this.fixture.ApiClient.Object;
                 });
         }
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64, String role = ClientRole.Client)
         {
-            this.mockFixture.Setup(platform, architecture, agentId: role == ClientRole.Client ? "ClientAgent" : "ServerAgent").SetupLayout(
+            this.fixture.Setup(platform, architecture, agentId: role == ClientRole.Client ? "ClientAgent" : "ServerAgent").SetupLayout(
                 new ClientInstance("ClientAgent", "1.2.3.4", ClientRole.Client),
                 new ClientInstance("ServerAgent", "1.2.3.5", ClientRole.Server));
 
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.fixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["Protocol"] = "Tcp";
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.fixture.Parameters["Protocol"] = "Tcp";
+            this.fixture.Parameters["PackageName"] = "Networking";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             this.currentDirectoryPath = new DependencyPath("Network", currentDirectory);
-            string resultsPath = this.mockFixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "Latte", "Latte_Results_Example.txt");
+            string resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "Latte", "Latte_Results_Example.txt");
             string results = File.ReadAllText(resultsPath);
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(results);
 
             this.SetupDefaultMockApiBehavior();
@@ -83,9 +83,9 @@ namespace VirtualClient.Actions
         public void LatteExecutorThrowsOnInitializationWhenProtocolIsInvalid(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters["Protocol"] = ProtocolType.Unspecified;
+            this.fixture.Parameters["Protocol"] = ProtocolType.Unspecified;
 
-            using TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            using TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             Assert.ThrowsAsync<NotSupportedException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
         }
 
@@ -98,9 +98,9 @@ namespace VirtualClient.Actions
         public void LatteExecutorThrowsOnInitializationWhenScenarioIsEmpty(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
+            this.fixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
 
-            using TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            using TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
             Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
         }
@@ -115,17 +115,17 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             string expectedPackage = "Networking";
-            this.mockFixture.PackageManager.OnGetPackage(expectedPackage)
+            this.fixture.PackageManager.OnGetPackage(expectedPackage)
                 .Callback<string, CancellationToken>((actualPackage, token) =>
                 {
                     Assert.AreEqual(expectedPackage, actualPackage);
                 })
                 .ReturnsAsync(this.mockPath);
 
-            using TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            using TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await component.InitializeAsync(EventContext.None, CancellationToken.None);
 
-            this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            this.fixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Test]
@@ -137,7 +137,7 @@ namespace VirtualClient.Actions
         public async Task LatteExecutorIntializeServerAPIClientAndLocalAPIClientOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            using TestLatteExecutor executor = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            using TestLatteExecutor executor = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await executor.InitializeAsync(EventContext.None, CancellationToken.None);
 
             ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
@@ -164,9 +164,9 @@ namespace VirtualClient.Actions
         public void LatteExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
-            using TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            using TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
             Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
         }
@@ -181,9 +181,9 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             string agentId = $"{Environment.MachineName}-Other";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            using (TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
@@ -199,8 +199,8 @@ namespace VirtualClient.Actions
         public void LatteExecutorThrowsWhenASpecificRoleIsNotDefined(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            using (TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
+            using (TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
@@ -215,7 +215,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
 
-            using (TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
@@ -232,7 +232,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
 
-            TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestLatteExecutor component = new TestLatteExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
             Assert.IsTrue(component.IsLatteClientExecuted);

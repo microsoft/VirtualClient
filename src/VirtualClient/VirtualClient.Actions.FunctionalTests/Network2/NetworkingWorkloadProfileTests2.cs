@@ -17,30 +17,30 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class NetworkingWorkloadProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();         
+            this.fixture = new DependencyFixture();         
         }
 
         public void SetupFixtureBasedOnPlatformAndArchitecture(PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture, "ClientAgent").SetupLayout(
+            this.fixture.Setup(platformID, architecture, "ClientAgent").SetupLayout(
                 new ClientInstance("ClientAgent", "1.2.3.4", "Client"),
                 new ClientInstance("ServerAgent", "1.2.3.5", "Server"));
 
-            this.mockFixture.SetupDisks(withRemoteDisks: false);           
+            this.fixture.SetupDisks(withRemoteDisks: false);           
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
-            this.mockFixture.SetupWorkloadPackage("visualstudiocruntime");
+            this.fixture.SetupWorkloadPackage("visualstudiocruntime");
 
             if (platformID == PlatformID.Unix)
             {
-                this.mockFixture.SetupFile("/etc/rc.local");
-                this.mockFixture.SetupFile("/etc/security/limits.conf");
+                this.fixture.SetupFile("/etc/rc.local");
+                this.fixture.SetupFile("/etc/security/limits.conf");
             }          
         }
 
@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
         {
             this.SetupFixtureBasedOnPlatformAndArchitecture(platformID, architecture);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -68,15 +68,15 @@ namespace VirtualClient.Actions
         {
             // We ensure the workload package does not exist.
             this.SetupFixtureBasedOnPlatformAndArchitecture(platformID, architecture);
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
                 Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Contains("networking"));
+                Assert.IsFalse(this.fixture.ProcessManager.Commands.Contains("networking"));
             }
         }
 
@@ -91,12 +91,12 @@ namespace VirtualClient.Actions
 
             this.SetupFixtureBasedOnPlatformAndArchitecture(platformID, architecture);       
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "networking");
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "networking");
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
 
                 VirtualClientRuntime.IsRebootRequested = false;
             }

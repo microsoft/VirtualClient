@@ -25,29 +25,29 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class GzipExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
         private ConcurrentBuffer defaultOutput = new ConcurrentBuffer();
 
         [SetUp]
         public void SetupDefaultBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("gzip", this.mockFixture.PlatformSpecifics.GetPackagePath("gzip"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("gzip", this.fixture.PlatformSpecifics.GetPackagePath("gzip"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(GzipExecutor.Options), "testOption1 testOption2" },
                 { nameof(GzipExecutor.InputFilesOrDirs), "Test1.zip Test2.txt" },
@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
         public async Task GzipExecutorGetsDefaultFileIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(GzipExecutor.Options), "testOption1 testOption2" },
                 { nameof(GzipExecutor.InputFilesOrDirs), "" },
@@ -91,7 +91,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await GzipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
         public async Task GzipExecutorRunsTheExpectedWorkloadCommand()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(GzipExecutor.Options), "testOption1 testOption2" },
                 { nameof(GzipExecutor.InputFilesOrDirs), "" },
@@ -133,10 +133,10 @@ namespace VirtualClient.Actions
             };
             string mockPackagePath = this.mockPackage.Path;
 
-            string expectedCommand = $"sudo bash -c \"gzip testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\"";
+            string expectedCommand = $"sudo bash -c \"gzip testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\"";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await GzipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -169,7 +169,7 @@ namespace VirtualClient.Actions
         public async Task GzipExecutorExecutesTheCorrectCommandsWithInstallationIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(GzipExecutor.Options), "testOption1 testOption2" },
                 { nameof(GzipExecutor.InputFilesOrDirs), "" },
@@ -182,11 +182,11 @@ namespace VirtualClient.Actions
             {
                 $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"sudo unzip silesia.zip -d silesia",
-                $"sudo bash -c \"gzip testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
+                $"sudo bash -c \"gzip testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -205,12 +205,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new GzipExecutor.GzipState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new GzipExecutor.GzipState()
             {
                 GzipStateInitialized = false
             }));
 
-            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await GzipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -229,7 +229,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -248,12 +248,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new GzipExecutor.GzipState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new GzipExecutor.GzipState()
             {
                 GzipStateInitialized = false
             }));
 
-            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await GzipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -272,7 +272,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -291,12 +291,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new GzipExecutor.GzipState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new GzipExecutor.GzipState()
             {
                 GzipStateInitialized = true
             }));
 
-            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestGzipExecutor GzipExecutor = new TestGzipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await GzipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

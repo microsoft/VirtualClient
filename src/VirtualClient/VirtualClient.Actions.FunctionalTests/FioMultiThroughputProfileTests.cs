@@ -18,12 +18,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class FioMultiThroughputProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -31,8 +31,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-IO-FIO-MULTITHROUGHPUT.json")]
         public void FioWorkloadMultiThroughputProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -44,26 +44,26 @@ namespace VirtualClient.Actions
         {
             // The disks are setup in a typical Azure VM scenario
             // (e.g. 1 OS disk, 1 temp/local disk, multiple remote disks that are unformatted).
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withUnformatted: true);
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withUnformatted: true);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Format disk dependency expectations.
                 // By the time the dependencies have been installed, all disks should be formatted and ready for
                 // operations against the file system.
-                WorkloadAssert.DisksAreInitialized(this.mockFixture);
+                WorkloadAssert.DisksAreInitialized(this.fixture);
 
                 // Apt packages expectations
                 // There are a few Apt packages that must be installed for the FIO workload to run.
-                WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio1");
-                WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio-dev");
+                WorkloadAssert.AptPackageInstalled(this.fixture, "libaio1");
+                WorkloadAssert.AptPackageInstalled(this.fixture, "libaio-dev");
 
                 // Workload dependency package expectations
                 // The FIO workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "fio");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "fio");
             }
         }
 
@@ -78,15 +78,15 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupWorkloadPackage("fio", expectedFiles: $@"linux-x64/fio");
-            string jobFilePath = this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.ScriptsDirectory, "fio/oltp-c.fio.jobfile");
-            this.mockFixture.SetupFile(jobFilePath, Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("oltp-c.fio.jobfile")));
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withUnformatted: false);
+            this.fixture.SetupWorkloadPackage("fio", expectedFiles: $@"linux-x64/fio");
+            string jobFilePath = this.fixture.PlatformSpecifics.Combine(this.fixture.ScriptsDirectory, "fio/oltp-c.fio.jobfile");
+            this.fixture.SetupFile(jobFilePath, Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("oltp-c.fio.jobfile")));
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("linux-x64/fio", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_FIO.json"));
@@ -95,11 +95,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -109,19 +109,19 @@ namespace VirtualClient.Actions
         {
             // Setup disks the expected scenarios:
             // - Disks are formatted and ready
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withUnformatted: false);
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withUnformatted: false);
 
             // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
+            this.fixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
                 Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Contains("fio"));
+                Assert.IsFalse(this.fixture.ProcessManager.Commands.Contains("fio"));
             }
         }
 

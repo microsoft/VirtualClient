@@ -21,8 +21,8 @@ namespace VirtualClient.Cleanup
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanLogsDirectoryExtensionDeletesAllFilesAndDirectoriesInTheLogsFolderWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string logsDirectory = mockFixture.GetLogsPath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string logsDirectory = fixture.GetLogsPath();
 
             // Scenario:
             // All of the directories and subdirectories should be deleted.
@@ -37,27 +37,27 @@ namespace VirtualClient.Cleanup
 
             List<string> filePaths = new List<string>
             {
-                mockFixture.Combine(logsDirectory, "directory1", "fileA.log"),
-                mockFixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "file1.log"),
-                mockFixture.Combine(logsDirectory, "directory1", "subdirectory1_2", "file2.log"),
-                mockFixture.Combine(logsDirectory, "directory2", "fileB.log"),
-                mockFixture.Combine(logsDirectory, "directory2", "subdirectory2_1", "file3.log"),
-                mockFixture.Combine(logsDirectory, "directory2", "subdirectory2_2", "file4.log"),
+                fixture.Combine(logsDirectory, "directory1", "fileA.log"),
+                fixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "file1.log"),
+                fixture.Combine(logsDirectory, "directory1", "subdirectory1_2", "file2.log"),
+                fixture.Combine(logsDirectory, "directory2", "fileB.log"),
+                fixture.Combine(logsDirectory, "directory2", "subdirectory2_1", "file3.log"),
+                fixture.Combine(logsDirectory, "directory2", "subdirectory2_2", "file4.log"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
         }
 
         [Test]
         public async Task CleanLogsDirectoryExtensionDeletesAllFilesAndDirectoriesInTheLogsFolderLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string logsDirectory = mockFixture.GetLogsPath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string logsDirectory = fixture.GetLogsPath();
 
             // Scenario:
             // All of the directories and subdirectories should be deleted.
@@ -72,28 +72,28 @@ namespace VirtualClient.Cleanup
 
             List<string> filePaths = new List<string>
             {
-                mockFixture.Combine(logsDirectory, "directory1", "fileA.log"),
-                mockFixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "file1.log"),
-                mockFixture.Combine(logsDirectory, "directory1", "subdirectory1_2", "file2.log"),
-                mockFixture.Combine(logsDirectory, "directory2", "fileB.log"),
-                mockFixture.Combine(logsDirectory, "directory2", "subdirectory2_1", "file3.log"),
-                mockFixture.Combine(logsDirectory, "directory2", "subdirectory2_2", "file4.log"),
+                fixture.Combine(logsDirectory, "directory1", "fileA.log"),
+                fixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "file1.log"),
+                fixture.Combine(logsDirectory, "directory1", "subdirectory1_2", "file2.log"),
+                fixture.Combine(logsDirectory, "directory2", "fileB.log"),
+                fixture.Combine(logsDirectory, "directory2", "subdirectory2_1", "file3.log"),
+                fixture.Combine(logsDirectory, "directory2", "subdirectory2_2", "file4.log"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanLogsDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheLogsDirectoryWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string logsDirectory = mockFixture.GetLogsPath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string logsDirectory = fixture.GetLogsPath();
             string otherDirectory = "any-directory";
 
             // Scenario:
@@ -103,27 +103,27 @@ namespace VirtualClient.Cleanup
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(logsDirectory, "directory1", "fileA.log"),
-                mockFixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "fileB.log"),
+                fixture.Combine(logsDirectory, "directory1", "fileA.log"),
+                fixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "fileB.log"),
 
                 // Should not be touched
-                mockFixture.Combine(otherDirectory, "directory2", "fileC.log"),
-                mockFixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
+                fixture.Combine(otherDirectory, "directory2", "fileC.log"),
+                fixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
 
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
         }
 
         [Test]
         public async Task CleanLogsDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheLogsDirectoryLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string logsDirectory = mockFixture.GetLogsPath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string logsDirectory = fixture.GetLogsPath();
             string otherDirectory = "any-directory";
 
             // Scenario:
@@ -133,28 +133,28 @@ namespace VirtualClient.Cleanup
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(logsDirectory, "directory1", "fileA.log"),
-                mockFixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "fileB.log"),
+                fixture.Combine(logsDirectory, "directory1", "fileA.log"),
+                fixture.Combine(logsDirectory, "directory1", "subdirectory1_1", "fileB.log"),
 
                 // Should not be touched
-                mockFixture.Combine(otherDirectory, "directory2", "fileC.log"),
-                mockFixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
+                fixture.Combine(otherDirectory, "directory2", "fileC.log"),
+                fixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanLogsDirectoryAsync(CancellationToken.None);
 
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanStateDirectoryExtensionDeletesAllFilesAndDirectoriesInTheStateFolderWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string stateDirectory = mockFixture.GetStatePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string stateDirectory = fixture.GetStatePath();
 
             // Scenario:
             // All of the directories and subdirectories should be deleted.
@@ -167,25 +167,25 @@ namespace VirtualClient.Cleanup
 
             List<string> filePaths = new List<string>
             {
-                mockFixture.Combine(stateDirectory, "state1.json"),
-                mockFixture.Combine(stateDirectory, "directory1", "state2.json"),
-                mockFixture.Combine(stateDirectory, "directory2", "state3.json"),
-                mockFixture.Combine(stateDirectory, "directory2", "subdirectory2_1", "state4.json"),
+                fixture.Combine(stateDirectory, "state1.json"),
+                fixture.Combine(stateDirectory, "directory1", "state2.json"),
+                fixture.Combine(stateDirectory, "directory2", "state3.json"),
+                fixture.Combine(stateDirectory, "directory2", "subdirectory2_1", "state4.json"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
         }
 
         [Test]
         public async Task CleanStateDirectoryExtensionDeletesAllFilesAndDirectoriesInTheStateFolderLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string stateDirectory = mockFixture.GetStatePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string stateDirectory = fixture.GetStatePath();
 
             // Scenario:
             // All of the directories and subdirectories should be deleted.
@@ -198,26 +198,26 @@ namespace VirtualClient.Cleanup
 
             List<string> filePaths = new List<string>
             {
-                mockFixture.Combine(stateDirectory, "state1.json"),
-                mockFixture.Combine(stateDirectory, "directory1", "state2.json"),
-                mockFixture.Combine(stateDirectory, "directory2", "state3.json"),
-                mockFixture.Combine(stateDirectory, "directory2", "subdirectory2_1", "state4.json"),
+                fixture.Combine(stateDirectory, "state1.json"),
+                fixture.Combine(stateDirectory, "directory1", "state2.json"),
+                fixture.Combine(stateDirectory, "directory2", "state3.json"),
+                fixture.Combine(stateDirectory, "directory2", "subdirectory2_1", "state4.json"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanStateDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheStateDirectoryWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string stateDirectory = mockFixture.GetStatePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string stateDirectory = fixture.GetStatePath();
             string otherDirectory = "any-directory";
 
             // Scenario:
@@ -227,27 +227,27 @@ namespace VirtualClient.Cleanup
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(stateDirectory, "directory1", "fileA.log"),
-                mockFixture.Combine(stateDirectory, "directory1", "subdirectory1_1", "fileB.log"),
+                fixture.Combine(stateDirectory, "directory1", "fileA.log"),
+                fixture.Combine(stateDirectory, "directory1", "subdirectory1_1", "fileB.log"),
 
                 // Should not be touched
-                mockFixture.Combine(otherDirectory, "directory2", "fileC.log"),
-                mockFixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
+                fixture.Combine(otherDirectory, "directory2", "fileC.log"),
+                fixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
 
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
         }
 
         [Test]
         public async Task CleanStateDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfTheStateDirectoryLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string stateDirectory = mockFixture.GetStatePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string stateDirectory = fixture.GetStatePath();
             string otherDirectory = "any-directory";
 
             // Scenario:
@@ -257,28 +257,28 @@ namespace VirtualClient.Cleanup
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(stateDirectory, "directory1", "fileA.log"),
-                mockFixture.Combine(stateDirectory, "directory1", "subdirectory1_1", "fileB.log"),
+                fixture.Combine(stateDirectory, "directory1", "fileA.log"),
+                fixture.Combine(stateDirectory, "directory1", "subdirectory1_1", "fileB.log"),
 
                 // Should not be touched
-                mockFixture.Combine(otherDirectory, "directory2", "fileC.log"),
-                mockFixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
+                fixture.Combine(otherDirectory, "directory2", "fileC.log"),
+                fixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
             };
 
-            filePaths.ForEach(file => mockFixture.FileSystem.File.Create(file));
+            filePaths.ForEach(file => fixture.FileSystem.File.Create(file));
 
-            await mockFixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanStateDirectoryAsync(CancellationToken.None);
 
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(2)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(3)));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDeletesExpectedPackageFilesAndDirectoriesInThePackagesFolderWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string packagesDirectory = mockFixture.GetPackagePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string packagesDirectory = fixture.GetPackagePath();
 
             // Scenario:
             // All of the package directories and subdirectories should be deleted.
@@ -292,32 +292,32 @@ namespace VirtualClient.Cleanup
             // ../packages/package1/win-arm64/workload1.exe
 
             var package1Definition = new DependencyMetadata("package1");
-            var package1Registration = new DependencyPath("package1", mockFixture.Combine(packagesDirectory, "package1"));
+            var package1Registration = new DependencyPath("package1", fixture.Combine(packagesDirectory, "package1"));
 
             var package2Definition = new DependencyMetadata("package2");
-            var package2Registration = new DependencyPath("package2", mockFixture.Combine(packagesDirectory, "package2"));
+            var package2Registration = new DependencyPath("package2", fixture.Combine(packagesDirectory, "package2"));
 
             List<string> filePaths = new List<string>
             {
-                mockFixture.Combine(packagesDirectory, "package1.vcpkgreg"),
-                mockFixture.Combine(package1Registration.Path, "package1.vcpkg"),
-                mockFixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
-                mockFixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
-                mockFixture.Combine(packagesDirectory, "package2.vcpkgreg"),
-                mockFixture.Combine(package2Registration.Path, "package2.vcpkg"),
-                mockFixture.Combine(package2Registration.Path, "linux-x64", "workload2.sh"),
-                mockFixture.Combine(package2Registration.Path, "linux-arm64", "workload2.sh"),
-                mockFixture.Combine(package2Registration.Path, "win-x64", "workload2.exe"),
-                mockFixture.Combine(package2Registration.Path, "win-arm64", "workload2.exe"),
+                fixture.Combine(packagesDirectory, "package1.vcpkgreg"),
+                fixture.Combine(package1Registration.Path, "package1.vcpkg"),
+                fixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
+                fixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
+                fixture.Combine(packagesDirectory, "package2.vcpkgreg"),
+                fixture.Combine(package2Registration.Path, "package2.vcpkg"),
+                fixture.Combine(package2Registration.Path, "linux-x64", "workload2.sh"),
+                fixture.Combine(package2Registration.Path, "linux-arm64", "workload2.sh"),
+                fixture.Combine(package2Registration.Path, "win-x64", "workload2.exe"),
+                fixture.Combine(package2Registration.Path, "win-arm64", "workload2.exe"),
             };
 
             filePaths.ForEach(file =>
             {
-                mockFixture.FileSystem.File.Create(file);
+                fixture.FileSystem.File.Create(file);
 
-                InMemoryFile targetFile = mockFixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
+                InMemoryFile targetFile = fixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
 
                 if (file.EndsWith("package1.vcpkg"))
                 {
@@ -337,17 +337,17 @@ namespace VirtualClient.Cleanup
                 }
             });
 
-            await mockFixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
         }
 
         [Test]
         public async Task CleanPackagesDirectoryExtensionDeletesExpectedPackageFilesAndDirectoriesInThePackagesFolderLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string packagesDirectory = mockFixture.GetPackagePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string packagesDirectory = fixture.GetPackagePath();
 
             // Scenario:
             // All of the package directories and subdirectories should be deleted.
@@ -361,32 +361,32 @@ namespace VirtualClient.Cleanup
             // ../packages/package1/win-arm64/workload1.exe
 
             var package1Definition = new DependencyMetadata("package1");
-            var package1Registration = new DependencyPath("package1", mockFixture.Combine(packagesDirectory, "package1"));
+            var package1Registration = new DependencyPath("package1", fixture.Combine(packagesDirectory, "package1"));
 
             var package2Definition = new DependencyMetadata("package2");
-            var package2Registration = new DependencyPath("package2", mockFixture.Combine(packagesDirectory, "package2"));
+            var package2Registration = new DependencyPath("package2", fixture.Combine(packagesDirectory, "package2"));
 
             List<string> filePaths = new List<string>
             {
-                mockFixture.Combine(packagesDirectory, "package1.vcpkgreg"),
-                mockFixture.Combine(package1Registration.Path, "package1.vcpkg"),
-                mockFixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
-                mockFixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
-                mockFixture.Combine(packagesDirectory, "package2.vcpkgreg"),
-                mockFixture.Combine(package2Registration.Path, "package2.vcpkg"),
-                mockFixture.Combine(package2Registration.Path, "linux-x64", "workload2.sh"),
-                mockFixture.Combine(package2Registration.Path, "linux-arm64", "workload2.sh"),
-                mockFixture.Combine(package2Registration.Path, "win-x64", "workload2.exe"),
-                mockFixture.Combine(package2Registration.Path, "win-arm64", "workload2.exe"),
+                fixture.Combine(packagesDirectory, "package1.vcpkgreg"),
+                fixture.Combine(package1Registration.Path, "package1.vcpkg"),
+                fixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
+                fixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
+                fixture.Combine(packagesDirectory, "package2.vcpkgreg"),
+                fixture.Combine(package2Registration.Path, "package2.vcpkg"),
+                fixture.Combine(package2Registration.Path, "linux-x64", "workload2.sh"),
+                fixture.Combine(package2Registration.Path, "linux-arm64", "workload2.sh"),
+                fixture.Combine(package2Registration.Path, "win-x64", "workload2.exe"),
+                fixture.Combine(package2Registration.Path, "win-arm64", "workload2.exe"),
             };
 
             filePaths.ForEach(file =>
             {
-                mockFixture.FileSystem.File.Create(file);
+                fixture.FileSystem.File.Create(file);
 
-                InMemoryFile targetFile = mockFixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
+                InMemoryFile targetFile = fixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
 
                 if (file.EndsWith("package1.vcpkg"))
                 {
@@ -406,18 +406,18 @@ namespace VirtualClient.Cleanup
                 }
             });
 
-            await mockFixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => filePaths.Contains(MockFixture.GetDirectoryName(file.Path))));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemovePackagesMarkedAsBuiltInPackagesWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string packagesDirectory = mockFixture.GetPackagePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string packagesDirectory = fixture.GetPackagePath();
 
             // Scenario:
             // Files and directories within the 'packages' folder associated with built-in packages
@@ -425,7 +425,7 @@ namespace VirtualClient.Cleanup
             // itself (i.e. not downloaded to the system) and are expected to be present at all times.
 
             var package1Definition = new DependencyMetadata("package1");
-            var package1Registration = new DependencyPath("package1", mockFixture.Combine(packagesDirectory, "package1"));
+            var package1Registration = new DependencyPath("package1", fixture.Combine(packagesDirectory, "package1"));
 
             Dictionary<string, IConvertible> builtInPackageMetadata = new Dictionary<string, IConvertible>
             {
@@ -433,42 +433,42 @@ namespace VirtualClient.Cleanup
             };
 
             var builtInPackage1Definition = new DependencyMetadata("builtInPackage1", metadata: builtInPackageMetadata);
-            var builtInPackage1Registration = new DependencyPath("builtInPackage1", mockFixture.Combine(packagesDirectory, "builtInPackage1"), metadata: builtInPackageMetadata);
+            var builtInPackage1Registration = new DependencyPath("builtInPackage1", fixture.Combine(packagesDirectory, "builtInPackage1"), metadata: builtInPackageMetadata);
 
             var builtInPackage2Definition = new DependencyMetadata("builtInPackage2", metadata: builtInPackageMetadata);
-            var builtInPackage2Registration = new DependencyPath("builtInPackage2", mockFixture.Combine(packagesDirectory, "builtInPackage2"), metadata: builtInPackageMetadata);
+            var builtInPackage2Registration = new DependencyPath("builtInPackage2", fixture.Combine(packagesDirectory, "builtInPackage2"), metadata: builtInPackageMetadata);
 
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(packagesDirectory, "package1.vcpkgreg"),
-                mockFixture.Combine(package1Registration.Path, "package1.vcpkg"),
-                mockFixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
-                mockFixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
+                fixture.Combine(packagesDirectory, "package1.vcpkgreg"),
+                fixture.Combine(package1Registration.Path, "package1.vcpkg"),
+                fixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
+                fixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
 
                 // Built-in packages should NOT be touched.
-                mockFixture.Combine(packagesDirectory, "builtInPackage1.vcpkgreg"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "builtInPackage1.vcpkg"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "linux-x64", "workload2.sh"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "linux-arm64", "workload2.sh"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "win-x64", "workload2.exe"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "win-arm64", "workload2.exe"),
+                fixture.Combine(packagesDirectory, "builtInPackage1.vcpkgreg"),
+                fixture.Combine(builtInPackage1Registration.Path, "builtInPackage1.vcpkg"),
+                fixture.Combine(builtInPackage1Registration.Path, "linux-x64", "workload2.sh"),
+                fixture.Combine(builtInPackage1Registration.Path, "linux-arm64", "workload2.sh"),
+                fixture.Combine(builtInPackage1Registration.Path, "win-x64", "workload2.exe"),
+                fixture.Combine(builtInPackage1Registration.Path, "win-arm64", "workload2.exe"),
 
-                mockFixture.Combine(packagesDirectory, "builtInPackage2.vcpkgreg"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "builtInPackage2.vcpkg"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "linux-x64", "workload3.sh"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "linux-arm64", "workload3.sh"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "win-x64", "workload3.exe"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "win-arm64", "workload3.exe"),
+                fixture.Combine(packagesDirectory, "builtInPackage2.vcpkgreg"),
+                fixture.Combine(builtInPackage2Registration.Path, "builtInPackage2.vcpkg"),
+                fixture.Combine(builtInPackage2Registration.Path, "linux-x64", "workload3.sh"),
+                fixture.Combine(builtInPackage2Registration.Path, "linux-arm64", "workload3.sh"),
+                fixture.Combine(builtInPackage2Registration.Path, "win-x64", "workload3.exe"),
+                fixture.Combine(builtInPackage2Registration.Path, "win-arm64", "workload3.exe"),
             };
 
             filePaths.ForEach(file =>
             {
-                mockFixture.FileSystem.File.Create(file);
+                fixture.FileSystem.File.Create(file);
 
-                InMemoryFile targetFile = mockFixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
+                InMemoryFile targetFile = fixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
 
                 if (file.EndsWith("package1.vcpkg"))
                 {
@@ -496,24 +496,24 @@ namespace VirtualClient.Cleanup
                 }
             });
 
-            await mockFixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
 
             // Packages other than built-in packages are removed.
             IEnumerable<string> expectedRemovals = filePaths.Take(6).ToList();
             IEnumerable<string> expectedRemaining = filePaths.Skip(6).ToList();
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(MockFixture.GetDirectoryName(file.Path))));
 
             // Built-in packages remain.
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => expectedRemaining.Contains(file.Path)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => expectedRemaining.Contains(file.Path)));
         }
 
         [Test]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemovePackagesMarkedAsBuiltInPackagesLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string packagesDirectory = mockFixture.GetPackagePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string packagesDirectory = fixture.GetPackagePath();
 
             // Scenario:
             // Files and directories within the 'packages' folder associated with built-in packages
@@ -521,7 +521,7 @@ namespace VirtualClient.Cleanup
             // itself (i.e. not downloaded to the system) and are expected to be present at all times.
 
             var package1Definition = new DependencyMetadata("package1");
-            var package1Registration = new DependencyPath("package1", mockFixture.Combine(packagesDirectory, "package1"));
+            var package1Registration = new DependencyPath("package1", fixture.Combine(packagesDirectory, "package1"));
 
             Dictionary<string, IConvertible> builtInPackageMetadata = new Dictionary<string, IConvertible>
             {
@@ -529,42 +529,42 @@ namespace VirtualClient.Cleanup
             };
 
             var builtInPackage1Definition = new DependencyMetadata("builtInPackage1", metadata: builtInPackageMetadata);
-            var builtInPackage1Registration = new DependencyPath("builtInPackage1", mockFixture.Combine(packagesDirectory, "builtInPackage1"), metadata: builtInPackageMetadata);
+            var builtInPackage1Registration = new DependencyPath("builtInPackage1", fixture.Combine(packagesDirectory, "builtInPackage1"), metadata: builtInPackageMetadata);
 
             var builtInPackage2Definition = new DependencyMetadata("builtInPackage2", metadata: builtInPackageMetadata);
-            var builtInPackage2Registration = new DependencyPath("builtInPackage2", mockFixture.Combine(packagesDirectory, "builtInPackage2"), metadata: builtInPackageMetadata);
+            var builtInPackage2Registration = new DependencyPath("builtInPackage2", fixture.Combine(packagesDirectory, "builtInPackage2"), metadata: builtInPackageMetadata);
 
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(packagesDirectory, "package1.vcpkgreg"),
-                mockFixture.Combine(package1Registration.Path, "package1.vcpkg"),
-                mockFixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
-                mockFixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
+                fixture.Combine(packagesDirectory, "package1.vcpkgreg"),
+                fixture.Combine(package1Registration.Path, "package1.vcpkg"),
+                fixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
+                fixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
 
                 // Built-in packages should NOT be touched.
-                mockFixture.Combine(packagesDirectory, "builtInPackage1.vcpkgreg"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "builtInPackage1.vcpkg"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "linux-x64", "workload2.sh"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "linux-arm64", "workload2.sh"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "win-x64", "workload2.exe"),
-                mockFixture.Combine(builtInPackage1Registration.Path, "win-arm64", "workload2.exe"),
+                fixture.Combine(packagesDirectory, "builtInPackage1.vcpkgreg"),
+                fixture.Combine(builtInPackage1Registration.Path, "builtInPackage1.vcpkg"),
+                fixture.Combine(builtInPackage1Registration.Path, "linux-x64", "workload2.sh"),
+                fixture.Combine(builtInPackage1Registration.Path, "linux-arm64", "workload2.sh"),
+                fixture.Combine(builtInPackage1Registration.Path, "win-x64", "workload2.exe"),
+                fixture.Combine(builtInPackage1Registration.Path, "win-arm64", "workload2.exe"),
 
-                mockFixture.Combine(packagesDirectory, "builtInPackage2.vcpkgreg"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "builtInPackage2.vcpkg"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "linux-x64", "workload3.sh"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "linux-arm64", "workload3.sh"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "win-x64", "workload3.exe"),
-                mockFixture.Combine(builtInPackage2Registration.Path, "win-arm64", "workload3.exe"),
+                fixture.Combine(packagesDirectory, "builtInPackage2.vcpkgreg"),
+                fixture.Combine(builtInPackage2Registration.Path, "builtInPackage2.vcpkg"),
+                fixture.Combine(builtInPackage2Registration.Path, "linux-x64", "workload3.sh"),
+                fixture.Combine(builtInPackage2Registration.Path, "linux-arm64", "workload3.sh"),
+                fixture.Combine(builtInPackage2Registration.Path, "win-x64", "workload3.exe"),
+                fixture.Combine(builtInPackage2Registration.Path, "win-arm64", "workload3.exe"),
             };
 
             filePaths.ForEach(file =>
             {
-                mockFixture.FileSystem.File.Create(file);
+                fixture.FileSystem.File.Create(file);
 
-                InMemoryFile targetFile = mockFixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
+                InMemoryFile targetFile = fixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
 
                 if (file.EndsWith("package1.vcpkg"))
                 {
@@ -592,25 +592,25 @@ namespace VirtualClient.Cleanup
                 }
             });
 
-            await mockFixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
 
             // Packages other than built-in packages are removed.
             IEnumerable<string> expectedRemovals = filePaths.Take(6).ToList();
             IEnumerable<string> expectedRemaining = filePaths.Skip(6).ToList();
 
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(file.Path)));
-            Assert.IsFalse(mockFixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(MockFixture.GetDirectoryName(file.Path))));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(file.Path)));
+            Assert.IsFalse(fixture.FileSystem.FileSystemEntries.Any(file => expectedRemovals.Contains(MockFixture.GetDirectoryName(file.Path))));
 
             // Built-in packages remain.
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => expectedRemaining.Contains(file.Path)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => expectedRemaining.Contains(file.Path)));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfThePackagesDirectoryWindows()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Win32NT);
-            string packagesDirectory = mockFixture.GetPackagePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Win32NT);
+            string packagesDirectory = fixture.GetPackagePath();
             string otherDirectory = "any-directory";
 
             // Scenario:
@@ -618,28 +618,28 @@ namespace VirtualClient.Cleanup
             // outside of this folder should be touched.
 
             var package1Definition = new DependencyMetadata("package1");
-            var package1Registration = new DependencyPath("package1", mockFixture.Combine(packagesDirectory, "package1"));
+            var package1Registration = new DependencyPath("package1", fixture.Combine(packagesDirectory, "package1"));
 
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(packagesDirectory, "package1.vcpkgreg"),
-                mockFixture.Combine(package1Registration.Path, "package1.vcpkg"),
-                mockFixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
-                mockFixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
+                fixture.Combine(packagesDirectory, "package1.vcpkgreg"),
+                fixture.Combine(package1Registration.Path, "package1.vcpkg"),
+                fixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
+                fixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
 
                 // Should not be touched
-                mockFixture.Combine(otherDirectory, "directory2", "fileC.log"),
-                mockFixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
+                fixture.Combine(otherDirectory, "directory2", "fileC.log"),
+                fixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
             };
 
             filePaths.ForEach(file =>
             {
-                mockFixture.FileSystem.File.Create(file);
+                fixture.FileSystem.File.Create(file);
 
-                InMemoryFile targetFile = mockFixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
+                InMemoryFile targetFile = fixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
 
                 if (file.EndsWith("package1.vcpkg"))
                 {
@@ -651,17 +651,17 @@ namespace VirtualClient.Cleanup
                 }
             });
 
-            await mockFixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
 
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(6)));
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(7)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(6)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(7)));
         }
 
         [Test]
         public async Task CleanPackagesDirectoryExtensionDoesNotRemoveFilesOrDirectoriesOutsideOfThePackagesDirectoryLinux()
         {
-            DependencyFixture mockFixture = new DependencyFixture(PlatformID.Unix);
-            string packagesDirectory = mockFixture.GetPackagePath();
+            DependencyFixture fixture = new DependencyFixture(PlatformID.Unix);
+            string packagesDirectory = fixture.GetPackagePath();
             string otherDirectory = "any-directory";
 
             // Scenario:
@@ -669,28 +669,28 @@ namespace VirtualClient.Cleanup
             // outside of this folder should be touched.
 
             var package1Definition = new DependencyMetadata("package1");
-            var package1Registration = new DependencyPath("package1", mockFixture.Combine(packagesDirectory, "package1"));
+            var package1Registration = new DependencyPath("package1", fixture.Combine(packagesDirectory, "package1"));
 
             List<string> filePaths = new List<string>
             {
                 // Should be removed.
-                mockFixture.Combine(packagesDirectory, "package1.vcpkgreg"),
-                mockFixture.Combine(package1Registration.Path, "package1.vcpkg"),
-                mockFixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
-                mockFixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
-                mockFixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
+                fixture.Combine(packagesDirectory, "package1.vcpkgreg"),
+                fixture.Combine(package1Registration.Path, "package1.vcpkg"),
+                fixture.Combine(package1Registration.Path, "linux-x64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "linux-arm64", "workload1.sh"),
+                fixture.Combine(package1Registration.Path, "win-x64", "workload1.exe"),
+                fixture.Combine(package1Registration.Path, "win-arm64", "workload1.exe"),
 
                 // Should not be touched
-                mockFixture.Combine(otherDirectory, "directory2", "fileC.log"),
-                mockFixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
+                fixture.Combine(otherDirectory, "directory2", "fileC.log"),
+                fixture.Combine(otherDirectory, "directory2", "subdirectory1_1", "fileD.log"),
             };
 
             filePaths.ForEach(file =>
             {
-                mockFixture.FileSystem.File.Create(file);
+                fixture.FileSystem.File.Create(file);
 
-                InMemoryFile targetFile = mockFixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
+                InMemoryFile targetFile = fixture.FileSystem.FileSystemEntries.First(e => e.Path == file) as InMemoryFile;
 
                 if (file.EndsWith("package1.vcpkg"))
                 {
@@ -702,10 +702,10 @@ namespace VirtualClient.Cleanup
                 }
             });
 
-            await mockFixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
+            await fixture.SystemManagement.Object.CleanPackagesDirectoryAsync(CancellationToken.None);
 
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(6)));
-            Assert.IsTrue(mockFixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(7)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(6)));
+            Assert.IsTrue(fixture.FileSystem.FileSystemEntries.Any(file => file.Path == filePaths.ElementAt(7)));
         }
     }
 }

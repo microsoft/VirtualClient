@@ -20,7 +20,7 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class MsmpiInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public async Task MsmpiInstallationRunsTheExpectedCommandInWindows()
@@ -30,11 +30,11 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                $@"msiexec.exe /i ""{this.mockFixture.GetPackagePath()}\msmpi\win-x64\msmpisdk.msi"" /qn"
+                $@"msiexec.exe /i ""{this.fixture.GetPackagePath()}\msmpi\win-x64\msmpisdk.msi"" /qn"
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -50,7 +50,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None);
             }
@@ -66,7 +66,7 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandExecuted++;
 
@@ -80,7 +80,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None);
             }
@@ -90,18 +90,18 @@ namespace VirtualClient.Dependencies
 
         private void SetupMockFixture(PlatformID platform)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform);
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform);
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsRegex(".*msmpisuccess.lock")))
+            this.fixture.File.Setup(f => f.Exists(It.IsRegex(".*msmpisuccess.lock")))
                 .Returns(false);
 
-            DependencyPath package = new DependencyPath("msmpi", this.mockFixture.PlatformSpecifics.GetPackagePath("msmpi"));
-            this.mockFixture.PackageManager.OnGetPackage("msmpi").ReturnsAsync(package);
+            DependencyPath package = new DependencyPath("msmpi", this.fixture.PlatformSpecifics.GetPackagePath("msmpi"));
+            this.fixture.PackageManager.OnGetPackage("msmpi").ReturnsAsync(package);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MsmpiInstallation.PackageName), "msmpi" }
             };

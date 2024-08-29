@@ -23,7 +23,7 @@ namespace VirtualClient.Actions.DiskPerformance
     [Category("Unit")]
     public class FioExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private IDictionary<string, IConvertible> profileParameters;
         private IEnumerable<Disk> disks;
         private string mockCommandLine;
@@ -39,9 +39,9 @@ namespace VirtualClient.Actions.DiskPerformance
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupMocks();
 
             // Setup default profile parameter values.
             this.mockCommandLine = "--name=fio_test_1 --ioengine=libaio";
@@ -54,13 +54,13 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(FioExecutor.PackageName), "fio" }
             };
 
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("fio", this.mockFixture.GetPackagePath("fio")));
-            this.mockFixture.File.OnFileExists().Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllText(It.IsAny<string>())).Returns(string.Empty);
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("fio", this.fixture.GetPackagePath("fio")));
+            this.fixture.File.OnFileExists().Returns(true);
+            this.fixture.File.Setup(file => file.ReadAllText(It.IsAny<string>())).Returns(string.Empty);
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 return new InMemoryProcess
                 {
@@ -79,7 +79,7 @@ namespace VirtualClient.Actions.DiskPerformance
             string workloadName = "fio";
             this.mockWorkloadPackage = new DependencyPath(
                 workloadName,
-                this.mockFixture.PlatformSpecifics.GetPackagePath(workloadName));
+                this.fixture.PlatformSpecifics.GetPackagePath(workloadName));
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.QueueDepth)] = 16;
             this.profileParameters[nameof(DiskSpdExecutor.ThreadCount)] = 32;
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor executor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 executor.EvaluateParametersAsync(EventContext.None);
 
@@ -112,7 +112,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
             this.profileParameters[nameof(TestFioExecutor.JobFiles)] = null;
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor executor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 WorkloadException error = Assert.Throws<WorkloadException>(executor.Validate);
 
@@ -126,7 +126,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(TestFioExecutor.CommandLine)] = "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}_direct --size=496GB --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth}";
             this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "{ScriptPath:fio}/oltp-c.fio.jobfile";
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor executor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 WorkloadException error = Assert.Throws<WorkloadException>(executor.Validate);
 
@@ -141,13 +141,13 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "jobfile1path";
 
             DependencyPath workloadPlatformSpecificPackage =
-                this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+                this.fixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.fixture.Platform, this.fixture.CpuArchitecture);
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor executor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                string updatedJobFilePath = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1path");
+                string updatedJobFilePath = this.fixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1path");
 
                 Assert.AreEqual($"{updatedJobFilePath} --output-format=json", executor.CommandLine);
             }
@@ -160,15 +160,15 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "path/to/jobfile1,path/jobfile2;path/jobfile3";
 
             DependencyPath workloadPlatformSpecificPackage =
-                this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+                this.fixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.fixture.Platform, this.fixture.CpuArchitecture);
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor executor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                string updatedJobFile1Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1");
-                string updatedJobFile2Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile2");
-                string updatedJobFile3Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile3");
+                string updatedJobFile1Path = this.fixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1");
+                string updatedJobFile2Path = this.fixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile2");
+                string updatedJobFile3Path = this.fixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile3");
 
                 Assert.AreEqual($"{updatedJobFile1Path} {updatedJobFile2Path} {updatedJobFile3Path} --output-format=json", executor.CommandLine);
             }
@@ -181,7 +181,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "disk_fill";
             this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = "496GB";
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor executor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 executor.EvaluateParametersAsync(EventContext.None);
 
@@ -201,7 +201,7 @@ namespace VirtualClient.Actions.DiskPerformance
 
             List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
 
-            this.mockFixture.DiskManager
+            this.fixture.DiskManager
                 .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
                 {
@@ -209,7 +209,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 })
                 .Returns(Task.CompletedTask);
 
-            using (TestFioExecutor workloadExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor workloadExecutor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 await workloadExecutor.ExecuteAsync(CancellationToken.None);
 
@@ -229,7 +229,7 @@ namespace VirtualClient.Actions.DiskPerformance
         [Test]
         public void FioExecutorCreatesTheExpectedWorkloadProcess_Scenario1()
         {
-            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 string expectedCommand = "/home/any/fio";
                 string expectedArguments = "--name=fio_test --ioengine=libaio";
@@ -255,7 +255,7 @@ namespace VirtualClient.Actions.DiskPerformance
         [Test]
         public void FioExecutorCreatesTheExpectedWorkloadProcess_Scenario2()
         {
-            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.fixture.Dependencies, this.profileParameters))
             {
                 string expectedCommand = "/home/any/fio";
                 string expectedArguments = "--name=fio_test --ioengine=libaio";

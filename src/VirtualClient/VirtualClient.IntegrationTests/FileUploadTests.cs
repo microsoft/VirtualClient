@@ -20,15 +20,15 @@ namespace VirtualClient
     [Category("Integration")]
     public class FileUploadTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private FileSystem fileSystem;
         private Random randomGen;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
             this.fileSystem = new FileSystem();
             this.randomGen = new Random();
 
@@ -46,10 +46,10 @@ namespace VirtualClient
 
             IBlobManager blobManager = new BlobManager(new DependencyBlobStore(DependencyStore.Content, storageAccountConnectionString));
 
-            this.mockFixture.Dependencies.RemoveAll<IFileSystem>();
-            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
-            this.mockFixture.Dependencies.AddSingleton<IFileSystem>(this.fileSystem);
-            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(new List<IBlobManager> { blobManager });
+            this.fixture.Dependencies.RemoveAll<IFileSystem>();
+            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+            this.fixture.Dependencies.AddSingleton<IFileSystem>(this.fileSystem);
+            this.fixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(new List<IBlobManager> { blobManager });
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace VirtualClient
             Random randomGen = new Random();
             IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources"), "results*.*");
             
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 if (!component.TryGetContentStoreManager(out IBlobManager contentStore))
                 {
@@ -179,7 +179,7 @@ namespace VirtualClient
                 // producing results.
                 Task fileCreationTask = Task.Run(async () =>
                 {
-                    using (TestExecutor component = new TestExecutor(this.mockFixture))
+                    using (TestExecutor component = new TestExecutor(this.fixture))
                     {
                         while (!cancellationSource.IsCancellationRequested)
                         {
@@ -204,7 +204,7 @@ namespace VirtualClient
                     { nameof(FileUploadMonitor.RequestsDirectory), requestDirectory }
                     };
 
-                    using (FileUploadMonitor monitor = new FileUploadMonitor(this.mockFixture.Dependencies, parameters))
+                    using (FileUploadMonitor monitor = new FileUploadMonitor(this.fixture.Dependencies, parameters))
                     {
                         if (!monitor.TryGetContentStoreManager(out IBlobManager contentStore))
                         {
@@ -228,14 +228,14 @@ namespace VirtualClient
         {
             if (!string.IsNullOrWhiteSpace(role))
             {
-                this.mockFixture.Parameters["Role"] = role;
+                this.fixture.Parameters["Role"] = role;
             }
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.AgentId).Returns(agentId);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.ExperimentId).Returns(experimentId.ToString());
+            this.fixture.SystemManagement.Setup(mgr => mgr.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.Setup(mgr => mgr.ExperimentId).Returns(experimentId.ToString());
 
             
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            using (TestExecutor component = new TestExecutor(this.fixture))
             {
                 if (!component.TryGetContentStoreManager(out IBlobManager contentStore))
                 {

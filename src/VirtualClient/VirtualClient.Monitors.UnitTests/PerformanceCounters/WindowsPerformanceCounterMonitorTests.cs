@@ -213,20 +213,20 @@ namespace VirtualClient.Monitors
             @"system,\system\threads"
         };
 
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void InitializeTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
 
             // Normally, there would be some amount of time intervals applied. To ensure the tests run
             // efficiently below, we are removing the time intervals.
             TimeSpan fastInterval = TimeSpan.FromMilliseconds(1);
-            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterCaptureInterval)] = fastInterval.ToString();
-            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterDiscoveryInterval)] = fastInterval.ToString();
-            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.MonitorFrequency)] = fastInterval.ToString();
+            this.fixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterCaptureInterval)] = fastInterval.ToString();
+            this.fixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterDiscoveryInterval)] = fastInterval.ToString();
+            this.fixture.Parameters[nameof(WindowsPerformanceCounterMonitor.MonitorFrequency)] = fastInterval.ToString();
         }
 
         [Test]
@@ -234,7 +234,7 @@ namespace VirtualClient.Monitors
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
-                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
                 {
                     MonitorException error = Assert.ThrowsAsync<MonitorException>(() => monitor.InitializeAsync(EventContext.None, CancellationToken.None));
                     Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
@@ -246,9 +246,9 @@ namespace VirtualClient.Monitors
         [TestCase("Processor=.")]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForAGivenDescriptor_1(string counterFilter)
         {
-            this.mockFixture.Parameters["Counters"] = counterFilter;
+            this.fixture.Parameters["Counters"] = counterFilter;
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -310,9 +310,9 @@ namespace VirtualClient.Monitors
         [TestCase("Processor=\\(_Total\\)")]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForAGivenDescriptor_2(string counterFilter)
         {
-            this.mockFixture.Parameters["Counters1"] = counterFilter;
+            this.fixture.Parameters["Counters1"] = counterFilter;
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -351,9 +351,9 @@ namespace VirtualClient.Monitors
         [TestCase("Processor=\\([0-9]+\\)\\\\% (C[0-9]+|Idle|Interrupt|Privileged|Processor|User) Time")]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForAGivenDescriptor_3(string counterFilter)
         {
-            this.mockFixture.Parameters["Counters1"] = counterFilter;
+            this.fixture.Parameters["Counters1"] = counterFilter;
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -406,9 +406,9 @@ namespace VirtualClient.Monitors
         [TestCase("IPv4=datagrams")]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForAGivenDescriptor_4(string counterFilter)
         {
-            this.mockFixture.Parameters["Counters1"] = counterFilter;
+            this.fixture.Parameters["Counters1"] = counterFilter;
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -449,9 +449,9 @@ namespace VirtualClient.Monitors
         [TestCase("Hyper-V Hypervisor Logical Processor=\\(_Total\\)")]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForAGivenDescriptor_5(string counterFilter)
         {
-            this.mockFixture.Parameters["Counters1"] = counterFilter;
+            this.fixture.Parameters["Counters1"] = counterFilter;
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -493,10 +493,10 @@ namespace VirtualClient.Monitors
         [TestCase("Memory=\\\\(page|pages)", "PhysicalDisk=_Total")]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForAGivenSetOfDescriptors_1(string counterFilter1, string counterFilter2)
         {
-            this.mockFixture.Parameters["Counters1"] = counterFilter1;
-            this.mockFixture.Parameters["Counters2"] = counterFilter2;
+            this.fixture.Parameters["Counters1"] = counterFilter1;
+            this.fixture.Parameters["Counters2"] = counterFilter2;
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -551,7 +551,7 @@ namespace VirtualClient.Monitors
         [Test]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForTheDefaultMonitorProfile_1()
         {
-            this.mockFixture.Parameters.AddRange(new Dictionary<string, IConvertible>
+            this.fixture.Parameters.AddRange(new Dictionary<string, IConvertible>
             {
                 { "Counters01", "IPv4=." },
                 { "Counters02", "Memory=(Available|Cache|Committed) Bytes" },
@@ -563,7 +563,7 @@ namespace VirtualClient.Monitors
                 { "Counters08", "System=." }
             });
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -693,7 +693,7 @@ namespace VirtualClient.Monitors
         [Test]
         public async Task WindowsPerformanceCounterMonitorIdentifiesTheExpectedCountersForTheDefaultMonitorProfile_2_HyperV_Counters()
         {
-            this.mockFixture.Parameters.AddRange(new Dictionary<string, IConvertible>
+            this.fixture.Parameters.AddRange(new Dictionary<string, IConvertible>
             {
                 { "Counters01", "Hyper-V Hypervisor Logical Processor=\\(_Total\\)" },
                 { "Counters02", "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time" },
@@ -704,7 +704,7 @@ namespace VirtualClient.Monitors
                 { "Counters07", "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(Nested Page Fault Intercepts/sec|Posted Interrupt Notifications/sec|Posted Interrupt Scans/sec|Total Intercepts Cost|Total Intercepts/sec)" },
             });
 
-            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+            using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
             {
                 await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -769,11 +769,11 @@ namespace VirtualClient.Monitors
         [Test]
         public async Task WindowsPerformanceCounterMonitorPerformsCounterCaptureOnIntervals()
         {
-            this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.fixture.Parameters["Counters1"] = "Processor=.";
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
-                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
                 {
                     var counter = new TestWindowsPerformanceCounter("AnyCategory", "AnyCounter", CaptureStrategy.Average);
 
@@ -804,11 +804,11 @@ namespace VirtualClient.Monitors
         [Test]
         public async Task WindowsPerformanceCounterMonitorPerformsCounterDiscoveryOnIntervals()
         {
-            this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.fixture.Parameters["Counters1"] = "Processor=.";
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
-                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
                 {
                     int discoveryAttempts = 0;
                     monitor.OnLoadCounters = () =>
@@ -833,17 +833,17 @@ namespace VirtualClient.Monitors
         [Test]
         public async Task WindowsPerformanceCounterMonitorPerformsCounterSnapshotsOnIntervals()
         {
-            this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.fixture.Parameters["Counters1"] = "Processor=.";
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
-                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
                 {
                     var counter = new TestWindowsPerformanceCounter("AnyCategory", "AnyCounter", CaptureStrategy.Average);
                     monitor.Counters.Add(@"\AnyCategory\AnyCounter", counter);
 
                     int snapshotAttempts = 0;
-                    this.mockFixture.Logger.OnLog = (level, eventId, state, exc) =>
+                    this.fixture.Logger.OnLog = (level, eventId, state, exc) =>
                     {
                         if (eventId.Name == "PerformanceCounter")
                         {
@@ -871,18 +871,18 @@ namespace VirtualClient.Monitors
         [Test]
         public async Task WindowsPerformanceCounterMonitorHandlesNewCountersBeingAddedMidstream()
         {
-            this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.fixture.Parameters["Counters1"] = "Processor=.";
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
-                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.mockFixture))
+                using (var monitor = new TestWindowsPerformanceCounterMonitor(this.fixture))
                 {
                     var counter = new TestWindowsPerformanceCounter("AnyCategory", "AnyCounter", CaptureStrategy.Average);
                     monitor.Counters.Add(@"\AnyCategory\AnyCounter", counter);
 
                     bool errorsOccurred = false;
                     int snapshotAttempts = 0;
-                    this.mockFixture.Logger.OnLog = (level, eventId, state, exc) =>
+                    this.fixture.Logger.OnLog = (level, eventId, state, exc) =>
                     {
                         if (eventId.Name == "PerformanceCounter")
                         {

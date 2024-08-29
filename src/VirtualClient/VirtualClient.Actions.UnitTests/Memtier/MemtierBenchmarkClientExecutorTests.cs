@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MemtierBenchmarkClientExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
         private string results;
 
@@ -33,8 +33,8 @@ namespace VirtualClient.Actions
         {
             // Setup:
             // Two Memcached server instances running on ports 6379 and 6380 with affinity to 4 logical processors
-            this.mockFixture.ApiClient.OnGetState(nameof(ServerState))
-               .ReturnsAsync(this.mockFixture.CreateHttpResponse(
+            this.fixture.ApiClient.OnGetState(nameof(ServerState))
+               .ReturnsAsync(this.fixture.CreateHttpResponse(
                    HttpStatusCode.OK,
                    new Item<ServerState>(nameof(ServerState), new ServerState(new List<PortDescription>
                    {
@@ -50,24 +50,24 @@ namespace VirtualClient.Actions
                         }
                    }))));
 
-            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
-                .Returns<string, ClientInstance>((id, instance) => this.mockFixture.ApiClient.Object);
+            this.fixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
+                .Returns<string, ClientInstance>((id, instance) => this.fixture.ApiClient.Object);
 
-            this.mockFixture.ApiClient.OnGetHeartbeat()
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.OnGetHeartbeat()
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            this.mockFixture.ApiClient.OnGetServerOnline()
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.OnGetServerOnline()
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("memtier", this.mockFixture.GetPackagePath("memtier"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("memtier", this.fixture.GetPackagePath("memtier"));
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 ["Scenario"] = "Memtier-Scenario",
                 ["PackageName"] = this.mockPackage.Name,
@@ -77,19 +77,19 @@ namespace VirtualClient.Actions
                 ["Username"] = "testuser"
             };
 
-            this.mockFixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierBenchmarkClientExecutorTests), "Examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.results);
 
             // Setup:
             // A single Memcached server instance running on port 6379 with affinity to 4 logical processors
-            this.mockFixture.ApiClient.OnGetState(nameof(ServerState))
-               .ReturnsAsync(this.mockFixture.CreateHttpResponse(
+            this.fixture.ApiClient.OnGetState(nameof(ServerState))
+               .ReturnsAsync(this.fixture.CreateHttpResponse(
                    HttpStatusCode.OK,
                    new Item<ServerState>(nameof(ServerState), new ServerState(new List<PortDescription>
                    {
@@ -100,37 +100,37 @@ namespace VirtualClient.Actions
                         }
                    }))));
 
-            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
-                .Returns<string, ClientInstance>((id, instance) => this.mockFixture.ApiClient.Object);
+            this.fixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
+                .Returns<string, ClientInstance>((id, instance) => this.fixture.ApiClient.Object);
 
-            this.mockFixture.ApiClient.OnGetHeartbeat()
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.OnGetHeartbeat()
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-            this.mockFixture.ApiClient.OnGetServerOnline()
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.OnGetServerOnline()
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
         [Test]
         public async Task MemtierBenchmarkClientExecutorOnInitializationGetsTheExpectedPackage()
         {
-            using (var component = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await component.InitializeAsync(EventContext.None, CancellationToken.None);
-                this.mockFixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockPackage.Name, It.IsAny<CancellationToken>()));
+                this.fixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockPackage.Name, It.IsAny<CancellationToken>()));
             }
         }
 
         [Test]
         public void MemtierBenchmarkClientExecutorHandlesDurationsAsBothIntegerAndTimeSpanFormats()
         {
-            this.mockFixture.Parameters["Duration"] = 30;
-            using (var component = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Parameters["Duration"] = 30;
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.AreEqual(30, component.Duration);
             }
 
-            this.mockFixture.Parameters["Duration"] = TimeSpan.FromMinutes(1).ToString();
-            using (var component = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Parameters["Duration"] = TimeSpan.FromMinutes(1).ToString();
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.AreEqual(60, component.Duration);
             }
@@ -139,7 +139,7 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MemtierBenchmarkClientExecutorExecutesExpectedCommands()
         {
-            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 List<string> expectedCommands = new List<string>()
                 {
@@ -151,12 +151,12 @@ namespace VirtualClient.Actions
                     $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove($"{exe} {arguments}");
-                    this.mockFixture.Process.StandardOutput.Append(this.results);
+                    this.fixture.Process.StandardOutput.Append(this.results);
 
-                    return this.mockFixture.Process;
+                    return this.fixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
@@ -167,7 +167,7 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MemtierBenchmarkClientExecutorExecutesExpectedCommandsWhenAUsernameIsDefined()
         {
-            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 executor.Parameters[nameof(executor.Username)] = "testuser";
 
@@ -180,12 +180,12 @@ namespace VirtualClient.Actions
                     $"sudo bash -c \"numactl -C 1 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove($"{exe} {arguments}");
-                    this.mockFixture.Process.StandardOutput.Append(this.results);
+                    this.fixture.Process.StandardOutput.Append(this.results);
 
-                    return this.mockFixture.Process;
+                    return this.fixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
@@ -198,7 +198,7 @@ namespace VirtualClient.Actions
         {
             this.SetMultipleServerInstances();
 
-            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // 2 client instances running in-parallel to target each of the 2 servers
                 executor.Parameters[nameof(executor.ClientInstances)] = 2;
@@ -222,12 +222,12 @@ namespace VirtualClient.Actions
                     $"sudo bash -c \"numactl -C 3 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6380 {executor.CommandLine}\""
                 };
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove($"{exe} {arguments}");
-                    this.mockFixture.Process.StandardOutput.Append(this.results);
+                    this.fixture.Process.StandardOutput.Append(this.results);
 
-                    return this.mockFixture.Process;
+                    return this.fixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
@@ -241,7 +241,7 @@ namespace VirtualClient.Actions
            
             this.SetMultipleServerInstances();
 
-            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // 4 client instances running in-parallel to target 1 server as the other server will sit idle because MaxClients = 4, If we Set MaxClients >= 8 both the servers will be engaged . 
                 executor.Parameters[nameof(executor.ClientInstances)] = 4;
@@ -265,12 +265,12 @@ namespace VirtualClient.Actions
                     $"sudo bash -c \"numactl -C 2 {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}\""
                 };
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove($"{exe} {arguments}");
-                    this.mockFixture.Process.StandardOutput.Append(this.results);
+                    this.fixture.Process.StandardOutput.Append(this.results);
 
-                    return this.mockFixture.Process;
+                    return this.fixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
@@ -281,14 +281,14 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MemtierBenchmarkClientExecutorEmitsTheExpectedMetricsRawMetricsScenario()
         {
-            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = true;
-            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = false;
+            this.fixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = true;
+            this.fixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = false;
 
-            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // Setup:
                 // Set the standard output for the Memtier process to valid results.
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     if (process.FullCommand().Contains("memtier_benchmark"))
                     {
@@ -298,7 +298,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.fixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
                 Assert.AreEqual(30, metricsEmitted.Count());
 
                 IEnumerable<string> expectedMetrics = new List<string>
@@ -343,14 +343,14 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MemtierBenchmarkClientExecutorEmitsTheExpectedMetricsAggregateMetricsScenario()
         {
-            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = false;
-            this.mockFixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = true;
+            this.fixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitRawMetrics)] = false;
+            this.fixture.Parameters[nameof(MemtierBenchmarkClientExecutor.EmitAggregateMetrics)] = true;
 
-            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // Setup:
                 // Set the standard output for the Memtier process to valid results.
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     if (process.FullCommand().Contains("memtier_benchmark"))
                     {
@@ -360,7 +360,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.fixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
                 Assert.AreEqual(141, metricsEmitted.Count());
 
                 IEnumerable<string> expectedMetrics = new List<string>

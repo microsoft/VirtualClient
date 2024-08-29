@@ -15,13 +15,13 @@ namespace VirtualClient.Proxy
     [Category("Unit")]
     internal class ProxyLoggerTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private Mock<IProxyApiClient> mockProxyApiClient;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.mockProxyApiClient = new Mock<IProxyApiClient>();
 
             this.mockProxyApiClient
@@ -29,7 +29,7 @@ namespace VirtualClient.Proxy
                     It.IsAny<IEnumerable<ProxyTelemetryMessage>>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
         [Test]

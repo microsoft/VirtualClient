@@ -19,13 +19,13 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class FileUploadDescriptorTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
         private Mock<IFileInfo> mockFile;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
             this.mockFile = new Mock<IFileInfo>();
 
             this.mockFile.Setup(file => file.Name).Returns("file1.log");

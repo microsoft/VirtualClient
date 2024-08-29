@@ -24,15 +24,15 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class AspNetBenchExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public void AspNetBenchExecutorThrowsIfCannotFindAspNetBenchPackage()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
-            this.mockFixture.PackageManager.OnGetPackage("aspnetbenchmarks").ReturnsAsync(value: null);
+            this.fixture.PackageManager.OnGetPackage("aspnetbenchmarks").ReturnsAsync(value: null);
 
-            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
             }
@@ -42,9 +42,9 @@ namespace VirtualClient.Actions
         public void AspNetBenchExecutorThrowsIfCannotFindBombardierPackage()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            this.mockFixture.PackageManager.OnGetPackage("bombardier").ReturnsAsync(value: null);
+            this.fixture.PackageManager.OnGetPackage("bombardier").ReturnsAsync(value: null);
 
-            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
             }
@@ -54,9 +54,9 @@ namespace VirtualClient.Actions
         public void AspNetBenchExecutorThrowsIfCannotFindDotNetSDKPackage()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            this.mockFixture.PackageManager.OnGetPackage("dotnetsdk").ReturnsAsync(value: null);
+            this.fixture.PackageManager.OnGetPackage("dotnetsdk").ReturnsAsync(value: null);
 
-            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
             }
@@ -67,7 +67,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
-            string packageDirectory = this.mockFixture.GetPackagePath();
+            string packageDirectory = this.fixture.GetPackagePath();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -96,7 +96,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -109,7 +109,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
 
-            string packageDirectory = this.mockFixture.GetPackagePath();
+            string packageDirectory = this.fixture.GetPackagePath();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
             List<string> expectedCommands = new List<string>()
@@ -120,7 +120,7 @@ namespace VirtualClient.Actions
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -138,7 +138,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAspNetBenchExecutor executor = new TestAspNetBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -163,37 +163,37 @@ namespace VirtualClient.Actions
         {
             if (platform == PlatformID.Win32NT)
             {
-                this.mockFixture = new MockFixture();
-                this.mockFixture.Setup(PlatformID.Win32NT);
+                this.fixture = new MockFixture();
+                this.fixture.Setup(PlatformID.Win32NT);
 
-                DependencyPath mockAspNetBenchPackage = new DependencyPath("aspnetbenchmarks", this.mockFixture.PlatformSpecifics.GetPackagePath("aspnetbenchmarks"));
-                DependencyPath mockDotNetPackage = new DependencyPath("dotnetsdk", this.mockFixture.PlatformSpecifics.GetPackagePath("dotnet"));
-                DependencyPath mockBombardierPackage = new DependencyPath("bombardier", this.mockFixture.PlatformSpecifics.GetPackagePath("bombardier"));
-                this.mockFixture.PackageManager.OnGetPackage(mockAspNetBenchPackage.Name).ReturnsAsync(mockAspNetBenchPackage);
-                this.mockFixture.PackageManager.OnGetPackage(mockDotNetPackage.Name).ReturnsAsync(mockDotNetPackage);
-                this.mockFixture.PackageManager.OnGetPackage(mockBombardierPackage.Name).ReturnsAsync(mockBombardierPackage);
+                DependencyPath mockAspNetBenchPackage = new DependencyPath("aspnetbenchmarks", this.fixture.PlatformSpecifics.GetPackagePath("aspnetbenchmarks"));
+                DependencyPath mockDotNetPackage = new DependencyPath("dotnetsdk", this.fixture.PlatformSpecifics.GetPackagePath("dotnet"));
+                DependencyPath mockBombardierPackage = new DependencyPath("bombardier", this.fixture.PlatformSpecifics.GetPackagePath("bombardier"));
+                this.fixture.PackageManager.OnGetPackage(mockAspNetBenchPackage.Name).ReturnsAsync(mockAspNetBenchPackage);
+                this.fixture.PackageManager.OnGetPackage(mockDotNetPackage.Name).ReturnsAsync(mockDotNetPackage);
+                this.fixture.PackageManager.OnGetPackage(mockBombardierPackage.Name).ReturnsAsync(mockBombardierPackage);
             }
             else
             {
-                this.mockFixture = new MockFixture();
-                this.mockFixture.Setup(PlatformID.Unix);
+                this.fixture = new MockFixture();
+                this.fixture.Setup(PlatformID.Unix);
 
-                DependencyPath mockAspNetBenchPackage = new DependencyPath("aspnetbenchmarks", this.mockFixture.PlatformSpecifics.GetPackagePath("aspnetbenchmarks"));
-                DependencyPath mockDotNetPackage = new DependencyPath("dotnetsdk", this.mockFixture.PlatformSpecifics.GetPackagePath("dotnet"));
-                DependencyPath mockBombardierPackage = new DependencyPath("bombardier", this.mockFixture.PlatformSpecifics.GetPackagePath("bombardier"));
-                this.mockFixture.PackageManager.OnGetPackage(mockAspNetBenchPackage.Name).ReturnsAsync(mockAspNetBenchPackage);
-                this.mockFixture.PackageManager.OnGetPackage(mockDotNetPackage.Name).ReturnsAsync(mockDotNetPackage);
-                this.mockFixture.PackageManager.OnGetPackage(mockBombardierPackage.Name).ReturnsAsync(mockBombardierPackage);
+                DependencyPath mockAspNetBenchPackage = new DependencyPath("aspnetbenchmarks", this.fixture.PlatformSpecifics.GetPackagePath("aspnetbenchmarks"));
+                DependencyPath mockDotNetPackage = new DependencyPath("dotnetsdk", this.fixture.PlatformSpecifics.GetPackagePath("dotnet"));
+                DependencyPath mockBombardierPackage = new DependencyPath("bombardier", this.fixture.PlatformSpecifics.GetPackagePath("bombardier"));
+                this.fixture.PackageManager.OnGetPackage(mockAspNetBenchPackage.Name).ReturnsAsync(mockAspNetBenchPackage);
+                this.fixture.PackageManager.OnGetPackage(mockDotNetPackage.Name).ReturnsAsync(mockDotNetPackage);
+                this.fixture.PackageManager.OnGetPackage(mockBombardierPackage.Name).ReturnsAsync(mockBombardierPackage);
             }
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(AspNetBenchExecutor.PackageName), "aspnetbenchmarks" },
                 { nameof(AspNetBenchExecutor.DotNetSdkPackageName), "dotnetsdk" },

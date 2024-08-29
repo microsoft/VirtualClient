@@ -25,28 +25,28 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class Pbzip2ExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
         private ConcurrentBuffer defaultOutput = new ConcurrentBuffer();
 
         [SetUp]
         public void SetupDefaultBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("pbzip2", this.mockFixture.PlatformSpecifics.GetPackagePath("pbzip2"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("pbzip2", this.fixture.PlatformSpecifics.GetPackagePath("pbzip2"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Pbzip2Executor.Options), "testOption1 testOption2" },
                 { nameof(Pbzip2Executor.InputFiles), "Test1.zip Test2.txt" },
@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
         public async Task Pbzip2ExecutorGetsDefaultFileIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Pbzip2Executor.Options), "testOption1 testOption2" },
                 { nameof(Pbzip2Executor.InputFiles), "" },
@@ -90,7 +90,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -111,7 +111,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Pbzip2Executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
         public async Task Pbzip2ExecutorRunsTheExpectedWorkloadCommand()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Pbzip2Executor.Options), "testOption1 testOption2" },
                 { nameof(Pbzip2Executor.InputFiles), "" },
@@ -132,10 +132,10 @@ namespace VirtualClient.Actions
             };
             string mockPackagePath = this.mockPackage.Path;
 
-            string expectedCommand = $"sudo bash -c \"pbzip2 testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}\"";
+            string expectedCommand = $"sudo bash -c \"pbzip2 testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}\"";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -156,7 +156,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Pbzip2Executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
         public async Task Pbzip2ExecutorExecutesTheCorrectCommandsWithInstallationIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Pbzip2Executor.Options), "testOption1 testOption2" },
                 { nameof(Pbzip2Executor.InputFiles), "" },
@@ -181,11 +181,11 @@ namespace VirtualClient.Actions
             {
                 $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"sudo unzip silesia.zip -d silesia",
-                $"sudo bash -c \"pbzip2 testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}\""
+                $"sudo bash -c \"pbzip2 testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}\""
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -204,12 +204,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Pbzip2Executor.Pbzip2State()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Pbzip2Executor.Pbzip2State()
             {
                 Pbzip2StateInitialized = false
             }));
 
-            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Pbzip2Executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -228,7 +228,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -247,12 +247,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Pbzip2Executor.Pbzip2State()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Pbzip2Executor.Pbzip2State()
             {
                 Pbzip2StateInitialized = false
             }));
 
-            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Pbzip2Executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -271,7 +271,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -290,12 +290,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Pbzip2Executor.Pbzip2State()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Pbzip2Executor.Pbzip2State()
             {
                 Pbzip2StateInitialized = true
             }));
 
-            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestPbzip2Executor Pbzip2Executor = new TestPbzip2Executor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Pbzip2Executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

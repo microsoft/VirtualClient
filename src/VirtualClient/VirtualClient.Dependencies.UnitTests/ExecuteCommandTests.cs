@@ -17,13 +17,13 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     internal class ExecuteCommandTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         public void SetupDefaults(PlatformID platform, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "anycommand";
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform, architecture);
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "anycommand";
         }
 
         [Test]
@@ -92,11 +92,11 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaults(PlatformID.Unix);
 
-            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            using (TestExecuteCommand command = new TestExecuteCommand(this.fixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     Assert.AreEqual(process.FullCommand(), $"{expectedCommand} {expectedCommandArguments}".Trim());
                 };
@@ -121,11 +121,11 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            using (TestExecuteCommand command = new TestExecuteCommand(this.fixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     Assert.AreEqual(process.FullCommand(), $"{expectedCommand} {expectedCommandArguments}".Trim());
                 };
@@ -146,12 +146,12 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaults(PlatformID.Unix);
 
-            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            using (TestExecuteCommand command = new TestExecuteCommand(this.fixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
                 List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     expectedCommands.Remove(process.FullCommand());
                 };
@@ -170,12 +170,12 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            using (TestExecuteCommand command = new TestExecuteCommand(this.fixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
                 List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     expectedCommands.Remove(process.FullCommand());
                 };
@@ -194,12 +194,12 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -218,14 +218,14 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -242,12 +242,12 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -266,14 +266,14 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64)}";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -292,12 +292,12 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, architecture);
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, architecture);
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -316,14 +316,14 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64)}";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -342,12 +342,12 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, architecture);
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, architecture);
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -366,14 +366,14 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
+            this.fixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
+            this.fixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 // We SHOULD NOT execute on the system when the platform/architecture does not match.
                 await command.ExecuteAsync(CancellationToken.None);
@@ -385,17 +385,17 @@ namespace VirtualClient.Dependencies
         public async Task ExecuteCommandResolvesPackagePathExpressionsOnInitializationInTheComponentParametersOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage");
+            string packagePath = this.fixture.GetPackagePath("anypackage");
 
             // The package MUST exist on the system.
-            this.mockFixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}\\build.exe&&{PackagePath:anypackage}\\build.exe install";
-            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}\\build.exe&&{PackagePath:anypackage}\\build.exe install";
+            this.fixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 await command.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -408,17 +408,17 @@ namespace VirtualClient.Dependencies
         public async Task ExecuteCommandResolvesPackagePathExpressionsOnInitializationInTheComponentParametersOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage");
+            string packagePath = this.fixture.GetPackagePath("anypackage");
 
             // The package MUST exist on the system.
-            this.mockFixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}/configure&&{PackagePath:anypackage}/make";
-            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}/configure&&{PackagePath:anypackage}/make";
+            this.fixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 await command.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -431,15 +431,15 @@ namespace VirtualClient.Dependencies
         public async Task ExecuteCommandTheResolvedPackagePathExpressionsWhenExecutingCommandsOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage");
+            string packagePath = this.fixture.GetPackagePath("anypackage");
 
             // The package MUST exist on the system.
-            this.mockFixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}\\build.exe&&{PackagePath:anypackage}\\build.exe install";
-            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}\\build.exe&&{PackagePath:anypackage}\\build.exe install";
+            this.fixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
 
             List<string> expectedCommands = new List<string>
             {
@@ -448,9 +448,9 @@ namespace VirtualClient.Dependencies
             };
 
             bool confirmed = false;
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     expectedCommands.Remove(process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
@@ -468,15 +468,15 @@ namespace VirtualClient.Dependencies
         public async Task ExecuteCommandTheResolvedPackagePathExpressionsWhenExecutingCommandsOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage");
+            string packagePath = this.fixture.GetPackagePath("anypackage");
 
             // The package MUST exist on the system.
-            this.mockFixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}/configure&&{PackagePath:anypackage}/make";
-            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}/configure&&{PackagePath:anypackage}/make";
+            this.fixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
 
             List<string> expectedCommands = new List<string>
             {
@@ -485,9 +485,9 @@ namespace VirtualClient.Dependencies
             };
 
             bool confirmed = false;
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     expectedCommands.Remove(process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
@@ -505,18 +505,18 @@ namespace VirtualClient.Dependencies
         public async Task ExecuteCommandResolvesPlatformSpecificPackagePathExpressionsOnInitializationInTheComponentParametersOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage");
-            string platformSpecificPath = this.mockFixture.Combine(packagePath, "win-x64");
+            string packagePath = this.fixture.GetPackagePath("anypackage");
+            string platformSpecificPath = this.fixture.Combine(packagePath, "win-x64");
 
             // The package MUST exist on the system.
-            this.mockFixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
 
             // The component uses the {PackagePath/Platform} referencing expression in both command and
             // working directory parameters.
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath/Platform:anypackage}\\build.exe&&{PackagePath/Platform:anypackage}\\build.exe install";
-            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath/Platform:anypackage}";
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath/Platform:anypackage}\\build.exe&&{PackagePath/Platform:anypackage}\\build.exe install";
+            this.fixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath/Platform:anypackage}";
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 await command.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -529,18 +529,18 @@ namespace VirtualClient.Dependencies
         public async Task ExecuteCommandResolvesPlatformSpecificPackagePathExpressionsOnInitializationInTheComponentParametersOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Unix);
-            string packagePath = this.mockFixture.GetPackagePath("anypackage");
-            string platformSpecificPath = this.mockFixture.Combine(packagePath, "linux-x64");
+            string packagePath = this.fixture.GetPackagePath("anypackage");
+            string platformSpecificPath = this.fixture.Combine(packagePath, "linux-x64");
 
             // The package MUST exist on the system.
-            this.mockFixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
+            this.fixture.PackageManager.OnGetPackage("anypackage").ReturnsAsync(new DependencyPath("anypackage", packagePath));
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath/Platform:anypackage}/configure&&{PackagePath/Platform:anypackage}/make";
-            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath/Platform:anypackage}";
+            this.fixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath/Platform:anypackage}/configure&&{PackagePath/Platform:anypackage}/make";
+            this.fixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath/Platform:anypackage}";
 
-            using (var command = new TestExecuteCommand(this.mockFixture))
+            using (var command = new TestExecuteCommand(this.fixture))
             {
                 await command.InitializeAsync(EventContext.None, CancellationToken.None);
 
@@ -551,8 +551,8 @@ namespace VirtualClient.Dependencies
 
         private class TestExecuteCommand : ExecuteCommand
         {
-            public TestExecuteCommand(MockFixture mockFixture)
-                : base(mockFixture?.Dependencies, mockFixture?.Parameters)
+            public TestExecuteCommand(MockFixture fixture)
+                : base(fixture?.Dependencies, fixture?.Parameters)
             {
             }
 

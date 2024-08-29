@@ -24,32 +24,32 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SockPerfExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
         private NetworkingWorkloadState networkingWorkloadState;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture = new MockFixture();
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.fixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["TestDuration"] = "300";
-            this.mockFixture.Parameters["Protocol"] = "TCP";
-            this.mockFixture.Parameters["TestMode"] = "ping-pong";
-            this.mockFixture.Parameters["MessageSize"] = "64";
-            this.mockFixture.Parameters["MessagesPerSecond"] = "max";
-            this.mockFixture.Parameters["ConfidenceLevel"] = "99";
+            this.fixture.Parameters["PackageName"] = "Networking";
+            this.fixture.Parameters["TestDuration"] = "300";
+            this.fixture.Parameters["Protocol"] = "TCP";
+            this.fixture.Parameters["TestMode"] = "ping-pong";
+            this.fixture.Parameters["MessageSize"] = "64";
+            this.fixture.Parameters["MessagesPerSecond"] = "max";
+            this.fixture.Parameters["ConfidenceLevel"] = "99";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory, "Examples", "SockPerf", "SockPerfClientExample1.txt");
             string results = File.ReadAllText(resultsPath);
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(results);
 
             this.SetupNetworkingWorkloadState();
@@ -59,22 +59,22 @@ namespace VirtualClient.Actions
         [Ignore("The networking workload is being refactored/rewritten. As such the unit tests will be rewritten as well.")]
         public async Task SockPerfExecutorClientExecutesAsExpected()
         {
-            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await networkingWorkloadExecutor.OnInitialize.Invoke(EventContext.None,CancellationToken.None);
 
             int processExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 processExecuted++;
                 this.networkingWorkloadState.ToolState = NetworkingWorkloadToolState.Stopped;
                 var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.networkingWorkloadState);
 
-                this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                     .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
-                return this.mockFixture.Process;
+                this.fixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                     .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+                return this.fixture.Process;
             };
 
-            TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestSockPerfExecutor component = new TestSockPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             Assert.AreEqual(1, processExecuted);
@@ -84,19 +84,19 @@ namespace VirtualClient.Actions
         [Ignore("The networking workload is being refactored/rewritten. As such the unit tests will be rewritten as well.")]
         public async Task SockPerfExecutorServerExecutesAsExpected()
         {
-            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await networkingWorkloadExecutor.OnInitialize.Invoke(EventContext.None, CancellationToken.None);
             string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
             int processExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 processExecuted++;
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestSockPerfExecutor component = new TestSockPerfExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             Assert.AreEqual(1, processExecuted);
@@ -116,8 +116,8 @@ namespace VirtualClient.Actions
 
             var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.networkingWorkloadState);
 
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+            this.fixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                 .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
         }
 
         private class TestSockPerfExecutor : SockPerfExecutor

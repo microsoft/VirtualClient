@@ -333,8 +333,8 @@ namespace VirtualClient.Actions.CpuPerformance
 
         private class TestOpenSslExecutor : OpenSslExecutor
         {
-            public TestOpenSslExecutor(DependencyFixture mockFixture)
-                : base(mockFixture.Dependencies, mockFixture.Parameters)
+            public TestOpenSslExecutor(DependencyFixture fixture)
+                : base(fixture.Dependencies, fixture.Parameters)
             {
             }
 

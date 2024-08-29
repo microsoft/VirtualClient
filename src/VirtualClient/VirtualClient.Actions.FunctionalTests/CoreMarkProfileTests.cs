@@ -17,12 +17,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class CoreMarkProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [SetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -30,8 +30,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-COREMARK.json")]
         public void CoreMarkWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -41,8 +41,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-COREMARKPRO.json")]
         public void CoreMarkProWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -57,20 +57,20 @@ namespace VirtualClient.Actions
                 $@"make XCFLAGS=""-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread",
             };
 
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, false));
-            this.mockFixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
+            this.fixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
             {
                 { "gcc", "10" }, // Should match profile defaults.
                 { "cc", "10" }
             });
 
-            this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnGetProcess = (id) => null;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("XCFLAGS", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_Coremark.txt"));
@@ -79,11 +79,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -96,16 +96,16 @@ namespace VirtualClient.Actions
                 $@"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremark; make XCFLAGS=""-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread'",
             };
 
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, false));
-            DependencyPath mockPackage = new DependencyPath("cygwin", this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin"));
+            DependencyPath mockPackage = new DependencyPath("cygwin", this.fixture.PlatformSpecifics.GetPackagePath("cygwin"));
 
-            this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnGetProcess = (id) => null;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("XCFLAGS", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_Coremark.txt"));
@@ -114,11 +114,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -131,20 +131,20 @@ namespace VirtualClient.Actions
                 $@"make TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all"
             };
 
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, false));
-            this.mockFixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
+            this.fixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
             {
                 { "gcc", "10" }, // Should match profile defaults.
                 { "cc", "10" }
             });
 
-            this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnGetProcess = (id) => null;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("certify-all", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_CoremarkPro.txt"));
@@ -153,11 +153,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -170,20 +170,20 @@ namespace VirtualClient.Actions
                 $@"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremarkpro; make TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all'"
             };
 
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, false));
-            this.mockFixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
+            this.fixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
             {
                 { "gcc", "10" }, // Should match profile defaults.
                 { "cc", "10" }
             });
 
-            this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnGetProcess = (id) => null;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("certify-all", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_CoremarkPro.txt"));
@@ -192,11 +192,11 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
     }

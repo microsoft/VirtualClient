@@ -7,14 +7,14 @@
   },
   "Parameters": {
     "GpuModel": "v620",
-    "LisenceKey": ""
+    "LicenseKey": ""
   },
   "Actions": [
     {
       "Type": "ThreeDMarkExecutor",
       "Parameters": {
         "Scenario": "TimeSpy",
-        "LisenceKey": "$Parameters.LicenseKey",
+        "LicenseKey": "$.Parameters.LicenseKey",
         "PackageName": "3dmark",
         "PsExecPackageName": "pstools",
         "PsExecSession": 2,

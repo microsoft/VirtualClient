@@ -24,7 +24,7 @@ namespace VirtualClient
     [Category("Unit")]
     public class ProfileExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private ExecutionProfile mockProfile;
 
         [OneTimeSetUp]
@@ -36,7 +36,7 @@ namespace VirtualClient
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
 
             // Note that the TestExecutor and TestMonitor classes are in the VirtualClient.TestFramework
             // project that is at the foundation of all unit + functional tests in the solution.
@@ -88,7 +88,7 @@ namespace VirtualClient
         [Test]
         public void ProfileExecutorCreatesTheExpectedWorkloadActionExecutorsAsDefinedInTheProfile()
         {
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.Initialize();
 
@@ -104,7 +104,7 @@ namespace VirtualClient
         [Test]
         public void ProfileExecutorCreatesTheExpectedWorkloadDependencyExecutorsAsDefinedInTheProfile()
         {
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.Initialize();
 
@@ -119,7 +119,7 @@ namespace VirtualClient
         [Test]
         public void ProfileExecutorInstallsDependenciesOnlyWhenInstructed()
         {
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.ExecuteActions = false;
                 executor.ExecuteMonitors = false;
@@ -139,7 +139,7 @@ namespace VirtualClient
         [Test]
         public void ProfileExecutorCreatesTheExpectedWorkloadMonitorExecutorsAsDefinedInTheProfile()
         {
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.Initialize();
 
@@ -156,7 +156,7 @@ namespace VirtualClient
         {
             using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
             {
-                using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, logger: this.mockFixture.Logger))
+                using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, logger: this.fixture.Logger))
                 {
                     executor.ExecuteActions = false;
                     executor.ExecuteDependencies = false;
@@ -178,8 +178,8 @@ namespace VirtualClient
                     await executor.ExecuteAsync(new ProfileTiming(profileIterations: 5), cancellationTokenSource.Token)
                         .ConfigureAwait(false);
 
-                    var monitorsStarted = this.mockFixture.Logger.MessagesLogged("TestMonitor.ExecuteStart");
-                    var monitorsCompleted = this.mockFixture.Logger.MessagesLogged("TestMonitor.ExecuteStop");
+                    var monitorsStarted = this.fixture.Logger.MessagesLogged("TestMonitor.ExecuteStart");
+                    var monitorsCompleted = this.fixture.Logger.MessagesLogged("TestMonitor.ExecuteStop");
 
                     Assert.IsNotEmpty(monitorsStarted);
                     Assert.IsNotEmpty(monitorsCompleted);
@@ -198,7 +198,7 @@ namespace VirtualClient
                 "Scenario3"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, targetScenarios))
             {
                 executor.Initialize();
 
@@ -222,7 +222,7 @@ namespace VirtualClient
             // Ensure we have components that share the same scenario name.
             this.mockProfile.Actions.Take(2).ToList().ForEach(a => a.Parameters["Scenario"] = "Scenario1");
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, targetScenarios))
             {
                 executor.Initialize();
 
@@ -243,7 +243,7 @@ namespace VirtualClient
                 "ScenarioDoesNotExist"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, targetScenarios))
             {
                 executor.Initialize();
 
@@ -260,7 +260,7 @@ namespace VirtualClient
                 "-Scenario3"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, excludedScenarios))
             {
                 executor.Initialize();
 
@@ -281,7 +281,7 @@ namespace VirtualClient
                 "-DependencyScenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, excludedScenarios))
             {
                 executor.Initialize();
 
@@ -314,7 +314,7 @@ namespace VirtualClient
                 "-MonitorScenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, excludedScenarios))
             {
                 executor.Initialize();
 
@@ -349,7 +349,7 @@ namespace VirtualClient
                 "-Scenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, scenarios))
             {
                 executor.Initialize();
 
@@ -367,7 +367,7 @@ namespace VirtualClient
         {
             // Scenario:
             // An explicit timeout is provided to the profile executor.
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromMicroseconds(50));
                 Task executionTask = executor.ExecuteAsync(explicitTimeout, CancellationToken.None);
@@ -393,7 +393,7 @@ namespace VirtualClient
 
             int iterationsStarted = 0;
             int iterationsCompleted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.IterationBegin += (sender, args) => iterationsStarted++;
                 executor.IterationEnd += (sender, args) => iterationsCompleted++;
@@ -435,7 +435,7 @@ namespace VirtualClient
             int actionsStarted = 0;
             int actionsCompleted = 0;
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.ActionBegin += (sender, args) => actionsStarted++;
                 executor.ActionEnd += (sender, args) => actionsCompleted++;
@@ -481,7 +481,7 @@ namespace VirtualClient
             int actionsStarted = 0;
             int actionsCompleted = 0;
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.ActionBegin += (sender, args) => actionsStarted++;
                 executor.ActionEnd += (sender, args) => actionsCompleted++;
@@ -529,7 +529,7 @@ namespace VirtualClient
             // Action 2 - ActivityID = Correlation ID 8, Parent Activity ID = Correlation ID 2
             // Action 3 - ActivityID = Correlation ID 9, Parent Activity ID = Correlation ID 2
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, logger: this.mockFixture.Logger))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, logger: this.fixture.Logger))
             {
                 executor.ExecuteActions = true;
                 executor.ExecuteDependencies = false;
@@ -545,16 +545,16 @@ namespace VirtualClient
 
                 executionTask.ThrowIfErrored();
 
-                var eventsLogged = this.mockFixture.Logger.Where(log => log.Item2.Name.StartsWith("TestExecutor"));
+                var eventsLogged = this.fixture.Logger.Where(log => log.Item2.Name.StartsWith("TestExecutor"));
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var iterations = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteActionsStart")?.Select(i => i.Item3 as EventContext);
+                var iterations = this.fixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteActionsStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(iterations);
                 Assert.IsNotEmpty(iterations);
                 Assert.IsTrue(iterations.Count() == 2);
 
-                var actions = this.mockFixture.Logger.Where(log => log.Item2.Name == "TestExecutor.ExecuteStart").Select(a => a.Item3 as EventContext);
+                var actions = this.fixture.Logger.Where(log => log.Item2.Name == "TestExecutor.ExecuteStart").Select(a => a.Item3 as EventContext);
                 Assert.IsNotNull(actions);
                 Assert.IsNotEmpty(actions);
                 Assert.IsTrue(actions.Count() == 6);
@@ -593,7 +593,7 @@ namespace VirtualClient
             // Monitor 1 - ActivityID = Correlation ID 2, Parent Activity ID = Correlation ID 1
             // Monitor 2 - ActivityID = Correlation ID 3, Parent Activity ID = Correlation ID 1
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, logger: this.mockFixture.Logger))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, logger: this.fixture.Logger))
             {
                 executor.ExecuteActions = false;
                 executor.ExecuteDependencies = true;
@@ -609,16 +609,16 @@ namespace VirtualClient
 
                 executionTask.ThrowIfErrored();
 
-                var eventsLogged = this.mockFixture.Logger.Where(log => log.Item2.Name.StartsWith("TestDependency"));
+                var eventsLogged = this.fixture.Logger.Where(log => log.Item2.Name.StartsWith("TestDependency"));
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.InstallDependenciesStart")?.Select(i => i.Item3 as EventContext);
+                var events = this.fixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.InstallDependenciesStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(events);
                 Assert.IsNotEmpty(events);
                 Assert.IsTrue(events.Count() == 1);
 
-                var dependencies = this.mockFixture.Logger.Where(log => log.Item2.Name == "TestDependency.ExecuteStart").Select(a => a.Item3 as EventContext);
+                var dependencies = this.fixture.Logger.Where(log => log.Item2.Name == "TestDependency.ExecuteStart").Select(a => a.Item3 as EventContext);
                 Assert.IsNotNull(dependencies);
                 Assert.IsNotEmpty(dependencies);
                 Assert.IsTrue(dependencies.Count() == 2);
@@ -645,7 +645,7 @@ namespace VirtualClient
             // Monitor 1 - ActivityID = Correlation ID 2, Parent Activity ID = Correlation ID 1
             // Monitor 2 - ActivityID = Correlation ID 3, Parent Activity ID = Correlation ID 1
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, logger: this.mockFixture.Logger))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies, logger: this.fixture.Logger))
             {
                 executor.ExecuteActions = false;
                 executor.ExecuteDependencies = false;
@@ -661,16 +661,16 @@ namespace VirtualClient
 
                 executionTask.ThrowIfErrored();
 
-                var eventsLogged = this.mockFixture.Logger.Where(log => log.Item2.Name.StartsWith("TestMonitor"));
+                var eventsLogged = this.fixture.Logger.Where(log => log.Item2.Name.StartsWith("TestMonitor"));
                 Assert.IsNotNull(eventsLogged);
                 Assert.IsNotEmpty(eventsLogged);
 
-                var events = this.mockFixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteMonitorsStart")?.Select(i => i.Item3 as EventContext);
+                var events = this.fixture.Logger.Where(log => log.Item2.Name == "ProfileExecutor.ExecuteMonitorsStart")?.Select(i => i.Item3 as EventContext);
                 Assert.IsNotNull(events);
                 Assert.IsNotEmpty(events);
                 Assert.IsTrue(events.Count() == 1);
 
-                var monitors = this.mockFixture.Logger.Where(log => log.Item2.Name == "TestMonitor.ExecuteStart").Select(a => a.Item3 as EventContext);
+                var monitors = this.fixture.Logger.Where(log => log.Item2.Name == "TestMonitor.ExecuteStart").Select(a => a.Item3 as EventContext);
                 Assert.IsNotNull(monitors);
                 Assert.IsNotEmpty(monitors);
                 Assert.IsTrue(monitors.Count() == 2);
@@ -692,7 +692,7 @@ namespace VirtualClient
         public async Task ProfileExecutorHandlesNonTerminalExceptionsIfTheFailFastOptionIsNotRequested(ErrorReason errorReason)
         {
             int iterationsExecuted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.ExecuteActions = true;
                 executor.FailFast = false;
@@ -721,7 +721,7 @@ namespace VirtualClient
         public async Task ProfileExecutorExitsImmediatelyOnAnyErrorWheneverTheFailFastOptionIsRequested(ErrorReason errorReason)
         {
             int iterationsExecuted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.fixture.Dependencies))
             {
                 executor.ExecuteActions = true;
                 executor.FailFast = true;

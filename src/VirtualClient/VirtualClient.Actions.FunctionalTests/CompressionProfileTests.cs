@@ -17,12 +17,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class CompressionProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -33,8 +33,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-COMPRESSION.json", PlatformID.Win32NT, Architecture.Arm64)]
         public void CompressionWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(platformID, architecture);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -53,13 +53,13 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload is built.
             // - The workload generates valid results.
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("Compression");
+            this.fixture.Setup(platformID, architecture);
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupWorkloadPackage("Compression");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
 
                 if (arguments.Contains("7z", StringComparison.OrdinalIgnoreCase))
                 {
@@ -77,12 +77,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -91,8 +91,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-COMPRESSION-LZBENCH.json", PlatformID.Unix, Architecture.Arm64)]
         public void CompressionWorkloadProfileParametersAreInlinedCorrectly_LZbench(string profile, PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(platformID, architecture);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -109,11 +109,11 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload is built.
             // - The workload generates valid results.
-            this.mockFixture.Setup(platformID, architecture);
+            this.fixture.Setup(platformID, architecture);
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
 
                 if (arguments.Contains("lzbenchexecutor.sh", StringComparison.OrdinalIgnoreCase))
                 {
@@ -123,12 +123,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 

@@ -26,40 +26,40 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class CPSServerExecutorTests2
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
 
         }
 
         public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Setup(platformID, architecture);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.fixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["Connections"] = 256;
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 30;
-            this.mockFixture.Parameters["Delaytime"] = 30;
-            this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerReset;
-            this.mockFixture.Parameters["Port"] = 5001;
-            this.mockFixture.Parameters["Workload"] = "CPS";
-            this.mockFixture.Parameters["Scenario"] = "CPSMock";
-            this.mockFixture.Parameters["ConfidenceLevel"] = "99";
+            this.fixture.Parameters["PackageName"] = "Networking";
+            this.fixture.Parameters["Connections"] = 256;
+            this.fixture.Parameters["TestDuration"] = 300;
+            this.fixture.Parameters["WarmupTime"] = 30;
+            this.fixture.Parameters["Delaytime"] = 30;
+            this.fixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerReset;
+            this.fixture.Parameters["Port"] = 5001;
+            this.fixture.Parameters["Workload"] = "CPS";
+            this.fixture.Parameters["Scenario"] = "CPSMock";
+            this.fixture.Parameters["ConfidenceLevel"] = "99";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
             string results = File.ReadAllText(resultsPath);
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(results);
         }
 
@@ -71,22 +71,22 @@ namespace VirtualClient.Actions
         public async Task CPSServerExecutorExecutesAsExpectedForResetInstructions(PlatformID platformID, Architecture architecture)
         {
             this.SetupDefaultMockApiBehavior(platformID, architecture);
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            string expectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
-            TestCPSServerExecutor executor = new TestCPSServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestCPSServerExecutor executor = new TestCPSServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await executor.InitializeAsync(EventContext.None, CancellationToken.None);
             string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
             int processExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 processExecuted++;
                 commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            TestCPSServerExecutor component = new TestCPSServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestCPSServerExecutor component = new TestCPSServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             string exe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
@@ -100,7 +100,7 @@ namespace VirtualClient.Actions
                 CollectionAssert.AreEqual(
                 new List<string>
                 {
-                    "sudo chmod +x \"" + this.mockFixture.Combine(expectedPath, exe) + "\"",
+                    "sudo chmod +x \"" + this.fixture.Combine(expectedPath, exe) + "\"",
                 },
                 commandsExecuted);
             }
@@ -114,24 +114,24 @@ namespace VirtualClient.Actions
         public async Task CPSServerExecutorExecutesAsExpectedForStartInstructions(PlatformID platformID, Architecture architecture)
         {
             this.SetupDefaultMockApiBehavior(platformID, architecture);
-            this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerStartExecution;
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            this.fixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerStartExecution;
+            string expectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
 
-            TestCPSServerExecutor executor = new TestCPSServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestCPSServerExecutor executor = new TestCPSServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await executor.InitializeAsync(EventContext.None, CancellationToken.None);
             string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
             int processExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
             {
                 processExecuted++;
                 commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            TestCPSServerExecutor component = new TestCPSServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestCPSServerExecutor component = new TestCPSServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             string exe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
@@ -145,7 +145,7 @@ namespace VirtualClient.Actions
                 CollectionAssert.AreEqual(
                 new List<string>
                 {
-                    "sudo chmod +x \"" + this.mockFixture.Combine(expectedPath, exe) + "\""
+                    "sudo chmod +x \"" + this.fixture.Combine(expectedPath, exe) + "\""
                 },
                 commandsExecuted);
             }

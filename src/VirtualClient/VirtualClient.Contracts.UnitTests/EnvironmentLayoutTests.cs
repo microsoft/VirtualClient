@@ -18,12 +18,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class EnvironmentLayoutTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
@@ -36,8 +36,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void ExperimentLayoutConstructorsSetPropertiesToExpectedValues()
         {
-            ClientInstance instance1 = this.mockFixture.Create<ClientInstance>();
-            ClientInstance instance2 = this.mockFixture.Create<ClientInstance>();
+            ClientInstance instance1 = this.fixture.Create<ClientInstance>();
+            ClientInstance instance2 = this.fixture.Create<ClientInstance>();
 
             EnvironmentLayout layout = new EnvironmentLayout(new List<ClientInstance>
             {
@@ -53,7 +53,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void ExperimentLayoutObjectsAreJsonSerializable()
         {
-            SerializationAssert.IsJsonSerializable<EnvironmentLayout>(this.mockFixture.Create<EnvironmentLayout>());
+            SerializationAssert.IsJsonSerializable<EnvironmentLayout>(this.fixture.Create<EnvironmentLayout>());
         }
     }
 }

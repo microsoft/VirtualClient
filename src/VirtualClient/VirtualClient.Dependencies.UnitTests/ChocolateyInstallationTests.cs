@@ -18,13 +18,13 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class ChocolateyInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public async Task ChocolateyInstallationRunsTheExpectedCommandInWindows()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
@@ -35,7 +35,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -51,12 +51,12 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "choco" }
             };
 
-            using (TestChocolateyInstallation chocolateyInstallation = new TestChocolateyInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestChocolateyInstallation chocolateyInstallation = new TestChocolateyInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await chocolateyInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -67,12 +67,12 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task ChocolateyInstallationRunsNothingInLinux()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandExecuted++;
                 IProcessProxy process = new InMemoryProcess()
@@ -84,7 +84,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestChocolateyInstallation chocolateyInstallation = new TestChocolateyInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestChocolateyInstallation chocolateyInstallation = new TestChocolateyInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await chocolateyInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

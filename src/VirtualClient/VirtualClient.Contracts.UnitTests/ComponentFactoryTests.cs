@@ -13,13 +13,13 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class ComponentFactoryTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
 
             ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
@@ -36,7 +36,7 @@ namespace VirtualClient.Contracts
             {
                 Assert.DoesNotThrow(() =>
                 {
-                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.fixture.Dependencies);
                     Assert.IsNotNull(component);
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);
@@ -47,7 +47,7 @@ namespace VirtualClient.Contracts
             {
                 Assert.DoesNotThrow(() =>
                 {
-                    VirtualClientComponent component = ComponentFactory.CreateComponent(dependency, this.mockFixture.Dependencies);
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(dependency, this.fixture.Dependencies);
                     Assert.IsNotNull(component);
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);
@@ -58,7 +58,7 @@ namespace VirtualClient.Contracts
             {
                 Assert.DoesNotThrow(() =>
                 {
-                    VirtualClientComponent component = ComponentFactory.CreateComponent(monitor, this.mockFixture.Dependencies);
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(monitor, this.fixture.Dependencies);
                     Assert.IsNotNull(component);
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);
@@ -78,7 +78,7 @@ namespace VirtualClient.Contracts
             {
                 Assert.DoesNotThrow(() =>
                 {
-                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.fixture.Dependencies);
                     Assert.IsNotNull(component);
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);
@@ -112,7 +112,7 @@ namespace VirtualClient.Contracts
             {
                 VirtualClientComponent component;
 
-                component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                component = ComponentFactory.CreateComponent(action, this.fixture.Dependencies);
                 Assert.IsNotNull(component);
                 Assert.IsNotEmpty(component.Dependencies);
                 Assert.IsNotNull(component.Parameters);
@@ -121,7 +121,7 @@ namespace VirtualClient.Contracts
 
                 Assert.DoesNotThrow(() =>
                 {
-                    component = ComponentFactory.CreateComponent(component.Parameters, "TestServerExecutor" ,this.mockFixture.Dependencies);
+                    component = ComponentFactory.CreateComponent(component.Parameters, "TestServerExecutor" ,this.fixture.Dependencies);
                     Assert.IsNotNull(component);
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);

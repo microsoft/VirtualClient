@@ -20,33 +20,33 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class CompilerInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
         }
 
         [Test]
         public void CompilerInstallationThrowsForUnsupportedCompiler()
         {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CompilerInstallation.CompilerName), "icc" },
                 { nameof(CompilerInstallation.CompilerVersion), "123" }
             };
 
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<NotSupportedException>(() => compilerInstallation.ExecuteAsync(CancellationToken.None));
             }
@@ -55,9 +55,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task CompilerInstallationRunsTheExpectedWorkloadCommandInLinuxForGcc()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CompilerInstallation.CompilerName), "gcc" },
                 { nameof(CompilerInstallation.CompilerVersion), "123" }
@@ -82,7 +82,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -105,7 +105,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -118,17 +118,17 @@ namespace VirtualClient.Dependencies
         [TestCase(Architecture.Arm64)]
         public async Task CompilerInstallationRunsTheExpectedCommandForCharmPlusPlusOnLinux(Architecture architecture)
         {
-            this.mockFixture.Setup(PlatformID.Unix, architecture);
+            this.fixture.Setup(PlatformID.Unix, architecture);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CompilerInstallation.CompilerName), "charm++" },
                 { nameof(CompilerInstallation.CompilerVersion), "6.5.0" }
@@ -144,7 +144,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -167,7 +167,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -181,20 +181,20 @@ namespace VirtualClient.Dependencies
         [TestCase("python3")]
         public async Task CompilerInstallationRunsTheExpectedWorkloadCommandInWindowsForGcc(string packages)
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.SetEnvironmentVariable("ChocolateyToolsLocation", this.mockFixture.Combine("C:", "tools"));
+            this.fixture.SetEnvironmentVariable("ChocolateyToolsLocation", this.fixture.Combine("C:", "tools"));
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CompilerInstallation.CompilerName), "gcc" },
                 { nameof(CompilerInstallation.CygwinPackages), packages }
             };
 
-            string cygwinPath = this.mockFixture.PlatformSpecifics.Combine("C:", "tools", "cygwin"); 
-            string cygwinInstallerPath = this.mockFixture.PlatformSpecifics.Combine(cygwinPath, "cygwinsetup.exe");
+            string cygwinPath = this.fixture.PlatformSpecifics.Combine("C:", "tools", "cygwin"); 
+            string cygwinInstallerPath = this.fixture.PlatformSpecifics.Combine(cygwinPath, "cygwinsetup.exe");
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
             List<string> expectedCommands = new List<string>()
@@ -204,7 +204,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => $"{c}" ==  $"{exe} {arguments}"))
                 {
@@ -226,7 +226,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -237,7 +237,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task CompilerInstallationInLinuxDefaultsToGcc10()
         {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>();
+            this.fixture.Parameters = new Dictionary<string, IConvertible>();
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
@@ -259,7 +259,7 @@ namespace VirtualClient.Dependencies
 
             int commandExecuted = 0;
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -282,7 +282,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -293,7 +293,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task CompilerInstallationRunsTheExpectedWorkloadCommandInLinuxForAocc()
         {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CompilerInstallation.CompilerName), "Aocc" },
                 { nameof(CompilerInstallation.CompilerVersion), "5.6.7" }
@@ -308,7 +308,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -328,7 +328,7 @@ namespace VirtualClient.Dependencies
                 };
             };
 
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -349,12 +349,12 @@ namespace VirtualClient.Dependencies
         [TestCase("(Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0", "10.3.0")]
         public void CompilerInstallationConfirmsTheInstalledVersionOfGCCAsExpected(string versionOutput, string expectedVersion)
         {
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = expectedVersion;
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     process.StandardOutput.AppendLine($"{process.StartInfo.FileName} {versionOutput}");
                 };
@@ -367,12 +367,12 @@ namespace VirtualClient.Dependencies
         [Test]
         public void CompilerInstallationThrowsIfGccVersionIsNotConfirmed()
         {
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = "10";
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     process.StandardOutput.AppendLine($"{process.StartInfo.FileName} (Ubuntu 9.4.0-3ubuntu1~18.04) 9.4.0");
                 };
@@ -384,7 +384,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public void CompilerInstallationConfirmsExpectedCompilersForGcc()
         {
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = "9";
@@ -395,7 +395,7 @@ namespace VirtualClient.Dependencies
                     { "cc", false }
                 };
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.fixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     process.StandardOutput.AppendLine($"{process.StartInfo.FileName} (Ubuntu 9.4.0-3ubuntu1~18.04) 9.4.0");
                     compilers[process.StartInfo.FileName] = true;

@@ -21,12 +21,12 @@ namespace VirtualClient.Dependencies
         private const string AddOfficialGPGKeyCommand = @"bash -c ""curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg --batch --yes""";
         private const string SetUpRepositoryCommand = @"bash -c ""echo """"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"""" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null""";
 
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         [Test]
@@ -34,14 +34,14 @@ namespace VirtualClient.Dependencies
         [TestCase(null)]
         public async Task DockerInstallationRunsTheExpectedCommandOnLinux(string version)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "Version", version }
             };
 
-            using (TestDockerInstallation dockerInstallation = new TestDockerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDockerInstallation dockerInstallation = new TestDockerInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 List<string> expectedCommands = new List<string>()
                 {
@@ -53,7 +53,7 @@ namespace VirtualClient.Dependencies
                 };
 
                 int commandExecuted = 0;
-                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
                 {
                     if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                     {

@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SpecCpuExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
 
         [Test]
@@ -53,15 +53,15 @@ namespace VirtualClient.Actions
             int coreCount = Environment.ProcessorCount;
             List<string> expectedCommands = new List<string>
             {
-                $"sudo mount -t iso9660 -o ro,exec,loop {this.mockPackage.Path}/speccpu.iso {this.mockFixture.GetPackagePath()}/speccpu_mount",
+                $"sudo mount -t iso9660 -o ro,exec,loop {this.mockPackage.Path}/speccpu.iso {this.fixture.GetPackagePath()}/speccpu_mount",
                 $"sudo ./install.sh -f -d {this.mockPackage.Path}",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
-                $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
+                $"sudo umount {this.fixture.GetPackagePath()}/speccpu_mount",
                 $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intrate\""
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -79,7 +79,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -128,7 +128,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -141,7 +141,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "fprate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
             };
 
             bool commandCalled = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 int coreCount = Environment.ProcessorCount;
                 if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --reportable fprate\"")
@@ -170,14 +170,14 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
 
             Assert.IsTrue(commandCalled);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
             commandCalled = false;
             int coreCount = Environment.ProcessorCount;
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intspeed\"")
                 {
@@ -207,7 +207,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
@@ -220,7 +220,7 @@ namespace VirtualClient.Actions
         {
             this.SetupWindows();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "fprate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
@@ -230,7 +230,7 @@ namespace VirtualClient.Actions
             bool commandCalled = false;
             int coreCount = Environment.ProcessorCount;
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --noreportable fprate")
                 {
@@ -250,14 +250,14 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
 
             Assert.IsTrue(commandCalled);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
@@ -265,7 +265,7 @@ namespace VirtualClient.Actions
             };
 
             commandCalled = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed")
                 {
@@ -285,7 +285,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
@@ -295,26 +295,26 @@ namespace VirtualClient.Actions
 
         private void SetupLinux()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("SPECcpu", this.mockFixture.PlatformSpecifics.GetPackagePath("speccpu", "1.1.8"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("SPECcpu", this.fixture.PlatformSpecifics.GetPackagePath("speccpu", "1.1.8"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
-                .Returns(new string[] { this.mockFixture.Combine(this.mockPackage.Path, "speccpu.iso") });
+            this.fixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
+                .Returns(new string[] { this.fixture.Combine(this.mockPackage.Path, "speccpu.iso") });
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
             string mockProfileText = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SPEC", "mockspeccpu.cfg"));
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
-            this.mockFixture.FileInfo.Setup(file => file.New(It.IsAny<string>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
+            this.fixture.FileInfo.Setup(file => file.New(It.IsAny<string>()))
                 .Returns(new Mock<IFileInfo>().Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
@@ -325,26 +325,26 @@ namespace VirtualClient.Actions
 
         private void SetupWindows()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockPackage = new DependencyPath("SPECcpu", this.mockFixture.PlatformSpecifics.GetPackagePath("speccpu", "1.1.8"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.mockPackage = new DependencyPath("SPECcpu", this.fixture.PlatformSpecifics.GetPackagePath("speccpu", "1.1.8"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
-                .Returns(new string[] { this.mockFixture.Combine(this.mockPackage.Path, "speccpu.iso") });
+            this.fixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
+                .Returns(new string[] { this.fixture.Combine(this.mockPackage.Path, "speccpu.iso") });
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
             string mockProfileText = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SPEC", "mockspeccpu.cfg"));
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
-            this.mockFixture.FileInfo.Setup(file => file.New(It.IsAny<string>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
+            this.fixture.FileInfo.Setup(file => file.New(It.IsAny<string>()))
                 .Returns(new Mock<IFileInfo>().Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },

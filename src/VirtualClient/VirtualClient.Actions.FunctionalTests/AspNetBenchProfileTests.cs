@@ -16,12 +16,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class AspNetBenchProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -29,8 +29,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-ASPNETBENCH.json")]
         public void AspNetBenchWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -47,9 +47,9 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("bombardier", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_AspNetBench.txt"));
@@ -58,12 +58,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -78,9 +78,9 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("bombardier", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_AspNetBench.txt"));
@@ -89,12 +89,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -130,21 +130,21 @@ namespace VirtualClient.Actions
         {
             if (platform == PlatformID.Win32NT)
             {
-                this.mockFixture.Setup(PlatformID.Win32NT);
-                this.mockFixture.SetupWorkloadPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
-                this.mockFixture.SetupWorkloadPackage("bombardier", expectedFiles: @"win-x64\bombardier.exe");
-                this.mockFixture.SetupWorkloadPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet.exe");
+                this.fixture.Setup(PlatformID.Win32NT);
+                this.fixture.SetupWorkloadPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
+                this.fixture.SetupWorkloadPackage("bombardier", expectedFiles: @"win-x64\bombardier.exe");
+                this.fixture.SetupWorkloadPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet.exe");
             }
             else
             {
-                this.mockFixture.Setup(PlatformID.Unix);
+                this.fixture.Setup(PlatformID.Unix);
 
-                this.mockFixture.SetupWorkloadPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
-                this.mockFixture.SetupWorkloadPackage("bombardier", expectedFiles: @"linux-x64\bombardier");
-                this.mockFixture.SetupWorkloadPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet");
+                this.fixture.SetupWorkloadPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
+                this.fixture.SetupWorkloadPackage("bombardier", expectedFiles: @"linux-x64\bombardier");
+                this.fixture.SetupWorkloadPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet");
             }
 
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SetupDisks(withRemoteDisks: false);
         }
     }
 }

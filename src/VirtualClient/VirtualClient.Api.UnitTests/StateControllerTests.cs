@@ -24,7 +24,7 @@ namespace VirtualClient.Api
     [Category("Unit")]
     public class StateControllerTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private IConfiguration mockConfiguration;
         private Mock<InMemoryFileSystemStream> mockFileStream;
         private State mockState;
@@ -34,7 +34,7 @@ namespace VirtualClient.Api
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.mockConfiguration = new ConfigurationBuilder().Build();
             this.mockFileStream = new Mock<InMemoryFileSystemStream>();
             this.mockState = new State(new Dictionary<string, IConvertible>
@@ -45,15 +45,15 @@ namespace VirtualClient.Api
             this.mockStateInstance = new Item<JObject>(Guid.NewGuid().ToString(), JObject.FromObject(this.mockState));
 
             this.controller = new StateController(
-                this.mockFixture.StateManager.Object,
-                this.mockFixture.FileSystem.Object,
+                this.fixture.StateManager.Object,
+                this.fixture.FileSystem.Object,
                 new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64),
-                this.mockFixture.Logger);
+                this.fixture.Logger);
 
-            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.fixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Returns(this.mockFileStream.Object);
 
-            this.mockFixture.Directory.Setup(dir => dir.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.Directory.Setup(dir => dir.Exists(It.IsAny<string>())).Returns(true);
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace VirtualClient.Api
                 JObject.FromObject(this.mockState),
                 CancellationToken.None);
 
-            this.mockFixture.FileStream.Verify(f => f.New(
+            this.fixture.FileStream.Verify(f => f.New(
                 It.Is<string>(filePath => Path.GetFileName(filePath) == $"{expectedStateId}.json"),
                 FileMode.CreateNew,
                 FileAccess.Write,
@@ -97,7 +97,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.fixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Throws(new IOException("file already exists"));
 
             ConflictObjectResult result = await this.controller.CreateStateAsync(
@@ -114,7 +114,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.fixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Throws(new IOException("used by another process"));
 
             ConflictObjectResult result = await this.controller.CreateStateAsync(
@@ -132,7 +132,7 @@ namespace VirtualClient.Api
             string expectedStateId = "teststate";
             NoContentResult result = await this.controller.DeleteStateAsync(expectedStateId, CancellationToken.None) as NoContentResult;
 
-            this.mockFixture.File.Verify(f => f.Delete(It.Is<string>(path => path.Contains(expectedStateId))));
+            this.fixture.File.Verify(f => f.Delete(It.Is<string>(path => path.Contains(expectedStateId))));
         }
 
         [Test]
@@ -149,7 +149,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
                 .Throws(new FileNotFoundException());
 
             NoContentResult result = await this.controller.DeleteStateAsync(expectedStateId, CancellationToken.None) as NoContentResult;
@@ -162,13 +162,13 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockStateInstance.ToJson())
                 .Verifiable();
 
             await this.controller.GetStateAsync(expectedStateId, CancellationToken.None);
 
-            this.mockFixture.File.Verify();
+            this.fixture.File.Verify();
         }
 
         [Test]
@@ -176,7 +176,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockStateInstance.ToJson());
 
             OkObjectResult result = await this.controller.GetStateAsync(expectedStateId, CancellationToken.None) as OkObjectResult;
@@ -192,7 +192,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.Is<string>(path => path.Contains(expectedStateId)), It.IsAny<CancellationToken>()))
                 .Throws(new FileNotFoundException());
 
             NotFoundObjectResult result = await this.controller.GetStateAsync(expectedStateId, CancellationToken.None) as NotFoundObjectResult;
@@ -217,7 +217,7 @@ namespace VirtualClient.Api
         [Test]
         public async Task StateControllerReturnsTheExpectedResponseWhenTheStateObjectIsInUseByAnotherProcessDuringUpdate()
         {
-            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.fixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Throws(new IOException("used by another process"));
 
             ConflictObjectResult result = await this.controller.UpdateStateAsync(

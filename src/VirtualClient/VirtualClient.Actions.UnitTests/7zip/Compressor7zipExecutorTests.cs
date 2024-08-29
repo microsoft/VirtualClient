@@ -25,28 +25,28 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class Compressor7zipExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
         private ConcurrentBuffer defaultOutput = new ConcurrentBuffer();
 
         [SetUp]
         public void SetupDefaultBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockPackage = new DependencyPath("7zip", this.mockFixture.PlatformSpecifics.GetPackagePath("7zip"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Win32NT);
+            this.mockPackage = new DependencyPath("7zip", this.fixture.PlatformSpecifics.GetPackagePath("7zip"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
                 { nameof(Compression7zipExecutor.InputFilesOrDirs), "Test1.zip Test2.txt" },
@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
         public async Task Compressor7zipExecutorGetsDefaultFileIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
                 { nameof(Compression7zipExecutor.InputFilesOrDirs), "" },
@@ -90,7 +90,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -111,7 +111,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Compressor7zipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
         public async Task Compressor7zipExecutorRunsTheExpectedWorkloadCommand()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
                 { nameof(Compression7zipExecutor.InputFilesOrDirs), "" },
@@ -132,10 +132,10 @@ namespace VirtualClient.Actions
             };
             string mockPackagePath = this.mockPackage.Path;
 
-            string expectedCommand = $"7z testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}";
+            string expectedCommand = $"7z testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -156,7 +156,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Compressor7zipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
         public async Task Compressor7zipExecutorExecutesTheCorrectCommandsWithInstallationIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
                 { nameof(Compression7zipExecutor.InputFilesOrDirs), "" },
@@ -181,11 +181,11 @@ namespace VirtualClient.Actions
             {
                 $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"unzip silesia.zip -d silesia",
-                $"7z testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}"
+                $"7z testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}"
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -204,12 +204,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
             {
                 Compressor7zipStateInitialized = false
             }));
 
-            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Compressor7zipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -228,7 +228,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -247,12 +247,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
             {
                 Compressor7zipStateInitialized = false
             }));
 
-            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Compressor7zipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -271,7 +271,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -290,12 +290,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
             {
                 Compressor7zipStateInitialized = true
             }));
 
-            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCompressor7zipExecutor Compressor7zipExecutor = new TestCompressor7zipExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await Compressor7zipExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

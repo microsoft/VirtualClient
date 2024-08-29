@@ -18,12 +18,12 @@ namespace VirtualClient.Actions
     [Category("Functional")]
     public class SpecJbbProfileTests
     {
-        private DependencyFixture mockFixture;
+        private DependencyFixture fixture;
 
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockFixture = new DependencyFixture();
+            this.fixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
         }
 
@@ -31,8 +31,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-SPECJBB.json")]
         public void SpecJbbWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            this.fixture.Setup(PlatformID.Unix);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -43,20 +43,20 @@ namespace VirtualClient.Actions
         [TestCase("PERF-SPECJBB.json")]
         public async Task SpecJbbWorkloadProfileInstallsTheExpectedDependenciesOnLinuxPlatforms(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture.Setup(PlatformID.Unix);
 
             // The location of the Java (Java SDK) executable
-            string expectedJavaExecutablePath = this.mockFixture.GetPackagePath("microsoft-jdk-17.0.3/linux-x64/bin/java");
-            this.mockFixture.SetupFile(expectedJavaExecutablePath);
+            string expectedJavaExecutablePath = this.fixture.GetPackagePath("microsoft-jdk-17.0.3/linux-x64/bin/java");
+            this.fixture.SetupFile(expectedJavaExecutablePath);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "specjbb2015");
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "javadevelopmentkit", pkg =>
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "specjbb2015");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "javadevelopmentkit", pkg =>
                 {
                     Assert.IsTrue(pkg.Metadata.TryGetValue(PackageMetadata.ExecutablePath, out IConvertible actualExecutablePath));
                     Assert.AreEqual(actualExecutablePath.ToString(), expectedJavaExecutablePath);
@@ -69,20 +69,20 @@ namespace VirtualClient.Actions
         [TestCase("PERF-SPECJBB.json")]
         public async Task SpecJbbWorkloadProfileInstallsTheExpectedDependenciesOnWindowsPlatforms(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.fixture.Setup(PlatformID.Win32NT);
 
             // The location of the Java (Java SDK) executable
-            string expectedJavaExecutablePath = this.mockFixture.GetPackagePath(@"microsoft-jdk-17.0.3\win-x64\bin\java.exe");
-            this.mockFixture.SetupFile(expectedJavaExecutablePath);
+            string expectedJavaExecutablePath = this.fixture.GetPackagePath(@"microsoft-jdk-17.0.3\win-x64\bin\java.exe");
+            this.fixture.SetupFile(expectedJavaExecutablePath);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies, dependenciesOnly: true))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
                 // Workload dependency package expectations
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "specjbb2015");
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "javadevelopmentkit", pkg =>
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "specjbb2015");
+                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "javadevelopmentkit", pkg =>
                 {
                     Assert.IsTrue(pkg.Metadata.TryGetValue(PackageMetadata.ExecutablePath, out IConvertible actualExecutablePath));
                     Assert.AreEqual(actualExecutablePath.ToString(), expectedJavaExecutablePath);
@@ -101,9 +101,9 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("-jar", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_SPECJbb.txt"));
@@ -112,12 +112,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -132,9 +132,9 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("-jar", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_SPECJbb.txt"));
@@ -143,12 +143,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
 
@@ -183,38 +183,38 @@ namespace VirtualClient.Actions
         {
             if (platform == PlatformID.Win32NT)
             {
-                this.mockFixture.Setup(PlatformID.Win32NT);
-                this.mockFixture.SetupWorkloadPackage("specjbb2015", expectedFiles: @"runtimes/win-x64/specjbb2015.jar");
+                this.fixture.Setup(PlatformID.Win32NT);
+                this.fixture.SetupWorkloadPackage("specjbb2015", expectedFiles: @"runtimes/win-x64/specjbb2015.jar");
 
                 Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
                 {
                     { PackageMetadata.ExecutablePath, "java.exe" }
                 };
 
-                this.mockFixture.SetupWorkloadPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/win-x64/bin/java.exe");
+                this.fixture.SetupWorkloadPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/win-x64/bin/java.exe");
             }
             else
             {
-                this.mockFixture.Setup(PlatformID.Unix);
-                this.mockFixture.SetupWorkloadPackage("specjbb2015", expectedFiles: @"runtimes/linux-x64/SPECJbb2008.jar");
+                this.fixture.Setup(PlatformID.Unix);
+                this.fixture.SetupWorkloadPackage("specjbb2015", expectedFiles: @"runtimes/linux-x64/SPECJbb2008.jar");
 
                 Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
                 {
                     { PackageMetadata.ExecutablePath, "java" }
                 };
 
-                this.mockFixture.SetupWorkloadPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/linux-x64/bin/java");
+                this.fixture.SetupWorkloadPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/linux-x64/bin/java");
             }
 
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SetupDisks(withRemoteDisks: false);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
-            this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
+            this.fixture.ProcessManager.OnGetProcess = (id) => null;
 
             // Remove any mock blob managers so that we do not evaluate the code paths that
             // upload log files by default.
-            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
         }
     }
 }

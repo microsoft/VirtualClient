@@ -13,12 +13,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class MetricTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
@@ -95,8 +95,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void MetricCorrectlyImplementsEqualitySemantics()
         {
-            Metric instance1 = this.mockFixture.Create<Metric>();
-            Metric instance2 = this.mockFixture.Create<Metric>();
+            Metric instance1 = this.fixture.Create<Metric>();
+            Metric instance2 = this.fixture.Create<Metric>();
 
             EqualityAssert.CorrectlyImplementsEqualitySemantics(() => instance1, () => instance2);
         }
@@ -104,8 +104,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void MetricCorrectlyImplementsHashcodeSemantics()
         {
-            Metric instance1 = this.mockFixture.Create<Metric>();
-            Metric instance2 = this.mockFixture.Create<Metric>();
+            Metric instance1 = this.fixture.Create<Metric>();
+            Metric instance2 = this.fixture.Create<Metric>();
 
             EqualityAssert.CorrectlyImplementsHashcodeSemantics(() => instance1, () => instance2);
         }
@@ -113,7 +113,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void MetricHashCodesAreNotCaseSensitive()
         {
-            Metric template = this.mockFixture.Create<Metric>();
+            Metric template = this.fixture.Create<Metric>();
             Metric instance1 = new Metric(
                 template.Name.ToLowerInvariant(),
                 template.Value,

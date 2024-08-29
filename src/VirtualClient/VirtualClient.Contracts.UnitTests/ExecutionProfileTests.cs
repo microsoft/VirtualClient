@@ -24,12 +24,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class ExecutionProfileTests
     {
-        private IFixture mockFixture;
+        private IFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new Fixture().SetupMocks(true);
+            this.fixture = new Fixture().SetupMocks(true);
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace VirtualClient.Contracts
         [TestCase(" ")]
         public void ExecutionProfileValidatesRequiredParameters(string invalidParameter)
         {
-            ExecutionProfile validComponent = this.mockFixture.Create<ExecutionProfile>();
+            ExecutionProfile validComponent = this.fixture.Create<ExecutionProfile>();
             Assert.Throws<ArgumentException>(() => new ExecutionProfile(
                 invalidParameter,
                 validComponent.MinimumExecutionInterval,
@@ -52,7 +52,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void ExecutionProfileIsJsonSerializableByDefault()
         {
-            ExecutionProfile profile = this.mockFixture.Create<ExecutionProfile>();
+            ExecutionProfile profile = this.fixture.Create<ExecutionProfile>();
             SerializationAssert.IsJsonSerializable<ExecutionProfile>(profile);
         }
 
@@ -82,16 +82,16 @@ namespace VirtualClient.Contracts
         [Test]
         public void ExecutionProfileImplementsHashCodeSemanticsCorrectly()
         {
-            ExecutionProfile profile = this.mockFixture.Create<ExecutionProfile>();
-            ExecutionProfile profile2 = this.mockFixture.Create<ExecutionProfile>();
+            ExecutionProfile profile = this.fixture.Create<ExecutionProfile>();
+            ExecutionProfile profile2 = this.fixture.Create<ExecutionProfile>();
             EqualityAssert.CorrectlyImplementsHashcodeSemantics<ExecutionProfile>(() => profile, () => profile2);
         }
 
         [Test]
         public void ExecutionProfileImplementsEqualitySemanticsCorrectly()
         {
-            ExecutionProfile profile = this.mockFixture.Create<ExecutionProfile>();
-            ExecutionProfile profile2 = this.mockFixture.Create<ExecutionProfile>();
+            ExecutionProfile profile = this.fixture.Create<ExecutionProfile>();
+            ExecutionProfile profile2 = this.fixture.Create<ExecutionProfile>();
             EqualityAssert.CorrectlyImplementsEqualitySemantics<ExecutionProfile>(() => profile, () => profile2);
         }
     }

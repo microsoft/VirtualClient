@@ -24,15 +24,15 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class HpcgExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public void HpcgExecutorThrowsIfCannotFindSpackPackage()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            this.mockFixture.PackageManager.OnGetPackage("spack").ReturnsAsync(value: null);
+            this.fixture.PackageManager.OnGetPackage("spack").ReturnsAsync(value: null);
 
-            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => HpcgExecutor.ExecuteAsync(CancellationToken.None));
             }
@@ -44,14 +44,14 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = @$"sudo chmod +x ""{this.mockFixture.GetPackagePath()}/hpcg/runhpcg.sh""";
+            string expectedCommand = @$"sudo chmod +x ""{this.fixture.GetPackagePath()}/hpcg/runhpcg.sh""";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await HpcgExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -85,14 +85,14 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = @$"sudo bash {this.mockFixture.GetPackagePath()}/hpcg/runhpcg.sh";
+            string expectedCommand = @$"sudo bash {this.fixture.GetPackagePath()}/hpcg/runhpcg.sh";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await HpcgExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -125,13 +125,13 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
-            string datFilePath = $"{this.mockFixture.GetPackagePath()}/hpcg/hpcg.dat";
+            string datFilePath = $"{this.fixture.GetPackagePath()}/hpcg/hpcg.dat";
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
-            this.mockFixture.File.Setup(f => f.Exists(datFilePath))
+            this.fixture.File.Setup(f => f.Exists(datFilePath))
                 .Returns(false);
 
             // Math.Cbrt(100GB * 1024 * 1024 * 0.25 / 3.4) / 8) * 8
@@ -141,7 +141,7 @@ namespace VirtualClient.Actions
                     + $"1800";
 
             bool fileWritten = false;
-            this.mockFixture.File.OnWriteAllTextAsync(datFilePath)
+            this.fixture.File.OnWriteAllTextAsync(datFilePath)
                 .Callback((string filePath, string context, CancellationToken token) =>
                 {
                     if (string.Equals(expectedFile, context))
@@ -150,7 +150,7 @@ namespace VirtualClient.Actions
                     }
                 });
 
-            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await HpcgExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -162,27 +162,27 @@ namespace VirtualClient.Actions
         public async Task HpcgExecutorWritesExpectedRunShellFile()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            string runShellPath = $"{this.mockFixture.GetPackagePath()}/hpcg/runhpcg.sh";
+            string runShellPath = $"{this.fixture.GetPackagePath()}/hpcg/runhpcg.sh";
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, 8, 9, 10, false));
 
             // First time set the file to not exist so it writes the file. Second return true so that the code will make the shell executable.
-            this.mockFixture.File.SetupSequence(f => f.Exists(runShellPath))
+            this.fixture.File.SetupSequence(f => f.Exists(runShellPath))
                 .Returns(false)
                 .Returns(true);
 
-            string expectedFile = $". {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit/share/spack/setup-env.sh" + Environment.NewLine
+            string expectedFile = $". {this.fixture.GetPackagePath()}/JavaDevelopmentKit/share/spack/setup-env.sh" + Environment.NewLine
                     + "spack install --reuse -n -y hpcg@9.8 %gcc +openmp ^openmpi@6.66.666" + Environment.NewLine
                     + $"spack load hpcg@9.8 %gcc ^openmpi@6.66.666" + Environment.NewLine
                     + $"mpirun --np 7 --use-hwthread-cpus --allow-run-as-root xhpcg";
 
             bool fileWritten = false;
-            this.mockFixture.File.OnWriteAllTextAsync(runShellPath)
+            this.fixture.File.OnWriteAllTextAsync(runShellPath)
                 .Callback((string filePath, string context, CancellationToken token) =>
                 {
                     if (string.Equals(expectedFile, context))
@@ -191,7 +191,7 @@ namespace VirtualClient.Actions
                     }
                 });
 
-            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestHpcgExecutor HpcgExecutor = new TestHpcgExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await HpcgExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -214,8 +214,8 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehaviors(PlatformID platform)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
             Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
             {
@@ -224,21 +224,21 @@ namespace VirtualClient.Actions
 
             DependencyPath mockSpackPackage = new DependencyPath(
                 "JavaDevelopmentKit",
-                this.mockFixture.PlatformSpecifics.GetPackagePath("JavaDevelopmentKit"),
+                this.fixture.PlatformSpecifics.GetPackagePath("JavaDevelopmentKit"),
                 metadata: specifics);
 
-            DependencyPath mockJbbPackage = new DependencyPath("spack", this.mockFixture.PlatformSpecifics.GetPackagePath("Hpcg2015"));
+            DependencyPath mockJbbPackage = new DependencyPath("spack", this.fixture.PlatformSpecifics.GetPackagePath("Hpcg2015"));
 
-            this.mockFixture.PackageManager.OnGetPackage("spack").ReturnsAsync(mockSpackPackage);
+            this.fixture.PackageManager.OnGetPackage("spack").ReturnsAsync(mockSpackPackage);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "HpcgVersion", "9.8" },
                 { "OpenMpiVersion", "6.66.666" },

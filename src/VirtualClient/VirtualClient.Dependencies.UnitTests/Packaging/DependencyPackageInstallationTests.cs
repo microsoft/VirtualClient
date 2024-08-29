@@ -21,26 +21,26 @@ namespace VirtualClient.Dependencies.Packaging
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Disposables cleaned up in [TearDown].")]
     public class DependencyPackageInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPackageInstallation installer;
         private DependencyPath installedDependency;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Parameters.AddRange(new Dictionary<string, IConvertible>
+            this.fixture = new MockFixture();
+            this.fixture.Parameters.AddRange(new Dictionary<string, IConvertible>
             {
                 ["BlobName"] = "any.package.1.2.3.4.zip",
                 ["BlobContainer"] = "packages",
                 ["PackageName"] = "any.package"
             });
 
-            this.installer = new DependencyPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            this.installer = new DependencyPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters);
 
             this.installedDependency = new DependencyPath(
                 "any.package",
-                this.mockFixture.PlatformSpecifics.GetPackagePath("any.package.1.2.3.4"));
+                this.fixture.PlatformSpecifics.GetPackagePath("any.package.1.2.3.4"));
         }
 
         [TearDown]
@@ -53,7 +53,7 @@ namespace VirtualClient.Dependencies.Packaging
         public async Task DependencyPackageInstallationInstallsTheExpectedPackage()
         {
             bool installed = false;
-            this.mockFixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
+            this.fixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
             {
                 BlobDescriptor descriptor = new BlobDescriptor(description);
 
@@ -75,7 +75,7 @@ namespace VirtualClient.Dependencies.Packaging
             this.installer.Parameters[nameof(DependencyPackageInstallation.InstallationPath)] = expectedPath;
 
             bool installed = false;
-            this.mockFixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
+            this.fixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
             {
                 installed = true;
                 Assert.IsNotNull(installationPath);
@@ -91,15 +91,15 @@ namespace VirtualClient.Dependencies.Packaging
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsFirstDisk()
         {
-            Disk mockDisk = this.mockFixture.Create<Disk>();
+            Disk mockDisk = this.fixture.Create<Disk>();
             string relativePath = $"{{FirstDisk}}\\packages";
-            string expectedPath = this.mockFixture.PlatformSpecifics.Combine(mockDisk.Volumes.First().AccessPaths.First(), "packages");
+            string expectedPath = this.fixture.PlatformSpecifics.Combine(mockDisk.Volumes.First().AccessPaths.First(), "packages");
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { mockDisk });
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { mockDisk });
             this.installer.Parameters[nameof(DependencyPackageInstallation.InstallationPath)] = relativePath;
 
             bool installed = false;
-            this.mockFixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
+            this.fixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
             {
                 installed = true;
                 Assert.IsNotNull(installationPath);
@@ -115,15 +115,15 @@ namespace VirtualClient.Dependencies.Packaging
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsLastDisk()
         {
-            Disk mockDisk = this.mockFixture.Create<Disk>();
+            Disk mockDisk = this.fixture.Create<Disk>();
             string relativePath = $"{{LastDisk}}\\packages";
-            string expectedPath = this.mockFixture.PlatformSpecifics.Combine(mockDisk.Volumes.First().AccessPaths.First(), "packages");
+            string expectedPath = this.fixture.PlatformSpecifics.Combine(mockDisk.Volumes.First().AccessPaths.First(), "packages");
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { mockDisk });
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { mockDisk });
             this.installer.Parameters[nameof(DependencyPackageInstallation.InstallationPath)] = relativePath;
 
             bool installed = false;
-            this.mockFixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
+            this.fixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
             {
                 installed = true;
                 Assert.IsNotNull(installationPath);
@@ -138,7 +138,7 @@ namespace VirtualClient.Dependencies.Packaging
         [Test]
         public void DependencyPackageInstallationThrowsExceptionWhenFailedToResolveDiskReference()
         {
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { this.mockFixture.Create<Disk>() });
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { this.fixture.Create<Disk>() });
             this.installer.Parameters[nameof(DependencyPackageInstallation.InstallationPath)] = "{MiddleDisk}\\packages";
 
             WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => this.installer.ExecuteAsync(CancellationToken.None));
@@ -148,8 +148,8 @@ namespace VirtualClient.Dependencies.Packaging
         [Test]
         public Task BlobPackageInstallerRegistersTheExpectedPackageAfterItIsInstalled()
         {
-            this.mockFixture.PackageManager.OnInstallDependencyPackage().ReturnsAsync(this.installedDependency.Path);
-            this.mockFixture.PackageManager.OnRegisterPackage(evaluate: packageRegistered =>
+            this.fixture.PackageManager.OnInstallDependencyPackage().ReturnsAsync(this.installedDependency.Path);
+            this.fixture.PackageManager.OnRegisterPackage(evaluate: packageRegistered =>
             {
                 Assert.IsTrue(object.ReferenceEquals(this.installedDependency, packageRegistered));
             });

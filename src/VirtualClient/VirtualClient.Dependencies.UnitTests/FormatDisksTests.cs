@@ -17,15 +17,15 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class FormatDisksTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private IEnumerable<Disk> disks;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.SetupMocks();
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.fixture = new MockFixture();
+            this.fixture.SetupMocks();
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
         }
 
         [Test]
@@ -33,16 +33,16 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, PartitionType.Gpt)]
         public async Task FormatDisksUsesTheExpectedPartitionTypeWhenInitializingDisksOnAGivenPlatform(PlatformID platform, PartitionType expectedPartitionType)
         {
-            this.mockFixture.Setup(platform);
-            this.disks = this.mockFixture.CreateDisks(platform, true);
+            this.fixture.Setup(platform);
+            this.disks = this.fixture.CreateDisks(platform, true);
             this.SetupDefaultMockBehaviors();
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
                    expectedPartitionType,
                    It.IsAny<FileSystemType>(),
@@ -56,16 +56,16 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, FileSystemType.Ntfs)]
         public async Task FormatDisksUsesTheExpectedFileSystemTypeWhenFormattingDisksOnAGivenPlatform(PlatformID platform, FileSystemType expectedFileSystemType)
         {
-            this.mockFixture.Setup(platform);
-            this.disks = this.mockFixture.CreateDisks(platform, true);
+            this.fixture.Setup(platform);
+            this.disks = this.fixture.CreateDisks(platform, true);
             this.SetupDefaultMockBehaviors();
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
                    It.IsAny<PartitionType>(),
                    expectedFileSystemType,
@@ -78,21 +78,21 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Unix, FileSystemType.Ext4)]
         public async Task FormatDisksWillParallelizeTheDiskFormattingOperationsWhenInstructedOnAGivenPlatform(PlatformID platform, FileSystemType expectedFileSystemType)
         {
-            this.mockFixture.Setup(platform);
-            this.disks = this.mockFixture.CreateDisks(platform, true);
+            this.fixture.Setup(platform);
+            this.disks = this.fixture.CreateDisks(platform, true);
             this.SetupDefaultMockBehaviors();
 
             // Instruct the executor to format in-parallel
-            this.mockFixture.Parameters[nameof(FormatDisks.InitializeDisksInParallel)] = true;
+            this.fixture.Parameters[nameof(FormatDisks.InitializeDisksInParallel)] = true;
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
                 // It is difficult to evaluate whether the operations ran in pure parallel. We are simply evaluating
                 // that the each of the format calls/per disk was made for now.
-                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
                    It.IsAny<PartitionType>(),
                    expectedFileSystemType,
@@ -106,13 +106,13 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultMockBehaviors();
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+            this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                 It.Is<Disk>(disk => disk.IsOperatingSystem()),
                 It.IsAny<PartitionType>(),
                 It.IsAny<FileSystemType>(),
@@ -130,13 +130,13 @@ namespace VirtualClient.Dependencies
             // it.
             this.disks.Where(disk => disk.IsOperatingSystem()).ToList().ForEach(disk => (disk.Volumes as List<DiskVolume>).Clear());
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+            this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                 It.Is<Disk>(disk => disk.IsOperatingSystem()),
                 It.IsAny<PartitionType>(),
                 It.IsAny<FileSystemType>(),
@@ -149,20 +149,20 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, FileSystemType.Ntfs)]
         public async Task FormatDisksWillFormatExpectedDisksRegardlessOfStateWhenTheForceParameterIsUsed_Scenario1(PlatformID platform, FileSystemType expectedFileSystemType)
         {
-            this.mockFixture.Setup(platform);
+            this.fixture.Setup(platform);
 
             // Scenario:
             // The disks are NOT already partitioned/formatted. We re-partition and format them anyway.
-            this.disks = this.mockFixture.CreateDisks(platform, false);
+            this.disks = this.fixture.CreateDisks(platform, false);
             this.SetupDefaultMockBehaviors();
 
-            this.mockFixture.Parameters["Force"] = true;
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Parameters["Force"] = true;
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
                    It.IsAny<PartitionType>(),
                    expectedFileSystemType,
@@ -176,20 +176,20 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, FileSystemType.Ntfs)]
         public async Task FormatDisksWillFormatExpectedDisksRegardlessOfStateWhenTheForceParameterIsUsed_Scenario2(PlatformID platform, FileSystemType expectedFileSystemType)
         {
-            this.mockFixture.Setup(platform);
+            this.fixture.Setup(platform);
 
             // Scenario:
             // The disks are already partitioned/formatted. We re-partition and format them.
-            this.disks = this.mockFixture.CreateDisks(platform, true);
+            this.disks = this.fixture.CreateDisks(platform, true);
             this.SetupDefaultMockBehaviors();
 
-            this.mockFixture.Parameters["Force"] = true;
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.fixture.Parameters["Force"] = true;
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
                    It.IsAny<PartitionType>(),
                    expectedFileSystemType,
@@ -201,23 +201,23 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task FormatDisksExcludesNonFormattableDevices()
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.fixture.Setup(PlatformID.Unix);
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
             Disk cdRom1 = new Disk(4, "/dev/dvd");
             Disk cdRom2 = new Disk(5, "/dev/cdrom");
             this.disks = this.disks.Append(cdRom1).Append(cdRom2);
 
             this.SetupDefaultMockBehaviors();
 
-            this.mockFixture.Parameters["DiskFilter"] = "none";
+            this.fixture.Parameters["DiskFilter"] = "none";
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+            this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                 It.IsAny<Disk>(),
                 It.IsAny<PartitionType>(),
                 It.IsAny<FileSystemType>(),
@@ -238,12 +238,12 @@ namespace VirtualClient.Dependencies
                 }
             });
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
                    It.IsAny<PartitionType>(),
                    It.IsAny<FileSystemType>(),
@@ -260,7 +260,7 @@ namespace VirtualClient.Dependencies
 
             List<Disk> disksFormatted = new List<Disk>();
 
-            this.mockFixture.DiskManager
+            this.fixture.DiskManager
                 .Setup(mgr => mgr.FormatDiskAsync(
                     It.IsAny<Disk>(),
                     It.IsAny<PartitionType>(),
@@ -274,7 +274,7 @@ namespace VirtualClient.Dependencies
                 })
                 .Returns(Task.CompletedTask);
 
-            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (FormatDisks diskFormatter = new FormatDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
                 await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
@@ -303,7 +303,7 @@ namespace VirtualClient.Dependencies
                 }
             });
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
         }
     }

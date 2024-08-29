@@ -16,13 +16,13 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class FileUploadDescriptorFactoryTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private Mock<IFileInfo> mockFile;
 
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
             this.mockFile = new Mock<IFileInfo>();
 
             DateTime fileCreationTime = DateTime.Now;

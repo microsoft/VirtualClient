@@ -17,19 +17,19 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class VirtualClientComponentTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.SetupMocks();
         }
 
         [Test]
         public void VirtualClientComponentConstructorsValidateRequiredParameters()
         {
-            Assert.Throws<ArgumentException>(() => new TestVirtualClientComponent(null, this.mockFixture.Parameters));
+            Assert.Throws<ArgumentException>(() => new TestVirtualClientComponent(null, this.fixture.Parameters));
         }
 
         [Test]
@@ -37,20 +37,20 @@ namespace VirtualClient.Contracts
         {
             // The existence of the layout causes the 'Role' parameter to be added automatically.
             // We want to do a pure parameter comparison.
-            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            VirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
+            VirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
-            Assert.IsTrue(object.ReferenceEquals(this.mockFixture.Dependencies, component.Dependencies));
+            Assert.IsTrue(object.ReferenceEquals(this.fixture.Dependencies, component.Dependencies));
 
             CollectionAssert.AreEquivalent(
-                this.mockFixture.Parameters.Select(p => $"{p.Key}={p.Value}"),
+                this.fixture.Parameters.Select(p => $"{p.Key}={p.Value}"),
                 component.Parameters.Select(p => $"{p.Key}={p.Value}"));
         }
 
         [Test]
         public void VirtualClientComponentTagsPropertyIsNeverNull()
         {
-            VirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, new Dictionary<string, IConvertible>());
+            VirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, new Dictionary<string, IConvertible>());
 
             Assert.IsNotNull(component.Tags);
             Assert.IsEmpty(component.Tags);
@@ -59,7 +59,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentTagsSupportsCommonListMergingScenario()
         {
-            VirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, new Dictionary<string, IConvertible>());
+            VirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, new Dictionary<string, IConvertible>());
 
             List<string> mergedTags = new List<string>(component.Tags) { "AnyOtherTag" };
 
@@ -75,12 +75,12 @@ namespace VirtualClient.Contracts
         public void VirtualClientComponentRolesMatchThoseDefinedInTheParameters(string roles, string expectedRoles)
         {
             // Both 'Role' and 'Roles' are supported parameters.
-            this.mockFixture.Parameters["Role"] = roles;
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            this.fixture.Parameters["Role"] = roles;
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             Assert.AreEqual(expectedRoles, string.Join(",", component.Roles));
 
-            this.mockFixture.Parameters["Roles"] = roles;
-            component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            this.fixture.Parameters["Roles"] = roles;
+            component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             Assert.AreEqual(expectedRoles, string.Join(",", component.Roles));
         }
 
@@ -90,17 +90,17 @@ namespace VirtualClient.Contracts
         [TestCase("Client;User", "Client,User")]
         public void VirtualClientComponentRolesMatchThoseDefinedInTheEnvironmentLayoutWhenTheyAreNotDefinedInTheParameters(string roles, string expectedRoles)
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.4", roles),
                 new ClientInstance("AnyOtherClientInstance", "1.2.3.5", "Server")
             });
 
             // Ensure there are no parameters that define the role.
-            this.mockFixture.Parameters.Remove("Role");
-            this.mockFixture.Parameters.Remove("Roles");
+            this.fixture.Parameters.Remove("Role");
+            this.fixture.Parameters.Remove("Roles");
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             Assert.AreEqual(expectedRoles, string.Join(",", component.Roles));
         }
@@ -108,18 +108,18 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentCorrectlyDeterminesWhenItIsInAGivenRole_Scenario1()
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.4", "Client"),
                 new ClientInstance("AnyOtherClientInstance", "1.2.3.5", "Server")
             });
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             // Even if the client is in the Client role, an IP address on the local system must
             // match the address defined in the matching environment layout client instance
             // for that role.
-            this.mockFixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
+            this.fixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
                 .Returns<string>(ip => ip == "1.2.3.4");
 
             Assert.IsTrue(component.IsInRole("Client"));
@@ -129,18 +129,18 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentCorrectlyDeterminesWhenItIsInAGivenRole_Scenario2()
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance("AnyOtherClientInstance", "1.2.3.4", "Client"),
                 new ClientInstance(Environment.MachineName, "1.2.3.5", "Server")
             });
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             // Even if the client is in the Server role, an IP address on the local system must
             // match the address defined in the matching environment layout client instance
             // for that role.
-            this.mockFixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
+            this.fixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
                 .Returns<string>(ip => ip == "1.2.3.5");
 
             Assert.IsTrue(component.IsInRole("Server"));
@@ -150,19 +150,19 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentCorrectlyDeterminesWhenItIsInAGivenRole_Scenario3()
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance("AnyOtherClientInstance1", "1.2.3.4", "Client"),
                 new ClientInstance("AnyOtherClientInstance2", "1.2.3.5", "Server"),
                 new ClientInstance(Environment.MachineName, "1.2.3.6", "Other")
             });
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             // Even if the client is in the Other role, an IP address on the local system must
             // match the address defined in the matching environment layout client instance
             // for that role.
-            this.mockFixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
+            this.fixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
                 .Returns<string>(ip => ip == "1.2.3.6");
 
             Assert.IsTrue(component.IsInRole("Other"));
@@ -173,18 +173,18 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentRolesAreNotCaseSensitive_Scenario1()
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.4", "Client"),
                 new ClientInstance("AnyOtherClientInstance2", "1.2.3.5", "Server"),
             });
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             // Even if the client is in the Client role, an IP address on the local system must
             // match the address defined in the matching environment layout client instance
             // for that role.
-            this.mockFixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
+            this.fixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
                 .Returns<string>(ip => ip == "1.2.3.4");
 
             Assert.IsTrue(component.IsInRole("Client".ToUpperInvariant()));
@@ -196,18 +196,18 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentRolesAreNotCaseSensitive_Scenario2()
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance("AnyOtherClientInstance2", "1.2.3.4", "Client"),
                 new ClientInstance(Environment.MachineName, "1.2.3.5", "Server"),
             });
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             // Even if the client is in the Server role, an IP address on the local system must
             // match the address defined in the matching environment layout client instance
             // for that role.
-            this.mockFixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
+            this.fixture.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>()))
                 .Returns<string>(ip => ip == "1.2.3.5");
 
             Assert.IsTrue(component.IsInRole("Server".ToUpperInvariant()));
@@ -219,8 +219,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentReturnsTheExpectedClientInstancseFromTheEnvironmentLayoutByRole()
         {
-            ClientInstance expectedInstance = this.mockFixture.Layout.Clients.ElementAt(1);
-            VirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            ClientInstance expectedInstance = this.fixture.Layout.Clients.ElementAt(1);
+            VirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             IEnumerable<ClientInstance> actualInstances = component.GetLayoutClientInstances(expectedInstance.Role);
             Assert.IsNotNull(actualInstances);
@@ -230,24 +230,24 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentReturnsTheExpectedRoleFromGivenClientInstance()
         {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.5", "Server"),
             });
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             Assert.AreEqual("Server", component.GetLayoutClientInstance().Role);
         }
 
         [Test]
         public async Task VirtualClientComponentAlwaysExecutesOnSingleVM_Scenario1()
         {
-            this.mockFixture.Layout = null;
-            this.mockFixture.Parameters.Add("Roles", "Other,Roles");
+            this.fixture.Layout = null;
+            this.fixture.Parameters.Add("Roles", "Other,Roles");
             
             bool executed = false;
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
             {
                 executed = true;
@@ -263,15 +263,15 @@ namespace VirtualClient.Contracts
         {
             // Scenario:
             // A layout is defined, but there is no role defined.
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.5")
             });
 
-            this.mockFixture.Parameters.Add("Roles", "Other,Roles");
+            this.fixture.Parameters.Add("Roles", "Other,Roles");
 
             bool executed = false;
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
             {
                 executed = true;
@@ -288,17 +288,17 @@ namespace VirtualClient.Contracts
             // Scenario:
             // A layout is defined and there are multiple VC client instances, but there
             // is no role defined.
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.5"),
                 new ClientInstance($"{Environment.MachineName}-2", "1.2.3.6"),
                 new ClientInstance($"{Environment.MachineName}-3", "1.2.3.7")
             });
 
-            this.mockFixture.Parameters.Add("Roles", "Other,Roles");
+            this.fixture.Parameters.Add("Roles", "Other,Roles");
 
             bool executed = false;
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
             {
                 executed = true;
@@ -314,7 +314,7 @@ namespace VirtualClient.Contracts
         {
             bool executed = false;
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
             {
                 executed = true;
@@ -329,14 +329,14 @@ namespace VirtualClient.Contracts
         public async Task VirtualClientComponentExecutesOnSpecifiedRoles()
         {
             bool executed = false;
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.5", "server"),
             });
-            this.mockFixture.Parameters.Add("Roles", "Other,Server");
+            this.fixture.Parameters.Add("Roles", "Other,Server");
 
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
             {
                 executed = true;
@@ -351,15 +351,15 @@ namespace VirtualClient.Contracts
         public async Task VirtualClientComponentDoesNotExecutesOnSpecifiedRolesDoesNotMatch()
         {
             bool executed = false;
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance(Environment.MachineName, "1.2.3.5", "Client"),
                 new ClientInstance(Environment.MachineName+"Database", "1.2.3.6", "Database")
             });
-            this.mockFixture.Parameters.Add("Role", "Other,Server");
+            this.fixture.Parameters.Add("Role", "Other,Server");
 
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
             {
                 executed = true;
@@ -376,11 +376,11 @@ namespace VirtualClient.Contracts
             // Scenario:
             // The component parameters does NOT have a 'Scenario' defined.
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.Parameters.Clear();
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.fixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -407,11 +407,11 @@ namespace VirtualClient.Contracts
             // Scenario:
             // The component parameters have a 'Scenario' defined.
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.fixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -438,13 +438,13 @@ namespace VirtualClient.Contracts
             // Scenario:
             // The component parameters have a 'Scenario' defined as well as a 'MetricScenario'.
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
             component.Parameters[nameof(component.MetricScenario)] = "AnyMetricScenarioDefined";
 
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.fixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -471,7 +471,7 @@ namespace VirtualClient.Contracts
             // Scenario:
             // The component parameters does NOT have a 'Scenario' defined.
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.Parameters.Clear();
 
             try
@@ -485,7 +485,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.fixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -512,7 +512,7 @@ namespace VirtualClient.Contracts
             // Scenario:
             // The component parameters have a 'Scenario' defined.
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
 
             try
@@ -526,7 +526,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.fixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -553,7 +553,7 @@ namespace VirtualClient.Contracts
             // Scenario:
             // The component parameters have a 'Scenario' defined as well as a 'MetricScenario'.
 
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture.Dependencies, this.fixture.Parameters);
             component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
             component.Parameters[nameof(component.MetricScenario)] = "AnyMetricScenarioDefined";
 
@@ -568,7 +568,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.fixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;

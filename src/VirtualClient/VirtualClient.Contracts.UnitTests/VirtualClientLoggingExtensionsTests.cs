@@ -25,20 +25,20 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class VirtualClientLoggingExtensionsTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private Mock<ILogger> mockLogger;
         private EventContext mockEventContext;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
             this.mockLogger = new Mock<ILogger>();
             this.mockEventContext = new EventContext(Guid.NewGuid());
 
             // When there is a content manager, the application will also write a file
             // upload notification file (e.g. upload.json). We validate this separately.
-            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
         }
 
         [Test]
@@ -991,7 +991,7 @@ namespace VirtualClient.Contracts
             bool expectedProcessDetailsCaptured = false;
             bool expectedProcessResultsCaptured = false;
 
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            this.fixture.Logger.OnLog = (level, eventInfo, state, error) =>
             {
                 Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
                 Assert.IsInstanceOf<EventContext>(state);
@@ -1033,7 +1033,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: true)
                 .ConfigureAwait(false);
 
@@ -1070,7 +1070,7 @@ namespace VirtualClient.Contracts
             bool expectedProcessDetailsCaptured = false;
             bool expectedProcessResultsCaptured = false;
 
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            this.fixture.Logger.OnLog = (level, eventInfo, state, error) =>
             {
                 Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
                 Assert.IsInstanceOf<EventContext>(state);
@@ -1113,7 +1113,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: new List<string> { expectedResults }, logToTelemetry: true)
                .ConfigureAwait(false);
 
@@ -1134,12 +1134,12 @@ namespace VirtualClient.Contracts
         public async Task LogProcessDetailsExtensionHandlesReservedCharactersInTheToolsetNamesWhenEmittingTelemetry(string toolsetName)
         {
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
 
             bool processDetailsHandled = false;
             bool processResultsHandled = false;
 
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            this.fixture.Logger.OnLog = (level, eventInfo, state, error) =>
             {
                 if (eventInfo.Name == $"{nameof(TestExecutor)}.AnyToolset.ProcessDetails")
                 {
@@ -1174,10 +1174,10 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
 
             bool confirmed = false;
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            this.fixture.Logger.OnLog = (level, eventInfo, state, error) =>
             {
                 if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
                 {
@@ -1210,16 +1210,16 @@ namespace VirtualClient.Contracts
         {
             // The default scenario is where the component has no 'Scenario' defined and the tool name
             // is not provided either.
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             InMemoryProcess process = new InMemoryProcess();
 
             bool expectedLogFileWritten = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
@@ -1238,16 +1238,16 @@ namespace VirtualClient.Contracts
         {
             // The default scenario is where the component has no 'Scenario' defined and the tool name
             // is not provided either.
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             InMemoryProcess process = new InMemoryProcess();
 
             bool expectedLogFileWritten = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath("AnyTool".ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath("AnyTool".ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith("AnyTool.log".ToLowerInvariant()), "Log file name not matched");
@@ -1266,16 +1266,16 @@ namespace VirtualClient.Contracts
         {
             // The default scenario is where the component has no 'Scenario' defined and the tool name
             // is not provided either.
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters["Scenario"] = "AnyScenario";
 
             InMemoryProcess process = new InMemoryProcess();
 
             bool expectedLogFileWritten = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith($"AnyScenario.log".ToLowerInvariant()), "Log file name not matched");
@@ -1294,16 +1294,16 @@ namespace VirtualClient.Contracts
         {
             // The default scenario is where the component has no 'Scenario' defined and the tool name
             // is not provided either.
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters["Scenario"] = "AnyScenario";
 
             InMemoryProcess process = new InMemoryProcess();
 
             bool expectedLogFileWritten = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath("AnyTool".ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath("AnyTool".ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith($"AnyScenario.log".ToLowerInvariant()), "Log file name not matched");
@@ -1328,7 +1328,7 @@ namespace VirtualClient.Contracts
         public async Task LogProcessDetailsExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystem(
             int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
         {
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             InMemoryProcess process = new InMemoryProcess
@@ -1345,10 +1345,10 @@ namespace VirtualClient.Contracts
             };
 
             bool expectedLogFileWritten = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
@@ -1404,10 +1404,10 @@ namespace VirtualClient.Contracts
             string expectedToolset = "AnyWorkloadToolset";
             bool expectedLogFileWritten = false;
 
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath(expectedToolset.ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith($"{expectedToolset}.log".ToLowerInvariant()), "Log file name not matched");
@@ -1430,7 +1430,7 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
@@ -1465,10 +1465,10 @@ namespace VirtualClient.Contracts
             bool expectedLogFileWritten = false;
             string expectedResults = "Any results from the execution of the process.";
 
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+                    string expectedLogDirectory = this.fixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
                     Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
@@ -1493,7 +1493,7 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
@@ -1505,29 +1505,29 @@ namespace VirtualClient.Contracts
         public async Task LogProcessDetailsExtensionCreatesTheLogDirectoryIfItDoesNotExist()
         {
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
  
-            string expectedLogPath = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+            string expectedLogPath = this.fixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
-            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
+            this.fixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
         }
 
         [Test]
         public async Task LogProcessDetailsExtensionCreatesTheLogDirectoryIfItDoesNotExistWhenTheToolsetNameIsProvided()
         {
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
 
             string expectedToolset = "AnyWorkloadToolset";
-            string expectedLogPath = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
+            string expectedLogPath = this.fixture.GetLogsPath(expectedToolset.ToLowerInvariant());
 
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
-            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
+            this.fixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
         }
 
         [Test]
@@ -1546,10 +1546,10 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
 
             bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
                     Assert.IsFalse(content.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
@@ -1566,14 +1566,14 @@ namespace VirtualClient.Contracts
         public async Task LogProcessDetailsExtensionRemovesWhitespaceFromToolsetNamesWhenLoggingToFile()
         {
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
+                    string expectedLogPath = this.fixture.GetLogsPath("anytoolset");
 
                     Assert.IsTrue(path.StartsWith(expectedLogPath));
                     Assert.IsTrue(path.EndsWith("anytoolset.log"));
@@ -1599,14 +1599,14 @@ namespace VirtualClient.Contracts
         public async Task LogProcessDetailsExtensionHandlesReservedCharactersInTheToolsetNamesWhenLoggingToFile(string toolsetName)
         {
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
-                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
+                    string expectedLogPath = this.fixture.GetLogsPath("anytoolset");
 
                     Assert.IsTrue(path.StartsWith(expectedLogPath));
                     Assert.IsTrue(path.EndsWith("anytoolset.log"));
@@ -1625,24 +1625,24 @@ namespace VirtualClient.Contracts
             // Ensure there is a content store defined. This indicates to the application that the user
             // supplied an intention on the command line (e.g. --contentStore) to have files uploaded to a
             // storage account.
-            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
+            this.fixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
                 new List<IBlobManager>
                 {
-                    this.mockFixture.ContentBlobManager.Object,
-                    this.mockFixture.PackagesBlobManager.Object
+                    this.fixture.ContentBlobManager.Object,
+                    this.fixture.PackagesBlobManager.Object
                 });
 
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
                     if (path.EndsWith("upload.json"))
                     {
-                        string expectedLogPath = this.mockFixture.PlatformSpecifics.ContentUploadsDirectory;
+                        string expectedLogPath = this.fixture.PlatformSpecifics.ContentUploadsDirectory;
                         Assert.IsTrue(path.StartsWith(expectedLogPath));
                         confirmed = true;
                     }
@@ -1658,19 +1658,19 @@ namespace VirtualClient.Contracts
             // Ensure there is a content store defined. This indicates to the application that the user
             // supplied an intention on the command line (e.g. --contentStore) to have files uploaded to a
             // storage account.
-            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
+            this.fixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
                 new List<IBlobManager>
                 {
-                    this.mockFixture.ContentBlobManager.Object,
-                    this.mockFixture.PackagesBlobManager.Object
+                    this.fixture.ContentBlobManager.Object,
+                    this.fixture.PackagesBlobManager.Object
                 });
 
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
                     if (path.EndsWith("upload.json"))
@@ -1696,19 +1696,19 @@ namespace VirtualClient.Contracts
             // Ensure there is a content store defined. This indicates to the application that the user
             // supplied an intention on the command line (e.g. --contentStore) to have files uploaded to a
             // storage account.
-            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
+            this.fixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
                 new List<IBlobManager>
                 {
-                    this.mockFixture.ContentBlobManager.Object,
-                    this.mockFixture.PackagesBlobManager.Object
+                    this.fixture.ContentBlobManager.Object,
+                    this.fixture.PackagesBlobManager.Object
                 });
 
             InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
 
             bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, string, CancellationToken>((path, content, token) =>
                 {
                     if (path.EndsWith("upload.json"))
@@ -1948,11 +1948,11 @@ namespace VirtualClient.Contracts
             // Minimum info provided. Additionally, the parameters for the component do not contain a 'Scenario'
             // definition.
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
             component.LogFailedMetric();
 
-            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+            var loggedMetric = this.fixture.Logger.FirstOrDefault();
 
             Assert.IsNotNull(loggedMetric);
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
@@ -1993,11 +1993,11 @@ namespace VirtualClient.Contracts
             // Minimum info provided. Additionally, the parameters for the component contain a 'Scenario'
             // definition.
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters[nameof(component.Scenario)] = "Any_Outcome";
             component.LogFailedMetric();
 
-            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+            var loggedMetric = this.fixture.Logger.FirstOrDefault();
 
             Assert.IsNotNull(loggedMetric);
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
@@ -2045,10 +2045,10 @@ namespace VirtualClient.Contracts
             DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
             DateTime expectedEndTime = DateTime.UtcNow;
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.LogFailedMetric(expectedToolName, expectedToolVersion, expectedScenarioName, expectedScenarioArguments, expectedMetricCategorization, expectedStartTime, expectedEndTime);
 
-            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+            var loggedMetric = this.fixture.Logger.FirstOrDefault();
 
             Assert.IsNotNull(loggedMetric);
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
@@ -2089,11 +2089,11 @@ namespace VirtualClient.Contracts
             // Minimum info provided. Additionally, the parameters for the component do not contain a 'Scenario'
             // definition.
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters.Clear();
             component.LogSuccessMetric();
 
-            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+            var loggedMetric = this.fixture.Logger.FirstOrDefault();
 
             Assert.IsNotNull(loggedMetric);
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
@@ -2134,11 +2134,11 @@ namespace VirtualClient.Contracts
             // Minimum info provided. Additionally, the parameters for the component contain a 'Scenario'
             // definition.
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.Parameters[nameof(component.Scenario)] = "Any_Outcome";
             component.LogSuccessMetric();
 
-            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+            var loggedMetric = this.fixture.Logger.FirstOrDefault();
 
             Assert.IsNotNull(loggedMetric);
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
@@ -2186,10 +2186,10 @@ namespace VirtualClient.Contracts
             DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
             DateTime expectedEndTime = DateTime.UtcNow;
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
+            TestExecutor component = new TestExecutor(this.fixture);
             component.LogSuccessMetric(expectedToolName, expectedToolVersion, expectedScenarioName, expectedScenarioArguments, expectedMetricCategorization, expectedStartTime, expectedEndTime);
 
-            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+            var loggedMetric = this.fixture.Logger.FirstOrDefault();
 
             Assert.IsNotNull(loggedMetric);
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);

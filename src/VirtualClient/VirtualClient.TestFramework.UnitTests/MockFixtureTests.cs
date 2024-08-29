@@ -49,9 +49,9 @@ namespace VirtualClient
         [Test]
         public void MockFixtureApiClientResponsesHandleBeingDisposed_CreateStateAsync()
         {
-            MockFixture mockFixture = new MockFixture();
-            mockFixture.Setup(System.PlatformID.Win32NT);
-            IApiClient mockClient = mockFixture.ApiClient.Object;
+            MockFixture fixture = new MockFixture();
+            fixture.Setup(System.PlatformID.Win32NT);
+            IApiClient mockClient = fixture.ApiClient.Object;
 
             // The response object will be disposed. The mock framework should not by default be using the same object.
             HttpResponseMessage response1 = mockClient.CreateStateAsync("AnyState", JObject.FromObject(new { any = "object" }), CancellationToken.None)
@@ -70,9 +70,9 @@ namespace VirtualClient
         [Test]
         public void MockFixtureApiClientResponsesHandleBeingDisposed_GetStateAsync()
         {
-            MockFixture mockFixture = new MockFixture();
-            mockFixture.Setup(System.PlatformID.Win32NT);
-            IApiClient mockClient = mockFixture.ApiClient.Object;
+            MockFixture fixture = new MockFixture();
+            fixture.Setup(System.PlatformID.Win32NT);
+            IApiClient mockClient = fixture.ApiClient.Object;
 
             // The response object will be disposed. The mock framework should not by default be using the same object.
             HttpResponseMessage response1 = mockClient.GetStateAsync("AnyState", CancellationToken.None)
@@ -91,9 +91,9 @@ namespace VirtualClient
         [Test]
         public void MockFixtureApiClientResponsesHandleBeingDisposed_UpdateStateAsync()
         {
-            MockFixture mockFixture = new MockFixture();
-            mockFixture.Setup(System.PlatformID.Win32NT);
-            IApiClient mockClient = mockFixture.ApiClient.Object;
+            MockFixture fixture = new MockFixture();
+            fixture.Setup(System.PlatformID.Win32NT);
+            IApiClient mockClient = fixture.ApiClient.Object;
 
             // The response object will be disposed. The mock framework should not by default be using the same object.
             HttpResponseMessage response1 = mockClient.UpdateStateAsync("AnyState", JObject.FromObject(new { any = "object" }), CancellationToken.None)

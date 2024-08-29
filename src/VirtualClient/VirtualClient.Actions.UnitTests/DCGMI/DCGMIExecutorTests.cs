@@ -26,15 +26,15 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class DCGMIExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private State mockState;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
         }
 
         [Test]
@@ -56,13 +56,13 @@ namespace VirtualClient.Actions
             int cudaTestGeneratorCommandsexecuted;
 
             this.SetupDefaultMockBehavior(PlatformID.Unix, Architecture.X64);
-            this.mockFixture.Parameters.Add("Subsystem", subsystem);
+            this.fixture.Parameters.Add("Subsystem", subsystem);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
                 OperationSystemFullName = "TestUbuntu",
                 LinuxDistribution = LinuxDistribution.Ubuntu
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             CancellationToken cancellationtoken = cancellationTokenSource.Token;
@@ -110,9 +110,9 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehavior(PlatformID platformID, Architecture architecture)
         {
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "Level", "1" },
                 { "Username", "anyuser" },
@@ -121,11 +121,11 @@ namespace VirtualClient.Actions
             };
 
             this.mockState = new State();
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
+            this.fixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
 
-            this.mockFixture.ApiClient.Setup(client => client.CreateStateAsync(It.IsAny<string>(), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.fixture.ApiClient.Setup(client => client.CreateStateAsync(It.IsAny<string>(), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
         private async Task<int> ExecuteDiagnosticsSubsystemCommandsAsync(CancellationToken cancellationToken, CancellationTokenSource cancellationTokenSource)
@@ -134,11 +134,11 @@ namespace VirtualClient.Actions
                 {
                     "sudo nvidia-smi -pm 1",
                     "sudo nvidia-smi -e 1",
-                    $"sudo dcgmi diag -r {this.mockFixture.Parameters["Level"]} -j"
+                    $"sudo dcgmi diag -r {this.fixture.Parameters["Level"]} -j"
                 };
 
             int diagnosticscommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -155,20 +155,20 @@ namespace VirtualClient.Actions
                 if (expectedDiagnosticsCommands.Any(c => c == $"{exe} {arguments}"))
                 {
                     diagnosticscommandExecuted++;
-                    if (arguments == $"dcgmi diag -r {this.mockFixture.Parameters["Level"]} -j")
+                    if (arguments == $"dcgmi diag -r {this.fixture.Parameters["Level"]} -j")
                     {
                         cancellationTokenSource.Cancel();
                         return process;
                     }
                     else if (arguments == $"nvidia-smi -e 1")
                     {
-                        this.mockFixture.StateManager.OnGetState(nameof(DCGMIExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
+                        this.fixture.StateManager.OnGetState(nameof(DCGMIExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
                     }
                 }
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -184,7 +184,7 @@ namespace VirtualClient.Actions
                 };
 
             int DiscoverycommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -210,7 +210,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -226,7 +226,7 @@ namespace VirtualClient.Actions
                 };
 
             int FieldGroupcommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -252,7 +252,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -268,7 +268,7 @@ namespace VirtualClient.Actions
                 };
 
             int GroupcommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -294,7 +294,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -311,7 +311,7 @@ namespace VirtualClient.Actions
                 };
 
             int HealthcommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -337,7 +337,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -352,7 +352,7 @@ namespace VirtualClient.Actions
                 };
 
             int ModulescommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -378,7 +378,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -389,12 +389,12 @@ namespace VirtualClient.Actions
         {
             List<string> expectedCUDATestGeneratorCommands = new List<string>()
                 {
-                    $"sudo /usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.mockFixture.Parameters["FieldIDProftester"]} -d 10",
-                    $"sudo dcgmi dmon -e {this.mockFixture.Parameters["ListOfFieldIDsDmon"]} -c 15"
+                    $"sudo /usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.fixture.Parameters["FieldIDProftester"]} -d 10",
+                    $"sudo dcgmi dmon -e {this.fixture.Parameters["ListOfFieldIDsDmon"]} -c 15"
                 };
 
             int CUDATestGeneratorcommandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 IProcessProxy process = new InMemoryProcess
                 {
@@ -412,7 +412,7 @@ namespace VirtualClient.Actions
                 {
                     CUDATestGeneratorcommandExecuted++;
                 }
-                if (arguments == $"dcgmi dmon -e {this.mockFixture.Parameters["ListOfFieldIDsDmon"]} -c 15")
+                if (arguments == $"dcgmi dmon -e {this.fixture.Parameters["ListOfFieldIDsDmon"]} -c 15")
                 {
                     cancellationTokenSource.Cancel();
                     return process;
@@ -420,7 +420,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIExecutor testDCGMIExecutor = new TestDCGMIExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await testDCGMIExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }

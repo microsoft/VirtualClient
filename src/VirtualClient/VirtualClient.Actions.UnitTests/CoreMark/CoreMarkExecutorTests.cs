@@ -23,20 +23,20 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class CoreMarkExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [Test]
         public async Task CoreMarkExecutorExecutesTheExpectedCommandInLinux()
         {
             this.Setup(PlatformID.Unix);
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("make", cmd);
                 Assert.AreEqual($"XCFLAGS=\"-DMULTITHREAD=9 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -46,14 +46,14 @@ namespace VirtualClient.Actions
         public async Task CoreMarkExecutorExecutesTheExpectedCommandInWindows()
         {
             this.Setup(PlatformID.Win32NT);
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
-                Assert.AreEqual(@$"{this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin")}\bin\bash", cmd);
+                Assert.AreEqual(@$"{this.fixture.PlatformSpecifics.GetPackagePath("cygwin")}\bin\bash", cmd);
                 Assert.AreEqual($"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremark; make XCFLAGS=\"-DMULTITHREAD=9 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread'", args);
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -63,19 +63,19 @@ namespace VirtualClient.Actions
         public async Task CoreMarkExecutorExcutesAllowsThreadOverWrite()
         {
             this.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CoreMarkExecutor.ThreadCount), 789 }
             };
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("make", cmd);
                 Assert.AreEqual($"XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
-                return this.mockFixture.Process;
+                return this.fixture.Process;
             };
 
-            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -83,22 +83,22 @@ namespace VirtualClient.Actions
 
         public void Setup(PlatformID platform)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform);
-            this.mockFixture.Parameters["PackageName"] = "coremark";
+            this.fixture = new MockFixture();
+            this.fixture.Setup(platform);
+            this.fixture.Parameters["PackageName"] = "coremark";
 
             string results = null;
 
             // Setup the mock logic to return valid CoreMark results.
-            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith(".log"))))
+            this.fixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith(".log"))))
                 .Returns(true);
 
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Callback<string, CancellationToken>((file, token) =>
                 {
                     if (file.EndsWith("run1.log") || file.EndsWith("run2.log"))
                     {
-                        results = File.ReadAllText(this.mockFixture.Combine(
+                        results = File.ReadAllText(this.fixture.Combine(
                             MockFixture.TestAssemblyDirectory,
                             "Examples",
                             "CoreMark",
@@ -107,11 +107,11 @@ namespace VirtualClient.Actions
                 })
                 .ReturnsAsync(() => results);
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 7, 9, 11, 13, false));
 
-            DependencyPath mockPackage = new DependencyPath("cygwin", this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin"));
-            this.mockFixture.PackageManager.OnGetPackage("cygwin").ReturnsAsync(mockPackage);
+            DependencyPath mockPackage = new DependencyPath("cygwin", this.fixture.PlatformSpecifics.GetPackagePath("cygwin"));
+            this.fixture.PackageManager.OnGetPackage("cygwin").ReturnsAsync(mockPackage);
         }
     }
 }

@@ -19,29 +19,29 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class AptPackageInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
         }
 
         [Test]
         public async Task AptPackageInstallationRunsTheExpectedCommandForSinglePackageAndRepo()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(AptPackageInstallation.Packages), "pack1" },
                 { nameof(AptPackageInstallation.Repositories), "some repo1" }
@@ -57,7 +57,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -78,7 +78,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestAptPackageInstallation aptPackageInstallation = new TestAptPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAptPackageInstallation aptPackageInstallation = new TestAptPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await aptPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -89,9 +89,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task AptPackageInstallationRunsTheExpectedCommandForMultiPackageAndRepo()
         {
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(AptPackageInstallation.Packages), "pack1,pack2,pack3" },
                 { nameof(AptPackageInstallation.Repositories), "some repo1,some repo2,some repo3" }
@@ -111,7 +111,7 @@ namespace VirtualClient.Dependencies
             };
 
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
@@ -132,7 +132,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestAptPackageInstallation aptPackageInstallation = new TestAptPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestAptPackageInstallation aptPackageInstallation = new TestAptPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await aptPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

@@ -15,13 +15,13 @@ namespace VirtualClient
     [Category("Unit")]
     public class SystemManagementTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.SetupMocks();
+            this.fixture = new MockFixture();
+            this.fixture.SetupMocks();
         }
 
         [Test]

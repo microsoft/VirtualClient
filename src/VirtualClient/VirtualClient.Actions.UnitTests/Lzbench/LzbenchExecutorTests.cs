@@ -23,27 +23,27 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LzbenchExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private DependencyPath mockPackage;
 
         [SetUp]
         public void SetupDefaultBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPackage = new DependencyPath("lzbench", this.mockFixture.PlatformSpecifics.GetPackagePath("lzbench"));
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("lzbench", this.fixture.PlatformSpecifics.GetPackagePath("lzbench"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LzbenchExecutor.Version), "1.8.1" },
                 { nameof(LzbenchExecutor.Options), "testOption1 testOption2" },
@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
         public async Task LzbenchExecutorClonesTheExpectedRepoContents()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LzbenchExecutor.Version), "1.8.1" },
                 { nameof(LzbenchExecutor.Options), "testOption1 testOption2" },
@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sudo git clone -b v1.8.1 https://github.com/inikep/lzbench.git";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -101,7 +101,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -113,7 +113,7 @@ namespace VirtualClient.Actions
         public async Task LzbenchExecutorGetsDefaultFileIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LzbenchExecutor.Version), "1.8.1" },
                 { nameof(LzbenchExecutor.Options), "testOption1 testOption2" },
@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
             string expectedCommand = $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -143,7 +143,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -155,7 +155,7 @@ namespace VirtualClient.Actions
         public async Task LzbenchExecutorRunsTheExpectedWorkloadCommand()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LzbenchExecutor.Version), "1.8.1" },
                 { nameof(LzbenchExecutor.Options), "testOption1 testOption2" },
@@ -164,10 +164,10 @@ namespace VirtualClient.Actions
             };
             string mockPackagePath = this.mockPackage.Path;
 
-            string expectedCommand = $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\"";
+            string expectedCommand = $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\"";
 
             bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommand == $"{exe} {arguments}")
                 {
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -199,7 +199,7 @@ namespace VirtualClient.Actions
         public async Task LzbenchExecutorExecutesTheCorrectCommandsWithInstallationIfInputFileOrDirNotProvided()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LzbenchExecutor.Version), "1.8.1" },
                 { nameof(LzbenchExecutor.Options), "testOption1 testOption2" },
@@ -214,11 +214,11 @@ namespace VirtualClient.Actions
                 $"sudo make",
                 $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"sudo unzip silesia.zip -d silesia",
-                $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
+                $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 {this.fixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -236,12 +236,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new LzbenchExecutor.LzbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new LzbenchExecutor.LzbenchState()
             {
                 LzbenchInitialized = false
             }));
 
-            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -262,7 +262,7 @@ namespace VirtualClient.Actions
         };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -280,12 +280,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new LzbenchExecutor.LzbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new LzbenchExecutor.LzbenchState()
             {
                 LzbenchInitialized = false
             }));
 
-            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -304,7 +304,7 @@ namespace VirtualClient.Actions
             };
 
             int processCount = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
@@ -322,12 +322,12 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new LzbenchExecutor.LzbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new LzbenchExecutor.LzbenchState()
             {
                 LzbenchInitialized = true
             }));
 
-            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLzbenchExecutor LzbenchExecutor = new TestLzbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

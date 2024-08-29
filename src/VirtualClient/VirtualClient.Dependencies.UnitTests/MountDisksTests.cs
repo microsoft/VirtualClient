@@ -18,14 +18,14 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class MountDisksTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
         private IEnumerable<Disk> disks;
         private List<DiskVolume> diskVolumes;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace VirtualClient.Dependencies
 
             List<Disk> disksMounted = new List<Disk>();
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks diskMounter = new MountDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await diskMounter.ExecuteAsync(CancellationToken.None);
 
@@ -43,13 +43,13 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string mountPoint = this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, $"{this.mockFixture.Parameters[nameof(MountDisks.MountPointPrefix)]}_{index}");
+                    string mountPoint = this.fixture.PlatformSpecifics.Combine(this.fixture.PlatformSpecifics.CurrentDirectory, $"{this.fixture.Parameters[nameof(MountDisks.MountPointPrefix)]}_{index}");
 
-                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, mountPoint, It.IsAny<CancellationToken>()));
+                    this.fixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, mountPoint, It.IsAny<CancellationToken>()));
                     index++;
                 }
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
                    It.IsAny<DiskVolume>(),
                    It.IsAny<string>(),
                    It.IsAny<CancellationToken>()),
@@ -61,11 +61,11 @@ namespace VirtualClient.Dependencies
         public async Task MountDisksMountsOnExpectedPathForWindows()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
-            this.mockFixture.Parameters[nameof(MountDisks.MountPointPrefix)] = "mockmountpath";
+            this.fixture.Parameters[nameof(MountDisks.MountPointPrefix)] = "mockmountpath";
 
             List<Disk> disksMounted = new List<Disk>();
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks diskMounter = new MountDisks(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await diskMounter.ExecuteAsync(CancellationToken.None);
 
@@ -73,13 +73,13 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string mountPoint = this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, $"{this.mockFixture.Parameters[nameof(MountDisks.MountPointPrefix)]}_{index}");
+                    string mountPoint = this.fixture.PlatformSpecifics.Combine(this.fixture.PlatformSpecifics.CurrentDirectory, $"{this.fixture.Parameters[nameof(MountDisks.MountPointPrefix)]}_{index}");
 
-                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, mountPoint, It.IsAny<CancellationToken>()));
+                    this.fixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, mountPoint, It.IsAny<CancellationToken>()));
                     index++;
                 }
 
-                this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
+                this.fixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
                    It.IsAny<DiskVolume>(),
                    It.IsAny<string>(),
                    It.IsAny<CancellationToken>()),
@@ -91,8 +91,8 @@ namespace VirtualClient.Dependencies
         {
             this.diskVolumes = new List<DiskVolume>();
 
-            this.mockFixture.Setup(platformID);
-            this.disks = this.mockFixture.CreateDisks(platformID, true);
+            this.fixture.Setup(platformID);
+            this.disks = this.fixture.CreateDisks(platformID, true);
 
             this.disks.ToList().ForEach(disk =>
             {
@@ -105,13 +105,13 @@ namespace VirtualClient.Dependencies
                 }
             });
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
 
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MountDisks.MountPointPrefix), "/mockmountpath" }
             };

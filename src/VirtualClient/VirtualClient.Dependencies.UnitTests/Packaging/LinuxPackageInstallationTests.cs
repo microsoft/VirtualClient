@@ -17,21 +17,21 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class LinuxPackageInstallationTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.fixture.FileSystem.SetupGet(fs => fs.File).Returns(this.fixture.File.Object);
         }
 
         [Test]
@@ -42,15 +42,15 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestUbuntu",
                 LinuxDistribution = LinuxDistribution.Ubuntu
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LinuxPackageInstallation.Packages), "pack1" },
                 { "Repositories-Apt", "repo1" }
             };
 
-            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await packageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.IsTrue(packageInstallation.InstantiatedInstaller is AptPackageInstallation);
@@ -68,14 +68,14 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestUbuntu",
                 LinuxDistribution = LinuxDistribution.Ubuntu
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "Repositories-Apt", "repo1" }
             };
 
-            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await packageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.IsTrue(packageInstallation.InstantiatedInstaller is AptPackageInstallation);
@@ -92,15 +92,15 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestCentOs",
                 LinuxDistribution = LinuxDistribution.CentOS8
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "Packages-Apt", "pack1" },
                 { "Repositories-Apt", "repo1" }
             };
 
-            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await packageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.IsNull(packageInstallation.InstantiatedInstaller);
@@ -115,9 +115,9 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestUbuntu",
                 LinuxDistribution = LinuxDistribution.Ubuntu
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LinuxPackageInstallation.Packages), "pack1,pack2,pack3" },
                 { "Packages-Apt", "extrapack1,extrapack2" },
@@ -130,7 +130,7 @@ namespace VirtualClient.Dependencies
                 { "Repositories-SUSE", "wrongrepo1,wrongrepo2" },
             };
 
-            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await packageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.IsTrue(packageInstallation.InstantiatedInstaller is AptPackageInstallation);
@@ -148,9 +148,9 @@ namespace VirtualClient.Dependencies
                 OperationSystemFullName = "TestMariner",
                 LinuxDistribution = LinuxDistribution.AzLinux
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LinuxPackageInstallation.Packages), "pack1,pack2,pack3" },
                 { "Packages-Apt", "wrongpack1,wrongpack2" },
@@ -166,7 +166,7 @@ namespace VirtualClient.Dependencies
                 { "Repositories-SUSE", "wrongrepo1,wrongrepo2" },
             };
 
-            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await packageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.IsTrue(packageInstallation.InstantiatedInstaller is DnfPackageInstallation);

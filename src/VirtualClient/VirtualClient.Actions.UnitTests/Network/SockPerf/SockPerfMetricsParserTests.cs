@@ -17,12 +17,12 @@ namespace VirtualClient.Actions
     {
         private string rawText;
         private SockPerfMetricsParser testParser;
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupDefaults()
         {
-            this.mockFixture = new MockFixture();
+            this.fixture = new MockFixture();
         }
 
         private string ExamplePath
