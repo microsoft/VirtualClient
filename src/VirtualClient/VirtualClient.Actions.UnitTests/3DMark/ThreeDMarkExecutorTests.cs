@@ -57,10 +57,10 @@ namespace VirtualClient.Actions
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string psToolsMockPackagePath = this.fixture.ToPlatformSpecificPath(this.psToolsMockPackage, PlatformID.Win32NT, Architecture.X64).Path;
+            string psToolsMockPackagePath = this.fixture.PlatformSpecifics.Combine(psToolsMockPackage.Path, "win-x64");
             string psToolsExecutablePath = this.fixture.PlatformSpecifics.Combine(psToolsMockPackagePath, "PsExec.exe");
             
-            string threeDMockPackagePath = this.fixture.ToPlatformSpecificPath(this.threeDMockPackage, PlatformID.Win32NT, Architecture.X64).Path;
+            string threeDMockPackagePath = this.fixture.PlatformSpecifics.Combine(threeDMockPackage.Path, "win-x64");
             string threeDExecutablePath = this.fixture.PlatformSpecifics.Combine(threeDMockPackagePath, "3DMark", "3DMarkCmd.exe");
             string threeDDLCPath = this.fixture.PlatformSpecifics.Combine(threeDMockPackagePath, "DLC", "3DMark");
 
