@@ -967,7 +967,7 @@ namespace VirtualClient
                 { "IsTLSEnabled" , true }
             };
 
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.fixture.Dependencies, parameters);
 
             Assert.AreEqual("Yes", parameters["Nested"]);
             Assert.AreEqual("Yes", parameters["BUILD_TLS"]);

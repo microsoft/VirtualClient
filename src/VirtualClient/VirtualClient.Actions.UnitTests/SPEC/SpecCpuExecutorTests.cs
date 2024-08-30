@@ -215,7 +215,7 @@ namespace VirtualClient.Actions
             Assert.IsTrue(commandCalled);
 
             // 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
@@ -224,7 +224,7 @@ namespace VirtualClient.Actions
             };
             commandCalled = false;
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 1 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed\"")
                 {
@@ -244,7 +244,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await specCpuExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }

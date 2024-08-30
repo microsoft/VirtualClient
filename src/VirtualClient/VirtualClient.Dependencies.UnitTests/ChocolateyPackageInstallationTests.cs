@@ -94,9 +94,9 @@ namespace VirtualClient.Dependencies
         [Test]
         public void ChocolateyPackageInstallationRunsNothingInLinux()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "choco" },
                 { nameof(ChocolateyPackageInstallation.Packages), "pack1,pack2" }
@@ -104,7 +104,7 @@ namespace VirtualClient.Dependencies
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandExecuted++;
                 IProcessProxy process = new InMemoryProcess()
@@ -116,7 +116,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestChocolateyPackageInstallation installation = new TestChocolateyPackageInstallation(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.IsFalse(VirtualClientComponent.IsSupported(installation));
             }

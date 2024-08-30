@@ -593,8 +593,8 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentIsSupportedRespectsSupportedPlatformAttribute()
         {
-            this.mockFixture.Setup(PlatformID.Unix, System.Runtime.InteropServices.Architecture.Arm64);
-            TestVirtualClientComponent2 component = new TestVirtualClientComponent2(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            this.fixture.Setup(PlatformID.Unix, System.Runtime.InteropServices.Architecture.Arm64);
+            TestVirtualClientComponent2 component = new TestVirtualClientComponent2(this.fixture.Dependencies, this.fixture.Parameters);
 
             Assert.IsFalse(VirtualClientComponent.IsSupported(component));
         }

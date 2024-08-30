@@ -17,20 +17,20 @@ namespace VirtualClient.Actions
     public class LMbenchMetricsParserTests
     {
         private static string Examples = MockFixture.GetDirectory(typeof(LMbenchExecutorTests), "Examples", "LMbench");
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupTest()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
         }
 
         [Test]
         public void LMbenchMetricsParserCapturesTheExpectedMetrics_1()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = this.mockFixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_1.txt");
+            string outputPath = this.fixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_1.txt");
             string results = File.ReadAllText(outputPath);
 
             LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
         public void LMbenchMetricsParserCapturesTheExpectedMetrics_2()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = this.mockFixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_2.txt");
+            string outputPath = this.fixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_2.txt");
             string results = File.ReadAllText(outputPath);
 
             LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
@@ -147,7 +147,7 @@ namespace VirtualClient.Actions
         public void LMbenchMetricsParserCapturesTheExpectedMetrics_3()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = this.mockFixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_3.txt");
+            string outputPath = this.fixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_3.txt");
             string results = File.ReadAllText(outputPath);
 
             LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
@@ -220,7 +220,7 @@ namespace VirtualClient.Actions
         public void LMbenchMetricsParserCapturesTheExpectedMetrics_4_RedHat_Scenario()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = this.mockFixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_rhel_1.txt");
+            string outputPath = this.fixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_rhel_1.txt");
             string results = File.ReadAllText(outputPath);
 
             LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
@@ -265,7 +265,7 @@ namespace VirtualClient.Actions
         public void LMbenchMetricsParserLeavesOutTheRelatedMetricsWhenTheMemoryMegahertzCannotBeDetermined()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = this.mockFixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_1.txt");
+            string outputPath = this.fixture.Combine(LMbenchMetricsParserTests.Examples, "lmbench_example_results_1.txt");
             string results = File.ReadAllText(outputPath);
             results = results.Replace("1344", "-1  ");
 
