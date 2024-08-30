@@ -27,6 +27,7 @@ namespace VirtualClient.Dependencies
     public class CompilerInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManager;
+        private int[] successCodes = { 0, 2 };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompilerInstallation"/> class.
@@ -238,21 +239,22 @@ namespace VirtualClient.Dependencies
 
         private async Task RemoveAlternativesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string[] compilers =
+            string[] packages =
             {
                 "gcc",
-                "gfortran"
+                "gfortran",
+                "cpp"
             };
 
             // due to the following error:
             //      update-alternatives: error: alternative g++ can't be slave of gcc: it is a master alternative
             // must remove alternatives from the VM to avoid errors, then set all of them together
 
-            foreach (string compiler in compilers)
+            foreach (string package in packages)
             {
                 try
                 {
-                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {compiler}", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {package}", Environment.CurrentDirectory, telemetryContext, cancellationToken, this.successCodes);
                 }
                 catch
                 {
@@ -273,9 +275,6 @@ namespace VirtualClient.Dependencies
                         $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion}";
 
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
-
-            // Remove all existing alternatives for cpp before the subsequent "update-alternatives" of cpp
-            await this.ExecuteCommandAsync("update-alternatives", "--remove-all cpp", Environment.CurrentDirectory, telemetryContext, cancellationToken);
 
             // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
             string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
@@ -312,7 +311,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, int[] successCodes = null)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
              {
@@ -328,7 +327,7 @@ namespace VirtualClient.Dependencies
                      {
                          await this.LogProcessDetailsAsync(process, telemetryContext);
 
-                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                         process.ThrowIfErrored<DependencyException>(successCodes: this.successCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                      }
                  }
              });

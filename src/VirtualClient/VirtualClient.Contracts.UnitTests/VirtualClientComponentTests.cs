@@ -11,6 +11,7 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
 
     [TestFixture]
@@ -589,6 +590,15 @@ namespace VirtualClient.Contracts
                 && context.Properties["toolName"].ToString() == component.TypeName);
         }
 
+        [Test]
+        public void VirtualClientComponentIsSupportedRespectsSupportedPlatformAttribute()
+        {
+            this.mockFixture.Setup(PlatformID.Unix, System.Runtime.InteropServices.Architecture.Arm64);
+            TestVirtualClientComponent2 component = new TestVirtualClientComponent2(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsFalse(VirtualClientComponent.IsSupported(component));
+        }
+
         private class TestVirtualClientComponent : VirtualClientComponent
         {
             public TestVirtualClientComponent(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
@@ -610,6 +620,31 @@ namespace VirtualClient.Contracts
             }
 
             public Func<string, bool> OnIsIPAddressPresent { get; set; }
+        }
+
+        /// <summary>
+        /// This class is only to test the SupportedPlatforms attribute. Only not supported platform is linux-arm64.
+        /// </summary>
+        [SupportedPlatforms("linux-x64,win-arm64,win-x64")]
+        private class TestVirtualClientComponent2 : VirtualClientComponent
+        {
+            public TestVirtualClientComponent2(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+                : base(dependencies, parameters)
+            {
+            }
+
+            public Action<EventContext, CancellationToken> OnExecute { get; set; }
+
+            protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+            {
+                this.OnExecute?.Invoke(telemetryContext, cancellationToken);
+                return Task.CompletedTask;
+            }
+
+            public new bool IsSupported()
+            {
+                return base.IsSupported();
+            }
         }
     }
 }

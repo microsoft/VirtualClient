@@ -10,6 +10,7 @@ namespace VirtualClient
     using Moq;
     using NUnit.Framework;
     using Microsoft.Azure.Amqp.Framing;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -32,7 +33,8 @@ namespace VirtualClient
             string expectedAgentId = Guid.NewGuid().ToString();
             string expectedExperimentId = Guid.NewGuid().ToString();
 
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(expectedAgentId, expectedExperimentId, PlatformID.Win32NT, architecture);
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, architecture);
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(expectedAgentId, expectedExperimentId, platformSpecifics);
 
             Assert.AreEqual(PlatformID.Win32NT, systemManagement.Platform);
             Assert.AreEqual(architecture, systemManagement.CpuArchitecture);
@@ -54,7 +56,8 @@ namespace VirtualClient
             string expectedAgentId = Guid.NewGuid().ToString();
             string expectedExperimentId = Guid.NewGuid().ToString();
 
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(expectedAgentId, expectedExperimentId, PlatformID.Unix, architecture);
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, architecture);
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(expectedAgentId, expectedExperimentId, platformSpecifics);
 
             Assert.AreEqual(PlatformID.Unix, systemManagement.Platform);
             Assert.AreEqual(architecture, systemManagement.CpuArchitecture);

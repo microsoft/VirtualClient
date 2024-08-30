@@ -9,6 +9,7 @@
         <RunAnalyzers>false</RunAnalyzers>
         <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118,NU5110,NU5111,IL2026,IL2104,IL2072</NoWarn>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+        <BuildPropertyOutput>true</BuildPropertyOutput>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,50 +28,94 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Folder Include="tools\" />
+        <Folder Include="Properties\" />
+
         <None Update="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="Scripts\Kusto\EventHub\TableMappings.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Scripts\Kusto\EventHub\Tables.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
-
-    <ItemGroup>
-        <!--
-        This prevents having ALL profiles published to the win-x64, win-arm64, linux-x64 and linux-arm64 directories
-        during the publish phase. We DO NOT want all profiles in each of those directories because certain profiles and
-        corresponding workloads cannot support both operating systems.
-
-        Below we have targets that copy the relevant profiles to the target platform/arch folders based upon the
-        supported operating system.
-        -->
-        <None Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
-    </ItemGroup>
-
     
-    <ItemGroup>
-        <Folder Include="Properties\" />
-    </ItemGroup>
-
-    <Target Name="PublishProfiles" AfterTargets="Publish">
-        <ItemGroup>
-            <ProfileFiles Include="profiles\*.json" />
-        </ItemGroup>
-        <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
-    </Target>
-
     <!--
-    Copy the script/content files into the target runtime publish directory.
+    Sets the target publish directory. In practice, this should be the same as the output path as there
+    is no need to duplicate the build output into a separate directory. The build output directory and
+    publish directory are the same.
     -->
-    <Target Name="CopyInScriptsToPublishDirectory" AfterTargets="Publish">
+    <Target Name="SetPublishDirectory" BeforeTargets="Build">     
+        <PropertyGroup>
+            <PublishDir>$(OutputPath)</PublishDir>
+        </PropertyGroup>
+    </Target>
+    
+    <!--
+    Copies the profiles into the target output directory.
+    -->
+    <Target Name="CopyProfilesToOutputDirectory" AfterTargets="Build">
+        <ItemGroup>
+            <ProfileFiles Include="profiles\*.*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+    
+    <!--
+    Copies script/content files into the target output directory.
+    -->
+    <Target Name="CopyScriptsToOutputDirectory" AfterTargets="Build">
         <ItemGroup>
             <ScriptFiles Include="$(RepoPath)\out\scripts\**\*.*" />
         </ItemGroup>
 
-        <Copy Condition="'$(RuntimeIdentifier)' != ''" SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)publish\scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
+        <Copy SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+
+    <!--
+    Copies "built-in" toolsets into the target output directory. These contain toolsets that
+    we carry with a VC build so that they never need to be downloaded. In practice these are typically
+    toolsets that are used often by the platform runtime itself or across numerous workload or monitoring
+    components.
+    -->
+    <Target Name="CopyToolsToOutputDirectory" AfterTargets="Build">
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
+            <ToolsetFiles Include="tools\**\*.*" />
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
+            <!-- ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" / -->
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
+            <ToolsetFiles Include="tools\**\lshw\*.vcpkg" />
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
+            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
+            <ToolsetFiles Include="tools\**\systemtools\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\visualstudiocruntime\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\wget\*.vcpkg" />
+        </ItemGroup>
+        
+        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
+            <ToolsetFiles Include="tools\**\lspci\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\systemtools\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\visualstudiocruntime\*.vcpkg" />
+            <ToolsetFiles Include="tools\**\wget\*.vcpkg" />
+        </ItemGroup>
+
+        <Copy
+            SourceFiles="@(ToolsetFiles)"
+            DestinationFiles="@(ToolsetFiles->'$(OutputPath)tools\%(RecursiveDir)%(Filename)%(Extension)')" 
+            />
+    </Target>
+
+    <!--
+    Creates the "packages" directory in the target output directory.
+    -->
+    <Target Name="CreatePackagesAndToolsOutputDirectory" AfterTargets="Build">
+        <MakeDir Directories="$(OutputPath)packages" />
+        <MakeDir Directories="$(OutputPath)tools" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

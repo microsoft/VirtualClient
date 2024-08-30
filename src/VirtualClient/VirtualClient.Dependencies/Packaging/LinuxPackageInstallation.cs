@@ -9,6 +9,7 @@ namespace VirtualClient.Dependencies
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -17,6 +18,7 @@ namespace VirtualClient.Dependencies
     /// Provides functionality for downloading and installing Linux packages
     /// on the system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class LinuxPackageInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
@@ -236,18 +238,6 @@ namespace VirtualClient.Dependencies
         protected virtual Task InstallPackageAsync(VirtualClientComponent installer, CancellationToken cancellationToken)
         {
             return installer.ExecuteAsync(cancellationToken);
-        }
-
-        /// <inheritdoc />
-        protected override bool IsSupported()
-        {
-            bool shouldExecute = false;
-            if (base.IsSupported())
-            {
-                shouldExecute = this.Platform == PlatformID.Unix;
-            }
-
-            return shouldExecute;
         }
 
         private VirtualClientComponent InstantiateAptInstaller()

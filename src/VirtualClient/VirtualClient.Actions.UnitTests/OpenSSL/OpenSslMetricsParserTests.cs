@@ -196,6 +196,38 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void OpenSslParserParsesResultsCorrectly_RSAAlgorithm_4096Scenario()
+        {
+            /* In this scenario, we are evaluating a single cipher as well as all byte buffer sizes.
+             
+               Example:
+                                  sign    verify    encrypt   decrypt   sign/s verify/s  encr./s  decr./s
+                rsa  4096 bits 0.000319s 0.000004s 0.000004s 0.000320s   3132.4 254999.2 252626.6   3127.0
+             */
+
+            OpenSslMetricsParser parser = new OpenSslMetricsParser(
+                File.ReadAllText(Path.Combine(OpenSslMetricsParserTests.examplesDir, "OpenSSL-speed-rsa4096-results.txt")),
+                "speed -elapsed -seconds 10 rsa4096");
+
+            IEnumerable<Metric> metrics = parser.Parse();
+
+            Assert.IsNotNull(metrics);
+            Assert.IsTrue(metrics.Count() == 8);
+
+            OpenSslMetricsParserTests.AssertMetricsMatch("rsa  4096 bits", metrics, new Dictionary<string, double>
+            {
+                { "rsa  4096 bits sign", 0.000319 },
+                { "rsa  4096 bits verify", 0.000004 },
+                { "rsa  4096 bits encrypt", 0.000004 },
+                { "rsa  4096 bits decrypt", 0.000320 },
+                { "rsa  4096 bits sign/s", 3132.4 },
+                { "rsa  4096 bits verify/s", 254999.2 },
+                { "rsa  4096 bits encr./s", 252626.6 },
+                { "rsa  4096 bits decr./s", 3127.0 }
+            });
+        }
+
+        [Test]
         public void OpenSslParserParsesResultsCorrectly_ed25519_Scenario()
         {
             /* In this scenario, we are evaluating a single cipher as well as all byte buffer sizes.

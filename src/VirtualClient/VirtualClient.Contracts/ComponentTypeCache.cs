@@ -39,6 +39,16 @@ namespace VirtualClient.Contracts
         public static ComponentTypeCache Instance { get; } = new ComponentTypeCache();
 
         /// <summary>
+        /// Returns true if the assembly is attributed as containing Virtual Client components.
+        /// </summary>
+        /// <param name="assembly">The assembly to validate.</param>
+        /// <returns>True if the assembly contains Virtual Client components. False if not.</returns>
+        public static bool IsComponentAssembly(Assembly assembly)
+        {
+            return assembly.GetCustomAttribute<VirtualClientComponentAssemblyAttribute>() != null;
+        }
+
+        /// <summary>
         /// Loads the assembly at the path specified into the current runtime.
         /// </summary>
         /// <param name="assemblyPath">The full path to the binary/assembly/.dll.</param>
@@ -59,11 +69,13 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Loads provider types from assemblies in the path provided.
+        /// Loads component types from assemblies in the path provided.
         /// </summary>
         /// <param name="assemblyDirectory">The full path to the binary/assemblies directory.</param>
         public void LoadComponentTypes(string assemblyDirectory)
         {
+            assemblyDirectory.ThrowIfNullOrWhiteSpace(nameof(assemblyDirectory));
+
             lock (ComponentTypeCache.LockObject)
             {
                 foreach (string assemblyPath in ComponentTypeCache.GetAssemblies(assemblyDirectory))
@@ -71,6 +83,7 @@ namespace VirtualClient.Contracts
                     try
                     {
                         Assembly assembly = Assembly.LoadFrom(assemblyPath);
+
                         if (ComponentTypeCache.IsComponentAssembly(assembly))
                         {
                             this.CacheProviderTypes(assembly);
@@ -104,14 +117,17 @@ namespace VirtualClient.Contracts
         private static IEnumerable<string> GetAssemblies(string directoryPath)
         {
             List<string> assemblies = new List<string>();
-            IEnumerable<string> allAssemblies = Directory.GetFiles(directoryPath, "*.dll");
+            string[] allAssemblies = Directory.GetFiles(directoryPath, "*.dll");
 
-            foreach (string assemblyPath in allAssemblies)
+            if (allAssemblies?.Length > 0)
             {
-                string fileName = Path.GetFileName(assemblyPath);
-                if (!ComponentTypeCache.IsExcluded(fileName))
+                foreach (string assemblyPath in allAssemblies)
                 {
-                    assemblies.Add(assemblyPath);
+                    string fileName = Path.GetFileName(assemblyPath);
+                    if (!ComponentTypeCache.IsExcluded(fileName))
+                    {
+                        assemblies.Add(assemblyPath);
+                    }
                 }
             }
 
@@ -122,11 +138,6 @@ namespace VirtualClient.Contracts
         {
             // Only Virtual Client assemblies at the moment.
             return !fileName.Contains("VirtualClient", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool IsComponentAssembly(Assembly assembly)
-        {
-            return assembly.GetCustomAttribute<VirtualClientComponentAssemblyAttribute>() != null;
         }
 
         private void CacheProviderTypes(Assembly componentAssembly)

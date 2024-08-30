@@ -159,11 +159,13 @@
         <Message Text="RepoPath                      : '$(RepoPath)'" Importance="High" />
         <Message Text="RepoScriptsPath               : '$(RepoScriptsPath)'" Importance="High" />
         <Message Text="RepoToolsetsPath              : '$(RepoToolsetsPath)'" Importance="High" />
+        <Message Text="BaseIntermediateOutputPath    : '$(BaseIntermediateOutputPath)'" Importance="High" />
+        <Message Text="BaseOutputPath                : '$(BaseOutputPath)'" Importance="High" />
         <Message Text="OutputPath                    : '$(OutputPath)'" Importance="High" />
         <Message Text="OutDir                        : '$(OutDir)'" Importance="High" />
-        <Message Text="BaseIntermediateOutputPath    : '$(BaseIntermediateOutputPath)'" Importance="High" />
         <Message Text="IntermediateOutputPath        : '$(IntermediateOutputPath)'" Importance="High" />
         <Message Text="IntDir                        : '$(IntDir)'" Importance="High" />
+        <Message Text="PublishDir                    : '$(PublishDir)'" Importance="High" />
         <Message Text="TargetName                    : '$(TargetName)'" Importance="High" />
         <Message Text="TargetDir                     : '$(TargetDir)'" Importance="High" />
         <Message Text="TargetPath                    : '$(TargetPath)'" Importance="High" />

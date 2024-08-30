@@ -7,7 +7,6 @@ namespace VirtualClient.Contracts
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using VirtualClient.Common.Extensions;
@@ -45,7 +44,7 @@ namespace VirtualClient.Contracts
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
         /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         public PlatformSpecifics(PlatformID platform, Architecture architecture, bool useUnixStylePathsOnly = false)
-            : this(platform, architecture, Path.GetDirectoryName(Assembly.GetAssembly(typeof(PlatformSpecifics)).Location), useUnixStylePathsOnly)
+            : this(platform, architecture, AppDomain.CurrentDomain.BaseDirectory, useUnixStylePathsOnly)
         {
         }
 
@@ -78,7 +77,7 @@ namespace VirtualClient.Contracts
             this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
             this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
             this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
-            
+            this.ToolsDirectory = this.Combine(standardizedCurrentDirectory, "tools");
         }
 
         /// <summary>
@@ -97,14 +96,14 @@ namespace VirtualClient.Contracts
         public string CurrentDirectory { get; }
 
         /// <summary>
-        /// The directory where log files are are written.
+        /// The directory where log files are are written. Overridable.
         /// </summary>
-        public string LogsDirectory { get; }
+        public string LogsDirectory { get; set; }
 
         /// <summary>
-        /// The directory where packages are stored.
+        /// The directory where packages are stored. Overridable.
         /// </summary>
-        public string PackagesDirectory { get; }
+        public string PackagesDirectory { get; set; }
 
         /// <summary>
         /// The directory where profiles are stored.
@@ -136,6 +135,11 @@ namespace VirtualClient.Contracts
         /// The directory where state objects are stored.
         /// </summary>
         public string StateDirectory { get; }
+
+        /// <summary>
+        /// The directory where built-in tools/toolsets are stored.
+        /// </summary>
+        public string ToolsDirectory { get; }
 
         /// <summary>
         /// True to standardize paths using Unix-style conventions (e.g. forward slashes '/')
@@ -234,7 +238,8 @@ namespace VirtualClient.Contracts
         /// <returns></returns>
         public static bool IsRunningInContainer()
         {
-            return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true);
+            // DOTNET does not properly recognize some containers. Adding /.dockerenv file as back up.
+            return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true || File.Exists("/.dockerenv"));
         }
 
         /// <summary>
@@ -434,6 +439,16 @@ namespace VirtualClient.Contracts
             return additionalPathSegments?.Any() != true
                 ? this.StateDirectory
                 : this.Combine(this.StateDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Combines the path segments provided with path where built-in tools/toolsets are stored.
+        /// </summary>
+        public string GetToolsPath(params string[] additionalPathSegments)
+        {
+            return additionalPathSegments?.Any() != true
+                ? this.ToolsDirectory
+                : this.Combine(this.ToolsDirectory, this.Combine(additionalPathSegments));
         }
 
         /// <summary>

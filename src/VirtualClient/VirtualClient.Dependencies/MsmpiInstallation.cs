@@ -15,6 +15,7 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// Installation component for the MS-MPI.
     /// </summary>
+    [SupportedPlatforms("win-x64")]
     public class MsmpiInstallation : VirtualClientComponent
     {
         private const string LockFileName = "msmpisuccess.lock";
@@ -64,22 +65,6 @@ namespace VirtualClient.Dependencies
 
                 await this.stateManager.SaveStateAsync(nameof(MsmpiInstallation), new State(), cancellationToken);
             }
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported() && this.Platform == PlatformID.Win32NT && this.CpuArchitecture == Architecture.X64;
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Msmpi", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
     }
 }

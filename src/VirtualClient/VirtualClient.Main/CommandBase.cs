@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Data;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -95,6 +96,11 @@ namespace VirtualClient
         /// the exit/flush wait supplied by the user on the command line.
         /// </summary>
         public DateTime ExitWaitTimeout { get; set; }
+
+        /// <summary>
+        /// The ID to use for the experiment and to include in telemetry output.
+        /// </summary>
+        public string ExperimentId { get; set; }
 
         /// <summary>
         /// True if a request to perform clean operations was requested on the
@@ -284,6 +290,15 @@ namespace VirtualClient
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
+            // Users can override the default packages directory using the 'VC_PACKAGES_DIR'
+            // environment variable. When defined, VC will download packages to this directory
+            // instead of the default location.
+            string userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
+            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
+            {
+                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
+            }
+
             if (this.Debug)
             {
                 this.LoggingLevel = LogLevel.Trace;
@@ -300,7 +315,6 @@ namespace VirtualClient
             }
 
             IConfiguration configuration = Program.LoadAppSettings();
-
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
@@ -312,7 +326,15 @@ namespace VirtualClient
                 this.LoggingLevel,
                 telemetrySource?.ToString());
 
-            List<IBlobManager> blobStores = new List<IBlobManager>();
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
+                this.AgentId,
+                this.ExperimentId,
+                platformSpecifics,
+                logger);
+
+            IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
+            IProfileManager profileManager = new ProfileManager();
+            List <IBlobManager> blobStores = new List<IBlobManager>();
 
             // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
             // through the proxy endpoint. All content/files will be uploaded through the proxy endpoint. All telemetry will be uploaded
@@ -348,16 +370,43 @@ namespace VirtualClient
             }
 
             IServiceCollection dependencies = new ServiceCollection();
-            dependencies.AddSingleton<ILogger>(logger);
-            dependencies.AddSingleton<IConfiguration>(configuration);
-            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
-            dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
+            dependencies.AddSingleton<IApiManager>(apiManager);
+            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
+            dependencies.AddSingleton<IConfiguration>(configuration);
+            dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
+            dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
+            dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
+            dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
+            dependencies.AddSingleton<ILogger>(logger);
+            dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
+            dependencies.AddSingleton<IProfileManager>(profileManager);
+            dependencies.AddSingleton<IStateManager>(systemManagement.StateManager);
+            dependencies.AddSingleton<ISystemInfo>(systemManagement);
+            dependencies.AddSingleton<ISystemManagement>(systemManagement);
+            dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
 
             return dependencies;
         }
 
+        /// <summary>
+        /// Initializes and registers existing dependency packages and toolset packages on the system.
+        /// </summary>
+        /// <param name="packageManager">Provides package management facilities required to discover and register packages.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        protected virtual async Task InitializePackagesAsync(IPackageManager packageManager, CancellationToken cancellationToken)
+        {
+            // 3) Initialize, discover and register any pre-existing packages on the system.
+            await packageManager.InitializePackagesAsync(cancellationToken);
+
+            IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken);
+
+            if (packages?.Any() == true)
+            {
+                await packageManager.RegisterPackagesAsync(packages, cancellationToken);
+            }
+        }
 
         /// <summary>
         /// Initializes the global/persistent telemetry properties that will be included

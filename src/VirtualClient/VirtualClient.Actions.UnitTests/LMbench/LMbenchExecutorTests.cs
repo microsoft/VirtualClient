@@ -21,54 +21,67 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class LMbenchExecutorTests
+    public class LMbenchExecutorTests : MockFixture
     {
-        private MockFixture fixture;
+        private static string Examples = MockFixture.GetDirectory(typeof(LMbenchExecutorTests), "Examples", "LMbench");
         private DependencyPath mockPackage;
-        private IEnumerable<Disk> disks;
 
         [SetUp]
-        public void SetupDefaultBehavior()
+        public void SetupDefaults()
         {
-            this.fixture = new MockFixture();
-            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+            this.Setup(PlatformID.Unix);
 
             // The workload requires the LMbench package to be registered (either built-in or installed). The LMbench
             // workload is compiled using Make and has a build step that runs the memory test. This uses commands in the
             // 'scripts' folder.
-            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
-            this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("lmbench"));
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.fixture.Directory.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockPackage = new DependencyPath("lmbench", this.PlatformSpecifics.GetPackagePath("lmbench"));
+            this.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.Directory.Setup(dir => dir.Exists(It.IsAny<string>())).Returns(true);
 
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "LMbenchX64Example.txt");
-            string output = File.ReadAllText(outputPath);
-            this.fixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => output);
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
+            this.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(LMbenchExecutor.PackageName), "lmbench" }
+                { nameof(LMbenchExecutor.PackageName), "lmbench" },
+                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" }
+            };
+
+            this.ProcessManager.OnProcessCreated = (process) =>
+            {
+                string lmbenchOutput = System.IO.File.ReadAllText(this.Combine(LMbenchExecutorTests.Examples, "lmbench_example_results_1.txt"));
+                process.StandardOutput.Append(lmbenchOutput);
             };
         }
 
         [Test]
-        public async Task LMbenchExecutorExecutesTheCorrectWorkloadCommands()
+        public async Task LMbenchExecutorExecutesTheExpectedWorkloadCommands()
         {
-            this.fixture.ProcessManager.OnProcessCreated = (process) =>
+            using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))
             {
-                string lmbenchOutput = File.ReadAllText(Path.Combine("Examples", "LMbench", "LMbenchExample.txt"));
+                await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+                Assert.IsTrue(this.ProcessManager.CommandsExecuted(
+                    $"sudo chmod -R 2777 \"{this.mockPackage.Path}/scripts\"",
+                    $"make build CPPFLAGS=\"-I /usr/include/tirpc\"",
+                    $"bash -c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results\"",
+                    $"make summary"));
+            }
+        }
+
+        [Test]
+        public async Task LMbenchExecutorExecutesTheExpectedLMbenchBenchmarks()
+        {
+            List<string> expectedBenchmarks = new List<string>
+            {
+                "BENCHMARK_BCOPY",
+                "BENCHMARK_MEM",
+                "BENCHMARK_MMAP",
+                "BENCHMARK_FILE"
             };
 
-            using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))
             {
-                await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
+                await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
 
-                Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted(
-                    "make build",
-                    "bash -c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results\"",
-                    "make see"));
+                CollectionAssert.AreEquivalent(expectedBenchmarks, lmbenchExecutor.Benchmarks);
             }
         }
 

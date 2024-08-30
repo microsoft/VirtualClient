@@ -23,6 +23,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SpecCpu workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SpecCpuExecutor : VirtualClientComponent
     {
         private const string SpecCpuRunShell = "runspeccpu.sh";
@@ -93,6 +94,18 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.CompilerVersion));
+            }
+        }
+
+        /// <summary>
+        /// Iterations.
+        /// Recommand Default: 2
+        /// </summary>
+        public int Iterations
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Iterations), 2);
             }
         }
 
@@ -174,24 +187,6 @@ namespace VirtualClient.Actions
             telemetryContext.AddContext(nameof(imageFile), imageFile);
 
             await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("SpecCpu", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private string GetConfigurationFileName()
@@ -383,10 +378,12 @@ namespace VirtualClient.Actions
             string configurationFile = this.GetConfigurationFileName();
             int coreCount = Environment.ProcessorCount;
 
-            string cmd = @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
+            string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
-            cmd = (this.Platform == PlatformID.Unix) ? $"{cmd} --reportable" : $"{cmd} --noreportable";
+            // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
+            bool reportable = (this.Platform == PlatformID.Unix) && (this.Iterations == 2 || this.Iterations == 3);
+            cmd = reportable ? $"{cmd} --reportable" : $"{cmd} --noreportable";
             cmd = $"{cmd} {this.SpecProfile}";
             return cmd;
         }

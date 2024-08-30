@@ -19,11 +19,6 @@ namespace VirtualClient
     public class RunBootstrapCommand : CommandBase
     {
         /// <summary>
-        /// The ID to use for the experiment and to include in telemetry output.
-        /// </summary>
-        public string ExperimentId { get; set; }
-
-        /// <summary>
         /// The name of the package to bootstrap/install.
         /// </summary>
         public string Name { get; set; }

@@ -45,6 +45,18 @@ namespace VirtualClient.Monitors
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
+            // Remove the first ATOP sample as it contains the system and process activity since boot.
+            // Note that particular counters could have reached their maximum value (several times) and started by zero again, so do not rely on these figures.
+            // If there is only one ATOP sample available we should take it, as something is better than nothing.
+            
+            Regex withoutBootAtopResults = new Regex(@"(?:.*?\bATOP\b.*?\bATOP\b)(.*)", RegexOptions.Singleline);
+            Match match = withoutBootAtopResults.Match(this.RawText);
+
+            if (match.Success)
+            {
+                this.RawText = "ATOP" + match.Groups[1].Value;
+            }
+
             int totalSamples = this.GetTotalSamples();
             List<Metric> metrics = new List<Metric>();
             IDictionary<string, MetricAggregate> aggregates = new Dictionary<string, MetricAggregate>(StringComparer.OrdinalIgnoreCase);
@@ -279,7 +291,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                this.AddMetric(metrics, @"\Processor Information(_Total)\CSwitches", matches.Select(m => m.Groups[1].Value));
+                this.AddMetric(metrics, @"\Processor Information(_Total)\CSwitches", matches.Select(m => m.Groups[1].Value), null, MetricAggregateType.Sum);
             }
 
             Regex cplIntrRegex = new Regex($@"CPL {Cell}{{4}}{Pipe}intr\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -287,7 +299,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                this.AddMetric(metrics, @"\Processor Information(_Total)\Serviced Interrupts", matches.Select(m => m.Groups[1].Value));
+                this.AddMetric(metrics, @"\Processor Information(_Total)\Serviced Interrupts", matches.Select(m => m.Groups[1].Value), null, MetricAggregateType.Sum);
             }
         }
 
@@ -397,7 +409,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Page Scans", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Page Scans", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex pagStealRegex = new Regex($@"PAG {Cell}{{1}}{Pipe}steal\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -405,7 +417,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Page Steals", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Page Steals", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex pagStallRegex = new Regex($@"PAG {Cell}{{2}}{Pipe}stall\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -413,7 +425,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Page Reclaims", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Page Reclaims", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex pagSwinRegex = new Regex($@"PAG {Cell}{{3}}{Pipe}swin\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -421,7 +433,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Swap Space Reads", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Swap Space Reads", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex pagSwoutRegex = new Regex($@"PAG {Cell}{{4}}{Pipe}swout\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -429,7 +441,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Swap Space Writes", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Memory\Swap Space Writes", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
         }
 
@@ -483,16 +495,15 @@ namespace VirtualClient.Monitors
 
                             // # reads for a specific disk.
                             values.Add(metricValue);
-                            this.AddMetric(metrics, $@"\Disk({instance})\# Reads", metricValue);
+                            this.AddMetric(metrics, $@"\Disk({instance})\# Reads", metricValue, null, MetricAggregateType.Sum);
                         }
                     }
 
                     if (values.Any())
                     {
                         // # reads for system as a whole. Disk reads are not cumulative in atop for each sample. They represent the number of
-                        // disk reads during the sample range. To determine the overall # reads we have to get the sum for each of the samples
-                        // and divide by the number of distinct sample intervals (e.g. 1 second sample rate over 60 minutes = 60 distinct sample intervals).
-                        this.AddMetric(metrics, @"\Disk\# Reads", values.Sum() / totalSamples);
+                        // disk reads during the sample range. To determine the overall # reads we have to get the sum for each of the samples.
+                        this.AddMetric(metrics, @"\Disk\# Reads", values.Sum());
                     }
                 }
 
@@ -511,16 +522,15 @@ namespace VirtualClient.Monitors
 
                             // # writes for a specific disk.
                             values.Add(metricValue);
-                            this.AddMetric(metrics, $@"\Disk({instance})\# Writes", metricValue);
+                            this.AddMetric(metrics, $@"\Disk({instance})\# Writes", metricValue, null, MetricAggregateType.Sum);
                         }
                     }
 
                     if (values.Any())
                     {
                         // # writes for system as a whole. Disk writes are not cumulative in atop for each sample. They represent the number of
-                        // disk writes during the sample range. To determine the overall # writes we have to get the sum for each of the samples
-                        // and divide by the number of distinct sample intervals (e.g. 1 second sample rate over 60 minutes = 60 distinct sample intervals).
-                        this.AddMetric(metrics, @"\Disk\# Writes", values.Sum() / totalSamples);
+                        // disk writes during the sample range. To determine the overall # writes we have to get the sum for each of the samples.
+                        this.AddMetric(metrics, @"\Disk\# Writes", values.Sum());
                     }
                 }
 
@@ -562,7 +572,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\TCP Segments Received", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\TCP Segments Received", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netTcpoRegex = new Regex($@"NET {Cell}{{2}}{Pipe}tcpo\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -570,7 +580,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\TCP Segments Transmitted", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\TCP Segments Transmitted", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netUdpiRegex = new Regex($@"NET {Cell}{{3}}{Pipe}udpi\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -578,7 +588,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\UDP Segments Received", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\UDP Segments Received", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netUdpoRegex = new Regex($@"NET {Cell}{{4}}{Pipe}udpo\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -586,7 +596,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\UDP Segments Transmitted", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\UDP Segments Transmitted", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netIpiRegex = new Regex($@"NET {Cell}{{1}}{Pipe}ipi\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -594,7 +604,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Received", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Received", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netIpoRegex = new Regex($@"NET {Cell}{{2}}{Pipe}ipo\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -602,7 +612,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Transmitted", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Transmitted", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netIpfrwRegex = new Regex($@"NET {Cell}{{3}}{Pipe}ipfrw\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -610,7 +620,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Forwarded", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Forwarded", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
 
             Regex netDelivRegex = new Regex($@"NET {Cell}{{4}}{Pipe}deliv\s+({TextParsingExtensions.ScientificNotationRegex})", RegexOptions.Multiline);
@@ -618,7 +628,7 @@ namespace VirtualClient.Monitors
 
             if (matches?.Any() == true)
             {
-                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Delivered", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value)));
+                matches.ToList().ForEach(m => this.AddMetric(metrics, @"\Network\IP Datagrams Delivered", TextParsingExtensions.TranslateByteUnit(m.Groups[1].Value), null, MetricAggregateType.Sum));
             }
         }
 
@@ -678,7 +688,7 @@ namespace VirtualClient.Monitors
                         string instance = match.Groups[1].Value;
                         values.Add(metricValue);
 
-                        this.AddMetric(metrics, $@"\Network({instance})\Packets Received", metricValue);
+                        this.AddMetric(metrics, $@"\Network({instance})\Packets Received", metricValue, null, MetricAggregateType.Sum);
                     }
                 }
 
@@ -687,7 +697,7 @@ namespace VirtualClient.Monitors
                     // packets received for system as a whole. Packets received is not cumulative in atop for each sample. They represent the number of
                     // packets received during the sample range. To determine the overall packages received we have to get the sum for each of the samples
                     // and divide by the number of distinct sample intervals (e.g. 1 second sample rate over 60 minutes = 60 distinct sample intervals).
-                    this.AddMetric(metrics, @"\Network\Packets Received", values.Sum() / totalSamples);
+                    this.AddMetric(metrics, @"\Network\Packets Received", values.Sum());
                 }
             }
 
@@ -711,7 +721,7 @@ namespace VirtualClient.Monitors
                         string instance = match.Groups[1].Value;
                         values.Add(metricValue);
 
-                        this.AddMetric(metrics, $@"\Network({instance})\Packets Transmitted", metricValue);
+                        this.AddMetric(metrics, $@"\Network({instance})\Packets Transmitted", metricValue, null, MetricAggregateType.Sum);
                     }
                 }
 
@@ -720,7 +730,7 @@ namespace VirtualClient.Monitors
                     // packets transmitted for system as a whole. Packets transmitted is not cumulative in atop for each sample. They represent the number of
                     // packets transmitted during the sample range. To determine the overall packages transmitted we have to get the sum for each of the samples
                     // and divide by the number of distinct sample intervals (e.g. 1 second sample rate over 60 minutes = 60 distinct sample intervals).
-                    this.AddMetric(metrics, @"\Network\Packets Transmitted", values.Sum() / totalSamples);
+                    this.AddMetric(metrics, @"\Network\Packets Transmitted", values.Sum());
                 }
             }
 

@@ -154,12 +154,6 @@
         <ProjectTypeExtension>$([System.IO.Path]::GetExtension('$(MSBuildProjectFile)'))</ProjectTypeExtension>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <DefineConstants Condition="'$(IsDotNetCore)' == 'true'">$(DefineConstants);NETCORE</DefineConstants>
-        <DefineConstants Condition="'$(IsDotNetStandard)' == 'true'">$(DefineConstants);NETSTANDARD</DefineConstants>
-        <DefineConstants Condition="'$(IsUniversalWindows)' == 'true'">$(DefineConstants);UNIVERSALWINDOWS</DefineConstants>
-    </PropertyGroup>
-
     <!--
         Default the runtime identifier to AnyCPU if not supplied.
     -->
@@ -185,36 +179,18 @@
 
     <!--
     **********************************************************************************
-    Intermediates/obj Paths (.NET Full Framework)
+    Intermediates/obj Paths
 
     Examples:
     S:\environment\repo.obj\Debug
     S:\environment\repo.obj\Debug\x86
     S:\environment\repo.obj\Debug\x64
+    S:\environment\repo.obj\Debug\AnyCPU
     **********************************************************************************
     -->
-    <PropertyGroup Condition="'$(IsDotNetCore)' != 'true' and '$(IsDotNetStandard)' != 'true'">
-        <BaseIntermediateOutputPath>$(BuildIntermediatesPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-        <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-        <IntDir>$(IntermediateOutputPath)</IntDir>
-    </PropertyGroup>
-
-
-    <!--
-    **********************************************************************************
-    Intermediates/obj Paths (.NET Core/Standard Framework)
-
-    Examples:
-    S:\environment\repo.obj\Debug
-    S:\environment\repo.obj\Debug\x86
-    S:\environment\repo.obj\Debug\x64
-    **********************************************************************************
-    -->
-    <PropertyGroup Condition="'$(IsDotNetCore)' == 'true' or '$(IsDotNetStandard)' == 'true'">
+    <PropertyGroup>
         <IntermediateOutputPath>$(BuildIntermediatesPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</IntermediateOutputPath>
-        <IntDir>$(IntermediateOutputPath)</IntDir>
     </PropertyGroup>
-
 
     <!-- 
     **********************************************************************************
@@ -225,11 +201,11 @@
     S:\environment\repo.bin\Debug
     S:\environment\repo.bin\Debug\x86
     S:\environment\repo.bin\Debug\x64
+    S:\environment\repo.bin\Debug\AnyCPU
     **********************************************************************************
     -->
     <PropertyGroup>
         <OutputPath>$(BuildBinPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</OutputPath>
-        <OutDir Condition="'$(IsDotNetCore)' == 'true' or '$(IsDotNetStandard)' == 'true'">$(OutputPath)$(TargetFramework)</OutDir>
     </PropertyGroup>
 
 
@@ -280,13 +256,13 @@
         <DebugSymbols>true</DebugSymbols>
         <DebugType>pdbonly</DebugType>
         <Optimize>false</Optimize>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
-        <DefineConstants>TRACE</DefineConstants>
+        <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     </PropertyGroup>
 
 

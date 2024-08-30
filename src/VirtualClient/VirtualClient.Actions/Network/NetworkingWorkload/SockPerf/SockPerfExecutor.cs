@@ -9,6 +9,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -16,6 +17,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// SockPerf workload Executor. 
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SockPerfExecutor : NetworkingWorkloadToolExecutor
     {
         private const string OutputFileName = "sockperf-results.txt";
@@ -163,14 +165,6 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "sockperf");
 
             return this.SystemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
-        }
-
-        /// <summary>
-        /// Execute on Unix/Linux platform only.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            return base.IsSupported() && this.Platform == PlatformID.Unix;
         }
     }
 }

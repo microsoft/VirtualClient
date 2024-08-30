@@ -955,6 +955,26 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_6()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            // "BUILD_TLS": "{calculate({calculate(512 >= 2)} ? "Yes" : "No")}",
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "Nested" , "{BUILD_TLS}" },
+                { "BUILD_TLS", "{calculate({IsTLSEnabled} ? \"Yes\" : \"No\")}" },
+                { "IsTLSEnabled" , true }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("Yes", parameters["Nested"]);
+            Assert.AreEqual("Yes", parameters["BUILD_TLS"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferencesInParameterSets_Scenario_1()
         {
             this.SetupDefaults(PlatformID.Win32NT);

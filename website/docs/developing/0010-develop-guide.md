@@ -515,8 +515,6 @@ exhaustive list but does illustrate things that are "fundamental" to development
   and are passed an 'EventContext' object from the base VirtualClientComponent class. This object allows the developer to add additional context to the telemetry that will
   be emitted. Imagine you will have to debug a problem. What information would be helpful? Include that type of information in the context.
 
-  
-
   ``` csharp
   // For example:
   // It is usefult to capture context-specific information related to a process being executed 
@@ -563,7 +561,7 @@ exhaustive list but does illustrate things that are "fundamental" to development
 The following section provides information on the general flow of the code for a Virtual Client component. This is helpful to understand when developing new
 components for the platform.
 
-#### The Component Base Class
+### The Component Base Class
 Firstly, all components in the Virtual Client whether action, monitor or dependency handler derive/inherit from the base class **VirtualClientComponent**. Thus, when
 implementing any new components, the developer should inherit from this class. The base class has a single constructor that must be implemented in the
 new component class. 
@@ -589,7 +587,7 @@ This constructor takes in the following parameters:
 * **IDictionary\<string, IConvertible>**  
   Provides the parameters defined in the profile for the action, monitor or dependency handler step to the class instance.
 
-#### Component Code/Method Flow
+### Component Code/Method Flow
 The following methods are executed in the order specified for each and every component in the Virtual Client platform. Of the methods listed, only the ExecuteAsync
 method is required to be implemented. The other methods are optional and may be overridden in the new component to meet the needs of the developer implementation.
 
@@ -848,7 +846,7 @@ euphoria. We typically use the Visual Studio IDE due to its robust support for d
 The sections below document some of the ways in which the developer can debug components in the Virtual Client. The Visual Studio IDE is used for these examples because of its
 robust support for developer inner-loop processes including support for debugging.
 
-#### Debug in Visual Studio Using Unit/Functional Tests
+### Debug in Visual Studio Using Unit/Functional Tests
 There is no faster way to get a debugger attached to your code than via an Nunit test. The Visual Studio 'Test Explorer' makes it very
 easy to put a break point in the code of a test method, to right-click in the test and then to select 'Debug Test(s)' from the context
 menu. From that point Visual Studio will build your source code and will execute the test with a debugger attached. The VC Team often 
@@ -998,13 +996,13 @@ examples illustrate how to do this.
   }
   ```
   
-  The workload dependencies package exists in a directory on the system already. We set an environment variable **VC_PACKAGES_PATH** to this path/directory location 
+  The workload dependencies package exists in a directory on the system already. We set the environment variable **VC_PACKAGES_DIR** to this path/directory location 
   before beginning to debug.
 
   ```
   e.g.
 
-  # Workload dependency package exists in a folder on the file system. We will set the 'VC_PACKAGES_PATH' environment 
+  # Workload dependency package exists in a folder on the file system. We will set the 'VC_PACKAGES_DIR' environment 
   # variable to this location.
   S:\one\debugging\packages\exampleworkload.1.0.0.zip
   ```
@@ -1019,8 +1017,8 @@ examples illustrate how to do this.
     * Application arguments = \{VirtualClientCommandLine\}   
       (e.g. `--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS-NONE.json`)
 
-    * Environment variables = Add the `VC_PACKAGES_PATH` variable and the path to your package directory.  
-      (e.g. `VC_PACKAGES_PATH = S:\one\debugging\packages`)
+    * Environment variables = Add the `VC_PACKAGES_DIR` variable and the path to your package directory.  
+      (e.g. `VC_PACKAGES_DIR = S:\one\debugging\packages`)
 
   * Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
 

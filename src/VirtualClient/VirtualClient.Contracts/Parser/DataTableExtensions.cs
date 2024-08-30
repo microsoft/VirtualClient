@@ -113,7 +113,7 @@ namespace VirtualClient.Contracts
             if (cellIndexAndLength.Count != columnNames.Count)
             {
                 throw new ArgumentOutOfRangeException(
-                    $"The cellIndexAndLength count:'{cellIndexAndLength.Count}' and columnNames count:{columnNames.Count}' need to match.");
+                    $"The cell index and length'{cellIndexAndLength.Count}' and count of column names '{columnNames.Count}' must match.");
             }
 
             List<string> rows = text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();

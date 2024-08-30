@@ -20,6 +20,7 @@ namespace VirtualClient.Monitors
     /// <summary>
     /// The Performance Counter Monitor for Virtual Client
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class LinuxPerformanceCounterMonitor : VirtualClientIntervalBasedMonitor
     {
         /// <summary>
@@ -98,21 +99,6 @@ namespace VirtualClient.Monitors
                     }
                 }
             });
-        }
-
-        /// <summary>
-        /// Return true/false whether the monitor is supported on the platform/system. Supported on
-        /// Windows platforms only.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = this.Platform == PlatformID.Unix;
-            if (isSupported)
-            {
-                isSupported = base.IsSupported();
-            }
-
-            return isSupported;
         }
 
         /// <inheritdoc/>

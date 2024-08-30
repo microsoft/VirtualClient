@@ -70,7 +70,7 @@ namespace VirtualClient
 
             if (!systemManagement.FileSystem.File.Exists(filePath))
             {
-                throw new DependencyException($"The binary at path '{filePath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
+                throw new DependencyException($"The file at path '{filePath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
             }
 
             switch (platform)

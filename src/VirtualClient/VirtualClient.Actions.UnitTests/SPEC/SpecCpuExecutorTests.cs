@@ -213,6 +213,43 @@ namespace VirtualClient.Actions
             }
 
             Assert.IsTrue(commandCalled);
+
+            // 
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
+                { nameof(SpecCpuExecutor.PackageName), "speccpu" },
+                { nameof(SpecCpuExecutor.Iterations), 1 },
+                { nameof(SpecCpuExecutor.RunPeak), true }
+            };
+            commandCalled = false;
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 1 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed\"")
+                {
+                    commandCalled = true;
+                }
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specCpuExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(commandCalled);
         }
 
         [Test]
