@@ -21,6 +21,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using System.Text.RegularExpressions;
+    using System.Runtime.InteropServices;
 
     [TestFixture]
     [Category("Unit")]
@@ -36,11 +37,15 @@ namespace VirtualClient.Actions
             this.fixture = new MockFixture();
             this.fixture.Setup(PlatformID.Win32NT);
 
-            this.threeDMockPackage = new DependencyPath("3DMark", this.fixture.PlatformSpecifics.GetPackagePath("3DMark"));
+            this.threeDMockPackage = new DependencyPath("3dmark", this.fixture.PlatformSpecifics.GetPackagePath("3dmark"));
             this.psToolsMockPackage = new DependencyPath("pstools", this.fixture.PlatformSpecifics.GetPackagePath("pstools"));
+
+            this.fixture.PackageManager.OnGetPackage("3dmark").ReturnsAsync(this.threeDMockPackage);
+            this.fixture.PackageManager.OnGetPackage("pstools").ReturnsAsync(this.psToolsMockPackage);
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
+                { nameof(ThreeDMarkExecutor.PackageName), "3dmark" },
                 { nameof(ThreeDMarkExecutor.PsExecPackageName), "pstools" },
                 { nameof(ThreeDMarkExecutor.PsExecSession), 2 },
                 { nameof(ThreeDMarkExecutor.LicenseKey), "someLicense" }
@@ -52,10 +57,10 @@ namespace VirtualClient.Actions
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string psToolsMockPackagePath = this.psToolsMockPackage.Path;
+            string psToolsMockPackagePath = this.fixture.ToPlatformSpecificPath(this.psToolsMockPackage, PlatformID.Win32NT, Architecture.X64).Path;
             string psToolsExecutablePath = this.fixture.PlatformSpecifics.Combine(psToolsMockPackagePath, "PsExec.exe");
             
-            string threeDMockPackagePath = this.threeDMockPackage.Path;
+            string threeDMockPackagePath = this.fixture.ToPlatformSpecificPath(this.threeDMockPackage, PlatformID.Win32NT, Architecture.X64).Path;
             string threeDExecutablePath = this.fixture.PlatformSpecifics.Combine(threeDMockPackagePath, "3DMark", "3DMarkCmd.exe");
             string threeDDLCPath = this.fixture.PlatformSpecifics.Combine(threeDMockPackagePath, "DLC", "3DMark");
 
@@ -68,14 +73,14 @@ namespace VirtualClient.Actions
             {
                 $"{commonArguments} {threeDExecutablePath} --path={threeDDLCPath}",
                 $"{commonArguments} {threeDExecutablePath} --register=someLicense",
-                $"{commonArguments} {threeDExecutablePath} --in= --export=result.xml"
+                $"{commonArguments} {threeDExecutablePath} --in={DateTimeOffset.Now.ToUnixTimeSeconds()}.out --export=result.xml"
             };
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 string expectedCommand = expectedCommands[commandNumber];
 
-                if (Regex.Match($"{exe} {arguments}", expectedCommand).Success)
+                if (expectedCommand == $"{exe} {arguments}")
                 {
                     commandExecuted = true;
                 }
