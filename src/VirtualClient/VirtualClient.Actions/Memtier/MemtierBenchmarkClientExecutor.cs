@@ -58,7 +58,6 @@ namespace VirtualClient.Actions
             // Ensure the duration is in integer (seconds) form.
             int duration = this.Duration;
             this.Parameters[nameof(this.Duration)] = duration;
-            this.processOutputDescriptions = new List<ProcessOutputDescription>();
         }
 
         /// <summary>
@@ -231,6 +230,7 @@ namespace VirtualClient.Actions
             {
                 IPAddress ipAddress;
                 List<Task> clientWorkloadTasks = new List<Task>();
+                this.processOutputDescriptions = new List<ProcessOutputDescription>();
 
                 if (this.IsMultiRoleLayout())
                 {
