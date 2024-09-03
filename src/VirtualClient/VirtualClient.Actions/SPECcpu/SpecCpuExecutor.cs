@@ -23,6 +23,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SpecCpu workload executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SpecCpuExecutor : VirtualClientComponent
     {
         private const string SpecCpuRunShell = "runspeccpu.sh";
@@ -186,24 +187,6 @@ namespace VirtualClient.Actions
             telemetryContext.AddContext(nameof(imageFile), imageFile);
 
             await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("SpecCpu", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         private string GetConfigurationFileName()

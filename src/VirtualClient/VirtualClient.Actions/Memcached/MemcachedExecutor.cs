@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// MemcachedMemtier workload executor
     /// </summary>
-    [UnixCompatible]
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class MemcachedExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -202,31 +202,6 @@ namespace VirtualClient.Actions
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
                 this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            if (base.IsSupported())
-            {
-                bool isSupported = (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
-
-                if (!isSupported)
-                {
-                    this.Logger.LogNotSupported("Memcached", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-                }
-
-                return isSupported;
-            }
-            else
-            {
-                return false;
-            }
-                
         }
 
         private async Task ValidatePlatformSupportAsync(CancellationToken cancellationToken)

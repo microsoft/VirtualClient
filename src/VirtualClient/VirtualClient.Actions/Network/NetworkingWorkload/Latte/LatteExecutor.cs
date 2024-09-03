@@ -9,6 +9,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -16,6 +17,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// Latte workload executor.
     /// </summary>
+    [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteExecutor : NetworkingWorkloadToolExecutor
     {
         private const string OutputFileName = "latte-results.xml";
@@ -125,14 +127,6 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "latte.exe");
 
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Execute on Windows platform only.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            return base.IsSupported() && this.Platform == PlatformID.Win32NT;
         }
     }
 }

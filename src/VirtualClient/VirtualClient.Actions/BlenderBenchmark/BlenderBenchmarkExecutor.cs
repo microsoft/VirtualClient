@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Executes the Blender Benchmark workload.
     /// </summary>
-    [WindowsCompatible]
+    [SupportedPlatforms("win-x64", true)]
     public class BlenderBenchmarkExecutor : VirtualClientComponent
     {
         private const string BlenderBenchmarkExecutableName = "benchmark-launcher-cli.exe";
@@ -94,8 +94,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
-
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -138,24 +136,6 @@ namespace VirtualClient.Actions
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && this.Platform == PlatformID.Win32NT
-                && this.CpuArchitecture == Architecture.X64;
-
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("BlenderBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
-
-            return isSupported;
         }
 
         /// <summary>

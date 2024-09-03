@@ -18,8 +18,6 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// A dependency to mount each volume of each disk at a user specified mount point.
     /// </summary>
-    [UnixCompatible]
-    [WindowsCompatible]
     public class MountDisks : VirtualClientComponent
     {
         private ISystemManagement systemManager;
