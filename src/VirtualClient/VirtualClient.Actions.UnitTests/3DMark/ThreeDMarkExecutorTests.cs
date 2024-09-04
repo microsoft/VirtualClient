@@ -48,7 +48,8 @@ namespace VirtualClient.Actions
                 { nameof(ThreeDMarkExecutor.PackageName), "3dmark" },
                 { nameof(ThreeDMarkExecutor.PsExecPackageName), "pstools" },
                 { nameof(ThreeDMarkExecutor.PsExecSession), 2 },
-                { nameof(ThreeDMarkExecutor.LicenseKey), "someLicense" }
+                { nameof(ThreeDMarkExecutor.LicenseKey), "someLicense" },
+                { nameof(ThreeDMarkExecutor.Scenario), "TimeSpy" }
             };
         }
 
@@ -73,14 +74,17 @@ namespace VirtualClient.Actions
             {
                 $"{commonArguments} {threeDExecutablePath} --path={threeDDLCPath}",
                 $"{commonArguments} {threeDExecutablePath} --register=someLicense",
-                $"{commonArguments} {threeDExecutablePath} --in={DateTimeOffset.Now.ToUnixTimeSeconds()}.out --export=result.xml"
+                $"{commonArguments} {threeDExecutablePath} --definition=custom_TSGT1.3dmdef --out=[0-9]+.out",
+                $"{commonArguments} {threeDExecutablePath} --definition=custom_TSGT2.3dmdef --out=[0-9]+.out",
+                $"{commonArguments} {threeDExecutablePath} --definition=custom_TSCT.3dmdef --out=[0-9]+.out",
+                $"{commonArguments} {threeDExecutablePath} --in=[0-9]+.out --export=result.xml"
             };
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 string expectedCommand = expectedCommands[commandNumber];
 
-                if (expectedCommand == $"{exe} {arguments}")
+                if (Regex.Match($"{exe} {arguments}", expectedCommand, RegexOptions.).Success)
                 {
                     commandExecuted = true;
                 }
@@ -107,7 +111,7 @@ namespace VirtualClient.Actions
                 await ThreeDMarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.IsTrue(commandExecuted);
+            Assert.AreEqual(expectedCommands.Count, commandNumber);
         }
 
         private class TestThreeDMarkExecutor : ThreeDMarkExecutor
