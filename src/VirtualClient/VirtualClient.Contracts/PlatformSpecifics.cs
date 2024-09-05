@@ -5,6 +5,7 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
@@ -237,7 +238,8 @@ namespace VirtualClient.Contracts
         /// <returns></returns>
         public static bool IsRunningInContainer()
         {
-            return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true);
+            // DOTNET does not properly recognize some containers. Adding /.dockerenv file as back up.
+            return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true || File.Exists("/.dockerenv"));
         }
 
         /// <summary>
