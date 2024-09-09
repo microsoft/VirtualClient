@@ -7,14 +7,14 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -26,6 +26,9 @@ namespace VirtualClient.Actions
     public class SuperBenchmarkExecutor : VirtualClientComponent
     {
         private const string SuperBenchmarkRunShell = "RunSuperBenchmark.sh";
+        private const string DefaultSBRepoLink = "https://github.com/microsoft/superbenchmark";
+        private string configFileFullPath;
+        private string repositoryName;
 
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -83,6 +86,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Link to the superbench repo.
+        /// </summary>
+        public string RepositoryLink
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SuperBenchmarkExecutor.RepositoryLink), DefaultSBRepoLink);
+            }
+        }
+
+        /// <summary>
         /// The username to execute superbench, required.
         /// </summary>
         public string Username
@@ -106,7 +120,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
+                return this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, this.repositoryName);
             }
         }
 
@@ -151,7 +165,36 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", cancellationToken)
+            var repositoryLinkUri = new Uri(this.RepositoryLink);
+            this.repositoryName = Path.GetFileName(repositoryLinkUri.AbsolutePath);
+            
+            // download config file if a link is provided
+            if (this.ConfigurationFile.StartsWith("http"))
+            {                
+                var configFileUri = new Uri(this.ConfigurationFile);
+                string configFileName = Path.GetFileName(configFileUri.AbsolutePath);
+                string configFullPath = this.PlatformSpecifics.Combine(this.SuperBenchmarkDirectory, configFileName);
+
+                using (var client = new HttpClient())
+                {
+                    await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
+                    {
+                        var response = await client.GetAsync(configFileUri);
+                        using (var fs = new FileStream(configFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
+                        {
+                            await response.Content.CopyToAsync(fs);
+                        }
+                    });
+                }
+
+                this.configFileFullPath = configFullPath;
+            }
+            else
+            {
+                this.configFileFullPath = this.ConfigurationFile;
+            }
+
+            SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>(this.repositoryName, cancellationToken)
                 ?? new SuperBenchmarkState();
 
             if (!state.SuperBenchmarkInitialized)
@@ -159,10 +202,10 @@ namespace VirtualClient.Actions
                 // This is to grant directory folders for 
                 await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
 
-                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
+                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, this.repositoryName);
                 if (!this.fileSystem.Directory.Exists(cloneDir))
                 {
-                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
+                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} {this.RepositoryLink}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
                 }
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
@@ -179,7 +222,7 @@ namespace VirtualClient.Actions
                 state.SuperBenchmarkInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
+            await this.stateManager.SaveStateAsync<SuperBenchmarkState>(this.repositoryName, state, cancellationToken);
         }
 
         private async Task ExecuteSbCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, bool runElevated)
@@ -198,7 +241,7 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.MetadataContract.AddForScenario(
-                    "SuperBenchmark",
+                    this.repositoryName,
                     process.FullCommand(),
                     toolVersion: null);
 
@@ -215,12 +258,12 @@ namespace VirtualClient.Actions
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
-                        toolName: "SuperBenchmark",
-                        scenarioName: "SuperBenchmark",
+                        toolName: this.repositoryName,
+                        scenarioName: this.repositoryName,
                         process.StartTime,
                         process.ExitTime,
                         metrics,
-                        metricCategorization: $"{this.ConfigurationFile}",
+                        metricCategorization: $"{this.configFileFullPath}",
                         scenarioArguments: commandArguments,
                         this.Tags,
                         telemetryContext);
@@ -232,7 +275,7 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            return @$"run --host-list localhost -c {this.ConfigurationFile}";
+            return @$"run --host-list localhost -c {this.configFileFullPath}";
         }
 
         internal class SuperBenchmarkState : State
