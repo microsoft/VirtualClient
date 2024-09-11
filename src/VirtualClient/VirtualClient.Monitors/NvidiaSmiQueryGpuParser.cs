@@ -5,6 +5,7 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
     using System.Data;
     using VirtualClient.Contracts;
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
@@ -14,6 +15,41 @@ namespace VirtualClient.Monitors
     /// </summary>
     public class NvidiaSmiQueryGpuParser : MetricsParser
     {
+        private readonly Dictionary<string, (string metricDelimiter, string metricUnit)> metricInfo = new ()
+        {
+            { "utilization.gpu", ("utilization.gpu [%]", "%") },
+            { "utilization.memory", ("utilization.memory [%]", "%") },
+            { "temperature.gpu", ("temperature.gpu", "celsius") },
+            { "temperature.memory", ("temperature.memory", "celsius") },
+            { "power.draw.average", ("power.draw.average [W]", "W") },
+            { "clocks.gr", ("clocks.current.graphics [MHz]", "MHz") },
+            { "clocks.sm", ("clocks.current.sm [MHz]", "MHz") },
+            { "clocks.video", ("clocks.current.video [MHz]", "MHz") },
+            { "clocks.mem", ("clocks.current.memory [MHz]", "MHz") },
+            { "memory.total", ("memory.total [MiB]", "MiB") },
+            { "memory.free", ("memory.free [MiB]", "MiB") },
+            { "memory.used", ("memory.used [MiB]", "MiB") },
+            { "power.draw.instant", ("power.draw.instant [W]", "W") },
+            { "pcie.link.gen.gpucurrent", ("pcie.link.gen.gpucurrent", string.Empty) },
+            { "pcie.link.width.current", ("pcie.link.width.current", string.Empty) },
+            { "ecc.errors.corrected.volatile.device_memory", ("ecc.errors.corrected.volatile.device_memory", string.Empty) },
+            { "ecc.errors.corrected.volatile.dram", ("ecc.errors.corrected.volatile.dram", string.Empty) },
+            { "ecc.errors.corrected.volatile.sram", ("ecc.errors.corrected.volatile.sram", string.Empty) },
+            { "ecc.errors.corrected.volatile.total", ("ecc.errors.corrected.volatile.total", string.Empty) },
+            { "ecc.errors.corrected.aggregate.device_memory", ("ecc.errors.corrected.aggregate.device_memory", string.Empty) },
+            { "ecc.errors.corrected.aggregate.dram", ("ecc.errors.corrected.aggregate.dram", string.Empty) },
+            { "ecc.errors.corrected.aggregate.sram", ("ecc.errors.corrected.aggregate.sram", string.Empty) },
+            { "ecc.errors.corrected.aggregate.total", ("ecc.errors.corrected.aggregate.total", string.Empty) },
+            { "ecc.errors.uncorrected.volatile.device_memory", ("ecc.errors.uncorrected.volatile.device_memory", string.Empty) },
+            { "ecc.errors.uncorrected.volatile.dram", ("ecc.errors.uncorrected.volatile.dram", string.Empty) },
+            { "ecc.errors.uncorrected.volatile.sram", ("ecc.errors.uncorrected.volatile.sram", string.Empty) },
+            { "ecc.errors.uncorrected.volatile.total", ("ecc.errors.uncorrected.volatile.total", string.Empty) },
+            { "ecc.errors.uncorrected.aggregate.device_memory", ("ecc.errors.uncorrected.aggregate.device_memory", string.Empty) },
+            { "ecc.errors.uncorrected.aggregate.dram", ("ecc.errors.uncorrected.aggregate.dram", string.Empty) },
+            { "ecc.errors.uncorrected.aggregate.sram", ("ecc.errors.uncorrected.aggregate.sram", string.Empty) },
+            { "ecc.errors.uncorrected.aggregate.total", ("ecc.errors.uncorrected.aggregate.total", string.Empty) }
+        };
+
         /// <summary>
         /// Constructor for <see cref="NvidiaSmiQueryGpuParser"/>
         /// </summary>
@@ -52,43 +88,19 @@ namespace VirtualClient.Monitors
                     { "pcie.link.gen.current", SafeGet(row, "pcie.link.gen.current") }
                 };
 
-                metrics.Add(new Metric("utilization.gpu", Convert.ToDouble(SafeGet(row, "utilization.gpu [%]")), unit: "%", metadata: metadata));
-                metrics.Add(new Metric("utilization.memory", Convert.ToDouble(SafeGet(row, "utilization.memory [%]")), unit: "%", metadata: metadata));
-                metrics.Add(new Metric("temperature.gpu", Convert.ToDouble(SafeGet(row, "temperature.gpu")), unit: "celsuis", metadata: metadata));
-                metrics.Add(new Metric("temperature.memory", Convert.ToDouble(SafeGet(row, "temperature.memory")), unit: "celsuis", metadata: metadata));
-                metrics.Add(new Metric("power.draw.average", Convert.ToDouble(SafeGet(row, "power.draw.average [W]")), unit: "W", metadata: metadata));
-                metrics.Add(new Metric("clocks.gr", Convert.ToDouble(SafeGet(row, "clocks.current.graphics [MHz]")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("clocks.sm", Convert.ToDouble(SafeGet(row, "clocks.current.sm [MHz]")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("clocks.video", Convert.ToDouble(SafeGet(row, "clocks.current.video [MHz]")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("clocks.mem", Convert.ToDouble(SafeGet(row, "clocks.current.memory [MHz]")), unit: "MHz", metadata: metadata));
-                metrics.Add(new Metric("memory.total", Convert.ToDouble(SafeGet(row, "memory.total [MiB]")), unit: "MiB", metadata: metadata));
-                metrics.Add(new Metric("memory.free", Convert.ToDouble(SafeGet(row, "memory.free [MiB]")), unit: "MiB", metadata: metadata));
-                metrics.Add(new Metric("memory.used", Convert.ToDouble(SafeGet(row, "memory.used [MiB]")), unit: "MiB", metadata: metadata));
-                metrics.Add(new Metric("power.draw.instant", Convert.ToDouble(SafeGet(row, "power.draw.instant [W]")), unit: "W", metadata: metadata));
-                metrics.Add(new Metric("pcie.link.gen.gpucurrent", Convert.ToDouble(SafeGet(row, "pcie.link.gen.gpucurrent")), metadata: metadata));
-                metrics.Add(new Metric("pcie.link.width.current", Convert.ToDouble(SafeGet(row, "pcie.link.width.current")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.volatile.device_memory", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.volatile.device_memory")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.volatile.dram", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.volatile.dram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.volatile.sram", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.volatile.sram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.volatile.total", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.volatile.total")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.aggregate.device_memory", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.aggregate.device_memory")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.aggregate.dram", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.aggregate.dram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.aggregate.sram", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.aggregate.sram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.corrected.aggregate.total", Convert.ToDouble(SafeGet(row, "ecc.errors.corrected.aggregate.total")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.volatile.device_memory", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.volatile.device_memory")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.volatile.dram", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.volatile.dram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.volatile.sram", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.volatile.sram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.volatile.total", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.volatile.total")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.aggregate.device_memory", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.aggregate.device_memory")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.aggregate.dram", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.aggregate.dram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.aggregate.sram", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.aggregate.sram")), metadata: metadata));
-                metrics.Add(new Metric("ecc.errors.uncorrected.aggregate.total", Convert.ToDouble(SafeGet(row, "ecc.errors.uncorrected.aggregate.total")), metadata: metadata));
+                foreach (var entry in this.metricInfo)
+                {
+                    if (double.TryParse(SafeGet(row, entry.Value.metricDelimiter), out _))
+                    {
+                        metrics.Add(new Metric(entry.Key, Convert.ToDouble(SafeGet(row, entry.Value.metricDelimiter)), unit: entry.Value.metricUnit, metadata: metadata));
+                    }
+                }
             }
 
             return metrics;
         }
 
-        private static IConvertible SafeGet(DataRow row, string columnName)
+        private static string SafeGet(DataRow row, string columnName)
         {
             return row.Table.Columns.Contains(columnName) ? Convert.ToString(row[columnName]) : "-1";
         }
