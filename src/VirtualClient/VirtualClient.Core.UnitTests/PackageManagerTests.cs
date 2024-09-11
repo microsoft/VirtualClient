@@ -64,6 +64,34 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task PackageManagerEnsuresThePackagesDirectoryExistsWhenInitializing()
+        {
+            string packageDirectory = this.mockFixture.GetPackagePath();
+
+            // Setup:
+            // The packages directory already exists.
+            this.mockFixture.Directory
+                .Setup(dir => dir.Exists(packageDirectory))
+                .Returns(true);
+
+            await this.packageManager.InitializePackagesAsync(CancellationToken.None);
+
+            // The package manager does not attempt to create the directory.
+            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(packageDirectory), Times.Never);
+
+            // Setup:
+            // The packages directory does not exist.
+            this.mockFixture.Directory
+                .Setup(dir => dir.Exists(packageDirectory))
+                .Returns(false);
+
+            await this.packageManager.InitializePackagesAsync(CancellationToken.None);
+
+            // The package manager is expected to create the directory.
+            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(packageDirectory), Times.Once);
+        }
+
+        [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversBinaryExtensionsThatExistInALocationDefinedByEnvironmentVariable()
         {

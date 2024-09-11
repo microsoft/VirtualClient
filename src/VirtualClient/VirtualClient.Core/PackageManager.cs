@@ -503,6 +503,13 @@ namespace VirtualClient
                 StringComparison ignoreCase = StringComparison.OrdinalIgnoreCase;
                 List<Tuple<string, string, ArchiveType>> archiveFilesFound = new List<Tuple<string, string, ArchiveType>>();
 
+                // Ensure the packages path exists.
+                string packagesLocation = this.PlatformSpecifics.GetPackagePath();
+                if (!this.FileSystem.Directory.Exists(packagesLocation))
+                {
+                    this.FileSystem.Directory.CreateDirectory(packagesLocation);
+                }
+
                 foreach (string packageDirectory in this.packagePaths)
                 {
                     if (this.FileSystem.Directory.Exists(packageDirectory))
