@@ -41,8 +41,8 @@ This profile is designed to identify general/broad regressions when compared aga
   | CompilerVersion | Version of compiler | 11 |
   |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | Convert.ToInt32(Math.Sqrt(totalAvailableMemoryKiloBytes * 1024 * 0.8 / 8)) (This value is dependent on memory of machine, uses 80% of available memory) |
   |   BlockSizeNB       |  The partitioning blocking factor  | 256 |
-  |   UsePerformanceLibraries | Using Machine-specific performance Libraries | false |
-  | CCFLAGS | compiler flags| -O3 -march=native  |
+  |   PerformanceLibrary | Optional. This parameter allows you to specify machine-specific performance libraries. You can assign values such as ARM, AMD, and INTEL to utilize the corresponding performance libraries. | null |
+  | PerformanceLibraryVersion | Required when using PerformanceLibrary parameter. Specify the version of the performance libraries you would like to use.<br/><br/>Curently, the supported configurations are :<br/>ARM - 23.04.1 , 24.04 | null  |  | CCFLAGS | compiler flags| -O3 -march=native  |
   |  BindToCores | If you want to bind the process to single core | false|
   | NumberOfProcesses | Number of processes to be launched for the parallel program |  No. of logical cores|
 
@@ -76,7 +76,7 @@ This profile is designed to identify general/broad regressions when compared aga
   If you want to use performance libraries for the supported platforms and distribution run following command.
 
   ``` bash
-  sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=UsePerformanceLibraries=true
+  sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=PerformanceLibrary=ARM,,,PerformanceLibraryVersion=23.04.1
 
   ```
 

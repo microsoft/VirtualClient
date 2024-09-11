@@ -51,17 +51,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines whether to use perf libraries or not.
-        /// </summary>
-        public bool UsePerformanceLibraries
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.UsePerformanceLibraries), false);
-            }
-        }
-
-        /// <summary>
         /// The order of the coefficient matrix also known as problem size (N)
         /// </summary>
         public string ProblemSizeN
@@ -142,6 +131,30 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.BindToCores), true);
+            }
+        }
+
+        /// <summary>
+        /// Perf library name like ARM, AMD, INTEL etc.
+        /// </summary>
+        public string PerformanceLibrary
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.PerformanceLibrary), out IConvertible performanceLibrary);
+                return performanceLibrary?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Per lib version.
+        /// </summary>
+        public string PerformanceLibraryVersion
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.PerformanceLibraryVersion), out IConvertible performanceLibraryVersion);
+                return performanceLibraryVersion?.ToString();
             }
         }
 
@@ -257,7 +270,7 @@ namespace VirtualClient.Actions
 
         private void ThrowIfPlatformIsNotSupported()
         {
-            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.UsePerformanceLibraries == true)
+            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.PerformanceLibrary != null)
             {
                 throw new WorkloadException(
                     $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +
@@ -297,19 +310,31 @@ namespace VirtualClient.Actions
 
         private async Task ConfigurePerformanceLibrary(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.UsePerformanceLibraries)
+            if (this.CpuArchitecture == Architecture.Arm64 && this.PerformanceLibrary == "ARM")
             {
-                if (this.CpuArchitecture == Architecture.Arm64)
+                // Switch between perf lib versions here
+                switch (this.PerformanceLibraryVersion)
                 {
-                    this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1_Ubuntu-22.04";
-                    DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                        .ConfigureAwait(false);
-
-                    string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
-                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, "arm-performance-libraries_23.04.1_Ubuntu-22.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                    await this.ExecuteCommandAsync($"./arm-performance-libraries_23.04.1_Ubuntu-22.04.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                    case "23.04.1":
+                        this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1";
+                        break;
+                    case "24.04":
+                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.04";
+                        break;
+                    default:
+                        throw new WorkloadException(
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.04 on the following platform/architectures: " +
+                            $"'{PlatformSpecifics.LinuxArm64}'.",
+                            ErrorReason.PlatformNotSupported);
                 }
-            }           
+
+                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                    .ConfigureAwait(false);
+
+                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
+                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"{this.hplPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync($"./{this.hplPerfLibraryInfo}.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+            }
         }
 
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -329,7 +354,7 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken);
 
-            if (this.UsePerformanceLibraries && this.CpuArchitecture == Architecture.Arm64)
+            if (this.PerformanceLibrary == "ARM" && this.CpuArchitecture == Architecture.Arm64)
             {
                 await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"LAdir *=", "LAdir = $(ARMPL_DIR)", cancellationToken);
@@ -337,20 +362,34 @@ namespace VirtualClient.Actions
                 await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
 
-                await this.fileSystem.File.ReplaceInFileAsync(
+                switch (this.PerformanceLibraryVersion)
+                {
+                    case "23.04.1":
+                        await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_23.04.1_gcc-11.3/lib/libarmpl.a", cancellationToken);
+                        break;
+                    case "24.04":
+                        await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_24.04_gcc/lib/libarmpl.a", cancellationToken);
+                        break;
+                    default:
+                        throw new WorkloadException(
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.04 on the following platform/architectures: " +
+                            $"'{PlatformSpecifics.LinuxArm64}'.",
+                            ErrorReason.PlatformNotSupported);
+                }
 
                 await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
             }
-            else if (this.UsePerformanceLibraries && this.CpuArchitecture != Architecture.Arm64)
+            else if (this.PerformanceLibrary != null && this.CpuArchitecture != Architecture.Arm64)
             {
                 throw new WorkloadException(
                     $"The HPL workload is currently only supports with perf libraries on the following platform/architectures: " +
                     $"'{PlatformSpecifics.LinuxArm64}'.",
                     ErrorReason.PlatformNotSupported);
             }
-            else 
+            else
             {
                 string architecture;
                 if (this.CpuArchitecture == Architecture.Arm64)
@@ -434,10 +473,14 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            var additionalMetadata = new Dictionary<string, object>();
+            additionalMetadata[$"{nameof(this.PerformanceLibrary)}"] = this.PerformanceLibrary;
+            additionalMetadata[$"{nameof(this.PerformanceLibraryVersion)}"] = this.PerformanceLibraryVersion;
             this.MetadataContract.AddForScenario(
                 "HPLinpack",
                 commandArguments,
-                toolVersion: null);
+                toolVersion: null,
+                additionalMetadata: additionalMetadata);
 
             this.MetadataContract.Apply(telemetryContext);
 
