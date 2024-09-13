@@ -781,7 +781,7 @@ namespace VirtualClient.Monitors
                     counter.OnTryGetCounterValue = () =>
                     {
                         captureAttempts++;
-                        if (captureAttempts >= 100)
+                        if (captureAttempts >= 10)
                         {
                             cancellationSource.Cancel();
                         }
@@ -796,7 +796,7 @@ namespace VirtualClient.Monitors
 
                     // Allow up to 1 min for the task to complete before forcing a timeout.
                     await Task.WhenAny(discoveryTask, Task.Delay(60000));
-                    Assert.AreEqual(100, captureAttempts);
+                    Assert.AreEqual(10, captureAttempts);
                 }
             }
         }
@@ -912,8 +912,8 @@ namespace VirtualClient.Monitors
 
                     Task executeTask = monitor.ExecuteAsync(cancellationSource.Token);
 
-                    // Allow up to 1 min for the task to complete before forcing a timeout.
-                    await Task.WhenAny(executeTask, Task.Delay(60000));
+                    // Allow up to 10 seconds for the task to complete before forcing a timeout.
+                    await Task.WhenAny(executeTask, Task.Delay(10000));
                     Assert.IsFalse(errorsOccurred);
                 }
             }

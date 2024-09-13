@@ -80,32 +80,27 @@ namespace VirtualClient.Actions
             {
                 fieldGroupCommandsexecuted = await this.ExecuteFieldGroupSubsystemCommandsAsync(cancellationtoken, cancellationTokenSource);
                 Assert.AreEqual(1, fieldGroupCommandsexecuted);
-
             }
             else if (subsystem == "Group")
             {
                 groupCommandsexecuted = await this.ExecuteGroupSubsystemCommandsAsync(cancellationtoken, cancellationTokenSource);
                 Assert.AreEqual(1, groupCommandsexecuted);
-
             }
             else if (subsystem == "Health")
             {
                 healthCommandsexecuted = await this.ExecuteHealthSubsystemCommandsAsync(cancellationtoken, cancellationTokenSource);
                 Assert.AreEqual(2, healthCommandsexecuted);
-
             }
             else if (subsystem == "Modules")
             {
                 modulesCommandsexecuted = await this.ExecuteModulesSubsystemCommandsAsync(cancellationtoken, cancellationTokenSource);
                 Assert.AreEqual(1, modulesCommandsexecuted);
-
             }
             else if (subsystem == "CUDATestGenerator")
             {
                 cudaTestGeneratorCommandsexecuted = await this.ExecuteCUDATestGeneratorSubsystemCommandsAsync(cancellationtoken, cancellationTokenSource);
                 Assert.AreEqual(2, cudaTestGeneratorCommandsexecuted);
             }
-
         }
 
         private void SetupDefaultMockBehavior(PlatformID platformID, Architecture architecture)

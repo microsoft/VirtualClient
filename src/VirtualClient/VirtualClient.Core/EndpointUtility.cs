@@ -17,7 +17,7 @@ namespace VirtualClient
     /// <summary>
     /// Provides features for managing requirements for remote endpoint access.
     /// </summary>
-    internal static class EndpointUtility
+    public static class EndpointUtility
     {
         /// <summary>
         /// Creates a <see cref="DependencyBlobStore"/> definition from the connection properties provided.
