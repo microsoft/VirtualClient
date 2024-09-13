@@ -148,6 +148,11 @@ namespace VirtualClient.Contracts
         public bool UseUnixStylePathsOnly { get; }
 
         /// <summary>
+        /// Whether VC is running in the context of docker container.
+        /// </summary>
+        internal static bool RunningInContainer { get; set; } = PlatformSpecifics.IsRunningInContainer();
+
+        /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
         /// common supported platform and architecture (e.g. win-x64, win-arm64, linux-x64, linux-arm64);
         /// </summary>

@@ -427,6 +427,7 @@ namespace VirtualClient
             this.Logger = new InMemoryLogger();
             this.FirewallManager = new Mock<IFirewallManager>();
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly: useUnixStylePathsOnly);
+            VirtualClient.Contracts.PlatformSpecifics.RunningInContainer = false;
             this.ProcessManager = new InMemoryProcessManager(platform);
             this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();
