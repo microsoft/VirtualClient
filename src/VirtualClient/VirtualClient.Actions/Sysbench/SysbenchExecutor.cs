@@ -400,6 +400,12 @@ namespace VirtualClient.Actions
                     }
                 }
             }
+            else
+            {
+                throw new WorkloadException(
+                $"The Sysbench workload generator is not supported on the current platform.",
+                ErrorReason.PlatformNotSupported);
+            }
         }
 
         internal class SysbenchState : State
