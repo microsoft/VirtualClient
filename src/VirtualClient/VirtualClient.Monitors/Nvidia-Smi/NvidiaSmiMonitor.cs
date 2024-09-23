@@ -43,9 +43,10 @@ namespace VirtualClient.Monitors
                     break;
 
                 case PlatformID.Unix:
+                    await this.QueryC2CAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                     await this.QueryGpuAsync(telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
-
                     break;
             }
         }
@@ -63,6 +64,52 @@ namespace VirtualClient.Monitors
             }
         }
 
+        private async Task QueryC2CAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
+
+            // This is the Nvidia smi c2c command
+            string command = "nvidia-smi";
+            string c2cCommand = "c2c -s";
+
+            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
+                .ConfigureAwait(false);
+
+            try
+            {
+                DateTime startTime = DateTime.UtcNow;
+                IProcessProxy process = await this.ExecuteCommandAsync(command, c2cCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true);
+                DateTime endTime = DateTime.UtcNow;
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    // We cannot log the process details here. The output is too large.
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia-Smi-c2c", logToFile: true);
+                    process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
+
+                    if (process.StandardOutput.Length > 0)
+                    {
+                        NvidiaSmiC2CParser parser = new NvidiaSmiC2CParser(process.StandardOutput.ToString());
+                        IList<Metric> metrics = parser.Parse();
+
+                        if (metrics?.Any() == true)
+                        {
+                            this.Logger.LogPerformanceCounters("nvidia", metrics, startTime, endTime, telemetryContext);
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected whenever ctrl-C is used.
+            }
+            catch (Exception exc)
+            {
+                // This would be expected on new VM while nvidia-smi is still being installed.
+                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+            }
+        }
+       
         private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -114,7 +161,7 @@ namespace VirtualClient.Monitors
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             // We cannot log the process details here. The output is too large.
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia-Smi", logToFile: true);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia-Smi-gpu", logToFile: true);
                             process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
 
                             if (process.StandardOutput.Length > 0)

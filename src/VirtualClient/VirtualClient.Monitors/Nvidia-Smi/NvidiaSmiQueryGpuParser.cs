@@ -92,7 +92,7 @@ namespace VirtualClient.Monitors
                 {
                     if (double.TryParse(SafeGet(row, entry.Value.metricDelimiter), out _))
                     {
-                        metrics.Add(new Metric(entry.Key, Convert.ToDouble(SafeGet(row, entry.Value.metricDelimiter)), unit: entry.Value.metricUnit, metadata: metadata));
+                        metrics.Add(new Metric(entry.Key, Convert.ToDouble(SafeGet(row, entry.Value.metricDelimiter)), unit: entry.Value.metricUnit, description: "Nvidia-smi gpu", metadata: metadata));
                     }
                 }
             }
