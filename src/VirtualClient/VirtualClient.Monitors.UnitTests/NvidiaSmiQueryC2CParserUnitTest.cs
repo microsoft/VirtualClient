@@ -28,8 +28,8 @@ namespace VirtualClient.Monitors.UnitTests
             IList<Metric> metrics = testParser.Parse();
 
             Assert.AreEqual(10, metrics.Count); 
-            MetricAssert.Exists(metrics, "C2C Link Speed", 44.712, "GB/s"); 
-            MetricAssert.Exists(metrics, "C2C Link Speed", 44.712, "GB/s"); 
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 0 Speed", 44.712, "GB/s"); 
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 1 Speed", 44.712, "GB/s"); 
         }
     }
 }

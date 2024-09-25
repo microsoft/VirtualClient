@@ -54,7 +54,7 @@ The following section describes the various counters/metrics that are available 
 | ecc.errors.uncorrected.aggregate.dram | Aggregate DRAM Uncorrected ECC Errors. |
 | ecc.errors.uncorrected.aggregate.sram | Aggregate SRAM Uncorrected ECC Errors. |
 | ecc.errors.uncorrected.aggregate.total | Aggregate Total Uncorrected ECC Errors. |
-| link speed | C2C link speed in GB/s. |
+| GPU 0: C2C Link 0 Speed | C2C link speed in GB/s. |
 
 ### Example
 This is an example of the minimum profile to run NvidiaSmiMonitor.

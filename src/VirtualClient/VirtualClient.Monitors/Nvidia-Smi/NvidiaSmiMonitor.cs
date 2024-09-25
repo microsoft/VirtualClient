@@ -70,7 +70,7 @@ namespace VirtualClient.Monitors
 
             // This is the Nvidia smi c2c command
             string command = "nvidia-smi";
-            string c2cCommand = "c2c -s";
+            string c2cCommandArguments = "c2c -s";
 
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
                 .ConfigureAwait(false);
@@ -78,7 +78,7 @@ namespace VirtualClient.Monitors
             try
             {
                 DateTime startTime = DateTime.UtcNow;
-                IProcessProxy process = await this.ExecuteCommandAsync(command, c2cCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true);
+                IProcessProxy process = await this.ExecuteCommandAsync(command, c2cCommandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true);
                 DateTime endTime = DateTime.UtcNow;
 
                 if (!cancellationToken.IsCancellationRequested)
