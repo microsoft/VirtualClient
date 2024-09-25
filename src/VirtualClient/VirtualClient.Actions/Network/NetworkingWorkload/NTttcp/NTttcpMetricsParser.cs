@@ -222,25 +222,25 @@ namespace VirtualClient.Actions
             /// Number of packets sent.
             /// </summary>
             [XmlElement("packets_sent")]
-            public int PacketsSent { get; set; }
+            public long PacketsSent { get; set; }
 
             /// <summary>
             /// Number of packets received.
             /// </summary>
             [XmlElement("packets_received")]
-            public int PacketsReceived { get; set; }
+            public long PacketsReceived { get; set; }
 
             /// <summary>
             /// Number of packets retransmitted.
             /// </summary>
             [XmlElement("packets_retransmitted")]
-            public int PacketsRetransmitted { get; set; }
+            public long PacketsRetransmitted { get; set; }
 
             /// <summary>
             /// Number of errors.
             /// </summary>
             [XmlElement("errors")]
-            public int Errors { get; set; }
+            public long Errors { get; set; }
 
             /// <summary>
             /// The number of logical CPU cores on the system.
@@ -300,7 +300,7 @@ namespace VirtualClient.Actions
             /// The number of processors.
             /// </summary>
             [XmlElement("num_processors")]
-            public int ProcessorCount { get; set; }
+            public long ProcessorCount { get; set; }
 
             /// <summary>
             /// The buffer count.
@@ -312,13 +312,13 @@ namespace VirtualClient.Actions
             /// The length of the buffer.
             /// </summary>
             [XmlElement("bufferLen")]
-            public int BufferLength { get; set; }
+            public long BufferLength { get; set; }
 
             /// <summary>
             /// The IO.
             /// </summary>
             [XmlElement("io")]
-            public int IO { get; set; }
+            public long IO { get; set; }
 
             /// <summary>
             /// Tcp average RTT.
