@@ -29,7 +29,15 @@ namespace VirtualClient.Monitors.UnitTests
 
             Assert.AreEqual(10, metrics.Count); 
             MetricAssert.Exists(metrics, "GPU 0: C2C Link 0 Speed", 44.712, "GB/s"); 
-            MetricAssert.Exists(metrics, "GPU 0: C2C Link 1 Speed", 44.712, "GB/s"); 
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 1 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 2 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 3 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 4 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 5 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 6 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 7 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 8 Speed", 44.712, "GB/s");
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 9 Speed", 44.712, "GB/s");
         }
     }
 }
