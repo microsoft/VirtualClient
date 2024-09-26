@@ -12,7 +12,7 @@
     {
       "Type": "NvidiaSmiMonitor",
       "Parameters": {
-        "Scenario": "CaptureNvidiaGpuCounters",
+        "Scenario": "CaptureNvidiaSmiCounters",
         "MonitorFrequency": "$.Parameters.MonitorFrequency",
         "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
