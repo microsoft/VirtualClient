@@ -118,7 +118,7 @@ namespace VirtualClient.Dependencies
             }
             else if (this.PlatformSpecifics.CpuArchitecture == Architecture.Ppc64le)
             {
-                metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/sbsa/cuda-keyring_1.0-1_all.deb""";
+                metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/ppc64le/cuda-keyring_1.0-1_all.deb""";
             }
 
             string cudaGPGKeyInstallCommand = @"dpkg -i cuda-keyring_1.0-1_all.deb";
