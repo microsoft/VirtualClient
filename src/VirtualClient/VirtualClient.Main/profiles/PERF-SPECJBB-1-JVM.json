@@ -1,0 +1,88 @@
+{
+  "Description": "SPECjbb2015 workload profile for compete",
+  "MinimumExecutionInterval": "00:01:00",
+  "MinimumRequiredExecutionTime": "02:00:00",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "(4-cores)=05:00:00,(16-cores)=03:00:00,(64-cores)=02:00:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "CMN": "-XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:+UseTransparentHugePages -XX:-UseAdaptiveSizePolicy -XX:-UsePerfData",
+    "LogicalProcessors": "{LogicalCoreCount}",
+	"SystemMemoryGB": "{SystemMemoryGigabytes}",
+  	"InitialHeapSizeInGb": "{calculate({SystemMemoryGB} * 7/8 )}",
+  	"MaxHeapSizeInGb": "{calculate({SystemMemoryGB} * 7/8 )}",
+  	"NurserySizeInGb": "{calculate({SystemMemoryGB} * 25/32 )}",
+	"MemoryFlag": "{calculate({SystemMemoryGB} * 7/256 )}",
+  	"WbSaturateCount": "96",
+  	"WbRunnerCount": "10",
+  	"WbTier2Count": "14",
+  	"WbTier3Count": "24",
+	"IsNUMAEnabled": true,
+    "IsARMEnabled": false
+  },
+  "Actions": [
+    {
+  		"Type": "SpecJbbExecutor",
+  		"Parameters": 
+  		{
+  			"Scenario": "ExecuteJavaPerformanceBenchmark",
+			"WbSaturateCount": "$.Parameters.WbSaturateCount",
+  			"WbRunnerCount": "$.Parameters.WbRunnerCount",
+			"SystemMemoryGB": "$.Parameters.SystemMemoryGB",
+  			"WbTier2Count": "$.Parameters.WbTier2Count",
+  			"WbTier3Count": "$.Parameters.WbTier3Count",
+  			"IsNUMAEnabled": "$.Parameters.IsNUMAEnabled",
+  			"IsARMEnabled": "$.Parameters.IsARMEnabled",
+			"MaxHeapSizeInGb": "$.Parameters.MaxHeapSizeInGb",
+  			"NurserySizeInGb": "$.Parameters.NurserySizeInGb",
+			"InitialHeapSizeInGb": "$.Parameters.InitialHeapSizeInGb",
+			"LogicalProcessors": "$.Parameters.LogicalProcessors",
+			"MemoryFlag": "$.Parameters.MemoryFlag",
+			"CMN":  "$.Parameters.CMN",
+  			"NUMA": "{calculate({IsNUMAEnabled} ? \"-XX:+UseNUMA\" : \"-XX:-UseNUMA\" )}",
+			"SpecJbb_ParallelGCThreads": "-XX:ParallelGCThreads={LogicalProcessors}",
+  			"Xms": "-Xms{InitialHeapSizeInGb}G",
+  			"Xmx": "-Xmx{MaxHeapSizeInGb}G",
+  			"Xmn": "-Xmn{NurserySizeInGb}G",
+			"CSML": "-XX:+UseCompressedOops -XX:+UseCompressedClassPointers",
+			"CMID": "-XX:+UseCompressedOops -XX:ObjectAlignmentInBytes=16 -XX:+UseCompressedClassPointers",
+			"CSML_MemoryRelatedFlags": "{calculate(({MemoryFlag} == 0) ? \"{CSML}\" : \"\" )}",
+			"CMID_MemoryRelatedFlags": "{calculate(({MemoryFlag} == 1) ? \"{CMID}\" : \"\" )}",
+			"SpecJbb_forkjoin_Workers": "-Dspecjbb.forkjoin.workers.Tier1={calculate({LogicalProcessors} * 2)}",
+  			"SpecJbb_WbSaturate": "-Dspecjbb.customerDriver.threads.saturate={WbSaturateCount}",
+  			"SpecJbb_WbRunner": "-Dspecjbb.comm.connect.selector.runner.count={WbRunnerCount}",
+  			"SpecJbb_forkjoin_WbTier2": "-Dspecjbb.forkjoin.workers.Tier2={WbTier2Count}",
+  			"SpecJbb_forkjoin_WbTier3": "-Dspecjbb.forkjoin.workers.Tier3={WbTier3Count}",
+			"ARM": "{calculate({IsARMEnabled} ? \"-XX:+AvoidUnalignedAccesses\" : \"\" )}",
+  			"JavaFlags": "{CMN} {NUMA} {SpecJbb_ParallelGCThreads} {Xms} {Xmx} {Xmn} {CSML_MemoryRelatedFlags} {CMID_MemoryRelatedFlags} {SpecJbb_forkjoin_Workers} {SpecJbb_WbSaturate} {SpecJbb_WbRunner} {SpecJbb_forkjoin_WbTier2} {SpecJbb_forkjoin_WbTier3} {ARM}",
+  			"PackageName": "specjbb2015",
+  			"JdkPackageName": "javadevelopmentkit",
+  			"Tags": "Java"
+  		}
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECjbbPackage",
+        "BlobContainer": "packages",
+        "BlobName": "specjbb.2015.0.0.zip",
+        "PackageName": "specjbb2015",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "JDKPackageDependencyInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-17.0.9.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    }
+  ]
+}
