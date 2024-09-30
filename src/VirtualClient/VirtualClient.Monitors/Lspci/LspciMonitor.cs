@@ -71,7 +71,8 @@ namespace VirtualClient.Monitors
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken);
 
             bool firstRun = true;
-            while (!cancellationToken.IsCancellationRequested)
+            int iteration = 0;
+            while (!cancellationToken.IsCancellationRequested && iteration < this.MonitorIterations)
             {
                 string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
                 string commandArguments = "-vvv";
@@ -129,6 +130,8 @@ namespace VirtualClient.Monitors
                             }
                         }
                     }
+
+                    iteration++;
                 }
                 catch (OperationCanceledException)
                 {
