@@ -7,8 +7,8 @@
     },
     "Parameters": {
         "Level": "4",
-        "Username": "null",
-        "LinuxCudaVersion": "11.6"
+        "Username": "",
+        "LinuxCudaVersion": "12.4"
     },
     "Actions": [
         {
