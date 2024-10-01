@@ -27,7 +27,7 @@ namespace VirtualClient
         /// <summary>
         /// Asserts the metric exists in the given list of results
         /// </summary>
-        public static void Exists(IList<Metric> results, string expectedMetric, double expectedMetricValue, string expectedMetricUnit = null, List<string> expectedTags = null)
+        public static void Exists(IList<Metric> results, string expectedMetric, double? expectedMetricValue, string expectedMetricUnit = null, List<string> expectedTags = null)
         {
             List<Metric> matchingMetrics = results.Where(m => m.Name == expectedMetric).ToList();
 
