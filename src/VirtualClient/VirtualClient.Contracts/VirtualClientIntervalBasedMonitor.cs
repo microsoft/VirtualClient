@@ -71,13 +71,14 @@ namespace VirtualClient.Contracts
 
         /// <summary>
         /// The number of iterations with which this monitor runs
+        /// Default is set to -1 for infinite loop.
         /// </summary>
         public long MonitorIterations
         {
             get
             {
                 return this.Parameters.GetValue<long>(
-                    nameof(VirtualClientIntervalBasedMonitor.MonitorIterations));
+                    nameof(VirtualClientIntervalBasedMonitor.MonitorIterations), -1);
             }
         }
     }
