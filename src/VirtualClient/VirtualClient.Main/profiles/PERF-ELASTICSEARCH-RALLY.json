@@ -1,0 +1,71 @@
+{
+    "Description": "Rally Elasticsearch Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DiskFilter": "osdisk:false&biggestsize"
+    },
+    "Actions": [
+        {
+            "Type": "RallyServerExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteRallyBenchmark",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "esrally",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "RallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteRallyBenchmark",
+                "TrackName": "geonames",
+                "DistributionVersion": "8.0.0",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "esrally",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3,python3-pip,git,pbzip2,python3.10-venv"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadRallyPackage",
+                "BlobContainer": "packages",
+                "BlobName": "esrally-2.11.0.rev0.zip",
+                "PackageName": "esrally",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}
