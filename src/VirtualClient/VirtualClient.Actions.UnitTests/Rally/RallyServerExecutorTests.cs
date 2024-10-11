@@ -7,7 +7,6 @@ namespace VirtualClient.Actions
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using Polly;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -18,10 +17,8 @@ namespace VirtualClient.Actions
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using static VirtualClient.Actions.RallyServerExecutor;
