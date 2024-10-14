@@ -124,6 +124,10 @@ stages:
     container: pmc-cli
 
     steps:
+    - task: CmdLine@2
+      inputs:
+        script: 'apt install python3-pip -y'
+
     - task: PipAuthenticate@1
       inputs:
         artifactFeeds: 'CRC-Dev'
@@ -478,6 +482,10 @@ stages:
     container: pmc-cli
 
     steps:
+    - task: CmdLine@2
+      inputs:
+        script: 'apt install python3-pip -y'
+
     - task: PipAuthenticate@1
       inputs:
         artifactFeeds: 'CRC-Dev'
