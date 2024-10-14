@@ -13,7 +13,6 @@ resources:
   containers:
   - container: pmc-cli
     image: 'mcr.microsoft.com/pmc/pmc-cli:latest'
-    options: --entrypoint=""
 
 variables:
   VcVersion : 1.0.0
