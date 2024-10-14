@@ -124,13 +124,6 @@ stages:
     container: pmc-cli
 
     steps:
-    - script: 'apt-get install python3-pip -y'
-
-    - task: PipAuthenticate@1
-      inputs:
-        artifactFeeds: 'CRC-Dev'
-    - script: pip install pmc-cli
-    
     - download: current
       artifact: drop
 
@@ -480,13 +473,6 @@ stages:
     container: pmc-cli
 
     steps:
-    - script: 'apt-get install python3-pip -y'
-
-    - task: PipAuthenticate@1
-      inputs:
-        artifactFeeds: 'CRC-Dev'
-    - script: pip install pmc-cli
-    
     - download: current
       artifact: drop
 
