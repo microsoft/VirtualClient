@@ -124,6 +124,27 @@ stages:
     container: pmc-cli
 
     steps:
+    - task: AzureCLI@2
+      inputs:
+        addSpnToEnvironment: true
+        azureSubscription: 'virtualclient-esrp-ame'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+            pmc --base-url "https://pmc-ingest.trafficmanager.net/api/v4" repo list --limit 1
+            # --base-url "https://tux-ingest.corp.trafficmanager.net/api/v4" if tux-dev
+
+    - task: AzureCLI@2
+      inputs:
+        addSpnToEnvironment: true
+        azureSubscription: 'virtualclient-esrp-ame'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+            echo "##vso[task.setvariable variable=idToken;issecret=true]$idToken"
+            echo "##vso[task.setvariable variable=tenantId]$tenantId"
+            echo "##vso[task.setvariable variable=servicePrincipalId]$servicePrincipalId"
+
     - download: current
       artifact: drop
 
@@ -144,20 +165,22 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Amazon Linux 2023 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-amazonlinux2023-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Amazon Linux 2 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-amazonlinux2-prod-yum'
 
@@ -167,20 +190,22 @@ stages:
       displayName: 'AzLinux 3.0 rpm publish x64'
       enabled: false
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'azurelinux-3.0-prod-base-x86_64-yum'
     - task: PublishLinuxPackagesPMC@0
       displayName: 'AzLinux 3.0 rpm publish aarch64'
       enabled: false
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'azurelinux-3.0-prod-base-aarch64-yum'
 
@@ -188,10 +213,11 @@ stages:
       displayName: 'Mariner 2.0 rpm publish x64'
       enabled: false
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-2.0-prod-Microsoft-x86_64-yum'
       
@@ -199,10 +225,11 @@ stages:
       displayName: 'Mariner 2.0 rpm publish aarch64'
       enabled: false
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-2.0-prod-Microsoft-aarch64-yum'
     
@@ -210,10 +237,11 @@ stages:
       displayName: 'Mariner 1.0 rpm publish'
       enabled: false
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-1.0-prod-Microsoft-aarch64-rpms-yum'
         
@@ -221,10 +249,11 @@ stages:
       displayName: 'Mariner 1.0 rpm publish'
       enabled: false
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-1.0-prod-Microsoft-x86_64-rpms-yum'
 
@@ -232,20 +261,22 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'CentOS 7 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-centos7-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'CentOS 6 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-centos6-prod-yum'
 
@@ -253,30 +284,33 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Fedora 39 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-fedora39-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Fedora 38 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-fedora38-prod-yum'
         
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Fedora 37 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-fedora37-prod-yum'
    
@@ -284,30 +318,33 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'OpenSUSE 15 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-opensuse15-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'OpenSUSE 42.2 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-opensuse42.2-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'OpenSUSE 42.3 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-opensuse42.3-prod-yum'
 
@@ -315,120 +352,132 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 9.0 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel9.0-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 8.2 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel8.2-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 8.1 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel8.1-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 8.0 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel8.0-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.9 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.9-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.8 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.8-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.5 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.5-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.4 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.4-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.3 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.3-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.2 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.2-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 7.1 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.1-prod-yum'
         
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Red Hat 6.9 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel6.9-prod-yum'
 
@@ -437,30 +486,33 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'SLES 15 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-sles15-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'SLES 12 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-sles12-prod-yum'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'SLES 11 rpm publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-sles11-prod-yum'
 
@@ -493,10 +545,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Debian 12.0 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-bookworm-prod-apt'
         release: 'bookworm'
@@ -504,10 +557,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Debian 11.0 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-bullseye-prod-apt'
         release: 'bullseye'
@@ -515,10 +569,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Debian 10.0 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-buster-prod-apt'
         release: 'buster'
@@ -526,10 +581,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Debian 8.0 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-jessie-prod-apt'
         release: 'jessie'      
@@ -537,10 +593,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Debian 9.0 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-stretch-prod-apt'
         release: 'stretch'    
@@ -549,10 +606,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 17.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-artful-prod-apt'
         release: 'artful'
@@ -560,10 +618,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 18.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-bionic-prod-apt'
         release: 'bionic'
@@ -571,10 +630,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 18.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-cosmic-prod-apt'
         release: 'cosmic'
@@ -582,10 +642,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 19.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-disco-prod-apt'
         release: 'disco'
@@ -593,10 +654,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 19.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-eoan-prod-apt'
         release: 'eoan'
@@ -604,10 +666,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 20.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-focal-prod-apt'
         release: 'focal'
@@ -615,10 +678,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 20.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-groovy-prod-apt'
         release: 'groovy'
@@ -626,10 +690,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 21.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-hirsute-prod-apt'
         release: 'hirsute'
@@ -637,10 +702,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 21.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-impish-prod-apt'
         release: 'impish'
@@ -648,10 +714,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 22.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-jammy-prod-apt'
         release: 'jammy'
@@ -659,10 +726,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 22.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-kinetic-prod-apt'
         release: 'kinetic'
@@ -670,10 +738,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 23.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-lunar-prod-apt'
         release: 'lunar'
@@ -681,10 +750,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 14.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-trusty-prod-apt'
         release: 'trusty'
@@ -692,10 +762,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 15.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-wily-prod-apt'
         release: 'wily'
@@ -703,10 +774,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 16.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-xenial-prod-apt'
         release: 'xenial'
@@ -714,10 +786,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 16.10 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-yakkety-prod-apt'
         release: 'yakkety'
@@ -725,10 +798,11 @@ stages:
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 17.04 deb publish'
       inputs:
-        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
-        msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-crc-principal)
-        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        profile: 'prod' # or 'tuxdev'
+        authType: 'token'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-zesty-prod-apt'
         release: 'zesty'
