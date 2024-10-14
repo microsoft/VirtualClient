@@ -141,8 +141,8 @@ stages:
     - task: AzureKeyVault@2
       inputs:
         ConnectedServiceName: 'virtualclient-esrp-ame'
-        KeyVaultName: 'junoprod01vault01'
-        SecretsFilter: 'virtualclient'
+        KeyVaultName: 'virtualclient-vault'
+        SecretsFilter: 'virtualclient-crc-principal'
         RunAsPreJob: true
         
     # Amazon Linux
@@ -151,7 +151,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-amazonlinux2023-prod-yum'
@@ -161,7 +161,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-amazonlinux2-prod-yum'
@@ -169,12 +169,33 @@ stages:
 
     # AzLinux
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'AzLinux 3.0 rpm publish x64'
+      enabled: false
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient-crc-principal)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'azurelinux-3.0-prod-base-x86_64-yum'
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'AzLinux 3.0 rpm publish aarch64'
+      enabled: false
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient-crc-principal)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'azurelinux-3.0-prod-base-aarch64-yum'
+
+    - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish x64'
       enabled: false
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-2.0-prod-Microsoft-x86_64-yum'
@@ -185,7 +206,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-2.0-prod-Microsoft-aarch64-yum'
@@ -196,7 +217,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-1.0-prod-Microsoft-aarch64-rpms-yum'
@@ -207,7 +228,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'cbl-mariner-1.0-prod-Microsoft-x86_64-rpms-yum'
@@ -218,7 +239,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-centos7-prod-yum'
@@ -228,7 +249,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-centos6-prod-yum'
@@ -239,7 +260,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-fedora39-prod-yum'
@@ -249,7 +270,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-fedora38-prod-yum'
@@ -259,7 +280,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-fedora37-prod-yum'
@@ -270,7 +291,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-opensuse15-prod-yum'
@@ -280,7 +301,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-opensuse42.2-prod-yum'
@@ -290,7 +311,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-opensuse42.3-prod-yum'
@@ -301,7 +322,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel9.0-prod-yum'
@@ -311,7 +332,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel8.2-prod-yum'
@@ -321,7 +342,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel8.1-prod-yum'
@@ -331,7 +352,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel8.0-prod-yum'
@@ -341,7 +362,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.9-prod-yum'
@@ -351,7 +372,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.8-prod-yum'
@@ -361,7 +382,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.5-prod-yum'
@@ -371,7 +392,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.4-prod-yum'
@@ -381,7 +402,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.3-prod-yum'
@@ -391,7 +412,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.2-prod-yum'
@@ -401,7 +422,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel7.1-prod-yum'
@@ -411,7 +432,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-rhel6.9-prod-yum'
@@ -423,7 +444,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-sles15-prod-yum'
@@ -433,7 +454,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-sles12-prod-yum'
@@ -443,7 +464,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'microsoft-sles11-prod-yum'
@@ -474,8 +495,8 @@ stages:
     - task: AzureKeyVault@2
       inputs:
         ConnectedServiceName: 'virtualclient-esrp-ame'
-        KeyVaultName: 'junoprod01vault01'
-        SecretsFilter: 'virtualclient'
+        KeyVaultName: 'virtualclient-vault'
+        SecretsFilter: 'virtualclient-crc-principal'
         RunAsPreJob: true
         
     # Debian
@@ -484,7 +505,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-bookworm-prod-apt'
@@ -495,7 +516,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-bullseye-prod-apt'
@@ -506,7 +527,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-buster-prod-apt'
@@ -517,7 +538,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-jessie-prod-apt'
@@ -528,7 +549,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-stretch-prod-apt'
@@ -540,7 +561,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-artful-prod-apt'
@@ -551,7 +572,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-bionic-prod-apt'
@@ -562,7 +583,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-cosmic-prod-apt'
@@ -573,7 +594,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-disco-prod-apt'
@@ -584,7 +605,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-eoan-prod-apt'
@@ -595,7 +616,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-focal-prod-apt'
@@ -606,7 +627,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-groovy-prod-apt'
@@ -617,7 +638,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-hirsute-prod-apt'
@@ -628,7 +649,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-impish-prod-apt'
@@ -639,7 +660,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-jammy-prod-apt'
@@ -650,7 +671,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-kinetic-prod-apt'
@@ -661,7 +682,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-lunar-prod-apt'
@@ -672,7 +693,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-trusty-prod-apt'
@@ -683,7 +704,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-wily-prod-apt'
@@ -694,7 +715,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-xenial-prod-apt'
@@ -705,7 +726,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-yakkety-prod-apt'
@@ -716,7 +737,7 @@ stages:
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-crc-principal)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-zesty-prod-apt'
