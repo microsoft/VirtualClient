@@ -85,10 +85,15 @@ stages:
           **/RPMS/**/*.rpm
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-    - task: EsrpCodeSigning@1
+    - task: EsrpCodeSigning@5
       condition: and(succeeded(), eq(variables['CODE_SIGNING'], true))
       inputs:
-        ConnectedServiceName: 'virtualclient-esrp'
+        ConnectedServiceName: 'virtualclient-esrp-ame'
+        AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
+        AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+        AuthAKVName: 'virtualclient-vault-esrp'
+        AuthCertName: 'virtualclient-esrp-cert-auth'
+        AuthSignCertName: 'virtualclient-esrp-cert-sign'
         FolderPath: '$(Build.ArtifactStagingDirectory)'
         Pattern: '*.deb,*.rpm'
         signConfigType: 'inlineSignParams'
@@ -135,7 +140,7 @@ stages:
 
     - task: AzureKeyVault@2
       inputs:
-        ConnectedServiceName: 'VirtualClient-AzureRM-AME'
+        ConnectedServiceName: 'virtualclient-esrp-ame'
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient'
         RunAsPreJob: true
@@ -468,7 +473,7 @@ stages:
 
     - task: AzureKeyVault@2
       inputs:
-        ConnectedServiceName: 'VirtualClient-AzureRM-AME'
+        ConnectedServiceName: 'virtualclient-esrp-ame'
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient'
         RunAsPreJob: true
