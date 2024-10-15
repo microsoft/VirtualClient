@@ -41,7 +41,7 @@ stages:
       continueOnError: false
       inputs:
         packageType: 'sdk'
-        version: '8.0.101'
+        version: '8.*'
         useGlobalJson: false
         performMultiLevelLookup: true
         workingDirectory: '$(Build.SourcesDirectory)'
@@ -133,7 +133,8 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-            pmc --base-url "https://pmc-ingest.trafficmanager.net/api/v4" repo list --limit 1
+            export idToken=$(az account get-access-token --resource 'api://d48bb382-20ec-41b9-a0ea-07758a21ccd0' --query accessToken --output tsv)
+            echo "##vso[task.setvariable variable=idToken;issecret=true]$idToken"
 
     - task: AzureCLI@2
       inputs:
