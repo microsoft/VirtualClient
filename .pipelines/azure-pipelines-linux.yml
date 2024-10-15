@@ -131,8 +131,7 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-            pmc --base-url "https://pmc-ingest.trafficmanager.net/api/v4" repo list --limit 1
-            # --base-url "https://tux-ingest.corp.trafficmanager.net/api/v4" if tux-dev
+            pmc --base-url "https://pmc-ingest.trafficmanager.net/api/v4" repo list --limit 1 --auth-type token --client-id cc6b4c30-84b7-457a-b280-79683f2dff33
 
     - task: AzureCLI@2
       inputs:
@@ -525,9 +524,28 @@ stages:
     container: pmc-cli
 
     steps:
+    - task: AzureCLI@2
+      inputs:
+        addSpnToEnvironment: true
+        azureSubscription: 'virtualclient-esrp-ame'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+            pmc --base-url "https://pmc-ingest.trafficmanager.net/api/v4" repo list --limit 1 --auth-type token --client-id cc6b4c30-84b7-457a-b280-79683f2dff33
+
+    - task: AzureCLI@2
+      inputs:
+        addSpnToEnvironment: true
+        azureSubscription: 'virtualclient-esrp-ame'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+            echo "##vso[task.setvariable variable=idToken;issecret=true]$idToken"
+            echo "##vso[task.setvariable variable=tenantId]$tenantId"
+            echo "##vso[task.setvariable variable=servicePrincipalId]$servicePrincipalId"
+
     - download: current
       artifact: drop
-
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(Agent.BuildDirectory)/drop/'
