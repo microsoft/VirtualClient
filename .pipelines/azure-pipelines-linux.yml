@@ -20,7 +20,7 @@ variables:
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
-  PMC_CLI_AUTH_TYPE: 'token'
+  PMC_CLI_AUTH_TYPE: 'wif'
   PMC_CLI_CLIENT_ID: 'cc6b4c30-84b7-457a-b280-79683f2dff33'
 
 stages:
@@ -168,7 +168,7 @@ stages:
       displayName: 'Amazon Linux 2023 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -179,7 +179,7 @@ stages:
       displayName: 'Amazon Linux 2 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -193,7 +193,7 @@ stages:
       enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -204,7 +204,7 @@ stages:
       enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -216,7 +216,7 @@ stages:
       enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -228,7 +228,7 @@ stages:
       enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -240,7 +240,7 @@ stages:
       enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -252,7 +252,7 @@ stages:
       enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -264,7 +264,7 @@ stages:
       displayName: 'CentOS 7 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -275,7 +275,7 @@ stages:
       displayName: 'CentOS 6 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -287,7 +287,7 @@ stages:
       displayName: 'Fedora 39 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -298,7 +298,7 @@ stages:
       displayName: 'Fedora 38 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -309,7 +309,7 @@ stages:
       displayName: 'Fedora 37 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -321,7 +321,7 @@ stages:
       displayName: 'OpenSUSE 15 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -332,7 +332,7 @@ stages:
       displayName: 'OpenSUSE 42.2 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -343,7 +343,7 @@ stages:
       displayName: 'OpenSUSE 42.3 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -355,7 +355,7 @@ stages:
       displayName: 'Red Hat 9.0 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -366,7 +366,7 @@ stages:
       displayName: 'Red Hat 8.2 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -377,7 +377,7 @@ stages:
       displayName: 'Red Hat 8.1 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -388,7 +388,7 @@ stages:
       displayName: 'Red Hat 8.0 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -399,7 +399,7 @@ stages:
       displayName: 'Red Hat 7.9 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -410,7 +410,7 @@ stages:
       displayName: 'Red Hat 7.8 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -421,7 +421,7 @@ stages:
       displayName: 'Red Hat 7.5 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -432,7 +432,7 @@ stages:
       displayName: 'Red Hat 7.4 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -443,7 +443,7 @@ stages:
       displayName: 'Red Hat 7.3 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -454,7 +454,7 @@ stages:
       displayName: 'Red Hat 7.2 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -465,7 +465,7 @@ stages:
       displayName: 'Red Hat 7.1 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -476,7 +476,7 @@ stages:
       displayName: 'Red Hat 6.9 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -489,7 +489,7 @@ stages:
       displayName: 'SLES 15 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -500,7 +500,7 @@ stages:
       displayName: 'SLES 12 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -511,7 +511,7 @@ stages:
       displayName: 'SLES 11 rpm publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -568,7 +568,7 @@ stages:
       displayName: 'Debian 12.0 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -580,7 +580,7 @@ stages:
       displayName: 'Debian 11.0 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -592,7 +592,7 @@ stages:
       displayName: 'Debian 10.0 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -604,7 +604,7 @@ stages:
       displayName: 'Debian 8.0 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -616,7 +616,7 @@ stages:
       displayName: 'Debian 9.0 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -629,7 +629,7 @@ stages:
       displayName: 'Ubuntu 17.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -641,7 +641,7 @@ stages:
       displayName: 'Ubuntu 18.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -653,7 +653,7 @@ stages:
       displayName: 'Ubuntu 18.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -665,7 +665,7 @@ stages:
       displayName: 'Ubuntu 19.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -677,7 +677,7 @@ stages:
       displayName: 'Ubuntu 19.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -689,7 +689,7 @@ stages:
       displayName: 'Ubuntu 20.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -701,7 +701,7 @@ stages:
       displayName: 'Ubuntu 20.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -713,7 +713,7 @@ stages:
       displayName: 'Ubuntu 21.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -725,7 +725,7 @@ stages:
       displayName: 'Ubuntu 21.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -737,7 +737,7 @@ stages:
       displayName: 'Ubuntu 22.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -749,7 +749,7 @@ stages:
       displayName: 'Ubuntu 22.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -761,7 +761,7 @@ stages:
       displayName: 'Ubuntu 23.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -773,7 +773,7 @@ stages:
       displayName: 'Ubuntu 14.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -785,7 +785,7 @@ stages:
       displayName: 'Ubuntu 15.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -797,7 +797,7 @@ stages:
       displayName: 'Ubuntu 16.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -809,7 +809,7 @@ stages:
       displayName: 'Ubuntu 16.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
@@ -821,7 +821,7 @@ stages:
       displayName: 'Ubuntu 17.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
-        authType: 'token'
+        authType: 'wif'
         auth_token: $(idToken) # no quotations
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
