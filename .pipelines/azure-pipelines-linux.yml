@@ -41,7 +41,7 @@ stages:
       continueOnError: false
       inputs:
         packageType: 'sdk'
-        version: '8.*'
+        version: '8.x'
         useGlobalJson: false
         performMultiLevelLookup: true
         workingDirectory: '$(Build.SourcesDirectory)'
