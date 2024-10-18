@@ -176,6 +176,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public string Action
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
+                return action?.ToString();
+                // return this.Parameters.GetValue<string>(nameof(this.Action), null);
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
@@ -299,7 +312,10 @@ namespace VirtualClient.Actions
             DependencyPath package = await this.GetPackageAsync(this.PackageName, cancellationToken);
             this.SysbenchPackagePath = package.Path;
 
-            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+            if (this.Action != ClientAction.TruncateDatabase)
+            {
+                await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+            }
 
             this.InitializeApiClients(telemetryContext, cancellationToken);
 
@@ -459,6 +475,27 @@ namespace VirtualClient.Actions
         {
             public const string OLTP = nameof(OLTP);
             public const string TPCC = nameof(TPCC);
+        }
+
+        /// <summary>
+        /// Supported Sysbench Client actions.
+        /// </summary>
+        internal class ClientAction
+        {
+            /// <summary>
+            /// Creates Database on MySQL server and Users on Server and any Clients.
+            /// </summary>
+            public const string PopulateDatabase = nameof(PopulateDatabase);
+
+            /// <summary>
+            /// Truncates all tables existing in database
+            /// </summary>
+            public const string TruncateDatabase = nameof(TruncateDatabase);
+
+            /// <summary>
+            /// Truncates all tables existing in database
+            /// </summary>
+            public const string RunWorkload = nameof(RunWorkload);
         }
     }
 }
