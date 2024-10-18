@@ -5,6 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +34,17 @@ namespace VirtualClient.Actions
         {
             this.stateManager = this.Dependencies.GetService<IStateManager>();
         }
+
+/*        /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public string WaitForServer
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.WaitForServer));
+            }
+        }*/
 
         /// <summary>
         /// Executes the workload.
@@ -81,6 +95,13 @@ namespace VirtualClient.Actions
 
             this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
 
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
+                string serverIp = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
+                this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
+            }
+
             string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
@@ -123,6 +144,20 @@ namespace VirtualClient.Actions
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
+        }
+
+        private string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
+                serverIPAddress = serverIP.ToString();
+            }
+
+            return serverIPAddress;
         }
     }
 }

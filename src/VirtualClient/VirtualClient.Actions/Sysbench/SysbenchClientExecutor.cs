@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using System.Net;
     using System.Net.Http;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -25,8 +26,11 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchClientExecutor : SysbenchExecutor
     {
+        private const string PythonCommand = "python3";
         private string sysbenchExecutionArguments;
         private string sysbenchLoggingArguments;
+        private string sysbenchPrepareArguments;
+        private string packageDirectory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchClientExecutor"/> class.
@@ -169,7 +173,24 @@ namespace VirtualClient.Actions
                 {
                     if (this.Benchmark == BenchmarkName.OLTP)
                     {
-                        await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
+                        if (this.Action == ClientAction.TruncateDatabase)
+                        {
+                            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+                            workloadPackage.ThrowIfNull(this.PackageName);
+
+                            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+                            this.packageDirectory = package.Path;
+
+                            await this.TruncateMySQLDatabaseAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        }
+                        else if (this.Action == ClientAction.PopulateDatabase)
+                        {
+                            await this.PrepareOLTPMySQLDatabase(telemetryContext, cancellationToken);
+                        }
+                        else
+                        {
+                            await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
+                        }
                     }
                     else if (this.Benchmark == BenchmarkName.TPCC)
                     {
@@ -241,6 +262,79 @@ namespace VirtualClient.Actions
                     this.CaptureMetrics(process, telemetryContext, cancellationToken);
                 }
             }
+        }
+
+        private async Task TruncateMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string arguments = $"{this.packageDirectory}/truncate-tables.py --dbName {this.DatabaseName}";
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
+                string serverIps = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
+                arguments += $" --clientIps \"{serverIps}\"";
+            }
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                PythonCommand,
+                arguments,
+                Environment.CurrentDirectory,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+                }
+            }
+        }
+
+        private async Task PrepareOLTPMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+
+            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
+                string serverIp = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
+                this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
+            }
+
+            string command = $"python3";
+            string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                command,
+                arguments + this.sysbenchPrepareArguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
+        }
+
+        private string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
+                serverIPAddress = serverIP.ToString();
+            }
+
+            return serverIPAddress;
         }
     }
 }
