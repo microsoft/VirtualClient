@@ -1,0 +1,220 @@
+{
+    "Description": "Sysbench OLTP MySQL Database Server Performance Workload for compete",
+    "MinimumExecutionInterval": "00:01:00",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "04:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DatabaseName": "sbtest",
+        "DatabaseScenario": "Configure", // should use Configure for configuration of below variables
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "Duration": "00:05:00",
+        "RecordCount": 40000000, //--table-size
+        "TableCount": 40, //default value to be updated
+        "Threads": "{LogicalCoreCount}"
+    },
+    "Actions": [
+        {
+            "Type": "SysbenchServerExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteServer",
+                "PackageName": "sysbench",
+                "Threads": "$.Parameters.Threads",
+                "RecordCount": "$.Parameters.RecordCount",
+                "TableCount": "$.Parameters.TableCount",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "TruncateMySQLDatabaseTables", // or may be drop all the tables in database. // do not drop all tables, just clean up rows from the tables preserving schema on different disks( from dependencies).
+                "Action": "TruncateDatabase",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                // "WaitForServer": true,
+                "PackageName": "mysql-server",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor", //This is the exact place where complete database is getting created with many records/rows. This has to be moved to actions.
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "Action": "PopulateDatabase",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Threads": "$.Parameters.Threads",
+                "RecordCount": "$.Parameters.RecordCount",
+                "TableCount": "$.Parameters.TableCount",
+                // "WaitForServer": true,
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_read_write",
+                "Action": "RunWorkload",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_read_write",
+                "PackageName": "sysbench",
+                "Threads": "$.Parameters.Threads",
+                "RecordCount": "$.Parameters.RecordCount",
+                "TableCount": "$.Parameters.TableCount",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "TruncateMySQLDatabaseTables",
+                "Action": "TruncateDatabase",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "WaitExecutor",
+            "Parameters": {
+                "Scenario": "WaitForTimeProvided",
+                "Duration": "00:02:00"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "MountLocation": "Root",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadMySqlServerPackage",
+                "BlobContainer": "packages",
+                "BlobName": "mysql-server-8.0.36-v1.zip", //updated version with addition of the truncate.py file
+                "PackageName": "mysql-server",
+                "Extract": true
+                // "Role": "Server" let's install it both on server and client for truncating tables.
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadSysbenchPackage",
+                "BlobContainer": "packages",
+                "BlobName": "sysbench-1.0.20.rev2.zip", // updated version with change in populate-database.py file
+                "PackageName": "sysbench",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "MySQLServerInstallation",
+            "Parameters": {
+                "Scenario": "InstallMySQLServer",
+                "Action": "InstallServer",
+                "Benchmark": "OLTP",
+                "PackageName": "mysql-server"
+                // "Role": "Server"  //needs to be installed at client side too for truncating tables.
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureMySQLServer",
+                "Action": "ConfigureServer",
+                "Benchmark": "OLTP",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "CreateMySQLDatabase",
+                "Action": "CreateDatabase",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "SetMySQLGlobalVariables",
+                "Action": "SetGlobalVariables",
+                "Benchmark": "OLTP",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration", // Need not move because here actual database is not getting created. It's just creating all tables and after this next step distributes the data in different disks based on disk filters. 
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "RecordCount": 1,
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Threads": "$.Parameters.Threads",
+                "TableCount": "$.Parameters.TableCount",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "DistributeMySQLDatabase",
+                "Action": "DistributeDatabase",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}
