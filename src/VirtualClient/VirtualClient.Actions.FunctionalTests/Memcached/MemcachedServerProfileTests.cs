@@ -63,8 +63,9 @@ namespace VirtualClient.Actions
         [TestCase("PERF-MEMCACHED.json")]
         public async Task MemcachedMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetLoggedInUserName())
-                            .Returns("mockuser");
+            this.mockFixture.PlatformSpecifics.EnvironmentVariables.Add(
+                EnvironmentVariable.SUDO_USER, 
+                "mockuser");
 
             IEnumerable<string> expectedCommands = new List<string>
             {

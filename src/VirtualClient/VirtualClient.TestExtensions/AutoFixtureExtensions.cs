@@ -9,6 +9,7 @@ namespace VirtualClient.TestExtensions
     using System.Security;
     using System.Security.Cryptography.X509Certificates;
     using AutoFixture;
+    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Extension methods for <see cref="Fixture"/> instances and for general
@@ -57,36 +58,17 @@ namespace VirtualClient.TestExtensions
             if (withPrivateKey)
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate.private")),
-                    AutoFixtureExtensions.CertificatePass(),
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")),
+                    string.Empty.ToSecureString(),
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate.private")));
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")));
             }
 
             return certificate;
-        }
-
-        /// <summary>
-        /// Returns the "secret" word for the test PFX certificate.  Note that this certificate is used
-        /// nowhere other than for testing.  It can be used to do nothing at all. In order to verify certain
-        /// certificate operations, the full PFX is required containing the private key. In order to export the
-        /// certificate with the private key the "secret" word is required.
-        /// </summary>
-        /// <returns></returns>
-        private static SecureString CertificatePass()
-        {
-            byte[] wordChars = new byte[] { 115, 101, 99, 114, 101, 116 };
-            SecureString word = new SecureString();
-            foreach (byte wordChar in wordChars)
-            {
-                word.AppendChar((char)wordChar);
-            }
-
-            return word;
         }
     }
 }
