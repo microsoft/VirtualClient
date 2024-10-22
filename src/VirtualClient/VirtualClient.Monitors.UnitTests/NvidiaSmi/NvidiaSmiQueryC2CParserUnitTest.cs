@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Monitors.UnitTests
+namespace VirtualClient.Monitors
 {
     using NUnit.Framework;
     using System;
@@ -27,8 +27,8 @@ namespace VirtualClient.Monitors.UnitTests
             NvidiaSmiC2CParser testParser = new NvidiaSmiC2CParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
-            Assert.AreEqual(10, metrics.Count); 
-            MetricAssert.Exists(metrics, "GPU 0: C2C Link 0 Speed", 44.712, "GB/s"); 
+            Assert.AreEqual(10, metrics.Count);
+            MetricAssert.Exists(metrics, "GPU 0: C2C Link 0 Speed", 44.712, "GB/s");
             MetricAssert.Exists(metrics, "GPU 0: C2C Link 1 Speed", 44.712, "GB/s");
             MetricAssert.Exists(metrics, "GPU 0: C2C Link 2 Speed", 44.712, "GB/s");
             MetricAssert.Exists(metrics, "GPU 0: C2C Link 3 Speed", 44.712, "GB/s");
