@@ -23,7 +23,7 @@ namespace VirtualClient.Dependencies
     /// Provides functionality for installing latest version of Redis from Apt package manager on specific OS distribution version.
     /// </summary>
     [SupportedPlatforms("linux-arm64,linux-x64")]
-    public class RedisPackageInstallation : VirtualClientComponent
+    public class MemtierPackageInstallation : VirtualClientComponent
     {
         private IFileSystem fileSystem;
         private ISystemManagement systemManager;
@@ -32,11 +32,11 @@ namespace VirtualClient.Dependencies
         private IStateManager stateManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RedisPackageInstallation"/> class.
+        /// Initializes a new instance of the <see cref="MemtierPackageInstallation"/> class.
         /// </summary>
         /// <param name="dependencies">An enumeration of dependencies that can be used for dependency injection.</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
-        public RedisPackageInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public MemtierPackageInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
@@ -53,12 +53,12 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(RedisPackageInstallation.Version), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(MemtierPackageInstallation.Version), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(RedisPackageInstallation.Version)] = value;
+                this.Parameters[nameof(MemtierPackageInstallation.Version)] = value;
             }
         }
 
@@ -89,8 +89,6 @@ namespace VirtualClient.Dependencies
             if (this.Platform == PlatformID.Unix)
             {
                 LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
-                this.Logger.LogMessage($"Print Distro Info:{distroInfo}", telemetryContext);
-                this.Logger.LogMessage($"Print LinuxDistribution:{distroInfo.LinuxDistribution}", telemetryContext);
 
                 switch (distroInfo.LinuxDistribution)
                 {
@@ -132,23 +130,29 @@ namespace VirtualClient.Dependencies
         {
             if (this.Version != string.Empty)
             {
-                this.installRedisCommand = $"install redis={this.Version} -y";
+                this.installRedisCommand = $"install memtier-benchmark={this.Version} -y";
             }
             else
             {
-                this.installRedisCommand = $"install redis -y";
+                this.installRedisCommand = $"install memtier-benchmark -y";
 
             }
 
+            await this.ExecuteCommandAsync("apt", "install lsb-release curl gpg", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync("curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync("echo \"deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main\" | sudo tee /etc/apt/sources.list.d/redis.list", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
             await this.ExecuteCommandAsync("apt", "update", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
             await this.ExecuteCommandAsync("apt", this.installRedisCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
             this.fileSystem.Directory.CreateDirectory(this.PackagePath);
-            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.PackagePath, "src"));
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.PackagePath, "memtier_benchmark"));
 
-            await this.ExecuteCommandAsync("cp", $"/usr/bin/redis-server {this.PlatformSpecifics.Combine(this.PackagePath, "src")}", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+            await this.ExecuteCommandAsync("cp", $"/usr/bin/memtier_benchmark {this.PlatformSpecifics.Combine(this.PackagePath, "memtier_benchmark")}", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
             DependencyPath redisPackage = new DependencyPath(this.PackageName, this.PackagePath);
