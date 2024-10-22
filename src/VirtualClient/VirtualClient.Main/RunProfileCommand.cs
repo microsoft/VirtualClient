@@ -856,6 +856,7 @@ namespace VirtualClient
             ConsoleLogger.Default.LogMessage($"Experiment ID: {this.ExperimentId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Agent ID: {this.AgentId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Log To File: {VirtualClientComponent.LogToFile}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {

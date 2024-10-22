@@ -24,7 +24,7 @@ namespace VirtualClient
             Mock<ILogger> loggerExpected = new Mock<ILogger>();
 
             // Setup this logger/logger provider to handle events that are the expected LogType.
-            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraceEvents());
+            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraces());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
             logger.Log(LogLevel.Information, new EventId((int)LogType.Undefined, "AnyName"), "AnyState", null, null);
@@ -41,7 +41,7 @@ namespace VirtualClient
             Mock<ILogger> loggerExpected = new Mock<ILogger>();
 
             // Setup this logger/logger provider to handle events that are the expected LogType.
-            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraceEvents());
+            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraces());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
             logger.Log(LogLevel.Information, new EventId((int)LogType.Trace, "AnyName"), "AnyState", null, null);
@@ -58,7 +58,7 @@ namespace VirtualClient
             Mock<ILogger> loggerExpected = new Mock<ILogger>();
 
             // Setup this logger/logger provider to handle events that are the expected LogType.
-            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraceEvents());
+            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraces());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
             logger.Log(LogLevel.Information, new EventId((int)LogType.Trace, "AnyName"), "AnyState", null, null);
@@ -75,7 +75,7 @@ namespace VirtualClient
             Mock<ILogger> loggerExpected = new Mock<ILogger>();
 
             // Setup this logger/logger provider to handle events that are the expected LogType.
-            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraceEvents());
+            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleTraces());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
             logger.Log(LogLevel.Error, new EventId((int)LogType.Error, "AnyName"), "AnyState", null, null);
@@ -92,7 +92,7 @@ namespace VirtualClient
             Mock<ILogger> loggerExpected = new Mock<ILogger>();
 
             // Setup this logger/logger provider to handle events that are the expected LogType.
-            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandlePerformanceCounterEvents());
+            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandlePerformanceCounters());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
             logger.Log(LogLevel.Information, new EventId((int)LogType.Metrics, "PerformanceCounter"), "AnyState", null, null);
@@ -126,7 +126,7 @@ namespace VirtualClient
             Mock<ILogger> loggerExpected = new Mock<ILogger>();
 
             // Setup this logger/logger provider to handle events that are the expected LogType.
-            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleMetricsEvents());
+            loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleMetrics());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
             logger.Log(LogLevel.Information, new EventId((int)LogType.Metrics, "AnyName"), "AnyState", null, null);
