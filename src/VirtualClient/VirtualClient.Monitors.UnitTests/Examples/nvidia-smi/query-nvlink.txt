@@ -1,6 +1,6 @@
 ﻿GPU 0: NVIDIA A100-SXM4-40GB (UUID: GPU-547e49e9-c77f-15a6-b5da-15b9eb0207d3)
          Link 0: Data Tx: 1040 KiB
-         Link 0: Data Rx: 200 KiB
+         Link 0: Data Rx: 200.3 KiB
          Link 1: Data Tx: 1500 KiB
          Link 1: Data Rx: 1500 KiB
          Link 2: Data Tx: 1500 KiB

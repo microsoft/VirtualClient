@@ -28,7 +28,7 @@ namespace VirtualClient.Monitors
             IList<Metric> metrics = testParser.Parse();
 
             Assert.AreEqual(192, metrics.Count);
-            MetricAssert.Exists(metrics, "GPU 0: NvLink Rx 0 Throughput", 200, "KiB");
+            MetricAssert.Exists(metrics, "GPU 0: NvLink Rx 0 Throughput", 200.3, "KiB");
             MetricAssert.Exists(metrics, "GPU 1: NvLink Tx 11 Throughput", 800, "KiB");
             MetricAssert.Exists(metrics, "GPU 2: NvLink Rx 9 Throughput", 500, "KiB");
             MetricAssert.Exists(metrics, "GPU 3: NvLink Tx 5 Throughput", 1200, "KiB");
