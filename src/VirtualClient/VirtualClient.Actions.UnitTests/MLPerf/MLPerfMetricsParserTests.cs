@@ -82,5 +82,20 @@ namespace VirtualClient.Actions
                 MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream-result_90.00_percentile_latency_ns", 2202969);
             }
         }
+
+        [Test]
+        [TestCase("Example_bert_server_performance_summary.json")]
+        public void MLPerfParserVerifyValidBertServerPerformanceMetrics(string exampleFile)
+        {
+            string outputPath = Path.Combine(this.ExamplePath, exampleFile);
+            this.rawText = File.ReadAllText(outputPath);
+
+            this.testParser = new MLPerfMetricsParser(this.rawText, false);
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(2, metrics.Count);
+            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-PerformanceMode", 1, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-result_completed_samples_per_sec", 25405.6);
+        }
     }
 }

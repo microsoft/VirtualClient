@@ -5,9 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text.RegularExpressions;
-    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Contracts;
 
@@ -16,10 +14,12 @@ namespace VirtualClient.Actions
     /// </summary>
     public class MLPerfMetricsParser : MetricsParser
     {
+        /*
         private static readonly string AccuracyResultsPattern = @"(\w+)\s*=\s*([\d.]+)"; 
         private static readonly string PerformanceResultsPattern = @"([\w\d_.]+)\s*:\s*([\d.]+)";
         private static readonly string ValueSplitRegexPattern = @"^[^:]+:";
         private static readonly string RemoveEndDotPattern = @"\.$";
+        */
 
         /// <summary>
         /// Constructor for <see cref="MLPerfMetricsParser"/>
@@ -45,7 +45,9 @@ namespace VirtualClient.Actions
             string metricName = string.Empty;
             double metricValue = 0;
             string metricUnit = string.Empty;
+            MetricRelativity metricRelativity = MetricRelativity.Undefined;
 
+            /*
             JObject results = JObject.Parse(this.PreprocessedText);
 
             foreach (JProperty model in results.Properties())
@@ -122,6 +124,25 @@ namespace VirtualClient.Actions
                     // do nothing as this result file has non-valid values.
                 }
             }
+            */
+
+            JObject parsedObject = JObject.Parse(this.RawText);
+
+            // Adding metric for performance result being valid/invalid
+            metricName = (string)parsedObject["config_name"] + "-PerformanceMode";
+            metricValue = Convert.ToDouble((string)parsedObject["result_validity"] == "VALID");
+            metricUnit = "VALID/INVALID";
+            metricRelativity = MetricRelativity.HigherIsBetter;
+
+            this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity));
+
+            // Adding metric for perofmrnace result value
+            metricName = (string)parsedObject["config_name"] + "-" + (string)parsedObject["scenario_key"];
+            string scenarioValue = ((string)parsedObject["summary_string"]).Split(" ")[1];
+            scenarioValue = scenarioValue.Substring(0, scenarioValue.Length - 1);
+            metricValue = Convert.ToDouble(scenarioValue);
+
+            this.Metrics.Add(new Metric(metricName, metricValue));
 
             return this.Metrics;
         }
