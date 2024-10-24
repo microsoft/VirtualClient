@@ -9,15 +9,12 @@ namespace VirtualClient.Dependencies
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -202,7 +199,7 @@ namespace VirtualClient.Dependencies
                 {
                     { "gpuVendor", "Nvidia" },
                     { "gpuDriverVersion_nvidia", this.LinuxDriverVersion },
-                    { "cudaVersion", this.LinuxDriverVersion }
+                    { "cudaVersion", this.LinuxCudaVersion }
                 },
                 MetadataContractCategory.Dependencies,
                 true);

@@ -123,6 +123,7 @@ namespace VirtualClient.Dependencies
                     commands.Add($"bash -c \"{setupCommand}\"");
                     commands.Add("apt-get update");
                     commands.Add("apt-get install -y nvidia-container-toolkit");
+                    commands.Add("nvidia-ctk runtime configure --runtime=docker");
                     commands.Add("systemctl restart docker");
                     
                     break;

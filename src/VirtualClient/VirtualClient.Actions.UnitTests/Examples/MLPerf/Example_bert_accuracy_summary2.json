@@ -1,4 +1,0 @@
-{
-  "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server": { "bert": "No accuracy results in PerformanceOnly mode." },
-  "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream": { "bert": "No accuracy results in PerformanceOnly mode." }
-}
