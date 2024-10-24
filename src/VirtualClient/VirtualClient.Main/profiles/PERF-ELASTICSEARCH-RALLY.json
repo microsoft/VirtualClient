@@ -25,6 +25,7 @@
                 "TrackName": "geonames",
                 "DistributionVersion": "8.0.0",
                 "DiskFilter": "$.Parameters.DiskFilter",
+                "MetricFilters": "Verbosity:1",
                 "PackageName": "esrally",
                 "Role": "Client"
             }

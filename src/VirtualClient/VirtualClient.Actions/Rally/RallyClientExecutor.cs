@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
@@ -37,17 +38,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The track targeted for run by Rally.
-        /// </summary>
-        public string TrackName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(RallyClientExecutor.TrackName));
-            }
-        }
-
-        /// <summary>
         /// The Elasticsearch Distribution Version.
         /// </summary>
         public string DistributionVersion
@@ -55,6 +45,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(RallyClientExecutor.DistributionVersion), "8.0.0");
+            }
+        }
+
+        /// <summary>
+        /// The track targeted for run by Rally.
+        /// </summary>
+        public string TrackName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(RallyClientExecutor.TrackName));
             }
         }
 
@@ -143,7 +144,7 @@ namespace VirtualClient.Actions
 
             this.raceId = Guid.NewGuid();
 
-            // Initialize list of Elasticsearch Hosts (ie. 1+ VM cluster.)
+            // Initialize list of Elasticsearch Hosts (ie. for future cases, 1+ VM cluster. current release is 1 VM host only)
 
             if (this.IsMultiRoleLayout())
             {
@@ -169,31 +170,18 @@ namespace VirtualClient.Actions
 
                 if (!state.RallyConfigured)
                 {
+                    await this.ConfigureRallyClientAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.StartRallyClientDaemonAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    // make rally directory
+
+                    // copy rally.ini file to it
+
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        // configure-client.py does the following:
-                        //      - assigns ownership of the data directory to current user (esrally cannot run as root)
-                        //      - initializes rally.ini config file
-                        //      - assigns the rally directory to the chosen disk data directory (too many documents to keep in memory)
-                        //      - starts the rally daemon
-
-                        string configArguments = $"--directory {this.DataDirectory} --user {this.CurrentUser} --clientIp {this.ClientIpAddress}";
-                        string arguments = $"{this.RallyPackagePath}/configure-client.py ";
-
-                        using (IProcessProxy process = await this.ExecuteCommandAsync(
-                            RallyExecutor.PythonCommand,
-                            arguments + configArguments,
-                            this.RallyPackagePath,
-                            telemetryContext,
-                            cancellationToken))
-                        {
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "ElasticsearchRally", logToFile: true);
-                                process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-                            }
-                        }
-
                         state.RallyConfigured = true;
                         await this.StateManager.SaveStateAsync<RallyState>(nameof(RallyState), state, cancellationToken);
                     }
@@ -219,7 +207,7 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        RallyMetricsParser parser = new RallyMetricsParser(results);
+                        RallyMetricsParser parser = new RallyMetricsParser(results, this.MetricFilters);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
@@ -235,7 +223,58 @@ namespace VirtualClient.Actions
                     }
                     catch (Exception exc)
                     {
-                        throw new WorkloadException($"Failed to parse ElasticsearchRally output.", exc, ErrorReason.InvalidResults);
+                        throw new WorkloadException($"Failed to parse Elasticsearch Rally output.", exc, ErrorReason.InvalidResults);
+                    }
+                }
+            }
+        }
+
+        private async Task ConfigureRallyClientAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                // configure-client.py does the following:
+                //      - assigns ownership of the data directory to current user (esrally cannot run as root)
+                //      - initializes rally.ini config file
+                //      - assigns the rally directory to the chosen disk data directory (too many documents to keep in memory)
+                //      - starts the rally daemon
+
+                string configArguments = $"--directory {this.DataDirectory} --user {this.CurrentUser}";
+                string arguments = $"{this.RallyPackagePath}/configure-client.py ";
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    RallyExecutor.PythonCommand,
+                    arguments + configArguments,
+                    this.RallyPackagePath,
+                    telemetryContext,
+                    cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "ElasticsearchRally", logToFile: true);
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                    }
+                }
+            }
+        }
+
+        private async Task StartRallyClientDaemonAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string arguments = $"start --node-ip={this.ClientIpAddress} --coordinator-ip={this.ClientIpAddress}";
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    "esrallyd",
+                    arguments,
+                    this.RallyPackagePath,
+                    telemetryContext,
+                    cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "ElasticsearchRally", logToFile: true);
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                     }
                 }
             }

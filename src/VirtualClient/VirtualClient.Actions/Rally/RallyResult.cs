@@ -54,6 +54,59 @@ namespace VirtualClient.Actions
         [JsonProperty("op_metrics")]
         public List<RallyMetrics> RallyMetrics { get; set; }
 
+        /// <summary>
+        /// Total Time
+        /// </summary>
+        [JsonProperty("total_time")]
+        public int TotalTime { get; set; }
+
+        /// <summary>
+        /// Indexing Throttle Time
+        /// </summary>
+        [JsonProperty("indexing_throttle_time")]
+        public int IndexingThrottleTime { get; set; }
+
+        /// <summary>
+        /// Merge Time
+        /// </summary>
+        [JsonProperty("merge_time")]
+        public int MergeTime { get; set; }
+
+        /// <summary>
+        /// Merge Count
+        /// </summary>
+        [JsonProperty("merge_count")]
+        public int MergeCount { get; set; }
+
+        /// <summary>
+        /// Refresh Time
+        /// </summary>
+        [JsonProperty("refresh_time")]
+        public int RefreshTime { get; set; }
+
+        /// <summary>
+        /// Refresh Count
+        /// </summary>
+        [JsonProperty("refresh_count")]
+        public int RefreshCount { get; set; }
+
+        /// <summary>
+        /// Flush Time
+        /// </summary>
+        [JsonProperty("flush_time")]
+        public int FlushTime { get; set; }
+
+        /// <summary>
+        /// Flush Count
+        /// </summary>
+        [JsonProperty("flush_count")]
+        public int FlushCount { get; set; }
+
+        /// <summary>
+        /// Merge Throttle Time
+        /// </summary>
+        [JsonProperty("merge_throttle_time")]
+        public int MergeThrottleTime { get; set; }
     }
 
     /// <summary>
@@ -98,6 +151,12 @@ namespace VirtualClient.Actions
         public StatsType ProcessingTime { get; set; }
 
         /// <summary>
+        /// Error rate
+        /// </summary>
+        [JsonProperty("error_rate")]
+        public double ErrorRate { get; set; }
+
+        /// <summary>
         /// Total duration
         /// </summary>
         [JsonProperty("duration")]
@@ -114,6 +173,24 @@ namespace VirtualClient.Actions
         /// </summary>
         [JsonProperty("median")]
         public double Median { get; set; }
+
+        /// <summary>
+        /// Min value
+        /// </summary>
+        [JsonProperty("min")]
+        public double Min { get; set; }
+
+        /// <summary>
+        /// Max value
+        /// </summary>
+        [JsonProperty("max")]
+        public double Max { get; set; }
+
+        /// <summary>
+        /// Mean value
+        /// </summary>
+        [JsonProperty("mean")]
+        public double Mean { get; set; }
 
         /// <summary>
         /// Unit
@@ -144,6 +221,18 @@ namespace VirtualClient.Actions
         /// </summary>
         [JsonProperty("99_0")]
         public double NinetyNineP { get; set; }
+
+        /// <summary>
+        /// 100th percentile
+        /// </summary>
+        [JsonProperty("100_0")]
+        public double HundredP { get; set; }
+
+        /// <summary>
+        /// Mean value
+        /// </summary>
+        [JsonProperty("mean")]
+        public double Mean { get; set; }
 
         /// <summary>
         /// Unit
