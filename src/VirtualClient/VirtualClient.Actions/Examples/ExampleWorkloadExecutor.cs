@@ -359,8 +359,11 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
 
                             this.Logger.LogSystemEvent(
-                                "Process.Details",
-                                new Dictionary<string, IConvertible>
+                                "ProcessResult",
+                                "ExampleWorkload",
+                                "The results of the example workload process",
+                                workloadProcess.ExitCode,
+                                new Dictionary<string, object>
                                 {
                                     { "toolset", "ExampleWorkload" },
                                     { "command", $"{this.WorkloadExecutablePath} {commandArguments}" },
@@ -369,6 +372,14 @@ namespace VirtualClient.Actions
                                     { "standardError", workloadProcess.StandardError?.ToString() },
                                     { "workingDirectory", this.WorkloadPackage.Path }
                                 },
+                                workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
+                                telemetryContext);
+
+                            this.Logger.LogSystemEvent(
+                                "KeyResult",
+                                "ExampleWorkload",
+                                "The results of the example workload process",
+                                100,
                                 workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
                                 telemetryContext);
 

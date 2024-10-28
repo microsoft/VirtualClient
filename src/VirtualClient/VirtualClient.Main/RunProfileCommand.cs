@@ -626,13 +626,20 @@ namespace VirtualClient
 
                 if (systemDetails?.Any() == true)
                 {
-                    List<KeyValuePair<string, object>> systemInfo = new List<KeyValuePair<string, object>>();
                     foreach (var entry in systemDetails)
                     {
-                        systemInfo.Add(new KeyValuePair<string, object>("SystemInfo", entry));
+                        if (entry.TryGetValue("toolset", out IConvertible toolset) && !string.IsNullOrWhiteSpace(toolset?.ToString()))
+                        {
+                            logger.LogSystemEvent(
+                                "SystemInfo",
+                                toolset.ToString(),
+                                null,
+                                -1,
+                                entry.ToDictionary(e => e.Key, e => e.Value as object),
+                                LogLevel.Information,
+                                EventContext.Persisted());
+                        }
                     }
-
-                    logger.LogSystemEvents("SystemInfo", systemInfo, EventContext.Persisted());
                 }
             }
             catch
