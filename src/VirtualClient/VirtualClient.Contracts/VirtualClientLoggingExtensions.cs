@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.Tracing;
     using System.Linq;
     using System.Net.Http;
     using System.Runtime.InteropServices;
@@ -977,92 +978,82 @@ namespace VirtualClient.Contracts
         /// Extension logs system/OS event data to the target telemetry data store(s).
         /// </summary>
         /// <param name="logger">The logger instance.</param>
-        /// <param name="eventType">The event type.</param>
+        /// <param name="eventType">The event type (e.g. Hardware.Fault).</param>
+        /// <param name="eventSource">The source/provider of the event (e.g. SystemLog, IpmiUtil).</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="eventInfo">A set of key/value pairs that describe the event information/context.</param>
-        /// <param name="level">The logging/severity level of the message context.</param>
-        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
-        public static void LogSystemEvent(this ILogger logger, string eventType, IEnumerable<KeyValuePair<string, IConvertible>> eventInfo, LogLevel level, EventContext eventContext, bool supportOriginalSchema = false)
+        /// <param name="eventDescription">A description of the event.</param>
+        /// <param name="eventId">A unique identifier for the event (e.g. 16384).</param>
+        /// <param name="eventLevel">The logging/severity level of the message context.</param>
+        public static void LogSystemEvent(
+            this ILogger logger,
+            string eventType,
+            string eventSource,
+            string eventDescription,
+            long eventId,
+            LogLevel eventLevel,
+            EventContext eventContext)
         {
             logger.ThrowIfNull(nameof(logger));
             eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));
-            eventInfo.ThrowIfNullOrEmpty(nameof(eventInfo));
+            eventSource.ThrowIfNullOrWhiteSpace(nameof(eventSource));
+            eventContext.ThrowIfNull(nameof(eventContext));
+
+            VirtualClientLoggingExtensions.LogSystemEvent(
+                logger,
+                eventType,
+                eventSource,
+                eventDescription,
+                eventId,
+                null,
+                eventLevel,
+                eventContext);
+        }
+
+        /// <summary>
+        /// Extension logs system/OS event data to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="eventType">The event type (e.g. Hardware.Fault).</param>
+        /// <param name="eventSource">The source/provider of the event (e.g. SystemLog, IpmiUtil).</param>
+        /// <param name="eventDescription">A description of the event.</param>
+        /// <param name="eventId">A unique identifier for the event (e.g. 16384).</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="eventInfo">A set of key/value pairs that describe the event information/context.</param>
+        /// <param name="eventLevel">The logging/severity level of the message context.</param>
+        public static void LogSystemEvent(
+            this ILogger logger, 
+            string eventType, 
+            string eventSource,
+            string eventDescription,
+            long eventId,
+            IEnumerable<KeyValuePair<string, object>> eventInfo,
+            LogLevel eventLevel, 
+            EventContext eventContext)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));
+            eventSource.ThrowIfNullOrWhiteSpace(nameof(eventSource));
             eventContext.ThrowIfNull(nameof(eventContext));
 
             if (eventInfo?.Any() == true)
             {
+                // Consolidate the event information.
+                IDictionary<string, object> systemEventInfo = new Dictionary<string, object>(StringComparer.Ordinal);
+
+                if (eventInfo != null)
+                {
+                    systemEventInfo.AddRange(eventInfo);
+                }
+
+                systemEventInfo["eventDescription"] = eventDescription;
+                systemEventInfo["eventId"] = eventId;
+                systemEventInfo["eventSource"] = eventSource;
+
                 EventContext systemEventContext = eventContext.Clone();
                 systemEventContext.Properties["eventType"] = eventType;
-                systemEventContext.Properties["eventInfo"] = eventInfo;
+                systemEventContext.Properties["eventInfo"] = systemEventInfo;
 
-                // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-                // output. To enable a seamless transition, we are supporting the old and the new schema
-                // until we have all systems using the latest version of the Virtual Client.
-                if (supportOriginalSchema)
-                {
-                    systemEventContext.Properties["name"] = eventType;
-                    systemEventContext.Properties["value"] = eventInfo;
-                }
-
-                VirtualClientLoggingExtensions.LogMessage(logger, eventType, level, LogType.SystemEvent, systemEventContext);
-            }
-        }
-
-        /// <summary>
-        /// Extension logs system/OS event data to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="message">The performance counter message/event name.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="events">The system events to log.</param>
-        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
-        public static void LogSystemEvents(this ILogger logger, string message, IEnumerable<KeyValuePair<string, object>> events, EventContext eventContext, bool supportOriginalSchema = false)
-        {
-            logger.ThrowIfNull(nameof(logger));
-            message.ThrowIfNullOrWhiteSpace(nameof(message));
-
-            VirtualClientLoggingExtensions.LogSystemEvents(
-                logger, 
-                message, 
-                events, 
-                LogLevel.Information, 
-                eventContext, 
-                supportOriginalSchema);
-        }
-
-        /// <summary>
-        /// Extension logs system/OS event data to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="message">The performance counter message/event name.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="events">The system events to log.</param>
-        /// <param name="level">The logging/severity level of the message context.</param>
-        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
-        public static void LogSystemEvents(this ILogger logger, string message, IEnumerable<KeyValuePair<string, object>> events, LogLevel level, EventContext eventContext, bool supportOriginalSchema = false)
-        {
-            logger.ThrowIfNull(nameof(logger));
-            message.ThrowIfNullOrWhiteSpace(nameof(message));
-
-            if (events?.Any() == true)
-            {
-                foreach (var systemEvent in events)
-                {
-                    EventContext systemEventContext = eventContext?.Clone();
-                    systemEventContext.Properties["eventType"] = systemEvent.Key;
-                    systemEventContext.Properties["eventInfo"] = systemEvent.Value;
-
-                    // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-                    // output. To enable a seamless transition, we are supporting the old and the new schema
-                    // until we have all systems using the latest version of the Virtual Client.
-                    if (supportOriginalSchema)
-                    {
-                        systemEventContext.Properties["name"] = systemEvent.Key;
-                        systemEventContext.Properties["value"] = systemEvent.Value;
-                    }
-
-                    VirtualClientLoggingExtensions.LogMessage(logger, message, level, LogType.SystemEvent, systemEventContext);
-                }
+                VirtualClientLoggingExtensions.LogMessage(logger, eventType, eventLevel, LogType.SystemEvent, systemEventContext);
             }
         }
 

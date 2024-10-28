@@ -110,43 +110,6 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogSystemEventsExtensionLogsTheExpectedEventsWhenSupportForOriginalSchemaIsRequested()
-        {
-            string expectedMessage = "RealtimeDataMonitorCounters";
-            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
-            {
-                ["SystemEventLog"] = "Process shutdown unexpectedly.",
-                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced."
-            };
-
-            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext, supportOriginalSchema: true);
-
-            // Original Schema
-            this.mockLogger.Verify(logger => logger.Log(
-                LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedMessage),
-                It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
-                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("name")
-                    && context.Properties.ContainsKey("value")),
-                null,
-                null),
-                Times.Exactly(2)); // Each performance counter is logged as an individual message
-
-            // New Schema
-            this.mockLogger.Verify(logger => logger.Log(
-                LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedMessage),
-                It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
-                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("eventType")
-                    && context.Properties.ContainsKey("eventInfo")),
-                null,
-                null),
-                Times.Exactly(2)); // Each performance counter is logged as an individual message
-        }
-
-        [Test]
         public void LogMetricsExtensionLogsTheExpectedEventsWhenSupportForOriginalSchemaIsRequested()
         {
             string expectedScenarioName = "AnyTestName";
