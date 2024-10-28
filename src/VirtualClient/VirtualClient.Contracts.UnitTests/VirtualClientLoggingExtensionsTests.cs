@@ -2248,7 +2248,7 @@ namespace VirtualClient.Contracts
                 expectedEventType, 
                 expectedEventSource,
                 expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 expectedEventInfo,
                 expectedEventLevel,
                 this.mockEventContext);
@@ -2286,14 +2286,14 @@ namespace VirtualClient.Contracts
                     Assert.IsNotNull(actualEventInfo);
                     Assert.AreEqual(expectedEventDescription, actualEventInfo["eventDescription"]);
                     Assert.AreEqual(expectedEventSource, actualEventInfo["eventSource"]);
-                    Assert.AreEqual(expectedEventId, actualEventInfo["eventId"]);
+                    Assert.AreEqual(expectedEventId.ToString(), actualEventInfo["eventId"].ToString());
                 });
 
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
                 expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 LogLevel.Information,
                 this.mockEventContext);
         }
@@ -2327,14 +2327,14 @@ namespace VirtualClient.Contracts
                     Assert.AreEqual(expectedEventInfo["property2"], actualEventInfo["property2"]);
                     Assert.AreEqual(expectedEventDescription, actualEventInfo["eventDescription"]);
                     Assert.AreEqual(expectedEventSource, actualEventInfo["eventSource"]);
-                    Assert.AreEqual(expectedEventId, actualEventInfo["eventId"]);
+                    Assert.AreEqual(expectedEventId.ToString(), actualEventInfo["eventId"].ToString());
                 });
 
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
                 expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 expectedEventInfo,
                 LogLevel.Information,
                 this.mockEventContext);
@@ -2375,7 +2375,7 @@ namespace VirtualClient.Contracts
                 expectedEventType,
                 expectedEventSource,
                 expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 expectedEventInfo,
                 LogLevel.Information,
                 this.mockEventContext);

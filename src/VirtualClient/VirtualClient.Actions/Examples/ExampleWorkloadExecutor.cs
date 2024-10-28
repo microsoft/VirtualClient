@@ -362,7 +362,7 @@ namespace VirtualClient.Actions
                                 "ProcessResult",
                                 "ExampleWorkload",
                                 "The results of the example workload process",
-                                workloadProcess.ExitCode,
+                                workloadProcess.ExitCode.ToString(),
                                 new Dictionary<string, object>
                                 {
                                     { "toolset", "ExampleWorkload" },
@@ -379,9 +379,10 @@ namespace VirtualClient.Actions
                                 "KeyResult",
                                 "ExampleWorkload",
                                 "The results of the example workload process",
-                                100,
+                                "keyresult_100",
                                 workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
-                                telemetryContext);
+                                telemetryContext,
+                                eventCode: 100);
 
                             // If the workload process returned a non-success exit code, we throw an exception typically. The ErrorReason used here
                             // will NOT cause VC to crash.

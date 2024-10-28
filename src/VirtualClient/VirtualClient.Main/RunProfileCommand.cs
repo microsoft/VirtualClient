@@ -634,7 +634,7 @@ namespace VirtualClient
                                 "SystemInfo",
                                 toolset.ToString(),
                                 null,
-                                -1,
+                                $"systeminfo_{toolset}".ToLowerInvariant(),
                                 entry.ToDictionary(e => e.Key, e => e.Value as object),
                                 LogLevel.Information,
                                 EventContext.Persisted());

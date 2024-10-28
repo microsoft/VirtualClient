@@ -135,7 +135,7 @@ namespace VirtualClient.Monitors
                                         "SystemInfo", 
                                         "lspci", 
                                         message,
-                                        -1,
+                                        $"{pciDevice.Name}_{pciDevice.Address}".ToLowerInvariant(),
                                         eventInfo, 
                                         LogLevel.Information, 
                                         telemetryContext);
