@@ -449,7 +449,7 @@ namespace VirtualClient
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(level)
-                .HandleTraceEvents());
+                .HandleTraces());
         }
 
         private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level)
@@ -471,7 +471,15 @@ namespace VirtualClient
 
         private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, LogLevel level)
         {
-            FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
+            FileLogSettings settings = new FileLogSettings
+            {
+                IsEnabled = true,
+                CountersFileName = "vc.counters",
+                EventsFileName = "vc.events",
+                MetricsCsvFileName = "metrics.csv",
+                MetricsFileName = "vc.metrics",
+                TracesFileName = "vc.traces"
+            };
 
             if (settings.IsEnabled)
             {
