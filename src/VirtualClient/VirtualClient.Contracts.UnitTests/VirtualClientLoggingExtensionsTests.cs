@@ -2247,11 +2247,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType, 
                 expectedEventSource,
-                expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 expectedEventInfo,
                 expectedEventLevel,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
 
             this.mockLogger.Verify(logger => logger.Log(
                 expectedEventLevel,
@@ -2286,16 +2286,16 @@ namespace VirtualClient.Contracts
                     Assert.IsNotNull(actualEventInfo);
                     Assert.AreEqual(expectedEventDescription, actualEventInfo["eventDescription"]);
                     Assert.AreEqual(expectedEventSource, actualEventInfo["eventSource"]);
-                    Assert.AreEqual(expectedEventId, actualEventInfo["eventId"]);
+                    Assert.AreEqual(expectedEventId.ToString(), actualEventInfo["eventId"].ToString());
                 });
 
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
-                expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 LogLevel.Information,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
         }
 
         [Test]
@@ -2327,17 +2327,17 @@ namespace VirtualClient.Contracts
                     Assert.AreEqual(expectedEventInfo["property2"], actualEventInfo["property2"]);
                     Assert.AreEqual(expectedEventDescription, actualEventInfo["eventDescription"]);
                     Assert.AreEqual(expectedEventSource, actualEventInfo["eventSource"]);
-                    Assert.AreEqual(expectedEventId, actualEventInfo["eventId"]);
+                    Assert.AreEqual(expectedEventId.ToString(), actualEventInfo["eventId"].ToString());
                 });
 
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
-                expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 expectedEventInfo,
                 LogLevel.Information,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
         }
 
         [Test]
@@ -2374,11 +2374,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
-                expectedEventDescription,
-                expectedEventId,
+                expectedEventId.ToString(),
                 expectedEventInfo,
                 LogLevel.Information,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
 
             // The original should not have been changed.
             Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);

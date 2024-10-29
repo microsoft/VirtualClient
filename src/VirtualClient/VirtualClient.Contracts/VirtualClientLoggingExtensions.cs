@@ -981,32 +981,36 @@ namespace VirtualClient.Contracts
         /// <param name="eventType">The event type (e.g. Hardware.Fault).</param>
         /// <param name="eventSource">The source/provider of the event (e.g. SystemLog, IpmiUtil).</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="eventDescription">A description of the event.</param>
         /// <param name="eventId">A unique identifier for the event (e.g. 16384).</param>
         /// <param name="eventLevel">The logging/severity level of the message context.</param>
+        /// <param name="eventDescription">A description of the event.</param>
+        /// <param name="eventCode">A numeric identifier/code to use for the event. This is helpful where for eventing systems that are numeric code-based.</param>
         public static void LogSystemEvent(
             this ILogger logger,
             string eventType,
             string eventSource,
-            string eventDescription,
-            long eventId,
+            string eventId,
             LogLevel eventLevel,
-            EventContext eventContext)
+            EventContext eventContext,
+            string eventDescription = null,
+            long? eventCode = null)
         {
             logger.ThrowIfNull(nameof(logger));
             eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));
             eventSource.ThrowIfNullOrWhiteSpace(nameof(eventSource));
+            eventId.ThrowIfNullOrWhiteSpace(nameof(eventId));
             eventContext.ThrowIfNull(nameof(eventContext));
 
             VirtualClientLoggingExtensions.LogSystemEvent(
                 logger,
                 eventType,
                 eventSource,
-                eventDescription,
                 eventId,
                 null,
                 eventLevel,
-                eventContext);
+                eventContext,
+                eventDescription,
+                eventCode);
         }
 
         /// <summary>
@@ -1015,46 +1019,48 @@ namespace VirtualClient.Contracts
         /// <param name="logger">The logger instance.</param>
         /// <param name="eventType">The event type (e.g. Hardware.Fault).</param>
         /// <param name="eventSource">The source/provider of the event (e.g. SystemLog, IpmiUtil).</param>
-        /// <param name="eventDescription">A description of the event.</param>
-        /// <param name="eventId">A unique identifier for the event (e.g. 16384).</param>
+        /// 
+        /// <param name="eventId">A unique identifier for the event (e.g. Fault_16384).</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="eventInfo">A set of key/value pairs that describe the event information/context.</param>
         /// <param name="eventLevel">The logging/severity level of the message context.</param>
+        /// <param name="eventDescription">A description of the event.</param>
+        /// <param name="eventCode">A numeric identifier/code to use for the event. This is helpful where for eventing systems that are numeric code-based.</param>
         public static void LogSystemEvent(
-            this ILogger logger, 
-            string eventType, 
+            this ILogger logger,
+            string eventType,
             string eventSource,
-            string eventDescription,
-            long eventId,
+            string eventId,
             IEnumerable<KeyValuePair<string, object>> eventInfo,
-            LogLevel eventLevel, 
-            EventContext eventContext)
+            LogLevel eventLevel,
+            EventContext eventContext,
+            string eventDescription = null,
+            long? eventCode = null)
         {
             logger.ThrowIfNull(nameof(logger));
             eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));
             eventSource.ThrowIfNullOrWhiteSpace(nameof(eventSource));
+            eventId.ThrowIfNullOrWhiteSpace(nameof(eventId));
             eventContext.ThrowIfNull(nameof(eventContext));
 
-            if (eventInfo?.Any() == true)
+            // Consolidate the event information.
+            IDictionary<string, object> systemEventInfo = new Dictionary<string, object>(StringComparer.Ordinal);
+
+            if (eventInfo != null)
             {
-                // Consolidate the event information.
-                IDictionary<string, object> systemEventInfo = new Dictionary<string, object>(StringComparer.Ordinal);
-
-                if (eventInfo != null)
-                {
-                    systemEventInfo.AddRange(eventInfo);
-                }
-
-                systemEventInfo["eventDescription"] = eventDescription;
-                systemEventInfo["eventId"] = eventId;
-                systemEventInfo["eventSource"] = eventSource;
-
-                EventContext systemEventContext = eventContext.Clone();
-                systemEventContext.Properties["eventType"] = eventType;
-                systemEventContext.Properties["eventInfo"] = systemEventInfo;
-
-                VirtualClientLoggingExtensions.LogMessage(logger, eventType, eventLevel, LogType.SystemEvent, systemEventContext);
+                systemEventInfo.AddRange(eventInfo);
             }
+
+            systemEventInfo["eventCode"] = eventCode ?? -1;
+            systemEventInfo["eventDescription"] = eventDescription;
+            systemEventInfo["eventId"] = eventId;
+            systemEventInfo["eventSource"] = eventSource;
+
+            EventContext systemEventContext = eventContext.Clone();
+            systemEventContext.Properties["eventType"] = eventType;
+            systemEventContext.Properties["eventInfo"] = systemEventInfo;
+
+            VirtualClientLoggingExtensions.LogMessage(logger, eventType, eventLevel, LogType.SystemEvent, systemEventContext);
         }
 
         /// <summary>
