@@ -133,12 +133,12 @@ namespace VirtualClient.Monitors
 
                                     this.Logger.LogSystemEvent(
                                         "SystemInfo", 
-                                        "lspci", 
-                                        message,
+                                        "lspci",
                                         $"{pciDevice.Name}_{pciDevice.Address}".ToLowerInvariant(),
                                         eventInfo, 
                                         LogLevel.Information, 
-                                        telemetryContext);
+                                        telemetryContext,
+                                        eventDescription: message);
                                 }
                             }
                         }

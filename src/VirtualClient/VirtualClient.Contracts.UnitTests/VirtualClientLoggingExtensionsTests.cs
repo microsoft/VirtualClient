@@ -2247,11 +2247,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType, 
                 expectedEventSource,
-                expectedEventDescription,
                 expectedEventId.ToString(),
                 expectedEventInfo,
                 expectedEventLevel,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
 
             this.mockLogger.Verify(logger => logger.Log(
                 expectedEventLevel,
@@ -2292,10 +2292,10 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
-                expectedEventDescription,
                 expectedEventId.ToString(),
                 LogLevel.Information,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
         }
 
         [Test]
@@ -2333,11 +2333,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
-                expectedEventDescription,
                 expectedEventId.ToString(),
                 expectedEventInfo,
                 LogLevel.Information,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
         }
 
         [Test]
@@ -2374,11 +2374,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType,
                 expectedEventSource,
-                expectedEventDescription,
                 expectedEventId.ToString(),
                 expectedEventInfo,
                 LogLevel.Information,
-                this.mockEventContext);
+                this.mockEventContext,
+                expectedEventDescription);
 
             // The original should not have been changed.
             Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);

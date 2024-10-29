@@ -361,7 +361,6 @@ namespace VirtualClient.Actions
                             this.Logger.LogSystemEvent(
                                 "ProcessResult",
                                 "ExampleWorkload",
-                                "The results of the example workload process",
                                 workloadProcess.ExitCode.ToString(),
                                 new Dictionary<string, object>
                                 {
@@ -373,12 +372,12 @@ namespace VirtualClient.Actions
                                     { "workingDirectory", this.WorkloadPackage.Path }
                                 },
                                 workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
-                                telemetryContext);
+                                telemetryContext,
+                                eventCode: workloadProcess.ExitCode);
 
                             this.Logger.LogSystemEvent(
                                 "KeyResult",
                                 "ExampleWorkload",
-                                "The results of the example workload process",
                                 "keyresult_100",
                                 workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
                                 telemetryContext,

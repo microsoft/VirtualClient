@@ -633,7 +633,6 @@ namespace VirtualClient
                             logger.LogSystemEvent(
                                 "SystemInfo",
                                 toolset.ToString(),
-                                null,
                                 $"systeminfo_{toolset}".ToLowerInvariant(),
                                 entry.ToDictionary(e => e.Key, e => e.Value as object),
                                 LogLevel.Information,
