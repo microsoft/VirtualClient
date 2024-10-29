@@ -626,13 +626,19 @@ namespace VirtualClient
 
                 if (systemDetails?.Any() == true)
                 {
-                    List<KeyValuePair<string, object>> systemInfo = new List<KeyValuePair<string, object>>();
                     foreach (var entry in systemDetails)
                     {
-                        systemInfo.Add(new KeyValuePair<string, object>("SystemInfo", entry));
+                        if (entry.TryGetValue("toolset", out IConvertible toolset) && !string.IsNullOrWhiteSpace(toolset?.ToString()))
+                        {
+                            logger.LogSystemEvent(
+                                "SystemInfo",
+                                toolset.ToString(),
+                                $"systeminfo_{toolset}".ToLowerInvariant(),
+                                entry.ToDictionary(e => e.Key, e => e.Value as object),
+                                LogLevel.Information,
+                                EventContext.Persisted());
+                        }
                     }
-
-                    logger.LogSystemEvents("SystemInfo", systemInfo, EventContext.Persisted());
                 }
             }
             catch
@@ -856,6 +862,7 @@ namespace VirtualClient
             ConsoleLogger.Default.LogMessage($"Experiment ID: {this.ExperimentId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Agent ID: {this.AgentId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Log To File: {VirtualClientComponent.LogToFile}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {

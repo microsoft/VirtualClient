@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
                 string username = this.Parameters.GetValue<string>(nameof(MemcachedExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.SystemManagement.GetLoggedInUserName();
+                    username = this.PlatformSpecifics.GetLoggedInUser();
                 }
 
                 return username;

@@ -290,14 +290,10 @@ namespace VirtualClient
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
-            // Users can override the default packages directory using the 'VC_PACKAGES_DIR'
-            // environment variable. When defined, VC will download packages to this directory
-            // instead of the default location.
-            string userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
-            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
-            {
-                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
-            }
+            // Users can override the location of the "packages" folder using environment variables.
+            // This is used in scenarios where VC may be used as a base for other applications that want to
+            // have a shared packages directory.
+            CommandBase.EvaluatePackagesDirectoryOverrides(platformSpecifics);
 
             if (this.Debug)
             {
@@ -453,7 +449,7 @@ namespace VirtualClient
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(level)
-                .HandleTraceEvents());
+                .HandleTraces());
         }
 
         private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level)
@@ -475,7 +471,15 @@ namespace VirtualClient
 
         private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, LogLevel level)
         {
-            FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
+            FileLogSettings settings = new FileLogSettings
+            {
+                IsEnabled = true,
+                CountersFileName = "vc.counters",
+                EventsFileName = "vc.events",
+                MetricsCsvFileName = "metrics.csv",
+                MetricsFileName = "vc.metrics",
+                TracesFileName = "vc.traces"
+            };
 
             if (settings.IsEnabled)
             {
@@ -524,6 +528,29 @@ namespace VirtualClient
             }
 
             return loggingProviders.Any() ? new LoggerFactory(loggingProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
+        }
+
+        private static void EvaluatePackagesDirectoryOverrides(PlatformSpecifics platformSpecifics)
+        {
+            // Users can override the default packages directory using the 'VC_PACKAGES_DIR'
+            // environment variable. When defined, VC will download packages to this directory
+            // instead of the default location.
+            string userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
+            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
+            {
+                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
+                return;
+            }
+
+            // We also support an environment variable 'SDK_PACKAGES_DIR' for other use cases where naming conventions
+            // follow a different nomenclature related to VC being used as an SDK. The environment variable noted above takes
+            // precedence.
+            userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_PACKAGES_DIR);
+            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
+            {
+                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
+                return;
+            }
         }
     }
 }

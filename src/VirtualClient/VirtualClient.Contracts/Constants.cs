@@ -146,14 +146,29 @@ namespace VirtualClient.Contracts
         public const string LD_LIBRARY_PATH = nameof(LD_LIBRARY_PATH);
 
         /// <summary>
-        /// Name = SUDO_USER
-        /// </summary>
-        public const string SUDO_USER = nameof(SUDO_USER);
-
-        /// <summary>
         /// Name = PATH
         /// </summary>
         public const string PATH = nameof(PATH);
+
+        /// <summary>
+        /// Name = SDK_EVENTHUB_CONNECTION
+        /// </summary>
+        public const string SDK_EVENTHUB_CONNECTION = nameof(SDK_EVENTHUB_CONNECTION);
+
+        /// <summary>
+        /// Name = SDK_PACKAGES_CONNECTION
+        /// </summary>
+        public const string SDK_PACKAGES_CONNECTION = nameof(SDK_PACKAGES_CONNECTION);
+
+        /// <summary>
+        /// Name = SDK_PACKAGES_DIR
+        /// </summary>
+        public const string SDK_PACKAGES_DIR = nameof(SDK_PACKAGES_DIR);
+
+        /// <summary>
+        /// Name = SUDO_USER
+        /// </summary>
+        public const string SUDO_USER = nameof(SUDO_USER);
 
         /// <summary>
         /// Name = USER
@@ -174,6 +189,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_PACKAGES_DIR
         /// </summary>
         public const string VC_PACKAGES_DIR = nameof(VC_PACKAGES_DIR);
+
+        /// <summary>
+        /// Name = VC_SUDO_USER
+        /// </summary>
+        public const string VC_SUDO_USER = nameof(VC_SUDO_USER);
     }
 
     /// <summary>

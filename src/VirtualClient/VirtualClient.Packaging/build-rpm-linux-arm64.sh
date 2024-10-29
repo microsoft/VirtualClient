@@ -10,7 +10,7 @@ fi
 # Define variables
 PACKAGE_NAME="virtualclient"
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)/../../../"
-BUILD_DIR="$REPO_ROOT/out/bin/Release/ARM64/VirtualClient.Main/net8.0/linux-arm64/publish/"
+BUILD_DIR="$REPO_ROOT/out/bin/Release/ARM64/VirtualClient.Main/net8.0/linux-arm64/"
 RPM_DIR="$REPO_ROOT/out/packages/rpm_arm64"
 OUT_DIR="$REPO_ROOT/out/packages/"
 
