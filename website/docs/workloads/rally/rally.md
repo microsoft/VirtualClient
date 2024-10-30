@@ -55,7 +55,7 @@ Rally hosts a various amount of "tracks", each of which are essentially test sui
 | http_logs     |   HTTP server log data                |   33      |
 | nyc_taxis     | Taxi rides in New York in 2015        |   79      |
 | noaa          |   Global daily weather measurements from NOAA     | 10    |
-| pmc           | Full text benchmark with academic papers from PMC |       |
+| pmc           | Full text benchmark with academic papers from PMC | 5.5   |
 
 ## Workload Metrics
 
