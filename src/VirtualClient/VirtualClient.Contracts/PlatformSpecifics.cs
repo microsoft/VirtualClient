@@ -53,7 +53,10 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
-        /// <param name="currentDirectory">The directory to use as the current working directory.</param>
+        /// <param name="workingDirectory">
+        /// The directory to use as the current working directory. This is the directory where tools, scripts, packages and logs exist 
+        /// and is typically the same directory as the Virtual Client application binaries.
+        /// </param>
         /// <param name="useUnixStylePathsOnly">True to use Unix-style paths only (e.g. w/forward slashes). False to apply the conventions for the OS platform targeted.</param>
         /// <remarks>
         /// This constructor is largely used to address challenges with testing code that references
@@ -61,14 +64,14 @@ namespace VirtualClient.Contracts
         /// system on which the test is running. For example, Linux paths use forward slashes. When
         /// testing components on a Windows system, the typical path semantics have to be modified.
         /// </remarks>
-        protected PlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory, bool useUnixStylePathsOnly = false)
+        public PlatformSpecifics(PlatformID platform, Architecture architecture, string workingDirectory, bool useUnixStylePathsOnly = false)
         {
             this.Platform = platform;
             this.PlatformArchitectureName = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
             this.CpuArchitecture = architecture;
             this.UseUnixStylePathsOnly = useUnixStylePathsOnly;
 
-            string standardizedCurrentDirectory = this.StandardizePath(currentDirectory);
+            string standardizedCurrentDirectory = this.StandardizePath(workingDirectory);
             this.CurrentDirectory = standardizedCurrentDirectory;
             this.LogsDirectory = this.Combine(standardizedCurrentDirectory, "logs");
             this.ContentUploadsDirectory = this.Combine(standardizedCurrentDirectory, "contentuploads");
@@ -151,6 +154,32 @@ namespace VirtualClient.Contracts
         /// Whether VC is running in the context of docker container.
         /// </summary>
         internal static bool RunningInContainer { get; set; } = PlatformSpecifics.IsRunningInContainer();
+
+        /// <summary>
+        /// Get the logged in user/username. On Windows systems, the user is discoverable even when running as Administrator.
+        /// On Linux systems, the user can be discovered using certain environment variables when running under sudo/root.
+        /// </summary>
+        public string GetLoggedInUser()
+        {
+            string loggedInUserName = Environment.UserName;
+            if (string.Equals(loggedInUserName, "root"))
+            {
+                loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
+                {
+                    loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
+                    if (string.IsNullOrEmpty(loggedInUserName))
+                    {
+                        throw new EnvironmentSetupException(
+                            $"Unable to determine logged in username. The expected environment variables '{EnvironmentVariable.SUDO_USER}' and " +
+                            $"'{EnvironmentVariable.VC_SUDO_USER}' do not exist or are set to 'root' (i.e. potentially when running as sudo/root).",
+                            ErrorReason.EnvironmentIsInsufficent);
+                    }
+                }
+            }
+
+            return loggedInUserName;
+        }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a

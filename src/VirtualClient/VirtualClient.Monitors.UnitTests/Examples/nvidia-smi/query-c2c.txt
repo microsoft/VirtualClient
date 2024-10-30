@@ -1,0 +1,11 @@
+GPU 0: NVIDIA GH200 480GB (UUID: GPU-8d852f73-f973-0769-9c78-5e52c7b36f16)
+         C2C Link 0: 44.712 GB/s
+         C2C Link 1: 44.712 GB/s
+         C2C Link 2: 44.712 GB/s
+         C2C Link 3: 44.712 GB/s
+         C2C Link 4: 44.712 GB/s
+         C2C Link 5: 44.712 GB/s
+         C2C Link 6: 44.712 GB/s
+         C2C Link 7: 44.712 GB/s
+         C2C Link 8: 44.712 GB/s
+         C2C Link 9: 44.712 GB/s
