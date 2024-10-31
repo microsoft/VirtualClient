@@ -980,62 +980,22 @@ namespace VirtualClient.Contracts
         /// <param name="logger">The logger instance.</param>
         /// <param name="eventType">The event type (e.g. Hardware.Fault).</param>
         /// <param name="eventSource">The source/provider of the event (e.g. SystemLog, IpmiUtil).</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="eventId">A unique identifier for the event (e.g. 16384).</param>
-        /// <param name="eventLevel">The logging/severity level of the message context.</param>
-        /// <param name="eventDescription">A description of the event.</param>
-        /// <param name="eventCode">A numeric identifier/code to use for the event. This is helpful where for eventing systems that are numeric code-based.</param>
-        public static void LogSystemEvent(
-            this ILogger logger,
-            string eventType,
-            string eventSource,
-            string eventId,
-            LogLevel eventLevel,
-            EventContext eventContext,
-            string eventDescription = null,
-            long? eventCode = null)
-        {
-            logger.ThrowIfNull(nameof(logger));
-            eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));
-            eventSource.ThrowIfNullOrWhiteSpace(nameof(eventSource));
-            eventId.ThrowIfNullOrWhiteSpace(nameof(eventId));
-            eventContext.ThrowIfNull(nameof(eventContext));
-
-            VirtualClientLoggingExtensions.LogSystemEvent(
-                logger,
-                eventType,
-                eventSource,
-                eventId,
-                null,
-                eventLevel,
-                eventContext,
-                eventDescription,
-                eventCode);
-        }
-
-        /// <summary>
-        /// Extension logs system/OS event data to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="eventType">The event type (e.g. Hardware.Fault).</param>
-        /// <param name="eventSource">The source/provider of the event (e.g. SystemLog, IpmiUtil).</param>
-        /// 
         /// <param name="eventId">A unique identifier for the event (e.g. Fault_16384).</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="eventInfo">A set of key/value pairs that describe the event information/context.</param>
         /// <param name="eventLevel">The logging/severity level of the message context.</param>
-        /// <param name="eventDescription">A description of the event.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="eventCode">A numeric identifier/code to use for the event. This is helpful where for eventing systems that are numeric code-based.</param>
+        /// <param name="eventDescription">A description of the event.</param>
+        /// <param name="eventInfo">A set of key/value pairs that describe the event information/context.</param>
         public static void LogSystemEvent(
             this ILogger logger,
             string eventType,
             string eventSource,
             string eventId,
-            IEnumerable<KeyValuePair<string, object>> eventInfo,
             LogLevel eventLevel,
             EventContext eventContext,
+            long? eventCode = null,
             string eventDescription = null,
-            long? eventCode = null)
+            IEnumerable<KeyValuePair<string, object>> eventInfo = null)
         {
             logger.ThrowIfNull(nameof(logger));
             eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));

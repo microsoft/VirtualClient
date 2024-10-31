@@ -2248,10 +2248,11 @@ namespace VirtualClient.Contracts
                 expectedEventType, 
                 expectedEventSource,
                 expectedEventId.ToString(),
-                expectedEventInfo,
                 expectedEventLevel,
                 this.mockEventContext,
-                expectedEventDescription);
+                null,
+                expectedEventDescription,
+                expectedEventInfo);
 
             this.mockLogger.Verify(logger => logger.Log(
                 expectedEventLevel,
@@ -2295,6 +2296,7 @@ namespace VirtualClient.Contracts
                 expectedEventId.ToString(),
                 LogLevel.Information,
                 this.mockEventContext,
+                null,
                 expectedEventDescription);
         }
 
@@ -2334,10 +2336,11 @@ namespace VirtualClient.Contracts
                 expectedEventType,
                 expectedEventSource,
                 expectedEventId.ToString(),
-                expectedEventInfo,
                 LogLevel.Information,
                 this.mockEventContext,
-                expectedEventDescription);
+                null,
+                expectedEventDescription,
+                expectedEventInfo);
         }
 
         [Test]
@@ -2375,10 +2378,11 @@ namespace VirtualClient.Contracts
                 expectedEventType,
                 expectedEventSource,
                 expectedEventId.ToString(),
-                expectedEventInfo,
                 LogLevel.Information,
                 this.mockEventContext,
-                expectedEventDescription);
+                null,
+                expectedEventDescription,
+                expectedEventInfo);
 
             // The original should not have been changed.
             Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);
