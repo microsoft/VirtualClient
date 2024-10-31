@@ -129,7 +129,14 @@ namespace VirtualClient
                 }
             }
 
-            if (VirtualClientComponent.LogToFile && logToFile)
+            // The VirtualClientComponent itself has a global setting (defined on the command line)
+            // for logging to file. The secondary extension method level boolean parameter here enables
+            // individual usages of this method to override if needed at the use case level.
+            // 
+            // e.g.
+            // The user may request logging to file on the command line. However, a specific component
+            // implementation may want to avoid logging its contents to file because it is not useful information etc...
+            if (component.LogToFile && logToFile)
             {
                 try
                 {
