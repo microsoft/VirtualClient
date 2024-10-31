@@ -135,6 +135,8 @@ namespace VirtualClient.Common.Telemetry
                 List<LogEventProperty> properties = new List<LogEventProperty>
                 {
                     new LogEventProperty("id", new ScalarValue(Guid.NewGuid().ToString().ToLowerInvariant())),
+                    new LogEventProperty("timestamp", new ScalarValue(DateTime.UtcNow.ToString("o"))),
+                    new LogEventProperty("level", new ScalarValue(logLevel.ToString())),
                     new LogEventProperty("message", new ScalarValue(eventMessage)),
                     new LogEventProperty("operationId", new ScalarValue(eventContext.ActivityId)),
                     new LogEventProperty("transactionId", new ScalarValue(eventContext.TransactionId)),
