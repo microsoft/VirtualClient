@@ -135,10 +135,10 @@ namespace VirtualClient.Monitors
                                         "SystemInfo", 
                                         "lspci",
                                         $"{pciDevice.Name}_{pciDevice.Address}".ToLowerInvariant(),
-                                        eventInfo, 
                                         LogLevel.Information, 
                                         telemetryContext,
-                                        eventDescription: message);
+                                        eventDescription: message,
+                                        eventInfo: eventInfo);
                                 }
                             }
                         }

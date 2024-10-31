@@ -71,11 +71,9 @@ namespace VirtualClient
                         };
 
                         CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
-
                         ParseResult parseResult = commandBuilder.Build().Parse(args);
                         parseResult.ThrowOnUsageError();
 
-                        Program.InitializeFileLogging(parseResult);
                         Task<int> executionTask = parseResult.InvokeAsync();
 
                         // On Windows systems, this is required when running Virtual Client as a service.
@@ -395,22 +393,6 @@ namespace VirtualClient
             rootCommand.AddCommand(convertCommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
-        }
-
-        private static void InitializeFileLogging(ParseResult parsingResult)
-        {
-            // Log to file. Instructs the application to log the output of processes
-            // to files in the logs directory.
-            Option logToFile = OptionFactory.CreateLogToFileFlag();
-
-            foreach (Token token in parsingResult.Tokens.Where(token => token.Type == TokenType.Option))
-            {
-                if (logToFile.Aliases.Contains(token.Value, StringComparer.OrdinalIgnoreCase))
-                {
-                    VirtualClientComponent.LogToFile = true;
-                    break;
-                }
-            }
         }
 
         private static void InitializeStartupLogging(string[] args)

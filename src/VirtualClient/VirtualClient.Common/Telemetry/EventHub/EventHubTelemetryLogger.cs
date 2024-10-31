@@ -133,7 +133,16 @@ namespace VirtualClient.Common.Telemetry
             this.underlyingTelemetryChannel.Add(eventData);
         }
 
-        private static EventData CreateEventObject(string eventMessage, LogLevel logLevel, EventContext eventContext, object bufferInfo = null)
+        /// <summary>
+        /// Creates an <see cref="EventData"/> object with the telemetry information to emit to 
+        /// the target Event Hub.
+        /// </summary>
+        /// <param name="eventMessage">The message to set for the event data object.</param>
+        /// <param name="logLevel">The severity level of the logged event.</param>
+        /// <param name="eventContext">Provides additional context information to include in the event data object.</param>
+        /// <param name="bufferInfo">Provides information on the current buffered messages count/state to include in the event data object.</param>
+        /// <returns></returns>
+        protected virtual EventData CreateEventObject(string eventMessage, LogLevel logLevel, EventContext eventContext, object bufferInfo = null)
         {
             var eventObject = new
             {
@@ -221,13 +230,13 @@ namespace VirtualClient.Common.Telemetry
                 };
             }
 
-            EventData eventData = EventHubTelemetryLogger.CreateEventObject(eventMessage, logLevel, eventContext, bufferInfo);
+            EventData eventData = this.CreateEventObject(eventMessage, logLevel, eventContext, bufferInfo);
             if (eventData.Body.Length > EventHubTelemetryChannel.MaxEventDataBytes)
             {
                 EventContext scaledDownContext = eventContext.Clone(withProperties: false)
                     .AddContext("exceededSizeLimits", bool.TrueString);
 
-                eventData = EventHubTelemetryLogger.CreateEventObject(eventMessage, logLevel, scaledDownContext, bufferInfo);
+                eventData = this.CreateEventObject(eventMessage, logLevel, scaledDownContext, bufferInfo);
             }
 
             return eventData;
