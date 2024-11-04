@@ -32,8 +32,7 @@
                 "Scenario": "inferencemodels-3d-unet",
                 "Model": "3d-unet",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         }
     ],

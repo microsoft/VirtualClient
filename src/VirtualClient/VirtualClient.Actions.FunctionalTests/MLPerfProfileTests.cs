@@ -80,7 +80,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: true);
-            this.mockFixture.SetupWorkloadPackage("mlperf", expectedFiles: @"closed/NVIDIA/Makefile.docker");
 
             string expectedStateId = nameof(CudaAndNvidiaGPUDriverInstallation);
             await this.mockFixture.StateManager.SaveStateAsync(expectedStateId, JObject.Parse("{ \"any\": \"state\" }"), CancellationToken.None)

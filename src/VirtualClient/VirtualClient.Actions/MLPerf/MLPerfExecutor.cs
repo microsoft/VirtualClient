@@ -390,7 +390,6 @@ namespace VirtualClient.Actions
                 $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make build\"", 
                 this.NvidiaDirectory, 
                 cancellationToken);
-
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
@@ -456,14 +455,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void ReplaceMakefile()
-        {
-            this.fileSystem.File.Copy(
-                this.PlatformSpecifics.GetScriptPath("mlperf", "Makefile.docker"),
-                this.PlatformSpecifics.GetPackagePath("mlperf", "closed", "NVIDIA", "Makefile.docker"),
-                true);
-        }
-
         private void ReplaceGPUConfigFilesToSupportAdditionalGPUs()
         {
             foreach (string directory in this.fileSystem.Directory.GetDirectories(this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
@@ -478,6 +469,17 @@ namespace VirtualClient.Actions
                         true);
                     }
                 }
+            }
+        }
+
+        private void ReplaceMakefile()
+        {
+            if (this.fileSystem.File.Exists(this.PlatformSpecifics.GetScriptPath("mlperf", "Makefile.docker")))
+            {
+                this.fileSystem.File.Copy(
+                    this.PlatformSpecifics.GetScriptPath("mlperf", "Makefile.docker"),
+                    this.PlatformSpecifics.GetPackagePath("mlperf", "closed", "NVIDIA", "Makefile.docker"),
+                    true);
             }
         }
 
