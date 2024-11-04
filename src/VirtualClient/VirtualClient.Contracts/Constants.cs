@@ -189,6 +189,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_PACKAGES_DIR
         /// </summary>
         public const string VC_PACKAGES_DIR = nameof(VC_PACKAGES_DIR);
+
+        /// <summary>
+        /// Name = VC_SUDO_USER
+        /// </summary>
+        public const string VC_SUDO_USER = nameof(VC_SUDO_USER);
     }
 
     /// <summary>

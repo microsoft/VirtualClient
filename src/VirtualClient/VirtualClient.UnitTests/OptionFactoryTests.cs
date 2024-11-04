@@ -16,6 +16,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Identity;
 
     [TestFixture]
     [Category("Unit")]
