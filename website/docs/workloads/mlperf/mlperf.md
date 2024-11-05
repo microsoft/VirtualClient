@@ -89,6 +89,10 @@ The following metrics are examples of those captured by the Virtual Client when 
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
+| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
+| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
+| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
+| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
 
 ## Workload Metrics MLPerf Training
 | Scenario                                | Metric Name                    | Example Value (min)  | Example Value (max) | Example Value (avg) | Unit |
