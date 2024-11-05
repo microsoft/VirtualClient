@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
             if (this.AccuracyMode)
             {
                 // Adding metric for accuracy result being passed/failed
-                metricName = (string)parsedObject["config_name"] + "-AccuracyMode";
+                metricName = $"{(string)parsedObject["config_name"]}-AccuracyMode";
                 bool passed = (bool)parsedObject["accuracy"][0]["pass"];
                 metricValue = Convert.ToDouble(passed);
                 metricUnit = "PASS/FAIL";
@@ -54,21 +54,21 @@ namespace VirtualClient.Actions
                 this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity));
 
                 // Adding metric for accuracy threshold
-                metricName = (string)parsedObject["config_name"] + "-ThresholdValue";
+                metricName = $"{(string)parsedObject["config_name"]}-ThresholdValue";
                 metricValue = (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.Undefined;
 
                 this.Metrics.Add(new Metric(metricName, metricValue));
 
                 // Adding metric for accuracy value
-                metricName = (string)parsedObject["config_name"] + "-AccuracyValue";
+                metricName = $"{(string)parsedObject["config_name"]}-AccuracyValue";
                 metricValue = (double)parsedObject["accuracy"][0]["value"];
                 metricRelativity = MetricRelativity.Undefined;
 
                 this.Metrics.Add(new Metric(metricName, metricValue));
 
                 // Adding metric for accuracy value
-                metricName = (string)parsedObject["config_name"] + "-Accuracy Threshold Ratio";
+                metricName = $"{(string)parsedObject["config_name"]}-Accuracy Threshold Ratio";
                 metricValue = (double)parsedObject["accuracy"][0]["value"] / (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
@@ -77,7 +77,7 @@ namespace VirtualClient.Actions
             else
             {
                 // Adding metric for performance result being valid/invalid
-                metricName = (string)parsedObject["config_name"] + "-PerformanceMode";
+                metricName = $"{(string)parsedObject["config_name"]}-PerformanceMode";
                 metricValue = Convert.ToDouble((string)parsedObject["result_validity"] == "VALID");
                 metricUnit = "VALID/INVALID";
                 metricRelativity = MetricRelativity.HigherIsBetter;
@@ -85,7 +85,7 @@ namespace VirtualClient.Actions
                 this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity));
 
                 // Adding metric for perofmrnace result value
-                metricName = (string)parsedObject["config_name"] + "-" + (string)parsedObject["scenario_key"];
+                metricName = $"{(string)parsedObject["config_name"]}-{(string)parsedObject["scenario_key"]}";
                 string scenarioValue = ((string)parsedObject["summary_string"]).Split(" ")[1];
                 scenarioValue = scenarioValue.Substring(0, scenarioValue.Length - 1);
                 metricValue = Convert.ToDouble(scenarioValue);
