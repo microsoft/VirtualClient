@@ -4,7 +4,7 @@
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SupportedRequireCustomSystemSupport": "A100_PCIe_80GBx4",
+        "SupportedRequireCustomSystemSupport": "A100_PCIe_40GBx8",
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
     "Parameters": {

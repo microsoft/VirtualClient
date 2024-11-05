@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,8 +38,8 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-PerformanceMode", 1, "VALID/INVALID");
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-result_completed_samples_per_sec", 25405.6);
+            MetricAssert.Exists(metrics, "PerformanceMode", 1, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "result_completed_samples_per_sec", 25405.6);
         }
 
         [Test]
@@ -52,8 +53,8 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-PerformanceMode", 0, "VALID/INVALID");
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-result_90.00_percentile_latency_ns", 1924537);
+            MetricAssert.Exists(metrics, "PerformanceMode", 0, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "result_90.00_percentile_latency_ns", 1924537);
         }
 
         [Test]
@@ -67,10 +68,10 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(4, metrics.Count);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode", 1, "PASS/FAIL");
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-ThresholdValue", 89.96526);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyValue", 90.2147015680108);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-Accuracy Threshold Ratio", 1.00277264321818);
+            MetricAssert.Exists(metrics, "AccuracyMode", 1, "PASS/FAIL");
+            MetricAssert.Exists(metrics, "ThresholdValue", 89.96526);
+            MetricAssert.Exists(metrics, "AccuracyValue", 90.2147015680108);
+            MetricAssert.Exists(metrics, "Accuracy Threshold Ratio", 1.00277264321818);
         }
 
         [Test]
@@ -84,10 +85,10 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(4, metrics.Count);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode", 0, "PASS/FAIL");
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-ThresholdValue", 1.0);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyValue", 1.5);
-            MetricAssert.Exists(metrics, "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-Accuracy Threshold Ratio", 1.5);
+            MetricAssert.Exists(metrics, "AccuracyMode", 0, "PASS/FAIL");
+            MetricAssert.Exists(metrics, "ThresholdValue", 1.0);
+            MetricAssert.Exists(metrics, "AccuracyValue", 1.5);
+            MetricAssert.Exists(metrics, "Accuracy Threshold Ratio", 1.5);
         }
     }
 }

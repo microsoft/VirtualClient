@@ -42,55 +42,61 @@ namespace VirtualClient.Actions
 
             JObject parsedObject = JObject.Parse(this.RawText);
 
+            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+            metadata["config_name"] = $"{(string)parsedObject["config_name"]}";
+            metadata["benchmark_short"] = $"{(string)parsedObject["benchmark_short"]}";
+            metadata["benchmark_full"] = $"{(string)parsedObject["benchmark_full"]}";
+            metadata["scenario"] = $"{(string)parsedObject["scenario"]}";
+
             if (this.AccuracyMode)
             {
                 // Adding metric for accuracy result being passed/failed
-                metricName = $"{(string)parsedObject["config_name"]}-AccuracyMode";
+                metricName = "AccuracyMode";
                 bool passed = (bool)parsedObject["accuracy"][0]["pass"];
                 metricValue = Convert.ToDouble(passed);
                 metricUnit = "PASS/FAIL";
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity));
+                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
                 // Adding metric for accuracy threshold
-                metricName = $"{(string)parsedObject["config_name"]}-ThresholdValue";
+                metricName = "ThresholdValue";
                 metricValue = (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.Undefined;
 
-                this.Metrics.Add(new Metric(metricName, metricValue));
+                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
 
                 // Adding metric for accuracy value
-                metricName = $"{(string)parsedObject["config_name"]}-AccuracyValue";
+                metricName = "AccuracyValue";
                 metricValue = (double)parsedObject["accuracy"][0]["value"];
                 metricRelativity = MetricRelativity.Undefined;
 
-                this.Metrics.Add(new Metric(metricName, metricValue));
+                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
 
                 // Adding metric for accuracy value
-                metricName = $"{(string)parsedObject["config_name"]}-Accuracy Threshold Ratio";
+                metricName = "Accuracy Threshold Ratio";
                 metricValue = (double)parsedObject["accuracy"][0]["value"] / (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metricRelativity));
+                this.Metrics.Add(new Metric(metricName, metricValue, metricRelativity, metadata: metadata));
             }
             else
             {
                 // Adding metric for performance result being valid/invalid
-                metricName = $"{(string)parsedObject["config_name"]}-PerformanceMode";
+                metricName = "PerformanceMode";
                 metricValue = Convert.ToDouble((string)parsedObject["result_validity"] == "VALID");
                 metricUnit = "VALID/INVALID";
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity));
+                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
                 // Adding metric for perofmrnace result value
-                metricName = $"{(string)parsedObject["config_name"]}-{(string)parsedObject["scenario_key"]}";
+                metricName = $"{(string)parsedObject["scenario_key"]}";
                 string scenarioValue = ((string)parsedObject["summary_string"]).Split(" ")[1];
                 scenarioValue = scenarioValue.Substring(0, scenarioValue.Length - 1);
                 metricValue = Convert.ToDouble(scenarioValue);
 
-                this.Metrics.Add(new Metric(metricName, metricValue));
+                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
             }
 
             return this.Metrics;
