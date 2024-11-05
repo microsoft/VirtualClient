@@ -51,7 +51,7 @@ https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks
 https://github.com/mlcommons/inference_results_v4.1/tree/master/closed/NVIDIA
 
 For systems which are not already included by MLPerf, add the config information in the appropriate \_\_init\_\_.py file under [GPUConfigFiles](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/MLPerf/GPUConfigFiles).  
-For example with A100-SXM4-40GBx8, we have the following section in the 3d-unet, SingleStream file: 
+For example with A100-SXM4-40GBx8, we have the following section in the 3d-unet, SingleStream file which is copied during initialization: 
 ```
 @ConfigRegistry.register(HarnessType.Custom, AccuracyTarget.k_99, PowerSetting.MaxP)
 class A100_SXM4_40GBx8(A100_SXM4_40GBx1):
