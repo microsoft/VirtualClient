@@ -3,9 +3,9 @@
 MLPerf is a consortium of AI leaders from academia, research labs, and industry whose mission is to “build fair and useful benchmarks” that provide unbiased evaluations of training and inference performance for hardware, software, and services—all conducted under prescribed conditions. To stay on the cutting edge of industry trends, MLPerf continues to evolve, holding new tests at regular intervals and adding new workloads that represent the state of the art in AI.
 
 * [MLPerf Training Documentation](https://github.com/mlcommons/training_results_v2.1/blob/main/MLPerf%E2%84%A2%20Training%20v2.0%20Results%20Discussion.pdf)  
-* [MLPerf Inference Documentation](https://github.com/mlcommons/inference_results_v2.0)  
+* [MLPerf Inference Documentation](https://github.com/mlcommons/inference_results_v4.1)  
 * [MLPerf Training Benchmarks](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks)
-* [MLPerf Inference Benchmarks](https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA)
+* [MLPerf Inference Benchmarks](https://github.com/mlcommons/inference_results_v4.1/tree/master/closed/NVIDIA)
 * [MLPerf Training Bert Preprocessing Data](./mlperf-trainining-bert-preprocessing-data.md)
 
 ## System Requirements
@@ -19,6 +19,7 @@ The following section defines the hardware systems/SKUs on which the MLPerf work
 GPU components for which the MLPerf workload is designed to test.
 
 * **Datacenter systems MLPerf Inference**  
+  * A100-SXM4-40GBx8
   * A100-SXM-80GBx8 (NVIDIA DGX A100, 80GB variant)
   * A100-SXM-80GBx4 (NVIDIA DGX Station A100, "Red SEPTober", 80GB variant)
   * A100-PCIex8 (80GB variant)
@@ -47,7 +48,7 @@ Source: [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVID
 Additional details on whether a system is supported or not can be found in the documetation here, 
 for each benchmark check it's respective implementation folder :
 https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks
-https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA
+https://github.com/mlcommons/inference_results_v4.1/tree/master/closed/NVIDIA
 
 
 ## What is Being Measured?
@@ -67,12 +68,14 @@ GPU performance across a wide range of inference models. Work is planned for int
 
 * **Inference Benchmarks**  
   * bert
-  * rnnt
-  * ssd-mobilenet
-  * ssd-resnet34
+  * 3d-unet
+  * ~~dlrm-v2 (not supported yet)~~
+  * ~~gptj (not supported yet)~~
+  * ~~llama2-70b (not supported yet)~~
+  * ~~mixtral-8x7b (not supported yet)~~
   * ~~resnet50 (not supported yet)~~
-  * ~~DLRM (not supported yet)~~
-  * ~~3D UNET (not supported yet)~~
+  * ~~retinanet (not supported yet)~~
+  * ~~stable-diffusion-xl (not supported yet)~~
 
 ## Workload Metrics MLPerf Inference
 
@@ -80,42 +83,12 @@ The following metrics are examples of those captured by the Virtual Client when 
 
 |Scenario | Metric Name  | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
 |---------|--------------|---------------------|---------------------|---------------------|------|
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_9_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_9_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_9_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_9_MaxP-Server-PerformanceMode | 0.0 | 1.0 | 0.5333333333333333 | VALID/INVALID |
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
 | bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Server-PerformanceMode | 0.0 | 1.0 | 0.7954545454545454 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_9_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_9_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_9_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_9_MaxP-Server-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Server-PerformanceMode | 0.0 | 1.0 | 0.9680851063829787 | VALID/INVALID |
-| rnnt | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| rnnt | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| rnnt | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| rnnt | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| ssd-mobilenet | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| ssd-mobilenet | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| ssd-mobilenet | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| ssd-mobilenet | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT-lwis_k_99_MaxP-Server-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Server-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
+| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
+| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
 
 ## Workload Metrics MLPerf Training
 | Scenario                                | Metric Name                    | Example Value (min)  | Example Value (max) | Example Value (avg) | Unit |
