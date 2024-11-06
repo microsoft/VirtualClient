@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Metrics;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -104,10 +105,17 @@ namespace VirtualClient
             @"\{([a-z0-9_-]+)\.(TotalDays|TotalHours|TotalMilliseconds|TotalMinutes|TotalSeconds)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // e.g.
+        // {Isarm}
+        private static readonly Regex Isarmexpression = new Regex(
+             @"\{Isarm\}",
+             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// The set of expressions and evaluators supported by the editor. Additional expressions
         /// and evaluators can be added (e.g. {PackagePath/Special:redis}).
         /// </summary>
+        /// 
         private static readonly IList<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>> Evaluators = new List<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>>
         {
             // Expression: {ScriptPath:xyz}
@@ -165,6 +173,39 @@ namespace VirtualClient
                             evaluatedExpression,
                             match.Value,
                             platformSpecifics.PlatformArchitectureName);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(
+              (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+ 
+                // Find all "isarm" occurrences using the regex
+                MatchCollection matches = Isarmexpression.Matches(expression);
+                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
+                string platform = platformSpecifics.PlatformArchitectureName;
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+ 
+                    // Replace each "isarm(string)" match individually with "true" or "false"
+                    foreach (Match match in matches)
+                    {
+                        // Check if the matched string contains 'arm' (case-insensitive)
+                        bool containsArm = platform.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0;
+                        // Replace the match in the original expression
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, containsArm ? "true" : "false");
                     }
                 }
 

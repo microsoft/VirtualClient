@@ -1080,6 +1080,8 @@ namespace VirtualClient
             {
                 { "Scenario", "RandomWrite_4k_BlockSize" },
                 { "PackageName", "diskspd" },
+                {"isarm","{IsArm}"},
+                {"Isarmenabled", "{calculate((\"{isarm}\" == \"true\") ? \"-XX:+AvoidUnalignedAccesses\" : \"\")}"},
                 { "DiskFilter", "BiggestSize" },
                 { "CommandLine", "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration} -Suw -W15 -D -L -Rtext" },
                 { "TestName", "diskspd_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}" },
@@ -1097,6 +1099,8 @@ namespace VirtualClient
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", parameters["Scenario"]);
             Assert.AreEqual("diskspd", parameters["PackageName"]);
+            Assert.AreEqual("true", parameters["isarm"]);
+            Assert.AreEqual("-XX:+AvoidUnalignedAccesses", parameters["Isarmenabled"]);
             Assert.AreEqual("BiggestSize", parameters["DiskFilter"]);
             Assert.AreEqual("-c496GB -b4K -r4K -t8 -o64 -w100 -d60 -Suw -W15 -D -L -Rtext", parameters["CommandLine"]);
             Assert.AreEqual(60, parameters["Duration"]);
