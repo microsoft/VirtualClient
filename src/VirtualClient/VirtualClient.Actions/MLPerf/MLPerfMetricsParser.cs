@@ -40,8 +40,10 @@ namespace VirtualClient.Actions
             string metricUnit = string.Empty;
             MetricRelativity metricRelativity = MetricRelativity.Undefined;
 
+            // The parsed JSON object from metadata.json
             JObject parsedObject = JObject.Parse(this.RawText);
 
+            // Logging some extra information as metadata
             IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
             metadata["config_name"] = $"{(string)parsedObject["config_name"]}";
             metadata["benchmark_short"] = $"{(string)parsedObject["benchmark_short"]}";
@@ -101,7 +103,7 @@ namespace VirtualClient.Actions
 
                 this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
-                // Adding metric for perofmrnace result value
+                // Adding metric for performance result value
                 string simpleKeyName;
                 if (((string)parsedObject["scenario_key"]).Contains("latency"))
                 {
