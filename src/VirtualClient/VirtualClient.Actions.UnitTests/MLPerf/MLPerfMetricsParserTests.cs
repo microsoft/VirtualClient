@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("Example_performance_summary1.json")]
-        public void MLPerfParserVerifyValidPerformanceMetrics(string exampleFile)
+        public void MLPerfParserVerifyValidMetrics(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
@@ -38,13 +38,13 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "PerformanceMode", 1, "VALID/INVALID");
-            MetricAssert.Exists(metrics, "result_completed_samples_per_sec", 25405.6);
+            MetricAssert.Exists(metrics, "PerformanceMode_p99", 1, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "samples_per_second_p99", 25405.6);
         }
 
         [Test]
         [TestCase("Example_performance_summary2.json")]
-        public void MLPerfParserVerifyInvalidPerformanceMetrics(string exampleFile)
+        public void MLPerfParserVerifyInvalidMetrics(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
@@ -53,13 +53,13 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "PerformanceMode", 0, "VALID/INVALID");
-            MetricAssert.Exists(metrics, "result_90.00_percentile_latency_ns", 1924537);
+            MetricAssert.Exists(metrics, "PerformanceMode_p99", 0, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "latency_ns_p99", 1924537);
         }
 
         [Test]
         [TestCase("Example_accuracy_summary1.json")]
-        public void MLPerfParserVerifyPassedPerformanceMetrics(string exampleFile)
+        public void MLPerfParserVerifyPassedMetrics(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
@@ -68,15 +68,15 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(4, metrics.Count);
-            MetricAssert.Exists(metrics, "AccuracyMode", 1, "PASS/FAIL");
-            MetricAssert.Exists(metrics, "ThresholdValue", 89.96526);
-            MetricAssert.Exists(metrics, "AccuracyValue", 90.2147015680108);
-            MetricAssert.Exists(metrics, "Accuracy Threshold Ratio", 1.00277264321818);
+            MetricAssert.Exists(metrics, "AccuracyMode_p99", 1, "PASS/FAIL");
+            MetricAssert.Exists(metrics, "ThresholdValue_p99", 89.96526);
+            MetricAssert.Exists(metrics, "AccuracyValue_p99", 90.2147015680108);
+            MetricAssert.Exists(metrics, "AccuracyThresholdRatio_p99", 1.00277264321818);
         }
 
         [Test]
         [TestCase("Example_accuracy_summary2.json")]
-        public void MLPerfParserVerifyFailedPerformanceMetrics(string exampleFile)
+        public void MLPerfParserVerifyFailedMetrics(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
@@ -85,10 +85,10 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(4, metrics.Count);
-            MetricAssert.Exists(metrics, "AccuracyMode", 0, "PASS/FAIL");
-            MetricAssert.Exists(metrics, "ThresholdValue", 1.0);
-            MetricAssert.Exists(metrics, "AccuracyValue", 1.5);
-            MetricAssert.Exists(metrics, "Accuracy Threshold Ratio", 1.5);
+            MetricAssert.Exists(metrics, "AccuracyMode_p99", 0, "PASS/FAIL");
+            MetricAssert.Exists(metrics, "ThresholdValue_p99", 1.0);
+            MetricAssert.Exists(metrics, "AccuracyValue_p99", 1.5);
+            MetricAssert.Exists(metrics, "AccuracyThresholdRatio_p99", 1.5);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Text.RegularExpressions;
+    using System.Linq;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Contracts;
 
@@ -48,10 +48,21 @@ namespace VirtualClient.Actions
             metadata["benchmark_full"] = $"{(string)parsedObject["benchmark_full"]}";
             metadata["scenario"] = $"{(string)parsedObject["scenario"]}";
 
+            // Whether this is default or high accuracy
+            string suffix;
+            if (((string)parsedObject["scenario"]).Contains("99_9"))
+            {
+                suffix = "_p99_9";
+            }
+            else
+            {
+                suffix = "_p99";
+            }
+
             if (this.AccuracyMode)
             {
                 // Adding metric for accuracy result being passed/failed
-                metricName = "AccuracyMode";
+                metricName = $"AccuracyMode{suffix}";
                 bool passed = (bool)parsedObject["accuracy"][0]["pass"];
                 metricValue = Convert.ToDouble(passed);
                 metricUnit = "PASS/FAIL";
@@ -60,21 +71,21 @@ namespace VirtualClient.Actions
                 this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
                 // Adding metric for accuracy threshold
-                metricName = "ThresholdValue";
+                metricName = $"ThresholdValue{suffix}";
                 metricValue = (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.Undefined;
 
                 this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
 
                 // Adding metric for accuracy value
-                metricName = "AccuracyValue";
+                metricName = $"AccuracyValue{suffix}";
                 metricValue = (double)parsedObject["accuracy"][0]["value"];
                 metricRelativity = MetricRelativity.Undefined;
 
                 this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
 
                 // Adding metric for accuracy value
-                metricName = "Accuracy Threshold Ratio";
+                metricName = $"AccuracyThresholdRatio{suffix}";
                 metricValue = (double)parsedObject["accuracy"][0]["value"] / (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
@@ -83,7 +94,7 @@ namespace VirtualClient.Actions
             else
             {
                 // Adding metric for performance result being valid/invalid
-                metricName = "PerformanceMode";
+                metricName = $"PerformanceMode{suffix}";
                 metricValue = Convert.ToDouble((string)parsedObject["result_validity"] == "VALID");
                 metricUnit = "VALID/INVALID";
                 metricRelativity = MetricRelativity.HigherIsBetter;
@@ -91,7 +102,17 @@ namespace VirtualClient.Actions
                 this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
                 // Adding metric for perofmrnace result value
-                metricName = $"{(string)parsedObject["scenario_key"]}";
+                string simpleKeyName;
+                if (((string)parsedObject["scenario_key"]).Contains("latency"))
+                {
+                    simpleKeyName = "latency_ns";
+                }
+                else
+                {
+                    simpleKeyName = "samples_per_second";
+                }
+
+                metricName = $"{simpleKeyName}{suffix}";
                 string scenarioValue = ((string)parsedObject["summary_string"]).Split(" ")[1];
                 scenarioValue = scenarioValue.Substring(0, scenarioValue.Length - 1);
                 metricValue = Convert.ToDouble(scenarioValue);
