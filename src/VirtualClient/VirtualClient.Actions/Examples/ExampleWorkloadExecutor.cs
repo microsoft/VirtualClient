@@ -362,7 +362,10 @@ namespace VirtualClient.Actions
                                 "ProcessResult",
                                 "ExampleWorkload",
                                 workloadProcess.ExitCode.ToString(),
-                                new Dictionary<string, object>
+                                workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
+                                telemetryContext,
+                                eventCode: workloadProcess.ExitCode,
+                                eventInfo: new Dictionary<string, object>
                                 {
                                     { "toolset", "ExampleWorkload" },
                                     { "command", $"{this.WorkloadExecutablePath} {commandArguments}" },
@@ -370,10 +373,7 @@ namespace VirtualClient.Actions
                                     { "standardOutput", workloadProcess.StandardOutput?.ToString() },
                                     { "standardError", workloadProcess.StandardError?.ToString() },
                                     { "workingDirectory", this.WorkloadPackage.Path }
-                                },
-                                workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
-                                telemetryContext,
-                                eventCode: workloadProcess.ExitCode);
+                                });
 
                             this.Logger.LogSystemEvent(
                                 "KeyResult",
