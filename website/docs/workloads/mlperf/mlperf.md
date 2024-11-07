@@ -92,18 +92,16 @@ GPU performance across a wide range of inference models. Work is planned for int
 
 The following metrics are examples of those captured by the Virtual Client when running the MLPerf Inference workload.
 
-|Scenario | Metric Name  | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
-|---------|--------------|---------------------|---------------------|---------------------|------|
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| bert | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
-| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
-| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
-| 3d-unet | DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream-PerformanceMode | 0.0 | 1.0 | 0.8333333333333334 | VALID/INVALID |
+|Scenario | Metric Name  | Example Value | Unit |
+|---------|--------------|---------------|------|
+| bert | PerformanceMode_p99 | 1.0 | VALID/INVALID |
+| bert | latency_ns_p99 | 525066834 |   |
+| bert | samples_per_second_p99 | 25.2768 | |
+| bert | AccuracyMode_p99 | 1.0 | PASS/FAIL |
+| bert | AccuracyValue_p99 | 0.86112 |  |
+| bert | ThresholdValue_p99 | 0.853083 |  |
+| bert | AccuracyThresholdRatio_p99 | 1.00831923740128 | PASS/FAIL |
+
 
 ## Workload Metrics MLPerf Training
 | Scenario                                | Metric Name                    | Example Value (min)  | Example Value (max) | Example Value (avg) | Unit |
