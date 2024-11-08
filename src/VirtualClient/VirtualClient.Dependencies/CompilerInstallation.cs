@@ -242,8 +242,7 @@ namespace VirtualClient.Dependencies
             string[] packages =
             {
                 "gcc",
-                "gfortran",
-                "cpp"
+                "gfortran"
             };
 
             // due to the following error:
@@ -264,7 +263,7 @@ namespace VirtualClient.Dependencies
                 }
             }
         }
-
+ 
         private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
