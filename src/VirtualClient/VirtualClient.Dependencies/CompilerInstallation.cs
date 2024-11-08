@@ -276,6 +276,9 @@ namespace VirtualClient.Dependencies
 
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
 
+            // Remove all existing alternatives for cpp before the subsequent "update-alternatives" of cpp
+            await this.ExecuteCommandAsync("update-alternatives", "--remove-all cpp", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+
             // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
             string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
 
