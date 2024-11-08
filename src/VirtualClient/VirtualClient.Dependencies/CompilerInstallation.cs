@@ -242,8 +242,7 @@ namespace VirtualClient.Dependencies
             string[] packages =
             {
                 "gcc",
-                "gfortran",
-                "cpp"
+                "gfortran"
             };
 
             // due to the following error:
@@ -264,7 +263,7 @@ namespace VirtualClient.Dependencies
                 }
             }
         }
-
+ 
         private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
@@ -275,6 +274,9 @@ namespace VirtualClient.Dependencies
                         $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion}";
 
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
+
+            // Remove all existing alternatives for cpp before the subsequent "update-alternatives" of cpp
+            await this.ExecuteCommandAsync("update-alternatives", "--remove-all cpp", Environment.CurrentDirectory, telemetryContext, cancellationToken);
 
             // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
             string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
