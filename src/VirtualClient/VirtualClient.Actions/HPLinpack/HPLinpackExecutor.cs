@@ -318,12 +318,12 @@ namespace VirtualClient.Actions
                     case "23.04.1":
                         this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1";
                         break;
-                    case "24.04":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.04";
+                    case "24.10":
+                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.10_deb";
                         break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.04 on the following platform/architectures: " +
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.10 on the following platform/architectures: " +
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }
@@ -368,13 +368,13 @@ namespace VirtualClient.Actions
                         await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_23.04.1_gcc-11.3/lib/libarmpl.a", cancellationToken);
                         break;
-                    case "24.04":
+                    case "24.10":
                         await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_24.04_gcc/lib/libarmpl.a", cancellationToken);
+                        makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_24.10_gcc/lib/libarmpl.a", cancellationToken);
                         break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.04 on the following platform/architectures: " +
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.10 on the following platform/architectures: " +
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }

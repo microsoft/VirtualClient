@@ -157,14 +157,14 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             this.fixture.Parameters["PerformanceLibrary"] = "ARM";
-            this.fixture.Parameters["PerformanceLibraryVersion"] = "24.04";
+            this.fixture.Parameters["PerformanceLibraryVersion"] = "24.10";
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "ARM", "arm-performance-libraries_24.04.sh")}",
-                    $"sudo ./arm-performance-libraries_24.04.sh -a",
+                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "ARM", "arm-performance-libraries_24.10_deb.sh")}",
+                    $"sudo ./arm-performance-libraries_24.10_deb.sh -a",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
