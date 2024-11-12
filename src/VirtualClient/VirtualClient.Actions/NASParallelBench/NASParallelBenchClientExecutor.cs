@@ -57,7 +57,7 @@ namespace VirtualClient.Actions
                 string username = this.Parameters.GetValue<string>(nameof(NASParallelBenchClientExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.systemManagement.GetLoggedInUserName();
+                    username = this.PlatformSpecifics.GetLoggedInUser();
                 }
 
                 return username;

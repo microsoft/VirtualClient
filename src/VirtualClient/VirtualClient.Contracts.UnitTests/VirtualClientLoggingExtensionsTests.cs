@@ -2224,41 +2224,55 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogSystemEventsExtensionLogsTheExpectedEvents()
+        [TestCase(LogLevel.Critical)]
+        [TestCase(LogLevel.Debug)]
+        [TestCase(LogLevel.Error)]
+        [TestCase(LogLevel.Information)]
+        [TestCase(LogLevel.None)]
+        [TestCase(LogLevel.Trace)]
+        [TestCase(LogLevel.Warning)]
+        public void LogSystemEventExtensionLogsTheExpectedEvents(LogLevel expectedEventLevel)
         {
-            string expectedMessage = "RealtimeDataMonitorCounters";
-            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
+            string expectedEventType = "EventResult";
+            string expectedEventSource = "AnySource";
+            string expectedEventDescription = "Test of the system event telemetry system.";
+            long expectedEventId = 100;
+
+            IDictionary<string, object> expectedEventInfo = new Dictionary<string, object>
             {
-                ["SystemEventLog"] = "Process shutdown unexpectedly.",
-                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced."
+                ["property1"] = "Process shutdown unexpectedly.",
+                ["property2"] = 1234,
             };
 
-            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext);
+            this.mockLogger.Object.LogSystemEvent(
+                expectedEventType, 
+                expectedEventSource,
+                expectedEventId.ToString(),
+                expectedEventLevel,
+                this.mockEventContext,
+                null,
+                expectedEventDescription,
+                expectedEventInfo);
 
             this.mockLogger.Verify(logger => logger.Log(
-                LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedMessage),
+                expectedEventLevel,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedEventType),
                 It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("eventType")
                     && context.Properties.ContainsKey("eventInfo")),
                 null,
                 null),
-                Times.Exactly(2)); // Each performance counter is logged as an individual message
+                Times.Exactly(1));
         }
 
         [Test]
-        public void LogSystemEventsExtensionIncludesTheSystemEventInformationInTheEventContext()
+        public void LogSystemEventExtensionIncludesTheSystemEventInformationInTheEventContext_1()
         {
-            string expectedMessage = "RealtimeDataMonitorCounters";
-            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
-            {
-                ["SystemEventLog"] = "Process shutdown unexpectedly.",
-                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced.",
-                ["MicrocodeVersion"] = 1234
-            };
-
-            int counterIndex = 0;
+            string expectedEventType = "EventResult";
+            string expectedEventSource = "AnySource";
+            string expectedEventDescription = "Test of the system event telemetry system.";
+            long expectedEventId = 100;
 
             this.mockLogger
                 .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
@@ -2267,18 +2281,76 @@ namespace VirtualClient.Contracts
                     Assert.IsNotNull(state);
                     Assert.IsTrue(state.Properties.ContainsKey("eventType"));
                     Assert.IsTrue(state.Properties.ContainsKey("eventInfo"));
-                    Assert.AreEqual(state.Properties["eventType"].ToString(), expectedSystemEvents.ElementAt(counterIndex).Key);
-                    Assert.AreEqual(state.Properties["eventInfo"], expectedSystemEvents.ElementAt(counterIndex).Value);
-                    counterIndex++;
+                    Assert.AreEqual(expectedEventType, state.Properties["eventType"]);
+
+                    IDictionary<string, object> actualEventInfo = state.Properties["eventInfo"] as IDictionary<string, object>;
+                    Assert.IsNotNull(actualEventInfo);
+                    Assert.AreEqual(expectedEventDescription, actualEventInfo["eventDescription"]);
+                    Assert.AreEqual(expectedEventSource, actualEventInfo["eventSource"]);
+                    Assert.AreEqual(expectedEventId.ToString(), actualEventInfo["eventId"].ToString());
                 });
 
-            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext);
+            this.mockLogger.Object.LogSystemEvent(
+                expectedEventType,
+                expectedEventSource,
+                expectedEventId.ToString(),
+                LogLevel.Information,
+                this.mockEventContext,
+                null,
+                expectedEventDescription);
         }
 
+        [Test]
+        public void LogSystemEventExtensionIncludesTheSystemEventInformationInTheEventContext_2()
+        {
+            string expectedEventType = "EventResult";
+            string expectedEventSource = "AnySource";
+            string expectedEventDescription = "Test of the system event telemetry system.";
+            long expectedEventId = 100;
+
+            IDictionary<string, object> expectedEventInfo = new Dictionary<string, object>
+            {
+                ["property1"] = "Process shutdown unexpectedly.",
+                ["property2"] = 1234,
+            };
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    Assert.IsNotNull(state);
+                    Assert.IsTrue(state.Properties.ContainsKey("eventType"));
+                    Assert.IsTrue(state.Properties.ContainsKey("eventInfo"));
+                    Assert.AreEqual(expectedEventType, state.Properties["eventType"]);
+
+                    IDictionary<string, object> actualEventInfo = state.Properties["eventInfo"] as IDictionary<string, object>;
+                    Assert.IsNotNull(actualEventInfo);
+                    Assert.AreEqual(expectedEventInfo["property1"], actualEventInfo["property1"]);
+                    Assert.AreEqual(expectedEventInfo["property2"], actualEventInfo["property2"]);
+                    Assert.AreEqual(expectedEventDescription, actualEventInfo["eventDescription"]);
+                    Assert.AreEqual(expectedEventSource, actualEventInfo["eventSource"]);
+                    Assert.AreEqual(expectedEventId.ToString(), actualEventInfo["eventId"].ToString());
+                });
+
+            this.mockLogger.Object.LogSystemEvent(
+                expectedEventType,
+                expectedEventSource,
+                expectedEventId.ToString(),
+                LogLevel.Information,
+                this.mockEventContext,
+                null,
+                expectedEventDescription,
+                expectedEventInfo);
+        }
 
         [Test]
-        public void LogSystemEventsExtensionDoesNotSideEffectOrChangeAnEventContextProvided()
+        public void LogSystemEventExtensionDoesNotSideEffectOrChangeAnEventContextProvided()
         {
+            string expectedEventType = "EventResult";
+            string expectedEventSource = "AnySource";
+            string expectedEventDescription = "Test of the system event telemetry system.";
+            long expectedEventId = 100;
+
             EventContext originalContext = new EventContext(Guid.NewGuid(), new Dictionary<string, object>
             {
                 ["property1"] = "Any Value",
@@ -2287,9 +2359,10 @@ namespace VirtualClient.Contracts
 
             EventContext cloneOfOriginal = originalContext.Clone();
 
-            IDictionary<string, object> systemEvents = new Dictionary<string, object>
+            IDictionary<string, object> expectedEventInfo = new Dictionary<string, object>
             {
-                ["SystemEventLog"] = "Process shutdown unexpectedly."
+                ["property1"] = "Process shutdown unexpectedly.",
+                ["property2"] = 1234,
             };
 
             this.mockLogger
@@ -2301,7 +2374,15 @@ namespace VirtualClient.Contracts
                     Assert.IsFalse(object.ReferenceEquals(originalContext, actualContext));
                 });
 
-            this.mockLogger.Object.LogSystemEvents("AnyMessage", systemEvents, this.mockEventContext);
+            this.mockLogger.Object.LogSystemEvent(
+                expectedEventType,
+                expectedEventSource,
+                expectedEventId.ToString(),
+                LogLevel.Information,
+                this.mockEventContext,
+                null,
+                expectedEventDescription,
+                expectedEventInfo);
 
             // The original should not have been changed.
             Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);

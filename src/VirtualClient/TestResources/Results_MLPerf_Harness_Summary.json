@@ -1,4 +1,18 @@
 {
-  "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server": { "bert": "result_scheduled_samples_per_sec: 4751.78, Result is INVALID" },
-  "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream": { "bert": "result_90.00_percentile_latency_ns: 2202969, Result is VALID" }
+  "benchmark_full": "bert-99",
+  "benchmark_short": "bert",
+  "config_name": "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Server",
+  "detected_system": "SystemConfiguration(host_cpu_conf=CPUConfiguration(layout={CPU(name=\"AMD EPYC 7V12 64-Core Processor\", architecture=CPUArchitecture.x86_64, core_count=48, threads_per_core=1): 2}), host_mem_conf=MemoryConfiguration(host_memory_capacity=Memory(quantity=928.7656999999999, byte_suffix=ByteSuffix.GB), comparison_tolerance=0.05), accelerator_conf=AcceleratorConfiguration(layout={GPU(name=\"NVIDIA A100-SXM4-40GB\", accelerator_type=AcceleratorType.Discrete, vram=Memory(quantity=40.0, byte_suffix=ByteSuffix.GiB), max_power_limit=400.0, pci_id=\"0x20B010DE\", compute_sm=80): 8}), numa_conf=NUMAConfiguration(numa_nodes={}, num_numa_nodes=4), system_id=\"DGX-A100_A100-SXM4-40GBx8\")",
+  "early_stopping_met": true,
+  "effective_min_duration_ms": 600000,
+  "effective_min_query_count": 100,
+  "result_completed_samples_per_sec": 25405.6,
+  "result_validity": "VALID",
+  "satisfies_query_constraint": false,
+  "scenario": "Server",
+  "scenario_key": "result_completed_samples_per_sec",
+  "summary_string": "result_completed_samples_per_sec: 25405.6, Result is VALID, 10-min runtime requirement met: True",
+  "system_name": "DGX-A100_A100-SXM4-40GBx8_TRT",
+  "tensorrt_version": "10.2.0",
+  "test_mode": "PerformanceOnly"
 }

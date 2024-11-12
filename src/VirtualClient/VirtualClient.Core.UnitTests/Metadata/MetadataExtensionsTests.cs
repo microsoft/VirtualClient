@@ -126,7 +126,7 @@ namespace VirtualClient.Metadata
             object value;
             Assert.IsTrue(metadata.TryGetValue("computerName", out value) && value.ToString() == Environment.MachineName);
             Assert.IsTrue(metadata.TryGetValue("osFamily", out value) && value.ToString() == "Unix");
-            Assert.IsTrue(metadata.TryGetValue("osName", out value) && value.ToString() == "Ubuntu");
+            Assert.IsTrue(metadata.TryGetValue("osName", out value) && value.ToString() == "Ubuntu 20.01 build 1234");
             Assert.IsTrue(metadata.TryGetValue("osPlatformArchitecture", out value) && value.ToString() == PlatformSpecifics.GetPlatformArchitectureName(platform, architecture));
             Assert.IsTrue(metadata.TryGetValue("osDescription", out value));
             Assert.IsTrue(metadata.TryGetValue("osVersion", out value));
@@ -334,7 +334,7 @@ namespace VirtualClient.Metadata
             // Host/OS Metadata
             Assert.IsTrue(metadata.TryGetValue("computerName", out value) && value.ToString() == Environment.MachineName);
             Assert.IsTrue(metadata.TryGetValue("osFamily", out value) && value.ToString() == "Unix");
-            Assert.IsTrue(metadata.TryGetValue("osName", out value) && value.ToString() == "Ubuntu");
+            Assert.IsTrue(metadata.TryGetValue("osName", out value) && value.ToString() == "TestUbuntu");
             Assert.IsTrue(metadata.TryGetValue("osDescription", out value));
             Assert.IsTrue(metadata.TryGetValue("osVersion", out value));
             Assert.IsTrue(metadata.TryGetValue("osPlatformArchitecture", out value) && value.ToString() == "linux-x64");
@@ -386,7 +386,7 @@ namespace VirtualClient.Metadata
             object value;
             Assert.IsTrue(metadata.TryGetValue("computerName", out value) && value.ToString() == Environment.MachineName);
             Assert.IsTrue(metadata.TryGetValue("osFamily", out value) && value.ToString() == "Unix");
-            Assert.IsTrue(metadata.TryGetValue("osName", out value) && value.ToString() == "Ubuntu");
+            Assert.IsTrue(metadata.TryGetValue("osName", out value) && value.ToString() == "TestUbuntu");
             Assert.IsTrue(metadata.TryGetValue("osDescription", out value));
             Assert.IsTrue(metadata.TryGetValue("osVersion", out value));
             Assert.IsTrue(metadata.TryGetValue("osPlatformArchitecture", out value) && value.ToString() == "linux-arm64");

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,60 +28,67 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("Example_bert_accuracy_summary2.json")]
-        [TestCase("Example_bert_perf_harness_summary2.json")]
-        public void MLPerfParserHandlesFilesThatHasNoValidValues(string exampleFile)
+        [TestCase("Example_performance_summary1.json")]
+        public void MLPerfParserVerifyValidMetrics(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
 
-            if (exampleFile.Contains("accuracy"))
-                this.testParser = new MLPerfMetricsParser(this.rawText, true);
-            else
-                this.testParser = new MLPerfMetricsParser(this.rawText, false);
-
+            this.testParser = new MLPerfMetricsParser(this.rawText, false);
             IList<Metric> metrics = this.testParser.Parse();
-            Assert.AreEqual(0, metrics.Count);
+
+            Assert.AreEqual(2, metrics.Count);
+            MetricAssert.Exists(metrics, "PerformanceMode_p99", 1, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "samples_per_second_p99", 25405.6);
         }
 
         [Test]
-        [TestCase("Example_bert_accuracy_summary1.json")]
-        [TestCase("Example_bert_perf_harness_summary1.json")]
-        public void MLPerfParserVerifyMetrics(string exampleFile)
+        [TestCase("Example_performance_summary2.json")]
+        public void MLPerfParserVerifyInvalidMetrics(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
 
-            if (exampleFile.Contains("accuracy"))
-            {
-                this.testParser = new MLPerfMetricsParser(this.rawText, true);
-                IList<Metric> metrics = this.testParser.Parse();
+            this.testParser = new MLPerfMetricsParser(this.rawText, false);
+            IList<Metric> metrics = this.testParser.Parse();
 
-                Assert.AreEqual(12, metrics.Count);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-AccuracyMode", 1, "PASS/FAIL");
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-ThresholdValue", 90.783);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-AccuracyValue", 91.873);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-Accuracy Threshold Ratio", 1.0120066532280274);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-AccuracyMode", 1, "PASS/FAIL");
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-ThresholdValue", 90.783);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-AccuracyValue", 91.568);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-Accuracy Threshold Ratio", 1.0086469933798177);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-AccuracyMode", 0, "PASS/FAIL");
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-ThresholdValue", 90.783);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-AccuracyValue", 90.723);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-Accuracy Threshold Ratio", 0.99933908330854893);
-            }
-            else
-            {
-                this.testParser = new MLPerfMetricsParser(this.rawText, false);
-                IList<Metric> metrics = this.testParser.Parse();
+            Assert.AreEqual(2, metrics.Count);
+            MetricAssert.Exists(metrics, "PerformanceMode_p99", 0, "VALID/INVALID");
+            MetricAssert.Exists(metrics, "latency_ns_p99", 1924537);
+        }
 
-                Assert.AreEqual(4, metrics.Count);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server-PerformanceMode", 0, "VALID/INVALID");
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server-result_scheduled_samples_per_sec", 4751.78);
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream-PerformanceMode", 1, "VALID/INVALID");
-                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream-result_90.00_percentile_latency_ns", 2202969);
-            }
+        [Test]
+        [TestCase("Example_accuracy_summary1.json")]
+        public void MLPerfParserVerifyPassedMetrics(string exampleFile)
+        {
+            string outputPath = Path.Combine(this.ExamplePath, exampleFile);
+            this.rawText = File.ReadAllText(outputPath);
+
+            this.testParser = new MLPerfMetricsParser(this.rawText, true);
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(4, metrics.Count);
+            MetricAssert.Exists(metrics, "AccuracyMode_p99", 1, "PASS/FAIL");
+            MetricAssert.Exists(metrics, "ThresholdValue_p99", 89.96526);
+            MetricAssert.Exists(metrics, "AccuracyValue_p99", 90.2147015680108);
+            MetricAssert.Exists(metrics, "AccuracyThresholdRatio_p99", 1.00277264321818);
+        }
+
+        [Test]
+        [TestCase("Example_accuracy_summary2.json")]
+        public void MLPerfParserVerifyFailedMetrics(string exampleFile)
+        {
+            string outputPath = Path.Combine(this.ExamplePath, exampleFile);
+            this.rawText = File.ReadAllText(outputPath);
+
+            this.testParser = new MLPerfMetricsParser(this.rawText, true);
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(4, metrics.Count);
+            MetricAssert.Exists(metrics, "AccuracyMode_p99", 0, "PASS/FAIL");
+            MetricAssert.Exists(metrics, "ThresholdValue_p99", 1.0);
+            MetricAssert.Exists(metrics, "AccuracyValue_p99", 1.5);
+            MetricAssert.Exists(metrics, "AccuracyThresholdRatio_p99", 1.5);
         }
     }
 }

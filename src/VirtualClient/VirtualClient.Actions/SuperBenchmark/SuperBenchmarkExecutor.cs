@@ -92,7 +92,7 @@ namespace VirtualClient.Actions
                 string username = this.Parameters.GetValue<string>(nameof(SuperBenchmarkExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.systemManager.GetLoggedInUserName();
+                    username = this.PlatformSpecifics.GetLoggedInUser();
                 }
 
                 return username;

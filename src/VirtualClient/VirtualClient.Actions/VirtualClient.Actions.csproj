@@ -30,9 +30,12 @@
         <ScriptFiles Include="HammerDB\*.sh" />
         <ScriptFiles Include="SuperBenchmark\*.yaml;SuperBenchmark\*.sh;SuperBenchmark\*.ini" />
         <ScriptFiles Include="MLPerf\**\*.py" />
+		<ScriptFiles Include="MLPerf\Makefile.docker" />
     </ItemGroup>
 
     <ItemGroup>
+      <ScriptFiles Remove="MLPerf\GPUConfigFiles\3d-unet\Offline\__init__.py" />
+      <ScriptFiles Remove="mlperf\gpuconfigfiles\3d-unet\__init__.py" />
       <ScriptFiles Remove="Sysbench\distribute-database.sh" />
     </ItemGroup>
 

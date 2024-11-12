@@ -63,12 +63,9 @@ namespace VirtualClient.Actions
         [TestCase("PERF-MEMCACHED.json")]
         public async Task MemcachedMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetLoggedInUserName())
-                            .Returns("mockuser");
-
             IEnumerable<string> expectedCommands = new List<string>
             {
-                $"sudo -u mockuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384 :: &\""
+                $"sudo -u [a-z]+ bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384 :: &\""
             };
 
             // Setup the expectations for the workload
@@ -90,7 +87,11 @@ namespace VirtualClient.Actions
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                InMemoryProcess process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                process.EnvironmentVariables.Add(
+                    EnvironmentVariable.SUDO_USER,
+                    "mockuser");
+
                 return process;
             };
 

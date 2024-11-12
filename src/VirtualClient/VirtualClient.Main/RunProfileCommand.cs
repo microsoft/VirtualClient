@@ -626,13 +626,19 @@ namespace VirtualClient
 
                 if (systemDetails?.Any() == true)
                 {
-                    List<KeyValuePair<string, object>> systemInfo = new List<KeyValuePair<string, object>>();
                     foreach (var entry in systemDetails)
                     {
-                        systemInfo.Add(new KeyValuePair<string, object>("SystemInfo", entry));
+                        if (entry.TryGetValue("toolset", out IConvertible toolset) && !string.IsNullOrWhiteSpace(toolset?.ToString()))
+                        {
+                            logger.LogSystemEvent(
+                                "SystemInfo",
+                                toolset.ToString(),
+                                $"systeminfo_{toolset}".ToLowerInvariant(),
+                                LogLevel.Information,
+                                EventContext.Persisted(),
+                                eventInfo: entry.ToDictionary(e => e.Key, e => e.Value as object));
+                        }
                     }
-
-                    logger.LogSystemEvents("SystemInfo", systemInfo, EventContext.Persisted());
                 }
             }
             catch
@@ -704,6 +710,7 @@ namespace VirtualClient
                 profileExecutor.ExecuteMonitors = false;
                 profileExecutor.ExitWait = this.ExitWait;
                 profileExecutor.FailFast = this.FailFast;
+                profileExecutor.LogToFile = this.LogToFile;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
@@ -799,6 +806,7 @@ namespace VirtualClient
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
                 profileExecutor.ExitWait = this.ExitWait;
                 profileExecutor.FailFast = this.FailFast;
+                profileExecutor.LogToFile = this.LogToFile;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
@@ -855,7 +863,8 @@ namespace VirtualClient
             EventContext telemetryContext = EventContext.Persisted();
             ConsoleLogger.Default.LogMessage($"Experiment ID: {this.ExperimentId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Agent ID: {this.AgentId}", telemetryContext);
-            ConsoleLogger.Default.LogMessage($"Log To File: {VirtualClientComponent.LogToFile}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Log To File: {this.LogToFile}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {
