@@ -319,7 +319,7 @@ namespace VirtualClient.Actions
                         this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1";
                         break;
                     case "24.10":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.10_deb";
+                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.10";
                         break;
                     default:
                         throw new WorkloadException(

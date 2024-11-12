@@ -163,8 +163,8 @@ namespace VirtualClient.Actions
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "ARM", "arm-performance-libraries_24.10_deb.sh")}",
-                    $"sudo ./arm-performance-libraries_24.10_deb.sh -a",
+                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "ARM", "arm-performance-libraries_24.10.sh")}",
+                    $"sudo ./arm-performance-libraries_24.10.sh -a",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
