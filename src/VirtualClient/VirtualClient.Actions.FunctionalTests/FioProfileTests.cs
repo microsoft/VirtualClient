@@ -158,28 +158,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        [Test]
-        [TestCase("PERF-IO-FIO.json")]
-        public void FioWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
-        {
-            // Setup disks the expected scenarios:
-            // - Disks are formatted and ready
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withUnformatted: false);
-
-            // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
-
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
-            {
-                executor.ExecuteDependencies = false;
-
-                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Contains("fio"));
-            }
-        }
-
         private static IEnumerable<string> GetFioStressProfileExpectedCommands(PlatformID platform)
         {
             string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";

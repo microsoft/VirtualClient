@@ -141,6 +141,11 @@ namespace VirtualClient
         public ILogger Logger { get; }
 
         /// <summary>
+        /// True if VC should log output to file.
+        /// </summary>
+        public bool LogToFile { get; set; }
+
+        /// <summary>
         /// The profile to execute.
         /// </summary>
         public ExecutionProfile Profile { get; }
@@ -716,6 +721,7 @@ namespace VirtualClient
                         bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
                         runtimeComponent.FailFast = this.FailFast;
+                        runtimeComponent.LogToFile = this.LogToFile;
 
                         // Global metadata. Supplied on the command line.
                         //

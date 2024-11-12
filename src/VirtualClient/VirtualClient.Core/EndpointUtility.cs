@@ -5,7 +5,10 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -13,11 +16,12 @@ namespace VirtualClient
     using Azure.Identity;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
 
     /// <summary>
     /// Provides features for managing requirements for remote endpoint access.
     /// </summary>
-    internal static class EndpointUtility
+    public static class EndpointUtility
     {
         /// <summary>
         /// Creates a <see cref="DependencyBlobStore"/> definition from the connection properties provided.
@@ -607,13 +611,14 @@ namespace VirtualClient
             certificateThumbprint.ThrowIfNullOrWhiteSpace(nameof(certificateThumbprint));
 
             // Always search CurrentUser/My store first.
+            PlatformID platform = Environment.OSVersion.Platform;
             StoreName storeName = StoreName.My;
             List<StoreLocation> storeLocations = new List<StoreLocation>
             {
                 StoreLocation.CurrentUser
             };
 
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            if (platform == PlatformID.Win32NT)
             {
                 // There is no local machine store on Unix/Linux systems. This store is available on
                 // Windows only.
@@ -627,7 +632,40 @@ namespace VirtualClient
                 SendCertificateChain = true
             };
 
-            X509Certificate2 certificate = await certificateManager.GetCertificateFromStoreAsync(certificateThumbprint, storeLocations, storeName);
+            X509Certificate2 certificate = null;
+
+            if (platform == PlatformID.Unix)
+            {
+                string currentUser = Environment.UserName;
+
+                try
+                {
+                    certificate = await certificateManager.GetCertificateFromStoreAsync(
+                        certificateThumbprint,
+                        storeLocations,
+                        storeName);
+                }
+                catch (CryptographicException) when (currentUser?.ToLowerInvariant() == "root")
+                {
+                    // Backup:
+                    // We are likely running as sudo/root. The .NET SDK will
+                    // look for the certificate in the location specific to 'root'
+                    // by default. We want to try the current user location as well.
+                    PlatformSpecifics platformSpecifics = new PlatformSpecifics(
+                        Environment.OSVersion.Platform,
+                        RuntimeInformation.ProcessArchitecture);
+
+                    currentUser = platformSpecifics.GetLoggedInUser();
+
+                    certificate = await certificateManager.GetCertificateFromPathAsync(
+                        certificateThumbprint,
+                        string.Format(CertificateManager.DefaultUnixCertificateDirectory, currentUser));
+                }
+            }
+            else
+            {
+                certificate = await certificateManager.GetCertificateFromStoreAsync(certificateThumbprint, storeLocations, storeName);
+            }
 
             return new ClientCertificateCredential(tenantId, clientId, certificate, credentialOptions);
         }
@@ -641,13 +679,14 @@ namespace VirtualClient
             certificateSubject.ThrowIfNullOrWhiteSpace(nameof(certificateSubject));
 
             // Always search CurrentUser/My store first.
+            PlatformID platform = Environment.OSVersion.Platform;
             StoreName storeName = StoreName.My;
             List<StoreLocation> storeLocations = new List<StoreLocation>
             {
                 StoreLocation.CurrentUser
             };
 
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            if (platform == PlatformID.Win32NT)
             {
                 // There is no local machine store on Unix/Linux systems. This store is available on
                 // Windows only.
@@ -661,7 +700,46 @@ namespace VirtualClient
                 SendCertificateChain = true
             };
 
-            X509Certificate2 certificate = await certificateManager.GetCertificateFromStoreAsync(certificateIssuer, certificateSubject, storeLocations, storeName);
+            X509Certificate2 certificate = null;
+
+            if (platform == PlatformID.Unix)
+            {
+                string currentUser = Environment.UserName;
+
+                try
+                {
+                    certificate = await certificateManager.GetCertificateFromStoreAsync(
+                        certificateIssuer,
+                        certificateSubject,
+                        storeLocations,
+                        storeName);
+                }
+                catch (CryptographicException) when (currentUser?.ToLowerInvariant() == "root")
+                {
+                    // Backup:
+                    // We are likely running as sudo/root. The .NET SDK will
+                    // look for the certificate in the location specific to 'root'
+                    // by default. We want to try the current user location as well.
+                    PlatformSpecifics platformSpecifics = new PlatformSpecifics(
+                        Environment.OSVersion.Platform,
+                        RuntimeInformation.ProcessArchitecture);
+
+                    currentUser = platformSpecifics.GetLoggedInUser();
+
+                    certificate = await certificateManager.GetCertificateFromPathAsync(
+                        certificateIssuer,
+                        certificateSubject,
+                        string.Format(CertificateManager.DefaultUnixCertificateDirectory, currentUser));
+                }
+            }
+            else
+            {
+                certificate = await certificateManager.GetCertificateFromStoreAsync(
+                    certificateIssuer, 
+                    certificateSubject, 
+                    storeLocations, 
+                    storeName);
+            }
 
             return new ClientCertificateCredential(tenantId, clientId, certificate, credentialOptions);
         }

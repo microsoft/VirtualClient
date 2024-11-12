@@ -27,8 +27,6 @@ set TrimFlag="-p:PublishTrimmed=true"
 set TrimFlag=""
 if /i "%~1" == "noTrim" set TrimFlag=""
 
-call %VCSolutionDir%\build-stage-packaging-tools.cmd && echo: || Goto :Error
-
 echo:
 echo [Building Source Code] VirtualClient %VCBuildVersion%
 echo -------------------------------------------------------

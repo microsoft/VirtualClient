@@ -178,6 +178,7 @@ namespace VirtualClient.Actions
                                 case LinuxDistribution.Debian:
                                 case LinuxDistribution.CentOS8:
                                 case LinuxDistribution.RHEL8:
+                                case LinuxDistribution.AzLinux:
                                     break;
                                 default:
                                     throw new WorkloadException(

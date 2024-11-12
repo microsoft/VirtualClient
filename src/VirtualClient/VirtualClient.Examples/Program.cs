@@ -62,11 +62,12 @@ namespace VirtualClient
                     // IMPORTANT:
                     // You MUST run as administrator in order for the application to make firewall rule changes.
                     IConfiguration configuration = new ConfigurationBuilder().Build();
+                    PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+
                     ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
                         Environment.MachineName,
                         Guid.NewGuid().ToString(),
-                        Environment.OSVersion.Platform,
-                        RuntimeInformation.ProcessArchitecture);
+                        platformSpecifics);
 
                     IServiceCollection dependencies = new ServiceCollection()
                         .AddSingleton<ISystemInfo>(systemManagement)

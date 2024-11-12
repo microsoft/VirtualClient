@@ -27,6 +27,7 @@ namespace VirtualClient.Dependencies
     public class CompilerInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManager;
+        private int[] successCodes = { 0, 2 };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompilerInstallation"/> class.
@@ -238,7 +239,7 @@ namespace VirtualClient.Dependencies
 
         private async Task RemoveAlternativesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string[] compilers =
+            string[] packages =
             {
                 "gcc",
                 "gfortran"
@@ -248,11 +249,11 @@ namespace VirtualClient.Dependencies
             //      update-alternatives: error: alternative g++ can't be slave of gcc: it is a master alternative
             // must remove alternatives from the VM to avoid errors, then set all of them together
 
-            foreach (string compiler in compilers)
+            foreach (string package in packages)
             {
                 try
                 {
-                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {compiler}", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {package}", Environment.CurrentDirectory, telemetryContext, cancellationToken, this.successCodes);
                 }
                 catch
                 {
@@ -262,7 +263,7 @@ namespace VirtualClient.Dependencies
                 }
             }
         }
-
+ 
         private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
@@ -312,7 +313,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, int[] successCodes = null)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
              {
@@ -328,7 +329,7 @@ namespace VirtualClient.Dependencies
                      {
                          await this.LogProcessDetailsAsync(process, telemetryContext);
 
-                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                         process.ThrowIfErrored<DependencyException>(successCodes: this.successCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                      }
                  }
              });

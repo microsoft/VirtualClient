@@ -6,8 +6,6 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text.RegularExpressions;
-    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Contracts;
 
@@ -16,11 +14,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class MLPerfMetricsParser : MetricsParser
     {
-        private static readonly string AccuracyResultsPattern = @"(\w+)\s*=\s*([\d.]+)"; 
-        private static readonly string PerformanceResultsPattern = @"([\w\d_.]+)\s*:\s*([\d.]+)";
-        private static readonly string ValueSplitRegexPattern = @"^[^:]+:";
-        private static readonly string RemoveEndDotPattern = @"\.$";
-
         /// <summary>
         /// Constructor for <see cref="MLPerfMetricsParser"/>
         /// </summary>
@@ -45,82 +38,88 @@ namespace VirtualClient.Actions
             string metricName = string.Empty;
             double metricValue = 0;
             string metricUnit = string.Empty;
+            MetricRelativity metricRelativity = MetricRelativity.Undefined;
 
-            JObject results = JObject.Parse(this.PreprocessedText);
+            // The parsed JSON object from metadata.json
+            JObject parsedObject = JObject.Parse(this.RawText);
 
-            foreach (JProperty model in results.Properties())
+            // Logging some extra information as metadata
+            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+            metadata["config_name"] = $"{(string)parsedObject["config_name"]}";
+            metadata["benchmark_short"] = $"{(string)parsedObject["benchmark_short"]}";
+            metadata["benchmark_full"] = $"{(string)parsedObject["benchmark_full"]}";
+            metadata["scenario"] = $"{(string)parsedObject["scenario"]}";
+
+            // Whether this is default or high accuracy
+            string suffix;
+            if (((string)parsedObject["scenario"]).Contains("99_9"))
             {
-                try
+                suffix = "_p99_9";
+            }
+            else
+            {
+                suffix = "_p99";
+            }
+
+            if (this.AccuracyMode)
+            {
+                // Adding metric for accuracy result being passed/failed
+                metricName = $"AccuracyMode{suffix}";
+                bool passed = (bool)parsedObject["accuracy"][0]["pass"];
+                metricValue = Convert.ToDouble(passed);
+                metricUnit = "PASS/FAIL";
+                metricRelativity = MetricRelativity.HigherIsBetter;
+
+                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
+
+                // Adding metric for accuracy threshold
+                metricName = $"ThresholdValue{suffix}";
+                metricValue = (double)parsedObject["accuracy"][0]["threshold"];
+                metricRelativity = MetricRelativity.Undefined;
+
+                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
+
+                // Adding metric for accuracy value
+                metricName = $"AccuracyValue{suffix}";
+                metricValue = (double)parsedObject["accuracy"][0]["value"];
+                metricRelativity = MetricRelativity.Undefined;
+
+                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
+
+                // Adding metric for accuracy value
+                metricName = $"AccuracyThresholdRatio{suffix}";
+                metricValue = (double)parsedObject["accuracy"][0]["value"] / (double)parsedObject["accuracy"][0]["threshold"];
+                metricRelativity = MetricRelativity.HigherIsBetter;
+
+                this.Metrics.Add(new Metric(metricName, metricValue, metricRelativity, metadata: metadata));
+            }
+            else
+            {
+                // Adding metric for performance result being valid/invalid
+                metricName = $"PerformanceMode{suffix}";
+                metricValue = Convert.ToDouble((string)parsedObject["result_validity"] == "VALID");
+                metricUnit = "VALID/INVALID";
+                metricRelativity = MetricRelativity.HigherIsBetter;
+
+                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
+
+                // Adding metric for performance result value
+                string simpleKeyName;
+                if (((string)parsedObject["scenario_key"]).Contains("latency"))
                 {
-                    MetricRelativity relativity = MetricRelativity.HigherIsBetter;
-                    
-                    if (this.AccuracyMode && (model.Value.ToString().Contains("PASSED") || model.Value.ToString().Contains("FAILED")))
-                    {
-                        // Adding metric for accuracy result being passed/failed
-                        metricName = model.Name + "-AccuracyMode";
-                        bool value = model.Value.ToString().Contains("PASSED");
-                        metricValue = Convert.ToDouble(value);
-                        metricUnit = "PASS/FAIL";
-
-                        Metric metric = new Metric(metricName, metricValue, metricUnit, relativity);
-                        this.Metrics.Add(metric);
-
-                        // Adding exact and threshold value for each accuracy run
-                        string metricValueString = Regex.Replace(model.Value.ToString(), ValueSplitRegexPattern, string.Empty);
-                        MatchCollection matches = Regex.Matches(metricValueString, AccuracyResultsPattern);
-                        double thresholdValue = 1;
-                        double accuracyValue = 0;
-
-                        if (matches.Count == 2)
-                        {
-                            foreach (Match match in matches)
-                            {
-                                metricName = model.Name + "-" + match.Groups[1].Value + "Value";
-
-                                string metricValueWithoutEndDot = Regex.Replace(match.Groups[2].Value, RemoveEndDotPattern, string.Empty);
-                                metricValue = double.Parse(metricValueWithoutEndDot);
-                                this.Metrics.Add(new Metric(metricName, metricValue));
-
-                                if (match.Groups[1].Value.Contains("Threshold"))
-                                {
-                                    thresholdValue = metricValue;
-                                }
-                                else
-                                {
-                                    accuracyValue = metricValue;
-                                }
-                            }
-
-                            // Adding ratio of Accuracy Value and Threshold Value
-                            metricValue = accuracyValue / thresholdValue;
-                            metricName = model.Name + "-Accuracy Threshold Ratio";
-                            this.Metrics.Add(new Metric(metricName, metricValue, relativity));
-                        }
-                    }
-                    else if (model.Value.ToString().Contains("INVALID") || model.Value.ToString().Contains("VALID"))
-                    {
-                        // Adding metric for perf result being valid/invalid
-                        metricName = model.Name + "-PerformanceMode";
-                        bool value = !model.Value.ToString().Contains("INVALID");
-                        metricValue = Convert.ToDouble(value);
-                        metricUnit = "VALID/INVALID";
-
-                        Metric metric = new Metric(metricName, metricValue, metricUnit, relativity);
-                        this.Metrics.Add(metric);
-
-                        // Getting exact value of metric
-                        string metricValueString = Regex.Replace(model.Value.ToString(), ValueSplitRegexPattern, string.Empty);
-                        Match match = Regex.Match(metricValueString, PerformanceResultsPattern);
-
-                        metricName = model.Name + "-" + match.Groups[1].Value;
-                        metricValue = double.Parse(match.Groups[2].Value);
-                        this.Metrics.Add(new Metric(metricName, metricValue));
-                    }                  
+                    simpleKeyName = "latency_ns";
                 }
-                catch
+                else
                 {
-                    // do nothing as this result file has non-valid values.
+                    simpleKeyName = "samples_per_second";
                 }
+
+                metricName = $"{simpleKeyName}{suffix}";
+                string scenarioValue = ((string)parsedObject["summary_string"]).Split(" ")[1];
+                scenarioValue = scenarioValue.Substring(0, scenarioValue.Length - 1);
+                metricValue = Convert.ToDouble(scenarioValue);
+
+                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
             }
 
             return this.Metrics;

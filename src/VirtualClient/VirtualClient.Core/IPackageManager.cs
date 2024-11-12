@@ -45,7 +45,7 @@ namespace VirtualClient
         /// Returns the package/dependency path information if it is registered.
         /// </summary>
         /// <param name="packageName">The name of the package dependency.</param>
-        /// <param name="cancellationToken">A tokent that can be used to cancel the operation.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         Task<DependencyPath> GetPackageAsync(string packageName, CancellationToken cancellationToken);
 
         /// <summary>

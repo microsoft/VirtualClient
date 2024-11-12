@@ -250,68 +250,24 @@ The following environment variables can be used to define alternate locations fo
   /home/user/virtualclient$ export VC_LIBRARY_PATH=/home/user/Extensions/VirtualClient.Extensions.Actions;/home/user/Extensions/VirtualClient.Extensions.Monitors
   ```
 
-* **VC_PACKAGES_PATH**  
-  Defines 1 or more path locations where Virtual Client packages (including extensions packages) exist. Multiple directory paths can be defined separated by a semi-colon ';' character (similar to the Windows 
-  and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only for packages. Recursive subdirectory searches are
-  not supported.
+* **VC_PACKAGES_DIR**  
+  Defines the directory path where Virtual Client packages (including extensions packages) exist and to where packages should be downloaded. This overrides the
+  default packages location (e.g. /packages) such that it will not be used for package searches or downloads. The must be a single directory. Recursive subdirectory searches are not supported.
 
   ``` bash
   # Example Folder Contents:
-  # /CustomPackages1
-  #      /customworkload_a.1.0.0.zip
-  #      /customworkload_b.1.0.0.zip
-  #
-  # /CustomPackages2
-  #      /customworkload_c.1.0.0.zip
-  #      /customworkload_d.1.0.0.zip
-  #
+  # /custom_packages
+  #      /workload_a.1.0.0.zip
+  #      /workload_b.1.0.0.zip
+  #      /workload_c.1.0.0.zip
+  #      /workload_d.1.0.0.zip
+  
   # On Windows systems
-  C:\VirtualClient> set VC_PACKAGES_PATH=C:\CustomPackages1
-  C:\VirtualClient> set VC_PACKAGES_PATH=C:\CustomPackages1;C:\CustomPackages2;
+  C:\VirtualClient> set VC_PACKAGES_DIR=C:\custom_packages
 
   # On Linux systems.
-  /home/user/virtualclient$ export VC_PACKAGES_PATH=/home/user/CustomPackages1
-  /home/user/virtualclient$ export VC_PACKAGES_PATH=/home/user/CustomPackages1;/home/user/CustomPackages2
+  /home/user/virtualclient$ export VC_PACKAGES_DIR=/home/user/custom_packages
   ```
-
-* **VC_PROFILES_PATH**  
-  Defines 1 or more path locations where extensions profiles exist and that should be available for use during execution. Multiple directory paths can be defined separated
-  by a semi-colon ';' character (similar to the Windows and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only for extension 
-  profiles. Recursive subdirectory searches are not supported.
-
-  ``` bash
-  # Example Folder Contents:
-  # /CustomProfiles1
-  #      /PERF-CUSTOM-WORKLOAD-A.json
-  #      /PERF-CUSTOM-WORKLOAD-B.json
-  #
-  # /CustomProfiles2
-  #      /PERF-CUSTOM-WORKLOAD-C.json
-  #      /PERF-CUSTOM-WORKLOAD-D.json
-  #
-  # On Windows systems
-  C:\VirtualClient> set VC_PROFILES_PATH=C:\CustomPackages1
-  C:\VirtualClient> set VC_PROFILES_PATH=C:\CustomPackages1;C:\CustomPackages2;
-
-  # On Linux systems.
-  /home/user/virtualclient$ export VC_PROFILES_PATH=/home/user/CustomProfiles1
-  /home/user/virtualclient$ export VC_PROFILES_PATH=/home/user/CustomProfiles1;/home/user/CustomProfiles2
-  ```
-
-#### Priority of Operations
-Given multiple of these environment variables are defined at the same time, Virtual Client will perform the search (and load/install) operations in the
-following way:
-
-* **Priority for extensions packages and binaries/.dlls:**  
-  * Packages with "extensions" in the default Virtual Client `/packages` folder are installed. This includes assemblies/.dlls and profiles extensions.
-  * Packages with "extensions" in directories defined in the `VC_PACKAGES_PATH` environment variable are installed. This includes assemblies/.dlls and profiles extensions.
-    However, packages that exist in the `/packages` folder have precedence. Duplicate packages found in the paths defined by this environment variable will be ignored.
-  * Binaries/.dlls in directories defined in the `VC_LIBRARY_PATH` environment variable are loaded into the runtime unless a duplicate (by name) is already loaded. 
-    Duplicate binaries/.dlls in the paths defined by this environment variable will be ignored.
-
-* **Priority for extensions profile:**  
-  * Profiles that are in the default Virtual Client `packages` folder have highest precedence.
-  * Profiles in directories defined in the `VC_PROFILES_PATH` environment variable have secondary precedence.
 
 ### Downloaded Extensions from a Package Store
 The default for most Virtual Client scenarios is to download extensions from a package store. The **VirtualClient bootstrap** command can be used to download
@@ -322,10 +278,10 @@ extensions from a package store and install them.
 /container=packages/blob=crc.vc.extensions.zip
 
 # Execute bootstrap command to download and install the extensions
-C:\Users\Any\VirtualClient> VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions --packages="{BlobStoreConnectionString|SAS URI}"
+C:\Users\Any\VirtualClient> VirtualClient.exe bootstrap --package=crc.vc.extensions.zip --name=crcvcextensions --packages="{Connection|SAS URI}"
  
 # Execute an extensions profile
-C:\Users\Any\VirtualClient> VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440 --packages="{BlobStoreConnectionString|SAS URI}"
+C:\Users\Any\VirtualClient> VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440 --packages="{Connection|SAS URI}"
 ```
 
 ### A Custom-Defined Bootstrap Profile is Used

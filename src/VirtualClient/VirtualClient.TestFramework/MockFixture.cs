@@ -25,6 +25,7 @@ namespace VirtualClient
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
 
     /// <summary>
     /// Fixture that encapsulates the setting up and mocking
@@ -61,7 +62,6 @@ namespace VirtualClient
 
         static MockFixture()
         {
-            VirtualClientComponent.LogToFile = true;
             VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
@@ -363,6 +363,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default tools path.
+        /// </summary>
+        public string GetToolsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetToolsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Sets the environment variable value in the underlying <see cref="PlatformSpecifics"/> instance.
         /// </summary>
         public void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
@@ -419,6 +427,7 @@ namespace VirtualClient
             this.Logger = new InMemoryLogger();
             this.FirewallManager = new Mock<IFirewallManager>();
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly: useUnixStylePathsOnly);
+            VirtualClient.Contracts.PlatformSpecifics.RunningInContainer = false;
             this.ProcessManager = new InMemoryProcessManager(platform);
             this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();

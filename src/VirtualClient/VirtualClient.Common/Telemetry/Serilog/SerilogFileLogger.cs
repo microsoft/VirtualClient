@@ -4,6 +4,7 @@
 namespace VirtualClient.Common.Telemetry
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using global::Serilog;
@@ -14,7 +15,6 @@ namespace VirtualClient.Common.Telemetry
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using Newtonsoft.Json.Serialization;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -132,29 +132,74 @@ namespace VirtualClient.Common.Telemetry
                     }
                 }
 
-                MessageTemplate template = new MessageTemplateParser().Parse(eventMessage);
-                List<LogEventProperty> properties = this.GetEventProperties(eventContext);
-                LogEvent logEvent = new LogEvent(DateTime.Now, level, exception, template, properties);
+                List<LogEventProperty> properties = new List<LogEventProperty>
+                {
+                    new LogEventProperty("id", new ScalarValue(Guid.NewGuid().ToString().ToLowerInvariant())),
+                    new LogEventProperty("timestamp", new ScalarValue(DateTime.UtcNow.ToString("o"))),
+                    new LogEventProperty("level", new ScalarValue(logLevel.ToString())),
+                    new LogEventProperty("message", new ScalarValue(eventMessage)),
+                    new LogEventProperty("operationId", new ScalarValue(eventContext.ActivityId)),
+                    new LogEventProperty("transactionId", new ScalarValue(eventContext.TransactionId)),
+                    new LogEventProperty("durationMs", new ScalarValue(eventContext.DurationMs))
+                };
+
+                if (eventContext != null)
+                {
+                    foreach (var entry in eventContext.Properties)
+                    {
+                        SerilogFileLogger.AddProperties(properties, entry.Key, entry.Value);
+                    }
+                }
+                
+                LogEvent logEvent = new LogEvent(
+                    DateTime.Now, 
+                    level, 
+                    exception, 
+                    new MessageTemplateParser().Parse(eventMessage), 
+                    properties);
+
                 this.logger.Write(logEvent);
             }
         }
 
-        private List<LogEventProperty> GetEventProperties(EventContext context)
+        /// <summary>
+        /// Adds the property (or nested properties) to the set of <see cref="LogEventProperty"/> values.
+        /// </summary>
+        /// <param name="properties">Serilog logging framework properties collection.</param>
+        /// <param name="propertyName">The name of the property to add.</param>
+        /// <param name="propertyValue">The value of the property (including primitive data types as well as collections).</param>
+        protected static void AddProperties(List<LogEventProperty> properties, string propertyName, object propertyValue)
         {
-            List<LogEventProperty> properties = new List<LogEventProperty>();
-            if (context != null)
+            try
             {
-                properties.Add(new LogEventProperty("transactionId", new ScalarValue(context.TransactionId)));
-                properties.Add(new LogEventProperty("durationMs", new ScalarValue(context.DurationMs)));
-
-                foreach (KeyValuePair<string, object> property in context.Properties.OrderBy(p => p.Key))
+                if (propertyValue is IDictionary)
                 {
-                    string serializedProperty = property.Value.ToJson(SerilogFileLogger.SerializationSettings);
-                    properties.Add(new LogEventProperty(property.Key, new ScalarValue(serializedProperty)));
+                    List<LogEventProperty> dictionaryProperties = new List<LogEventProperty>();
+                    foreach (DictionaryEntry entry in propertyValue as IDictionary)
+                    {
+                        SerilogFileLogger.AddProperties(dictionaryProperties, entry.Key.ToString(), entry.Value);
+                    }
+
+                    Dictionary<ScalarValue, LogEventPropertyValue> propertyValues = new Dictionary<ScalarValue, LogEventPropertyValue>();
+                    if (dictionaryProperties.Any())
+                    {
+                        foreach (var entry in dictionaryProperties)
+                        {
+                            propertyValues.Add(new ScalarValue(entry.Name), entry.Value);
+                        }
+                    }
+
+                    properties.Add(new LogEventProperty(propertyName, new DictionaryValue(propertyValues)));
+                }
+                else
+                {
+                    properties.Add(new LogEventProperty(propertyName, new ScalarValue(propertyValue)));
                 }
             }
-
-            return properties;
+            catch
+            {
+                // Best Effort
+            }
         }
     }
 }

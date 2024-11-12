@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -295,6 +296,12 @@ namespace VirtualClient.Actions
                 // simpler in the workload executor and additionally makes testing the 2 different classes easier.
                 ExampleWorkloadMetricsParser resultsParser = new ExampleWorkloadMetricsParser(results);
                 IList<Metric> workloadMetrics = resultsParser.Parse();
+                foreach (var item in workloadMetrics)
+                {
+                    item.Metadata.Add("product", "VirtualClient");
+                    item.Metadata.Add("company", "Microsoft");
+                    item.Metadata.Add("csp", "Azure");
+                }
 
                 // We have extension methods in the Virtual Client codebase that make it easier to log certain types
                 // of data in a consistent way. The 'LogTestMetrics' method is an extension method to ILogger instances
@@ -350,6 +357,31 @@ namespace VirtualClient.Actions
                             // error etc... This is very helpful for triage/debugging.
                             await this.LogProcessDetailsAsync(workloadProcess, telemetryContext, "ExampleWorkload", logToFile: true)
                                 .ConfigureAwait(false);
+
+                            this.Logger.LogSystemEvent(
+                                "ProcessResult",
+                                "ExampleWorkload",
+                                workloadProcess.ExitCode.ToString(),
+                                workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
+                                telemetryContext,
+                                eventCode: workloadProcess.ExitCode,
+                                eventInfo: new Dictionary<string, object>
+                                {
+                                    { "toolset", "ExampleWorkload" },
+                                    { "command", $"{this.WorkloadExecutablePath} {commandArguments}" },
+                                    { "exitCode", workloadProcess.ExitCode },
+                                    { "standardOutput", workloadProcess.StandardOutput?.ToString() },
+                                    { "standardError", workloadProcess.StandardError?.ToString() },
+                                    { "workingDirectory", this.WorkloadPackage.Path }
+                                });
+
+                            this.Logger.LogSystemEvent(
+                                "KeyResult",
+                                "ExampleWorkload",
+                                "keyresult_100",
+                                workloadProcess.ExitCode == 0 ? LogLevel.Information : LogLevel.Error,
+                                telemetryContext,
+                                eventCode: 100);
 
                             // If the workload process returned a non-success exit code, we throw an exception typically. The ErrorReason used here
                             // will NOT cause VC to crash.

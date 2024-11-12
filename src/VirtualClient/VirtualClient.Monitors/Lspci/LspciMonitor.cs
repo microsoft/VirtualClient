@@ -6,6 +6,7 @@ namespace VirtualClient.Monitors
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -71,10 +72,17 @@ namespace VirtualClient.Monitors
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken);
 
             bool firstRun = true;
+            long iteration = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
                 string commandArguments = "-vvv";
+
+                if (this.MonitorIterations != -1 && iteration >= this.MonitorIterations) 
+                {
+                    // Default is set to -1 for infinite loop.
+                    break;
+                }
 
                 try
                 {
@@ -119,16 +127,24 @@ namespace VirtualClient.Monitors
                                 foreach (PciDevice pciDevice in pciDevices)
                                 {
                                     string message = $"PCI Device: '{pciDevice.Name}'. Address: '{pciDevice.Address}'";
-                                    this.Logger.LogSystemEvents(message, pciDevice.Properties, telemetryContext);
-                                    foreach (PciDevice.PciDeviceCapability capability in pciDevice.Capabilities)
-                                    {
-                                        message = $"{message}. Capability: '{capability.Name}'";
-                                        this.Logger.LogSystemEvents(message, pciDevice.Properties, telemetryContext);
-                                    }
+                                    IEnumerable<string> capabilities = pciDevice.Capabilities.Select(c => c.Name);
+                                    IDictionary<string, object> eventInfo = new Dictionary<string, object>(pciDevice.Properties);
+                                    eventInfo.Add("capabilities", capabilities);
+
+                                    this.Logger.LogSystemEvent(
+                                        "SystemInfo", 
+                                        "lspci",
+                                        $"{pciDevice.Name}_{pciDevice.Address}".ToLowerInvariant(),
+                                        LogLevel.Information, 
+                                        telemetryContext,
+                                        eventDescription: message,
+                                        eventInfo: eventInfo);
                                 }
                             }
                         }
                     }
+
+                    iteration++;
                 }
                 catch (OperationCanceledException)
                 {

@@ -4,15 +4,15 @@
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SupportedRequireCustomSystemSupport": "A100_PCIe_80GBx4",
+        "SupportedRequireCustomSystemSupport": "A100_PCIe_40GBx8",
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
     "Parameters": {
         "Username": "",
         "DiskFilter": "SizeGreaterThan:1000gb",
-        "LinuxCudaVersion": "12.0",
-        "LinuxDriverVersion": "525",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        "LinuxCudaVersion": "12.4",
+        "LinuxDriverVersion": "550",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run",
         "RequireCustomSystemSupport": true
     },
     "Actions": [
@@ -29,31 +29,10 @@
         {
             "Type": "MLPerfExecutor",
             "Parameters": {
-                "Scenario": "inferencemodels-rnnt",
-                "Model": "rnnt",
+                "Scenario": "inferencemodels-3d-unet",
+                "Model": "3d-unet",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
-            }
-        },
-        {
-            "Type": "MLPerfExecutor",
-            "Parameters": {
-                "Scenario": "inferencemodels-ssd-mobilenet",
-                "Model": "ssd-mobilenet",
-                "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
-            }
-        },
-        {
-            "Type": "MLPerfExecutor",
-            "Parameters": {
-                "Scenario": "inferencemodels-ssd-resnet34",
-                "Model": "ssd-resnet34",
-                "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         }
     ],
@@ -68,7 +47,7 @@
             "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneMLCommonsRepo",
-                "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
+                "RepoUri": "https://github.com/mlcommons/inference_results_v4.1.git",
                 "PackageName": "mlperf"
             }
         },

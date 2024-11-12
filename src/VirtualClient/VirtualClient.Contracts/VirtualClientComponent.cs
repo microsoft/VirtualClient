@@ -5,23 +5,18 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
-    using System.Runtime.Versioning;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
 
@@ -109,11 +104,6 @@ namespace VirtualClient.Contracts
         /// to target storage resources. When not defined the default template will be used.
         /// </summary>
         public static string ContentPathTemplate { get; set; }
-
-        /// <summary>
-        /// True if the output of processes should be logged to files in the logs directory.
-        /// </summary>
-        public static bool LogToFile { get; set; } = false;
 
         /// <summary>
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
@@ -215,6 +205,12 @@ namespace VirtualClient.Contracts
         /// The Logger for this component
         /// </summary>
         public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// True/false whether the output of processes should be logged to files 
+        /// in the logs directory.
+        /// </summary>
+        public bool LogToFile { get; set; }
 
         /// <summary>
         /// Metadata provided to the application on the command line.
