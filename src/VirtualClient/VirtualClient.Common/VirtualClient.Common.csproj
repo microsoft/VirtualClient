@@ -1,12 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Common</AssemblyName>
         <NoWarn></NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- Package dependency only for force updating version for severity vulnerability. -->
+        <PackageReference Include="System.Net.Http" Version="4.3.4"/>
+        <PackageReference Include="System.Private.Uri" Version="4.3.2"/>
+        <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1"/>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Azure.Messaging.EventHubs" Version="$(Azure_Messaging_EventHubs_PackageVersion)" />
         <PackageReference Include="Azure.Storage.Blobs" Version="$(Azure_Storage_Blobs_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="$(Microsoft_Extensions_Configuration_PackageVersion)" />
@@ -14,7 +19,6 @@
         <PackageReference Include="Microsoft.Extensions.Logging" Version="$(Microsoft_Extensions_Logging_PackageVersion)" />
         <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_PackageVersion)" />
         <PackageReference Include="Polly" Version="$(Polly_PackageVersion)" />
-        <PackageReference Include="Polly.Extensions.Http" Version="$(Polly_Extensions_Http_PackageVersion)" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="$(Serilog_Extensions_Logging_PackageVersion)" />
         <PackageReference Include="Serilog.Sinks.File" Version="$(Serilog_Sinks_File_PackageVersion)" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="$(Serilog_Sinks_RollingFile_PackageVersion)" />

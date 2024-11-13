@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Actions</AssemblyName>
         <NoWarn>SA1508;CA1416;CS4014;CA2213;IL2026</NoWarn>
     </PropertyGroup>
@@ -11,7 +11,6 @@
         <PackageReference Include="Extreme.Numerics" Version="$(Extreme_Numerics_PackageVersion)" />
         <PackageReference Include="MathNet.Numerics.Signed" Version="$(MathNet_Numerics_Signed_PackageVersion)" />
         <PackageReference Include="Microsoft.Windows.Compatibility" Version="$(Microsoft_Windows_Compatibility_PackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="$(Microsoft_Extensions_Http_Polly_PackageVersion)" />
     </ItemGroup>
     
     <ItemGroup>

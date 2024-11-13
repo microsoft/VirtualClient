@@ -88,8 +88,6 @@ namespace VirtualClient.Actions
 
                     if (headerCount == 0 && line.Trim() != Seperator)
                     {
-                        Console.WriteLine(line);
-
                         throw new WorkloadResultsException(
                             "Results parsing operation failed. The Sockperf parser failed to parse the complete header.",
                             ErrorReason.WorkloadResultsNotFound);

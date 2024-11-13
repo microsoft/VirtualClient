@@ -7,6 +7,7 @@ namespace VirtualClient.Api
     using System.ComponentModel;
     using System.Threading;
     using System.Threading.Tasks;
+    using Asp.Versioning;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;

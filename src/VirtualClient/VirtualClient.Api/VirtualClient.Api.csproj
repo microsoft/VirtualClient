@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Api</AssemblyName>
         <RootNamespace>VirtualClient.Api</RootNamespace>
         <NoWarn>AD0001,SA1508</NoWarn>
@@ -9,11 +9,9 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="Microsoft.AspNetCore" Version="$(Microsoft_AspNetCore_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="$(Microsoft_AspNetCore_Authentication_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(Microsoft_AspNetCore_Mvc_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="$(Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion)" />
-	    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="$(Microsoft_AspNetCore_Mvc_Versioning_PackageVersion)" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+        <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
         <PackageReference Include="System.Diagnostics.Debug" Version="$(System_Diagnostics_Debug_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(Microsoft_Extensions_DependencyInjection_PackageVersion)" />
     </ItemGroup>

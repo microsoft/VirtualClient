@@ -25,7 +25,7 @@ The following example extensions repo can be used for reference to the details d
   <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <RootNamespace>CRC.VirtualClient.Extensions</RootNamespace>
     </PropertyGroup>
 
@@ -336,7 +336,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
 
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
-  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net8.0/VirtualClient.exe).
+  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net9.0/VirtualClient.exe).
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
@@ -379,7 +379,7 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
   e.g.
 
   # Example output directory for extensions
-  S:\one\crc-virtualclient-examples\out\bin\Release\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
+  S:\one\crc-virtualclient-examples\out\bin\Release\AnyCPU\CRC.VirtualClient.Extensions.Actions\net9.0
   ```
 
 **Setup Visual Studio for debugging:**
@@ -393,13 +393,13 @@ at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more
      * Launch = Executable
 
      * Executable = \{PathToVirtualClientExe\}  
-       (e.g. ```S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net8.0\VirtualClient.exe```)
+       (e.g. ```S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net9.0\VirtualClient.exe```)
 
      * Application arguments = \{VirtualClientCommandLine\}   
        (e.g. `--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS.NONE.json --packages="https://virtualclient..."`)
 
      * Environment variables = Add the `VC_LIBRARY_PATH` variable and the path to your built extensions binaries.  
-       (e.g. `VC_LIBRARY_PATH = S:\one\crc-virtualclient-examples\out\bin\Debug\x64\CRC.VirtualClient.Extensions.Actions\net8.0`)
+       (e.g. `VC_LIBRARY_PATH = S:\one\crc-virtualclient-examples\out\bin\Debug\x64\CRC.VirtualClient.Extensions.Actions\net9.0`)
 
   4. Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).
 
