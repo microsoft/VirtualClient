@@ -89,7 +89,8 @@ Docker is installed with DockerInstallation.
     }
 }
 ```
-- **NVIDIA Container Toolkit**: A set of tools which enable the use of NVIDIA GPUs within docker containers.
+- **NVIDIA Container Toolkit**: A set of tools which enable the use of NVIDIA GPUs within docker containers.  
+Nvidia container toolkit is installed with NvidiaContainerToolkitInstallation.
 ```
 {
     "Type": "NvidiaContainerToolkitInstallation",
@@ -112,8 +113,52 @@ does not launch the docker container shell.
 
 To actually run the benchmark:
 - **make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast**: Run performance mode which focuses
-on the efficiency of the model in making predictions. The [output metadata.json file](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Actions.UnitTests/Examples/MLPerf/Example_performance_summary2.json)
-will contain a valid/invalid output, and either the latency or throughput.
+on the efficiency of the model in making predictions. The json output will include a valid/invalid output, and either the latency or throughput.
+```
+{
+    "benchmark_full": "bert-99",
+    "benchmark_short": "bert",
+    "config_name": "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-SingleStream",
+    "detected_system": "SystemConfiguration(host_cpu_conf=CPUConfiguration(layout={CPU(name=\"AMD EPYC 7V12 64-Core Processor\", architecture=CPUArchitecture.x86_64, core_count=48, threads_per_core=1): 2}), host_mem_conf=MemoryConfiguration(host_memory_capacity=Memory(quantity=928.7656999999999, byte_suffix=ByteSuffix.GB), comparison_tolerance=0.05), accelerator_conf=AcceleratorConfiguration(layout={GPU(name=\"NVIDIA A100-SXM4-40GB\", accelerator_type=AcceleratorType.Discrete, vram=Memory(quantity=40.0, byte_suffix=ByteSuffix.GiB), max_power_limit=400.0, pci_id=\"0x20B010DE\", compute_sm=80): 8}), numa_conf=NUMAConfiguration(numa_nodes={}, num_numa_nodes=4), system_id=\"DGX-A100_A100-SXM4-40GBx8\")",
+    "early_stopping_met": true,
+    "effective_min_duration_ms": 600000,
+    "effective_min_query_count": 100,
+    "result_90.00_percentile_latency_ns": 1924537,
+    "result_validity": "INVALID",
+    "satisfies_query_constraint": false,
+    "scenario": "SingleStream",
+    "scenario_key": "result_90.00_percentile_latency_ns",
+    "summary_string": "result_90.00_percentile_latency_ns: 1924537, Result is INVALID, 10-min runtime requirement met: True",
+    "system_name": "DGX-A100_A100-SXM4-40GBx8_TRT",
+    "tensorrt_version": "10.2.0",
+    "test_mode": "PerformanceOnly"
+}
+```
 - **make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast**: Run accuracy mode which focuses on
-the accuracy of the model's predictions. The [output metadata.json file](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Actions.UnitTests/Examples/MLPerf/Example_accuracy_summary1.json)
-will contain a pass/fail output, and the accuracy score.
+the accuracy of the model's predictions. The json output will inculde a pass/fail output, and the accuracy score.
+```
+{
+    "accuracy": [
+        {
+            "name": "F1",
+            "pass": true,
+            "threshold": 89.96526,
+            "value": 90.2147015680108
+        }
+    ],
+    "accuracy_pass": true,
+    "benchmark_full": "bert-99",
+    "benchmark_short": "bert",
+    "config_name": "DGX-A100_A100-SXM4-40GBx8_TRT-custom_k_99_MaxP-Offline",
+    "detected_system": "SystemConfiguration(host_cpu_conf=CPUConfiguration(layout={CPU(name=\"AMD EPYC 7V12 64-Core Processor\", architecture=CPUArchitecture.x86_64, core_count=48, threads_per_core=1): 2}), host_mem_conf=MemoryConfiguration(host_memory_capacity=Memory(quantity=928.7656999999999, byte_suffix=ByteSuffix.GB), comparison_tolerance=0.05), accelerator_conf=AcceleratorConfiguration(layout={GPU(name=\"NVIDIA A100-SXM4-40GB\", accelerator_type=AcceleratorType.Discrete, vram=Memory(quantity=40.0, byte_suffix=ByteSuffix.GiB), max_power_limit=400.0, pci_id=\"0x20B010DE\", compute_sm=80): 8}), numa_conf=NUMAConfiguration(numa_nodes={}, num_numa_nodes=4), system_id=\"DGX-A100_A100-SXM4-40GBx8\")",
+    "effective_min_duration_ms": 600000,
+    "effective_samples_per_query": 19800000,
+    "satisfies_query_constraint": true,
+    "scenario": "Offline",
+    "scenario_key": "result_samples_per_second",
+    "summary_string": "[PASSED] F1: 90.215 (Threshold=89.965)",
+    "system_name": "DGX-A100_A100-SXM4-40GBx8_TRT",
+    "tensorrt_version": "10.2.0",
+    "test_mode": "AccuracyOnly"
+}
+```
