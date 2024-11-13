@@ -7,8 +7,7 @@ The following guide details the developer process for the MLPerf workload. The f
 
 In machine learning, inference involves using an already trained model to make predictions on unseen data.
 The MLPerf workload will run multiple benchmarks on a GPU-based system, in which the performance of the model
-to make those predictions is measured. The throughput (requests per second) and latency (response time for a 
-single prediction) are used as metrics.
+to make those predictions is measured. Throughput and latency are used as metrics.
 
 ## Benchmarks
 The benchmark suite for NVIDIA GPU-based systems in MLPerf Inference is detailed in the [Inference results
@@ -25,7 +24,10 @@ is available under the [directory for the benchmark](https://github.com/mlcommon
 - **SingleStream**: Queries are sent one-by-one to the tested system. The latency of processing individual queries is measured.
 
 ## Config Versions
-- **default**: Uses lower precision to achieve faster inference times.  
+- **default**: Uses lower precision to achieve faster inference times.
+- **high accuracy**: Uses higher precision and prioritizes accuracy over performance. (not supported yet)
+- **triton**: Uses the triton inference server to manage and serve models. (not supported yet)
+- **triton high accuracy**: Uses the triton inference server and higher precision. (not supported yet)
 
 ## Hardware for MLPerf
 - **A100_SXM4_40GBx8**: Azure VM sku Standard_ND96asr_v4. This represents a system with 8 A100 NVIDIA GPUs. The NVIDIA A100 GPU
