@@ -107,14 +107,18 @@ namespace VirtualClient.Dependencies
             List<string> commands = new List<string>();
 
             string delKeyCommand = "apt-key del 7fa2af80";
-            string metaPackageDownloadCommand;
+            string metaPackageDownloadCommand = string.Empty;
             if (this.PlatformSpecifics.CpuArchitecture == Architecture.X64)
             {
                 metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/x86_64/cuda-keyring_1.0-1_all.deb""";
             }
-            else
+            else if (this.PlatformSpecifics.CpuArchitecture == Architecture.Arm64) 
             {
                 metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/sbsa/cuda-keyring_1.0-1_all.deb""";
+            }
+            else if (this.PlatformSpecifics.CpuArchitecture == Architecture.Ppc64le)
+            {
+                metaPackageDownloadCommand = $@"bash -c ""wget https://developer.download.nvidia.com/compute/cuda/repos/$(echo $(. /etc/os-release; echo $ID$VERSION_ID) | sed -e 's/\.//g')/ppc64le/cuda-keyring_1.0-1_all.deb""";
             }
 
             string cudaGPGKeyInstallCommand = @"dpkg -i cuda-keyring_1.0-1_all.deb";
