@@ -18,7 +18,7 @@ The following are supported currently in Virtual Client:
 
 ## Scenarios
 MLPerf will evaluate the performance of a system in different scenarios. For a given benchmark, the configurations for each scenario
-is available under the [directory for the benchmark](https://github.com/mlcommons/inference_results_v4.1/tree/main/closed/NVIDIA/configs/bert).
+are available under the [directory for the benchmark](https://github.com/mlcommons/inference_results_v4.1/tree/main/closed/NVIDIA/configs/bert).
 - **Offline**: All queries are aggregated into a batch and sent to the tested system. The maximum throughput without a latency constraint is measured.
 - **Server**: Queries are aggregated into multiple batches and sent to the tested system. The maximum throughput with a latency constraint is measured.
 - **SingleStream**: Queries are sent one-by-one to the tested system. The latency of processing individual queries is measured.
@@ -30,7 +30,7 @@ is available under the [directory for the benchmark](https://github.com/mlcommon
 - **triton high accuracy**: Uses the triton inference server and higher precision. (not supported yet)
 
 ## Hardware for MLPerf
-- **A100_SXM4_40GBx8**: Azure VM sku Standard_ND96asr_v4. This represents a system with 8 A100 NVIDIA GPUs. The NVIDIA A100 GPU
+- **A100_SXM4_40GBx8**: Azure VM SKU Standard_ND96asr_v4. This represents a system with 8 A100 NVIDIA GPUs. The NVIDIA A100 GPU
 is designed for high-performance computing.
 
 ## Adding a config
