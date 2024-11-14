@@ -9,7 +9,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using Extreme.Statistics;
     using MathNet.Numerics.Distributions;
     using MathNet.Numerics.Statistics;
     using VirtualClient.Contracts;
@@ -95,7 +94,9 @@ namespace VirtualClient.Actions.NetworkPerformance
             metrics.Add(new Metric("ConnectsPerSec_P99_9", Statistics.QuantileCustom(connectsPerSec, 1d - 0.001d, QuantileDefinition.R3)));
             metrics.Add(new Metric("ConnectsPerSec_P99_99", Statistics.QuantileCustom(connectsPerSec, 1d - 0.0001d, QuantileDefinition.R3)));
             metrics.Add(new Metric("ConnectsPerSec_P99_999", Statistics.QuantileCustom(connectsPerSec, 1d - 0.00001d, QuantileDefinition.R3)));
-            metrics.Add(new Metric("ConnectsPerSec_Mad", Stats.MedianAbsoluteDeviation(connectsPerSec.ToArray())));
+            double median = Statistics.Median(connectsPerSec);
+            double[] absoluteDeviations = connectsPerSec.Select(x => Math.Abs(x - median)).ToArray();
+            metrics.Add(new Metric("ConnectsPerSec_Mad", Statistics.Median(absoluteDeviations)));
             metrics.Add(new Metric("ConnectsPerSec_StandardErrorMean", sem));
             metrics.Add(new Metric("ConnectsPerSec_LowerCI", lowerCI));
             metrics.Add(new Metric("ConnectsPerSec_UpperCI", upperCI));
