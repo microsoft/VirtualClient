@@ -201,7 +201,7 @@ namespace VirtualClient.Identity
                             {
                                 X509Certificate2 certificateFromFile = X509CertificateLoader.LoadPkcs12(
                                     certificateBytes,
-                                    null,
+                                    string.Empty,
                                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
 
                                 if (certificateFromFile != null)

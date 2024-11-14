@@ -35,7 +35,6 @@ namespace VirtualClient.Actions
         public void Compressor7zipResultsParserParsesTheExpectedSizesAndTimeFromResults()
         {
             this.testParser.Parse();
-            this.testParser.SizeAndTime.PrintDataTableFormatted();
             Assert.AreEqual(4, this.testParser.SizeAndTime.Columns.Count);
             Assert.AreEqual(7, this.testParser.SizeAndTime.Rows.Count);
         }

@@ -49,7 +49,6 @@ namespace VirtualClient.TestExtensions
         /// <returns>
         /// A mock/test certificate.
         /// </returns>
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "The certificate password parameter cannot be disposed in this context.")]
         private static X509Certificate2 CreateCertificate(bool withPrivateKey = false)
         {
             X509Certificate2 certificate = null;
@@ -64,8 +63,9 @@ namespace VirtualClient.TestExtensions
             }
             else
             {
-                certificate = X509CertificateLoader.LoadCertificate(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")));
+                certificate = X509CertificateLoader.LoadPkcs12(
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")),
+                    null);
             }
 
             return certificate;

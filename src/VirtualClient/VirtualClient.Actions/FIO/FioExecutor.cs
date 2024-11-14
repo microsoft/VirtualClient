@@ -834,8 +834,6 @@ namespace VirtualClient.Actions
                 this.GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, commandArguments);
 
                 string modifiedOutput = this.FilterWarnings(workloadProcess.StandardOutput.ToString());
-
-                Console.WriteLine("Modified output:\n" + modifiedOutput);
                 parser = new FioMetricsParser(modifiedOutput, parseReadMetrics, parseWriteMetrics);
             }
 

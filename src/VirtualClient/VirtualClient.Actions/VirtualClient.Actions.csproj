@@ -8,7 +8,6 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="Extreme.Numerics" Version="$(Extreme_Numerics_PackageVersion)" />
         <PackageReference Include="MathNet.Numerics.Signed" Version="$(MathNet_Numerics_Signed_PackageVersion)" />
         <PackageReference Include="Microsoft.Windows.Compatibility" Version="$(Microsoft_Windows_Compatibility_PackageVersion)" />
     </ItemGroup>
