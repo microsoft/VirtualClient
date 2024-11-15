@@ -1,4 +1,4 @@
-﻿# MLPerf Developer Guide
+# MLPerf Developer Guide
 The following guide details the developer process for the MLPerf workload. The focus of this guide is on MLPerf *Inference*.
 
 * [Workload Details](./mlperf.md)
@@ -35,32 +35,6 @@ is designed for high-performance computing.
 
 ## Adding a config
 The config information given the benchmark, scenario, config version, and system to test is in the [\_\_init\_\_.py file under the benchmark folder](https://github.com/mlcommons/inference_results_v4.1/blob/main/closed/NVIDIA/configs/bert/SingleStream/__init__.py).
-```
-├───configs
-│   │   configuration.py
-│   │   error.py
-│   │
-│   ├───3d-unet
-│   │   │   __init__.py
-│   │   │
-│   │   ├───Offline
-│   │   │       __init__.py
-│   │   │
-│   │   └───SingleStream
-│   │           __init__.py
-│   │
-│   ├───bert
-│   │   │   __init__.py
-│   │   │
-│   │   ├───Offline
-│   │   │       __init__.py
-│   │   │
-│   │   ├───Server
-│   │   │       __init__.py
-│   │   │
-│   │   └───SingleStream
-│   │           __init__.py
-```
 By default, the repository does not have support for all systems (i.e. A100_SXM4_40GBx8). To add support, the file is replaced with Virtual Client at runtime.
 For example with bert in the SingleStream scenario, a file with the following section is used:
 ```
