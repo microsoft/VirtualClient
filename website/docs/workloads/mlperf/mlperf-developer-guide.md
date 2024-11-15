@@ -46,6 +46,10 @@ class A100_SXM4_40GBx8(SingleStreamGPUBaseConfig):
 These files are stored as script files for MLPerf, under [GPUConfigFiles](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/MLPerf/GPUConfigFiles).
 
 ## Dependencies
+- **make**, **gcc**: Necessary dependencies for the workload. Installed in CUDAAndNvidiaGPUDriverInstallation:
+```
+commands.Add("apt install build-essential -yq");
+```
 - **CUDA**: An API created by NVIDIA which enables general-purpose computing on GPUs. To install CUDA, a .run file is used.
 - **NVIDIA Linux Driver**: Software component that enables communication between GPUs and the operating
 system. The linux driver will handle the low-level interaction between the GPU and OS. This driver is 
@@ -170,7 +174,9 @@ does not launch the docker container shell.
 
 To actually run the benchmark:
 - **make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast**: Run performance mode which focuses
-on the efficiency of the model in making predictions. The json output will include a valid/invalid output, and either the latency or throughput.
+on the efficiency of the model in making predictions. In this example, the command will run the bert benchmark, with Offline, Server, and Single Stream scenarios, using the default config version,
+in performance only mode, and with fewer iterations for faster turnaround time.  
+The json output will include a valid/invalid output, and either the latency or throughput. For example this is the json output for the Single Stream scenario:
 ```
 {
     "benchmark_full": "bert-99",
@@ -192,7 +198,9 @@ on the efficiency of the model in making predictions. The json output will inclu
 }
 ```
 - **make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast**: Run accuracy mode which focuses on
-the accuracy of the model's predictions. The json output will inculde a pass/fail output, and the accuracy score.
+the accuracy of the model's predictions. In this example, the command will run the bert benchmark, with Offline, Server, and Single Stream scenarios, using the default config version,
+in accuracy only mode, and with fewer iterations for faster turnaround time.  
+The json output will inculde a pass/fail output, and the accuracy score. For example this is the json output for the Offline scenario:
 ```
 {
     "accuracy": [
