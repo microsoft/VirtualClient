@@ -52,17 +52,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             }
         }
 
-        /*/// <summary>
-        /// The specifed action that controls the execution of the dependency.
-        /// </summary>
-        public bool WaitForServer
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.WaitForServer), false);
-            }
-        }*/
-
         /// <summary>
         /// The specifed action that controls the execution of the dependency.
         /// </summary>
