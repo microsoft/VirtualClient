@@ -35,17 +35,6 @@ namespace VirtualClient.Actions
             this.stateManager = this.Dependencies.GetService<IStateManager>();
         }
 
-/*        /// <summary>
-        /// The specifed action that controls the execution of the dependency.
-        /// </summary>
-        public string WaitForServer
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.WaitForServer));
-            }
-        }*/
-
         /// <summary>
         /// Executes the workload.
         /// </summary>
