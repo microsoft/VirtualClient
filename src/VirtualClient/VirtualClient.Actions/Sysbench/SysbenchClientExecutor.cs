@@ -215,11 +215,10 @@ namespace VirtualClient.Actions
             this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
-            string command = "python3";
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                PythonCommand,
                 script + this.sysbenchExecutionArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -244,11 +243,10 @@ namespace VirtualClient.Actions
             this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
-            string command = "python3";
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                PythonCommand,
                 script + this.sysbenchExecutionArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,

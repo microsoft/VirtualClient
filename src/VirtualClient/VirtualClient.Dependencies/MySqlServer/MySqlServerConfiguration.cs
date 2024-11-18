@@ -113,68 +113,6 @@ namespace VirtualClient.Dependencies.MySqlServer
         /// </summary>
         protected ISystemManagement SystemManager { get; }
 
-        /*
-                /// <summary>
-                /// Client used to communicate with the hosted instance of the
-                /// Virtual Client API at server side.
-                /// </summary>
-                public IApiClient ServerApiClient { get; set; }*/
-
-        /*
-        /// <summary>
-        /// Server IpAddress on which MySQL Server runs.
-        /// </summary>
-        protected string ServerIpAddress { get; set; }
-
-        /// <summary>
-        /// Initializes the environment for execution of the Sysbench workload.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
-            workloadPackage.ThrowIfNull(this.PackageName);
-
-            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-            this.packageDirectory = package.Path;
-
-            this.InitializeApiClients(telemetryContext, cancellationToken);
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance clientInstance = this.GetLayoutClientInstance();
-                string layoutIPAddress = clientInstance.IPAddress;
-
-                this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
-                this.ThrowIfRoleNotSupported(clientInstance.Role);
-            }
-        }
-
-        /// <summary>
-        /// Initializes API client.
-        /// </summary>
-        protected void InitializeApiClients(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-
-                if (!this.IsMultiRoleLayout())
-                {
-                    this.ServerIpAddress = IPAddress.Loopback.ToString();
-                    this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
-                }
-                else
-                {
-                    ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                    IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-                    this.ServerIpAddress = serverIPAddress.ToString();
-                    this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, serverIPAddress);
-                    this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
-                }
-            }
-        }*/
-
         /// <summary>
         /// Installs MySQL
         /// </summary>
@@ -192,13 +130,6 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.packageDirectory = package.Path;
-
-            /*if (this.WaitForServer)
-            {
-                string serverstateId = $"{nameof(MySQLServerConfiguration)}-{this.Action}-action-success";
-                ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(serverstateId, cancellationToken)
-                    .ConfigureAwait(false);
-            }*/
 
             if (!this.SkipInitialize)
             {
@@ -225,11 +156,6 @@ namespace VirtualClient.Dependencies.MySqlServer
                 else if (this.Action == ConfigurationAction.SetGlobalVariables)
                 {
                     await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                else if (this.Action == ConfigurationAction.TruncateDatabase)
-                {
-                    await this.TruncateMySQLDatabaseAsync(telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
@@ -319,32 +245,6 @@ namespace VirtualClient.Dependencies.MySqlServer
                     Environment.CurrentDirectory,
                     telemetryContext,
                     cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task TruncateMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string arguments = $"{this.packageDirectory}/truncate-tables.py --dbName {this.DatabaseName}";
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
-                string serverIps = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
-                arguments += $" --clientIps \"{serverIps}\"";
-            }
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
-                arguments,
-                Environment.CurrentDirectory,
-                telemetryContext,
-                cancellationToken))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -452,13 +352,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             /// <summary>
             /// Distributes existing database to disks on the system
             /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);
-
-            /// <summary>
-            /// Truncates all tables existing in database
-            /// </summary>
-            public const string TruncateDatabase = nameof(TruncateDatabase);
-
+            public const string DistributeDatabase = nameof(DistributeDatabase);   
         }
 
         internal class ConfigurationState
