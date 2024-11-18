@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 // in opensoruce to download redis from apt package manager. 
 namespace VirtualClient.Dependencies
 {
@@ -9,13 +10,9 @@ namespace VirtualClient.Dependencies
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.VisualBasic;
-    using Newtonsoft.Json;
     using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 

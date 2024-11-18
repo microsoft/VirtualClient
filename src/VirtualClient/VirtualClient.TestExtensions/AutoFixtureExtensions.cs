@@ -3,13 +3,10 @@
 
 namespace VirtualClient.TestExtensions
 {
-    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
-    using System.Security;
     using System.Security.Cryptography.X509Certificates;
     using AutoFixture;
-    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Extension methods for <see cref="Fixture"/> instances and for general
