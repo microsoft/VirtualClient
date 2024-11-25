@@ -89,6 +89,8 @@ namespace VirtualClient.Monitors
 
                 try
                 {
+                    await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
+
                     // We do not honor the cancellation token until ALL files have been processed.
                     while (await this.UploadFilesAsync(blobManager, relatedContext))
                     {
@@ -103,8 +105,6 @@ namespace VirtualClient.Monitors
                             // to process, we will exit.
                         }
                     }
-
-                    await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
