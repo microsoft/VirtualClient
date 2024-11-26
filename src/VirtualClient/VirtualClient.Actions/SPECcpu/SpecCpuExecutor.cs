@@ -122,6 +122,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Threads.
+        /// </summary>
+        public int Threads
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Threads), Environment.ProcessorCount);
+            }
+        }
+
+        /// <summary>
+        /// Copies.
+        /// </summary>
+        public int Copies
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Copies), Environment.ProcessorCount);
+            }
+        }
+
+        /// <summary>
         /// The path to the SPECcpu package.
         /// </summary>
         protected string PackageDirectory { get; set; }
@@ -376,9 +398,8 @@ namespace VirtualClient.Actions
         {
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
-            int coreCount = Environment.ProcessorCount;
 
-            string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
+            string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {this.Copies} --threads {this.Threads} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
             // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
