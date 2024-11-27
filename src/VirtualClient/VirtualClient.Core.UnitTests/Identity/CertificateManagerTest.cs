@@ -35,13 +35,13 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME")]
         [TestCase("GBL")]
-        [TestCase("AME Infra CA 02")]
+        [TestCase("AME Infra CA 06")]
         [TestCase("DC=AME")]
         [TestCase("DC=GBL")]
         [TestCase("CN=AME")]
-        [TestCase("CN=AME Infra CA 02")]
-        [TestCase("CN=AME Infra CA 02, DC=AME, DC=GBL")]
-        [TestCase("CN=AME Infra CA 02,DC=AME,DC=GBL")]
+        [TestCase("CN=AME Infra CA 06")]
+        [TestCase("CN=AME Infra CA 06, DC=AME, DC=GBL")]
+        [TestCase("CN=AME Infra CA 06,DC=AME,DC=GBL")]
         public void CertificateManagerSearchesSupportsARangeOfFormatsForIssuersOnCertificates(string issuer)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
@@ -67,10 +67,10 @@ namespace VirtualClient.Identity
 
         [Test]
         [TestCase("virtualclient")]
-        [TestCase("virtualclient.corp")]
-        [TestCase("virtualclient.corp.azure.com")]
-        [TestCase("CN=virtualclient.corp")]
-        [TestCase("CN=virtualclient.corp.azure.com")]
+        [TestCase("virtualclient.test.corp")]
+        [TestCase("virtualclient.test.corp.azure.com")]
+        [TestCase("CN=virtualclient.test.corp")]
+        [TestCase("CN=virtualclient.test.corp.azure.com")]
         public void CertificateManagerSearchesSupportsARangeOfFormatsForSubjectNamesOnCertificates(string subjectName)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
@@ -95,13 +95,13 @@ namespace VirtualClient.Identity
             this.testCertificateManager = new TestCertificateManager(this.mockFixture);
 
             string expectedDirectory = CertificateManager.DefaultUnixCertificateDirectory;
-            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "A3706B2B12D35F8B2B5F8176F7B6F18534A23FAD");
+            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA");
             bool confirmedDir = false;
             bool confirmedFile = false;
 
             // Issuer: AME
-            // Subject Name: virtualclient.corp.azure.com
-            // Thumbprint: A3706B2B12D35F8B2B5F8176F7B6F18534A23FAD
+            // Subject Name: virtualclient.test.corp.azure.com
+            // Thumbprint: C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA
             //
             // Note that this is an expired/invalid certificate so there are no security concerns. It is merely
             // used for testing purposes.
@@ -138,35 +138,35 @@ namespace VirtualClient.Identity
             // Expectation:
             // We do not need to compare the certificate properties. We just need to ensure we attempted to
             // read from the expected directory and that the certificate deserializes without error.
-            await this.testCertificateManager.GetCertificateFromPathAsync("AME", "virtualclient.corp.azure.com", expectedDirectory);
+            await this.testCertificateManager.GetCertificateFromPathAsync("AME", "virtualclient.test.corp.azure.com", expectedDirectory);
 
             Assert.IsTrue(confirmedDir);
             Assert.IsTrue(confirmedFile);
         }
 
         [Test]
-        [TestCase("AME", "virtualclient.corp.azure.com")]
-        [TestCase("GBL", "virtualclient.corp.azure.com")]
-        [TestCase("AME Infra CA 02", "virtualclient")]
+        [TestCase("AME", "virtualclient.test.corp.azure.com")]
+        [TestCase("GBL", "virtualclient.test.corp.azure.com")]
+        [TestCase("AME Infra CA 06", "virtualclient")]
         [TestCase("DC=AME", "corp.azure.com")]
         [TestCase("DC=GBL", "azure.com")]
-        [TestCase("CN=AME", "virtualclient.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 02", "CN=virtualclient.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 02, DC=AME, DC=GBL", "CN=virtualclient.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 02,DC=AME,DC=GBL", "CN=virtualclient.corp.azure.com")]
+        [TestCase("CN=AME", "virtualclient.test.corp.azure.com")]
+        [TestCase("CN=AME Infra CA 06", "CN=virtualclient.test.corp.azure.com")]
+        [TestCase("CN=AME Infra CA 06, DC=AME, DC=GBL", "CN=virtualclient.test.corp.azure.com")]
+        [TestCase("CN=AME Infra CA 06,DC=AME,DC=GBL", "CN=virtualclient.test.corp.azure.com")]
         public async Task CertificateManagerHandlesDifferentIssuerAndSubjectNameFormats(string issuer, string subjectName)
         {
             this.mockFixture.Setup(PlatformID.Unix);
             this.testCertificateManager = new TestCertificateManager(this.mockFixture);
 
             string expectedDirectory = CertificateManager.DefaultUnixCertificateDirectory;
-            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "A3706B2B12D35F8B2B5F8176F7B6F18534A23FAD");
+            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA");
             bool confirmedDir = false;
             bool confirmedFile = false;
 
             // Issuer: AME
-            // Subject Name: virtualclient.corp.azure.com
-            // Thumbprint: A3706B2B12D35F8B2B5F8176F7B6F18534A23FAD
+            // Subject Name: virtualclient.test.corp.azure.com
+            // Thumbprint: C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA
             //
             // Note that this is an expired/invalid certificate so there are no security concerns. It is merely
             // used for testing purposes.
