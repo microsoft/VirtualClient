@@ -58,14 +58,14 @@ namespace VirtualClient.TestExtensions
             if (withPrivateKey)
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")),
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
                     string.Empty.ToSecureString(),
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")));
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")));
             }
 
             return certificate;
