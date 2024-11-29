@@ -157,6 +157,71 @@ There are a lot of moving parts to this workload that allows for both out-of-box
   with 10,000 records each can be created, a workload can be run on 5 tables for 1000 records if desired. VC does not support dropping and recreating a new database or table 
   configuration within the same profile or system.
 
+  VC now supports truncating tables and populating the table again. Following are changes to be made in profile.
+  ``` bash
+  {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "TruncateMySQLDatabaseTables",
+                "Action": "TruncateDatabase",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "WaitExecutor",
+            "Parameters": {
+                "Scenario": "WaitForTimeProvided",
+                "Duration": "00:01:00"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "Action": "PopulateDatabase",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Threads": "$.Parameters.Threads",
+                "RecordCount": "$.Parameters.RecordCount",
+                "TableCount": "$.Parameters.TableCount",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "WaitExecutor",
+            "Parameters": {
+                "Scenario": "WaitForTimeProvided",
+                "Duration": "00:01:00"
+            }
+        },
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_read_only",
+                "Action": "RunWorkload",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Duration": "$.Parameters.Duration",
+                "Workload": "oltp_read_only",
+                "PackageName": "sysbench",
+                "Threads": "$.Parameters.Threads",
+                "RecordCount": "$.Parameters.RecordCount",
+                "TableCount": "$.Parameters.TableCount",
+                "Role": "Client"
+            }
+        },
+  ```
+
+
 * **SysbenchServerExecutor**  
   Sets the server online for client interaction.
 
