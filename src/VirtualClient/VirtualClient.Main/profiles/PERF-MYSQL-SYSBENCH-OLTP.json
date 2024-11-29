@@ -169,7 +169,7 @@
             "Parameters": {
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql-server-8.0.36.zip",
+                "BlobName": "mysql-server-8.0.36-v1.zip",
                 "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
@@ -180,7 +180,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev1.zip",
+                "BlobName": "sysbench-1.0.20.rev2.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -231,7 +231,7 @@
                 "Action": "SetGlobalVariables",
                 "Benchmark": "OLTP",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1000000",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
