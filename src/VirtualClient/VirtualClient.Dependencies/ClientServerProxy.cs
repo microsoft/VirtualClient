@@ -168,7 +168,9 @@ namespace VirtualClient.Dependencies
                                 }
                                 else if (instructions.Properties.TryGetValue("type", out IConvertible componentType))
                                 {
-                                    component = ComponentFactory.CreateComponent(instructions.Properties, componentType.ToString(), this.Dependencies, this.ExecutionSeed);
+                                    throw new NotSupportedException(
+                                        "Component factory construction method using a simple type is no longer supported. " +
+                                        "Migrate to the method allowing the full profile component description/element to be sent/provided.");
                                 }
 
                                 if (component != null)

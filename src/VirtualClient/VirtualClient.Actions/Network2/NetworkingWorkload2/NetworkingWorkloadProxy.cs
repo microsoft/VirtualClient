@@ -123,8 +123,17 @@ namespace VirtualClient.Actions
 
                             workloadInstructions.Properties["TypeOfInstructions"] = workloadInstructions.Type;
 
+                            ExecutionProfileElement element = new ExecutionProfileElement(
+                                workloadInstructions.Properties["Type"].ToString(),
+                                workloadInstructions.Properties,
+                                null,
+                                null);
+
                             // Create WorkloadServerExecutor
-                            VirtualClientComponent serverComponent = ComponentFactory.CreateComponent(workloadInstructions.Properties, workloadInstructions.Properties["Type"].ToString(), this.Dependencies);
+                            VirtualClientComponent serverComponent = ComponentFactory.CreateComponent(
+                                element,
+                                this.Dependencies);
+
                             serverComponent.ClientRequestId = workloadInstructions.ClientRequestId;
 
                             await serverComponent.ExecuteAsync(cancellationToken)

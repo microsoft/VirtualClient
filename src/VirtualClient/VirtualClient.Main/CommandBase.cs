@@ -300,16 +300,6 @@ namespace VirtualClient
                 this.LoggingLevel = LogLevel.Trace;
             }
 
-            if (this.Metadata?.Any() == true)
-            {
-                VirtualClientRuntime.Metadata.AddRange(this.Metadata, true);
-            }
-
-            if (this.Parameters?.Any() == true)
-            {
-                VirtualClientRuntime.Parameters.AddRange(this.Parameters, true);
-            }
-
             IConfiguration configuration = Program.LoadAppSettings();
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);

@@ -1,0 +1,40 @@
+{
+    "Description": "Test Profile Executor (Metadata + Extensions)",
+    "RequiresApi": true,
+    "MinimumExecutionInterval": "00:05:00",
+    "MinimumRequiredExecutionTime": "01:00:00",
+    "Iterations": 1,
+    "Metadata": {
+        "Property1": "Value_A",
+        "Property2": 12345,
+        "Property3": true
+    },
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Metadata": {
+                "Property4": 7777,
+                "Property5": "Value_B"
+            },
+            "Parameters": {
+                "CommandLine": "--name=testName --engine=V8",
+                "Tags": "Test,VC"
+            },
+            "Documentation": {
+                "OpenSource": true,
+                "Contacts": [
+                    "virtualclient@microsoft.com"
+                ]
+            }
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "TestMonitor",
+            "Parameters": {
+                "Counters": "Counter1,Counter2,Counter3",
+                "Tags": "Test,VC,Monitoring"
+            }
+        }
+    ]
+}

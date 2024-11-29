@@ -1,0 +1,85 @@
+{
+    "Description": "Test Profile Executor",
+    "MinimumExecutionInterval": "00:00:05",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": {
+        "ProfilingEnabled": false,
+        "ProfilingMode": "None"
+    },
+    "Actions": [
+        {
+            "Type": "ParallelExecution",
+            "Metadata": {
+                "ExampleMetadata1": "Value1",
+                "ExampleMetadata2": true
+            },
+            "Documentation": [
+                "https://microsoft.github.io/VirtualClient",
+                "https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles"
+            ],
+            "Components": [
+                {
+                    "Type": "ExampleWorkloadExecutor",
+                    "Metadata": {
+                        "ExampleMetadata3": "Value2",
+                        "ExampleMetadata4": 123
+                    },
+                    "Parameters": {
+                        "Scenario": "Scenario1",
+                        "CommandLine": "Workload --duration=00:00:15",
+                        "ExampleParameter1": "AnyValue1",
+                        "ExampleParameter2": 1234,
+                        "PackageName": "exampleworkload",
+                        "ProfilingScenario": "Scenario1",
+                        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                        "ProfilingMode": "$.Parameters.ProfilingMode",
+                        "ProfilingPeriod": "00:00:30",
+                        "ProfilingWarmUpPeriod": "00:00:05",
+                        "Tags": "Test,VC",
+                        "FailFast": true
+                    },
+                    "Contacts": [
+                        "virtualclient@microsoft.com"
+                    ]
+                },
+                {
+                    "Type": "ExampleWorkloadExecutor",
+                    "Metadata": {
+                        "ExampleMetadata3": "Value3",
+                        "ExampleMetadata4": 777
+                    },
+                    "Parameters": {
+                        "Scenario": "Scenario2",
+                        "CommandLine": "Workload --duration=00:00:15",
+                        "ExampleParameter1": "AnyValue2",
+                        "ExampleParameter2": 5678,
+                        "PackageName": "exampleworkload",
+                        "ProfilingScenario": "Scenario2",
+                        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                        "ProfilingMode": "$.Parameters.ProfilingMode",
+                        "ProfilingPeriod": "00:00:30",
+                        "ProfilingWarmUpPeriod": "00:00:05",
+                        "Tags": "Test,VC"
+                    },
+                    "Contacts": [
+                        "virtualclient@microsoft.com"
+                    ]
+                }
+            ]
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallExampleWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
+                "PackageName": "exampleworkload",
+                "Extract": true
+            }
+        }
+    ]
+}
