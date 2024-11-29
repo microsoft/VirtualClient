@@ -282,7 +282,7 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                     process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
