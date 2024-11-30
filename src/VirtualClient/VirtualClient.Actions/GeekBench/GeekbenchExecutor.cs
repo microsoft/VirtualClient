@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -41,6 +42,7 @@ namespace VirtualClient.Actions
             this.packageManager = dependencies.GetService<IPackageManager>();
             this.processManager = dependencies.GetService<ProcessManager>();
             this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.SupportingExecutables = new List<string>();
         }
 
         /// <summary>
@@ -63,6 +65,13 @@ namespace VirtualClient.Actions
         /// The path where the Geekbench JSON results file should be output.
         /// </summary>
         public string ResultsFilePath { get; set; }
+
+        /// <summary>
+        /// A set of paths for supporting executables of the main process 
+        /// (e.g. geekbench_x86_64, geekbench_aarch64). These typically need to 
+        /// be cleaned up/terminated at the end of each round of processing.
+        /// </summary>
+        protected IList<string> SupportingExecutables { get; }
 
         /// <summary>
         /// Executes Geek bench

@@ -46,6 +46,35 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualClientComponent"/> class.
         /// </summary>
+        /// <param name="component">A component to use as a reference when creating a new instance..</param>
+        protected VirtualClientComponent(VirtualClientComponent component)
+            : this(component?.Dependencies, component?.Parameters)
+        {
+            this.ClientRequestId = component.ClientRequestId;
+            this.ExecutionSeed = component.ExecutionSeed;
+            this.FailFast = component.FailFast;
+            this.LogToFile = component.LogToFile;
+            this.MetadataContract = component.MetadataContract;
+
+            if (component.Metadata?.Any() == true)
+            {
+                this.Metadata.AddRange(component.Metadata);
+            }
+
+            if (component.Extensions?.Any() == true)
+            {
+                this.Extensions.AddRange(component.Extensions);
+            }
+
+            if (component.SupportedRoles?.Any() == true)
+            {
+                this.SupportedRoles = new List<string>(component.SupportedRoles);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VirtualClientComponent"/> class.
+        /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters">
         /// Parameters defined in the execution profile or supplied to the Virtual Client on the command line.
@@ -74,7 +103,7 @@ namespace VirtualClient.Contracts
             this.MetadataContract = new MetadataContract();
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
-            this.SupportingExecutables = new List<string>();
+            this.SupportedRoles = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
 
@@ -493,14 +522,7 @@ namespace VirtualClient.Contracts
         /// The roles that are supported for the executor (e.g. Client, Server). Not all executors support
         /// multi-role scenarios.
         /// </summary>
-        public IEnumerable<string> SupportedRoles { get; protected set; }
-
-        /// <summary>
-        /// A set of paths for supporting executables of the main process 
-        /// (e.g. geekbench_x86_64, geekbench_aarch64). These typically need to 
-        /// be cleaned up/terminated at the end of each round of processing.
-        /// </summary>
-        public List<string> SupportingExecutables { get; private set; }
+        public IEnumerable<string> SupportedRoles { get; set; }
 
         /// <summary>
         /// The tags defined in the profile arguments.
