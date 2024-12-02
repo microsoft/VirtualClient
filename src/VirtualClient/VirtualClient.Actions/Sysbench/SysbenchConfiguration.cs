@@ -134,19 +134,5 @@ namespace VirtualClient.Actions
                 }
             }
         }
-
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
-            }
-
-            return serverIPAddress;
-        }
     }
 }
