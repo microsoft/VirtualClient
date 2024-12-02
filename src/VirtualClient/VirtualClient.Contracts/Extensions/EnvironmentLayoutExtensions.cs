@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
 
     /// <summary>
     /// Extensions for <see cref="EnvironmentLayout"/> instances.
@@ -33,6 +34,24 @@ namespace VirtualClient.Contracts
             }
 
             return clientInstances?.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Returns first ServerIpAddress from the layout file in a client-server scenario.
+        /// </summary>
+        /// <param name="component">The component with the environment layout.</param>
+        /// <returns></returns>
+        public static string GetServerIpAddress(this VirtualClientComponent component)
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (component.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = component.GetLayoutClientInstances(ClientRole.Server).First();
+                serverIPAddress = serverInstance.IPAddress;
+            }
+
+            return serverIPAddress;
         }
     }
 }

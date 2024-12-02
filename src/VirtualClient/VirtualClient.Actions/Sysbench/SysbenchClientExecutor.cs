@@ -218,7 +218,7 @@ namespace VirtualClient.Actions
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
+                SysbenchClientExecutor.PythonCommand,
                 script + this.sysbenchExecutionArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -246,7 +246,7 @@ namespace VirtualClient.Actions
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
+                SysbenchClientExecutor.PythonCommand,
                 script + this.sysbenchExecutionArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -274,7 +274,7 @@ namespace VirtualClient.Actions
             }
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                PythonCommand,
+                SysbenchClientExecutor.PythonCommand,
                 arguments,
                 Environment.CurrentDirectory,
                 telemetryContext,
@@ -303,11 +303,10 @@ namespace VirtualClient.Actions
                 this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
             }
 
-            string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                SysbenchClientExecutor.PythonCommand,
                 arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -319,20 +318,6 @@ namespace VirtualClient.Actions
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
-        }
-
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
-            }
-
-            return serverIPAddress;
         }
     }
 }
