@@ -184,7 +184,6 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
                 return action?.ToString();
-                // return this.Parameters.GetValue<string>(nameof(this.Action), null);
             }
         }
 
