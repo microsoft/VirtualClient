@@ -25,7 +25,6 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
-    using VirtualClient.Dependencies.Packaging;
 
     /// <summary>
     /// The main entry point for the program
