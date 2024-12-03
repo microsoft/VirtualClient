@@ -215,7 +215,7 @@ namespace VirtualClient
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --fail-fast
-                OptionFactory.CreateFailFastFlag(required: false, false),
+                OptionFactory.CreateFailFastFlag(required: false),
 
                 // --dependencies
                 OptionFactory.CreateDependenciesFlag(required: false),

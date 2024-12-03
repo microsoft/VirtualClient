@@ -54,14 +54,14 @@ namespace VirtualClient.TestExtensions
             if (withPrivateKey)
             {
                 certificate = X509CertificateLoader.LoadPkcs12(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")),
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
                     null,
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
                 certificate = X509CertificateLoader.LoadPkcs12(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "testcertificate2.private")),
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
                     null);
             }
 
