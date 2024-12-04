@@ -26,6 +26,15 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkingWorkloadToolExecutor"/> class.
         /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public NetworkingWorkloadToolExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkingWorkloadToolExecutor"/> class.
+        /// </summary>
         /// <param name="dependencies">Provides required dependencies to the workload.</param>
         /// <param name="parameters">The set of parameters defined for the action in the profile definition.</param>
         protected NetworkingWorkloadToolExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

@@ -7,7 +7,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -15,6 +14,15 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// </summary>
     public class CPSServerExecutor : CPSExecutor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CPSServerExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public CPSServerExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSServerExecutor"/> class.
         /// </summary>

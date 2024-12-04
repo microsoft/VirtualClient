@@ -6,7 +6,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,7 +14,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -28,6 +26,15 @@ namespace VirtualClient.Actions.NetworkPerformance
         private const string OutputFileName = "ntttcp-results.xml";
         private static readonly TimeSpan DefaultWarmupTime = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan DefaultCooldownTime = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NTttcpExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public NTttcpExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NTttcpExecutor"/> class.
