@@ -85,6 +85,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Name of the Binary to run for the suite of Benchmarks compiled.
+        /// </summary>
+        public string BinaryName
+        {
+            get
+            {
+               return this.Parameters.GetValue<string>(nameof(this.BinaryName), null);
+            }
+        }
+
+        /// <summary>
+        /// Name of the Binary to run for the suite of Benchmarks compiled.
+        /// </summary>
+        public string BinaryCommandLine
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.BinaryCommandLine), null);
+            }
+        }
+
+        /// <summary>
         /// The compilerFlags that are used for make command in compiling LMbench.
         /// </summary>
         public string CompilerFlags
@@ -119,7 +141,14 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.BuildSourceCodeAsync(telemetryContext, cancellationToken);
-            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+            if (this.BinaryName == null)
+            {
+                await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+            }
+            else
+            {
+
+            }
         }
 
         /// <summary>
