@@ -46,6 +46,7 @@ namespace VirtualClient.Actions
         {
             this.commandLine = commandLine;
             this.metrics = new List<Metric>();
+            this.readWriteMode = ReadWriteMode.ReadWrite;
         }
 
         private enum ReadWriteMode
