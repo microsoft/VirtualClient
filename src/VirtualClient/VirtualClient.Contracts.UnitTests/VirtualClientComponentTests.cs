@@ -10,8 +10,10 @@ namespace VirtualClient.Contracts
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
+    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
 
     [TestFixture]
@@ -34,6 +36,13 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void VirtualClientComponentConstructorsValidateRequiredParameters_2()
+        {
+            // Copy constructors
+            Assert.Throws<ArgumentException>(() => new TestVirtualClientComponent(null as VirtualClientComponent));
+        }
+
+        [Test]
         public void VirtualClientComponentConstructorsSetPropertiesToExpectedValues()
         {
             // The existence of the layout causes the 'Role' parameter to be added automatically.
@@ -46,6 +55,68 @@ namespace VirtualClient.Contracts
             CollectionAssert.AreEquivalent(
                 this.mockFixture.Parameters.Select(p => $"{p.Key}={p.Value}"),
                 component.Parameters.Select(p => $"{p.Key}={p.Value}"));
+        }
+
+        [Test]
+        public void VirtualClientComponentConstructorsSetPropertiesToExpectedValues_2()
+        {
+            // The existence of the layout causes the 'Role' parameter to be added automatically.
+            // We want to do a pure parameter comparison.
+            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
+
+            // Setup:
+            // The copy constructor is used more often with client/server implementations. Add in parameters
+            // common to those scenarios.
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.ClientRequestId)] = Guid.NewGuid().ToString();
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedPlatforms)] = "win-x64,linux-x64";
+
+            TestVirtualClientComponent originalComponent = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // Expectation:
+            // The following information should be copied from the original component to the new component:
+            //
+            // Properties
+            originalComponent.ExecutionSeed = 7777;
+            originalComponent.FailFast = true;
+            originalComponent.LogToFile = true;
+            originalComponent.SupportedRoles = new List<string> { "Client", "Server" };
+
+            // Parameters
+            originalComponent.Parameters["Parameter"] = 101010;
+
+            // Metadata
+            originalComponent.Metadata.Add("Metadata", 1234);
+
+            // Metadata Contract
+            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContractCategory.Scenario);
+
+            // Extensions
+            originalComponent.Extensions.Add("Contacts", JToken.Parse("[ 'virtualclient@microsoft.com' ]"));
+
+            // Copy constructor
+            VirtualClientComponent component = new TestVirtualClientComponent(originalComponent);
+
+            Assert.IsTrue(object.ReferenceEquals(originalComponent.Dependencies, component.Dependencies));
+            Assert.AreEqual(originalComponent.ClientRequestId, component.ClientRequestId);
+            Assert.AreEqual(originalComponent.ExecutionSeed, component.ExecutionSeed);
+            Assert.AreEqual(originalComponent.FailFast, component.FailFast);
+            Assert.AreEqual(originalComponent.LogToFile, component.LogToFile);
+            CollectionAssert.AreEquivalent(originalComponent.SupportedPlatforms, component.SupportedPlatforms);
+            CollectionAssert.AreEquivalent(originalComponent.SupportedRoles, component.SupportedRoles);
+
+            CollectionAssert.AreEquivalent(
+                originalComponent.Parameters.Select(p => $"{p.Key}={p.Value}"),
+                component.Parameters.Select(p => $"{p.Key}={p.Value}"));
+
+            CollectionAssert.AreEquivalent(
+                originalComponent.Metadata.Select(p => $"{p.Key}={p.Value}"),
+                component.Metadata.Select(p => $"{p.Key}={p.Value}"));
+
+            CollectionAssert.AreEquivalent(
+                originalComponent.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"),
+                component.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"));
+
+            Assert.AreEqual(originalComponent.Extensions["Contacts"], component.Extensions["Contacts"]);
         }
 
         [Test]
@@ -601,6 +672,11 @@ namespace VirtualClient.Contracts
 
         private class TestVirtualClientComponent : VirtualClientComponent
         {
+            public TestVirtualClientComponent(VirtualClientComponent component)
+                : base(component)
+            {
+            }
+
             public TestVirtualClientComponent(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {

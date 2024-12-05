@@ -636,19 +636,19 @@ namespace VirtualClient.Actions.NetworkPerformance
                 switch (tool)
                 {
                     case NetworkingWorkloadTool.CPS:
-                        action = new CPSClientExecutor(this.Dependencies, this.Parameters);
+                        action = new CPSClientExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.NTttcp:
-                        action = new NTttcpClientExecutor(this.Dependencies, this.Parameters);
+                        action = new NTttcpClientExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.Latte:
-                        action = new LatteClientExecutor(this.Dependencies, this.Parameters);
+                        action = new LatteClientExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.SockPerf:
-                        action = new SockPerfClientExecutor(this.Dependencies, this.Parameters);
+                        action = new SockPerfClientExecutor(this);
                         break;
 
                     default:
@@ -660,19 +660,19 @@ namespace VirtualClient.Actions.NetworkPerformance
                 switch (tool)
                 {
                     case NetworkingWorkloadTool.CPS:
-                        action = new CPSServerExecutor(this.Dependencies, this.Parameters);
+                        action = new CPSServerExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.NTttcp:
-                        action = new NTttcpServerExecutor(this.Dependencies, this.Parameters);
+                        action = new NTttcpServerExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.Latte:
-                        action = new LatteServerExecutor(this.Dependencies, this.Parameters);
+                        action = new LatteServerExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.SockPerf:
-                        action = new SockPerfServerExecutor(this.Dependencies, this.Parameters);
+                        action = new SockPerfServerExecutor(this);
                         break;
 
                     default:
@@ -773,6 +773,16 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.ProfilingScenario = serverInstructions.ProfilingScenario;
                                     this.ProfilingPeriod = serverInstructions.ProfilingPeriod;
                                     this.ProfilingWarmUpPeriod = serverInstructions.ProfilingWarmUpPeriod;
+
+                                    if (serverInstructions.Metadata?.Any() == true)
+                                    {
+                                        this.Metadata.AddRange(serverInstructions.Metadata, withReplace: true);
+                                    }
+
+                                    if (serverInstructions.Extensions?.Any() == true)
+                                    {
+                                        this.Extensions.AddRange(serverInstructions.Extensions, withReplace: true);
+                                    }
 
                                     NetworkingWorkloadExecutor.SaveStateAsync(
                                         NetworkingWorkloadExecutor.LocalApiClient,

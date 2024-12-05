@@ -1,0 +1,60 @@
+{
+    "Description": "Test Profile Executor (Metadata + Extensions)",
+    "RequiresApi": true,
+    "MinimumExecutionInterval": "00:05:00",
+    "MinimumRequiredExecutionTime": "01:00:00",
+    "Iterations": 1,
+    "Metadata": {
+        "Property1": "Value_A",
+        "Property2": 12345,
+        "Property3": true
+    },
+    "Actions": [
+        {
+            "Type": "ParallelExecution",
+            "Metadata": {
+                "Property4": 7777,
+                "Property5": "Value_B"
+            },
+            "Contacts": [
+                "virtualclient@microsoft.com"
+            ],
+            "Components": [
+                {
+                    "Type": "TestExecutor",
+                    "Metadata": {
+                        "Property6": 1111,
+                        "Property7": "Value_C"
+                    },
+                    "Parameters": {
+                        "CommandLine": "--name=testName --engine=V6",
+                        "Tags": "Test,VC"
+                    },
+                    "Documentation": {
+                        "OpenSource": true,
+                        "Resources": [
+                            "https://microsoft.github.io/VirtualClient"
+                        ]
+                    }
+                },
+                {
+                    "Type": "TestExecutor",
+                    "Metadata": {
+                        "Property6": 2222,
+                        "Property7": "Value_D"
+                    },
+                    "Parameters": {
+                        "CommandLine": "--name=testName --engine=V8",
+                        "Tags": "Test,VC"
+                    },
+                    "Documentation": {
+                        "OpenSource": true,
+                        "Resources": [
+                            "https://microsoft.github.io/VirtualClient"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
