@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Asp.Versioning;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
@@ -60,7 +61,6 @@ namespace VirtualClient
         {
             hostBuilder.Configure(apiService =>
             {
-                apiService.UseApiVersioning();
                 apiService.UseMiddleware<ApiExceptionMiddleware>(dependencies.GetService<ILogger>());
                 apiService.UseMvc();
             });

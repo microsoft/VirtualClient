@@ -381,16 +381,12 @@ namespace VirtualClient.Actions
 
             while (DateTime.UtcNow < pollingTimeout && !cancellationToken.IsCancellationRequested)
             {
-                Console.WriteLine(this.ResultsPath);
-
                 if (fileAccess.Exists(this.ResultsPath))
                 {
                     try
                     {
                         resultsContent = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath)
                             .ConfigureAwait(false);
-
-                        // Console.WriteLine(resultsContent);
 
                         if (!string.IsNullOrWhiteSpace(resultsContent))
                         {
