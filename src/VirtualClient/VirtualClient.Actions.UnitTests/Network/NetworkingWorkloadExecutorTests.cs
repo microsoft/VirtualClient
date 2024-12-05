@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -29,6 +30,139 @@ namespace VirtualClient.Actions
         public void SetupTest()
         {
             this.SetupForPlatform(PlatformID.Win32NT, NetworkingWorkloadTool.NTttcp);
+        }
+
+        [Test]
+        public void NetworkingWorkloadStateInstancesAreJsonSerializable()
+        {
+            NetworkingWorkloadState state = new NetworkingWorkloadState(
+                "networking",
+                "Scenario_1",
+                NetworkingWorkloadTool.NTttcp,
+                NetworkingWorkloadToolState.Start,
+                "Protocol_1",
+                16,
+                "8K",
+                "8K",
+                256,
+                60,
+                5,
+                5,
+                "Test_Mode_1",
+                64,
+                1234,
+                true,
+                true,
+                16,
+                32,
+                "Interrupt_Differentiator_1",
+                "100",
+                80.5,
+                true,
+                "Profiling_Scenario_1",
+                "00:00:30",
+                "00:00:05",
+                Guid.NewGuid());
+
+            SerializationAssert.IsJsonSerializable(state);
+        }
+
+        [Test]
+        public void NetworkingWorkloadStateInstancesAreJsonSerializable_2()
+        {
+            NetworkingWorkloadState state = new NetworkingWorkloadState(
+                "networking",
+                "Scenario_1",
+                NetworkingWorkloadTool.NTttcp,
+                NetworkingWorkloadToolState.Start,
+                "Protocol_1",
+                16,
+                "8K",
+                "8K",
+                256,
+                60,
+                5,
+                5,
+                "Test_Mode_1",
+                64,
+                1234,
+                true,
+                true,
+                16,
+                32,
+                "Interrupt_Differentiator_1",
+                "100",
+                80.5,
+                true,
+                "Profiling_Scenario_1",
+                "00:00:30",
+                "00:00:05",
+                Guid.NewGuid(),
+                //
+                // With Metadata
+                new Dictionary<string, IConvertible>
+                {
+                    ["String"] = "AnyValue",
+                    ["Integer"] = 12345,
+                    ["Boolean"] = true,
+                    ["Guid"] = Guid.NewGuid().ToString()
+                });
+
+            NetworkingWorkloadState deserializedState = state.ToJson().FromJson<NetworkingWorkloadState>();
+            Assert.IsNotEmpty(deserializedState.Metadata);
+
+            SerializationAssert.IsJsonSerializable(state);
+        }
+
+        [Test]
+        public void NetworkingWorkloadStateInstancesAreJsonSerializable_3()
+        {
+            NetworkingWorkloadState state = new NetworkingWorkloadState(
+                "networking",
+                "Scenario_1",
+                NetworkingWorkloadTool.NTttcp,
+                NetworkingWorkloadToolState.Start,
+                "Protocol_1",
+                16,
+                "8K",
+                "8K",
+                256,
+                60,
+                5,
+                5,
+                "Test_Mode_1",
+                64,
+                1234,
+                true,
+                true,
+                16,
+                32,
+                "Interrupt_Differentiator_1",
+                "100",
+                80.5,
+                true,
+                "Profiling_Scenario_1",
+                "00:00:30",
+                "00:00:05",
+                Guid.NewGuid(),
+                //
+                // With Metadata
+                new Dictionary<string, IConvertible>
+                {
+                    ["String"] = "AnyValue",
+                    ["Integer"] = 12345,
+                    ["Boolean"] = true,
+                    ["Guid"] = Guid.NewGuid().ToString()
+                });
+
+            // ...And Extensions
+            state.Extensions.Add("Contacts", JToken.Parse("[ 'virtualclient@microsoft.com' ]"));
+
+            NetworkingWorkloadState deserializedState = state.ToJson().FromJson<NetworkingWorkloadState>();
+            Assert.IsNotEmpty(deserializedState.Metadata);
+            Assert.IsNotEmpty(deserializedState.Extensions);
+
+            SerializationAssert.IsJsonSerializable(state);
         }
 
         [Test]

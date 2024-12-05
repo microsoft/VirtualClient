@@ -13,7 +13,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -26,7 +25,16 @@ namespace VirtualClient.Actions.NetworkPerformance
         private IFileSystem fileSystem;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CPSClientExecutor"/> class.
+        /// Initializes a new instance of the <see cref="CPSExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public CPSExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CPSExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
