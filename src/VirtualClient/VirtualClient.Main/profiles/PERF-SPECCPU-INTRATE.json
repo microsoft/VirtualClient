@@ -28,6 +28,8 @@
                 "SpecProfile": "$.Parameters.SpecProfile",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
                 "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
                 "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
             }
