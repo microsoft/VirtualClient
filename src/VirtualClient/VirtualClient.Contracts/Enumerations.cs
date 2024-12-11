@@ -678,6 +678,27 @@ namespace VirtualClient
     }
 
     /// <summary>
+    /// Metric verbosity to mark the importance of a metric.
+    /// </summary>
+    public enum MetricVerbosity
+    {
+        /// <summary>
+        /// Represents critical issues, high priority metrics
+        /// </summary>
+        Critical,
+
+        /// <summary>
+        /// Represents regular information or normal priority metrics
+        /// </summary>
+        Standard,
+
+        /// <summary>
+        /// Represents informational or low priority metrics
+        /// </summary>
+        Informational
+    }
+
+    /// <summary>
     /// Disk partition types (e.g. GPT, MSDOS).
     /// </summary>
     public enum PartitionType

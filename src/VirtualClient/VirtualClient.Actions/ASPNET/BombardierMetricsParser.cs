@@ -26,8 +26,6 @@ namespace VirtualClient.Actions
         {
         }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {

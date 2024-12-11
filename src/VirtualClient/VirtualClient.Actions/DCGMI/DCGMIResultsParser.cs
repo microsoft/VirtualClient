@@ -166,8 +166,6 @@ namespace VirtualClient.Actions
 
         private string Subsystem { get; set; }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {

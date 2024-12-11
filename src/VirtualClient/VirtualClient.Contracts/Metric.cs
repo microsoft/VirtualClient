@@ -5,6 +5,7 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
@@ -76,6 +77,15 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Creates a metric
+        /// </summary>
+        public Metric(string name, double value, string unit, MetricRelativity relativity, MetricVerbosity metricVerbosity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+            : this(name, value, unit, relativity, tags: tags, description: description, metadata: metadata)
+        {
+            this.MetricVerbosity = metricVerbosity;
+        }
+
+        /// <summary>
         /// Represents the case where a valid measurement could not be taken.
         /// </summary>
         public static Metric None { get; } = new Metric("n/a", 0);
@@ -125,6 +135,11 @@ namespace VirtualClient.Contracts
         /// Telemetry context for metric.
         /// </summary>
         public IDictionary<string, IConvertible> Metadata { get; }
+
+        /// <summary>
+        /// Metric verbosity to descript importance of metric.
+        /// </summary>
+        public MetricVerbosity MetricVerbosity { get; set; } = MetricVerbosity.Standard;
 
         /// <summary>
         /// Determines if two objects are equal.
@@ -212,9 +227,86 @@ namespace VirtualClient.Contracts
         public override int GetHashCode()
         {
             StringBuilder hashBuilder = new StringBuilder()
-                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
+                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{this.MetricVerbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
 
             return hashBuilder.ToString().ToLowerInvariant().GetHashCode(StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Print metrics to console. Default to critical only.
+        /// </summary>
+        /// <param name="metrics">List of Metrics</param>
+        /// <param name="scenario">Scenario</param>
+        /// <param name="criticalOnly">Boolean to note if prints critical only metric</param>
+        public static void PrintConsole(IList<Metric> metrics, string scenario, bool criticalOnly = true)
+        {
+            Console.WriteLine();
+            Dictionary<string, int> colWidths = new Dictionary<string, int>();
+
+            DataTable table = new DataTable();
+            table.Columns.Add("Scenario", typeof(string));
+            table.Columns.Add("Name", typeof(string));
+            table.Columns.Add("Value", typeof(double));
+            table.Columns.Add("Unit", typeof(string));
+
+            IList<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.MetricVerbosity == MetricVerbosity.Critical).ToList() : metrics;
+
+            foreach (Metric metric in metricsToPrint)
+            {
+                DataRow row = table.NewRow();
+                row["Scenario"] = scenario; // You can modify this as needed
+                row["Name"] = metric.Name;
+                row["Value"] = metric.Value;
+                row["Unit"] = metric.Unit;
+                table.Rows.Add(row);
+            }
+
+            Metric.PrintDataTableFormatted(table);
+        }
+
+        /// <summary>
+        /// Data table with formated column width.
+        /// </summary>
+        /// <param name="dataTable">Input data table.</param>
+        private static void PrintDataTableFormatted(DataTable dataTable)
+        {
+            Console.WriteLine();
+            Dictionary<string, int> colWidths = new Dictionary<string, int>();
+
+            foreach (DataColumn col in dataTable.Columns)
+            {
+                Console.Write("| " + col.ColumnName);
+                var maxLabelSize = dataTable.Rows.OfType<DataRow>()
+                        .Select(m => (m.Field<object>(col.ColumnName)?.ToString() ?? string.Empty).Length)
+                        .OrderByDescending(m => m).FirstOrDefault();
+
+                maxLabelSize = Math.Max(col.ColumnName.Length, maxLabelSize);
+
+                colWidths.Add(col.ColumnName, maxLabelSize);
+                for (int i = 0; i < maxLabelSize - col.ColumnName.Length + 1; i++)
+                {
+                    Console.Write(" ");
+                }
+            }
+
+            Console.Write("|");
+            Console.WriteLine();
+            Console.WriteLine(new string('-', colWidths.Values.Sum() + 13)); // 13 is the extra width for the spaces and pipes
+
+            foreach (DataRow dataRow in dataTable.Rows)
+            {
+                for (int j = 0; j < dataRow.ItemArray.Length; j++)
+                {
+                    Console.Write("| " + dataRow.ItemArray[j]);
+                    for (int i = 0; i < colWidths[dataTable.Columns[j].ColumnName] - dataRow.ItemArray[j].ToString().Length + 1; i++)
+                    {
+                        Console.Write(" ");
+                    }
+                }
+
+                Console.Write("|");
+                Console.WriteLine();
+            }
         }
     }
 }

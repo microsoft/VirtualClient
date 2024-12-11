@@ -39,8 +39,6 @@ namespace VirtualClient.Actions
         /// </summary>
         public DataTable LinpackResult { get; set; }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {

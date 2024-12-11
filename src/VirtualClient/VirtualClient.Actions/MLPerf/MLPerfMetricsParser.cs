@@ -25,8 +25,6 @@ namespace VirtualClient.Actions
             this.AccuracyMode = accuracyMode;
         }
 
-        private List<Metric> Metrics { get; set; }
-
         private bool AccuracyMode { get; set; }
 
         /// <inheritdoc/>
