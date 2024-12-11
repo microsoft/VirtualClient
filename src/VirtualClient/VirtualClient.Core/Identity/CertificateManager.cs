@@ -125,9 +125,9 @@ namespace VirtualClient.Identity
                             byte[] certificateBytes = await this.FileSystem.File.ReadAllBytesAsync(file);
                             if (certificateBytes?.Any() == true)
                             {
-                                X509Certificate2 certificateFromFile = new X509Certificate2(
+                                X509Certificate2 certificateFromFile = X509CertificateLoader.LoadPkcs12(
                                     certificateBytes,
-                                    string.Empty.ToSecureString(),
+                                    null,
                                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
 
                                 if (certificateFromFile != null)
@@ -199,9 +199,9 @@ namespace VirtualClient.Identity
                             byte[] certificateBytes = await this.FileSystem.File.ReadAllBytesAsync(file);
                             if (certificateBytes?.Any() == true)
                             {
-                                X509Certificate2 certificateFromFile = new X509Certificate2(
+                                X509Certificate2 certificateFromFile = X509CertificateLoader.LoadPkcs12(
                                     certificateBytes,
-                                    string.Empty.ToSecureString(),
+                                    string.Empty,
                                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
 
                                 if (certificateFromFile != null)
