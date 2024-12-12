@@ -21,12 +21,50 @@ Telemetry data emitted is divided into 3 different categories:
   System events describe certain types of important information on the system beyond simple performance measurements. This might for example
   include Windows registry changes or special event logs.
 
+## Metrics
+Metrics are generally the most important data coming out from a VirtualClient test. They usually represents measurement and information from a workloar or a monitor.
+
+### Metric Filter
+Metrics could be filtered with filters in supported workloads. They are comma delimiter list of regex expressions that will be matched with the `Name` field of the Metric object.
+
+For example, a metric filter with `(read|write)_(bandwidth|iops)` regex will capture four metrics: "read_bandwidth, read_iops, write_bandwidth, write_iops".
+
+There is a special set of filters for metric verbosity, which will be covered in next section. Filters except metric verbosity are examined with "OR/union". Metric verbosity filters are "AND/intersection".
+
+Examples
+```bash
+# metrics that has _p99
+_p99
+# metrics that match the regex
+(read|write)_(bandwidth|iops)
+# metrics that match the regex OR contains _p99 or _p50
+(read|write)_(bandwidth|iops),_p99,p50
+# metric with critical verbosity
+MetricVerbosity:Critical
+# metric with critical verbosity, AND contains read_
+MetricVerbosity:Critical,read_
+```
+
+### Metric Verbosity
+Metrics have 3 verbosity: Critical, Standard, Informational. The verbosity level indicates the metrics' importance. This could be filtered with MetricFilter in supported workloads.
+
+- Critical  
+    Critical metrics represents the most crucial metrics coming from a tool. They should be direct indicator of a system performance. For example, "average total iops" in a IO workload, or a "query per hour" in a database workload is considered critical.  
+    Filter for critical metric: MetricVerbosity:Critical
+- Standard  
+    Standard metrics represents secondary metrics that might correlates with.  
+    Filter for standard metric: MetricVerbosity:Standard
+- Informational  
+    Informational metrics are verbose information that helps to debug performance difference, but they alone don't directly correlate with performance differences. For example, size of database, total threads count or "memory usage in a networking workload" are considered to be informational.  
+    Filter for informational metric: MetricVerbosity:Informational
+
+
 ## Log Files
 The Virtual Client emits ALL data/telemetry captured from workloads, monitors and from the system to standard log files. Log files can be found 
 in the **logs** directory within the Virtual Client application's parent directory itself. Logs are separated into the following categories:
 
 - **Traces**  
-  operational traces about everything the Virtual Client is doing while running useful for debugging/triage purposes.
+  Operational traces about everything the Virtual Client is doing while running useful for debugging/triage purposes.
 
 - **Metrics**  
   Important measurements captured from the workload and the system that can be used to analyze the performance and reliability of the workload and correspondingly

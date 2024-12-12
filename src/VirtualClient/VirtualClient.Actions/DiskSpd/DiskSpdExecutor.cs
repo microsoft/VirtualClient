@@ -349,6 +349,12 @@ namespace VirtualClient.Actions
             string result = workload.StandardOutput.ToString();
             DiskSpdMetricsParser parser = new DiskSpdMetricsParser(result, this.CommandLine);
             IList<Metric> metrics = parser.Parse();
+
+            if (this.MetricFilters?.Any() == true)
+            {
+                metrics = metrics.FilterBy(this.MetricFilters).ToList();
+            }
+
             metrics.PrintConsole(this.MetricScenario ?? this.Scenario);
 
             this.Logger.LogMetrics(
