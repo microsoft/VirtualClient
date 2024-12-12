@@ -392,14 +392,14 @@ namespace VirtualClient
                         discoveredPackages?.Any() == true ? discoveredPackages.Select(pkg => pkg.Name).OrderBy(p => p) : null);
 
                     // Validate we do not have duplicate binaries defined.
-                    var duplicatePackages = discoveredPackages.GroupBy(pkg => pkg.Name).Where(group => group.Count() > 1);
-                    if (duplicatePackages?.Any() == true)
-                    {
-                        throw new DependencyException(
-                            $"Duplicate packages discovered. Packages must have unique names in relation to other packages. The following packages have " +
-                            $"duplicates: {string.Join(", ", duplicatePackages.Select(g => g.Key))}",
-                            ErrorReason.DuplicatePackagesFound);
-                    }
+                    // var duplicatePackages = discoveredPackages.GroupBy(pkg => pkg.Name).Where(group => group.Count() > 1);
+                    // if (duplicatePackages?.Any() == true)
+                    // {
+                    //    throw new DependencyException(
+                    //        $"Duplicate packages discovered. Packages must have unique names in relation to other packages. The following packages have " +
+                    //        $"duplicates: {string.Join(", ", duplicatePackages.Select(g => g.Key))}",
+                    //        ErrorReason.DuplicatePackagesFound);
+                    // }
 
                     return discoveredPackages as IEnumerable<DependencyPath>;
                 }
@@ -747,12 +747,11 @@ namespace VirtualClient
             List<DependencyPath> packages = new List<DependencyPath>();
             if (this.FileSystem.Directory.Exists(directoryPath))
             {
-                if (this.TryGetPackageDescriptions(directoryPath, out IEnumerable<string> vcPkgFiles))
+                if (this.TryGetPackageDescriptions(directoryPath, out IEnumerable<IFileInfo> vcPkgFiles))
                 {
-                    foreach (string file in vcPkgFiles)
+                    foreach (IFileInfo file in vcPkgFiles)
                     {
-                        string fileContents = await this.FileSystem.File.ReadAllTextAsync(file, cancellationToken)
-                            .ConfigureAwait(false);
+                        string fileContents = await this.FileSystem.File.ReadAllTextAsync(file.FullName, cancellationToken);
 
                         if (!string.IsNullOrWhiteSpace(fileContents))
                         {
@@ -766,10 +765,11 @@ namespace VirtualClient
 
                                 DependencyPath packageLocation = new DependencyPath(
                                     packageDescription.Name,
-                                    Path.GetDirectoryName(file),
+                                    file.DirectoryName,
                                     packageDescription.Description,
                                     packageDescription.Version,
-                                    packageDescription.Metadata);
+                                    packageDescription.Metadata,
+                                    file.CreationTimeUtc);
 
                                 packages.Add(packageLocation);
                             }
@@ -932,7 +932,7 @@ namespace VirtualClient
             }
         }
 
-        private bool TryGetPackageDescriptions(string packagePath, out IEnumerable<string> vcPkgFiles)
+        private bool TryGetPackageDescriptions(string packagePath, out IEnumerable<IFileInfo> vcPkgFiles)
         {
             vcPkgFiles = null;
             IEnumerable<string> descriptions = this.FileSystem.Directory.EnumerateFiles(
@@ -942,7 +942,7 @@ namespace VirtualClient
 
             if (descriptions?.Any() == true)
             {
-                vcPkgFiles = descriptions;
+                vcPkgFiles = new List<IFileInfo>(descriptions.Select(path => this.FileSystem.FileInfo.New(path)));
             }
 
             return vcPkgFiles != null;
