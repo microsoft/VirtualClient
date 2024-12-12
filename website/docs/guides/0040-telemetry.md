@@ -22,7 +22,18 @@ Telemetry data emitted is divided into 3 different categories:
   include Windows registry changes or special event logs.
 
 ## Metrics
-Metrics are generally the most important data coming out from a VirtualClient test. They usually represents measurement and information from a workloar or a monitor.
+Metrics are generally the most important data coming out from a VirtualClient test. They usually represents measurement and information from a workload or a monitor. Metric is a core contract in VirtualClient which include the following fields.
+
+| **Field Name**         | **Example Value**     | **Description** |
+|------------------------|-----------------------|-----------------|
+| `Name`            | "md5 16-byte"         | The name of the metric.               |
+| `Value`           | 39359.36              | The value of the metric, double type. |
+| `Unit`            | "kilobytes/sec"       | The unit of measurement.   |
+| `Relativity`      | "HigherIsBetter"      | Defines the metric's relativity interpretation. For example, "HigherIsBetter" means that higher values are considered better for this metric. |
+| `Verbosity`  | MetricVerbosity.Critical | Importance of metric. Enum.MetricVerbosity type.  |
+| `Metadata`        | `{}`                  | KeyValue pairs of additional metadata related to the metric.       |
+| `Description`     | "OpenSSL performance on md5 algorithm " | A detailed explanation of what the metric represents.|
+
 
 ### Metric Filter
 Metrics could be filtered with filters in supported workloads. They are comma delimiter list of regex expressions that will be matched with the `Name` field of the Metric object.

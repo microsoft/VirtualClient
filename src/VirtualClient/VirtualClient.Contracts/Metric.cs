@@ -82,7 +82,7 @@ namespace VirtualClient.Contracts
         public Metric(string name, double value, string unit, MetricRelativity relativity, MetricVerbosity metricVerbosity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
             : this(name, value, unit, relativity, tags: tags, description: description, metadata: metadata)
         {
-            this.MetricVerbosity = metricVerbosity;
+            this.Verbosity = metricVerbosity;
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Metric verbosity to descript importance of metric.
         /// </summary>
-        public MetricVerbosity MetricVerbosity { get; set; } = MetricVerbosity.Standard;
+        public MetricVerbosity Verbosity { get; set; } = MetricVerbosity.Standard;
 
         /// <summary>
         /// Determines if two objects are equal.
@@ -227,7 +227,7 @@ namespace VirtualClient.Contracts
         public override int GetHashCode()
         {
             StringBuilder hashBuilder = new StringBuilder()
-                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{this.MetricVerbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
+                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{this.Verbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
 
             return hashBuilder.ToString().ToLowerInvariant().GetHashCode(StringComparison.OrdinalIgnoreCase);
         }

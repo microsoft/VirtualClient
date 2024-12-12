@@ -55,13 +55,13 @@ namespace VirtualClient.Contracts
                     switch (verbosityFilter.ToLower())
                     {
                         case "metricverbosity:critical":
-                            filteredMetrics = filteredMetrics.Where(m => m.MetricVerbosity == MetricVerbosity.Critical);
+                            filteredMetrics = filteredMetrics.Where(m => m.Verbosity == MetricVerbosity.Critical);
                             break;
                         case "metricverbosity:standard":
-                            filteredMetrics = filteredMetrics.Where(m => m.MetricVerbosity == MetricVerbosity.Standard);
+                            filteredMetrics = filteredMetrics.Where(m => m.Verbosity == MetricVerbosity.Standard);
                             break;
                         case "metricverbosity:informational":
-                            filteredMetrics = filteredMetrics.Where(m => m.MetricVerbosity == MetricVerbosity.Informational);
+                            filteredMetrics = filteredMetrics.Where(m => m.Verbosity == MetricVerbosity.Informational);
                             break;
 
                         default:
@@ -100,7 +100,7 @@ namespace VirtualClient.Contracts
                 table.Columns.Add("Value", typeof(double));
                 table.Columns.Add("Unit", typeof(string));
 
-                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.MetricVerbosity == MetricVerbosity.Critical).ToList() : metrics;
+                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == MetricVerbosity.Critical).ToList() : metrics;
 
                 foreach (Metric metric in metricsToPrint)
                 {

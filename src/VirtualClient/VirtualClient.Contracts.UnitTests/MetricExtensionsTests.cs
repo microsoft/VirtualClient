@@ -68,13 +68,13 @@ namespace VirtualClient.Contracts
         public void MetricFiltersCorrectFiltersVerbosity()
         {
             IEnumerable<string> filter = new List<string> { "MetricVerbosity:Standard" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m=>m.MetricVerbosity == MetricVerbosity.Standard).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            CollectionAssert.AreEquivalent(this.metrics.Where(m=>m.Verbosity == MetricVerbosity.Standard).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "MetricVerbosity:Critical" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.MetricVerbosity == MetricVerbosity.Critical).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == MetricVerbosity.Critical).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "MetricVerbosity:Informational" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.MetricVerbosity == MetricVerbosity.Informational).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == MetricVerbosity.Informational).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "MetricVerbosity:others" };
             CollectionAssert.AreEquivalent(Enumerable.Empty<Metric>().Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));

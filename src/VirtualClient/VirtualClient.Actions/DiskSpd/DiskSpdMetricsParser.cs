@@ -199,7 +199,7 @@ namespace VirtualClient.Actions
 
             foreach (var metric in metrics.Where(m => m.Name.EndsWith("total") && (m.Unit == "iops" || m.Unit == "ms" || m.Unit == "MiB/s")))
             {
-                metric.MetricVerbosity = MetricVerbosity.Critical;
+                metric.Verbosity = MetricVerbosity.Critical;
             }
 
             this.Metrics.AddRange(metrics);
@@ -219,7 +219,7 @@ namespace VirtualClient.Actions
 
             foreach (var metric in metrics.Where(m => m.Name.EndsWith("total") && (m.Unit == "iops" || m.Unit == "ms" || m.Unit == "MiB/s")))
             {
-                metric.MetricVerbosity = MetricVerbosity.Critical;
+                metric.Verbosity = MetricVerbosity.Critical;
             }
 
             this.Metrics.AddRange(metrics);
@@ -238,7 +238,7 @@ namespace VirtualClient.Actions
             metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"write {writeIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
             foreach (var metric in metrics.Where(m => m.Name.EndsWith("total") && (m.Unit == "iops" || m.Unit == "ms" || m.Unit == "MiB/s")))
             {
-                metric.MetricVerbosity = MetricVerbosity.Critical;
+                metric.Verbosity = MetricVerbosity.Critical;
             }
 
             this.Metrics.AddRange(metrics);
@@ -265,7 +265,7 @@ namespace VirtualClient.Actions
             string[] criticalMetrics = { "total latency 50th", "total latency 90th", "total latency 99th" };
             foreach (var metric in metrics.Where(m => criticalMetrics.Contains(m.Name)))
             {
-                metric.MetricVerbosity = MetricVerbosity.Critical;
+                metric.Verbosity = MetricVerbosity.Critical;
             }
 
             this.Metrics.AddRange(metrics);
