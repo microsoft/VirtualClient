@@ -347,7 +347,7 @@ namespace VirtualClient.Actions
 
                     SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
-                    metrics.PrintConsole(this.Scenario);
+                    metrics.LogConsole(this.Scenario);
 
                     this.Logger.LogMetrics(
                         toolName: "SPECcpu",

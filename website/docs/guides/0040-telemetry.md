@@ -30,7 +30,7 @@ Metrics are generally the most important data coming out from a VirtualClient te
 | `Value`           | 39359.36              | The value of the metric, double type. |
 | `Unit`            | "kilobytes/sec"       | The unit of measurement.   |
 | `Relativity`      | "HigherIsBetter"      | Defines the metric's relativity interpretation. For example, "HigherIsBetter" means that higher values are considered better for this metric. |
-| `Verbosity`  | MetricVerbosity.Critical | Importance of metric. Enum.MetricVerbosity type.  |
+| `Verbosity`  | 0 | Importance of metric. Enum Microsoft.Extensions.Logging.LogLevel type.  |
 | `Metadata`        | `{}`                  | KeyValue pairs of additional metadata related to the metric.       |
 | `Description`     | "OpenSSL performance on md5 algorithm " | A detailed explanation of what the metric represents.|
 
@@ -50,24 +50,24 @@ _p99
 (read|write)_(bandwidth|iops)
 # metrics that match the regex OR contains _p99 or _p50
 (read|write)_(bandwidth|iops),_p99,p50
-# metric with critical verbosity
-MetricVerbosity:Critical
-# metric with critical verbosity, AND contains read_
-MetricVerbosity:Critical,read_
+# metric with verbosity 0
+verbosity:0
+# metric with verbosity lower or equal to 1, AND contains read_
+verbosity:1,read_
 ```
 
 ### Metric Verbosity
-Metrics have 3 verbosity: Critical, Standard, Informational. The verbosity level indicates the metrics' importance. This could be filtered with MetricFilter in supported workloads.
+Metrics have 3 verbosity (0-2): Critical, Standard, Informational. The verbosity level indicates the metrics' importance. This could be filtered with MetricFilter in supported workloads.
 
-- Critical  
+- Level 0: Critical  
     Critical metrics represents the most crucial metrics coming from a tool. They should be direct indicator of a system performance. For example, "average total iops" in a IO workload, or a "query per hour" in a database workload is considered critical.  
-    Filter for critical metric: MetricVerbosity:Critical
-- Standard  
+    Filter for critical metric: `verbosity:0`
+- Level 1: Standard  
     Standard metrics represents secondary metrics that might correlates with.  
-    Filter for standard metric: MetricVerbosity:Standard
-- Informational  
+    Filter for standard metric: `verbosity:1`
+- Level 2: Informational  
     Informational metrics are verbose information that helps to debug performance difference, but they alone don't directly correlate with performance differences. For example, size of database, total threads count or "memory usage in a networking workload" are considered to be informational.  
-    Filter for informational metric: MetricVerbosity:Informational
+    Filter for informational metric: `verbosity:2`
 
 
 ## Log Files

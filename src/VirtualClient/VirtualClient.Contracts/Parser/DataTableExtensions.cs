@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Microsoft.Extensions.Logging;
     using VirtualClient;
 
     /// <summary>
@@ -183,7 +184,7 @@ namespace VirtualClient.Contracts
             string unit = null, 
             string namePrefix = null,
             MetricRelativity metricRelativity = MetricRelativity.Undefined,
-            MetricVerbosity metricVerbosity = MetricVerbosity.Standard,
+            LogLevel metricVerbosity = (LogLevel)1,
             int tagIndex = -1, 
             int startTimeIndex = -1,
             DateTime? startTime = null,

@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Microsoft.Extensions.Logging;
     using NUnit.Framework;
 
     [TestFixture]
@@ -37,11 +38,11 @@ namespace VirtualClient.Contracts
                 new Metric("write_completionlatency_p99_99", 3267543),
                 new Metric("write_submissionlatency_mean", 15.35467863),
 
-                new Metric("verbose_test_1", 123, "unit", MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Critical),
-                new Metric("verbose_test_2", -123, "unit", MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Critical),
-                new Metric("verbose_test_3", 123, "unit", MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational),
-                new Metric("verbose_test_4", -123, "unit", MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational),
-                new Metric("verbose_test_5", -123, "unit", MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational),
+                new Metric("verbose_test_1", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)0),
+                new Metric("verbose_test_2", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)0),
+                new Metric("verbose_test_3", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)2),
+                new Metric("verbose_test_4", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)2),
+                new Metric("verbose_test_5", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)2),
             };
         }
 
@@ -67,16 +68,16 @@ namespace VirtualClient.Contracts
         [Test]
         public void MetricFiltersCorrectFiltersVerbosity()
         {
-            IEnumerable<string> filter = new List<string> { "MetricVerbosity:Standard" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m=>m.Verbosity == MetricVerbosity.Standard).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            IEnumerable<string> filter = new List<string> { "Verbosity:1" };
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= (LogLevel)1).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
-            filter = new List<string> { "MetricVerbosity:Critical" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == MetricVerbosity.Critical).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            filter = new List<string> { "Verbosity:0" };
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == (LogLevel)0).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
-            filter = new List<string> { "MetricVerbosity:Informational" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == MetricVerbosity.Informational).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            filter = new List<string> { "Verbosity:2" };
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= (LogLevel)2).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
-            filter = new List<string> { "MetricVerbosity:others" };
+            filter = new List<string> { "Verbosity:others" };
             CollectionAssert.AreEquivalent(Enumerable.Empty<Metric>().Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
         }
 
@@ -171,7 +172,7 @@ namespace VirtualClient.Contracts
             List<string> filters = new List<string>
             {
                 "test_2",
-                "MetricVerbosity:Critical",
+                "verbosity:0",
             };
 
             IEnumerable<Metric> expectedMetrics = this.metrics.Where(m => m.Name == "verbose_test_2");

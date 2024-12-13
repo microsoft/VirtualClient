@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -49,19 +50,19 @@ namespace VirtualClient.Contracts
 
             if (filterTerms?.Any() == true)
             {
-                string verbosityFilter = filterTerms.Where(f => f.Contains(nameof(MetricVerbosity))).FirstOrDefault();
+                string verbosityFilter = filterTerms.Where(f => f.Contains("verbosity", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                 if (!string.IsNullOrEmpty(verbosityFilter)) 
                 {
                     switch (verbosityFilter.ToLower())
                     {
-                        case "metricverbosity:critical":
-                            filteredMetrics = filteredMetrics.Where(m => m.Verbosity == MetricVerbosity.Critical);
+                        case "verbosity:0":
+                            filteredMetrics = filteredMetrics.Where(m => ((int)m.Verbosity) <= 0);
                             break;
-                        case "metricverbosity:standard":
-                            filteredMetrics = filteredMetrics.Where(m => m.Verbosity == MetricVerbosity.Standard);
+                        case "verbosity:1":
+                            filteredMetrics = filteredMetrics.Where(m => ((int)m.Verbosity) <= 1);
                             break;
-                        case "metricverbosity:informational":
-                            filteredMetrics = filteredMetrics.Where(m => m.Verbosity == MetricVerbosity.Informational);
+                        case "verbosity:2":
+                            filteredMetrics = filteredMetrics.Where(m => ((int)m.Verbosity) <= 2);
                             break;
 
                         default:
@@ -69,7 +70,7 @@ namespace VirtualClient.Contracts
                             break;
                     }
 
-                    filterTerms = filterTerms.Where(f => !f.Contains(nameof(MetricVerbosity)));
+                    filterTerms = filterTerms.Where(f => !f.Contains("verbosity", StringComparison.OrdinalIgnoreCase));
                 }
 
                 if (filterTerms?.Any() == true)
@@ -87,7 +88,7 @@ namespace VirtualClient.Contracts
         /// <param name="metrics">List of Metrics</param>
         /// <param name="scenario">Scenario</param>
         /// <param name="criticalOnly">Boolean to note if prints critical only metric</param>
-        public static void PrintConsole(this IEnumerable<Metric> metrics, string scenario, bool criticalOnly = true)
+        public static void LogConsole(this IEnumerable<Metric> metrics, string scenario, bool criticalOnly = true)
         {
             try
             {
@@ -100,7 +101,7 @@ namespace VirtualClient.Contracts
                 table.Columns.Add("Value", typeof(double));
                 table.Columns.Add("Unit", typeof(string));
 
-                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == MetricVerbosity.Critical).ToList() : metrics;
+                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == (LogLevel)0).ToList() : metrics;
 
                 foreach (Metric metric in metricsToPrint)
                 {
@@ -112,7 +113,7 @@ namespace VirtualClient.Contracts
                     table.Rows.Add(row);
                 }
 
-                MetricExtensions.PrintDataTableFormatted(table);
+                MetricExtensions.LogConsole(table);
             }
             catch (Exception exc)
             {
@@ -125,7 +126,7 @@ namespace VirtualClient.Contracts
         /// Data table with formated column width.
         /// </summary>
         /// <param name="dataTable">Input data table.</param>
-        private static void PrintDataTableFormatted(DataTable dataTable)
+        private static void LogConsole(DataTable dataTable)
         {
             Console.WriteLine();
             Dictionary<string, int> colWidths = new Dictionary<string, int>();

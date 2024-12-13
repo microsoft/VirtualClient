@@ -15,6 +15,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class LzbenchMetricsParser : MetricsParser
     {
+        private List<Metric> metrics;
+
         /// <summary>
         /// Constructor for <see cref="LzbenchMetricsParser"/>
         /// </summary>
@@ -30,7 +32,7 @@ namespace VirtualClient.Actions
             try
             {
                 this.Preprocess();
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
                 MemoryStream mStrm = new MemoryStream(Encoding.UTF8.GetBytes(this.PreprocessedText));
                 using (var reader = new StreamReader(mStrm))
                 {
@@ -49,7 +51,7 @@ namespace VirtualClient.Actions
                             try
                             {
                                 // Compression speed
-                                this.Metrics.Add(new Metric($"Compression Speed({values[0].Trim()})", Convert.ToDouble(values[1]), "MB/s", MetricRelativity.HigherIsBetter));
+                                this.metrics.Add(new Metric($"Compression Speed({values[0].Trim()})", Convert.ToDouble(values[1]), "MB/s", MetricRelativity.HigherIsBetter));
                             }
                             catch
                             {
@@ -59,7 +61,7 @@ namespace VirtualClient.Actions
                             try
                             {
                                 // Decompression speed
-                                this.Metrics.Add(new Metric($"Decompression Speed({values[0].Trim()})", Convert.ToDouble(values[2]), "MB/s", MetricRelativity.HigherIsBetter));
+                                this.metrics.Add(new Metric($"Decompression Speed({values[0].Trim()})", Convert.ToDouble(values[2]), "MB/s", MetricRelativity.HigherIsBetter));
                             }
                             catch
                             {
@@ -69,7 +71,7 @@ namespace VirtualClient.Actions
                             try
                             {
                                 // Compressed size/Original size
-                                this.Metrics.Add(new Metric($"Compressed size and Original size ratio({values[0].Trim()})", Convert.ToDouble(values[5]), null, MetricRelativity.LowerIsBetter));
+                                this.metrics.Add(new Metric($"Compressed size and Original size ratio({values[0].Trim()})", Convert.ToDouble(values[5]), null, MetricRelativity.LowerIsBetter));
                             }
                             catch
                             {
@@ -79,7 +81,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {

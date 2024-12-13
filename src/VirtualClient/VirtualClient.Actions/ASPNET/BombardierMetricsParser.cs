@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     {
         private const string RequestPerSecond = "Reqs/sec";
         private const string Microsecond = "microsecond";
+        private List<Metric> metrics;
 
         /// <summary>
         /// Constructor for <see cref="BombardierMetricsParser"/>
@@ -30,28 +31,28 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             this.Preprocess();
-            this.Metrics = new List<Metric>();
+            this.metrics = new List<Metric>();
 
             Root root = JsonSerializer.Deserialize<Root>(this.PreprocessedText);
-            this.Metrics.Add(new Metric("Latency Max", root.Result.Latency.Max, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency Average", root.Result.Latency.Mean, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency Stddev", root.Result.Latency.Stddev, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency P50", root.Result.Latency.Percentiles.P50, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency P75", root.Result.Latency.Percentiles.P75, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency P90", root.Result.Latency.Percentiles.P90, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency P95", root.Result.Latency.Percentiles.P95, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
-            this.Metrics.Add(new Metric("Latency P99", root.Result.Latency.Percentiles.P99, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency Max", root.Result.Latency.Max, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency Average", root.Result.Latency.Mean, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency Stddev", root.Result.Latency.Stddev, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency P50", root.Result.Latency.Percentiles.P50, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency P75", root.Result.Latency.Percentiles.P75, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency P90", root.Result.Latency.Percentiles.P90, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency P95", root.Result.Latency.Percentiles.P95, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
+            this.metrics.Add(new Metric("Latency P99", root.Result.Latency.Percentiles.P99, BombardierMetricsParser.Microsecond, MetricRelativity.LowerIsBetter));
 
-            this.Metrics.Add(new Metric("RequestPerSecond Max", root.Result.Rps.Max, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond Average", root.Result.Rps.Mean, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond Stddev", root.Result.Rps.Stddev, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond P50", root.Result.Rps.Percentiles.P50, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond P75", root.Result.Rps.Percentiles.P75, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond P90", root.Result.Rps.Percentiles.P90, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond P95", root.Result.Rps.Percentiles.P95, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
-            this.Metrics.Add(new Metric("RequestPerSecond P99", root.Result.Rps.Percentiles.P99, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond Max", root.Result.Rps.Max, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond Average", root.Result.Rps.Mean, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond Stddev", root.Result.Rps.Stddev, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond P50", root.Result.Rps.Percentiles.P50, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond P75", root.Result.Rps.Percentiles.P75, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond P90", root.Result.Rps.Percentiles.P90, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond P95", root.Result.Rps.Percentiles.P95, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
+            this.metrics.Add(new Metric("RequestPerSecond P99", root.Result.Rps.Percentiles.P99, BombardierMetricsParser.RequestPerSecond, MetricRelativity.HigherIsBetter));
 
-            return this.Metrics;
+            return this.metrics;
         }
 
         private class Latency

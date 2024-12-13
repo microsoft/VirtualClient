@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using global::VirtualClient;
     using global::VirtualClient.Contracts;
+    using Microsoft.Extensions.Logging;
     using DataTableExtensions = global::VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
@@ -21,6 +22,8 @@ namespace VirtualClient.Actions
         /// Separate the column values by 2 or more spaces.
         /// </summary>
         private static readonly Regex SpecCpuDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
+
+        private List<Metric> metrics = new List<Metric>();
 
         /// <summary>
         /// Constructor for <see cref="SpecCpuMetricsParser"/>
@@ -61,14 +64,14 @@ namespace VirtualClient.Actions
                 this.ParseSpecCpuResult();
                 this.ParseSpecCpuSummaryResult();
 
-                this.Metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
-                this.Metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
-                this.Metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                this.metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
+                this.metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                this.metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
 
                 // Every score in SPECcpu is critical metric.
-                this.Metrics.ForEach(m => m.Verbosity = MetricVerbosity.Critical);
+                this.metrics.ForEach(m => m.Verbosity = (LogLevel)0);
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {

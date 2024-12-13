@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     public class SpecJbbMetricsParser : MetricsParser
     {
         private const string OperationPerSecond = "jOPS";
+        private List<Metric> metrics;
 
         /// <summary>
         /// Constructor for <see cref="SpecJbbMetricsParser"/>
@@ -31,7 +32,7 @@ namespace VirtualClient.Actions
             try
             {
                 this.Preprocess();
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
 
                 // If the line doesn't have column, it's individual result.
                 // If the line has column, it's the summary line.
@@ -41,10 +42,10 @@ namespace VirtualClient.Actions
                     string[] tokens = metric.Split("=");
                     string name = tokens[0];
                     string value = tokens[1];
-                    this.Metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
+                    this.metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
                 }
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {

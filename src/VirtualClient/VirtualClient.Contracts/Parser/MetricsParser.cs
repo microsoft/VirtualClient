@@ -22,10 +22,5 @@ namespace VirtualClient.Contracts
             : base(rawText)
         {
         }
-
-        /// <summary>
-        /// Metrics list
-        /// </summary>
-        public List<Metric> Metrics { get; set; } = new List<Metric>();
     }
 }

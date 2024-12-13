@@ -14,6 +14,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class MLPerfMetricsParser : MetricsParser
     {
+        private List<Metric> metrics;
+
         /// <summary>
         /// Constructor for <see cref="MLPerfMetricsParser"/>
         /// </summary>
@@ -31,7 +33,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             this.Preprocess();
-            this.Metrics = new List<Metric>();
+            this.metrics = new List<Metric>();
 
             string metricName = string.Empty;
             double metricValue = 0;
@@ -68,28 +70,28 @@ namespace VirtualClient.Actions
                 metricUnit = "PASS/FAIL";
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
+                this.metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
                 // Adding metric for accuracy threshold
                 metricName = $"ThresholdValue{suffix}";
                 metricValue = (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.Undefined;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
+                this.metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
 
                 // Adding metric for accuracy value
                 metricName = $"AccuracyValue{suffix}";
                 metricValue = (double)parsedObject["accuracy"][0]["value"];
                 metricRelativity = MetricRelativity.Undefined;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
+                this.metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
 
                 // Adding metric for accuracy value
                 metricName = $"AccuracyThresholdRatio{suffix}";
                 metricValue = (double)parsedObject["accuracy"][0]["value"] / (double)parsedObject["accuracy"][0]["threshold"];
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metricRelativity, metadata: metadata));
+                this.metrics.Add(new Metric(metricName, metricValue, metricRelativity, metadata: metadata));
             }
             else
             {
@@ -99,7 +101,7 @@ namespace VirtualClient.Actions
                 metricUnit = "VALID/INVALID";
                 metricRelativity = MetricRelativity.HigherIsBetter;
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
+                this.metrics.Add(new Metric(metricName, metricValue, metricUnit, metricRelativity, metadata: metadata));
 
                 // Adding metric for performance result value
                 string simpleKeyName;
@@ -117,10 +119,10 @@ namespace VirtualClient.Actions
                 scenarioValue = scenarioValue.Substring(0, scenarioValue.Length - 1);
                 metricValue = Convert.ToDouble(scenarioValue);
 
-                this.Metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
+                this.metrics.Add(new Metric(metricName, metricValue, metadata: metadata));
             }
 
-            return this.Metrics;
+            return this.metrics;
         }
     }
 }

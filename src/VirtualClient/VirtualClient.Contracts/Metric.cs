@@ -9,6 +9,7 @@ namespace VirtualClient.Contracts
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Represents the result of a single metric
@@ -79,10 +80,10 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
-        public Metric(string name, double value, string unit, MetricRelativity relativity, MetricVerbosity metricVerbosity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+        public Metric(string name, double value, string unit, MetricRelativity relativity, LogLevel verbosity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
             : this(name, value, unit, relativity, tags: tags, description: description, metadata: metadata)
         {
-            this.Verbosity = metricVerbosity;
+            this.Verbosity = verbosity;
         }
 
         /// <summary>
@@ -137,9 +138,10 @@ namespace VirtualClient.Contracts
         public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
-        /// Metric verbosity to descript importance of metric.
+        /// Metric verbosity to descript importance of metric. Default to 1, which means standard.
+        /// Verbosity 0: Critical. Verbosity 1: Standard. Verbosity 2: Informational.
         /// </summary>
-        public MetricVerbosity Verbosity { get; set; } = MetricVerbosity.Standard;
+        public LogLevel Verbosity { get; set; } = (LogLevel)1;
 
         /// <summary>
         /// Determines if two objects are equal.

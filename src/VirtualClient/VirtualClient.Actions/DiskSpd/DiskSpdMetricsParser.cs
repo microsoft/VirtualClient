@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
@@ -34,6 +35,7 @@ namespace VirtualClient.Actions
 
         private string commandLine;
         private ReadWriteMode readWriteMode;
+        private List<Metric> metrics;
 
         /// <summary>
         /// Constructor for <see cref="DiskSpdMetricsParser"/>
@@ -44,7 +46,7 @@ namespace VirtualClient.Actions
             : base(rawText)
         {
             this.commandLine = commandLine;
-            this.Metrics = new List<Metric>();
+            this.metrics = new List<Metric>();
             this.readWriteMode = ReadWriteMode.ReadWrite;
         }
 
@@ -78,7 +80,7 @@ namespace VirtualClient.Actions
 
                 this.ParseLatencyResult();
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {
@@ -180,9 +182,9 @@ namespace VirtualClient.Actions
             DataTable cpuUsage = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DiskSpdMetricsParser.DiskSpdDataTableDelimiter, sectionName, columnNames: null);
 
-            this.Metrics.AddRange(cpuUsage.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "percentage", namePrefix: $"cpu {cpuUsage.Columns[1].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter, metricVerbosity: MetricVerbosity.Informational));
-            this.Metrics.AddRange(cpuUsage.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "percentage", namePrefix: $"cpu {cpuUsage.Columns[2].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter, metricVerbosity: MetricVerbosity.Informational));
-            this.Metrics.AddRange(cpuUsage.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "percentage", namePrefix: $"cpu {cpuUsage.Columns[3].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter, metricVerbosity: MetricVerbosity.Informational));
+            this.metrics.AddRange(cpuUsage.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "percentage", namePrefix: $"cpu {cpuUsage.Columns[1].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter, metricVerbosity: (LogLevel)2));
+            this.metrics.AddRange(cpuUsage.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "percentage", namePrefix: $"cpu {cpuUsage.Columns[2].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter, metricVerbosity: (LogLevel)2));
+            this.metrics.AddRange(cpuUsage.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "percentage", namePrefix: $"cpu {cpuUsage.Columns[3].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter, metricVerbosity: (LogLevel)2));
         }
 
         private void ParseTotalIoResult()
@@ -191,18 +193,18 @@ namespace VirtualClient.Actions
             DataTable totalIo = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DiskSpdMetricsParser.DiskSpdDataTableDelimiter, sectionName, columnNames: null);
             List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"total {totalIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational));
-            metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"total {totalIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational));
+            metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"total {totalIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: (LogLevel)2));
+            metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"total {totalIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: (LogLevel)2));
             metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"total {totalIo.Columns[3].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"total {totalIo.Columns[4].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(totalIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"total {totalIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
             foreach (var metric in metrics.Where(m => m.Name.EndsWith("total") && (m.Unit == "iops" || m.Unit == "ms" || m.Unit == "MiB/s")))
             {
-                metric.Verbosity = MetricVerbosity.Critical;
+                metric.Verbosity = (LogLevel)0;
             }
 
-            this.Metrics.AddRange(metrics);
+            this.metrics.AddRange(metrics);
         }
 
         private void ParseReadIoResult()
@@ -211,18 +213,18 @@ namespace VirtualClient.Actions
             DataTable readIo = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DiskSpdMetricsParser.DiskSpdDataTableDelimiter, sectionName, columnNames: null);
             List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"read {readIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational));
-            metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"read {readIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational));
+            metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"read {readIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: (LogLevel)2));
+            metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"read {readIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: (LogLevel)2));
             metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"read {readIo.Columns[3].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"read {readIo.Columns[4].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(readIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"read {readIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
             foreach (var metric in metrics.Where(m => m.Name.EndsWith("total") && (m.Unit == "iops" || m.Unit == "ms" || m.Unit == "MiB/s")))
             {
-                metric.Verbosity = MetricVerbosity.Critical;
+                metric.Verbosity = (LogLevel)0;
             }
 
-            this.Metrics.AddRange(metrics);
+            this.metrics.AddRange(metrics);
         }
 
         private void ParseWriteIoResult()
@@ -231,17 +233,17 @@ namespace VirtualClient.Actions
             DataTable writeIo = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DiskSpdMetricsParser.DiskSpdDataTableDelimiter, sectionName, columnNames: null);
             List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"write {writeIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational));
-            metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"write {writeIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: MetricVerbosity.Informational));
+            metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"write {writeIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: (LogLevel)2));
+            metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"write {writeIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter, metricVerbosity: (LogLevel)2));
             metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"write {writeIo.Columns[3].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"write {writeIo.Columns[4].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(writeIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"write {writeIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
             foreach (var metric in metrics.Where(m => m.Name.EndsWith("total") && (m.Unit == "iops" || m.Unit == "ms" || m.Unit == "MiB/s")))
             {
-                metric.Verbosity = MetricVerbosity.Critical;
+                metric.Verbosity = (LogLevel)0;
             }
 
-            this.Metrics.AddRange(metrics);
+            this.metrics.AddRange(metrics);
         }
 
         private void ParseLatencyResult()
@@ -265,10 +267,10 @@ namespace VirtualClient.Actions
             string[] criticalMetrics = { "total latency 50th", "total latency 90th", "total latency 99th" };
             foreach (var metric in metrics.Where(m => criticalMetrics.Contains(m.Name)))
             {
-                metric.Verbosity = MetricVerbosity.Critical;
+                metric.Verbosity = (LogLevel)0;
             }
 
-            this.Metrics.AddRange(metrics);
+            this.metrics.AddRange(metrics);
         }
 
         private string ProcessAndUpdateString(string input)

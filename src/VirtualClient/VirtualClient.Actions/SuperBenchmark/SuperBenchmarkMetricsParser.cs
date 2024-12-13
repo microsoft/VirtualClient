@@ -12,6 +12,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SuperBenchmarkMetricsParser : MetricsParser
     {
+        private List<Metric> metrics;
+
         /// <summary>
         /// Constructor for <see cref="SuperBenchmarkMetricsParser"/>
         /// </summary>
@@ -25,7 +27,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             this.Preprocess();
-            this.Metrics = new List<Metric>();
+            this.metrics = new List<Metric>();
 
             JObject results = JObject.Parse(this.PreprocessedText);
             foreach (JProperty model in results.Properties())
@@ -44,7 +46,7 @@ namespace VirtualClient.Actions
                     }
 
                     Metric metric = new Metric(model.Name, ((double)model.Value), null, relativity);
-                    this.Metrics.Add(metric);
+                    this.metrics.Add(metric);
                 }
                 catch
                 {
@@ -52,7 +54,7 @@ namespace VirtualClient.Actions
                 }
             }
 
-            return this.Metrics;
+            return this.metrics;
         }
     }
 }

@@ -355,7 +355,7 @@ namespace VirtualClient.Actions
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
             }
 
-            metrics.PrintConsole(this.MetricScenario ?? this.Scenario);
+            metrics.LogConsole(this.MetricScenario ?? this.Scenario);
 
             this.Logger.LogMetrics(
                 "DiskSpd",

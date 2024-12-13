@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     public class HpcgMetricsParser : MetricsParser
     {
         private const string Gflops = "Gflop/s";
+        private List<Metric> metrics;
 
         /// <summary>
         /// Constructor for <see cref="HpcgMetricsParser"/>
@@ -31,16 +32,16 @@ namespace VirtualClient.Actions
             {
                 this.Preprocess();
 
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
                 Regex resultRegex = new Regex($@"Final Summary::HPCG result is VALID with a GFLOP\/s rating of={TextParsingExtensions.DoubleTypeRegex}", RegexOptions.Multiline);
                 Match match = Regex.Match(this.PreprocessedText, resultRegex.ToString(), resultRegex.Options);
 
                 if (match.Success)
                 {
-                    this.Metrics.Add(new Metric($"Total {Gflops}", Convert.ToDouble(match.Groups[1].Value), HpcgMetricsParser.Gflops, MetricRelativity.HigherIsBetter));
+                    this.metrics.Add(new Metric($"Total {Gflops}", Convert.ToDouble(match.Groups[1].Value), HpcgMetricsParser.Gflops, MetricRelativity.HigherIsBetter));
                 }
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {
