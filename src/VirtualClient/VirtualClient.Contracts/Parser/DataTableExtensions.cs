@@ -184,7 +184,7 @@ namespace VirtualClient.Contracts
             string unit = null, 
             string namePrefix = null,
             MetricRelativity metricRelativity = MetricRelativity.Undefined,
-            LogLevel metricVerbosity = (LogLevel)1,
+            int metricVerbosity = 1,
             int tagIndex = -1, 
             int startTimeIndex = -1,
             DateTime? startTime = null,

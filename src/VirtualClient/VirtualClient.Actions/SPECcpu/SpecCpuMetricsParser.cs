@@ -10,7 +10,6 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using global::VirtualClient;
     using global::VirtualClient.Contracts;
-    using Microsoft.Extensions.Logging;
     using DataTableExtensions = global::VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
@@ -69,7 +68,7 @@ namespace VirtualClient.Actions
                 this.metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
 
                 // Every score in SPECcpu is critical metric.
-                this.metrics.ForEach(m => m.Verbosity = (LogLevel)0);
+                this.metrics.ForEach(m => m.Verbosity = 0);
 
                 return this.metrics;
             }

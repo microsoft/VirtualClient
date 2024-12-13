@@ -30,7 +30,7 @@ Metrics are generally the most important data coming out from a VirtualClient te
 | `Value`           | 39359.36              | The value of the metric, double type. |
 | `Unit`            | "kilobytes/sec"       | The unit of measurement.   |
 | `Relativity`      | "HigherIsBetter"      | Defines the metric's relativity interpretation. For example, "HigherIsBetter" means that higher values are considered better for this metric. |
-| `Verbosity`  | 0 | Importance of metric. Enum Microsoft.Extensions.Logging.LogLevel type.  |
+| `Verbosity`  | 0 | Importance of metric. int type.  |
 | `Metadata`        | `{}`                  | KeyValue pairs of additional metadata related to the metric.       |
 | `Description`     | "OpenSSL performance on md5 algorithm " | A detailed explanation of what the metric represents.|
 

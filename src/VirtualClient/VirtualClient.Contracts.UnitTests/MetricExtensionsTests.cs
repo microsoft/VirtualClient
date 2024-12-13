@@ -38,11 +38,11 @@ namespace VirtualClient.Contracts
                 new Metric("write_completionlatency_p99_99", 3267543),
                 new Metric("write_submissionlatency_mean", 15.35467863),
 
-                new Metric("verbose_test_1", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)0),
-                new Metric("verbose_test_2", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)0),
-                new Metric("verbose_test_3", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)2),
-                new Metric("verbose_test_4", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)2),
-                new Metric("verbose_test_5", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: (LogLevel)2),
+                new Metric("verbose_test_1", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: 0),
+                new Metric("verbose_test_2", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 0),
+                new Metric("verbose_test_3", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
+                new Metric("verbose_test_4", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
+                new Metric("verbose_test_5", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
             };
         }
 
@@ -69,13 +69,13 @@ namespace VirtualClient.Contracts
         public void MetricFiltersCorrectFiltersVerbosity()
         {
             IEnumerable<string> filter = new List<string> { "Verbosity:1" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= (LogLevel)1).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= 1).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "Verbosity:0" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == (LogLevel)0).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity == 0).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "Verbosity:2" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= (LogLevel)2).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= 2).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "Verbosity:others" };
             CollectionAssert.AreEquivalent(Enumerable.Empty<Metric>().Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));

@@ -8,7 +8,6 @@ namespace VirtualClient.Contracts
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -101,7 +100,7 @@ namespace VirtualClient.Contracts
                 table.Columns.Add("Value", typeof(double));
                 table.Columns.Add("Unit", typeof(string));
 
-                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == (LogLevel)0).ToList() : metrics;
+                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == 0).ToList() : metrics;
 
                 foreach (Metric metric in metricsToPrint)
                 {
