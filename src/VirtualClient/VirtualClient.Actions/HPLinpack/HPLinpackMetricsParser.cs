@@ -25,6 +25,8 @@ namespace VirtualClient.Actions
         /// </summary>
         private const string SplitAtSpace = @"\s{1,}";
 
+        private List<Metric> metrics;
+
         /// <summary>
         /// constructor for <see cref="HPLinpackMetricsParser"/>.
         /// </summary>
@@ -39,8 +41,6 @@ namespace VirtualClient.Actions
         /// </summary>
         public DataTable LinpackResult { get; set; }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
@@ -51,7 +51,7 @@ namespace VirtualClient.Actions
             }
             else
             {
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
                 for (int i = 0; i < matches.Count; i++)
                 {
                     var st = Regex.Split(matches.ElementAt(i).Value, SplitAtSpace);
@@ -64,12 +64,12 @@ namespace VirtualClient.Actions
                              { $"Q_WR{st[0]}", st[4] },
                          };
 
-                    this.Metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", metadata: metadata));
-                    this.Metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[6]), "Gflops", metadata: metadata));
+                    this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", metadata: metadata));
+                    this.metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[6]), "Gflops", metadata: metadata));
                 }
             }
 
-            return this.Metrics;
+            return this.metrics;
         }
     }
 }

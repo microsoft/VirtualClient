@@ -21,12 +21,61 @@ Telemetry data emitted is divided into 3 different categories:
   System events describe certain types of important information on the system beyond simple performance measurements. This might for example
   include Windows registry changes or special event logs.
 
+## Metrics
+Metrics are generally the most important data coming out from a VirtualClient test. They usually represents measurement and information from a workload or a monitor. Metric is a core contract in VirtualClient which include the following fields.
+
+| **Field Name**         | **Example Value**     | **Description** |
+|------------------------|-----------------------|-----------------|
+| `Name`            | "md5 16-byte"         | The name of the metric.               |
+| `Value`           | 39359.36              | The value of the metric, double type. |
+| `Unit`            | "kilobytes/sec"       | The unit of measurement.   |
+| `Relativity`      | "HigherIsBetter"      | Defines the metric's relativity interpretation. For example, "HigherIsBetter" means that higher values are considered better for this metric. |
+| `Verbosity`  | 0 | Importance of metric. int type.  |
+| `Metadata`        | `{}`                  | KeyValue pairs of additional metadata related to the metric.       |
+| `Description`     | "OpenSSL performance on md5 algorithm " | A detailed explanation of what the metric represents.|
+
+
+### Metric Filter
+Metrics could be filtered with filters in supported workloads. They are comma delimiter list of regex expressions that will be matched with the `Name` field of the Metric object.
+
+For example, a metric filter with `(read|write)_(bandwidth|iops)` regex will capture four metrics: "read_bandwidth, read_iops, write_bandwidth, write_iops".
+
+There is a special set of filters for metric verbosity, which will be covered in next section. Filters except metric verbosity are examined with "OR/union". Metric verbosity filters are "AND/intersection".
+
+Examples
+```bash
+# metrics that has _p99
+_p99
+# metrics that match the regex
+(read|write)_(bandwidth|iops)
+# metrics that match the regex OR contains _p99 or _p50
+(read|write)_(bandwidth|iops),_p99,p50
+# metric with verbosity 0
+verbosity:0
+# metric with verbosity lower or equal to 1, AND contains read_
+verbosity:1,read_
+```
+
+### Metric Verbosity
+Metrics have 3 verbosity (0-2): Critical, Standard, Informational. The verbosity level indicates the metrics' importance. This could be filtered with MetricFilter in supported workloads.
+
+- Level 0: Critical  
+    Critical metrics represents the most crucial metrics coming from a tool. They should be direct indicator of a system performance. For example, "average total iops" in a IO workload, or a "query per hour" in a database workload is considered critical.  
+    Filter for critical metric: `verbosity:0`
+- Level 1: Standard  
+    Standard metrics represents secondary metrics that might correlates with.  
+    Filter for standard metric: `verbosity:1`
+- Level 2: Informational  
+    Informational metrics are verbose information that helps to debug performance difference, but they alone don't directly correlate with performance differences. For example, size of database, total threads count or "memory usage in a networking workload" are considered to be informational.  
+    Filter for informational metric: `verbosity:2`
+
+
 ## Log Files
 The Virtual Client emits ALL data/telemetry captured from workloads, monitors and from the system to standard log files. Log files can be found 
 in the **logs** directory within the Virtual Client application's parent directory itself. Logs are separated into the following categories:
 
 - **Traces**  
-  operational traces about everything the Virtual Client is doing while running useful for debugging/triage purposes.
+  Operational traces about everything the Virtual Client is doing while running useful for debugging/triage purposes.
 
 - **Metrics**  
   Important measurements captured from the workload and the system that can be used to analyze the performance and reliability of the workload and correspondingly
