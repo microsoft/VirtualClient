@@ -33,8 +33,6 @@ namespace VirtualClient.Actions
             this.confidenceLevel = confidenceLevel;
         }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {

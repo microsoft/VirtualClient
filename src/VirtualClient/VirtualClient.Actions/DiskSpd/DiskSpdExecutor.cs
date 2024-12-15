@@ -6,13 +6,11 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -349,7 +347,15 @@ namespace VirtualClient.Actions
             this.MetadataContract.Apply(telemetryContext);
 
             string result = workload.StandardOutput.ToString();
-            IList<Metric> metrics = new DiskSpdMetricsParser(result, this.CommandLine).Parse();
+            DiskSpdMetricsParser parser = new DiskSpdMetricsParser(result, this.CommandLine);
+            IList<Metric> metrics = parser.Parse();
+
+            if (this.MetricFilters?.Any() == true)
+            {
+                metrics = metrics.FilterBy(this.MetricFilters).ToList();
+            }
+
+            metrics.LogConsole(this.MetricScenario ?? this.Scenario);
 
             this.Logger.LogMetrics(
                 "DiskSpd",

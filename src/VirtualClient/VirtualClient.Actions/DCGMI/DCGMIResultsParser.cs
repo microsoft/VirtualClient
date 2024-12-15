@@ -136,7 +136,9 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Separate the column values by 2 or more spaces.
         /// </summary>
-        private static readonly Regex DataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);       
+        private static readonly Regex DataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);      
+
+        private List<Metric> metrics; 
 
         /// <summary>
         /// Constructor for <see cref="DCGMIResultsParser"/>
@@ -166,47 +168,45 @@ namespace VirtualClient.Actions
 
         private string Subsystem { get; set; }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
             this.Preprocess();
-            this.Metrics = new List<Metric>();
+            this.metrics = new List<Metric>();
             if (this.Subsystem == DCGMIResultsParser.Diagnostics) 
             {
-                this.Metrics = this.ParseDiagnosticsResults();
+                this.metrics = this.ParseDiagnosticsResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.Discovery)
             {
-                this.Metrics = this.ParseDiscoveryResults();
+                this.metrics = this.ParseDiscoveryResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.FieldGroup)
             {
-                this.Metrics = this.ParseFieldGroupResults();
+                this.metrics = this.ParseFieldGroupResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.Group)
             {
-                this.Metrics = this.ParseGroupResults();
+                this.metrics = this.ParseGroupResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.Health)
             {
-                this.Metrics = this.ParseHealthResults();
+                this.metrics = this.ParseHealthResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.Modules)
             {
-                this.Metrics = this.ParseModulesResults();
+                this.metrics = this.ParseModulesResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.CUDATestGenerator)
             {
-                this.Metrics = this.ParseCUDATestGeneratorResults();
+                this.metrics = this.ParseCUDATestGeneratorResults();
             }
             else if (this.Subsystem == DCGMIResultsParser.CUDATestGeneratorDmon)
             {
-                this.Metrics = this.ParseCUDATestGeneratorDmonResults();
+                this.metrics = this.ParseCUDATestGeneratorDmonResults();
             }
 
-            return this.Metrics;
+            return this.metrics;
         }
 
         private List<Metric> ParseDiagnosticsResults()
