@@ -11,7 +11,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -21,6 +20,15 @@ namespace VirtualClient.Actions.NetworkPerformance
     [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteServerExecutor : LatteExecutor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LatteServerExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public LatteServerExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LatteServerExecutor"/> class.
         /// </summary>

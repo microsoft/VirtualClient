@@ -5,14 +5,12 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -22,6 +20,15 @@ namespace VirtualClient.Actions.NetworkPerformance
     [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SockPerfServerExecutor : SockPerfExecutor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SockPerfServerExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public SockPerfServerExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfServerExecutor"/> class.
         /// </summary>

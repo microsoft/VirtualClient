@@ -57,7 +57,7 @@ namespace VirtualClient.Actions
                 $"sudo ./install.sh -f -d {this.mockPackage.Path}",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
-                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intrate\""
+                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
             };
 
             int processCount = 0;
@@ -100,7 +100,7 @@ namespace VirtualClient.Actions
                 $"powershell -Command \"(Get-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso| Get-Volume).DriveLetter\"",
                 $"cmd /c echo 1 | X:\\install.bat {this.mockPackage.Path}",
                 $"powershell -Command \"Dismount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
-                $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --noreportable intrate"
+                $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable intrate"
             };
 
             int processCount = 0;
@@ -356,7 +356,9 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
-                { nameof(SpecCpuExecutor.RunPeak), true }
+                { nameof(SpecCpuExecutor.RunPeak), true },
+                { nameof(SpecCpuExecutor.Threads), 8 },
+                { nameof(SpecCpuExecutor.Copies), 4 }
             };
         }
 
@@ -386,7 +388,9 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
-                { nameof(SpecCpuExecutor.RunPeak), true }
+                { nameof(SpecCpuExecutor.RunPeak), true },
+                { nameof(SpecCpuExecutor.Threads), 8 },
+                { nameof(SpecCpuExecutor.Copies), 4 }
             };
         }
 

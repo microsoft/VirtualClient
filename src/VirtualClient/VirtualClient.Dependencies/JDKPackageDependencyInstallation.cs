@@ -12,7 +12,6 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.Packaging;
 
     /// <summary>
     /// Provides functionality for installing the JDK on the system.
