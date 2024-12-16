@@ -96,7 +96,8 @@ namespace VirtualClient.Dependencies
                 {
                     case LinuxDistribution.Ubuntu:
                         break;
-
+                    case LinuxDistribution.AzLinux:
+                        break;
                     default:
                         throw new WorkloadException(
                             $"Redis installation is not supported by Virtual Client on the current Unix/Linux distro '{distroInfo.LinuxDistribution}'.",
@@ -123,6 +124,9 @@ namespace VirtualClient.Dependencies
                     case LinuxDistribution.Ubuntu:
                     case LinuxDistribution.Debian:
                         await this.InstallOnUbuntuAsync(telemetryContext, cancellationToken);
+                        break;
+                    case LinuxDistribution.AzLinux:
+                        await this.InstallOnAzLinuxAsync(telemetryContext, cancellationToken);
                         break;
                 }
             }
@@ -156,5 +160,35 @@ namespace VirtualClient.Dependencies
                             .ConfigureAwait(false);
 
         }
+
+        private async Task InstallOnAzLinuxAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (this.Version != string.Empty)
+            {
+                this.installRedisCommand = $"install redis-{this.Version} -y";
+            }
+            else
+            {
+                this.installRedisCommand = $"install redis -y";
+
+            }
+
+            await this.ExecuteCommandAsync("dnf", "update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync("dnf", this.installRedisCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+
+            this.fileSystem.Directory.CreateDirectory(this.PackagePath);
+            this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.PackagePath, "src"));
+
+            await this.ExecuteCommandAsync("cp", $"/usr/bin/redis-server {this.PlatformSpecifics.Combine(this.PackagePath, "src")}", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+
+            DependencyPath redisPackage = new DependencyPath(this.PackageName, this.PackagePath);
+            await this.systemManager.PackageManager.RegisterPackageAsync(redisPackage, cancellationToken)
+                            .ConfigureAwait(false);
+
+        }
+
     }
 }
