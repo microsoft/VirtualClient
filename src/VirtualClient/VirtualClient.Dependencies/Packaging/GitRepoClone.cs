@@ -48,12 +48,29 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Git checkout
+        /// </summary>
+        public string Checkout
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(GitRepoClone.Checkout), string.Empty);
+            }
+
+            set
+            {
+                this.Parameters[nameof(GitRepoClone.Checkout)] = value;
+            }
+        }
+
+        /// <summary>
         /// Executes the git clone operation.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             telemetryContext.AddContext("repoUri", this.RepoUri);
             telemetryContext.AddContext("packagesDirectory", this.PlatformSpecifics.PackagesDirectory);
+            telemetryContext.AddContext("checkout", this.Checkout);
 
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             ProcessManager processManager = systemManagement.ProcessManager;
@@ -99,6 +116,25 @@ namespace VirtualClient.Dependencies
                 DependencyPath package = new DependencyPath(this.PackageName, this.Combine(this.PlatformSpecifics.PackagesDirectory, this.PackageName));
                 await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken)
                     .ConfigureAwait(false);
+            }
+
+            if (this.Checkout != string.Empty)
+            {
+                using (IProcessProxy checkoutProcess = processManager.CreateProcess("git", $"-C {cloneDirectory} checkout {this.Checkout}", this.PlatformSpecifics.PackagesDirectory))
+                {
+                    this.CleanupTasks.Add(() => checkoutProcess.SafeKill());
+
+                    await checkoutProcess.StartAndWaitAsync(cancellationToken)
+                       .ConfigureAwait(false);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(checkoutProcess, telemetryContext, "Git")
+                            .ConfigureAwait(false);
+
+                        checkoutProcess.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                    }
+                }
             }
         }
     }
