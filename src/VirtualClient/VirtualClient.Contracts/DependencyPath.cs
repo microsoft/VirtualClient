@@ -33,12 +33,17 @@ namespace VirtualClient.Contracts
         /// <param name="description">A description of the dependency.</param>
         /// <param name="version">The version of the package/dependency.</param>
         /// <param name="metadata">A set of additional platform-specific metadata/properties associated with the dependency.</param>
+        /// <param name="timestamp">
+        /// A timestamp that indicates the time-of-origin for the dependency package (e.g. when it was registered). This timestamp can
+        /// be used to resolve conflicts between packages having the same name.
+        /// </param>
         [JsonConstructor]
-        public DependencyPath(string name, string path, string description = null, string version = null, IDictionary<string, IConvertible> metadata = null)
+        public DependencyPath(string name, string path, string description = null, string version = null, IDictionary<string, IConvertible> metadata = null, DateTime? timestamp = null)
             : base(name, description, version, metadata)
         {
             path.ThrowIfNullOrWhiteSpace(nameof(path));
             this.Path = path;
+            this.Timestamp = timestamp ?? DateTime.UtcNow;
         }
 
         /// <summary>
@@ -46,6 +51,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty("path", Required = Required.Always, Order = 3)]
         public string Path { get; }
+
+        /// <summary>
+        /// A timestamp for when the dependency
+        /// </summary>
+        [JsonProperty("timestamp", Required = Required.Always, Order = 3)]
+        public DateTime Timestamp { get; }
 
         /// <summary>
         /// Determines if two objects are equal.

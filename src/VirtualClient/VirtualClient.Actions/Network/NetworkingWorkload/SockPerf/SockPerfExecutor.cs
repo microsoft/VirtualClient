@@ -25,6 +25,15 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfExecutor"/> class.
         /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public SockPerfExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SockPerfExecutor"/> class.
+        /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
         public SockPerfExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

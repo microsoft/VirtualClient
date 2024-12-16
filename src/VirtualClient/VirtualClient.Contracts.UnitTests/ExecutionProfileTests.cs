@@ -66,7 +66,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        [TestCase("TEST-PROFILE-3.json")]
+        [TestCase("TEST-PROFILE-3-PARALLEL.json")]
         public void ExecutionProfileCanDeserializeProfileFilesWithParallelExecutionComponents(string profileName)
         {
             ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))

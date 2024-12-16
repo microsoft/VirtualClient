@@ -6,8 +6,11 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
     using Microsoft.AspNetCore.Http.Features;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
@@ -79,15 +82,21 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NetworkingWorkloadState()
             : base()
         {
+            this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkingWorkloadState"/> class.
         /// </summary>
         [JsonConstructor]
-        public NetworkingWorkloadState(IDictionary<string, IConvertible> properties)
+        public NetworkingWorkloadState(IDictionary<string, IConvertible> properties, IDictionary<string, IConvertible> metadata = null)
             : base(properties)
         {
+            this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            if (metadata?.Any() == true)
+            {
+                this.Metadata.AddRange(metadata);
+            }
         }
 
         /// <summary>
@@ -120,7 +129,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             string profilingScenario = null,
             string profilingPeriod = null,
             string profilingWarmUpPeriod = null,
-            Guid? clientRequestId = null)
+            Guid? clientRequestId = null,
+            IDictionary<string, IConvertible> metadata = null)
         {
             packageName.ThrowIfNull(nameof(packageName));
             scenario.ThrowIfNull(nameof(scenario));
@@ -154,6 +164,12 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.ProfilingPeriod)] = profilingPeriod;
             this.Properties[nameof(this.ProfilingWarmUpPeriod)] = profilingWarmUpPeriod;
             this.ClientRequestId = clientRequestId;
+
+            this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            if (metadata?.Any() == true)
+            {
+                this.Metadata.AddRange(metadata);
+            }
         }
 
         /// <summary>
@@ -509,5 +525,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                 this.Properties[nameof(this.ConfidenceLevel)] = value;
             }
         }
+
+        /// <summary>
+        /// Metadata associated with the component.
+        /// </summary>
+        [JsonProperty("metadata", Required = Required.Default)]
+        [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
+        public IDictionary<string, IConvertible> Metadata { get; }
     }
 }

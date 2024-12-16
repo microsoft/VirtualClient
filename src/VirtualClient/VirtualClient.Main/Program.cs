@@ -25,7 +25,6 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
-    using VirtualClient.Dependencies.Packaging;
 
     /// <summary>
     /// The main entry point for the program
@@ -215,7 +214,7 @@ namespace VirtualClient
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --fail-fast
-                OptionFactory.CreateFailFastFlag(required: false, false),
+                OptionFactory.CreateFailFastFlag(required: false),
 
                 // --dependencies
                 OptionFactory.CreateDependenciesFlag(required: false),

@@ -25,7 +25,13 @@
         <None Update="Resources\TEST-PROFILE-1.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="Resources\TEST-PROFILE-3.json">
+        <None Update="Resources\TEST-PROFILE-4-PARALLEL.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\TEST-PROFILE-4.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\TEST-PROFILE-3-PARALLEL.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="Resources\TEST-PROFILE-2.json">
