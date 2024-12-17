@@ -13,6 +13,8 @@
         "Iterations": 2,
         "SpecProfile": "fprate",
         "RunPeak": false,
+        "Threads": "{LogicalCoreCount}",
+        "Copies": "{LogicalCoreCount}",
         "BaseOptimizingFlags": "-g -O3 -march=native -frecord-gcc-switches",
         "PeakOptimizingFlags": "-g -Ofast -march=native -flto -frecord-gcc-switches"
     },
@@ -26,6 +28,8 @@
                 "SpecProfile": "$.Parameters.SpecProfile",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
                 "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
                 "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
             }

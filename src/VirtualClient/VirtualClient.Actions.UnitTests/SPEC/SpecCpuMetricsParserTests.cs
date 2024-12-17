@@ -1,12 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using global::VirtualClient.Contracts;
 using NUnit.Framework;
 using VirtualClient;
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
 
 namespace VirtualClient.Actions
 {
@@ -24,6 +24,7 @@ namespace VirtualClient.Actions
             string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
+            
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(28, metrics.Count);

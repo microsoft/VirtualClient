@@ -63,10 +63,14 @@ namespace VirtualClient
             packageManager.ThrowIfNull(nameof(packageManager));
             if (packages?.Any() == true)
             {
-                foreach (DependencyPath package in packages)
+                // Note:
+                // We process the *.vcpkg files in chronological order from earliest to latest
+                // using the file creation timestamp. This helps address scenarios where there are *.vcpkg
+                // files that have the same/duplicate name. In this scenario, we will effectively take the
+                // *.vcpkg file for the latest package created or downloaded and use that for registration.
+                foreach (DependencyPath package in packages.OrderBy(pkg => pkg.Timestamp))
                 {
-                    await packageManager.RegisterPackageAsync(package, (CancellationToken)cancellationToken)
-                        .ConfigureAwait(false);
+                    await packageManager.RegisterPackageAsync(package, (CancellationToken)cancellationToken);
                 }
             }
         }

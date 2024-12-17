@@ -20,6 +20,7 @@ namespace VirtualClient
     using Polly;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -382,7 +383,7 @@ namespace VirtualClient
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public void PackageManagerThrowsWhenDuplicatePackagesAreFoundDuringDiscoveryInTheDefaultPackagesDirectory()
+        public void PackageManagerHandlesScenariosWhenDuplicatePackageRegistrationsAreFoundDuringDiscoveryInTheDefaultPackagesDirectory()
         {
             // Packages that exist in the user-defined location are selected first.
             string defaultPackageLocation = this.mockFixture.GetPackagePath();
@@ -403,13 +404,12 @@ namespace VirtualClient
                     return package.ToJson();
                 });
 
-            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => this.packageManager.DiscoverPackagesAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DuplicatePackagesFound, error.Reason);
+            Assert.DoesNotThrowAsync(() => this.packageManager.DiscoverPackagesAsync(CancellationToken.None));
         }
 
         [Test]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public void PackageManagerThrowsWhenDuplicatePackagesAreFoundDuringDiscoveryInAUserDefinedLocation()
+        public void PackageManagerHandlesScenariosWhenDuplicatePackageRegistrationsAreFoundDuringDiscoveryInAUserDefinedLocation()
         {
             // Packages that exist in the user-defined location are selected first.
             string userDefinedPath = @"C:/any/user/defined/location";
@@ -434,8 +434,7 @@ namespace VirtualClient
                     return package.ToJson();
                 });
 
-            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => this.packageManager.DiscoverPackagesAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DuplicatePackagesFound, error.Reason);
+            Assert.DoesNotThrowAsync(() => this.packageManager.DiscoverPackagesAsync(CancellationToken.None));
         }
 
         [Test]
@@ -963,6 +962,13 @@ namespace VirtualClient
 
             this.mockFixture.Directory.Setup(dir => dir.EnumerateFiles(packagesPath, "*.vcpkg", SearchOption.AllDirectories))
                 .Returns(vcpkgFiles);
+
+            // We need timestamps on the files so we use IFileInfo instances in the package manager.
+            Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
+            this.mockFixture.FileInfo
+                .Setup(f => f.New(It.IsAny<string>()))
+                .Callback<string>(path => mockFile.Setup(path))
+                .Returns(() => mockFile.Object);
         }
 
         private class TestPackageManager : PackageManager
