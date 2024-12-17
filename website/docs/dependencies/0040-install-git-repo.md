@@ -21,7 +21,7 @@ The following section describes the parameters used by the individual component 
 |---------------|--------------|-----------------------------------------------------------------------------------------------------------------|
 | PackageName   | Yes          | The logical name of the that will be registered with the Virtual Client runtime to represent the packages directory into which the repo was cloned. Other profile components can use this name to reference/discover the repo and its location. |
 | RepoUri       | Yes          | The full URI to the Git repository to download/clone into the packages directory.                               |
-| Checkout      | No           | The branch-name or commit-hash to checkout to a specific branch or commit in the repository.                    |
+| Checkout      | No           | The branch-name or commit-hash or tag to checkout to a specific branch, commit, tag in the repository.          |
 | Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line).                  |
 
 
@@ -37,7 +37,7 @@ In this example, VC clones https://github.com/eembc/coremark.git into the runtim
       "Type": "GitRepoClone",
       "Parameters": {
           "RepoUri": "https://github.com/eembc/coremark.git",
-          "Checkout": "eefc986"
+          "Checkout": "v1.01"
           "PackageName": "coremark"
       }
   }

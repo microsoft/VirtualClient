@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
@@ -72,7 +72,7 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
-            
+
             // The parameter Checkout can be a branch-name, tag or a commit id.
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
