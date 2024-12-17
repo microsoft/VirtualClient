@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.CommandLine;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -118,23 +119,9 @@ namespace VirtualClient.Dependencies
                     .ConfigureAwait(false);
             }
 
-            if (this.Checkout != string.Empty)
+            if (!string.IsNullOrEmpty(this.Checkout))
             {
-                using (IProcessProxy checkoutProcess = processManager.CreateProcess("git", $"-C {cloneDirectory} checkout {this.Checkout}", this.PlatformSpecifics.PackagesDirectory))
-                {
-                    this.CleanupTasks.Add(() => checkoutProcess.SafeKill());
-
-                    await checkoutProcess.StartAndWaitAsync(cancellationToken)
-                       .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(checkoutProcess, telemetryContext, "Git")
-                            .ConfigureAwait(false);
-
-                        checkoutProcess.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                    }
-                }
+                await this.ExecuteCommandAsync("git", $"-C {cloneDirectory} checkout {this.Checkout}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken);
             }
         }
     }
