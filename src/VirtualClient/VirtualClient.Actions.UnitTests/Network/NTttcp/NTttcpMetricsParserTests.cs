@@ -229,6 +229,30 @@ namespace VirtualClient.Actions
             Assert.AreEqual(parser.Metadata["cpuSpeed"], 2593.906);
         }
 
+        [Test]
+        [TestCase("ServerOutput_NTttcp_Anomaly_1.xml")]
+        public void NTttcpMetricsParserParsesExpectedMetrics_Anomaly_1_Very_Large_BufferCount_Values(string file)
+        {
+            string contents = NTttcpMetricsParserTests.GetFileContents(file);
+            NTttcpMetricsParser parser = new NTttcpMetricsParser(contents, isClient: false);
+            IList<Metric> metrics = parser.Parse();
+
+            Assert.IsNotNull(metrics);
+            Assert.IsNotEmpty(metrics);
+
+            Assert.IsTrue(metrics.Count == 10);
+            MetricAssert.Exists(metrics, "TotalBytesMB", 38471692.489753);
+            MetricAssert.Exists(metrics, "AvgBytesPerCompl", 150843.719);
+            MetricAssert.Exists(metrics, "AvgFrameSize", 3799.802);
+            MetricAssert.Exists(metrics, "ThroughputMbps", 89645.202);
+            MetricAssert.Exists(metrics, "AvgPacketsPerInterrupt", 8.201);
+            MetricAssert.Exists(metrics, "InterruptsPerSec", 359577.17);
+            MetricAssert.Exists(metrics, "PacketsRetransmitted", 14);
+            MetricAssert.Exists(metrics, "Errors", 0);
+            MetricAssert.Exists(metrics, "CyclesPerByte", 1.598);
+            MetricAssert.Exists(metrics, "AvgCpuPercentage", 16.398);
+        }
+
         private static string GetFileContents(string fileName)
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);

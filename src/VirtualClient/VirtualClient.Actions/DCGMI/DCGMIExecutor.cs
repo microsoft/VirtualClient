@@ -123,6 +123,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The version of CUDA to be installed in Linux Systems
+        /// </summary>
+        public string LinuxCudaVersion
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(DCGMIExecutor.LinuxCudaVersion), "11.6");
+            }
+        }
+
+        /// <summary>
         /// Initializes enviroment to run DCGMI.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
@@ -361,7 +372,7 @@ namespace VirtualClient.Actions
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 List<Task<string>> tasksList = new List<Task<string>>();
-                string dcgmproftestercommand = $"/usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
+                string dcgmproftestercommand = $"/usr/bin/dcgmproftester{(int)Convert.ToDouble(this.LinuxCudaVersion)} --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
                 string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
                 DateTime startTime = DateTime.UtcNow;
 

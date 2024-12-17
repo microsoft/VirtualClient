@@ -40,9 +40,9 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
+        <PackageOutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</PackageOutDir>
         <NuspecProperties>
-            BinDir=$(OutDir)\bin;BinConfigDir=$(OutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(OutDir)\tools;Version=$(Version)
+            BinDir=$(OutDir)\bin;BinConfigDir=$(PackageOutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(PackageOutDir)\tools;Version=$(Version)
         </NuspecProperties>
     </PropertyGroup>
 

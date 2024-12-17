@@ -23,6 +23,15 @@ namespace VirtualClient.Actions.NetworkPerformance
         private const string OutputFileName = "latte-results.xml";
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="LatteExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public LatteExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>

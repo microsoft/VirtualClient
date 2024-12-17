@@ -11,7 +11,7 @@
         "CompilerName": "gcc",
         "CompilerVersion": "10",
         "CompilerFlags": "CPPFLAGS=\"-I /usr/include/tirpc\"",
-        "MemorySizeMB": "{calculate({SystemMemoryMegabytes} * 0.25})}"
+        "MemorySizeMB": "{calculate({SystemMemoryMegabytes} / 4)}"
     },
     "Actions": [
         {

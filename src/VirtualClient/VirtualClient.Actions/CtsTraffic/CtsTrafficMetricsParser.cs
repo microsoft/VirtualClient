@@ -14,6 +14,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class CtsTrafficMetricsParser : MetricsParser
     {
+        private List<Metric> metrics;
+
         /// <summary>
         /// Constructor for <see cref="CtsTrafficMetricsParser"/>
         /// </summary>
@@ -23,15 +25,13 @@ namespace VirtualClient.Actions
         {
         }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
             try
             {
                 this.Preprocess();
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
                 MemoryStream mStrm = new MemoryStream(Encoding.UTF8.GetBytes(this.PreprocessedText));
                 using (var reader = new StreamReader(mStrm))
                 {
@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {
@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
         {
             try
             {
-                this.Metrics.Add(metric);
+                this.metrics.Add(metric);
             }
             catch
             {

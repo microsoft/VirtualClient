@@ -42,7 +42,6 @@ namespace VirtualClient
 
         static DependencyFixture()
         {
-            VirtualClientComponent.LogToFile = true;
             VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
@@ -283,6 +282,7 @@ namespace VirtualClient
             this.ApiClientManager = new InMemoryApiClientManager();
             this.ApiManager = new InMemoryApiManager();
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly);
+            VirtualClient.Contracts.PlatformSpecifics.RunningInContainer = false;
             this.Configuration = new ConfigurationBuilder().Build();
             this.DiskManager = new InMemoryDiskManager();
             this.FileSystem = new InMemoryFileSystem(this.PlatformSpecifics);
@@ -303,6 +303,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(this.FirewallManager);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
             this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
+            this.SystemManagement.SetupGet(sm => sm.RunningInContainer).Returns(false);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.PlatformArchitectureName).Returns(this.PlatformSpecifics.PlatformArchitectureName);

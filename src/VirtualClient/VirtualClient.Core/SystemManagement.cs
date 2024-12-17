@@ -98,7 +98,7 @@ namespace VirtualClient
         /// <summary>
         /// Whether VC is running in container.
         /// </summary>
-        public bool RunningInContainer { get; } = PlatformSpecifics.IsRunningInContainer();
+        public bool RunningInContainer { get; internal set; } = PlatformSpecifics.RunningInContainer;
 
         /// <inheritdoc />
         public ISshClientManager SshClientManager { get; internal set; }

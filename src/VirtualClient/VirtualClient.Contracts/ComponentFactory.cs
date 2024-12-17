@@ -7,6 +7,7 @@ namespace VirtualClient.Contracts
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
@@ -17,15 +18,24 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class ComponentFactory
     {
-        private static readonly Type ParallelExecutionType = typeof(ParallelExecution);
-
         /// <summary>
         /// Creates the expected component from the assemblies/.dlls loaded.
         /// </summary>
         /// <param name="componentDescription">The component type description.</param>
         /// <param name="dependencies">A collection of dependencies that can be used for dependency injection.</param>
         /// <param name="randomizationSeed">A randomization seed to use to ensure consistency across workloads running on different systems.</param>
-        public static VirtualClientComponent CreateComponent(ExecutionProfileElement componentDescription, IServiceCollection dependencies, int? randomizationSeed = null)
+        /// <param name="failFast">
+        /// True if the application should fail/crash immediately upon experiencing any errors in actions, monitors or dependencies. It is the default
+        /// behavior for the application to attempt to "stay alive" when experiencing certain types of errors because they could be transient in nature
+        /// (vs. terminal).
+        /// </param>
+        /// <param name="logToFile">True to instruct the application to log output to files on the file system.</param>
+        public static VirtualClientComponent CreateComponent(
+            ExecutionProfileElement componentDescription, 
+            IServiceCollection dependencies,
+            int? randomizationSeed = null,
+            bool? failFast = null,
+            bool? logToFile = null)
         {
             componentDescription.ThrowIfNull(nameof(componentDescription));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -37,7 +47,15 @@ namespace VirtualClient.Contracts
                     throw new TypeLoadException($"Type '{componentDescription.Type}' does not exist.");
                 }
 
-                VirtualClientComponent component = ComponentFactory.CreateComponent(componentDescription, type, dependencies, randomizationSeed);
+                VirtualClientComponent component = ComponentFactory.CreateComponent(
+                    componentDescription,
+                    type,
+                    dependencies,
+                    new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
+                    new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase),
+                    randomizationSeed,
+                    failFast,
+                    logToFile);
 
                 return component;
             }
@@ -73,79 +91,83 @@ namespace VirtualClient.Contracts
             }
         }
 
-        /// <summary>
-        /// Creates the expected component from the assemblies/.dlls loaded.
-        /// </summary>
-        /// <param name="parameters">Parameters of the component..</param>
-        /// <param name="componentType">The component type.</param>
-        /// <param name="dependencies">A collection of dependencies that can be used for dependency injection.</param>
-        /// <param name="randomizationSeed">A randomization seed to use to ensure consistency across workloads running on different systems.</param>
-        public static VirtualClientComponent CreateComponent(IDictionary<string, IConvertible> parameters, string componentType, IServiceCollection dependencies, int? randomizationSeed = null)
+        private static VirtualClientComponent CreateComponent(
+            ExecutionProfileElement componentDescription, 
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type,
+            IServiceCollection dependencies,
+            IDictionary<string, IConvertible> metadata,
+            IDictionary<string, JToken> extensions,
+            int? randomizationSeed = null,
+            bool? failFast = null,
+            bool? logToFile = null)
         {
-            dependencies.ThrowIfNull(nameof(dependencies));
+            VirtualClientComponent component = component = (VirtualClientComponent)Activator.CreateInstance(type, dependencies, componentDescription.Parameters);
+            component.ExecutionSeed = randomizationSeed;
 
-            try
+            // Metadata is merged at each level down the hierarchy. Metadata at higher levels
+            // takes priority overriding metadata at lower levels (i.e. withReplace: false).
+            // This allows metadata to be set at higher levels that is then in turn applied to
+            // components throughout the hierarchy.
+            if (componentDescription.Metadata?.Any() == true)
             {
-                if (!ComponentTypeCache.Instance.TryGetComponentType(componentType, out Type type))
+                metadata.AddRange(componentDescription.Metadata, withReplace: false);
+            }
+
+            // Extensions are merged at each level down the hierarchy. Extensions at higher levels
+            // takes priority overriding extensions at lower levels (i.e. withReplace: false).
+            // This allows extensions to be set at higher levels that is then in turn applied to
+            // components throughout the hierarchy.
+            if (componentDescription.Extensions?.Any() == true)
+            {
+                extensions.AddRange(componentDescription.Extensions, withReplace: false);
+            }
+
+            if (failFast != null)
+            {
+                component.FailFast = failFast.Value;
+            }
+
+            if (logToFile != null)
+            {
+                component.LogToFile = logToFile.Value;
+            }
+
+            if (metadata?.Any() == true)
+            {
+                component.Metadata.AddRange(metadata, withReplace: true);
+            }
+
+            if (extensions?.Any() == true)
+            {
+                component.Extensions.AddRange(extensions, withReplace: true);
+            }
+
+            // Recursive to handle subcomponents.
+            if (componentDescription.Components?.Any() == true)
+            {
+                VirtualClientComponentCollection componentCollection = component as VirtualClientComponentCollection;
+
+                foreach (ExecutionProfileElement subComponent in componentDescription.Components)
                 {
-                    throw new TypeLoadException($"Type '{componentType}' does not exist.");
-                }
-
-                VirtualClientComponent component = (VirtualClientComponent)Activator.CreateInstance(type, dependencies, parameters);
-                component.ExecutionSeed = randomizationSeed;
-
-                return component;
-            }
-            catch (TypeLoadException exc)
-            {
-                throw new StartupException(
-                    $"Virtual Client component initialization failed. A component of type '{componentType}' does not exist in the application domain.",
-                    exc);
-            }
-            catch (InvalidCastException exc)
-            {
-                throw new StartupException(
-                    $"Virtual Client component initialization failed. The type '{componentType}' is not a valid instance of the required " +
-                    $"base type '{typeof(VirtualClientComponent).FullName}'.",
-                    exc);
-            }
-            catch (JsonException exc)
-            {
-                throw new StartupException(
-                    $"Virtual Client component initialization failed. The component of type '{componentType}' contains extensions that are NOT valid JSON-formatted content.",
-                    exc);
-            }
-            catch (Exception exc)
-            {
-                throw new StartupException("Virtual Client component initialization failed.", exc);
-            }
-        }
-
-        private static VirtualClientComponent CreateComponent(ExecutionProfileElement componentDescription, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type, IServiceCollection dependencies, int? randomizationSeed = null)
-        {
-            VirtualClientComponent component = null;
-            if (componentDescription.Components?.Any() != true)
-            {
-                component = (VirtualClientComponent)Activator.CreateInstance(type, dependencies, componentDescription.Parameters);
-                component.ExecutionSeed = randomizationSeed;
-            }
-            else
-            {
-                if (componentDescription.Components?.Any() == true)
-                {
-                    VirtualClientComponentCollection componentCollection = (VirtualClientComponentCollection)Activator.CreateInstance(type, dependencies, componentDescription.Parameters);
-                    foreach (ExecutionProfileElement subComponent in componentDescription.Components)
+                    if (!ComponentTypeCache.Instance.TryGetComponentType(subComponent.Type, out Type subcomponentType))
                     {
-                        if (!ComponentTypeCache.Instance.TryGetComponentType(subComponent.Type, out Type subcomponentType))
-                        {
-                            throw new TypeLoadException($"Type '{subComponent.Type}' does not exist.");
-                        }
-
-                        componentCollection.Add(ComponentFactory.CreateComponent(subComponent, subcomponentType, dependencies, randomizationSeed));
+                        throw new TypeLoadException($"Type '{subComponent.Type}' does not exist.");
                     }
 
-                    component = componentCollection;
+                    VirtualClientComponent childComponent = ComponentFactory.CreateComponent(
+                        subComponent, 
+                        subcomponentType, 
+                        dependencies, 
+                        new Dictionary<string, IConvertible>(metadata, StringComparer.OrdinalIgnoreCase),
+                        extensions,
+                        randomizationSeed,
+                        failFast,
+                        logToFile);
+
+                    componentCollection.Add(childComponent);
                 }
+
+                component = componentCollection;
             }
 
             return component;

@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.ServiceProcess;
     using System.Threading;
@@ -51,7 +52,7 @@ namespace VirtualClient
                 // handled correctly. This is required for response file support where relative paths are used. For example
                 // when a user defines the profile by name only (no full or relative path, --profile=ANY-PROFILE.json),
                 // the working directory will matter.
-                Environment.CurrentDirectory = Path.GetDirectoryName(VirtualClientComponent.ExecutingAssembly.Location);
+                Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
                 // We do not want to miss any startup errors that happen before we can get the rest of
                 // the loggers setup.
@@ -69,11 +70,9 @@ namespace VirtualClient
                         };
 
                         CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
-
                         ParseResult parseResult = commandBuilder.Build().Parse(args);
                         parseResult.ThrowOnUsageError();
 
-                        Program.InitializeFileLogging(parseResult);
                         Task<int> executionTask = parseResult.InvokeAsync();
 
                         // On Windows systems, this is required when running Virtual Client as a service.
@@ -215,7 +214,7 @@ namespace VirtualClient
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --fail-fast
-                OptionFactory.CreateFailFastFlag(required: false, false),
+                OptionFactory.CreateFailFastFlag(required: false),
 
                 // --dependencies
                 OptionFactory.CreateDependenciesFlag(required: false),
@@ -393,22 +392,6 @@ namespace VirtualClient
             rootCommand.AddCommand(convertCommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
-        }
-
-        private static void InitializeFileLogging(ParseResult parsingResult)
-        {
-            // Log to file. Instructs the application to log the output of processes
-            // to files in the logs directory.
-            Option logToFile = OptionFactory.CreateLogToFileFlag();
-
-            foreach (Token token in parsingResult.Tokens.Where(token => token.Type == TokenType.Option))
-            {
-                if (logToFile.Aliases.Contains(token.Value, StringComparer.OrdinalIgnoreCase))
-                {
-                    VirtualClientComponent.LogToFile = true;
-                    break;
-                }
-            }
         }
 
         private static void InitializeStartupLogging(string[] args)

@@ -12,10 +12,8 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -59,9 +57,7 @@ namespace VirtualClient.Actions
             this.benchmarks = new List<string>
             {
                 "bert",
-                "rnnt",
-                "ssd-mobilenet",
-                "ssd-resnet34"
+                "3d-unet"
             };
 
             if (string.IsNullOrEmpty(this.DiskFilter))
@@ -90,7 +86,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The MLPerf model name (e.g. bert, rnnt, ssd-mobilenet).
+        /// The MLPerf model name (e.g. bert, 3d-unet).
         /// </summary>
         public string Model
         {
@@ -118,7 +114,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// This enables A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf.
+        /// This enables A100_PCIe_40GBx8 system support that was not supported by github repo of MLPerf.
         /// </summary>
         public bool RequireCustomSystemSupport
         {
@@ -202,7 +198,7 @@ namespace VirtualClient.Actions
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
 
                             await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.AccuracySummary)
-                                .ConfigureAwait();
+                               .ConfigureAwait();
                         }
                     }
                 }
@@ -229,18 +225,14 @@ namespace VirtualClient.Actions
             {
                 // add user in docker group and create scratch space
                 await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.NvidiaDirectory, cancellationToken);
-               
+
                 if (this.RequireCustomSystemSupport)
                 {
-                    // This enables A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf..
+                    // This enables A100_PCIe_40GBx8 system support that was not supported by github repo of MLPerf..
                     this.ReplaceGPUConfigFilesToSupportAdditionalGPUs();
                 }
-               
-                string makefileFilePath = this.PlatformSpecifics.Combine(this.NvidiaDirectory, "Makefile");
 
-                // Update the docker flags in MLPerf docker file
-                await this.fileSystem.File.ReplaceInFileAsync(
-                    makefileFilePath, "DOCKER_INTERACTIVE_FLAGS = -it", "DOCKER_INTERACTIVE_FLAGS = -i -d", cancellationToken);
+                this.ReplaceMakefile();
 
                 await this.SetupEnvironmentAsync(cancellationToken);
                 state.Initialized = true;
@@ -337,6 +329,18 @@ namespace VirtualClient.Actions
             this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "preprocessed_data"));
 
             await this.ExecuteCommandAsync(
+                "sudo",
+                $"systemctl restart docker",
+                this.NvidiaDirectory,
+                cancellationToken);
+
+            await this.ExecuteCommandAsync(
+                "sudo",
+                $"systemctl start nvidia-fabricmanager",
+                this.NvidiaDirectory,
+                cancellationToken);
+
+            await this.ExecuteCommandAsync(
                 "sudo", 
                 $" -u {this.Username} bash -c \"make prebuild MLPERF_SCRATCH_PATH={this.mlperfScratchSpace}\"", 
                 this.NvidiaDirectory, 
@@ -349,17 +353,17 @@ namespace VirtualClient.Actions
                 cancellationToken);
 
             await this.ExecuteCommandAsync(
-                "sudo", 
-                $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make clean\"", 
-                this.NvidiaDirectory, 
-                cancellationToken);     
-            
+                "sudo",
+                $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make clean\"",
+                this.NvidiaDirectory,
+                cancellationToken);
+
             await this.ExecuteCommandAsync(
                 "sudo", 
                 $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make link_dirs\"", 
                 this.NvidiaDirectory, 
                 cancellationToken);
-           
+
             foreach (string benchmark in this.benchmarks)
             {
                 await this.ExecuteCommandAsync(
@@ -379,7 +383,6 @@ namespace VirtualClient.Actions
                     $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make preprocess_data BENCHMARKS={benchmark}\"", 
                     this.NvidiaDirectory, 
                     cancellationToken);
-
             }
 
             await this.ExecuteCommandAsync(
@@ -387,7 +390,6 @@ namespace VirtualClient.Actions
                 $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make build\"", 
                 this.NvidiaDirectory, 
                 cancellationToken);
-
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
@@ -401,7 +403,7 @@ namespace VirtualClient.Actions
 
             if (context == MLPerfExecutor.AccuracySummary)
             {
-                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "accuracy_summary.json", SearchOption.AllDirectories);
+                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "metadata.json", SearchOption.AllDirectories);
 
                 foreach (string file in resultsFiles)
                 {
@@ -427,7 +429,7 @@ namespace VirtualClient.Actions
             }
             else if (context == MLPerfExecutor.PerformanceSummary)
             {
-                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "perf_harness_summary.json", SearchOption.AllDirectories);
+                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "metadata.json", SearchOption.AllDirectories);
 
                 foreach (string file in resultsFiles)
                 {
@@ -455,16 +457,7 @@ namespace VirtualClient.Actions
 
         private void ReplaceGPUConfigFilesToSupportAdditionalGPUs()
         {
-            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles")))
-            {
-                this.fileSystem.File.Copy(
-                    file,
-                    this.Combine(this.NvidiaDirectory, "code", "common", "systems", Path.GetFileName(file)),
-                    true);
-            }
-
-            foreach (string directory in this.fileSystem.Directory.GetDirectories(
-                this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
+            foreach (string directory in this.fileSystem.Directory.GetDirectories(this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
             {
                 foreach (string subDirectory in this.fileSystem.Directory.GetDirectories(directory))
                 {
@@ -476,6 +469,17 @@ namespace VirtualClient.Actions
                         true);
                     }
                 }
+            }
+        }
+
+        private void ReplaceMakefile()
+        {
+            if (this.fileSystem.File.Exists(this.PlatformSpecifics.GetScriptPath("mlperf", "Makefile.docker")))
+            {
+                this.fileSystem.File.Copy(
+                    this.PlatformSpecifics.GetScriptPath("mlperf", "Makefile.docker"),
+                    this.PlatformSpecifics.GetPackagePath("mlperf", "closed", "NVIDIA", "Makefile.docker"),
+                    true);
             }
         }
 
@@ -536,35 +540,17 @@ namespace VirtualClient.Actions
             this.scenarios = new Dictionary<string, string>();
 
             this.scenarios.Add("bert", "Offline,Server,SingleStream");
-            this.scenarios.Add("rnnt", "Offline,Server,SingleStream");
-            this.scenarios.Add("ssd-mobilenet", "Offline,MultiStream,SingleStream");
-            this.scenarios.Add("ssd-resnet34", "Offline,Server,SingleStream,MultiStream");
+            this.scenarios.Add("3d-unet", "Offline,SingleStream");
 
-            List<string> bertConfigs = new List<string>()
-            {
-                "default",
-                "high_accuracy",
-                "triton",
-                "high_accuracy_triton"
-            };
-
-            List<string> rnntConfigs = new List<string>()
+            List<string> configs = new List<string>()
             {
                 "default"
             };
 
-            List<string> ssdConfigs = new List<string>()
-            {
-                "default",
-                "triton"
-            };
-
             this.benchmarkConfigs = new Dictionary<string, List<string>>();
 
-            this.benchmarkConfigs.Add("bert", bertConfigs);
-            this.benchmarkConfigs.Add("rnnt", rnntConfigs);
-            this.benchmarkConfigs.Add("ssd-mobilenet", ssdConfigs);
-            this.benchmarkConfigs.Add("ssd-resnet34", ssdConfigs);
+            this.benchmarkConfigs.Add("bert", configs);
+            this.benchmarkConfigs.Add("3d-unet", configs);
         }
 
         private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)

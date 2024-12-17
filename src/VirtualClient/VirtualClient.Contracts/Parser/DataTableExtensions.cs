@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Microsoft.Extensions.Logging;
     using VirtualClient;
 
     /// <summary>
@@ -165,6 +166,7 @@ namespace VirtualClient.Contracts
         /// <param name="unit">Unit of the metric.</param>
         /// <param name="namePrefix">If supplied, it will append extra prefix to metric name.</param>
         /// <param name="metricRelativity">It shows Metric Relativity whether higherIsBetter,lowerIsBetter or notDefined.</param>
+        /// <param name="metricVerbosity">Importance of metric, critical, regular or informational</param>
         /// <param name="tagIndex">Index of the tag.</param>
         /// <param name="startTimeIndex">Index of start time. To avoid format issue, cell needs to be in ticks.</param>
         /// <param name="startTime">Start time.</param>
@@ -182,6 +184,7 @@ namespace VirtualClient.Contracts
             string unit = null, 
             string namePrefix = null,
             MetricRelativity metricRelativity = MetricRelativity.Undefined,
+            int metricVerbosity = 1,
             int tagIndex = -1, 
             int startTimeIndex = -1,
             DateTime? startTime = null,
@@ -230,7 +233,7 @@ namespace VirtualClient.Contracts
                             endTime = new DateTime(Convert.ToInt64(row[endTimeIndex]));
                         }
 
-                        Metric metric = new Metric(namePrefix + name, metricValue, unit, metricRelativity, tags)
+                        Metric metric = new Metric(namePrefix + name, metricValue, unit, metricRelativity, metricVerbosity, tags)
                         {
                             StartTime = (startTime == null) ? DateTime.MinValue : startTime.Value,
                             EndTime = (endTime == null) ? DateTime.MinValue : endTime.Value

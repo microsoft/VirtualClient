@@ -353,27 +353,36 @@ namespace VirtualClient.Actions
 
         private async Task CheckDistroSupportAsync(CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
             {
-                var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (!cancellationToken.IsCancellationRequested)
+                if (this.Platform == PlatformID.Unix)
                 {
-                    switch (linuxDistributionInfo.LinuxDistribution)
+                    var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        case LinuxDistribution.Ubuntu:
-                        case LinuxDistribution.Debian:
-                            break;
-                        default:
-                            throw new WorkloadException(
-                            $"The PostgreSQL TPCC workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution}. Supported distros include:" +
-                            $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)}," +
-                            $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
-                            ErrorReason.LinuxDistributionNotSupported);
+                        switch (linuxDistributionInfo.LinuxDistribution)
+                        {
+                            case LinuxDistribution.Ubuntu:
+                            case LinuxDistribution.Debian:
+                                break;
+                            default:
+                                throw new WorkloadException(
+                                $"The HammerDB workload generator is not supported on the current Linux distro - " +
+                                $"{linuxDistributionInfo.LinuxDistribution}. Supported distros include:" +
+                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)}," +
+                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
+                                ErrorReason.LinuxDistributionNotSupported);
+                        }
                     }
                 }
+            }
+            else
+            {
+                throw new WorkloadException(
+                    $"The HammerDB workload generator is not supported on the current architecture.",
+                    ErrorReason.ProcessorArchitectureNotSupported);
             }
         }
 

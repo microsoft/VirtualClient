@@ -568,19 +568,21 @@ namespace VirtualClient.Actions
 
             if (workloadPackage == null)
             {
-                throw new DependencyException(
-                    $"The FIO workload package was not found in the packages directory.",
-                    ErrorReason.WorkloadDependencyMissing);
+                // This is to allow user to use custom installed FIO
+                this.ExecutablePath = this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio";
             }
+            else
+            {
+                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
 
-            workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
-            this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(this.ExecutablePath);
+                this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(this.ExecutablePath);
 
-            // Ensure the binary can execute (e.g. chmod +x)
-            await this.SystemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+                // Ensure the binary can execute (e.g. chmod +x)
+                await this.SystemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
 
         /// <summary>

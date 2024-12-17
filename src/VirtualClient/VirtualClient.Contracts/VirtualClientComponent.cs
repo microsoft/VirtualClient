@@ -5,23 +5,18 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
-    using System.Runtime.Versioning;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
 
@@ -47,6 +42,35 @@ namespace VirtualClient.Contracts
 
         private const string Role = "Role";
         private ISystemInfo systemInfo;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VirtualClientComponent"/> class.
+        /// </summary>
+        /// <param name="component">A component to use as a reference when creating a new instance..</param>
+        protected VirtualClientComponent(VirtualClientComponent component)
+            : this(component?.Dependencies, component?.Parameters)
+        {
+            this.ClientRequestId = component.ClientRequestId;
+            this.ExecutionSeed = component.ExecutionSeed;
+            this.FailFast = component.FailFast;
+            this.LogToFile = component.LogToFile;
+            this.MetadataContract = component.MetadataContract;
+
+            if (component.Metadata?.Any() == true)
+            {
+                this.Metadata.AddRange(component.Metadata);
+            }
+
+            if (component.Extensions?.Any() == true)
+            {
+                this.Extensions.AddRange(component.Extensions);
+            }
+
+            if (component.SupportedRoles?.Any() == true)
+            {
+                this.SupportedRoles = new List<string>(component.SupportedRoles);
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualClientComponent"/> class.
@@ -79,7 +103,7 @@ namespace VirtualClient.Contracts
             this.MetadataContract = new MetadataContract();
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
-            this.SupportingExecutables = new List<string>();
+            this.SupportedRoles = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
 
@@ -109,11 +133,6 @@ namespace VirtualClient.Contracts
         /// to target storage resources. When not defined the default template will be used.
         /// </summary>
         public static string ContentPathTemplate { get; set; }
-
-        /// <summary>
-        /// True if the output of processes should be logged to files in the logs directory.
-        /// </summary>
-        public static bool LogToFile { get; set; } = false;
 
         /// <summary>
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
@@ -215,6 +234,12 @@ namespace VirtualClient.Contracts
         /// The Logger for this component
         /// </summary>
         public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// True/false whether the output of processes should be logged to files 
+        /// in the logs directory.
+        /// </summary>
+        public bool LogToFile { get; set; }
 
         /// <summary>
         /// Metadata provided to the application on the command line.
@@ -497,14 +522,7 @@ namespace VirtualClient.Contracts
         /// The roles that are supported for the executor (e.g. Client, Server). Not all executors support
         /// multi-role scenarios.
         /// </summary>
-        public IEnumerable<string> SupportedRoles { get; protected set; }
-
-        /// <summary>
-        /// A set of paths for supporting executables of the main process 
-        /// (e.g. geekbench_x86_64, geekbench_aarch64). These typically need to 
-        /// be cleaned up/terminated at the end of each round of processing.
-        /// </summary>
-        public List<string> SupportingExecutables { get; private set; }
+        public IEnumerable<string> SupportedRoles { get; set; }
 
         /// <summary>
         /// The tags defined in the profile arguments.

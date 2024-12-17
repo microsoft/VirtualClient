@@ -1,11 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using System.Collections.Generic;
 using VirtualClient.Contracts;
 
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
 
 namespace VirtualClient.Actions
 {
@@ -17,7 +18,7 @@ namespace VirtualClient.Actions
         public void DiskSpdParserVerifyReadWrite()
         {
             string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt"));
-            var parser = new DiskSpdMetricsParser(results);
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w50 -d900 -Suw -W50 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
 
@@ -128,7 +129,7 @@ namespace VirtualClient.Actions
         public void DiskSpdParserVerifyWriteOnly()
         {
             string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly.txt"));
-            var parser = new DiskSpdMetricsParser(results);
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w100 -d900 -Suw -W30 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
 
@@ -151,18 +152,6 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "total throughput total", 597.33, "MiB/s");
             MetricAssert.Exists(metrics, "total iops total", 76458.71, "iops");
             MetricAssert.Exists(metrics, "total latency average total", 6.696, "ms");
-
-            // Read
-            MetricAssert.Exists(metrics, "read bytes 0", 0, "bytes");
-            MetricAssert.Exists(metrics, "read bytes total", 0, "bytes");
-            MetricAssert.Exists(metrics, "read io operations 0", 0, "I/Os");
-            MetricAssert.Exists(metrics, "read io operations total", 0, "I/Os");
-            MetricAssert.Exists(metrics, "read throughput 0", 0, "MiB/s");
-            MetricAssert.Exists(metrics, "read throughput total", 0, "MiB/s");
-            MetricAssert.Exists(metrics, "read iops 0", 0, "iops");
-            MetricAssert.Exists(metrics, "read iops total", 0, "iops");
-            MetricAssert.Exists(metrics, "read latency average 0", 0, "ms");
-            MetricAssert.Exists(metrics, "read latency average total", 0, "ms");
 
             // Write
             MetricAssert.Exists(metrics, "write bytes 0", 23594541056, "bytes");
@@ -213,10 +202,11 @@ namespace VirtualClient.Actions
         [Test]
         public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "Read8k.txt"));
-            var parser = new DiskSpdMetricsParser(results);
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "Write8k.txt"));
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w100 -d900 -Suw -W30 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
+            metrics.LogConsole("test");
 
             // cpu metrics
             MetricAssert.Exists(metrics, "cpu usage 0", 92.79, "percentage");
@@ -235,11 +225,6 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "total throughput 0", 30.63, "MiB/s");
             MetricAssert.Exists(metrics, "total throughput 1", 36.17, "MiB/s");
             MetricAssert.Exists(metrics, "total throughput total", 2579.05, "MiB/s");
-
-            // Read
-            MetricAssert.Exists(metrics, "read bytes 0", 0, "bytes");
-            MetricAssert.Exists(metrics, "read bytes 1", 0, "bytes");
-            MetricAssert.Exists(metrics, "read bytes total", 0, "bytes");
 
             // Write
             MetricAssert.Exists(metrics, "write bytes 0", 1927421952, "bytes");

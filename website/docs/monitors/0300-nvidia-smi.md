@@ -16,7 +16,7 @@ This monitor has dependency on nvidia-smi. Please use [Nvidia Driver Installatio
 * linux-arm64
 
 ## Supported Query
-Right now the only query supported is --query-gpu. Please create a feature request if you need other queries.
+Right now the query supported are --query-gpu and --query-c2c. Please create a feature request if you need other queries.
 
 ## nvidia-smi Output Description
 The following section describes the various counters/metrics that are available with the nvidia-smi toolset.
@@ -54,6 +54,7 @@ The following section describes the various counters/metrics that are available 
 | ecc.errors.uncorrected.aggregate.dram | Aggregate DRAM Uncorrected ECC Errors. |
 | ecc.errors.uncorrected.aggregate.sram | Aggregate SRAM Uncorrected ECC Errors. |
 | ecc.errors.uncorrected.aggregate.total | Aggregate Total Uncorrected ECC Errors. |
+| GPU 0: C2C Link 0 Speed | C2C link speed in GB/s. |
 
 ### Example
 This is an example of the minimum profile to run NvidiaSmiMonitor.
@@ -73,7 +74,7 @@ This is an example of the minimum profile to run NvidiaSmiMonitor.
       {
         "Type": "NvidiaSmiMonitor",
         "Parameters": {
-          "Scenario": "CaptureNvidiaGpuCounters",
+          "Scenario": "CaptureNvidiaSmiCounters",
           "MonitorFrequency": "$.Parameters.MonitorFrequency",
           "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
         }

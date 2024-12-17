@@ -9,22 +9,20 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
-    using Azure;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
-    using Azure.Storage.Blobs;
     using Microsoft.Extensions.Logging;
     using Serilog;
+    using Serilog.Formatting;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Logging;
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
-    using VirtualClient.Identity;
     using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
@@ -174,7 +172,7 @@ namespace VirtualClient
 
                     // Traces logging is affected by --log-level values defined on the command line.
                     ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
-                        .HandleTraceEvents();
+                        .HandleTraces();
 
                     loggerProviders.Add(tracesLoggerProvider);
 
@@ -193,7 +191,7 @@ namespace VirtualClient
                     // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
                     // always written.
                     ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
-                        .HandleMetricsEvents();
+                        .HandleMetrics();
 
                     loggerProviders.Add(metricsLoggerProvider);
 
@@ -227,8 +225,8 @@ namespace VirtualClient
         /// <param name="logFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\traces.log).</param>
         /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
         /// <param name="level">The logging severity level.</param>
-        /// <param name="excludes">Properties to exclude from JSON structured output.</param>
-        public static ILoggerProvider CreateFileLoggerProvider(string logFilePath, TimeSpan flushInterval, LogLevel level, IEnumerable<string> excludes = null)
+        /// <param name="formatter">Provides a formatter to use for structuring the output.</param>
+        public static ILoggerProvider CreateFileLoggerProvider(string logFilePath, TimeSpan flushInterval, LogLevel level, ITextFormatter formatter = null)
         {
             logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
 
@@ -239,12 +237,24 @@ namespace VirtualClient
 
             if (!string.IsNullOrWhiteSpace(logFilePath))
             {
-                LoggerConfiguration logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
-                    new JsonTextFormatter(excludes),
-                    logFilePath,
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: flushInterval);
+                LoggerConfiguration logConfiguration = null;
+                if (formatter != null)
+                {
+                    logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                        formatter,
+                        logFilePath,
+                        fileSizeLimitBytes: maxFileSizeBytes,
+                        retainedFileCountLimit: 10,
+                        flushToDiskInterval: flushInterval);
+                }
+                else
+                {
+                    logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                        logFilePath,
+                        fileSizeLimitBytes: maxFileSizeBytes,
+                        retainedFileCountLimit: 10,
+                        flushToDiskInterval: flushInterval);
+                }
 
                 loggerProvider = new SerilogFileLoggerProvider(logConfiguration, level);
 
@@ -290,37 +300,54 @@ namespace VirtualClient
 
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
+                IEnumerable<string> propertiesToExcludeForMetrics = new List<string>
+                {
+                    "durationMs",
+                    "message",
+                    "profileFriendlyName"
+                };
+
+                IEnumerable<string> propertiesToExcludeForEvents = new List<string>
+                {
+                    "durationMs",
+                    "message",
+                    "profileFriendlyName"
+                };
+
                 // Logs/Traces
-                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), level)
-                    .HandleTraceEvents();
+                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
+                    Path.Combine(logFileDirectory, settings.TracesFileName),
+                    TimeSpan.FromSeconds(5),
+                    level,
+                    new SerilogJsonTextFormatter()).HandleTraces();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), LogLevel.Trace)
-                    .HandleMetricsEvents();
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
+                    Path.Combine(logFileDirectory, settings.MetricsFileName), 
+                    TimeSpan.FromSeconds(3), 
+                    LogLevel.Trace,
+                    new SerilogJsonTextFormatter(propertiesToExcludeForMetrics)).HandleMetrics();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Metrics/Results in CSV Format
-                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName))
-                    .HandleMetricsEvents();
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(
+                    Path.Combine(logFileDirectory, 
+                    settings.MetricsCsvFileName)).HandleMetrics();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsCsvLoggerProvider);
 
-                // Performance Counters
-                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), LogLevel.Trace)
-                    .HandlePerformanceCounterEvents();
-
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => countersLoggerProvider.Dispose()));
-                loggerProviders.Add(countersLoggerProvider);
-
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), LogLevel.Trace)
-                    .HandleSystemEvents();
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
+                    Path.Combine(logFileDirectory, settings.EventsFileName), 
+                    TimeSpan.FromSeconds(5), 
+                    LogLevel.Trace,
+                    new SerilogJsonTextFormatter(propertiesToExcludeForEvents)).HandleSystemEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));
                 loggerProviders.Add(eventsLoggerProvider);
@@ -548,34 +575,31 @@ namespace VirtualClient
         /// </summary>
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
-        /// <param name="platform">The OS/system platform hosting the application (e.g. Windows, Unix).</param>
-        /// <param name="architecture">The CPU/processor architecture (e.g. amd64, arm, x86).</param>
-        /// <param name="logger">A logger used to capture telemetry.</param>
-        public static ISystemManagement CreateSystemManager(
-            string agentId,
-            string experimentId,
-            PlatformID platform,
-            Architecture architecture,
-            Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
+        /// <param name="logger">The logger to use for capturing telemetry.</param>
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
+            platformSpecifics.ThrowIfNull(nameof(platformSpecifics));
 
-            PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
-            IFileSystem fileSystem = new FileSystem();
+            PlatformID platform = platformSpecifics.Platform;
             ProcessManager processManager = ProcessManager.Create(platform);
+            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform, logger);
+            IFileSystem fileSystem = new FileSystem();
+            IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
+            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
             ISshClientManager sshClientManager = new SshClientManager();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
-            IStateManager packageStateManager = new PackageStateManager(fileSystem, platformSpecifics);
 
             return new SystemManagement
             {
                 AgentId = agentId,
                 ExperimentId = experimentId.ToLowerInvariant(),
-                DiskManager = DependencyFactory.CreateDiskManager(platform, logger),
+                DiskManager = diskManager,
                 FileSystem = fileSystem,
-                FirewallManager = DependencyFactory.CreateFirewallManager(platform, processManager),
-                PackageManager = new PackageManager(packageStateManager, fileSystem, platformSpecifics, logger),
+                FirewallManager = firewallManager,
+                PackageManager = packageManager,
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
                 SshClientManager = sshClientManager,
@@ -652,7 +676,7 @@ namespace VirtualClient
         /// Applies a filter to the logger generated by the provider that will handle the logging
         /// of test metrics/results events.
         /// </summary>
-        internal static ILoggerProvider HandleMetricsEvents(this ILoggerProvider loggerProvider)
+        internal static ILoggerProvider HandleMetrics(this ILoggerProvider loggerProvider)
         {
             return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metrics);
         }
@@ -661,7 +685,7 @@ namespace VirtualClient
         /// Applies a filter to the logger generated by the provider that will handle the logging
         /// of test metrics/results events.
         /// </summary>
-        internal static ILoggerProvider HandlePerformanceCounterEvents(this ILoggerProvider loggerProvider)
+        internal static ILoggerProvider HandlePerformanceCounters(this ILoggerProvider loggerProvider)
         {
             return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metrics && eventId.Name == "PerformanceCounter");
         }
@@ -679,7 +703,7 @@ namespace VirtualClient
         /// Applies a filter to the logger generated by the provider that will handle the logging
         /// of trace events.
         /// </summary>
-        internal static ILoggerProvider HandleTraceEvents(this ILoggerProvider loggerProvider)
+        internal static ILoggerProvider HandleTraces(this ILoggerProvider loggerProvider)
         {
             return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id <= LogType.Error);
         }

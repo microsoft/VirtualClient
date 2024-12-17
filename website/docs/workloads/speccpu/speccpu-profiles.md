@@ -43,8 +43,10 @@ for evaluating the performance of the CPU for processing calculations.
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto |
+  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
 
 * **Profile Runtimes**  
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
@@ -99,6 +101,8 @@ for evaluating the performance of the CPU for processing calculations.
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
+  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto |
 
@@ -151,6 +155,8 @@ for evaluating the performance of the CPU for processing calculations.
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
+  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto |
 
@@ -202,6 +208,8 @@ for evaluating the performance of the CPU for processing calculations.
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
+  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto | 
 
