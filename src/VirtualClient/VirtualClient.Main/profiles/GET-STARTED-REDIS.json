@@ -55,22 +55,10 @@
             }
         },
         {
-            "Type": "WgetPackageInstallation",
+            "Type": "RedisPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRedisPackage",
-                "PackageName": "redis",
-                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
-                "SubPath": "redis-6.2.1",
-                "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
-            }
-        },
-        {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "CompileRedis",
-                "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "make",
-                "WorkingDirectory": "{PackagePath:redis}"
+                "Scenario": "InstallRedisPackageFromAptRepository",
+                "PackageName": "redis"
             }
         },
         {

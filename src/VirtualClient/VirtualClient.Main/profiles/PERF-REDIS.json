@@ -234,35 +234,22 @@
             }
         },
         {
-            "Type": "DependencyPackageInstallation",
+            "Type": "RedisPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallKeysForRedisTLS",
-                "BlobContainer": "packages",
-                "BlobName": "redisresources.zip",
-                "PackageName": "redisresources",
-                "Extract": true
-            }
-        },
-        {
-            "Type": "WgetPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallRedisPackage",
-                "PackageName": "redis",
-                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
-                "SubPath": "redis-6.2.1",
-                "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
+                "Scenario": "InstallRedisPackageFromAptRepository",
+                "PackageName": "redis"
             }
         },
         {
             "Type": "ExecuteCommand",
-          "Parameters": {
-            "Scenario": "CompileRedis",
-            "SupportedPlatforms": "linux-x64,linux-arm64",
-            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-            "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
-            "Command": "make BUILD_TLS={BUILD_TLS}",
-            "WorkingDirectory": "{PackagePath:redis}"
-          }
+            "Parameters": {
+                "Scenario": "CompileRedis",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+                "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
+                "Command": "make BUILD_TLS={BUILD_TLS}",
+                "WorkingDirectory": "{PackagePath:redis}"
+            }
         },
         {
             "Type": "GitRepoClone",
