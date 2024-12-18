@@ -30,8 +30,8 @@ namespace VirtualClient.Dependencies
                 .Returns(true);
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(GitRepoClone.PackageName), "aspnetbenchmarks" },
-                { nameof(GitRepoClone.RepoUri), "https://github.com/aspnet/Benchmarks.git" }
+                { nameof(GitRepoClone.PackageName), "coremark" },
+                { nameof(GitRepoClone.RepoUri), "https://github.com/eembc/coremark.git" }
             };
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
@@ -73,19 +73,19 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            // The parameter Checkout can be a branch-name, tag or a commit id.
+            // The parameter Commit can be a branch-name, tag or a commit id.
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(GitRepoClone.PackageName), "aspnetbenchmarks" },
-                { nameof(GitRepoClone.RepoUri), "https://github.com/aspnet/Benchmarks.git" },
-                { nameof(GitRepoClone.Checkout), "Checkout-string" }
+                { nameof(GitRepoClone.PackageName), "coremark" },
+                { nameof(GitRepoClone.RepoUri), "https://github.com/eembc/coremark.git" },
+                { nameof(GitRepoClone.Commit), "Checkout-string" }
             };
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
                 $@"git clone {this.mockFixture.Parameters[$"{nameof(GitRepoClone.RepoUri)}"]} {this.mockFixture.GetPackagePath()}\{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]}",
-                $@"git -C {this.mockFixture.GetPackagePath()}\{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]} checkout {this.mockFixture.Parameters[$"{nameof(GitRepoClone.Checkout)}"]}",
+                $@"git -C {this.mockFixture.GetPackagePath()}\{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]} checkout {this.mockFixture.Parameters[$"{nameof(GitRepoClone.Commit)}"]}",
             };
 
             int commandExecuted = 0;

@@ -49,18 +49,18 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Git checkout
+        /// Parameter to checkout to a specific branch, commit or tag in the repository
         /// </summary>
-        public string Checkout
+        public string Commit
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(GitRepoClone.Checkout), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(GitRepoClone.Commit), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(GitRepoClone.Checkout)] = value;
+                this.Parameters[nameof(GitRepoClone.Commit)] = value;
             }
         }
 
@@ -71,7 +71,7 @@ namespace VirtualClient.Dependencies
         {
             telemetryContext.AddContext("repoUri", this.RepoUri);
             telemetryContext.AddContext("packagesDirectory", this.PlatformSpecifics.PackagesDirectory);
-            telemetryContext.AddContext("checkout", this.Checkout);
+            telemetryContext.AddContext("Commit", this.Commit);
 
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             ProcessManager processManager = systemManagement.ProcessManager;
@@ -119,9 +119,9 @@ namespace VirtualClient.Dependencies
                     .ConfigureAwait(false);
             }
 
-            if (!string.IsNullOrEmpty(this.Checkout))
+            if (!string.IsNullOrEmpty(this.Commit))
             {
-                await this.ExecuteCommandAsync("git", $"-C {cloneDirectory} checkout {this.Checkout}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("git", $"-C {cloneDirectory} checkout {this.Commit}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken);
             }
         }
     }
