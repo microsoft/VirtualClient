@@ -134,7 +134,7 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallOnUbuntuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Version != string.Empty)
+            if (!string.IsNullOrEmpty(this.Version))
             {
                 this.installRedisCommand = $"install redis={this.Version} -y";
             }
@@ -163,7 +163,7 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallOnAzLinuxAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Version != string.Empty)
+            if (!string.IsNullOrEmpty(this.Version))
             {
                 this.installRedisCommand = $"install redis-{this.Version} -y";
             }
