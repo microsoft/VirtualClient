@@ -26,6 +26,7 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.File.Reset();
+            this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
@@ -37,7 +38,7 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                $@"git clone {this.mockFixture.Parameters[$"{nameof(GitRepoClone.RepoUri)}"]} {this.mockFixture.GetPackagePath()}\{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]}"
+                $@"git clone {this.mockFixture.Parameters[$"{nameof(GitRepoClone.RepoUri)}"]} {this.mockFixture.GetPackagePath()}/{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]}"
             };
 
             int commandExecuted = 0;
@@ -69,6 +70,7 @@ namespace VirtualClient.Dependencies
         public async Task GitRepoCloneRunsTheExpectedCommandWithCheckout()
         {
             this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
@@ -84,8 +86,8 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                $@"git clone {this.mockFixture.Parameters[$"{nameof(GitRepoClone.RepoUri)}"]} {this.mockFixture.GetPackagePath()}\{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]}",
-                $@"git -C {this.mockFixture.GetPackagePath()}\{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]} checkout {this.mockFixture.Parameters[$"{nameof(GitRepoClone.Commit)}"]}",
+                $@"git clone {this.mockFixture.Parameters[$"{nameof(GitRepoClone.RepoUri)}"]} {this.mockFixture.GetPackagePath()}/{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]}",
+                $@"git -C {this.mockFixture.GetPackagePath()}/{this.mockFixture.Parameters[$"{nameof(GitRepoClone.PackageName)}"]} checkout {this.mockFixture.Parameters[$"{nameof(GitRepoClone.Commit)}"]}",
             };
 
             int commandExecuted = 0;
