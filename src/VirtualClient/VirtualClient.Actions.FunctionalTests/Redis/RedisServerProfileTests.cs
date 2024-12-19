@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
             this.mockFixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
-            this.mockFixture.SetupFile("redis", "redis-6.2.1/src/redis-server", new byte[0]);
+            this.mockFixture.SetupFile("redis", "src/redis-server", new byte[0]);
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("AnyName", "AnyDescription", 1, 4, 1, 0, true));
         }
