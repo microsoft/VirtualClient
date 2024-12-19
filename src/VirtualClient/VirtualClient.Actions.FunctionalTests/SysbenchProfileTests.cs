@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
+        // [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
         public async Task MySQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(

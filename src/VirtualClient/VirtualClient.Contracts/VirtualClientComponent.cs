@@ -625,6 +625,7 @@ namespace VirtualClient.Contracts
 
                     if (this.Parameters?.Any() == true)
                     {
+                        Console.WriteLine("before adding parameters to dictonary");
                         this.MetadataContract.Add(
                             this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
                             MetadataContractCategory.Scenario,

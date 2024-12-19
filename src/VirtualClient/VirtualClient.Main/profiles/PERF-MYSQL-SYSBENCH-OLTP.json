@@ -10,6 +10,7 @@
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Balanced",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "InnodbBufferPoolSize": "{calculate({SystemMemoryBytes} * 80 / 100)}",
         "Duration": "00:05:00"
     },
     "Actions": [
@@ -231,7 +232,8 @@
                 "Action": "SetGlobalVariables",
                 "Benchmark": "OLTP",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000",
+                "InnodbBufferPoolSize": "$.Parameters.InnodbBufferPoolSize",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000;innodb_buffer_pool_size={InnodbBufferPoolSize};innodb_lock_wait_timeout=300;innodb_io_capacity=10000;innodb_io_capacity_max=10000;innodb_buffer_pool_dump_at_shutdown=OFF;innodb_change_buffering=0;table_open_cache=20000;skip_log_bin=1;",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
