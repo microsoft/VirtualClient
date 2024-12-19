@@ -160,11 +160,11 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   ``` bash
   # e.g.
   # Suppose that the binaries exist in an alternate location (e.g. a build output location).
-  /home/user/repos/any.team.extensions/out/bin/Debug/x64/Any.Team.VirtualClient.Extensions/net8.0/linux-x64/publish
+  /home/user/repos/any.team.extensions/out/bin/Debug/x64/Any.Team.VirtualClient.Extensions/net9.0/linux-x64/publish
 
   # Virtual Client can be instructed to search for extensions binaries in this alternate
   # location in addition to the default 'packages' folder location.
-  ~/virtualclient.1.15.0/linux-x64$ export VC_LIBRARY_PATH=/home/user/repos/any.team.extensions/out/bin/Debug/x64/Any.Team.VirtualClient.Extensions/net8.0/linux-x64/publish
+  ~/virtualclient.1.15.0/linux-x64$ export VC_LIBRARY_PATH=/home/user/repos/any.team.extensions/out/bin/Debug/x64/Any.Team.VirtualClient.Extensions/net9.0/linux-x64/publish
   ~/virtualclient.1.15.0/linux-x64$ VirtualClient --profile=/home/user/repos/any.team.extensions/src/Any.Team.VirtualClient.Extensions/profiles/PERF-CUSTOM-WORKLOAD-1.json ...
   ```
 
