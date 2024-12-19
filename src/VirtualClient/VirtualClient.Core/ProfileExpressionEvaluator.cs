@@ -24,9 +24,13 @@ namespace VirtualClient
         // e.g.
         // {fn(512 / 16)]}
         // {fn(512 / {LogicalThreadCount})}
-        private static readonly Regex CalculateExpression = new Regex(
+        /*private static readonly Regex CalculateExpression = new Regex(
             @"\{calculate\(([0-9\*\/\+\-\(\)\s]+)\)\}",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);*/
+
+        private static readonly Regex CalculateExpression = new Regex(
+    @"\{calculate\(([0-9L\*\/\+\-\(\)\s]+)\)\}",
+    RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {calculate({IsTLSEnabled} ? "Yes" : "No")}
@@ -436,13 +440,16 @@ namespace VirtualClient
 
                 if (matches?.Any() == true)
                 {
+                    Console.WriteLine($"just before c# script");
                     isMatched = true;
                     foreach (Match match in matches)
                     {
                         string function = match.Groups[1].Value;
+                        Console.WriteLine($"just before c# script");
                         long result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<long>(function);
-
+                        Console.WriteLine($"the result after csharpscript is {result}");
                         evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                        Console.WriteLine($"evaluated expression {evaluatedExpression}");
                     }
                 }
 
@@ -638,6 +645,7 @@ namespace VirtualClient
                         {
                             isMatched = true;
                             evaluatedExpression = evaluation.Outcome;
+                            Console.WriteLine($"Evaluated expression in evaluateexpressionasync {evaluatedExpression}");
                         }
                     }
                 }
@@ -724,7 +732,9 @@ namespace VirtualClient
                             EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, parameters, parameter.Value.ToString(), cancellationToken);
                             if (evaluation.IsMatched)
                             {
+                                Console.WriteLine($"After evaluation in runtime {evaluation.Outcome}");
                                 parameters[parameter.Key] = evaluation.Outcome;
+                                Console.WriteLine($"After assigning it to parameter key in runtime {evaluation.Outcome}");
                             }
                         }
                     }

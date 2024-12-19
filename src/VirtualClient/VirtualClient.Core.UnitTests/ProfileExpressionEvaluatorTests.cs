@@ -709,6 +709,7 @@ namespace VirtualClient
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
+                {"{calculate(67419566080 * 800000 / 100)}", "23456"},
                 { "{calculate(512 + 2)}", "514" },
                 { "{calculate(512 - 2)}", "510" },
                 { "{calculate(512 * 2)}", "1024" },
