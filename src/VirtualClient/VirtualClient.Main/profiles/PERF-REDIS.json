@@ -245,6 +245,7 @@
             "Parameters": {
                 "Scenario": "CloneMemtierRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
+                "Commit": "1.4.0",
                 "PackageName": "memtier"
             }
         },
@@ -253,7 +254,7 @@
             "Parameters": {
                 "Scenario": "CompileMemtier",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
+                "Command": "autoreconf -ivf&&bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
             }
         },
