@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO.Abstractions;
     using System.Linq;
@@ -147,7 +148,13 @@ namespace VirtualClient.Actions
             }
             else
             {
-
+                using (IProcessProxy executeBinary = await this.ExecuteCommandAsync($"{this.BinaryName}", this.BinaryCommandLine, this.LMbenchPackage.Path, telemetryContext, cancellationToken))
+                {
+                    await this.LogProcessDetailsAsync(executeBinary, telemetryContext);
+                    executeBinary.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                    LatMemRdMetricsParser latMemRdMetricsParser = new LatMemRdMetricsParser(executeBinary.StandardOutput.ToString());
+                    this.CaptureMetrics(executeBinary, latMemRdMetricsParser, telemetryContext);
+                }
             }
         }
 
@@ -209,7 +216,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy process, MetricsParser metricsParser, EventContext telemetryContext)
         {
             this.MetadataContract.AddForScenario(
                 "LMbench",
@@ -218,8 +225,7 @@ namespace VirtualClient.Actions
 
             this.MetadataContract.Apply(telemetryContext);
 
-            LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
-            IList<Metric> metrics = parser.Parse();
+            IList<Metric> metrics = metricsParser.Parse();
 
             this.Logger.LogMetrics(
                 toolName: "LMbench",
@@ -297,7 +303,8 @@ namespace VirtualClient.Actions
 
                     // The use of the original telemetry context created at the top
                     // is purposeful.
-                    this.CaptureMetrics(process, relatedContext);
+                    LMbenchMetricsParser lmbenchMetricsParser = new LMbenchMetricsParser(process.StandardOutput.ToString());
+                    this.CaptureMetrics(process, lmbenchMetricsParser, relatedContext);
                 }
             });
         }
