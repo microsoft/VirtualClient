@@ -20,7 +20,9 @@
                 "Scenario": "MemoryPerformance",
                 "PackageName": "lmbench",
                 "CompilerFlags": "$.Parameters.CompilerFlags",
-                "MemorySizeMB": "$.Parameters.MemorySizeMB"
+                "MemorySizeMB": "$.Parameters.MemorySizeMB",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "2048 128"
             }
         }
     ],
