@@ -825,7 +825,7 @@ namespace VirtualClient
             if (this.Metadata?.Any() == true)
             {
                 // Command-line metadata overrides metadata in the profile itself.
-                profile.Parameters.AddRange(this.Metadata, true);
+                profile.Metadata.AddRange(this.Metadata, true);
             }
 
             if (this.Parameters?.Any() == true)

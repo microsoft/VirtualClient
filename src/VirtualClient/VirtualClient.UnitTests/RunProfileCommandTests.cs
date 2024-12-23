@@ -187,6 +187,70 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task RunProfileCommandAddsTheExpectedMetadataToProfile()
+        {
+            // Scenario:
+            // In the default scenario, a workload profile is supplied that only contains
+            // workloads (i.e. no specific monitors).
+            string profile1 = "TEST-WORKLOAD-PROFILE.json";
+            string defaultMonitorProfile = "MONITORS-DEFAULT.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+            this.command.Metadata = new Dictionary<string, IConvertible>();
+            this.command.Metadata.Add("MetadataKey1", "MetadataValue1");
+            this.command.Metadata.Add("MetadataKey2", "MetadataValue2");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            bool isCommandMetadataSubset = this.command.Metadata.All(kvp =>
+            profile.Metadata.TryGetValue(kvp.Key, out var value) && value.Equals(kvp.Value));
+            
+            Assert.IsTrue(isCommandMetadataSubset);
+        }
+
+        [Test]
+        public async Task RunProfileCommandAddsTheExpectedParametersToProfile()
+        {
+            // Scenario:
+            // In the default scenario, a workload profile is supplied that only contains
+            // workloads (i.e. no specific monitors).
+            string profile1 = "TEST-WORKLOAD-PROFILE.json";
+            string defaultMonitorProfile = "MONITORS-DEFAULT.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+            this.command.Parameters.Add("ParameterKey1", "ParameterValue1");
+            this.command.Parameters.Add("ParameterKey2", "ParameterValue2");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            bool isCommandParametersSubset = this.command.Parameters.All(kvp =>
+            profile.Parameters.TryGetValue(kvp.Key, out var value) && value.Equals(kvp.Value));
+
+            Assert.IsTrue(isCommandParametersSubset);
+        }
+
+        [Test]
         public async Task RunProfileCommandCreatesTheExpectedProfile_DefaultMonitorProfileExplicitlyDefinedScenario()
         {
             // Scenario:
