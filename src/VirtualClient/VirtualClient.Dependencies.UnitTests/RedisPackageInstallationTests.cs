@@ -73,6 +73,31 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        [Test]
+        [TestCase(Architecture.X64, "linux-x64")]
+        [TestCase(Architecture.Arm64, "linux-arm64")]
+        public async Task RedisPackageInstallationExecutesExpectedInstallationCommandsOnAzLinux(Architecture architecture, string platformArchitecture)
+        {
+            this.SetupDefaultMockBehavior(PlatformID.Unix, architecture);
+
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestAzLinux",
+                LinuxDistribution = LinuxDistribution.AzLinux
+            };
+
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockInfo);
+
+            using (TestRedisPackageInstallation installation = new TestRedisPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await installation.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"dnf update"));
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"dnf install redis -y"));
+            }
+        }
+
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.mockFixture.Setup(platform, architecture);
