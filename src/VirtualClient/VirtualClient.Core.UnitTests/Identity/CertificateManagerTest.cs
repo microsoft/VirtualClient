@@ -133,7 +133,7 @@ namespace VirtualClient.Identity
                     Assert.AreEqual(expectedCertificateFile, actualCertificateFile);
                     confirmedFile = true;
                 })
-                .ReturnsAsync(certificate.RawData);
+                .ReturnsAsync(certificate.Export(X509ContentType.Pfx));
 
             // Expectation:
             // We do not need to compare the certificate properties. We just need to ensure we attempted to
@@ -198,7 +198,7 @@ namespace VirtualClient.Identity
                     Assert.AreEqual(expectedCertificateFile, actualCertificateFile);
                     confirmedFile = true;
                 })
-                .ReturnsAsync(certificate.RawData);
+                .ReturnsAsync(certificate.Export(X509ContentType.Pfx));
 
             // Expectation:
             // We do not need to compare the certificate properties. We just need to ensure we attempted to
