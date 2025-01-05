@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using MathNet.Numerics;
@@ -146,6 +147,19 @@ namespace VirtualClient.Actions
                 }
             }
             
+        }
+
+        private string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                serverIPAddress = serverInstance.IPAddress;
+            }
+
+            return serverIPAddress;
         }
     }
 }

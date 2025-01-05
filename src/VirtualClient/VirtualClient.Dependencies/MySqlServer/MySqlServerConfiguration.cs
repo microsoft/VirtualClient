@@ -64,6 +64,17 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
+        /// stripeddisk mount point.
+        /// </summary>
+        public string StripeDiskMountPoint
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.StripeDiskMountPoint), null);
+            }
+        }
+
+        /// <summary>
         /// Disk filter specified
         /// </summary>
         public string DiskFilter
@@ -164,7 +175,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         private async Task ConfigureMySQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string serverIp = this.GetServerIpAddress();
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
+            string innoDbDirs = this.StripeDiskMountPoint != null ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
 
@@ -297,6 +308,19 @@ namespace VirtualClient.Dependencies.MySqlServer
             int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024);
             
             return bufferSizeInMegaBytes.ToString();
+        }
+
+        private string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                serverIPAddress = serverInstance.IPAddress;
+            }
+
+            return serverIPAddress;
         }
 
         private string GetClientIpAddresses()

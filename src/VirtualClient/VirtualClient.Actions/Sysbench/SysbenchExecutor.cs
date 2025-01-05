@@ -392,6 +392,23 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                serverIPAddress = serverInstance.IPAddress;
+            }
+
+            return serverIPAddress;
+        }
+
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)

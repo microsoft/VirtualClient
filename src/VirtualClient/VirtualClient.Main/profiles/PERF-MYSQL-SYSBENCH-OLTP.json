@@ -170,7 +170,7 @@
             "Parameters": {
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql-server-8.0.36-v1.zip",
+                "BlobName": "mysql-server-8.0.36-v2.zip",
                 "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
@@ -233,7 +233,7 @@
                 "Benchmark": "OLTP",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "InnodbBufferPoolSize": "$.Parameters.InnodbBufferPoolSize",
-                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000;innodb_buffer_pool_size={InnodbBufferPoolSize};innodb_lock_wait_timeout=300;innodb_io_capacity=10000;innodb_io_capacity_max=10000;innodb_buffer_pool_dump_at_shutdown=OFF;innodb_change_buffering=0;table_open_cache=20000;skip_log_bin=1;",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000;innodb_buffer_pool_size={InnodbBufferPoolSize};innodb_lock_wait_timeout=300;innodb_io_capacity=10000;innodb_io_capacity_max=10000;innodb_buffer_pool_dump_at_shutdown=OFF;innodb_change_buffering=0;table_open_cache=20000;",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }

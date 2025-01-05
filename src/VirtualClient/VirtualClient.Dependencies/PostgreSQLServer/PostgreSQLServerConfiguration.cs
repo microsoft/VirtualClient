@@ -272,6 +272,19 @@ namespace VirtualClient.Dependencies
             return diskPaths;
         }
 
+        private string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                serverIPAddress = serverInstance.IPAddress;
+            }
+
+            return serverIPAddress;
+        }
+
         /// <summary>
         /// Supported PostgreSQL Server configuration actions.
         /// </summary>
