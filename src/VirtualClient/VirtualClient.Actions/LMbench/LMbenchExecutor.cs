@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc.Razor;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -146,15 +147,36 @@ namespace VirtualClient.Actions
             {
                 await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
             }
+            else if (this.BinaryName.Equals("lat_mem_rd", StringComparison.OrdinalIgnoreCase))
+            {
+                string binaryPath = string.Empty; 
+                if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64)
+                {
+                    binaryPath = this.PlatformSpecifics.Combine(this.LMbenchPackage.Path, "bin", "x86_64-Linux");
+                }
+                else if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.Arm64)
+                {
+                    binaryPath = this.PlatformSpecifics.Combine(this.LMbenchPackage.Path, "bin", "aarch64-Linux");
+                }
+                else
+                {
+                    this.Logger.LogNotSupported(this.BinaryName, this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                }
+
+                if (!string.IsNullOrEmpty(binaryPath))
+                {
+                    using (IProcessProxy executeBinary = await this.ExecuteCommandAsync(this.PlatformSpecifics.Combine(binaryPath, this.BinaryName), this.BinaryCommandLine, binaryPath, telemetryContext, cancellationToken))
+                    {
+                        await this.LogProcessDetailsAsync(executeBinary, telemetryContext);
+                        executeBinary.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        LatMemRdMetricsParser latMemRdMetricsParser = new LatMemRdMetricsParser($"{executeBinary.StandardOutput.ToString()}{executeBinary.StandardError.ToString()}");
+                        this.CaptureMetrics(executeBinary, latMemRdMetricsParser, telemetryContext);
+                    }
+                }
+            }
             else
             {
-                using (IProcessProxy executeBinary = await this.ExecuteCommandAsync($"{this.BinaryName}", this.BinaryCommandLine, this.LMbenchPackage.Path, telemetryContext, cancellationToken))
-                {
-                    await this.LogProcessDetailsAsync(executeBinary, telemetryContext);
-                    executeBinary.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                    LatMemRdMetricsParser latMemRdMetricsParser = new LatMemRdMetricsParser(executeBinary.StandardOutput.ToString());
-                    this.CaptureMetrics(executeBinary, latMemRdMetricsParser, telemetryContext);
-                }
+                this.Logger.LogMessage($"Unsupported {nameof(this.BinaryName)}: {this.BinaryName}, supported binarienames are : null(for sumarry),lat_rd_mem", telemetryContext);
             }
         }
 

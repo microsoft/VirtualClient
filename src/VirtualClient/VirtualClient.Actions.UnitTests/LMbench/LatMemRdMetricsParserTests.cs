@@ -37,11 +37,10 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = parser.Parse();
 
             Assert.IsTrue(metrics.Count == 54);
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "LatencyArraySizeInMB_0.00098" && m.Value == 1.438));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "LatencyArraySizeInMB_0.01172" && m.Value == 1.438));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "LatencyArraySizeInMB_64.00000" && m.Value == 4.545));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "LatencyArraySizeInMB_128.00000" && m.Value == 2.537));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "LatencyArraySizeInMB_48.00000" && m.Value == 1.831));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_64_Array_512_B" && m.Value == 1.438));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_64_Array_1_KiB" && m.Value == 1.438));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_32_Array_768_KiB" && m.Value == 1.506));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_32_Array_32_MiB" && m.Value == 1.612));
         }
     }
 }

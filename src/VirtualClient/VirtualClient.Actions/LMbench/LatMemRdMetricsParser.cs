@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Sectionize by one or more empty lines.
         /// </summary>
-        private static readonly Regex LatMemRdSectionDelimiter = new Regex(@"(\r)(\n)(\s)*(\r)(\n)", RegexOptions.ExplicitCapture);
+        private static readonly Regex LatMemRdSectionDelimiter = new Regex(@$"({Environment.NewLine})(\s)*({Environment.NewLine})", RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LatMemRdMetricsParser"/> class.
@@ -36,7 +36,7 @@ namespace VirtualClient.Actions
             this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, LatMemRdSectionDelimiter);
             foreach (var section in this.Sections)
             {
-                var lines = section.Value.Split("\r\n");
+                var lines = section.Value.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
                     var values = line.Split(' ');
@@ -56,14 +56,8 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override void Preprocess()
         {
-            // Converting all CRLF(Windows EOL) to LF(Unix EOL).
-            this.PreprocessedText = Regex.Replace(this.RawText, "\r\n", "\n");
-
-            // Converting all LF to CRLF.
-            this.PreprocessedText = Regex.Replace(this.PreprocessedText, "\n", "\r\n");
-
             // Removing unnecessary starting and ending space.
-            this.PreprocessedText = this.PreprocessedText.Trim();
+            this.PreprocessedText = this.RawText.Trim();
         }
 
         private long RoundOffToNearest512Multiple(double number)
