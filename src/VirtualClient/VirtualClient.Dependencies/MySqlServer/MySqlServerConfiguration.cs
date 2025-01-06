@@ -64,6 +64,17 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
+        /// stripeddisk mount point.
+        /// </summary>
+        public string StripeDiskMountPoint
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.StripeDiskMountPoint), null);
+            }
+        }
+
+        /// <summary>
         /// Disk filter specified
         /// </summary>
         public string DiskFilter
@@ -123,13 +134,13 @@ namespace VirtualClient.Dependencies.MySqlServer
             ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
 
+            telemetryContext.AddContext(nameof(configurationState), configurationState);
+
             DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
             workloadPackage.ThrowIfNull(this.PackageName);
 
             DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.packageDirectory = package.Path;
-
-            telemetryContext.AddContext(nameof(configurationState), configurationState);
 
             if (!this.SkipInitialize)
             {
@@ -164,7 +175,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         private async Task ConfigureMySQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string serverIp = this.GetServerIpAddress();
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
+            string innoDbDirs = this.StripeDiskMountPoint != null ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
 
@@ -306,8 +317,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
+                serverIPAddress = serverInstance.IPAddress;
             }
 
             return serverIPAddress;
@@ -352,8 +362,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             /// <summary>
             /// Distributes existing database to disks on the system
             /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);
-
+            public const string DistributeDatabase = nameof(DistributeDatabase);   
         }
 
         internal class ConfigurationState

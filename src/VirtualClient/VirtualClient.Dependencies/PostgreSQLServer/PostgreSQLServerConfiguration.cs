@@ -279,8 +279,7 @@ namespace VirtualClient.Dependencies
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
+                serverIPAddress = serverInstance.IPAddress;
             }
 
             return serverIPAddress;

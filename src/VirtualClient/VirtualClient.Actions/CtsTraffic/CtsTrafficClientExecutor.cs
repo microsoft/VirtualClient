@@ -6,8 +6,10 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient;
     using VirtualClient.Common;
@@ -98,7 +100,8 @@ namespace VirtualClient.Actions
                 cancellationToken,
                 this.PollingInterval);
 
-            string targetIPAddress = this.GetServerIPAddress(cancellationToken);
+            ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
+            string targetIPAddress = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
 
             string ctsTrafficCommandArgs = $"-Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
             $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
@@ -146,17 +149,17 @@ namespace VirtualClient.Actions
             
         }
 
-        private string GetServerIPAddress(CancellationToken cancellationToken)
+        private string GetServerIpAddress()
         {
-            string targetIPAddress = "localhost";
+            string serverIPAddress = IPAddress.Loopback.ToString();
 
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                targetIPAddress = serverInstance.IPAddress;
+                serverIPAddress = serverInstance.IPAddress;
             }
 
-            return targetIPAddress;
+            return serverIPAddress;
         }
     }
 }

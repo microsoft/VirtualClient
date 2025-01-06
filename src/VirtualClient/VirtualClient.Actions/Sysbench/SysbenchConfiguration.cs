@@ -5,6 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -81,11 +84,20 @@ namespace VirtualClient.Actions
 
             this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
 
-            string command = $"python3";
+            string serverIp = "localhost";
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
+                serverIp = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
+            }
+
+            this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
+
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                SysbenchExecutor.PythonCommand,
                 arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -107,11 +119,10 @@ namespace VirtualClient.Actions
 
             this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
 
-            string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                SysbenchExecutor.PythonCommand,
                 arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,

@@ -35,6 +35,11 @@ namespace VirtualClient.Actions
         /// </summary>
         public const int SelectWorkloadDefaultTableCount = 1;
 
+        /// <summary>
+        /// const for python command.
+        /// </summary>
+        protected const string PythonCommand = "python3";
+
         private readonly IStateManager stateManager;
         private static readonly string[] SelectWorkloads =
         {
@@ -176,6 +181,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public string Action
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
+                return action?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
@@ -299,7 +316,10 @@ namespace VirtualClient.Actions
             DependencyPath package = await this.GetPackageAsync(this.PackageName, cancellationToken);
             this.SysbenchPackagePath = package.Path;
 
-            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+            if (this.Action != ClientAction.TruncateDatabase)
+            {
+                await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+            }
 
             this.InitializeApiClients(telemetryContext, cancellationToken);
 
@@ -375,6 +395,23 @@ namespace VirtualClient.Actions
             }
            
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected string GetServerIpAddress()
+        {
+            string serverIPAddress = IPAddress.Loopback.ToString();
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                serverIPAddress = serverInstance.IPAddress;
+            }
+
+            return serverIPAddress;
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -459,6 +496,27 @@ namespace VirtualClient.Actions
         {
             public const string OLTP = nameof(OLTP);
             public const string TPCC = nameof(TPCC);
+        }
+
+        /// <summary>
+        /// Supported Sysbench Client actions.
+        /// </summary>
+        internal class ClientAction
+        {
+            /// <summary>
+            /// Creates Database on MySQL server and Users on Server and any Clients.
+            /// </summary>
+            public const string PopulateDatabase = nameof(PopulateDatabase);
+
+            /// <summary>
+            /// Truncates all tables existing in database
+            /// </summary>
+            public const string TruncateDatabase = nameof(TruncateDatabase);
+
+            /// <summary>
+            /// Truncates all tables existing in database
+            /// </summary>
+            public const string RunWorkload = nameof(RunWorkload);
         }
     }
 }
