@@ -35,6 +35,11 @@ namespace VirtualClient.Actions
         /// </summary>
         public const int SelectWorkloadDefaultTableCount = 1;
 
+        /// <summary>
+        /// const for python command.
+        /// </summary>
+        protected const string PythonCommand = "python3";
+
         private readonly IStateManager stateManager;
         private static readonly string[] SelectWorkloads =
         {

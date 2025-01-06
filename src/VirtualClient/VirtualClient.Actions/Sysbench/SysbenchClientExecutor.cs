@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
@@ -26,7 +27,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchClientExecutor : SysbenchExecutor
     {
-        private const string PythonCommand = "python3";
         private string sysbenchExecutionArguments;
         private string sysbenchLoggingArguments;
         private string sysbenchPrepareArguments;
@@ -218,7 +218,7 @@ namespace VirtualClient.Actions
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchClientExecutor.PythonCommand,
+                SysbenchExecutor.PythonCommand,
                 script + this.sysbenchExecutionArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -246,7 +246,7 @@ namespace VirtualClient.Actions
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchClientExecutor.PythonCommand,
+                SysbenchExecutor.PythonCommand,
                 script + this.sysbenchExecutionArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -266,15 +266,18 @@ namespace VirtualClient.Actions
         {
             string arguments = $"{this.packageDirectory}/truncate-tables.py --dbName {this.DatabaseName}";
 
+            string serverIps = "localhost";
+
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
-                string serverIps = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
-                arguments += $" --clientIps \"{serverIps}\"";
+                serverIps = (instance.Role == ClientRole.Server) ? "localhost" : this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             }
 
+            arguments += $" --clientIps \"{serverIps}\"";
+
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchClientExecutor.PythonCommand,
+                SysbenchExecutor.PythonCommand,
                 arguments,
                 Environment.CurrentDirectory,
                 telemetryContext,
@@ -296,17 +299,20 @@ namespace VirtualClient.Actions
 
             this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
 
+            string serverIp = "localhost";
+
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
-                string serverIp = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
-                this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
+                serverIp = (instance.Role == ClientRole.Server) ? "localhost" : this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             }
+
+            this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
 
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchClientExecutor.PythonCommand,
+                SysbenchExecutor.PythonCommand,
                 arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
