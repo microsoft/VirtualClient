@@ -322,6 +322,8 @@ namespace VirtualClient
             IProfileManager profileManager = new ProfileManager();
             List <IBlobManager> blobStores = new List<IBlobManager>();
 
+            ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
+
             // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
             // through the proxy endpoint. All content/files will be uploaded through the proxy endpoint. All telemetry will be uploaded
             // the proxy endpoint (with the exception of file logging which remains as-is). This enables Virtual Client to support disconnected
@@ -341,6 +343,9 @@ namespace VirtualClient
 
                 blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString(), debugLogger));
                 blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString(), debugLogger));
+
+                // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
+                apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), this.ProxyApiUri);
             }
             else
             {
@@ -355,10 +360,12 @@ namespace VirtualClient
                 }
             }
 
+            
+
             IServiceCollection dependencies = new ServiceCollection();
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IApiManager>(apiManager);
-            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
+            dependencies.AddSingleton<IApiClientManager>();
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
             dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
