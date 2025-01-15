@@ -542,15 +542,20 @@ namespace VirtualClient.Actions
             this.scenarios.Add("bert", "Offline,Server,SingleStream");
             this.scenarios.Add("3d-unet", "Offline,SingleStream");
 
-            List<string> configs = new List<string>()
+            List<string> bertConfigs = new List<string>()
+            {
+                "default"
+            };
+
+            List<string> unetConfigs = new List<string>()
             {
                 "default"
             };
 
             this.benchmarkConfigs = new Dictionary<string, List<string>>();
 
-            this.benchmarkConfigs.Add("bert", configs);
-            this.benchmarkConfigs.Add("3d-unet", configs);
+            this.benchmarkConfigs.Add("bert", bertConfigs);
+            this.benchmarkConfigs.Add("3d-unet", unetConfigs);
         }
 
         private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)

@@ -808,7 +808,7 @@ class A100_SXM4_40GBx8(A100_SXM4_40GBx1):
 
 @ConfigRegistry.register(HarnessType.Custom, AccuracyTarget.k_99_9, PowerSetting.MaxP)
 class A100_SXM4_40GBx8_HighAccuracy(A100_SXM4_40GBx8):
-    pass
+    offline_expected_qps = 46
 
 
 @ConfigRegistry.register(HarnessType.Triton, AccuracyTarget.k_99, PowerSetting.MaxP)
