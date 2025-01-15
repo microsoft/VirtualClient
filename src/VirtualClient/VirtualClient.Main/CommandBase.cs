@@ -365,7 +365,7 @@ namespace VirtualClient
             IServiceCollection dependencies = new ServiceCollection();
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IApiManager>(apiManager);
-            dependencies.AddSingleton<IApiClientManager>();
+            dependencies.AddSingleton<IApiClientManager>(apiClientManager);
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
             dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
