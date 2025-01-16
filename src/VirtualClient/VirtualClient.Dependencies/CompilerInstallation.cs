@@ -6,7 +6,6 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -225,9 +224,18 @@ namespace VirtualClient.Dependencies
 
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
-                case LinuxDistribution.AzLinux:
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
+
+                    break;
+
+                case LinuxDistribution.AzLinux:
+                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("dnf", "install gcc gfortran -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
 
                     break;
