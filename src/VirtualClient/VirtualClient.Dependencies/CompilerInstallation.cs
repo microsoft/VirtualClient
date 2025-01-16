@@ -235,6 +235,7 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install gcc gfortran -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
 
