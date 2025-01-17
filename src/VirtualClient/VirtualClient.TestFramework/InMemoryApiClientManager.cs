@@ -217,6 +217,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Not implemented.
+        /// </summary>
+        public IEnumerable<IProxyApiClient> GetProxyApiClients()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Creates API clients from the ones that are already cached.
         /// </summary>
         /// <returns>
