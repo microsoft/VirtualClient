@@ -208,13 +208,13 @@ namespace VirtualClient.Dependencies
         private async Task InstallGccAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
+            gccVersion = (string.IsNullOrEmpty(gccVersion)) ? string.Empty : gccVersion;
+
             switch (distro.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
-                    // default to 10
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
-                    gccVersion = (string.IsNullOrEmpty(gccVersion)) ? "10" : gccVersion;
                     await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", @$"install build-essential gcc-{gccVersion} g++-{gccVersion} gfortran-{gccVersion} -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -231,6 +231,11 @@ namespace VirtualClient.Dependencies
                     break;
 
                 case LinuxDistribution.AzLinux:
+                    if (!string.IsNullOrEmpty(gccVersion))
+                    {
+                        throw new Exception("gcc version should not be supplied for AzLinux3");
+                    }
+
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -272,7 +277,7 @@ namespace VirtualClient.Dependencies
                 }
             }
         }
- 
+
         private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
