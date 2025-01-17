@@ -233,7 +233,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.AzLinux:
                     if (!string.IsNullOrEmpty(gccVersion))
                     {
-                        throw new Exception("gcc version should not be supplied for AzLinux3");
+                        throw new Exception($"gcc version should not be supplied for {distro.LinuxDistribution}");
                     }
 
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
