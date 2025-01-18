@@ -170,7 +170,7 @@ namespace VirtualClient.Actions
                         await this.LogProcessDetailsAsync(executeBinary, telemetryContext);
                         executeBinary.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                         LatMemRdMetricsParser latMemRdMetricsParser = new LatMemRdMetricsParser($"{executeBinary.StandardOutput.ToString()}{executeBinary.StandardError.ToString()}");
-                        this.CaptureMetrics(executeBinary, latMemRdMetricsParser, telemetryContext);
+                        this.CaptureMetrics(executeBinary, latMemRdMetricsParser, telemetryContext, this.BinaryName);
                     }
                 }
             }
@@ -238,7 +238,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private void CaptureMetrics(IProcessProxy process, MetricsParser metricsParser, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy process, MetricsParser metricsParser, EventContext telemetryContext, string scenario)
         {
             this.MetadataContract.AddForScenario(
                 "LMbench",
@@ -251,7 +251,7 @@ namespace VirtualClient.Actions
 
             this.Logger.LogMetrics(
                 toolName: "LMbench",
-                scenarioName: "Memory Benchmark",
+                scenarioName: scenario,
                 process.StartTime,
                 process.ExitTime,
                 metrics,
@@ -326,7 +326,7 @@ namespace VirtualClient.Actions
                     // The use of the original telemetry context created at the top
                     // is purposeful.
                     LMbenchMetricsParser lmbenchMetricsParser = new LMbenchMetricsParser(process.StandardOutput.ToString());
-                    this.CaptureMetrics(process, lmbenchMetricsParser, relatedContext);
+                    this.CaptureMetrics(process, lmbenchMetricsParser, relatedContext, "Memory Benchmark");
                 }
             });
         }
