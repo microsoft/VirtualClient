@@ -245,8 +245,8 @@ namespace VirtualClient.Actions
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
 
-            IEnumerable<Tuple<string, double>> expectedValues = FioMetricsParserTests.ExpectedReadMetrics.Select(entry => new Tuple<string, double>(entry.Key, entry.Value));
-            IEnumerable<Tuple<string, double>> actualValues = metrics.Select(m => new Tuple<string, double>(m.Name, m.Value));
+            IEnumerable<Tuple<string, double?>> expectedValues = FioMetricsParserTests.ExpectedReadMetrics.Select(entry => new Tuple<string, double?>(entry.Key, entry.Value));
+            IEnumerable<Tuple<string, double?>> actualValues = metrics.Select(m => new Tuple<string, double?>(m.Name, m.Value));
 
             CollectionAssert.AreEquivalent(expectedValues, actualValues);
         }
@@ -262,8 +262,8 @@ namespace VirtualClient.Actions
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
 
-            IEnumerable<Tuple<string, double>> expectedValues = FioMetricsParserTests.ExpectedWriteMetrics.Select(entry => new Tuple<string, double>(entry.Key, entry.Value));
-            IEnumerable<Tuple<string, double>> actualValues = metrics.Select(m => new Tuple<string, double>(m.Name, m.Value));
+            IEnumerable<Tuple<string, double?>> expectedValues = FioMetricsParserTests.ExpectedWriteMetrics.Select(entry => new Tuple<string, double?>(entry.Key, entry.Value));
+            IEnumerable<Tuple<string, double?>> actualValues = metrics.Select(m => new Tuple<string, double?>(m.Name, m.Value));
 
             CollectionAssert.AreEquivalent(expectedValues, actualValues);
         }
@@ -282,11 +282,11 @@ namespace VirtualClient.Actions
 
             // All latency metrics are emitted in milliseconds form (vs. nanoseconds).
             double expectedConversionFactor = 0.000001;
-            IEnumerable<Tuple<string, double>> expectedValues = FioMetricsParserTests.ExpectedReadMetrics.Where(entry => entry.Key.Contains("latency"))
-                .Select(entry => new Tuple<string, double>(entry.Key, entry.Value * expectedConversionFactor));
+            IEnumerable<Tuple<string, double?>> expectedValues = FioMetricsParserTests.ExpectedReadMetrics.Where(entry => entry.Key.Contains("latency"))
+                .Select(entry => new Tuple<string, double?>(entry.Key, entry.Value * expectedConversionFactor));
 
-            IEnumerable<Tuple<string, double>> actualValues = metrics.Where(m => m.Name.Contains("latency"))
-                .Select(m => new Tuple<string, double>(m.Name, m.Value));
+            IEnumerable<Tuple<string, double?>> actualValues = metrics.Where(m => m.Name.Contains("latency"))
+                .Select(m => new Tuple<string, double?>(m.Name, m.Value));
 
             Assert.IsTrue(expectedValues.Count() == actualValues.Count());
             CollectionAssert.AreEquivalent(expectedValues, actualValues);
@@ -306,11 +306,11 @@ namespace VirtualClient.Actions
 
             // All latency metrics are emitted in milliseconds form (vs. nanoseconds).
             double expectedConversionFactor = 0.000001;
-            IEnumerable<Tuple<string, double>> expectedValues = FioMetricsParserTests.ExpectedWriteMetrics.Where(entry => entry.Key.Contains("latency"))
-                .Select(entry => new Tuple<string, double>(entry.Key, entry.Value * expectedConversionFactor));
+            IEnumerable<Tuple<string, double?>> expectedValues = FioMetricsParserTests.ExpectedWriteMetrics.Where(entry => entry.Key.Contains("latency"))
+                .Select(entry => new Tuple<string, double?>(entry.Key, entry.Value * expectedConversionFactor));
 
-            IEnumerable<Tuple<string, double>> actualValues = metrics.Where(m => m.Name.Contains("latency"))
-                .Select(m => new Tuple<string, double>(m.Name, m.Value));
+            IEnumerable<Tuple<string, double?>> actualValues = metrics.Where(m => m.Name.Contains("latency"))
+                .Select(m => new Tuple<string, double?>(m.Name, m.Value));
 
             Assert.IsTrue(expectedValues.Count() == actualValues.Count());
             CollectionAssert.AreEquivalent(expectedValues, actualValues);
