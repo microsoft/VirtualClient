@@ -53,9 +53,9 @@ namespace VirtualClient.Actions
 
             Assert.AreEqual(4, metrics.Count);
             MetricAssert.Exists(metrics, "hbIR (max attempted)", 304872, "jOPS");
-            MetricAssert.Exists(metrics, "hbIR (settled)", null, "jOPS");
+            MetricAssert.Exists(metrics, "hbIR (settled)_N/A", 1);
             MetricAssert.Exists(metrics, "max-jOPS", 234751, "jOPS");
-            MetricAssert.Exists(metrics, "critical-jOPS", null , "jOPS");
+            MetricAssert.Exists(metrics, "critical-jOPS_N/A", 1);
         }
     }
 }
