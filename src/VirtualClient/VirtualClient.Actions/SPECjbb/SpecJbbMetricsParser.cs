@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
 
                     if (value.Trim().Equals("N/A", StringComparison.OrdinalIgnoreCase))
                     {
-                        this.metrics.Add(new Metric($"{name.Trim()}_N/A", 1, null, MetricRelativity.LowerIsBetter));
+                        this.metrics.Add(new Metric($"{name.Trim()}_Missing", 1, null, MetricRelativity.LowerIsBetter));
                     }
                     else
                     {

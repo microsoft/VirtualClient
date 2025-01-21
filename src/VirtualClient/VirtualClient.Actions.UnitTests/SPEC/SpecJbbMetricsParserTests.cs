@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SpecJbbParserVerifyMetricsFpRate()
+        public void SpecJbbParserVerifyMetrics()
         {
             string outputPath = Path.Combine(this.ExamplePath, "specjbb2015-C-20220301-00002-reporter.out");
             this.rawText = File.ReadAllText(outputPath);
@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
 
 
         [Test]
-        public void SpecJbbParserVerifyNanMetricsFpRate()
+        public void SpecJbbParserVerifyMissingMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string outputPath = Path.Combine(workingDirectory, "Examples", "SPECjbb", "specjbbNanOutput1.txt");
@@ -53,9 +53,9 @@ namespace VirtualClient.Actions
 
             Assert.AreEqual(4, metrics.Count);
             MetricAssert.Exists(metrics, "hbIR (max attempted)", 304872, "jOPS");
-            MetricAssert.Exists(metrics, "hbIR (settled)_N/A", 1);
+            MetricAssert.Exists(metrics, "hbIR (settled)_Missing", 1);
             MetricAssert.Exists(metrics, "max-jOPS", 234751, "jOPS");
-            MetricAssert.Exists(metrics, "critical-jOPS_N/A", 1);
+            MetricAssert.Exists(metrics, "critical-jOPS_Missing", 1);
         }
     }
 }
