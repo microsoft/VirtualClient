@@ -37,7 +37,7 @@ In this example, VC clones https://github.com/eembc/coremark.git into the runtim
       "Type": "GitRepoClone",
       "Parameters": {
           "RepoUri": "https://github.com/eembc/coremark.git",
-          "Commit": "v1.01"
+          "Commit": "v1.01",
           "PackageName": "coremark"
       }
   }

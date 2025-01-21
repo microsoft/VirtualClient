@@ -42,7 +42,15 @@ namespace VirtualClient.Actions
                     string[] tokens = metric.Split("=");
                     string name = tokens[0];
                     string value = tokens[1];
-                    this.metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
+
+                    if (value.Trim().Equals("N/A", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.metrics.Add(new Metric($"{name.Trim()}_Missing", 1, null, MetricRelativity.LowerIsBetter));
+                    }
+                    else
+                    {
+                        this.metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
+                    }
                 }
 
                 return this.metrics;
