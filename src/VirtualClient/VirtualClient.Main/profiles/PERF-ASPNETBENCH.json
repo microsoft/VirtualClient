@@ -42,6 +42,7 @@
             "Parameters": {
                 "Scenario": "CloneAspNetBenchmarksRepo",
                 "RepoUri": "https://github.com/aspnet/Benchmarks.git",
+                "Commit": "cf5b6ee",
                 "PackageName": "aspnetbenchmarks"
             }
         },
