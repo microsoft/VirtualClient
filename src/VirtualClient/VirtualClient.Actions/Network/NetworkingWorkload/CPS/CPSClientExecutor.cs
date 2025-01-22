@@ -41,7 +41,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
-            return $"-c -r {this.Connections} " +
+            return $"-c -r {this.Connections} " + $"{((this.DataTransferMode == 2) ? "-k " : string.Empty)}" +
                 $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
                 $"-i {this.DisplayInterval} -wt {this.WarmupTime} -t {this.TestDuration} " +
                 $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)}".Trim();
