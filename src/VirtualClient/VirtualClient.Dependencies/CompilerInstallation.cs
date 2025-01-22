@@ -109,7 +109,7 @@ namespace VirtualClient.Dependencies
                     {
                         await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
 
-                        if (!await this.ConfirmGccVersionInstalledAsync(cancellationToken))
+                        if (!string.IsNullOrEmpty(this.CompilerVersion) && !await this.ConfirmGccVersionInstalledAsync(cancellationToken))
                         {
                             throw new DependencyException($"'{this.CompilerName.ToLowerInvariant()}' compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
                         }
@@ -267,6 +267,9 @@ namespace VirtualClient.Dependencies
                 default:
                     throw new PlatformNotSupportedException($"This Linux distribution '{distro}' is not supported for this profile.");
             }
+
+            // Log gcc version to telemetry
+            await this.ExecuteCommandAsync("gcc", "-dumpversion", Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
         private async Task RemoveAlternativesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
