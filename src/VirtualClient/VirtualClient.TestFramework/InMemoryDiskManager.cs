@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -121,6 +122,16 @@ namespace VirtualClient
         {
             this.OnGetDisks?.Invoke();
             return Task.FromResult((IEnumerable<Disk>)this);
+        }
+
+        /// <summary>
+        /// Grabs the available data directory on the system.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="diskFilter">Disk filter to </param>
+        public Task<IEnumerable<string>> GetDiskPathsAsync(string diskFilter, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
         private void AddVolumeToDisk(Disk disk, FileSystemType fileSystemType)

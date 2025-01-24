@@ -19,6 +19,7 @@ namespace VirtualClient
     using Polly;
     using VirtualClient.Contracts;
     using VirtualClient.Properties;
+    using System.Reflection;
 
     [TestFixture]
     [Category("Unit")]
@@ -356,6 +357,24 @@ namespace VirtualClient
             {
                 this.WaitTime = TimeSpan.Zero;
             }
+        }
+
+        [Test]
+        public async Task UnixDiskManagerReturnsListofDiskPaths()
+        {
+            this.testProcess.OnHasExited = () => true;
+            this.testProcess.OnStart = () => true;
+            this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
+
+            List<string> accessPaths = new List<string>
+            {
+                "/mnt",
+            };
+
+            IEnumerable<string> diskPaths = await this.diskManager.GetDiskPathsAsync("osdisk:false", CancellationToken.None)
+                .ConfigureAwait(false);
+
+            CollectionAssert.AreEqual(diskPaths, accessPaths);
         }
     }
 }
