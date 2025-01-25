@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -219,7 +220,8 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     if (string.IsNullOrEmpty(gccVersion))
                     {
-                        await this.ExecuteCommandAsync("apt", @$"install build-essential gcc g++ gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        await this.ExecuteCommandAsync("apt", "install build-essential gcc g++ gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        await this.ExecuteCommandAsync("apt", "install make gcc g++ gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     }
                     else
                     {
