@@ -241,6 +241,7 @@ namespace VirtualClient.Dependencies
                         await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        await this.ExecuteCommandAsync("dnf", "install libnsl -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install make gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     }
                     else
