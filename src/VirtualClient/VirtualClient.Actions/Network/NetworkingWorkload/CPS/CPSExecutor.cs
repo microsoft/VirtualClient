@@ -54,6 +54,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
             this.Parameters.SetIfNotDefined(nameof(this.DelayTime), 0);
             this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
+            this.Parameters.SetIfNotDefined(nameof(this.AdditionalParams), string.Empty);
         }
 
         /// <summary>
@@ -175,6 +176,17 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 return this.Parameters.GetValue<int>(nameof(this.ConfidenceLevel), 99);
+            }
+        }
+
+        /// <summary>
+        /// gets additional optional parameters.
+        /// </summary>
+        public string AdditionalParams
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.AdditionalParams), string.Empty);
             }
         }
 
