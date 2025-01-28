@@ -235,7 +235,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task CompilerInstallationInLinuxDefaultsToGcc10()
+        public async Task CompilerInstallationInLinuxDefaultsToEmpty()
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>();
 
@@ -246,15 +246,7 @@ namespace VirtualClient.Dependencies
                 "sudo update-alternatives --remove-all gfortran",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
-                "sudo apt install build-essential gcc-10 g++-10 gfortran-10 -y --quiet",
-                "sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 " +
-                    $"--slave /usr/bin/g++ g++ /usr/bin/g++-10 " +
-                    $"--slave /usr/bin/gcov gcov /usr/bin/gcov-10 " +
-                    $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10 " +
-                    $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10 " +
-                    $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-10",
-                "sudo update-alternatives --remove-all cpp",
-                "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-10 100",
+                "sudo apt install build-essential gcc g++ gfortran -y --quiet"
             };
 
             int commandExecuted = 0;
