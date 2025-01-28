@@ -270,9 +270,6 @@ namespace VirtualClient.Dependencies
                 default:
                     throw new PlatformNotSupportedException($"This Linux distribution '{distro}' is not supported for this profile.");
             }
-
-            // Log gcc version to telemetry
-            await this.ExecuteCommandAsync("gcc", "-dumpversion", Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
         private async Task RemoveAlternativesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
