@@ -1149,6 +1149,11 @@ namespace VirtualClient.Contracts
             effectiveScenarioName = !string.IsNullOrWhiteSpace(effectiveScenarioName) ? effectiveScenarioName : "Outcome";
             effectiveToolName = !string.IsNullOrEmpty(effectiveToolName) ? effectiveToolName : component.TypeName;
 
+            if (string.IsNullOrWhiteSpace(scenarioArguments))
+            {
+                scenarioArguments = component.ScenarioArguments;
+            }
+
             if (success)
             {
                 component.Logger.LogSuccessMetric(

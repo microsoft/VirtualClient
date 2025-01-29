@@ -298,6 +298,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Defines the scenarioArguments to use for specific user defined arguments of scenario and same is used for the success or failure metrics for scenarios(e.g. --databaseSystem MySQL --benchmark OLTP --threadCount 4 --tableCount 10 --recordCount 100000 ).
+        /// </summary>
+        public string ScenarioArguments
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.ScenarioArguments), out IConvertible scenarioArguments);
+                return scenarioArguments?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.ScenarioArguments)] = value;
+            }
+        }
+
+        /// <summary>
         /// Defines the name of the package associated with the component.
         /// </summary>
         public string PackageName

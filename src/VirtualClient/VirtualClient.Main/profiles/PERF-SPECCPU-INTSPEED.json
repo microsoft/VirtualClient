@@ -57,7 +57,8 @@
                 "Scenario": "InstallCompiler",
                 "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
-                "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
+                "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel",
+                "ScenarioArguments": "--compilerName {CompilerName} --compilerVersion {CompilerVersion}"
             }
         },
         {

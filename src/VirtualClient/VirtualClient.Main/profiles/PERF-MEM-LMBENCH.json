@@ -39,7 +39,8 @@
             "Parameters": {
                 "Scenario": "InstallCompiler",
                 "CompilerName": "$.Parameters.CompilerName",
-                "CompilerVersion": "$.Parameters.CompilerVersion"
+                "CompilerVersion": "$.Parameters.CompilerVersion",
+                "ScenarioArguments": "--compilerName {CompilerName} --compilerVersion {CompilerVersion}"
             }
         },
         {
