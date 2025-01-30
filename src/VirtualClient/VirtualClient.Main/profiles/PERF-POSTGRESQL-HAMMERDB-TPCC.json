@@ -143,7 +143,6 @@
                 "VirtualUsers": "$.Parameters.VirtualUsers",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
                 "Port": "$.Parameters.Port",
-                "ScenarioArguments": "--virtualUsers {VirtualUsers} --warehouseCount {WarehouseCount}",
                 "Role": "Server"
             }
         },

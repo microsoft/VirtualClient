@@ -297,7 +297,7 @@ namespace VirtualClient.Contracts
             }
         }
 
-        /// <summary>
+        /*/// <summary>
         /// Defines the scenarioArguments to use for specific user defined arguments of scenario and same is used for the success or failure metrics for scenarios(e.g. --databaseSystem MySQL --benchmark OLTP --threadCount 4 --tableCount 10 --recordCount 100000 ).
         /// </summary>
         public string ScenarioArguments
@@ -312,7 +312,7 @@ namespace VirtualClient.Contracts
             {
                 this.Parameters[nameof(this.ScenarioArguments)] = value;
             }
-        }
+        }*/
 
         /// <summary>
         /// Defines the name of the package associated with the component.
@@ -695,11 +695,11 @@ namespace VirtualClient.Contracts
 
                             if (succeeded)
                             {
-                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime);
+                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                             }
                             else
                             {
-                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime);
+                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                             }
                         }
 
