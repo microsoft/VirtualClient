@@ -22,6 +22,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// </summary>
     public class CPSExecutor : NetworkingWorkloadToolExecutor
     {
+        private readonly object threadLock = new object();
         private IFileSystem fileSystem;
 
         /// <summary>
@@ -266,6 +267,16 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <inheritdoc/>
         protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
+            lock (this.threadLock)
+            {
+                if (this.ProcessStartRetryPolicy == null)
+                {
+                    this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz"))
+                        .Or<VirtualClientException>()
+                        .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+                }
+            }
+
             IProcessProxy process = null;
 
             EventContext relatedContext = telemetryContext.Clone()
