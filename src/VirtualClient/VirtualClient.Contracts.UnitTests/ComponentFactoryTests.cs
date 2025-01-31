@@ -130,7 +130,7 @@ namespace VirtualClient.Contracts
 
         [Test]
         [TestCase("TEST-PROFILE-4-PARALLEL.json")]
-        [TestCase("TEST-PROFILE-1-PARALLEL-LOOP.json")]
+        [TestCase("TEST-PROFILE-2-PARALLEL-LOOP.json")]
         public void ComponentFactoryAddsExpectedComponentLevelMetadataToSubComponents(string profileName)
         {
             ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
