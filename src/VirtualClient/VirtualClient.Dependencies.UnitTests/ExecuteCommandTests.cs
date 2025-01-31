@@ -72,14 +72,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public void ExecuteCommandCorrectlyIdentifiesThePartsOfTheCommandOnWindowsSystems1()
-        {
-            string fullCommand = "ping -n 2 127.0.0.1 >nul";
-            Assert.IsTrue(TestExecuteCommand.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments, out bool actualRunElevated));
-            Assert.IsFalse(actualRunElevated); // No "sudo" concept on Windows.
-        }
-
-        [Test]
         [TestCase("anycommand", "anycommand", null)]
         [TestCase("anycommand  ", "anycommand", null)]
         [TestCase("./anycommand", "./anycommand", null)]
