@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void HpcgParserVerifyMetricsFpRate()
+        public void HpcgParserVerifyMetrics()
         {
             string outputPath = Path.Combine(this.ExamplePath, "HpcgExample1.txt");
             this.rawText = File.ReadAllText(outputPath);

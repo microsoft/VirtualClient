@@ -130,6 +130,7 @@ namespace VirtualClient.Contracts
 
         [Test]
         [TestCase("TEST-PROFILE-4-PARALLEL.json")]
+        [TestCase("TEST-PROFILE-1-PARALLEL-LOOP.json")]
         public void ComponentFactoryAddsExpectedComponentLevelMetadataToSubComponents(string profileName)
         {
             ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
@@ -170,6 +171,40 @@ namespace VirtualClient.Contracts
             };
 
             CollectionAssert.AreEquivalent(subComponent2ExpectedMetadata, subComponent2.Metadata);
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-1-PARALLEL-LOOP.json")]
+        public void ComponentFactoryCreatesExpectedParallelLoopExecutionComponentsFromAnExecutionProfile(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            bool confirmed = false;
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                    Assert.IsNotNull(component);
+                    Assert.IsNotEmpty(component.Dependencies);
+                    Assert.IsNotNull(component.Parameters);
+
+                    ParallelLoopExecution parallelExecutionComponent = component as ParallelLoopExecution;
+                    if (parallelExecutionComponent != null)
+                    {
+                        Assert.IsNotEmpty(parallelExecutionComponent);
+                        Assert.IsTrue(parallelExecutionComponent.Count() == 2);
+                        Assert.IsTrue(parallelExecutionComponent.ElementAt(0) is TestExecutor);
+                        Assert.IsTrue(parallelExecutionComponent.ElementAt(1) is TestExecutor);
+                        Assert.IsTrue(parallelExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "Scenario2");
+                        Assert.IsTrue(parallelExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "Scenario3");
+                        confirmed = true;
+                    }
+                });
+            }
+
+            Assert.IsTrue(confirmed);
         }
 
         [Test]
