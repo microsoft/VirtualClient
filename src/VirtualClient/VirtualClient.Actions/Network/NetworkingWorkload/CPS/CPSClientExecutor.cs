@@ -44,7 +44,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             return $"-c -r {this.Connections} " +
                 $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
                 $"-i {this.DisplayInterval} -wt {this.WarmupTime} -t {this.TestDuration} " +
-                $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)}".Trim();
+                $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)} " +
+                $"{this.AdditionalParams}".Trim();
         }
     }
 }

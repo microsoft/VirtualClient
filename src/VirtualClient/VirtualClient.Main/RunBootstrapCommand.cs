@@ -38,7 +38,7 @@ namespace VirtualClient
         {
             RunProfileCommand profileExecutionCommand = new RunProfileCommand
             {
-                AgentId = this.AgentId,
+                ClientId = this.ClientId,
                 ContentStore = this.ContentStore,
                 Debug = this.Debug,
                 Timeout = ProfileTiming.OneIteration(),

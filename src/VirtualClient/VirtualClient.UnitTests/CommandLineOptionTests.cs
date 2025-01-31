@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.CommandLine.Parsing;
+    using System.Configuration;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -47,6 +48,36 @@ namespace VirtualClient
             }
         }
 
+        [TestCase("--not-a-valid-option", "Option is not supported")]
+        [TestCase("--packag", "Option is simply misspelled")]
+        public void VirtualClientThrowsWhenAnUnrecognizedOptionIsSuppliedOnTheCommandLine(string option, string value)
+        {
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "--profile", "PERF-ANY-PROFILE.json"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                ArgumentException error = Assert.Throws<ArgumentException>(() =>
+                {
+                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(string.Join(" ", arguments));
+                    result.ThrowOnUsageError();
+                });
+
+                Assert.IsTrue(error.Message.StartsWith(
+                    $"Invalid Usage. The following command line options are not supported: {option}", 
+                    StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
         [Test]
         [TestCase("--agent-id", "AgentID")]
         [TestCase("--agentId", "AgentID")]
@@ -54,7 +85,7 @@ namespace VirtualClient
         [TestCase("--clientId", "AgentID")]
         [TestCase("--clientid", "AgentID")]
         [TestCase("--client", "AgentID")]
-        [TestCase("--a", "AgentID")]
+        [TestCase("--c", "AgentID")]
         [TestCase("--port", "4501")]
         [TestCase("--api-port", "4501")]
         [TestCase("--clean", null)]
@@ -75,7 +106,6 @@ namespace VirtualClient
         [TestCase("--debug", null)]
         [TestCase("--verbose", null)]
         [TestCase("--dependencies", null)]
-        [TestCase("--event-hub-connection-string", "Endpoint=ConnectionString")]
         [TestCase("--eventHubConnectionString", "Endpoint=ConnectionString")]
         [TestCase("--eventhubconnectionstring", "Endpoint=ConnectionString")]
         [TestCase("--event-hub", "Endpoint=ConnectionString")]
@@ -91,7 +121,7 @@ namespace VirtualClient
         [TestCase("--ff", null)]
         [TestCase("--flush-wait", "00:10:00")]
         [TestCase("--exit-wait", "00:10:00")]
-        [TestCase("--fw", "00:10:00")]
+        [TestCase("--wait", "00:10:00")]
         [TestCase("--i", "3")]
         [TestCase("--iterations", "3")]
         [TestCase("--layout-path", "C:\\any\\path\\to\\layout.json")]
@@ -99,6 +129,9 @@ namespace VirtualClient
         [TestCase("--layoutpath", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--lp", "C:\\any\\path\\to\\layout.json")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--ll", "3")]
         [TestCase("--log-level", "2")]
         [TestCase("--ll", "3")]
         [TestCase("--log-level", "Information")]
@@ -111,6 +144,8 @@ namespace VirtualClient
         [TestCase("--ltf", null)]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
         [TestCase("--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
@@ -122,6 +157,8 @@ namespace VirtualClient
         [TestCase("--sd", "1234")]
         [TestCase("--scenarios", "Scenario1")]
         [TestCase("--sc", "Scenario1")]
+        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
+        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
         [TestCase("--t", "1440")]
@@ -146,6 +183,8 @@ namespace VirtualClient
                 Assert.DoesNotThrow(() =>
                 {
                     ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(string.Join(" ", arguments));
+
                     Assert.IsFalse(result.Errors.Any());
                     result.ThrowOnUsageError();
                 }, message: $"Option '{option}' is not supported.");
@@ -160,7 +199,7 @@ namespace VirtualClient
         [TestCase("--clientid", "AgentID")]
         [TestCase("--client-id", "AgentID")]
         [TestCase("--client", "AgentID")]
-        [TestCase("--a", "AgentID")]
+        [TestCase("--c", "AgentID")]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "logs,packages,state")]
@@ -176,6 +215,8 @@ namespace VirtualClient
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
         [TestCase("--ll", "3")]
         [TestCase("--log-level", "Information")]
@@ -186,11 +227,15 @@ namespace VirtualClient
         [TestCase("--lr", "10.00:00:00")]
         [TestCase("--log-to-file", null)]
         [TestCase("--ltf", null)]
+        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
         [TestCase("--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
+        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
+        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
         public void VirtualClientBootstrapCommandSupportsAllExpectedOptions(string option, string value)
@@ -220,18 +265,78 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--clean", null)]
+        [TestCase("--clean", "all")]
+        [TestCase("--clean", "logs")]
+        [TestCase("--clean", "packages")]
+        [TestCase("--clean", "state")]
+        [TestCase("--clean", "logs,packages,state")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--ll", "3")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("--ll", "Error")]
+        [TestCase("--log-retention", "14400")]
+        [TestCase("--log-retention", "10.00:00:00")]
+        [TestCase("--lr", "14400")]
+        [TestCase("--lr", "10.00:00:00")]
+        public void VirtualClientCleanCommandSupportsAllExpectedOptions(string option, string value)
+        {
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "clean"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    Assert.IsFalse(result.Errors.Any());
+                    result.ThrowOnUsageError();
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
+        [TestCase("convert --p=ANY-PROFILE.json --path=C:\\Any\\Path")]
+        [TestCase("convert --profile=ANY-PROFILE.json --output=C:\\Any\\Path")]
+        [TestCase("convert --profile=ANY-PROFILE.json --output-path=C:\\Any\\Path")]
+        public void VirtualClientConvertCommandSupportsAllExpectedOptions(string commandLine)
+        {
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            {
+                string[] arguments = commandLine.Split(" ");
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = Program.SetupCommandLine(arguments, cancellationSource).Build().Parse(arguments);
+                    Assert.IsFalse(result.Errors.Any());
+                    result.ThrowOnUsageError();
+                });
+            }
+        }
+
+        [Test]
         [TestCase("--port", "4501")]
         [TestCase("--api-port", "4501")]
         [TestCase("--monitor", null)]
         [TestCase("--mon", null)]
         [TestCase("--ip-address", "10.0.0.128")]
-        [TestCase("--ipAddress", "10.0.0.128")]
-        [TestCase("--ipaddress", "10.0.0.128")]
         [TestCase("--ip", "10.0.0.128")]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "logs,packages,state")]
         [TestCase("--debug", null)]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
         [TestCase("--ll", "3")]
         [TestCase("--log-level", "Information")]
@@ -242,6 +347,8 @@ namespace VirtualClient
         [TestCase("--lr", "10.00:00:00")]
         [TestCase("--log-to-file", null)]
         [TestCase("--ltf", null)]
+        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
+        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         public void VirtualClientRunApiCommandSupportsAllExpectedOptions(string option, string value)
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
@@ -292,10 +399,10 @@ namespace VirtualClient
                         "--system", "Azure",
                         "--metadata", "Prop1=Value1,,,Prop2=Value2",
                         "--parameters", "Param1=Value1,,,Param2=Value2",
-                        "--contentStore", "BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123",
-                        "--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b",
-                        "--agentId", "007",
-                        "--experimentId", "123456",
+                        "--content-store", "BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123",
+                        "--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b",
+                        "--client-id", "007",
+                        "--experiment-id", "123456",
                         "--debug"
                     },
                     result.Tokens.Select(t => t.Value));
