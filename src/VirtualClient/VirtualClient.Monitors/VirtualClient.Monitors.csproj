@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Monitors</AssemblyName>
         <RootNamespace>VirtualClient.Monitors</RootNamespace>
         <NoWarn>CA1416;CA2227,SA1116</NoWarn>

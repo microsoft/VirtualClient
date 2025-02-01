@@ -7,12 +7,15 @@
     <ItemGroup>
         <PackageReference Include="AsyncFixer" Version="1.6.0">
             <PrivateAssets>All</PrivateAssets>
+            <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0">
             <PrivateAssets>All</PrivateAssets>
+            <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
         <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
             <PrivateAssets>All</PrivateAssets>
+            <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
     </ItemGroup>
 </Project>

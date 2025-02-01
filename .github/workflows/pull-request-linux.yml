@@ -31,7 +31,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 8.0.101
+        dotnet-version: 9.0.100
 
     - name: Add permission to run shell
       run: chmod -R +x *.sh

@@ -48,14 +48,6 @@ namespace VirtualClient.Actions
         public void LAPACKParserVerifyMetrics()
         {
             IList<Metric> metrics = this.testParser.Parse();
-            this.testParser.LINSingleResult.PrintDataTableFormatted();
-            this.testParser.LINDoubleResult.PrintDataTableFormatted();
-            this.testParser.LINComplexResult.PrintDataTableFormatted();
-            this.testParser.LINComplexDoubleResult.PrintDataTableFormatted();
-            this.testParser.EIGSingleResult.PrintDataTableFormatted();
-            this.testParser.EIGDoubleResult.PrintDataTableFormatted();
-            this.testParser.EIGComplexResult.PrintDataTableFormatted();
-            this.testParser.EIGComplexDoubleResult.PrintDataTableFormatted();
             MetricAssert.Exists(metrics, "compute_time_LIN_Single_Precision", 4.02, "seconds");
             MetricAssert.Exists(metrics, "compute_time_LIN_Double_Precision", 4.11, "seconds");
             MetricAssert.Exists(metrics, "compute_time_LIN_Complex", 10.5, "seconds");

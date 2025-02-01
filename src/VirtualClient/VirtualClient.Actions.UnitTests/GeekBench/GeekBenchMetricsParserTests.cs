@@ -29,8 +29,6 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBenchParserVerifySingleCoreResult()
         {
-            this.testParser.SingleCoreResult.PrintDataTableFormatted();
-
             Assert.AreEqual(5, this.testParser.SingleCoreResult.Columns.Count);
         }
 
