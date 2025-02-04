@@ -678,11 +678,11 @@ namespace VirtualClient.Contracts
 
                             if (succeeded)
                             {
-                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime);
+                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                             }
                             else
                             {
-                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime);
+                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                             }
                         }
 
