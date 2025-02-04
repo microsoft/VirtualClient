@@ -182,7 +182,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
-            // string serverIp = this.GetLayoutClientInstances(ClientRole.Server, false).FirstOrDefault()?.IPAddress ?? IPAddress.Loopback.ToString();
+
             string innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";

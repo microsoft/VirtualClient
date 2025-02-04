@@ -158,6 +158,11 @@ There are a lot of moving parts to this workload that allows for both out-of-box
   configuration within the same profile or system.
 
   VC now supports truncating tables and populating the table again. Following are changes to be made in profile.
+
+  **Note:** Use TruncateDatabase with caution. 
+  
+  ** **DO NOT CHANGE THE SIZE OF DATABASE FROM ACTION TO ACTION. IF DEALING WITH LARGE DATABASES RE-POPULATING DATABASE WOULD TAKE A LOT OF TIME AND IS NOT ALWAYS RECOMMENDED** **
+
   ``` bash
   {
             "Type": "SysbenchClientExecutor",
