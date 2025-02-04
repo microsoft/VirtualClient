@@ -100,8 +100,9 @@ namespace VirtualClient.Actions
                 cancellationToken,
                 this.PollingInterval);
 
-            ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
-            string targetIPAddress = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
+            string targetIPAddress = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                                    .FirstOrDefault()?.IPAddress
+                                    ?? "localhost";
 
             string ctsTrafficCommandArgs = $"-Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
             $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
@@ -147,19 +148,6 @@ namespace VirtualClient.Actions
                 }
             }
             
-        }
-
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                serverIPAddress = serverInstance.IPAddress;
-            }
-
-            return serverIPAddress;
         }
     }
 }

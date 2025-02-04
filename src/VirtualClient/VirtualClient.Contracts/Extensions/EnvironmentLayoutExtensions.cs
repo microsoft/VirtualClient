@@ -6,7 +6,6 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
 
     /// <summary>
     /// Extensions for <see cref="EnvironmentLayout"/> instances.

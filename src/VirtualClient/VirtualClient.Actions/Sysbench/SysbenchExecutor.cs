@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Sysbench workload executor.
@@ -34,6 +35,11 @@ namespace VirtualClient.Actions
         /// Default table count for a 'select' workload type
         /// </summary>
         public const int SelectWorkloadDefaultTableCount = 1;
+
+        /// <summary>
+        /// const for python command.
+        /// </summary>
+        protected const string PythonCommand = "python3";
 
         private readonly IStateManager stateManager;
         private static readonly string[] SelectWorkloads =
@@ -393,20 +399,40 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// 
+        /// Add metrics to telemtry.
         /// </summary>
-        /// <returns></returns>
-        protected string GetServerIpAddress()
+        /// <param name="arguments"></param>
+        /// <param name="process"></param>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        protected void AddMetric(string arguments, IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
+            if (!cancellationToken.IsCancellationRequested)
             {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                serverIPAddress = serverInstance.IPAddress;
-            }
+                this.MetadataContract.AddForScenario(
+                    "Sysbench",
+                    process.FullCommand(),
+                    toolVersion: null);
 
-            return serverIPAddress;
+                this.MetadataContract.Apply(telemetryContext);
+
+                string text = process.StandardOutput.ToString();
+
+                List<Metric> metrics = new List<Metric>();
+                double duration = (process.ExitTime - process.StartTime).TotalMinutes;
+                metrics.Add(new Metric("PopulateDatabaseTime_Minutes ", duration, "minutes", MetricRelativity.LowerIsBetter));
+
+                this.Logger.LogMetrics(
+                    toolName: "Sysbench",
+                    scenarioName: this.MetricScenario ?? this.Scenario,
+                    process.StartTime,
+                    process.ExitTime,
+                    metrics,
+                    null,
+                    scenarioArguments: arguments,
+                    this.Tags,
+                    telemetryContext);
+            }
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)

@@ -64,13 +64,18 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
-        /// stripeddisk mount point.
+        /// stripedisk mount point.
         /// </summary>
         public string StripeDiskMountPoint
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.StripeDiskMountPoint), null);
+                if (this.Parameters.TryGetValue(nameof(this.StripeDiskMountPoint), out IConvertible stripediskmountpoint) && stripediskmountpoint != null)
+                {
+                    return stripediskmountpoint.ToString();
+                }
+
+                return string.Empty;
             }
         }
 
@@ -174,8 +179,11 @@ namespace VirtualClient.Dependencies.MySqlServer
 
         private async Task ConfigureMySQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string serverIp = this.GetServerIpAddress();
-            string innoDbDirs = this.StripeDiskMountPoint != null ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
+            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                                    .FirstOrDefault()?.IPAddress
+                                    ?? IPAddress.Loopback.ToString();
+            // string serverIp = this.GetLayoutClientInstances(ClientRole.Server, false).FirstOrDefault()?.IPAddress ?? IPAddress.Loopback.ToString();
+            string innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
 
@@ -308,19 +316,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024);
             
             return bufferSizeInMegaBytes.ToString();
-        }
-
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                serverIPAddress = serverInstance.IPAddress;
-            }
-
-            return serverIPAddress;
         }
 
         private string GetClientIpAddresses()

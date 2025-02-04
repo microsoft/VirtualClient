@@ -82,20 +82,17 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
-            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
+            string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            this.sysbenchPrepareArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance instance = this.Layout.GetClientInstance(this.AgentId);
-                string serverIp = (instance.Role == ClientRole.Server) ? "localhost" : this.GetServerIpAddress();
-                this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
-            }
+            string serverIp = "localhost";
 
-            string command = $"python3";
+            this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
+
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                SysbenchExecutor.PythonCommand,
                 arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -105,6 +102,8 @@ namespace VirtualClient.Actions
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+
+                    this.AddMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
                 }
             }
         }
@@ -115,13 +114,13 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
-            this.sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount} --password {this.SuperUserPassword}";
+            string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount}";
+            this.sysbenchPrepareArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
-            string command = $"python3";
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                SysbenchExecutor.PythonCommand,
                 arguments + this.sysbenchPrepareArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
@@ -131,6 +130,8 @@ namespace VirtualClient.Actions
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+
+                    this.AddMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
                 }
             }
         }
