@@ -192,13 +192,19 @@ namespace VirtualClient.Actions
 
             this.HPLDirectory = workloadPackage.Path;
 
-            await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
-
-            await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
-            await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
+            switch (this.PerformanceLibrary)
+            {
+                case "AMD":
+                    break;
+                default:
+                    await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
+                    await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
+                    await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
+                    await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
+                    await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
+                    break;
+            }
 
         }
 
@@ -210,43 +216,68 @@ namespace VirtualClient.Actions
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-
-                this.SetParameters();
-                await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
                 IProcessProxy process;
 
-                if (this.cpuInfo.IsHyperthreadingEnabled)
+                switch (this.PerformanceLibrary)
                 {
-                    this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses} --allow-run-as-root";
+                    case "AMD":
+                        DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                        .ConfigureAwait(false);
+                        string amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD");
+                        await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(amdPerfLibrariesPath, $"run.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                        await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(amdPerfLibrariesPath, $"xhpl"), this.Platform, cancellationToken).ConfigureAwait(false);
+                        string username = this.GetLoggedInUserName();
+                        await this.ExecuteCommandAsync("./run.sh", "-c", amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true, username: username);
+                        await this.ConfigureDatFileAsync(telemetryContext, cancellationToken);
+                        process = await this.ExecuteCommandAsync("./run.sh", amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true, username: username);
+
+                        this.CaptureMetrics(process.StandardOutput.ToString(), $"./run.sh", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                        break;
+                    default:
+                        await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        this.SetParameters();
+                        await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
+                        if (this.cpuInfo.IsHyperthreadingEnabled)
+                        {
+                            this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses} --allow-run-as-root";
+                        }
+                        else
+                        {
+                            this.commandArguments = $"-np {this.NumberOfProcesses} --allow-run-as-root";
+                        }
+
+                        if (this.BindToCores)
+                        {
+                            this.commandArguments += $" --bind-to core";
+                        }
+
+                        process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+
+                        using (process)
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true)
+                                    .ConfigureAwait();
+
+                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+
+                            }
+                        }
+
+                        break;
                 }
-                else
-                {
-                    this.commandArguments = $"-np {this.NumberOfProcesses} --allow-run-as-root";
-                }
-
-                if (this.BindToCores)
-                {
-                    this.commandArguments += $" --bind-to core";
-                }
-
-                process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
-
-                using (process)
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true)
-                            .ConfigureAwait();
-
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
-
-                    }
-                }
+                
             }
+        }
+
+        private string GetLoggedInUserName()
+        {
+            return this.systemManagement.GetLoggedInUserName();
         }
 
         private void SetParameters()
@@ -270,7 +301,7 @@ namespace VirtualClient.Actions
 
         private void ThrowIfPlatformIsNotSupported()
         {
-            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.PerformanceLibrary != null)
+            if (this.Platform != PlatformID.Unix | ((this.CpuArchitecture == Architecture.Arm64 && !(this.PerformanceLibrary == "ARM" | string.IsNullOrEmpty(this.PerformanceLibrary))) | (this.CpuArchitecture == Architecture.X64 && !(this.PerformanceLibrary == "AMD" | string.IsNullOrEmpty(this.PerformanceLibrary)))))
             {
                 throw new WorkloadException(
                     $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +
@@ -414,51 +445,78 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureDatFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string hplDatFile = this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC", "HPL.dat");
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of problems sizes", $"1   # of problems sizes", cancellationToken);
+            switch (this.PerformanceLibrary)
+            {
+                case "ARM":
+                    string hplDatFile = this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC", "HPL.dat");
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of problems sizes", $"1   # of problems sizes", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+Ns", $"{this.ProblemSizeN} Ns", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+Ns", $"{this.ProblemSizeN} Ns", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of NBs", $"1   # of NBs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of NBs", $"1   # of NBs", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+NBs", $"{this.BlockSizeNB} NBs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+NBs", $"{this.BlockSizeNB} NBs", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of process grids", $"1   # of process grids", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of process grids", $"1   # of process grids", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+Ps", $"{this.ProcessRows}  Ps", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+Ps", $"{this.ProcessRows}  Ps", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+Qs", $"{this.ProcessColumns}  Qs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+Qs", $"{this.ProcessColumns}  Qs", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of recursive stopping criterium", $"1   # of recursive stopping criterium", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of recursive stopping criterium", $"1   # of recursive stopping criterium", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+PFACTs", $"0    PFACTs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+PFACTs", $"0    PFACTs", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of panel fact", $"1   # of panel fact", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of panel fact", $"1   # of panel fact", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+NBMINs", $"1  NBMINs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+NBMINs", $"1  NBMINs", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of panels in recursion", $"1   # of panels in recursion", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of panels in recursion", $"1   # of panels in recursion", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+NDIVs", $"2   NDIVs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+NDIVs", $"2   NDIVs", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+# of recursive panel fact.", $"1   # of recursive panel fact.", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+# of recursive panel fact.", $"1   # of recursive panel fact.", cancellationToken);
 
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+RFACTs", $"2   RFACTs", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            hplDatFile, @"([0-9]+\s+)+RFACTs", $"2   RFACTs", cancellationToken);
+                    break;
+                case "AMD":
+                    if (!string.IsNullOrEmpty(this.ProblemSizeN) && !string.IsNullOrEmpty(this.BlockSizeNB))
+                    {
+                        DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                        .ConfigureAwait(false);
+                        string amdDatFilePath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD", "HPL.dat");
+                        await this.fileSystem.File.ReplaceInFileAsync(
+                                amdDatFilePath, @"([0-9]+\s+)+# of problems sizes", $"1   # of problems sizes", cancellationToken);
+
+                        await this.fileSystem.File.ReplaceInFileAsync(
+                                amdDatFilePath, @"([0-9]+\s+)+Ns", $"{this.ProblemSizeN} Ns", cancellationToken);
+
+                        await this.fileSystem.File.ReplaceInFileAsync(
+                                amdDatFilePath, @"([0-9]+\s+)+# of NBs", $"1   # of NBs", cancellationToken);
+
+                        await this.fileSystem.File.ReplaceInFileAsync(
+                                amdDatFilePath, @"([0-9]+\s+)+NBs", $"{this.BlockSizeNB} NBs", cancellationToken);
+                    }
+
+                    break;
+                default:
+                    break;
+            }       
 
         }
 

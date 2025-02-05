@@ -190,6 +190,61 @@ namespace VirtualClient.Actions
             }
         }
 
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithAMDPerformanceLibrariesOnUbuntuX64Platform(PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            this.fixture.Parameters["PerformanceLibrary"] = "AMD";
+
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
+            {
+                List<string> expectedCommands = new List<string>()
+                {
+                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "AMD", "run.sh")}",
+                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "AMD", "xhpl")}",
+                    $"sudo -u {this.GetLoggedInUserName()} ./run.sh -c",
+                    $"sudo -u {this.GetLoggedInUserName()} ./run.sh",
+                };
+
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove(expectedCommands[0]);
+                    if (arguments == $"-u {this.GetLoggedInUserName()} ./run.sh")
+                    {
+                        this.fixture.Process.StandardOutput.Append(this.rawString);
+                    }
+
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.AreEqual(expectedCommands.Count, 0);
+            }
+        }
+
+        private string GetLoggedInUserName()
+        {
+            string loggedInUserName = Environment.UserName;
+            if (string.Equals(loggedInUserName, "root"))
+            {
+                loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
+                {
+                    loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
+                    if (string.IsNullOrEmpty(loggedInUserName))
+                    {
+                        throw new EnvironmentSetupException($"'USER' Environment variable is set to root and 'SUDO_USER' Environment variable is either root or null." +
+                            "The required environment variable 'VC_SUDO_USER' is expected to be set to a valid non-empty value." +
+                            "Please ensure that the necessary environment variables are configured properly for the execution environment.", ErrorReason.EnvironmentIsInsufficent);
+                    }
+                }
+            }
+
+            return loggedInUserName;
+        }
+
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.fixture.Setup(platform, architecture);
