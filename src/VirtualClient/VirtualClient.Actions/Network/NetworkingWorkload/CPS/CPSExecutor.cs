@@ -32,6 +32,19 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
+                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+
+            this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
+            this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
+            this.Parameters.SetIfNotDefined(nameof(this.DisplayInterval), 10);
+            this.Parameters.SetIfNotDefined(nameof(this.ConnectionsPerThread), 100);
+            this.Parameters.SetIfNotDefined(nameof(this.MaxPendingRequestsPerThread), 100);
+            this.Parameters.SetIfNotDefined(nameof(this.Port), 7201);
+            this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
+            this.Parameters.SetIfNotDefined(nameof(this.DelayTime), 0);
+            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
+            this.Parameters.SetIfNotDefined(nameof(this.AdditionalParams), string.Empty);
         }
 
         /// <summary>
@@ -44,7 +57,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.fileSystem = dependencies.GetService<IFileSystem>();
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+.WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
 
             this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
             this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
@@ -267,16 +280,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <inheritdoc/>
         protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            lock (this.threadLock)
-            {
-                if (this.ProcessStartRetryPolicy == null)
-                {
-                    this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz"))
-                        .Or<VirtualClientException>()
-                        .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-                }
-            }
-
             IProcessProxy process = null;
 
             EventContext relatedContext = telemetryContext.Clone()
