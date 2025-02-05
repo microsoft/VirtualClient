@@ -224,9 +224,10 @@ custom environment variables on the system to provide Virtual Client with the al
 locations (normal operation) as well as within these alternate locations.
 
 #### Supported Environment Variables
-The following environment variables can be used to define alternate locations for dependencies:
+The following environment variables can be used to define alternate locations for dependencies. See the 
+[Usage Examples](https://microsoft.github.io/VirtualClient/docs/guides/0200-usage-examples/) documentation for the full set of supported environment variables.
 
-* **VC_LIBRARY_PATH**  
+* **VC_LIBRARY_PATH**   
   Defines 1 or more path locations where extensions assemblies/.dlls exist and that should be loaded at runtime. Multiple directory paths can be defined separated
   by a semi-colon ';' character (similar to the Windows and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only
   for extension assemblies/.dlls. Recursive subdirectory searches are not supported.
@@ -252,7 +253,7 @@ The following environment variables can be used to define alternate locations fo
 
 * **VC_PACKAGES_DIR**  
   Defines the directory path where Virtual Client packages (including extensions packages) exist and to where packages should be downloaded. This overrides the
-  default packages location (e.g. /packages) such that it will not be used for package searches or downloads. The must be a single directory. Recursive subdirectory searches are not supported.
+  default packages location (e.g. \<application-dir\>/packages) such that it will not be used for package searches or downloads. The must be a single directory. Recursive subdirectory searches are not supported.
 
   ``` bash
   # Example Folder Contents:

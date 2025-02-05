@@ -3,8 +3,8 @@
 --system=Azure
 --metadata:Prop1=Value1,,,Prop2=Value2
 --parameters:Param1=Value1,,,Param2=Value2
---contentStore=BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123
---packageStore=https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b
---agentId=007
---experimentId=123456
+--content-store=BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123
+--package-store=https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b
+--client-id=007
+--experiment-id=123456
 --debug

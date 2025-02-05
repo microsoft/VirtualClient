@@ -7,7 +7,7 @@ One of the first things that users of the Virtual Client want to do is to run th
 basic example where we are supplying the minimum number of parameters to the Virtual Client. The '--debug' option instructs the
 Virtual Client to output verbose tracing information to the console.
 
-```
+``` bash
 # Run a COREMARK workload profile. The workload package itself containing the COREMARK executables will
 # be downloaded from the VC workload package store.
 #
@@ -30,15 +30,15 @@ provides examples of a valid environment layout for that particular workload pro
 
 * [Environment Layouts](./0020-client-server.md)
 
-```
+``` bash
 # Run the workload using the default port for hosting the REST API
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --layoutPath=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --layout-path=C:\any\path\to\layout.json
 
 # Run the workload using a specific port for hosting the REST API
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501 --packages="{BlobStoreConnectionString|SAS URI}" --layoutPath=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501 --packages="{BlobStoreConnectionString|SAS URI}" --layout-path=C:\any\path\to\layout.json
 
 # Run the workload using a specific port for hosting the REST API different for the Client and Server roles
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501/Client,4502/Server --packages="{BlobStoreConnectionString|SAS URI}" --layoutPath=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501/Client,4502/Server --packages="{BlobStoreConnectionString|SAS URI}" --layout-path=C:\any\path\to\layout.json
 ```
 
 ## Scenario: Pass in Metadata for Correlation
@@ -46,8 +46,8 @@ The Virtual Client is designed to be generally agnostic to the nomenclature of t
 the application can be correlated with the data captured by the automation system executing it, metadata can be supplied on the command line. Every metadata property emitted
 will be included in ALL metrics, counters, logs etc... telemetry that is emitted by the application.
 
-```
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
+``` bash
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
 ```
 
 ## Scenario: Instruct the Application to Fail Fast
@@ -56,15 +56,15 @@ for a non-terminal reason. Users may want to instruct the application to promptl
 Note that this generally refers to 'Actions' in the profile. The application always fails fast on the failure of 'Dependencies'. 'Monitors' are
 typically implemented to handle exceptions due to the requirement they continue to operate in the background even on failure.
 
-```
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --fail-fast
+``` bash
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --fail-fast
 ```
 
 ## Scenario: Write the Output of Processes to the File System
 Virtual Client runs a wide range of workloads, monitors and dependency handlers when executing a given profile. The following examples show
 how to instruct the application to log the output of processes to files in the logs directory on the file system.
 
-```
+``` bash
 # Log the workload process output to the file system.
 #
 # On Windows
@@ -82,7 +82,7 @@ in order to minimize the overall size of the log content on the file system (...
 a user might want to perform a "reset" to force Virtual Client to treat a given profile as a "first run" again. In this scenario, the
 user would want to cleanup the local state files. The following examples show how to perform an initial cleanup on the system.
 
-```
+``` bash
 # Perform a full clean. This will remove ALL log files/directories, any packages previously downloaded minus
 # those that are "built-in" or part of the Virtual Client package itself and any state files previously written.
 # This essentially resets Virtual Client back to the state it was in before the first run on the system.
@@ -113,9 +113,9 @@ Note that the Virtual Client does have a set of explicit expectations for how th
 
 * [Event Hub Integration](./0610-integration-event-hub.md) 
 
-```
+``` bash
 # To send data to an Event Hub, supply a connection string to the Event Hub namespace on the command line.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{EventHubConnectionString}"
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --event-hub="{EventHubConnectionString}"
 ```
 
 ## Scenario: Upload Log Files to a Content Store
@@ -126,7 +126,7 @@ on monitor profiles below for additional details on which profiles support this.
 * [Blob Store Support](./0600-integration-blob-storage.md)
 * [Monitor Profiles](../monitors/0200-monitor-profiles.md)
 
-```
+``` bash
 VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
 ```
 
@@ -134,26 +134,139 @@ VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobSto
 Virtual Client emits quite a bit of operational traces while running in order to provide good information to the user. There are times when this
 amount of information is not desirable. The logging level (or severity) can be changed on the command line. The default logging level is 'Information'.
 
-```
+``` bash
 # Emit traces for 'Warning' level and above only.
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Warning
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Warning
 
 # Emit traces for 'Error' level and above only.
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Error
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Error
 
 # Emit traces for 'Critical' level and above only.
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Critical
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Critical
 ```
 
 Correspondingly, there are times when more operational traces are desirable (e.g. for debugging scenarios). The default logging level is 'Information'.
 
-```
+``` bash
 # Emit all traces (...the most verbose option)
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Trace
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Trace
 
 # Emit traces for 'Debug' level and above.
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Debug
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Debug
 
 # Emit traces for 'Information' level and above only.
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
 ```
+
+## Scenario: Change the Default Location for Log Files
+Virtual Client writes log files to the application `/logs` folder by default. However, the user can change this by defining an alternate
+path on the command line or via an environment variable. See the section below on 'Supported Environment Variables' for more information on options
+available.
+
+``` bash
+# Define an alternate location for log files on the command line.
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-dir="/home/user/logs"
+
+# Define an alternate location for log files using an environment variable.
+/home/user/virtualclient$ export VC_LOGS_DIR="/home/user/logs"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
+```
+
+## Scenario: Change the Default Location for Package Downloads
+Virtual Client downloads packages to the application `/packages` folder by default. However, the user can change this by defining an alternate
+path on the command line or via an environment variable. See the section below on 'Supported Environment Variables' for more information on options
+available.
+
+``` bash
+# Define an alternate location for package downloads on the command line.
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --package-dir="/home/user/packages"
+
+# Define an alternate location for package downloads using an environment variable.
+/home/user/virtualclient$ export VC_PACKAGES_DIR="/home/user/packages"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
+```
+
+## Supported Environment Variables
+The Virtual Client application supports a small set of environment variables that allow users to provide information to the application. Each of 
+these environment variables has a corresponding command line option to enable support for a range of use cases. The following environment variables
+can be used to define alternate locations for dependencies:
+
+* **VC_LIBRARY_PATH**  
+  Defines 1 or more path locations where extensions assemblies/.dlls exist and that should be loaded at runtime. Multiple directory paths can be defined separated
+  by a semi-colon ';' character (similar to the Windows and Linux `PATH` environment variable). Note that Virtual Client will search the immediate directory only
+  for extension assemblies/.dlls. Recursive subdirectory searches are not supported.
+
+  ``` bash
+  # Example Folder Contents:
+  # /VirtualClient.Extensions.Actions
+  #      /VirtualClient.Extensions.Actions.dll
+  #      /VirtualClient.Extensions.Actions.pdb
+  #
+  # /VirtualClient.Extensions.Monitors
+  #      /VirtualClient.Extensions.Monitors.dll
+  #      /VirtualClient.Extensions.Monitors.pdb
+  #
+  # On Windows systems
+  C:\VirtualClient> set VC_LIBRARY_PATH=C:\Extensions\VirtualClient.Extensions.Actions
+  C:\VirtualClient> set VC_LIBRARY_PATH=C:\Extensions\VirtualClient.Extensions.Actions;C:\Extensions\VirtualClient.Extensions.Monitors
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_LIBRARY_PATH=/home/user/Extensions/VirtualClient.Extensions.Actions
+  /home/user/virtualclient$ export VC_LIBRARY_PATH=/home/user/Extensions/VirtualClient.Extensions.Actions;/home/user/Extensions/VirtualClient.Extensions.Monitors
+  ```
+
+* **VC_LOGS_DIR**  
+  Defines an alternate directory path to which Virtual Client should write log files. This overrides the default logs location 
+  (e.g. \<application-dir\>/logs).
+
+  ``` bash
+  # On Windows systems
+  C:\VirtualClient> set VC_LOGS_DIR=C:\Users\User1\Logs
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_LOGS_DIR="/home/user/logs"
+
+  # Note that the logs directory can be defined on the command line as well. Log directories
+  # defined on the command line take priority over those defined by the environment variable.
+  /home/user/virtualclient$ ./VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=120 --log-dir="/home/user/logs"
+  ```
+
+* **VC_PACKAGES_DIR**  
+  Defines an alternate directory path where Virtual Client packages (including extensions packages) exist and to where packages should be downloaded. This overrides the
+  default packages location (e.g. \<application_dir\>/packages) such that it will not be used for package searches or downloads. The must be a single directory. Recursive subdirectory searches 
+  are not supported.
+
+  ``` bash
+  # Example Folder Contents:
+  # /custom_packages
+  #      /workload_a.1.0.0.zip
+  #      /workload_b.1.0.0.zip
+  #      /workload_c.1.0.0.zip
+  #      /workload_d.1.0.0.zip
+  
+  # On Windows systems
+  C:\VirtualClient> set VC_PACKAGES_DIR=C:\custom_packages
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_PACKAGES_DIR="/home/user/custom_packages"
+
+  # Note that the packages directory can be defined on the command line as well. Package directories
+  # defined on the command line take priority over those defined by the environment variable.
+  /home/user/virtualclient$ ./VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=120 --package-dir="/home/user/packages"
+  ```
+
+* **VC_STATE_DIR**  
+  Defines an alternate directory path to which Virtual Client should write state files/documents. This overrides the default state location 
+  (e.g. \<application-dir\>/state).
+
+  ``` bash
+  # On Windows systems
+  C:\VirtualClient> set VC_STATE_DIR=C:\Users\User1\State
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_STATE_DIR="/home/user/state"
+
+  # Note that the state directory can be defined on the command line as well. State directories
+  # defined on the command line take priority over those defined by the environment variable.
+  /home/user/virtualclient$ ./VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=120 --state-dir="/home/user/state"
+  ```

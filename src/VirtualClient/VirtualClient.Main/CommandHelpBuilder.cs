@@ -32,11 +32,28 @@ namespace VirtualClient
         protected IConsole Console { get; }
 
         /// <summary>
+        /// Returns text containing the version information for the application
+        /// (e.g. VirtualClient (v1.0.0).
+        /// </summary>
+        /// <returns></returns>
+        public static string GetVersionInfo()
+        {
+            AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
+            Version version = assemblyName.Version;
+            string projectName = assemblyName.Name;
+
+            return $"{projectName} (v{version.Major}.{version.Minor}.{version.Build}.{version.Revision})";
+        }
+
+        /// <summary>
         /// Writes the usage/help content to standard output on the console.
         /// </summary>
         /// <param name="command">Provides the command details, options and description information.</param>
         public void Write(ICommand command)
         {
+            this.WriteLine();
+            this.WriteVersion(command);
+            this.WriteLine();
             this.WriteLine();
             this.WriteSynopsis(command);
             this.WriteLine(2);
@@ -182,11 +199,22 @@ namespace VirtualClient
             }
         }
 
+        /// <summary>
+        /// Writes version information to the console standard output.
+        /// </summary>
+        /// <param name="command">Describes the command details.</param>
+        protected virtual void WriteVersion(ICommand command)
+        {
+            this.Console.Out.Write(CommandHelpBuilder.GetVersionInfo());
+        }
+
         private static void AddOptionDescription(List<Tuple<string, string>> optionDescriptions, IOption option)
         {
             string argumentHelpName = (option as Option)?.ArgumentHelpName;
+
+            // We ONLY display up to 3 of the aliases.
             string orderedAliases = string.Join(",", CommandHelpBuilder.GetDistinctAliases(option).Where(alias => alias.Contains("-"))
-                .OrderByDescending(alias => alias));
+                .Take(3));
 
             bool isFlag = string.Equals(argumentHelpName, "Flag", StringComparison.OrdinalIgnoreCase);
 
