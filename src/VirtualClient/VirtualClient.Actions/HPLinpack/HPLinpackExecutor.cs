@@ -231,7 +231,7 @@ namespace VirtualClient.Actions
                         await this.ConfigureDatFileAsync(telemetryContext, cancellationToken);
                         process = await this.ExecuteCommandAsync("./run.sh", amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true, username: username);
 
-                        this.CaptureMetrics(process.StandardOutput.ToString(), $"./run.sh", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                        this.CaptureMetrics(process.StandardOutput.ToString(), $"./run.sh", startTime, DateTime.UtcNow, telemetryContext, cancellationToken, isAMD: true);
                         break;
                     default:
                         await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
@@ -529,7 +529,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken, bool isAMD = false)
         {
             var additionalMetadata = new Dictionary<string, object>();
             additionalMetadata[$"{nameof(this.PerformanceLibrary)}"] = this.PerformanceLibrary;
@@ -542,7 +542,7 @@ namespace VirtualClient.Actions
 
             this.MetadataContract.Apply(telemetryContext);
 
-            HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
+            HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results, isAMD);
             IList<Metric> metrics = parser.Parse();
 
             foreach (Metric result in metrics)
