@@ -57,7 +57,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.fileSystem = dependencies.GetService<IFileSystem>();
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
-.WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
 
             this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
             this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
