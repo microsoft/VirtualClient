@@ -25,15 +25,22 @@ namespace VirtualClient.Actions
         /// </summary>
         private const string SplitAtSpace = @"\s{1,}";
 
+        /// <summary>
+        /// To check if the system is AMD.
+        /// </summary>
+        private bool isAMD = false;
+
         private List<Metric> metrics;
 
         /// <summary>
         /// constructor for <see cref="HPLinpackMetricsParser"/>.
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public HPLinpackMetricsParser(string rawText)
+        /// <param name="isAMD">To check if the system is AMD.</param>
+        public HPLinpackMetricsParser(string rawText, bool isAMD = false)
             : base(rawText)
         {
+            this.isAMD = isAMD;
         }
 
         /// <summary>
@@ -56,7 +63,22 @@ namespace VirtualClient.Actions
                 {
                     var st = Regex.Split(matches.ElementAt(i).Value, SplitAtSpace);
 
-                    Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
+                    if (this.isAMD)
+                    {
+                        Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
+                         {
+                             { $"N_WR{st[0]}", st[2] },
+                             { $"NB_WR{st[0]}", st[3] },
+                             { $"P_WR{st[0]}", st[4] },
+                             { $"Q_WR{st[0]}", st[5] },
+                         };
+
+                        this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[6]), "secs", metadata: metadata));
+                        this.metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[7]), "Gflops", metadata: metadata));
+                    }
+                    else
+                    {
+                        Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
                          {
                              { $"N_WR{st[0]}", st[1] },
                              { $"NB_WR{st[0]}", st[2] },
@@ -64,8 +86,9 @@ namespace VirtualClient.Actions
                              { $"Q_WR{st[0]}", st[4] },
                          };
 
-                    this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", metadata: metadata));
-                    this.metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[6]), "Gflops", metadata: metadata));
+                        this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", metadata: metadata));
+                        this.metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[6]), "Gflops", metadata: metadata));
+                    }
                 }
             }
 

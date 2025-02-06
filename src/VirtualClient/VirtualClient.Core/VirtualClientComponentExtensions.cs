@@ -148,7 +148,7 @@ namespace VirtualClient
                 }
 
                 component.CleanupTasks.Add(() => process.SafeKill());
-                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+                component.Logger.LogTraceMessage($"Executing:  {SensitiveData.ObscureSecrets(process.FullCommand())}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
                 await process.StartAndWaitAsync(cancellationToken)
