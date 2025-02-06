@@ -64,6 +64,22 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
+        /// stripedisk mount point.
+        /// </summary>
+        public string StripeDiskMountPoint
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(this.StripeDiskMountPoint), out IConvertible stripediskmountpoint) && stripediskmountpoint != null)
+                {
+                    return stripediskmountpoint.ToString();
+                }
+
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Disk filter specified
         /// </summary>
         public string DiskFilter
@@ -123,13 +139,13 @@ namespace VirtualClient.Dependencies.MySqlServer
             ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
 
+            telemetryContext.AddContext(nameof(configurationState), configurationState);
+
             DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
             workloadPackage.ThrowIfNull(this.PackageName);
 
             DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.packageDirectory = package.Path;
-
-            telemetryContext.AddContext(nameof(configurationState), configurationState);
 
             if (!this.SkipInitialize)
             {
@@ -163,8 +179,11 @@ namespace VirtualClient.Dependencies.MySqlServer
 
         private async Task ConfigureMySQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string serverIp = this.GetServerIpAddress();
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
+            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                                    .FirstOrDefault()?.IPAddress
+                                    ?? IPAddress.Loopback.ToString();
+
+            string innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
 
@@ -299,20 +318,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             return bufferSizeInMegaBytes.ToString();
         }
 
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
-            }
-
-            return serverIPAddress;
-        }
-
         private string GetClientIpAddresses()
         {
             string clientIpAddresses = string.Empty;
@@ -352,8 +357,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             /// <summary>
             /// Distributes existing database to disks on the system
             /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);
-
+            public const string DistributeDatabase = nameof(DistributeDatabase);   
         }
 
         internal class ConfigurationState
