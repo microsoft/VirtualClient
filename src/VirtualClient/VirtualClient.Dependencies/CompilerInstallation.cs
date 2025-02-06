@@ -215,6 +215,7 @@ namespace VirtualClient.Dependencies
             {
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
+                    await this.ExecuteCommandAsync("apt-get", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -236,7 +237,7 @@ namespace VirtualClient.Dependencies
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     if (string.IsNullOrEmpty(gccVersion))
                     {
-                        await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
+                        await this.ExecuteCommandAsync("dnf", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -258,6 +259,7 @@ namespace VirtualClient.Dependencies
                         throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");
                     }
 
+                    await this.ExecuteCommandAsync("dnf", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
