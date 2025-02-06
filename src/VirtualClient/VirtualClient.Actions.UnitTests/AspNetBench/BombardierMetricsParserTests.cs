@@ -28,7 +28,7 @@ namespace VirtualClient.Parser
         }
 
         [Test]
-        public void BombardierParserVerifyMetricsFpRate()
+        public void BombardierParserVerifyMetrics()
         {
             string outputPath = Path.Combine(this.ExamplePath, "BombardierExample.txt");
             this.rawText = File.ReadAllText(outputPath);

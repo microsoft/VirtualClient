@@ -6,7 +6,6 @@ namespace VirtualClient
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs.Models;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
