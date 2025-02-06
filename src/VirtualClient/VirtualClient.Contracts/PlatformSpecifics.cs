@@ -137,7 +137,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory where state objects are stored.
         /// </summary>
-        public string StateDirectory { get; }
+        public string StateDirectory { get; set; }
 
         /// <summary>
         /// The directory where built-in tools/toolsets are stored.

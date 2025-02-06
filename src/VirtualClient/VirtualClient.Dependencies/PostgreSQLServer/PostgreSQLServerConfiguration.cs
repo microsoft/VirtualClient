@@ -177,7 +177,9 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string serverIp = this.GetServerIpAddress();
+            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                                    .FirstOrDefault()?.IPAddress
+                                    ?? IPAddress.Loopback.ToString();
 
             string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer}";
 
@@ -270,20 +272,6 @@ namespace VirtualClient.Dependencies
             }
 
             return diskPaths;
-        }
-
-        private string GetServerIpAddress()
-        {
-            string serverIPAddress = IPAddress.Loopback.ToString();
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIP);
-                serverIPAddress = serverIP.ToString();
-            }
-
-            return serverIPAddress;
         }
 
         /// <summary>

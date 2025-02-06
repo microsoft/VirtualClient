@@ -4,16 +4,10 @@
 namespace VirtualClient.Configuration
 {
     /// <summary>
-    /// Represents the 'FileLogSettings' section of the appsetting.json file
-    /// for the application.
+    /// Represents log file setting for the application.
     /// </summary>
     public class FileLogSettings
     {
-        /// <summary>
-        /// True/false whether file logging is enabled.
-        /// </summary>
-        public bool IsEnabled { get; set; } = false;
-
         /// <summary>
         /// The file name to use for the file that contains workload performance counter
         /// output.
@@ -25,6 +19,11 @@ namespace VirtualClient.Configuration
         /// output.
         /// </summary>
         public string EventsFileName { get; set; }
+
+        /// <summary>
+        /// True/false whether the settings are enabled by default.
+        /// </summary>
+        public bool IsEnabled { get; set; }
 
         /// <summary>
         /// The file name to use for the file that contains workload metrics/results
@@ -43,5 +42,21 @@ namespace VirtualClient.Configuration
         /// errors.
         /// </summary>
         public string TracesFileName { get; set; }
+
+        /// <summary>
+        /// The default settings for Virtual Client log files.
+        /// </summary>
+        public static FileLogSettings Default()
+        {
+            return new FileLogSettings
+            {
+                IsEnabled = true,
+                CountersFileName = "vc.counters",
+                EventsFileName = "vc.events",
+                MetricsCsvFileName = "metrics.csv",
+                MetricsFileName = "vc.metrics",
+                TracesFileName = "vc.traces"
+            };
+        }
     }
 }
