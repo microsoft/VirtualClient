@@ -43,12 +43,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
-        /// and to include in telemetry output.
-        /// </summary>
-        public string AgentId { get; set; }
-
-        /// <summary>
         /// The port(s) to use to listen to HTTP traffic for the Virtual Client REST API.
         /// </summary>
         public IDictionary<string, int> ApiPorts { get; set; }
@@ -57,6 +51,12 @@ namespace VirtualClient
         /// A set of target resources to clean (e.g. logs, packages, state, all).
         /// </summary>
         public IList<string> CleanTargets { get; set; }
+
+        /// <summary>
+        /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
+        /// and to include in telemetry output.
+        /// </summary>
+        public string ClientId { get; set; }
 
         /// <summary>
         /// Describes the target store to which content files/logs should be uploaded.
@@ -115,6 +115,18 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// An alternate directory to which write log files. Setting this overrides
+        /// the defaults and takes precedence over any 'VC_LOGS_DIR' environment variable values.
+        /// </summary>
+        /// <remarks>
+        /// Order of Priority
+        /// 1) --log-dir command line option defined location
+        /// 2) VC_LOGS_DIR environment variable defined location
+        /// 3) default /logs folder location.
+        /// </remarks>
+        public string LogDirectory { get; set; }
+
+        /// <summary>
         /// The logging level for the application (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).
         /// </summary>
         public LogLevel LoggingLevel { get; set; } = LogLevel.Information;
@@ -142,6 +154,18 @@ namespace VirtualClient
         public IDictionary<string, IConvertible> Parameters { get; set; }
 
         /// <summary>
+        /// An alternate directory to which packages should be downloaded. Setting this overrides
+        /// the defaults and takes precedence over any 'VC_PACKAGES_DIR' environment variable values.
+        /// </summary>
+        /// <remarks>
+        /// Order of Priority:
+        /// 1) --package-dir command line option defined location
+        /// 2) VC_PACKAGES_DIR environment variable defined location
+        /// 3) default /packages folder location.
+        /// </remarks>
+        public string PackageDirectory { get; set; }
+
+        /// <summary>
         /// Describes the target store from which dependency packages should be downloaded.
         /// </summary>
         public DependencyStore PackageStore { get; set; }
@@ -151,6 +175,18 @@ namespace VirtualClient
         /// or downloaded from the proxy endpoint.
         /// </summary>
         public Uri ProxyApiUri { get; set; }
+
+        /// <summary>
+        /// An alternate directory to which state files/documents should be written. Setting this overrides
+        /// the defaults and takes precedence over any 'VC_STATE_DIR' environment variable values.
+        /// </summary>
+        /// <remarks>
+        /// Order of Priority
+        /// 1) --state-dir command line option defined location
+        /// 2) VC_STATE_DIR environment variable defined location
+        /// 3) default /state folder location.
+        /// </remarks>
+        public string StateDirectory { get; set; }
 
         /// <summary>
         /// Issues a request to the OS to reboot.
@@ -261,6 +297,77 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Checks to see if the user has overridden the default directory path locations
+        /// (e.g. logs, packages, state) on the command line or via environment variables
+        /// and sets the application to use them if so.
+        /// </summary>
+        /// <param name="platformSpecifics">Defines the fundamental directory paths for the application.</param>
+        protected void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
+        {
+            // Priority (logs directory):
+            // 1) --log-dir command line option
+            // 2) VC_LOGS_DIR environment variable
+            if (!string.IsNullOrWhiteSpace(this.LogDirectory))
+            {
+                // Users can override on the command line with the --log-dir option.
+                platformSpecifics.LogsDirectory = this.LogDirectory;
+            }
+            else
+            {
+                // Users can also override using the 'VC_LOGS_DIR' environment variable.
+                string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_LOGS_DIR);
+                if (!string.IsNullOrWhiteSpace(environmentVariableValue))
+                {
+                    platformSpecifics.LogsDirectory = environmentVariableValue;
+                }
+            }
+
+            // Priority (packages directory):
+            // 1) --package-dir command line option
+            // 2) VC_PACKAGES_DIR environment variable
+            if (!string.IsNullOrWhiteSpace(this.PackageDirectory))
+            {
+                // Users can override on the command line with the --package-dir option.
+                platformSpecifics.PackagesDirectory = this.PackageDirectory;
+            }
+            else
+            {
+                // Users can also override using the 'VC_PACKAGES_DIR' or 'SDK_PACKAGES_DIR' environment variables.
+                string environmentVariableValue1 = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
+                string environmentVariableValue2 = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_PACKAGES_DIR);
+                if (!string.IsNullOrWhiteSpace(environmentVariableValue1))
+                {
+                    platformSpecifics.PackagesDirectory = environmentVariableValue1;
+                }
+                else if (!string.IsNullOrWhiteSpace(environmentVariableValue2))
+                {
+                    // We also support an environment variable 'SDK_PACKAGES_DIR' for other use cases where naming conventions
+                    // follow a different nomenclature related to VC being used as an SDK. The 'VC_PACKAGES_DIR' environment variable
+                    // noted above takes precedence.
+                    platformSpecifics.PackagesDirectory = environmentVariableValue2;
+                }
+            }
+
+            // Priority (state directory):
+            // 1) --state-dir command line option
+            // 2) VC_STATE_DIR environment variable
+            if (!string.IsNullOrWhiteSpace(this.StateDirectory))
+            {
+                // Users can override on the command line with the --state-dir option.
+                platformSpecifics.StateDirectory = this.StateDirectory;
+            }
+            else
+            {
+                // Users can also override using the 'VC_STATE_DIR' environment variable.
+                string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_STATE_DIR);
+                if (!string.IsNullOrWhiteSpace(environmentVariableValue))
+                {
+                    platformSpecifics.StateDirectory = environmentVariableValue;
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns assembly version information for the application.
         /// </summary>
         /// <param name="platformVersion">The version of the open source platform core..</param>
@@ -290,10 +397,10 @@ namespace VirtualClient
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
-            // Users can override the location of the "packages" folder using environment variables.
-            // This is used in scenarios where VC may be used as a base for other applications that want to
-            // have a shared packages directory.
-            CommandBase.EvaluatePackagesDirectoryOverrides(platformSpecifics);
+            // Users can override the location of the "logs", "packages" and "state" folders on the command line
+            // or by using environment variables. This is used in scenarios where VC may be used as a base for other
+            // applications that want to have a shared resource + dependency directories.
+            this.EvaluateDirectoryPathOverrides(platformSpecifics);
 
             if (this.Debug)
             {
@@ -313,7 +420,7 @@ namespace VirtualClient
                 telemetrySource?.ToString());
 
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
-                this.AgentId,
+                this.ClientId,
                 this.ExperimentId,
                 platformSpecifics,
                 logger);
@@ -359,8 +466,6 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
                 }
             }
-
-            
 
             IServiceCollection dependencies = new ServiceCollection();
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
@@ -412,7 +517,7 @@ namespace VirtualClient
 
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["clientId"] = this.AgentId.ToLowerInvariant(),
+                ["clientId"] = this.ClientId.ToLowerInvariant(),
                 ["clientInstance"] = Guid.NewGuid().ToString(),
                 ["appVersion"] = extensionsVersion ?? platformVersion,
                 ["appPlatformVersion"] = platformVersion,
@@ -466,27 +571,16 @@ namespace VirtualClient
             }
         }
 
-        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, LogLevel level)
+        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics platformSpecifics, LogLevel level)
         {
-            FileLogSettings settings = new FileLogSettings
-            {
-                IsEnabled = true,
-                CountersFileName = "vc.counters",
-                EventsFileName = "vc.events",
-                MetricsCsvFileName = "metrics.csv",
-                MetricsFileName = "vc.metrics",
-                TracesFileName = "vc.traces"
-            };
+            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateFileLoggerProviders(
+                platformSpecifics.LogsDirectory, 
+                FileLogSettings.Default(), 
+                level);
 
-            if (settings.IsEnabled)
+            if (loggingProviders?.Any() == true)
             {
-                PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings, level);
-
-                if (loggingProviders?.Any() == true)
-                {
-                    loggingProviders.AddRange(logProviders);
-                }
+                loggingProviders.AddRange(logProviders);
             }
         }
 
@@ -506,18 +600,18 @@ namespace VirtualClient
             }
         }
 
-        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics specifics, DependencyEventHubStore eventHubStore, Uri proxyApiUri, LogLevel level, string source = null)
+        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics platformSpecifics, DependencyEventHubStore eventHubStore, Uri proxyApiUri, LogLevel level, string source = null)
         {
             // Application loggers. Events are routed to different loggers based upon
             // the EventId defined when the message is logged (e.g. Trace, Error, SystemEvent, TestMetrics).
             List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
 
             CommandBase.AddConsoleLogging(loggingProviders, level);
-            CommandBase.AddFileLogging(loggingProviders, configuration, level);
+            CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, level);
 
             if (proxyApiUri != null)
             {
-                CommandBase.AddProxyApiLogging(loggingProviders, configuration, specifics, proxyApiUri, source);
+                CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, proxyApiUri, source);
             }
             else
             {
@@ -525,29 +619,6 @@ namespace VirtualClient
             }
 
             return loggingProviders.Any() ? new LoggerFactory(loggingProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
-        }
-
-        private static void EvaluatePackagesDirectoryOverrides(PlatformSpecifics platformSpecifics)
-        {
-            // Users can override the default packages directory using the 'VC_PACKAGES_DIR'
-            // environment variable. When defined, VC will download packages to this directory
-            // instead of the default location.
-            string userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
-            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
-            {
-                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
-                return;
-            }
-
-            // We also support an environment variable 'SDK_PACKAGES_DIR' for other use cases where naming conventions
-            // follow a different nomenclature related to VC being used as an SDK. The environment variable noted above takes
-            // precedence.
-            userDefinedPackageDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_PACKAGES_DIR);
-            if (!string.IsNullOrWhiteSpace(userDefinedPackageDirectory))
-            {
-                platformSpecifics.PackagesDirectory = userDefinedPackageDirectory;
-                return;
-            }
         }
     }
 }

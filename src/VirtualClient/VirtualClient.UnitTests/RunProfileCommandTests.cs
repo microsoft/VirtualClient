@@ -39,7 +39,7 @@ namespace VirtualClient
 
             this.command = new TestRunProfileCommand
             {
-                AgentId = "AnyAgent",
+                ClientId = "AnyAgent",
                 Debug = false,
                 Timeout = ProfileTiming.OneIteration(),
                 ExecutionSystem = "AnySystem",
