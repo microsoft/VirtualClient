@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -432,11 +433,30 @@ namespace VirtualClient.Actions
                 true);
             }
 
+            string gccVersion;
+            if (string.IsNullOrEmpty(this.CompilerVersion))
+            {
+                IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync();
+                object compilerVersion;
+                if (compilerMetadata.TryGetValue("compilerVersion_gcc", out compilerVersion))
+                {
+                    gccVersion = compilerVersion.ToString().Split(".")[0];
+                }
+                else
+                {
+                    throw new WorkloadException("gcc version not found.");
+                }
+            }
+            else
+            {
+                gccVersion = this.CompilerVersion;
+            }
+
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(
                 SpecCpuConfigPlaceHolder.Gcc10Workaround,
-                Convert.ToInt32(this.CompilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
+                Convert.ToInt32(gccVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
                 StringComparison.OrdinalIgnoreCase);
 
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
