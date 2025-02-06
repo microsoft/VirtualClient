@@ -206,7 +206,7 @@ namespace VirtualClient.Actions
                     $"sudo -u {this.GetLoggedInUserName()} ./run.sh",
                 };
 
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
                     if (arguments == $"-u {this.GetLoggedInUserName()} ./run.sh")
@@ -252,7 +252,14 @@ namespace VirtualClient.Actions
             this.currentDirectoryPath = new DependencyPath("HPL", currentDirectory);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "HPLinpack", "HPLResults.txt");
+            if (architecture == Architecture.X64)
+            {
+                resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "HPLinpack", "HPL-AMDResults.txt");
+            }
+            else
+            {
+                resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "HPLinpack", "HPLResults.txt");
+            }
             this.rawString = File.ReadAllText(resultsPath);
             this.fixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
                 .Returns(this.rawString);
