@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SuperBenchmarkParserVerifyMetricsFpRate()
+        public void SuperBenchmarkParserVerifyMetrics()
         {
             string outputPath = Path.Combine(this.ExamplePath, "results-summary.jsonl");
             this.rawText = File.ReadAllText(outputPath);

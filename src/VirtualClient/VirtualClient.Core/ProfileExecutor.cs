@@ -658,31 +658,13 @@ namespace VirtualClient
 
         private static void OutputComponentStart(string componentType, VirtualClientComponent component)
         {
-            VirtualClientComponentCollection componentCollection = component as VirtualClientComponentCollection;
-            if (componentCollection != null)
+            if (!string.IsNullOrWhiteSpace(component.Scenario))
             {
-                foreach (VirtualClientComponent subComponent in componentCollection)
-                {
-                    if (!string.IsNullOrWhiteSpace(component.Scenario))
-                    {
-                        ConsoleLogger.Default.LogInformation($"Profile: Parallel {componentType} = {subComponent.TypeName} (scenario={subComponent.Scenario})");
-                    }
-                    else
-                    {
-                        ConsoleLogger.Default.LogInformation($"Profile: Parallel {componentType} = {subComponent.TypeName}");
-                    }
-                }
+                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName} (scenario={component.Scenario})");
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(component.Scenario))
-                {
-                    ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName} (scenario={component.Scenario})");
-                }
-                else
-                {
-                    ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName}");
-                }
+                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName}");
             }
         }
 
