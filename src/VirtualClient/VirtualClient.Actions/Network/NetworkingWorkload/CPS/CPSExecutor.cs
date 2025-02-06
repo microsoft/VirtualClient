@@ -22,7 +22,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// </summary>
     public class CPSExecutor : NetworkingWorkloadToolExecutor
     {
-        private readonly object threadLock = new object();
         private IFileSystem fileSystem;
 
         /// <summary>
