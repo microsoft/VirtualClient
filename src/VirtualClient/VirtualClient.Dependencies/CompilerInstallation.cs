@@ -234,10 +234,10 @@ namespace VirtualClient.Dependencies
 
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
+                    await this.ExecuteCommandAsync("dnf", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     if (string.IsNullOrEmpty(gccVersion))
                     {
-                        await this.ExecuteCommandAsync("dnf", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
