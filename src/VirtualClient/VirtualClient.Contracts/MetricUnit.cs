@@ -45,6 +45,11 @@ namespace VirtualClient.Contracts
         public const string Bytes = "bytes";
 
         /// <summary>
+        /// Count
+        /// </summary>
+        public const string Count = "Count";
+
+        /// <summary>
         /// Kilobytes per second
         /// </summary>
         public const string KilobytesPerSecond = "kilobytes/sec";

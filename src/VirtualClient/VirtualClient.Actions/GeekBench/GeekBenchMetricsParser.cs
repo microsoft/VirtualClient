@@ -79,6 +79,8 @@ namespace VirtualClient.Actions
             metrics.AddRange(this.SingleCoreSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: "SingleCoreSummary-", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(this.MultiCoreSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: "MultiCoreSummary-", metricRelativity: MetricRelativity.HigherIsBetter));
 
+            metrics.ForEach(metric => metric.Verbosity = 0);
+
             return metrics;
         }
 

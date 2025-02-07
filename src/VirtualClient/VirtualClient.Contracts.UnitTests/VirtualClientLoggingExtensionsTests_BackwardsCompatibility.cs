@@ -119,6 +119,7 @@ namespace VirtualClient.Contracts
             string expectedToolResults = "Tool A: metric1=value 1 | metric 2=value 2";
             double expectedMetricValue = 123.456;
             string expectedUnits = "seconds";
+            int expectedVerbosity = 1;
             string expectedMetricCategorization = "instanceA";
             string expectedDescription = "Metric description";
             MetricRelativity expectedRelativity = MetricRelativity.LowerIsBetter;
@@ -144,6 +145,7 @@ namespace VirtualClient.Contracts
                 expectedTags,
                 this.mockEventContext,
                 expectedRelativity,
+                expectedVerbosity,
                 expectedDescription,
                 expectedToolResults,
                 expectedToolVersion,
@@ -154,7 +156,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 22
+                It.Is<EventContext>(context => context.Properties.Count == 23
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("testName")
@@ -170,6 +172,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["testArguments"].ToString() == expectedTestArguments
                     && context.Properties["metricName"].ToString() == expectedMetricName
                     && context.Properties["testResult"].ToString() == expectedMetricValue.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["testedInstance"].ToString() == expectedMetricCategorization),
                 null,
                 null));
@@ -178,7 +181,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 22
+                It.Is<EventContext>(context => context.Properties.Count == 23
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -204,6 +207,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == expectedDescription
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"] == expectedMetadata as Object
