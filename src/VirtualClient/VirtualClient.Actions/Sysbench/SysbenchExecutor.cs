@@ -228,10 +228,7 @@ namespace VirtualClient.Actions
             int tableCount = tables.GetValueOrDefault(DefaultTableCount);
 
             // if not using the configurable scenario, must use 10 tables
-            // if using a workload that must use only 1 table, table count adjusted as such 
-
             tableCount = (databaseScenario == SysbenchScenario.Configure) ? tableCount : DefaultTableCount;
-            tableCount = (SelectWorkloads.Contains(workload, StringComparer.OrdinalIgnoreCase)) ? SelectWorkloadDefaultTableCount : tableCount;
 
             return tableCount;
         }
