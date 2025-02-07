@@ -44,8 +44,8 @@ namespace VirtualClient.Actions
         public void Compressor7zipResultsParserCreatesTheExpectedMetricsFromResults()
         {
             IList<Metric> metrics = this.testParser.Parse();
-            MetricAssert.Exists(metrics, "Compressed size and Original size ratio", 26.03795395904138);
-            MetricAssert.Exists(metrics, "CompressionTime", 53.223, "seconds");
+            MetricAssert.Exists(metrics, "Compression_Ratio", 26.03795395904138);
+            MetricAssert.Exists(metrics, "Compression_Time", 53.223, "seconds");
         }
 
         [Test]

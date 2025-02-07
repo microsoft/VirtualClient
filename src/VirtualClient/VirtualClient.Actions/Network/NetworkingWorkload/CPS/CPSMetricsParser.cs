@@ -85,7 +85,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             metrics.Add(new Metric("ConnectsPerSec_Min", connectsPerSec.Min()));
             metrics.Add(new Metric("ConnectsPerSec_Max", connectsPerSec.Max()));
             metrics.Add(new Metric("ConnectsPerSec_Med", connectsPerSec.Median()));
-            metrics.Add(new Metric("ConnectsPerSec_Avg", connectsPerSec.Average()));
+            metrics.Add(new Metric("ConnectsPerSec_Avg", connectsPerSec.Average(), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 0));
             metrics.Add(new Metric("ConnectsPerSec_P25", connectsPerSec.Percentile(25)));
             metrics.Add(new Metric("ConnectsPerSec_P50", connectsPerSec.Percentile(50)));
             metrics.Add(new Metric("ConnectsPerSec_P75", connectsPerSec.Percentile(75)));
@@ -96,10 +96,10 @@ namespace VirtualClient.Actions.NetworkPerformance
             metrics.Add(new Metric("ConnectsPerSec_P99_999", Statistics.QuantileCustom(connectsPerSec, 1d - 0.00001d, QuantileDefinition.R3)));
             double median = Statistics.Median(connectsPerSec);
             double[] absoluteDeviations = connectsPerSec.Select(x => Math.Abs(x - median)).ToArray();
-            metrics.Add(new Metric("ConnectsPerSec_Mad", Statistics.Median(absoluteDeviations)));
-            metrics.Add(new Metric("ConnectsPerSec_StandardErrorMean", sem));
-            metrics.Add(new Metric("ConnectsPerSec_LowerCI", lowerCI));
-            metrics.Add(new Metric("ConnectsPerSec_UpperCI", upperCI));
+            metrics.Add(new Metric("ConnectsPerSec_Mad", Statistics.Median(absoluteDeviations), MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_StandardErrorMean", sem, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_LowerCI", lowerCI, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_UpperCI", upperCI, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
         }
 
         /// <summary>

@@ -61,7 +61,13 @@ namespace VirtualClient.Actions
             List<Metric> metrics = new List<Metric>();
             int rows = this.SizeAndTime.Rows.Count;
 
-            metrics.Add(new Metric("Compressed size and Original size ratio", (Convert.ToDouble(this.SizeAndTime.Rows[2].ItemArray[2]) / Convert.ToDouble(this.SizeAndTime.Rows[0].ItemArray[2])) * 100, MetricRelativity.LowerIsBetter));
+            metrics.Add(new Metric(
+                "Compression_Ratio", 
+                (Convert.ToDouble(this.SizeAndTime.Rows[2].ItemArray[2]) / Convert.ToDouble(this.SizeAndTime.Rows[0].ItemArray[2])) * 100, 
+                "precentage",
+                relativity: MetricRelativity.LowerIsBetter, 
+                verbosity: 2));
+
             double compressionTime = 0;
 
             for (int i = rows - 1; i > 2; i--)
@@ -69,7 +75,7 @@ namespace VirtualClient.Actions
                 compressionTime += Convert.ToDouble(this.SizeAndTime.Rows[i].ItemArray[2]);
             }
 
-            metrics.Add(new Metric("CompressionTime", compressionTime, MetricUnit.Seconds, MetricRelativity.LowerIsBetter));
+            metrics.Add(new Metric("Compression_Time", compressionTime, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 0));
 
             return metrics;
         }

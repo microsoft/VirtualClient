@@ -604,7 +604,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -630,6 +630,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == string.Empty
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.Undefined.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["toolResults"].ToString() == string.Empty
@@ -649,6 +650,7 @@ namespace VirtualClient.Contracts
             string expectedToolResults = "Tool A: metric1=value 1 | metric 2=value 2";
             double expectedMetricValue = 123.456;
             string expectedUnits = "seconds";
+            int expectedVerbosity = 1;
             string expectedMetricCategorization = "instanceA";
             string expectedDescription = "Metric description";
             MetricRelativity expectedRelativity = MetricRelativity.LowerIsBetter;
@@ -674,6 +676,7 @@ namespace VirtualClient.Contracts
                 expectedTags,
                 this.mockEventContext,
                 expectedRelativity,
+                expectedVerbosity,
                 expectedDescription,
                 expectedToolResults,
                 expectedToolVersion,
@@ -682,7 +685,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -708,6 +711,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == expectedDescription
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"] == expectedMetadata as Object
@@ -1751,7 +1755,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -1777,6 +1781,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "0"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
@@ -1799,7 +1804,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -1825,6 +1830,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "0"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
@@ -1859,7 +1865,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -1885,6 +1891,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "2"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
@@ -1907,7 +1914,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -1933,6 +1940,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "2"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
@@ -1958,7 +1966,7 @@ namespace VirtualClient.Contracts
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
             EventContext context = loggedMetric.Item3 as EventContext;
 
-            Assert.IsTrue(context.Properties.Count == 15
+            Assert.IsTrue(context.Properties.Count == 16
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -1980,6 +1988,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "0"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
@@ -2003,7 +2012,7 @@ namespace VirtualClient.Contracts
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
             EventContext context = loggedMetric.Item3 as EventContext;
 
-            Assert.IsTrue(context.Properties.Count == 15
+            Assert.IsTrue(context.Properties.Count == 16
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -2025,6 +2034,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "0"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
@@ -2054,7 +2064,7 @@ namespace VirtualClient.Contracts
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
             EventContext context = loggedMetric.Item3 as EventContext;
 
-            Assert.IsTrue(context.Properties.Count == 15
+            Assert.IsTrue(context.Properties.Count == 16
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -2076,6 +2086,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "0"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Empty
@@ -2099,7 +2110,7 @@ namespace VirtualClient.Contracts
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
             EventContext context = loggedMetric.Item3 as EventContext;
 
-            Assert.IsTrue(context.Properties.Count == 15
+            Assert.IsTrue(context.Properties.Count == 16
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -2121,6 +2132,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "2"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
@@ -2144,7 +2156,7 @@ namespace VirtualClient.Contracts
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
             EventContext context = loggedMetric.Item3 as EventContext;
 
-            Assert.IsTrue(context.Properties.Count == 15
+            Assert.IsTrue(context.Properties.Count == 16
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -2166,6 +2178,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "2"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["toolVersion"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Empty
@@ -2195,7 +2208,7 @@ namespace VirtualClient.Contracts
             Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
             EventContext context = loggedMetric.Item3 as EventContext;
 
-            Assert.IsTrue(context.Properties.Count == 15
+            Assert.IsTrue(context.Properties.Count == 16
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -2205,6 +2218,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricCategorization")
                     && context.Properties.ContainsKey("metricDescription")
                     && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("metricVerbosity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
@@ -2217,6 +2231,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["metricVerbosity"].ToString() == "2"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Empty

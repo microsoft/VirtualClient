@@ -42,12 +42,12 @@ namespace VirtualClient.Actions
 
                 foreach (StressNgStressorResult stressor in parsedResult.Metrics)
                 {
-                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops", stressor.BogoOps, "BogoOps"));
-                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-usr-sys-time", stressor.BogoOpsPerSecondUsrSysTime, BogusOperationsPerSecond));
-                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-real-time", stressor.BogoOpsPerSecondRealTime, BogusOperationsPerSecond));
-                    this.metrics.Add(new Metric($"{stressor.Stressor}-wall-clock-time", stressor.WallClockTime, "second"));
-                    this.metrics.Add(new Metric($"{stressor.Stressor}-user-time", stressor.UserTime, "second"));
-                    this.metrics.Add(new Metric($"{stressor.Stressor}-system-time", stressor.SystemTime, "second"));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops", stressor.BogoOps, "BogoOps", MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-usr-sys-time", stressor.BogoOpsPerSecondUsrSysTime, BogusOperationsPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-real-time", stressor.BogoOpsPerSecondRealTime, BogusOperationsPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-wall-clock-time", stressor.WallClockTime, "second", MetricRelativity.LowerIsBetter, verbosity: 2));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-user-time", stressor.UserTime, "second", MetricRelativity.LowerIsBetter, verbosity: 2));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-system-time", stressor.SystemTime, "second", MetricRelativity.LowerIsBetter, verbosity: 2));
                 }
 
                 return this.metrics;
