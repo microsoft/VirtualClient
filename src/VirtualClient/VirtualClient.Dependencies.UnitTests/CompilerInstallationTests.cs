@@ -8,6 +8,7 @@ namespace VirtualClient.Dependencies
     using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -235,7 +236,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task CompilerInstallationInLinuxDefaultsToEmpty()
+        public async Task CompilerInstallationInLinuxDefaultsToEmptyIfNoExistingVersion()
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>();
 
@@ -297,6 +298,82 @@ namespace VirtualClient.Dependencies
             }
 
             Assert.AreEqual(expectedCommands.Count(), commandExecuted);
+        }
+
+        [Test]
+        public async Task CompilerInstallationInLinuxDefaultsToEmptyIfExistingVersion()
+        {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>();
+
+            ProcessStartInfo expectedInfo = new ProcessStartInfo();
+            List<string> expectedCommands = new List<string>()
+            {
+                "sudo gcc -dumpversion",
+                "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
+                "sudo apt update"
+            };
+            List<string> unexpectedCommands = new List<string>()
+            {
+                "sudo apt install build-essential gcc g++ gfortran make -y --quiet"
+            };
+
+            int expectedCommandExecuted = 0;
+            int unexpectedCommandExecuted = 0;
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                {
+                    expectedCommandExecuted++;
+                }
+
+                if (unexpectedCommands.Any(c => c == $"{exe} {arguments}"))
+                {
+                    unexpectedCommandExecuted++;
+                }
+
+                if (exe == "sudo" && arguments == "gcc -dumpversion")
+                {
+                    IProcessProxy process = new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true,
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("10"))
+                    };
+                    return process;
+                }
+                else
+                {
+                    IProcessProxy process = new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    return process;
+                }
+            };
+
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(expectedCommands.Count(), expectedCommandExecuted);
+            Assert.AreEqual(unexpectedCommandExecuted, 0);
         }
 
         [Test]
