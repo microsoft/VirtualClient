@@ -242,11 +242,10 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                "sudo update-alternatives --remove-all gcc",
-                "sudo update-alternatives --remove-all gfortran",
+                "sudo gcc -dumpversion",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
-                "sudo apt install build-essential gcc g++ gfortran -y --quiet"
+                "sudo apt install build-essential gcc g++ gfortran make -y --quiet"
             };
 
             int commandExecuted = 0;
@@ -258,20 +257,38 @@ namespace VirtualClient.Dependencies
                     commandExecuted++;
                 }
 
-                IProcessProxy process = new InMemoryProcess
+                if (exe == "sudo" && arguments == "gcc -dumpversion")
                 {
-                    StartInfo = new ProcessStartInfo
+                    IProcessProxy process = new InMemoryProcess
                     {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-                process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
-                process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
-                return process;
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 1,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    return process;
+                }
+                else
+                {
+                    IProcessProxy process = new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    return process;
+                }
             };
 
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
