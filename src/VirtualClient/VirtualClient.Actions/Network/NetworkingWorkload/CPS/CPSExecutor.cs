@@ -31,6 +31,19 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
+                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+
+            this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
+            this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
+            this.Parameters.SetIfNotDefined(nameof(this.DisplayInterval), 10);
+            this.Parameters.SetIfNotDefined(nameof(this.ConnectionsPerThread), 100);
+            this.Parameters.SetIfNotDefined(nameof(this.MaxPendingRequestsPerThread), 100);
+            this.Parameters.SetIfNotDefined(nameof(this.Port), 7201);
+            this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
+            this.Parameters.SetIfNotDefined(nameof(this.DelayTime), 0);
+            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
+            this.Parameters.SetIfNotDefined(nameof(this.AdditionalParams), string.Empty);
         }
 
         /// <summary>
