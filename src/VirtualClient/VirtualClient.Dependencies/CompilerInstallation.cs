@@ -210,22 +210,23 @@ namespace VirtualClient.Dependencies
         {
             LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
             gccVersion = (string.IsNullOrEmpty(gccVersion)) ? string.Empty : gccVersion;
+            string installedVersion = await this.GetInstalledGCCVersionAsync(telemetryContext, cancellationToken);
 
             switch (distro.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
-                    await this.ExecuteCommandAsync("apt-get", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    if (string.IsNullOrEmpty(gccVersion))
+                    if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
                         await this.ExecuteCommandAsync("apt", "install build-essential gcc g++ gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("apt", "install make gcc g++ gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     }
-                    else
+                    else if (!string.IsNullOrEmpty(gccVersion))
                     {
+                        await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
+
                         await this.ExecuteCommandAsync("apt", @$"install build-essential gcc-{gccVersion} g++-{gccVersion} gfortran-{gccVersion} -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
                     }
@@ -234,9 +235,7 @@ namespace VirtualClient.Dependencies
 
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
-                    await this.ExecuteCommandAsync("dnf", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
-                    if (string.IsNullOrEmpty(gccVersion))
+                    if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
                         await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -245,8 +244,9 @@ namespace VirtualClient.Dependencies
                         await this.ExecuteCommandAsync("dnf", "install libnsl -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install make gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     }
-                    else
+                    else if (!string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
+                        await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
                     }
@@ -259,8 +259,6 @@ namespace VirtualClient.Dependencies
                         throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");
                     }
 
-                    await this.ExecuteCommandAsync("dnf", "remove gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -370,6 +368,26 @@ namespace VirtualClient.Dependencies
                      }
                  }
              });
+        }
+
+        private async Task<string> GetInstalledGCCVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string command = "gcc";
+            string commandArguments = "-dumpversion";
+
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
+            {
+                try
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+
+                    return process.StandardOutput.ToString().Trim();
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            }
         }
     }
 

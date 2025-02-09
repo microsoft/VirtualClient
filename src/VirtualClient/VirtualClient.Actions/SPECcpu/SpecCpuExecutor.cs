@@ -436,13 +436,9 @@ namespace VirtualClient.Actions
             string gccVersion;
             if (string.IsNullOrEmpty(this.CompilerVersion))
             {
-                IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync();
-                object compilerVersion;
-                if (compilerMetadata.TryGetValue("compilerVersion_gcc", out compilerVersion))
-                {
-                    gccVersion = compilerVersion.ToString().Split(".")[0];
-                }
-                else
+                gccVersion = await this.GetInstalledGCCVersionAsync(cancellationToken);
+
+                if (string.IsNullOrEmpty(gccVersion))
                 {
                     throw new WorkloadException("gcc version not found.");
                 }
@@ -460,6 +456,26 @@ namespace VirtualClient.Actions
                 StringComparison.OrdinalIgnoreCase);
 
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
+        }
+
+        private async Task<string> GetInstalledGCCVersionAsync(CancellationToken cancellationToken)
+        {
+            string command = "gcc";
+            string commandArguments = "-dumpversion";
+
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
+            {
+                try
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+
+                    return process.StandardOutput.ToString().Trim();
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            }
         }
 
         internal class SpecCpuState : State
