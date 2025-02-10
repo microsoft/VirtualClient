@@ -380,7 +380,7 @@ namespace VirtualClient.Dependencies
                 {
                     await process.StartAndWaitAsync(cancellationToken);
 
-                    return process.StandardOutput.ToString().Trim();
+                    return process.StandardOutput.ToString().Trim().Split(".")[0];
                 }
                 catch
                 {
