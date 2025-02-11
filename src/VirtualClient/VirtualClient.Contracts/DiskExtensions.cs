@@ -11,7 +11,7 @@ namespace VirtualClient.Contracts
     using System.Text.RegularExpressions;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public static class DiskExtensions
     {
@@ -42,11 +42,10 @@ namespace VirtualClient.Contracts
                 path = "/";
 
             }
-            else if (platform == PlatformID.Unix && disk.IsOperatingSystem())
+            else if (platform == PlatformID.Win32NT && disk.IsOperatingSystem())
             {
                 // If it is OS disk, test on OS partition
                 path = disk.Volumes.Where(v => v.IsOperatingSystem()).FirstOrDefault().AccessPaths.FirstOrDefault();
-
             }
             else
             {
@@ -178,7 +177,7 @@ namespace VirtualClient.Contracts
                 else
                 {
                     result = disk.Volumes.Sum(v => v.SizeInBytes(platform));
-                }               
+                }
             }
 
             return result;
