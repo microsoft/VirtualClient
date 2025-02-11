@@ -353,7 +353,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
@@ -385,7 +384,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },

@@ -433,19 +433,11 @@ namespace VirtualClient.Actions
                 true);
             }
 
-            string compilerVersion;
-            if (string.IsNullOrEmpty(this.CompilerVersion))
-            {
-                compilerVersion = await this.GetInstalledCompilerVersionAsync(this.CompilerName, cancellationToken);
+            string compilerVersion = await this.GetInstalledCompilerVersionAsync(this.CompilerName, cancellationToken);
 
-                if (string.IsNullOrEmpty(compilerVersion))
-                {
-                    throw new WorkloadException($"{this.CompilerName} version not found.");
-                }
-            }
-            else
+            if (string.IsNullOrEmpty(compilerVersion))
             {
-                compilerVersion = this.CompilerVersion;
+                throw new WorkloadException($"{this.CompilerName} version not found.");
             }
 
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);

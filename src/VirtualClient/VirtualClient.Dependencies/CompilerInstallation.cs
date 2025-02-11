@@ -175,7 +175,7 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
-                        // apt purge
+                        await this.ExecuteCommandAsync("apt", "purge gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("apt", "install build-essential gcc g++ gfortran make -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     }
                     else if (!string.IsNullOrEmpty(gccVersion))
