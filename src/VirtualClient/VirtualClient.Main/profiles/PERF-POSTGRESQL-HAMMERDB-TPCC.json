@@ -49,14 +49,16 @@
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "FormatDisks",
-                "Role": "Server"
+                "Role": "Server",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
-                "Role": "Server"
+                "Role": "Server",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
@@ -103,7 +105,8 @@
                 "Role": "Server",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
-                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
