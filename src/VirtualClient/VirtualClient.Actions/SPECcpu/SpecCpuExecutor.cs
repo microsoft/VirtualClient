@@ -88,13 +88,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Compiler version
+        /// Compiler name
         /// </summary>
-        public string CompilerVersion
+        public string CompilerName
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.CompilerVersion));
+                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.CompilerName));
             }
         }
 
@@ -433,34 +433,34 @@ namespace VirtualClient.Actions
                 true);
             }
 
-            string gccVersion;
+            string compilerVersion;
             if (string.IsNullOrEmpty(this.CompilerVersion))
             {
-                gccVersion = await this.GetInstalledGCCVersionAsync(cancellationToken);
+                compilerVersion = await this.GetInstalledCompilerVersionAsync(this.CompilerName, cancellationToken);
 
-                if (string.IsNullOrEmpty(gccVersion))
+                if (string.IsNullOrEmpty(compilerVersion))
                 {
-                    throw new WorkloadException("gcc version not found.");
+                    throw new WorkloadException($"{this.CompilerName} version not found.");
                 }
             }
             else
             {
-                gccVersion = this.CompilerVersion;
+                compilerVersion = this.CompilerVersion;
             }
 
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(
                 SpecCpuConfigPlaceHolder.Gcc10Workaround,
-                Convert.ToInt32(gccVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
+                Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
                 StringComparison.OrdinalIgnoreCase);
 
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
         }
 
-        private async Task<string> GetInstalledGCCVersionAsync(CancellationToken cancellationToken)
+        private async Task<string> GetInstalledCompilerVersionAsync(string compilerName, CancellationToken cancellationToken)
         {
-            string command = "gcc";
+            string command = compilerName;
             string commandArguments = "-dumpversion";
 
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
@@ -469,13 +469,17 @@ namespace VirtualClient.Actions
                 {
                     await process.StartAndWaitAsync(cancellationToken);
 
-                    return process.StandardOutput.ToString().Trim().Split(".")[0];
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        return process.StandardOutput.ToString().Trim().Split(".")[0];
+                    }
                 }
                 catch
                 {
-                    return string.Empty;
                 }
             }
+
+            return string.Empty;
         }
 
         internal class SpecCpuState : State

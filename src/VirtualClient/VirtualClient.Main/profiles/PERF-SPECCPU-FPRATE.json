@@ -23,7 +23,6 @@
             "Type": "SpecCpuExecutor",
             "Parameters": {
                 "Scenario": "ExecuteSPECBenchmark",
-                "CompilerVersion": "$.Parameters.CompilerVersion",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "$.Parameters.SpecProfile",
                 "PackageName": "speccpu2017",
@@ -55,7 +54,6 @@
             "Type": "CompilerInstallation",
             "Parameters": {
                 "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
                 "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
             }

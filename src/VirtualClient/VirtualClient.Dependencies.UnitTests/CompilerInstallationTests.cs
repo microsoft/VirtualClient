@@ -43,7 +43,6 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(CompilerInstallation.CompilerName), "icc" },
                 { nameof(CompilerInstallation.CompilerVersion), "123" }
             };
 
@@ -60,7 +59,6 @@ namespace VirtualClient.Dependencies
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(CompilerInstallation.CompilerName), "gcc" },
                 { nameof(CompilerInstallation.CompilerVersion), "123" }
             };
 
@@ -115,68 +113,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase(Architecture.X64)]
-        [TestCase(Architecture.Arm64)]
-        public async Task CompilerInstallationRunsTheExpectedCommandForCharmPlusPlusOnLinux(Architecture architecture)
-        {
-            this.mockFixture.Setup(PlatformID.Unix, architecture);
-
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
-
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CompilerInstallation.CompilerName), "charm++" },
-                { nameof(CompilerInstallation.CompilerVersion), "6.5.0" }
-            };
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            List<string> expectedCommands = new List<string>()
-            {
-                "sudo wget https://charm.cs.illinois.edu/distrib/charm-6.5.0.tar.gz -O charm.tar.gz",
-                "sudo tar -xzf charm.tar.gz",
-                "sudo ./build charm++ netlrts-linux-x86_64 --with-production -j4",
-                "sudo ./build charm++ netlrts-linux-arm8 --with-production -j4"
-            };
-
-            int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
-                {
-                    commandExecuted++;
-                }
-
-                IProcessProxy process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-                process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 123.3.0");
-                process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 123.3.0");
-                return process;
-            };
-
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.AreEqual(3, commandExecuted);
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         [TestCase("python3")]
@@ -190,7 +126,6 @@ namespace VirtualClient.Dependencies
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(CompilerInstallation.CompilerName), "gcc" },
                 { nameof(CompilerInstallation.CygwinPackages), packages }
             };
 
@@ -377,52 +312,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task CompilerInstallationRunsTheExpectedWorkloadCommandInLinuxForAocc()
-        {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CompilerInstallation.CompilerName), "Aocc" },
-                { nameof(CompilerInstallation.CompilerVersion), "5.6.7" }
-            };
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            List<string> expectedCommands = new List<string>()
-            {
-                "sudo wget https://developer.amd.com/wordpress/media/files/aocc-compiler-5.6.7.tar",
-                "sudo tar -xvf aocc-compiler-5.6.7.tar",
-                "sudo bash install.sh"
-            };
-
-            int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
-                {
-                    commandExecuted++;
-                }
-
-                return new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-            };
-
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.AreEqual(3, commandExecuted);
-        }
-
-        [Test]
         [TestCase("(Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0", "7")]
         [TestCase("(Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0", "7.5.0")]
         [TestCase("(Ubuntu 9.4.0-3ubuntu1~18.04) 9.4.0", "9")]
@@ -437,7 +326,6 @@ namespace VirtualClient.Dependencies
         {
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = expectedVersion;
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
@@ -455,7 +343,6 @@ namespace VirtualClient.Dependencies
         {
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = "10";
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
@@ -472,7 +359,6 @@ namespace VirtualClient.Dependencies
         {
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = "9";
 
                 Dictionary<string, bool> compilers = new Dictionary<string, bool>()
