@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -55,6 +56,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo mount -t iso9660 -o ro,exec,loop {this.mockPackage.Path}/speccpu.iso {this.mockFixture.GetPackagePath()}/speccpu_mount",
                 $"sudo ./install.sh -f -d {this.mockPackage.Path}",
+                $"sudo gcc -dumpversion",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
                 $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
@@ -66,17 +68,35 @@ namespace VirtualClient.Actions
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
 
-                return new InMemoryProcess
+                if (exe == "sudo" && arguments == "gcc -dumpversion")
                 {
-                    StartInfo = new ProcessStartInfo
+                    return new InMemoryProcess
                     {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("10")),
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                }
+                else
+                {
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                }
             };
 
             using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -84,7 +104,7 @@ namespace VirtualClient.Actions
                 await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, processCount);
+            Assert.AreEqual(expectedCommands.Count, processCount);
         }
 
         [Test]

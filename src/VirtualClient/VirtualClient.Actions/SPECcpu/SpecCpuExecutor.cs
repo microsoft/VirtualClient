@@ -88,17 +88,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Compiler name
-        /// </summary>
-        public string CompilerName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.CompilerName));
-            }
-        }
-
-        /// <summary>
         /// Iterations.
         /// Recommand Default: 2
         /// </summary>
@@ -433,11 +422,11 @@ namespace VirtualClient.Actions
                 true);
             }
 
-            string compilerVersion = await this.GetInstalledCompilerVersionAsync(this.CompilerName, cancellationToken);
+            string compilerVersion = await this.GetInstalledCompilerVersionAsync("gcc", cancellationToken);
 
             if (string.IsNullOrEmpty(compilerVersion))
             {
-                throw new WorkloadException($"{this.CompilerName} version not found.");
+                throw new WorkloadException("gcc version not found.");
             }
 
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);

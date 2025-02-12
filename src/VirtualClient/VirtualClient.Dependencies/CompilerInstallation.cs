@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.Configuration;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -91,6 +92,13 @@ namespace VirtualClient.Dependencies
                 {
                     throw new DependencyException($"gcc compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
                 }
+
+                // Ensure gcc, cc, and gfrotran versions match
+                bool compilerVersionsMatch = await this.ConfirmCompilerVerionsMatchAsync(telemetryContext, cancellationToken);
+                if (!compilerVersionsMatch)
+                {
+                    throw new DependencyException("gcc, cc, and gfortran compiler versions do not match", ErrorReason.DependencyInstallationFailed);
+                }
             }
             else if (this.Platform == PlatformID.Win32NT)
             {
@@ -144,6 +152,15 @@ namespace VirtualClient.Dependencies
             return (confirmedCompilers == compilersToCheck.Count);
         }
 
+        private async Task<bool> ConfirmCompilerVerionsMatchAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string gccVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", telemetryContext, cancellationToken);
+            string ccVersion = await this.GetInstalledCompilerDumpVersionAsync("cc", telemetryContext, cancellationToken);
+            string gfortranVersion = await this.GetInstalledCompilerDumpVersionAsync("gfortran", telemetryContext, cancellationToken);
+
+            return gccVersion == ccVersion && ccVersion == gfortranVersion;
+        }
+
         private Task InstallCygwinAsync(DependencyPath cygwinInstallationPath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string cygwinCommandArguments;
@@ -165,7 +182,7 @@ namespace VirtualClient.Dependencies
         {
             LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
             gccVersion = (string.IsNullOrEmpty(gccVersion)) ? string.Empty : gccVersion;
-            string installedVersion = await this.GetInstalledCompilerVersionAsync("gcc", telemetryContext, cancellationToken);
+            string installedVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", telemetryContext, cancellationToken);
 
             switch (distro.LinuxDistribution)
             {
@@ -296,10 +313,12 @@ namespace VirtualClient.Dependencies
              });
         }
 
-        private async Task<string> GetInstalledCompilerVersionAsync(string compilerName, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = compilerName;
             string commandArguments = "-dumpversion";
+
+            string version = string.Empty;
 
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
             {
@@ -311,15 +330,16 @@ namespace VirtualClient.Dependencies
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext);
 
-                        return process.StandardOutput.ToString().Trim().Split(".")[0];
+                        version = process.StandardOutput.ToString().Trim().Split(".")[0];
                     }
                 }
                 catch
                 {
+                    version = string.Empty;
                 }
             }
 
-            return string.Empty;
+            return version;
         }
     }
 
