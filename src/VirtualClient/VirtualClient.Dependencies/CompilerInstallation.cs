@@ -396,7 +396,7 @@ namespace VirtualClient.Dependencies
     public class Compilers
     {
         /// <summary>
-        /// Gcc compiler.
+        /// Gnu compiler.
         /// </summary>
         public const string Gnu = "gnu";
 
