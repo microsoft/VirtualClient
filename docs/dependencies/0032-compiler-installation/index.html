@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.fe082272.css">
-<script src="/VirtualClient/assets/js/runtime~main.fd58badd.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.1bf9ded5.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.a6927833.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -24,9 +24,9 @@
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="profile-component-parameters">Profile Component Parameters<a class="hash-link" aria-label="Direct link to Profile Component Parameters" title="Direct link to Profile Component Parameters" href="/VirtualClient/docs/dependencies/0032-compiler-installation/#profile-component-parameters">​</a></h2>
 <p>The following section describes the parameters used by the individual component in the profile.</p>
-<table><thead><tr><th><strong>Parameter</strong></th><th><strong>Default Value</strong></th><th><strong>Description</strong></th></tr></thead><tbody><tr><td>CompilerVersion</td><td>N/A</td><td>Optional. The version of the compiler to be installed (e.g. 10)</td></tr><tr><td>CygwinPackages</td><td>N/A</td><td>Optional. Windows Only. Comma-delimited list of packages that needs to be installed with cygwin (e.g. gcc-fortran,python3).</td></tr><tr><td>Note: VC automatically installs make &amp; cmake with Cygwin.</td><td></td><td></td></tr></tbody></table>
+<table><thead><tr><th><strong>Parameter</strong></th><th><strong>Default Value</strong></th><th><strong>Description</strong></th></tr></thead><tbody><tr><td>CompilerName</td><td>gnu</td><td>Optional. The name of the compiler to be installed (ie. &quot;gnu&quot; or &quot;charm++&quot;)</td></tr><tr><td>CompilerVersion</td><td>N/A</td><td>Optional. The version of the compiler to be installed (e.g. 10)</td></tr><tr><td>CygwinPackages</td><td>N/A</td><td>Optional. Windows Only. Comma-delimited list of packages that needs to be installed with cygwin (e.g. gcc-fortran,python3).</td></tr><tr><td>Note: VC automatically installs make &amp; cmake with Cygwin.</td><td></td><td></td></tr></tbody></table>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="compilers-supported">Compilers Supported<a class="hash-link" aria-label="Direct link to Compilers Supported" title="Direct link to Compilers Supported" href="/VirtualClient/docs/dependencies/0032-compiler-installation/#compilers-supported">​</a></h2>
-<table><thead><tr><th><strong>CompilerName</strong></th><th><strong>Supported Platform/Architectures</strong></th></tr></thead><tbody><tr><td>gcc</td><td>linux-arm64,linux-x64,win-arm64,win-x64</td></tr></tbody></table>
+<table><thead><tr><th><strong>CompilerName</strong></th><th><strong>Supported Platform/Architectures</strong></th></tr></thead><tbody><tr><td>gnu</td><td>linux-arm64,linux-x64,win-arm64,win-x64</td></tr><tr><td>charm++</td><td>linux-arm64,linux-x64,win-arm64,win-x64</td></tr></tbody></table>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="example">Example<a class="hash-link" aria-label="Direct link to Example" title="Direct link to Example" href="/VirtualClient/docs/dependencies/0032-compiler-installation/#example">​</a></h2>
 <p>The following section describes the parameters used by the individual component in the profile.</p>
 <ul>
