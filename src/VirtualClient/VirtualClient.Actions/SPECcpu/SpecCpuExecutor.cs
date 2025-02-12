@@ -422,7 +422,7 @@ namespace VirtualClient.Actions
                 true);
             }
 
-            string compilerVersion = await this.GetInstalledCompilerVersionAsync("gcc", cancellationToken);
+            string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", cancellationToken);
 
             if (string.IsNullOrEmpty(compilerVersion))
             {
@@ -439,10 +439,12 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
         }
 
-        private async Task<string> GetInstalledCompilerVersionAsync(string compilerName, CancellationToken cancellationToken)
+        private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, CancellationToken cancellationToken)
         {
             string command = compilerName;
             string commandArguments = "-dumpversion";
+
+            string version = string.Empty;
 
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
             {
@@ -452,15 +454,16 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        return process.StandardOutput.ToString().Trim().Split(".")[0];
+                        version = process.StandardOutput.ToString().Trim().Split(".")[0];
                     }
                 }
                 catch
                 {
+                    version = string.Empty;
                 }
             }
 
-            return string.Empty;
+            return version;
         }
 
         internal class SpecCpuState : State

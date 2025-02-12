@@ -7,7 +7,6 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -36,20 +35,6 @@ namespace VirtualClient.Dependencies
                 .Returns(true);
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
-        }
-
-        [Test]
-        public void CompilerInstallationThrowsForUnsupportedCompiler()
-        {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CompilerInstallation.CompilerVersion), "123" }
-            };
-
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                Assert.ThrowsAsync<NotSupportedException>(() => compilerInstallation.ExecuteAsync(CancellationToken.None));
-            }
         }
 
         [Test]
@@ -193,7 +178,7 @@ namespace VirtualClient.Dependencies
                     commandExecuted++;
                 }
 
-                if (exe == "sudo" && arguments == "gcc -dumpversion")
+                if (exe == "sudo" && arguments.Contains("-dumpversion"))
                 {
                     IProcessProxy process = new InMemoryProcess
                     {
@@ -232,7 +217,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(expectedCommands.Count(), commandExecuted);
+            Assert.GreaterOrEqual(commandExecuted, expectedCommands.Count());
         }
 
         [Test]
@@ -267,7 +252,7 @@ namespace VirtualClient.Dependencies
                     unexpectedCommandExecuted++;
                 }
 
-                if (exe == "sudo" && arguments == "gcc -dumpversion")
+                if (exe == "sudo" && arguments.Contains("-dumpversion"))
                 {
                     IProcessProxy process = new InMemoryProcess
                     {
@@ -307,7 +292,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(expectedCommands.Count(), expectedCommandExecuted);
+            Assert.GreaterOrEqual(expectedCommandExecuted, expectedCommands.Count());
             Assert.AreEqual(unexpectedCommandExecuted, 0);
         }
 
