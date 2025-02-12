@@ -5,7 +5,8 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.Configuration;
+    using System.IO;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -39,6 +40,17 @@ namespace VirtualClient.Dependencies
         {
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManager = this.Dependencies.GetService<ISystemManagement>();
+        }
+
+        /// <summary>
+        /// The name of the compiler (e.g. gnu).
+        /// </summary>
+        public string CompilerName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(CompilerInstallation.CompilerName), "gnu");
+            }
         }
 
         /// <summary>
@@ -84,31 +96,48 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            switch (this.CompilerName.ToLowerInvariant())
             {
-                await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
+                case Compilers.Gnu:
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
 
-                if (!string.IsNullOrEmpty(this.CompilerVersion) && !await this.ConfirmGccVersionInstalledAsync(cancellationToken))
-                {
-                    throw new DependencyException($"gcc compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
-                }
+                        if (!string.IsNullOrEmpty(this.CompilerVersion) && !await this.ConfirmGccVersionInstalledAsync(cancellationToken))
+                        {
+                            throw new DependencyException($"gcc compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
+                        }
 
-                // Ensure gcc, cc, and gfrotran versions match
-                bool compilerVersionsMatch = await this.ConfirmCompilerVerionsMatchAsync(telemetryContext, cancellationToken);
-                if (!compilerVersionsMatch)
-                {
-                    throw new DependencyException("gcc, cc, and gfortran compiler versions do not match", ErrorReason.DependencyInstallationFailed);
-                }
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                string chocolateyToolsLocation = this.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
-                string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
+                        // Ensure gcc, cc, and gfrotran versions match
+                        bool compilerVersionsMatch = await this.ConfirmCompilerVerionsMatchAsync(telemetryContext, cancellationToken);
+                        if (!compilerVersionsMatch)
+                        {
+                            throw new DependencyException("gcc, cc, and gfortran compiler versions do not match", ErrorReason.DependencyInstallationFailed);
+                        }
+                    }
+                    else if (this.Platform == PlatformID.Win32NT)
+                    {
+                        string chocolateyToolsLocation = this.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
+                        string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
 
-                DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
-                await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken);
+                        DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
+                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken);
 
-                await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken);
+                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken);
+                    }
+
+                    break;
+
+                case Compilers.Charmplusplus:
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        await this.InstallCharmplusplusAsync(this.CompilerVersion, telemetryContext, cancellationToken);
+                    }
+
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Compiler '{this.CompilerName}' is not supported.");
             }
 
             // The compiler + version installed is an important part of the metadata
@@ -291,6 +320,24 @@ namespace VirtualClient.Dependencies
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgumentCpp, Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
+        private async Task InstallCharmplusplusAsync(string charmplusplusVersion, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // default latest
+            charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
+            await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
+            {
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
+            }
+
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
+            {
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
+            }
+        }
+
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, int[] successCodes = null)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
@@ -348,6 +395,11 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class Compilers
     {
+        /// <summary>
+        /// Gnu compiler.
+        /// </summary>
+        public const string Gnu = "gnu";
+
         /// <summary>
         /// Gcc compiler.
         /// </summary>
