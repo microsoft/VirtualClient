@@ -51,11 +51,6 @@ namespace VirtualClient.Dependencies
             {
                 return this.Parameters.GetValue<string>(nameof(CompilerInstallation.CompilerName), "gnu");
             }
-
-            set
-            {
-                this.Parameters[nameof(CompilerInstallation.CompilerName)] = value;
-            }
         }
 
         /// <summary>
