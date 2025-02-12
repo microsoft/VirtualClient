@@ -8,8 +8,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "10",
+        "CompilerVersion": "",
         "Iterations": 2,
         "SpecProfile": "fprate",
         "RunPeak": false,
@@ -23,7 +22,6 @@
             "Type": "SpecCpuExecutor",
             "Parameters": {
                 "Scenario": "ExecuteSPECBenchmark",
-                "CompilerVersion": "$.Parameters.CompilerVersion",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "$.Parameters.SpecProfile",
                 "PackageName": "speccpu2017",
@@ -55,7 +53,6 @@
             "Type": "CompilerInstallation",
             "Parameters": {
                 "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
                 "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
             }

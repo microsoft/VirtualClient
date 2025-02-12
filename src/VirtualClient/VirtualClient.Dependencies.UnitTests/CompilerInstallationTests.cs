@@ -7,7 +7,7 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -38,28 +38,12 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public void CompilerInstallationThrowsForUnsupportedCompiler()
-        {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CompilerInstallation.CompilerName), "icc" },
-                { nameof(CompilerInstallation.CompilerVersion), "123" }
-            };
-
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                Assert.ThrowsAsync<NotSupportedException>(() => compilerInstallation.ExecuteAsync(CancellationToken.None));
-            }
-        }
-
-        [Test]
         public async Task CompilerInstallationRunsTheExpectedWorkloadCommandInLinuxForGcc()
         {
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(CompilerInstallation.CompilerName), "gcc" },
                 { nameof(CompilerInstallation.CompilerVersion), "123" }
             };
 
@@ -114,68 +98,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase(Architecture.X64)]
-        [TestCase(Architecture.Arm64)]
-        public async Task CompilerInstallationRunsTheExpectedCommandForCharmPlusPlusOnLinux(Architecture architecture)
-        {
-            this.mockFixture.Setup(PlatformID.Unix, architecture);
-
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
-
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CompilerInstallation.CompilerName), "charm++" },
-                { nameof(CompilerInstallation.CompilerVersion), "6.5.0" }
-            };
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            List<string> expectedCommands = new List<string>()
-            {
-                "sudo wget https://charm.cs.illinois.edu/distrib/charm-6.5.0.tar.gz -O charm.tar.gz",
-                "sudo tar -xzf charm.tar.gz",
-                "sudo ./build charm++ netlrts-linux-x86_64 --with-production -j4",
-                "sudo ./build charm++ netlrts-linux-arm8 --with-production -j4"
-            };
-
-            int commandExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
-                {
-                    commandExecuted++;
-                }
-
-                IProcessProxy process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-                process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 123.3.0");
-                process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 123.3.0");
-                return process;
-            };
-
-            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.AreEqual(3, commandExecuted);
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         [TestCase("python3")]
@@ -189,7 +111,6 @@ namespace VirtualClient.Dependencies
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(CompilerInstallation.CompilerName), "gcc" },
                 { nameof(CompilerInstallation.CygwinPackages), packages }
             };
 
@@ -235,26 +156,17 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task CompilerInstallationInLinuxDefaultsToGcc10()
+        public async Task CompilerInstallationInLinuxDefaultsToEmptyIfNoExistingVersion()
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>();
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                "sudo update-alternatives --remove-all gcc",
-                "sudo update-alternatives --remove-all gfortran",
+                "sudo gcc -dumpversion",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
-                "sudo apt install build-essential gcc-10 g++-10 gfortran-10 -y --quiet",
-                "sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 " +
-                    $"--slave /usr/bin/g++ g++ /usr/bin/g++-10 " +
-                    $"--slave /usr/bin/gcov gcov /usr/bin/gcov-10 " +
-                    $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10 " +
-                    $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10 " +
-                    $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-10",
-                "sudo update-alternatives --remove-all cpp",
-                "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-10 100",
+                "sudo apt install build-essential gcc g++ gfortran make -y --quiet"
             };
 
             int commandExecuted = 0;
@@ -266,20 +178,38 @@ namespace VirtualClient.Dependencies
                     commandExecuted++;
                 }
 
-                IProcessProxy process = new InMemoryProcess
+                if (exe == "sudo" && arguments.Contains("-dumpversion"))
                 {
-                    StartInfo = new ProcessStartInfo
+                    IProcessProxy process = new InMemoryProcess
                     {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-                process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
-                process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
-                return process;
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 1,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    return process;
+                }
+                else
+                {
+                    IProcessProxy process = new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    return process;
+                }
             };
 
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -287,45 +217,74 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(expectedCommands.Count(), commandExecuted);
+            Assert.GreaterOrEqual(commandExecuted, expectedCommands.Count());
         }
 
         [Test]
-        public async Task CompilerInstallationRunsTheExpectedWorkloadCommandInLinuxForAocc()
+        public async Task CompilerInstallationInLinuxDefaultsToEmptyIfExistingVersion()
         {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CompilerInstallation.CompilerName), "Aocc" },
-                { nameof(CompilerInstallation.CompilerVersion), "5.6.7" }
-            };
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>();
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
-                "sudo wget https://developer.amd.com/wordpress/media/files/aocc-compiler-5.6.7.tar",
-                "sudo tar -xvf aocc-compiler-5.6.7.tar",
-                "sudo bash install.sh"
+                "sudo gcc -dumpversion",
+                "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
+                "sudo apt update"
+            };
+            List<string> unexpectedCommands = new List<string>()
+            {
+                "sudo apt install build-essential gcc g++ gfortran make -y --quiet"
             };
 
-            int commandExecuted = 0;
+            int expectedCommandExecuted = 0;
+            int unexpectedCommandExecuted = 0;
+
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
-                    commandExecuted++;
+                    expectedCommandExecuted++;
                 }
 
-                return new InMemoryProcess
+                if (unexpectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
-                    StartInfo = new ProcessStartInfo
+                    unexpectedCommandExecuted++;
+                }
+
+                if (exe == "sudo" && arguments.Contains("-dumpversion"))
+                {
+                    IProcessProxy process = new InMemoryProcess
                     {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true,
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("10"))
+                    };
+                    return process;
+                }
+                else
+                {
+                    IProcessProxy process = new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0");
+                    return process;
+                }
             };
 
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -333,7 +292,8 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(3, commandExecuted);
+            Assert.GreaterOrEqual(expectedCommandExecuted, expectedCommands.Count());
+            Assert.AreEqual(unexpectedCommandExecuted, 0);
         }
 
         [Test]
@@ -351,7 +311,6 @@ namespace VirtualClient.Dependencies
         {
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = expectedVersion;
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
@@ -369,7 +328,6 @@ namespace VirtualClient.Dependencies
         {
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = "10";
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
@@ -386,7 +344,6 @@ namespace VirtualClient.Dependencies
         {
             using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                compilerInstallation.CompilerName = "gcc";
                 compilerInstallation.CompilerVersion = "9";
 
                 Dictionary<string, bool> compilers = new Dictionary<string, bool>()
