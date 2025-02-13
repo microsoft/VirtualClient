@@ -28,13 +28,9 @@ namespace VirtualClient.Common.Telemetry
 
         private static AssemblyName loggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
         private static AssemblyName executingAssembly = Assembly.GetEntryAssembly().GetName();
+        private JsonSerializerSettings jsonSerializationSettings;
         private EventHubTelemetryChannel underlyingTelemetryChannel;
         private LogLevel minumumLogLevel;
-
-        static EventHubTelemetryLogger()
-        {
-            EventHubTelemetryLogger.DefaultJsonSerializationSettings.Converters.Add(new ContextPropertiesJsonConverter());
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventHubTelemetryLogger"/> class.
@@ -46,28 +42,26 @@ namespace VirtualClient.Common.Telemetry
             channel.ThrowIfNull(nameof(channel));
             this.underlyingTelemetryChannel = channel;
             this.minumumLogLevel = level;
+
+            this.jsonSerializationSettings = new JsonSerializerSettings
+            {
+                // Format: 2012-03-21T05:40:12.340Z
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                Formatting = Formatting.None,
+                NullValueHandling = NullValueHandling.Ignore,
+
+                // We tried using PreserveReferenceHandling.All and Object, but ran into issues
+                // when deserializing string arrays and read only dictionaries
+                ReferenceLoopHandling = ReferenceLoopHandling.Error,
+
+                // This is the default setting, but to avoid remote code execution bugs do NOT change
+                // this to any other setting.
+                TypeNameHandling = TypeNameHandling.None,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
+            this.jsonSerializationSettings.Converters.Add(new ContextPropertiesJsonConverter());
         }
-
-        /// <summary>
-        /// Serializer settings to use when serializing/deserializing objects to/from
-        /// JSON.
-        /// </summary>
-        public static JsonSerializerSettings DefaultJsonSerializationSettings { get; } = new JsonSerializerSettings
-        {
-            // Format: 2012-03-21T05:40:12.340Z
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            Formatting = Formatting.None,
-            NullValueHandling = NullValueHandling.Ignore,
-
-            // We tried using PreserveReferenceHandling.All and Object, but ran into issues
-            // when deserializing string arrays and read only dictionaries
-            ReferenceLoopHandling = ReferenceLoopHandling.Error,
-
-            // This is the default setting, but to avoid remote code execution bugs do NOT change
-            // this to any other setting.
-            TypeNameHandling = TypeNameHandling.None,
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
-        };
 
         /// <summary>
         /// Gets or sets true/false whether channel event transmission diagnostics is
@@ -158,7 +152,7 @@ namespace VirtualClient.Common.Telemetry
                 appHost = Environment.MachineName
             };
 
-            return new EventData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventObject, EventHubTelemetryLogger.DefaultJsonSerializationSettings)));
+            return new EventData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventObject, this.jsonSerializationSettings)));
         }
 
         private static IEnumerable<KeyValuePair<string, object>> GetContextProperties(EventContext context, object bufferInfo = null)

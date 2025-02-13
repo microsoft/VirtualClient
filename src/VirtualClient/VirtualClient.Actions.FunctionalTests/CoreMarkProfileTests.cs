@@ -177,7 +177,8 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupLinuxPackagesInstalled(new Dictionary<string, string>
             {
                 { "gcc", "10" }, // Should match profile defaults.
-                { "cc", "10" }
+                { "cc", "10" },
+                { "gfortran", "10" }
             });
 
             this.mockFixture.ProcessManager.OnGetProcess = (id) => null;

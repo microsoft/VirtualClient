@@ -71,16 +71,6 @@ namespace VirtualClient
         public static bool IsRebootRequested { get; set; }
 
         /// <summary>
-        /// Metadata provided to the application on the command line.
-        /// </summary>
-        public static IDictionary<string, IConvertible> Metadata { get; } = new ConcurrentDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
-        /// Parameters provided to the application on the command line.
-        /// </summary>
-        public static IDictionary<string, IConvertible> Parameters { get; } = new ConcurrentDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
         /// Cleans up any tracked resources.
         /// </summary>
         public static void OnCleanup()

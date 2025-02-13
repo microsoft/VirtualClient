@@ -1,4 +1,0 @@
-{
-  "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server": { "bert": "result_scheduled_samples_per_sec: 4751.78, Result is INVALID" },
-  "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream": { "bert": "result_90.00_percentile_latency_ns: 2202969, Result is VALID" }
-}

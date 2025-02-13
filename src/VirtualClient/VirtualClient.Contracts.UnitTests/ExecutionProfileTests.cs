@@ -66,8 +66,22 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        [TestCase("TEST-PROFILE-3.json")]
+        [TestCase("TEST-PROFILE-3-PARALLEL.json")]
         public void ExecutionProfileCanDeserializeProfileFilesWithParallelExecutionComponents(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            Assert.IsNotEmpty(profile.Actions);
+            Assert.IsTrue(profile.Actions.Count == 2);
+
+            Assert.IsNotEmpty(profile.Actions[1].Components);
+            Assert.IsTrue(profile.Actions[1].Components.Count() == 2);
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-1-PARALLEL-LOOP.json")]
+        public void ExecutionProfileCanDeserializeProfileFilesWithParallelLoopExecutionComponents(string profileName)
         {
             ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
                 .FromJson<ExecutionProfile>();

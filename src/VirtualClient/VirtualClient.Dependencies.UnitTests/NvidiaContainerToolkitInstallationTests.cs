@@ -6,10 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
     using System.Net.Http;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +32,7 @@ namespace VirtualClient.Dependencies
 
         private const string UpdateCommand = "apt-get update";
         private const string NvidiaDockerInstallationCommand = "apt-get install -y nvidia-container-toolkit";
+        private const string ConfigureDockerRuntimeCommand = "nvidia-ctk runtime configure --runtime=docker";
         private const string RestartDockerCommand = "systemctl restart docker";
 
         private MockFixture fixture;
@@ -87,6 +85,7 @@ namespace VirtualClient.Dependencies
             this.SetupProcessManager("sudo", $"bash -c \"{SetupCommand}\"", Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", NvidiaDockerInstallationCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", ConfigureDockerRuntimeCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", RestartDockerCommand, Environment.CurrentDirectory);
 
             await this.component.ExecuteAsync(CancellationToken.None);
@@ -115,6 +114,7 @@ namespace VirtualClient.Dependencies
             this.SetupProcessManager("sudo", $"bash -c \"{SetupCommand}\"", Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", NvidiaDockerInstallationCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", ConfigureDockerRuntimeCommand, Environment.CurrentDirectory);
 
             var setup = this.SetupProcessManager("sudo", RestartDockerCommand, Environment.CurrentDirectory);
             setup.Returns(NvidiaContainerToolkitInstallationTests.GetProcessProxy(1));

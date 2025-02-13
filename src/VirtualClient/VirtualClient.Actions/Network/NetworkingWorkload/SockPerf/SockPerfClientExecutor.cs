@@ -12,7 +12,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -23,6 +22,15 @@ namespace VirtualClient.Actions.NetworkPerformance
     [SupportedPlatforms("linux-arm64,linux-x64")]
     public class SockPerfClientExecutor : SockPerfExecutor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SockPerfClientExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public SockPerfClientExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfClientExecutor"/> class.
         /// </summary>

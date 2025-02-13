@@ -109,6 +109,23 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Get all existing/cached Proxy API clients.
+        /// </summary>
+        /// <returns>
+        /// A set of <see cref="IProxyApiClient"/> that can be used to interface with Proxy API Endpoints.
+        /// </returns>
+        public IEnumerable<IProxyApiClient> GetProxyApiClients()
+        {
+            List<IProxyApiClient> clients = new List<IProxyApiClient>();
+            if (this.proxyApiClients.Any())
+            {
+                clients.AddRange(this.proxyApiClients.Values);
+            }
+
+            return clients;
+        }
+
+        /// <summary>
         /// Returns the effective port to use for hosting the API service. The port can be defined/overridden
         /// on the command line.
         /// </summary>

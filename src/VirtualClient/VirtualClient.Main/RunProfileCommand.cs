@@ -44,7 +44,7 @@ namespace VirtualClient
         /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of their severity. Default = false.
         /// </summary>
-        public bool FailFast { get; set; }
+        public bool? FailFast { get; set; }
 
         /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
@@ -822,8 +822,16 @@ namespace VirtualClient
 
         private void InitializeProfile(ExecutionProfile profile)
         {
+            if (this.Metadata?.Any() == true)
+            {
+                // Command-line metadata overrides metadata in the profile itself.
+                profile.Metadata.AddRange(this.Metadata, true);
+            }
+
             if (this.Parameters?.Any() == true)
             {
+                // Command-line parameters override parameters defined in the profile
+                // itself.
                 profile.Parameters.AddRange(this.Parameters, true);
             }
 
@@ -862,9 +870,11 @@ namespace VirtualClient
 
             EventContext telemetryContext = EventContext.Persisted();
             ConsoleLogger.Default.LogMessage($"Experiment ID: {this.ExperimentId}", telemetryContext);
-            ConsoleLogger.Default.LogMessage($"Agent ID: {this.AgentId}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Client ID: {this.ClientId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Log To File: {this.LogToFile}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Package Directory: {platformSpecifics.PackagesDirectory}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"State Directory: {platformSpecifics.StateDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {

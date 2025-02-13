@@ -56,18 +56,22 @@ namespace VirtualClient.Actions
                 metrics.Add(new Metric(
                     "Operations/sec",
                     metrics.First(m => m.Name == "Operations/min").Value / 60,
-                    relativity: MetricRelativity.HigherIsBetter));
+                    MetricUnit.OperationsPerSec,
+                    relativity: MetricRelativity.HigherIsBetter,
+                    verbosity: 0));
 
                 metrics.Add(new Metric(
                     "Transactions/sec",
                     metrics.First(m => m.Name == "Transactions/min").Value / 60,
-                    relativity: MetricRelativity.HigherIsBetter));
+                    MetricUnit.TransactionsPerSec,
+                    relativity: MetricRelativity.HigherIsBetter,
+                    verbosity: 0));
 
                 return metrics;
             }
             catch (Exception exc)
             {
-                throw new WorkloadResultsException("Failed to parse PostgreSQL metrics from results.", exc, ErrorReason.InvalidResults);
+                throw new WorkloadResultsException("Failed to parse HammerDB metrics from results.", exc, ErrorReason.InvalidResults);
             }
         }
 
@@ -94,7 +98,7 @@ namespace VirtualClient.Actions
         {
             if (this.Sections.Count <= 0 || !this.Sections.ContainsKey("TEST RESULT"))
             {
-                throw new SchemaException("The PostgreSQL output file has incorrect format for parsing");
+                throw new SchemaException("The HammerDB output file has incorrect format for parsing");
             }
         }
     }

@@ -34,10 +34,10 @@ This workload is supported ONLY for systems that contain Nvidia GPU hardware com
   |-----------------------|---------|---------------|
   | Username     | Optional. User which needs to be created in container to run MLPerf benchmarks. | testuser  |
   | DiskFilter     | Optional. Filter to decide the disk that will be used to download benchmarks. Since benchmarks data is around 800gb, default disk filter is greater than 1000gb. | SizeGreaterThan:1000gb  |
-  | LinuxCudaVersion     | Optional. Version of CUDA that needs to be installed. | 11.6  |
-  | LinuxDriverVersion     | Optional. Version of GPU driver that needs to be installed. | 510  |
-  | LinuxLocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run  |
-  | RequireCustomSystemSupport | Optional. This enables additional A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf. Ones that are supported by github repo of MLPerf are still supported. | true |
+  | LinuxCudaVersion     | Optional. Version of CUDA that needs to be installed. | 12.4  |
+  | LinuxDriverVersion     | Optional. Version of GPU driver that needs to be installed. | 550  |
+  | LinuxLocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.4.0_550.54.14_linux.run  |
+  | RequireCustomSystemSupport | Optional. This enables additional A100_PCIe_40GBx8 system support that was not supported by github repo of MLPerf. Ones that are supported by github repo of MLPerf are still supported. | true |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

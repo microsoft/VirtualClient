@@ -1,5 +1,5 @@
 # Compiler Installation
-This dependency provides support for installing either the GCC or AOCC compiler, along with any appropriate packages.
+This dependency provides support for installing either the GCC compiler, along with any appropriate packages.
 
 ## Supported Platform/Architectures
 * linux-x64
@@ -12,7 +12,7 @@ The following section describes the parameters used by the individual component 
 
 | **Parameter** | **Default Value** | **Description**                                                   |
 |---------------|--------------|------------------------------------------------------------------------|
-| CompilerName  | gcc          | Optional. The name of the compiler to be installed (ie. "gcc" or "aocc") |
+| CompilerName  | gnu          | Optional. The name of the compiler to be installed (ie. "gnu" or "charm++") |
 | CompilerVersion | N/A        | Optional. The version of the compiler to be installed (e.g. 10) |
 | CygwinPackages | N/A         | Optional. Windows Only. Comma-delimited list of packages that needs to be installed with cygwin (e.g. gcc-fortran,python3).
 Note: VC automatically installs make & cmake with Cygwin. |
@@ -21,9 +21,8 @@ Note: VC automatically installs make & cmake with Cygwin. |
 
 | **CompilerName** | **Supported Platform/Architectures**                                   |
 |------------------|------------------------------------------------------------------------|
-|gcc               | linux-arm64,linux-x64,win-arm64,win-x64                                |
-|aocc              | linux-arm64,linux-x64                                                  |
-|charm++           | linux-arm64,linux-x64                                                  |
+| gnu              | linux-arm64,linux-x64,win-arm64,win-x64                                |
+| charm++          | linux-arm64,linux-x64,win-arm64,win-x64                                |
 
 ## Example
 The following section describes the parameters used by the individual component in the profile.
@@ -35,8 +34,7 @@ The following section describes the parameters used by the individual component 
     "Type": "CompilerInstallation",
     "Parameters": {
         "Scenario": "InstallCompiler",
-        "CompilerName": "gcc",
-        "CompilerVersion": "10",
+        "CompilerVersion": "",
         "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
     }
 },

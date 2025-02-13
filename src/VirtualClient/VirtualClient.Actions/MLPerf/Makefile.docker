@@ -1,0 +1,210 @@
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#	 http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This Makefile includes all the variables and targets used to set up NVIDIA's MLPerf Inference docker environment
+include $(CURDIR)/Makefile.const
+
+ENV ?= release
+
+USE_NIGHTLY ?= 0
+
+PARTNER_DROP ?= 0
+PARTNER_RELEASE := 4
+
+# Conditional Docker flags
+ifndef DOCKER_DETACH
+    DOCKER_DETACH := 0
+endif
+ifndef DOCKER_TAG
+    DOCKER_TAG := $(UNAME)-$(ARCH)
+endif
+
+DOCKER_BUILDKIT = 1
+HOST_VOL ?= ${PWD}
+CONTAINER_VOL ?= /work
+NO_DOCKER_PULL ?= 0
+
+# The below paths are for internal use only.
+# If any extra mounting path is needed, please use DOCKER_ARGS environment variables
+ifneq ($(wildcard /home/scratch.mlperf_inference),)
+    DOCKER_MOUNTS += -v /home/scratch.mlperf_inference:/home/scratch.mlperf_inference
+endif
+ifneq ($(wildcard /home/mlperf_inf_dlrmv2),)
+    DOCKER_MOUNTS += -v /home/mlperf_inf_dlrmv2:/home/mlperf_inf_dlrmv2
+endif
+ifneq ($(wildcard /home/scratch.svc_compute_arch),)
+    DOCKER_MOUNTS += -v /home/scratch.svc_compute_arch:/home/scratch.svc_compute_arch
+endif
+ifneq ($(wildcard /home/scratch.computelab/sudo),)
+    DOCKER_MOUNTS += -v /home/scratch.computelab/sudo:/home/scratch.computelab/sudo
+endif
+ifneq ($(wildcard /home/scratch.dlsim),)
+    DOCKER_MOUNTS += -v /home/scratch.dlsim:/home/scratch.dlsim
+endif
+ifneq ($(wildcard /raid/data),)
+    DOCKER_MOUNTS += -v /raid/data:/raid/data
+endif
+ifneq ($(wildcard $(PROJECT_ROOT)/../../regression),)
+    DOCKER_MOUNTS += -v $(shell realpath $(PROJECT_ROOT)/../../regression):/regression
+endif
+ifdef MLPERF_SCRATCH_PATH
+    ifneq ($(wildcard $(MLPERF_SCRATCH_PATH)),)
+        DOCKER_MOUNTS += -v $(MLPERF_SCRATCH_PATH):$(MLPERF_SCRATCH_PATH)
+    else
+        $(error Path set in MLPERF_SCRATCH_PATH does not exist!)
+    endif
+endif
+
+# Handle different nvidia-docker version. Do not use nvidia-docker when running with CPUs
+ifneq ($(wildcard /usr/bin/nvidia-docker),)
+    DOCKER_RUN_CMD := nvidia-docker run
+    # Set Environment variables to fix docker client and server version mismatch
+    # Related issue: https://github.com/kubernetes-sigs/kubespray/issues/6160
+    export DOCKER_API_VERSION=1.40
+else
+    DOCKER_RUN_CMD := docker run --gpus=all --runtime=nvidia -d
+endif
+
+# If specific DOCKER_COMMAND is not passed, launch interactive docker container session.
+ifeq ($(DOCKER_COMMAND),)
+    DOCKER_INTERACTIVE_FLAGS = -it
+else
+    DOCKER_INTERACTIVE_FLAGS =
+endif
+
+
+# Docker container host name
+RANDOM := $(shell bash -c 'echo $$RANDOM')
+DOCKER_NAME := mlperf-inference-$(DOCKER_TAG)
+
+
+############################## DOCKER TAG / NAME ##############################
+# Dockerfile
+DOCKER_FILENAME := docker/$(ENV)/Dockerfile
+
+BASE_IMAGE_NAME ?= mlpinf-$(VERSION)-cuda$(CUDA_VER)-${BASE_IMAGE_ALIAS}-ubuntu$(UBUNTU_VERSION)-$(BUILD_CONTEXT)-$(ENV)
+
+ifeq ($(ENV), dev)
+# for nvidia internal dev only
+    CONTAINER_REGISTRY := gitlab-master.nvidia.com/mlpinf/mlperf-inference
+    DOCKER_BUILD_ARGS = --build-arg BASE_IMAGE=$(CONTAINER_REGISTRY):$(BASE_IMAGE_NAME) \
+		--build-arg ENV=$(ENV) \
+		--build-arg BUILD_CONTEXT=$(BUILD_CONTEXT) \
+		--build-arg USE_NIGHTLY=$(USE_NIGHTLY) \
+		--build-arg CUDA_VER=$(CUDA_VER) \
+		--build-arg TRT_MAJOR_VER=$(TRT_MAJOR_VER) \
+		--build-arg TRT_VER=$(TRT_VER) \
+		--build-arg MLPERF_VER=$(VERSION)
+else ifeq ($(ENV), release)
+# for partner code drop and post submission general public code release
+    ifeq ($(PARTNER_DROP), 1)
+        BASE_IMAGE_NAME = mlpinf-$(VERSION).$(PARTNER_RELEASE)-cuda$(CUDA_VER)-${BASE_IMAGE_ALIAS}-ubuntu$(UBUNTU_VERSION)-$(BUILD_CONTEXT)-$(ENV)-partner
+        CONTAINER_REGISTRY := nvcr.io/yrleydyexu3y/mlpinf-partner-$(subst .,,$(VERSION))/mlpinf-partner-$(subst .,,$(VERSION))
+    else
+	    ifeq ($(EXTERNAL_USER), 0)
+            CONTAINER_REGISTRY := gitlab-master.nvidia.com/mlpinf/mlperf-inference
+		else
+            CONTAINER_REGISTRY := nvcr.io/nvidia/mlperf/mlperf-inference
+		endif
+    endif
+    DOCKER_BUILD_ARGS := --build-arg BASE_IMAGE=$(CONTAINER_REGISTRY):$(BASE_IMAGE_NAME) \
+		--build-arg ENV=$(ENV) \
+		--build-arg BUILD_CONTEXT=$(BUILD_CONTEXT)
+else
+	$(error Only dev and release mode is currently supported.)
+endif
+
+
+# Check if the user is currently under NVIDIA intranet. External users should see 1.
+.PHONY: check_intranet
+check_intranet:
+	@echo "EXTERNAL_USER = $(EXTERNAL_USER)"
+
+# Small helper to check if nvidia-docker is installed correctly.
+.PHONY: docker_sanity
+docker_sanity:
+	docker pull nvcr.io/nvidia/cuda:11.0.3-runtime-ubuntu18.04
+	$(DOCKER_RUN_CMD) --rm \
+		-e NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES} \
+		nvcr.io/nvidia/cuda:11.0.3-runtime-ubuntu18.04 nvidia-smi
+	@echo "Nvidia-docker is installed correctly!"
+
+
+# Build the docker image and launch an interactive container.
+# For CPU builds, first build the backend libraries and copy them into the working directory
+.PHONY: prebuild
+prebuild:
+ifeq ($(BUILD_TRITON), 1)
+	@$(MAKE) -f Makefile.build build_triton_backends
+endif
+	@$(MAKE) -f Makefile.docker build_docker
+ifneq ($(strip ${DOCKER_DETACH}), 1)
+	@$(MAKE) -f Makefile.docker attach_docker || true
+endif
+
+
+
+.PHONY: build_docker
+build_docker:
+	@echo "Building Docker image"
+ifeq ($(PARTNER_DROP), 1)
+	@echo "PARTNER_DROP: $(VERSION).$(PARTNER_RELEASE)"
+endif
+	@echo "BASE_IMAGE: $(BASE_IMAGE_NAME)"
+	@echo "DOCKER_FILENAME: $(DOCKER_FILENAME)"
+ifeq ($(NO_DOCKER_PULL), 0)
+	docker pull $(CONTAINER_REGISTRY):$(BASE_IMAGE_NAME)
+endif
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -t mlperf-inference:$(DOCKER_TAG)-latest $(DOCKER_BUILD_ARGS) \
+		--network host \
+		--build-context common=docker/common \
+		-f $(DOCKER_FILENAME) docker/$(ENV)
+
+
+# Add current user into docker image.
+.PHONY: docker_add_user
+docker_add_user:
+	@echo "Adding user account into image"
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build -t mlperf-inference:$(DOCKER_TAG) --network host \
+		--build-arg BASE_IMAGE=mlperf-inference:$(DOCKER_TAG)-latest \
+		--build-arg GID=$(GROUPID) --build-arg UID=$(UID) --build-arg GROUP=$(GROUPNAME) --build-arg USER=$(UNAME) \
+		- < docker/Dockerfile.user
+
+# Add user and launch an interactive container session.
+.PHONY: attach_docker
+attach_docker:
+	@$(MAKE) -f Makefile.docker docker_add_user
+	@$(MAKE) -f Makefile.docker launch_docker
+
+# Launch a container session.
+.PHONY: launch_docker
+launch_docker:
+	$(DOCKER_RUN_CMD) --rm $(DOCKER_INTERACTIVE_FLAGS) -w /work \
+		-v $(realpath $(HOST_VOL)):$(CONTAINER_VOL) -v $(realpath ${HOME}):/mnt/${HOME} \
+		-v ${SSH_KEY_MOUNT_PATH} -v ${VSCODE_EXTENSION_MOUNT_PATH} \
+		--cap-add SYS_ADMIN --cap-add SYS_TIME \
+		-e NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES} \
+		-e HISTFILE=/mnt/${HOME}/.mlperf_bash_history \
+		--shm-size=32gb \
+		--ulimit memlock=-1 \
+		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
+		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
+		--name $(DOCKER_NAME) -h $(subst _,-,$(shell echo $(DOCKER_NAME) | cut -c -64)) --add-host $(DOCKER_NAME):127.0.0.1 \
+		--cpuset-cpus $(shell taskset -c -p $$$$ | awk '{print $$NF}') \
+		--user $(UID) --net host --device /dev/fuse \
+		$(DOCKER_MOUNTS) $(DOCKER_ARGS) \
+		-e MLPERF_SCRATCH_PATH=$(MLPERF_SCRATCH_PATH) \
+		-e HOST_HOSTNAME=$(HOSTNAME) \
+		$(shell if [ $(MIG_CONF) == "ALL" ]; then echo "--gpus all -e NVIDIA_MIG_CONFIG_DEVICES=all"; elif [ $(MIG_CONF) != "OFF" ]; then echo "--gpus '\"device=`bash scripts/mig_get_uuid.sh`\"'"; fi) \
+		mlperf-inference:$(DOCKER_TAG) $(DOCKER_COMMAND)

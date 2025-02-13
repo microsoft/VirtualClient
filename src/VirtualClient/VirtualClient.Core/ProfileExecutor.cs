@@ -25,7 +25,7 @@ namespace VirtualClient
         private static int currentIteration;
         private MetadataContract metadataContract;
         private bool disposed;
-        
+
         /// <summary>
         /// Constructs an instance of a profile executor, the main class that will execute a profile
         /// </summary>
@@ -33,7 +33,11 @@ namespace VirtualClient
         /// <param name="dependencies">Shared platform dependencies to pass along to individual components in the profile.</param>
         /// <param name="scenarios">A specific set of profile scenarios to execute or to exclude.</param>
         /// <param name="logger">A logger to use for capturing telemetry.</param>
-        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, ILogger logger = null)
+        public ProfileExecutor(
+            ExecutionProfile profile, 
+            IServiceCollection dependencies, 
+            IEnumerable<string> scenarios = null, 
+            ILogger logger = null)
         {
             profile.ThrowIfNull(nameof(profile));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -133,7 +137,7 @@ namespace VirtualClient
         /// True if VC should exit/crash on first/any error(s) regardless of 
         /// their severity. Default = false.
         /// </summary>
-        public bool FailFast { get; set; }
+        public bool? FailFast { get; set; }
 
         /// <summary>
         /// Logs things to various sources
@@ -143,7 +147,7 @@ namespace VirtualClient
         /// <summary>
         /// True if VC should log output to file.
         /// </summary>
-        public bool LogToFile { get; set; }
+        public bool? LogToFile { get; set; }
 
         /// <summary>
         /// The profile to execute.
@@ -199,11 +203,6 @@ namespace VirtualClient
                 CancellationToken profileCancellationToken = tokenSource.Token;
                 if (!profileCancellationToken.IsCancellationRequested)
                 {
-                    if (this.Profile.Metadata?.Any() == true)
-                    {
-                        VirtualClientRuntime.Metadata.AddRange(this.Profile.Metadata, true);
-                    }
-
                     // The parent context is created when the profile operations start up. We can use the
                     // activity ID of the parent to enable correlation of events all the way down the
                     // callstack.
@@ -443,7 +442,7 @@ namespace VirtualClient
                                                 this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                             }
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || action?.FailFast == true)
+                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast.Value || action?.FailFast == true)
                                         {
                                             // Error reasons have numeric/integer values that indicate their severity. Error reasons
                                             // with a value >= 500 are terminal situations where the workload cannot run successfully
@@ -659,31 +658,13 @@ namespace VirtualClient
 
         private static void OutputComponentStart(string componentType, VirtualClientComponent component)
         {
-            VirtualClientComponentCollection componentCollection = component as VirtualClientComponentCollection;
-            if (componentCollection != null)
+            if (!string.IsNullOrWhiteSpace(component.Scenario))
             {
-                foreach (VirtualClientComponent subComponent in componentCollection)
-                {
-                    if (!string.IsNullOrWhiteSpace(component.Scenario))
-                    {
-                        ConsoleLogger.Default.LogInformation($"Profile: Parallel {componentType} = {subComponent.TypeName} (scenario={subComponent.Scenario})");
-                    }
-                    else
-                    {
-                        ConsoleLogger.Default.LogInformation($"Profile: Parallel {componentType} = {subComponent.TypeName}");
-                    }
-                }
+                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName} (scenario={component.Scenario})");
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(component.Scenario))
-                {
-                    ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName} (scenario={component.Scenario})");
-                }
-                else
-                {
-                    ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName}");
-                }
+                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName}");
             }
         }
 
@@ -716,44 +697,21 @@ namespace VirtualClient
                         continue;
                     }
 
+                    // Command-line or Profile-level metadata overrides component-level metadata.
+                    if (this.Profile.Metadata?.Any() == true)
+                    {
+                        component.Metadata.AddRange(this.Profile.Metadata, withReplace: true);
+                    }
+
                     if (ComponentTypeCache.Instance.TryGetComponentType(component.Type, out Type componentType))
                     {
                         bool executeComponent = true;
-                        VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
-                        runtimeComponent.FailFast = this.FailFast;
-                        runtimeComponent.LogToFile = this.LogToFile;
-
-                        // Global metadata. Supplied on the command line.
-                        //
-                        // e.g.
-                        // VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --metadata="Meta1=Value1,,,Meta2=1234"
-                        if (VirtualClientRuntime.Metadata?.Any() == true)
-                        {
-                            runtimeComponent.Metadata.AddRange(
-                                VirtualClientRuntime.Metadata.Select(entry => new KeyValuePair<string, IConvertible>(entry.Key.CamelCased(), entry.Value)),
-                                true);
-                        }
-
-                        // Profile Component-level metadata. Defined in the individual component within the profile (overrides global).
-                        //
-                        // e.g.
-                        // {
-                        //    "Type": "GeekbenchExecutor",
-                        //    "Metadata": {
-                        //        "ComponentMetadata1": 98765,
-                        //        "ComponentMetadata2": true,
-                        //        "ComponentMetadata3": "ValueX"
-                        //    },
-                        //    "Parameters": {
-                        //        "Scenario": "ExecuteGeekBench6Benchmark",
-                        //        "CommandLine": "--no-upload",
-                        //        "PackageName": "geekbench6"
-                        //    }
-                        // }
-                        if (component.Metadata?.Any() == true)
-                        {
-                            runtimeComponent.Metadata.AddRange(component.Metadata, true);
-                        }
+                        VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(
+                            component,
+                            this.Dependencies,
+                            this.RandomizationSeed,
+                            this.FailFast,
+                            this.LogToFile);
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))
                         {
@@ -762,30 +720,6 @@ namespace VirtualClient
 
                         if (executeComponent)
                         {
-                            // Profile component-level extensions metadata. Defined in the individual component within the profile.
-                            //
-                            // e.g.
-                            // {
-                            //    "Type": "GeekbenchExecutor",
-                            //    "Parameters": {
-                            //        "Scenario": "ExecuteGeekBench6Benchmark",
-                            //        "CommandLine": "--no-upload",
-                            //        "PackageName": "geekbench6"
-                            //    },
-                            //    "ExtensionsSection": {
-                            //        "CustomValue": "Custom1",
-                            //        "CustomList": [ "Item1", "Item2", "Item3" ],
-                            //        "CustomDictionary": {
-                            //            "Key1": "Value1",
-                            //            "Key2": 445566
-                            //        }
-                            //    }
-                            // }
-                            if (component.Extensions?.Any() == true)
-                            {
-                                runtimeComponent.Extensions.AddRange(component.Extensions, withReplace: true);
-                            }
-
                             components.Add(runtimeComponent);
                             this.ComponentCreated?.Invoke(this, new ComponentEventArgs(runtimeComponent));
                         }

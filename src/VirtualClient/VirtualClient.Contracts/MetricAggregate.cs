@@ -63,12 +63,14 @@ namespace VirtualClient.Contracts
         /// <param name="metricUnit">The unit of measurement (e.g. KB/sec).</param>
         /// <param name="relativity">The relativity of the metric in comparison with other samples of itself (e.g. higher/lower is better).</param>
         /// <param name="aggregateType">The type of aggregation to apply to the metric values/samples.</param>
+        /// <param name="verbosity">Verbosity/Importance of metric</param>
         /// <param name="description">A description of the metric.</param>
-        public MetricAggregate(string metricName, string metricUnit, MetricRelativity relativity, MetricAggregateType aggregateType = MetricAggregateType.Average, string description = null)
+        public MetricAggregate(string metricName, string metricUnit, MetricRelativity relativity, MetricAggregateType aggregateType = MetricAggregateType.Average, int verbosity = 1, string description = null)
             : this(metricName, aggregateType, description)
         {
             this.Unit = metricUnit;
             this.Relativity = relativity;
+            this.Verbosity = verbosity;
         }
 
         /// <summary>
@@ -96,6 +98,12 @@ namespace VirtualClient.Contracts
         /// (e.g. higher/lower is better).
         /// </summary>
         public MetricRelativity Relativity { get; set; }
+
+        /// <summary>
+        /// Metric verbosity to descript importance of metric. Default to 1, which means standard.
+        /// Verbosity 0: Critical. Verbosity 1: Standard. Verbosity 2: Informational.
+        /// </summary>
+        public int Verbosity { get; set; }
 
         /// <summary>
         /// Creates a metric from the aggregate of values/samples.

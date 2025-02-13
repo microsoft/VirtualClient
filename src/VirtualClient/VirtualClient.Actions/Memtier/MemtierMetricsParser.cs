@@ -321,6 +321,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Throughput" : $"{metricNamePrefix}-Throughput",
                         metricUnit: MetricUnit.RequestsPerSec,
                         relativity: MetricRelativity.HigherIsBetter,
+                        verbosity: 0,
                         description: "Total number of requests/operations per second during the period of time.")
                 },
                 {
@@ -351,6 +352,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Latency-P50" : $"{metricNamePrefix}-Latency-P50",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
+                        verbosity: 0,
                         description: "The latency for 50% of all requests was at or under this value.")
                 },
                 {
@@ -375,6 +377,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Latency-P99" : $"{metricNamePrefix}-Latency-P99",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
+                        verbosity: 0,
                         description: "The latency for 99% of all requests was at or under this value.")
                 },
                 {
@@ -391,6 +394,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Bandwidth" : $"{metricNamePrefix}-Bandwidth",
                         metricUnit: MetricUnit.KilobytesPerSecond,
                         relativity: MetricRelativity.HigherIsBetter,
+                        verbosity: 0,
                         description: "Total amount of data transferred per second during the period of time.")
                 }
             };
