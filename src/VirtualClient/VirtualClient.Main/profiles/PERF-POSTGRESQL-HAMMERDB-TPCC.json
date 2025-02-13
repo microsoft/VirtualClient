@@ -9,6 +9,7 @@
     "Parameters": {
         "DatabaseName": "hammerdb_tpcc",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "DataDirectory": "",
         "Port": "5432",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
         "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
@@ -132,7 +133,8 @@
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "postgresql",
                 "Port": "$.Parameters.Port",
-                "Role": "Server"
+                "Role": "Server",
+                "DataDirectory": "$.Parameters.DataDirectory"
             }
         },
         {
