@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -55,6 +56,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo mount -t iso9660 -o ro,exec,loop {this.mockPackage.Path}/speccpu.iso {this.mockFixture.GetPackagePath()}/speccpu_mount",
                 $"sudo ./install.sh -f -d {this.mockPackage.Path}",
+                $"sudo gcc -dumpversion",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
                 $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
@@ -66,17 +68,35 @@ namespace VirtualClient.Actions
                 Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
                 processCount++;
 
-                return new InMemoryProcess
+                if (exe == "sudo" && arguments == "gcc -dumpversion")
                 {
-                    StartInfo = new ProcessStartInfo
+                    return new InMemoryProcess
                     {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("10")),
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                }
+                else
+                {
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                }
             };
 
             using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -84,7 +104,7 @@ namespace VirtualClient.Actions
                 await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, processCount);
+            Assert.AreEqual(expectedCommands.Count, processCount);
         }
 
         [Test]
@@ -99,6 +119,7 @@ namespace VirtualClient.Actions
                 $"powershell -Command \"Mount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
                 $"powershell -Command \"(Get-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso| Get-Volume).DriveLetter\"",
                 $"cmd /c echo 1 | X:\\install.bat {this.mockPackage.Path}",
+                "gcc -dumpversion",
                 $"powershell -Command \"Dismount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
                 $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable intrate"
             };
@@ -114,18 +135,36 @@ namespace VirtualClient.Actions
                     output.Append("X");
                 }
 
-                return new InMemoryProcess
+                if (exe == "gcc" && arguments == "-dumpversion")
                 {
-                    StartInfo = new ProcessStartInfo
+                    return new InMemoryProcess
                     {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true,
-                    StandardOutput = output
-                };
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true,
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("10")),
+                    };
+                }
+                else
+                {
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true,
+                        StandardOutput = output
+                    };
+                }
             };
 
             using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -133,7 +172,7 @@ namespace VirtualClient.Actions
                 await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, processCount);
+            Assert.AreEqual(processCount, expectedCommands.Count);
         }
 
         [Test]
@@ -273,7 +312,7 @@ namespace VirtualClient.Actions
                 {
                     commandCalled = true;
                 }
-
+                
                 return new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -353,7 +392,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
@@ -385,7 +423,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(SpecCpuExecutor.CompilerVersion), "10" },
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },

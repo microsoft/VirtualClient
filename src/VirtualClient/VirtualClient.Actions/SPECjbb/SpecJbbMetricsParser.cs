@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        this.metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
+                        this.metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
                     }
                 }
 

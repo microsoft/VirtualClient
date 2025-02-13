@@ -144,6 +144,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 latencyP50,
                 MetricUnit.Microseconds,
                 MetricRelativity.LowerIsBetter,
+                verbosity: 0,
                 description: "Network latencies for 50% of observations are at this latency or lower (P50)."));
 
             double latencyP75 = histogramData.Where(entry => entry.FrequencyInTotal <= totalObservations * .75)
@@ -177,6 +178,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 latencyP99,
                 MetricUnit.Microseconds,
                 MetricRelativity.LowerIsBetter,
+                verbosity: 0,
                 description: "Network latencies for 99% of observations are at this latency or lower (P99)."));
 
             double latencyP99_9 = histogramData.Where(entry => entry.FrequencyInTotal <= totalObservations * .999)

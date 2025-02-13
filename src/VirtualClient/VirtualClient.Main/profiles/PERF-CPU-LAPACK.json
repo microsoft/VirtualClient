@@ -6,8 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
     },
     "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "10"
+        "CompilerVersion": ""
     },
     "Actions": [
         {
@@ -38,7 +37,6 @@
             "Type": "CompilerInstallation",
             "Parameters": {
                 "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
                 "CygwinPackages": "gcc-fortran,python3"
             }

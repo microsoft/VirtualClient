@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
                         string[] nameAndValue = Regex.Split(line, columnRegex.ToString(), columnRegex.Options);
                         string metricName = nameAndValue[0].Trim();
                         double metricValue = Convert.ToDouble(nameAndValue[1].Replace(SpecJvmMetricsParser.operationPerSecond, string.Empty));
-                        this.metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
+                        this.metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
                     }
                     else
                     {
@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
                         string metricName = nameAndValue[0].Trim();
                         string[] a = line.Split(" ");
                         double metricValue = Convert.ToDouble(nameAndValue[1]);
-                        this.metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
+                        this.metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
                     }
                 }
 
