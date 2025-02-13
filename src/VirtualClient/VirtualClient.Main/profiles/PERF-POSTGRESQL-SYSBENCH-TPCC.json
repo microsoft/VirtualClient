@@ -44,7 +44,8 @@
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "FormatDisks",
-                "Role": "Server"
+                "Role": "Server",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
@@ -52,7 +53,8 @@
             "Parameters": {
                 "Scenario": "CreateMountPoints",
                 "MountLocation": "Root",
-                "Role": "Server"
+                "Role": "Server",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
