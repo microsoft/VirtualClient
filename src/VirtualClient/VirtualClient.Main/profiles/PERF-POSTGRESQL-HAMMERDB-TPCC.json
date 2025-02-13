@@ -106,8 +106,7 @@
                 "Role": "Server",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
-                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer",
-                "DiskFilter": "$.Parameters.DiskFilter"
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
             }
         },
         {
