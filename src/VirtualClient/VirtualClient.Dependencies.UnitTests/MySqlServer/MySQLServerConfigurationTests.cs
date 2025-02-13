@@ -171,8 +171,8 @@ namespace VirtualClient.Dependencies.MySqlServer
             this.fixture.Process.OnHasExited = () => true;
 
             using TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.fixture);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
+            ProcessException exception = Assert.ThrowsAsync<ProcessException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.ProcessFailed, exception.Reason);
         }
 
         [Test]

@@ -155,7 +155,7 @@ namespace VirtualClient
                     .ConfigureAwait(false);
 
                 await component.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
-                process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+                process.ThrowIfErrored<ProcessException>(process.StandardError.ToString(), ErrorReason.ProcessFailed);
             }
 
             return process;

@@ -109,8 +109,8 @@ namespace VirtualClient.Dependencies
             };
 
             using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
+            ProcessException exception = Assert.ThrowsAsync<ProcessException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.ProcessFailed, exception.Reason);
         }
 
         [Test]
