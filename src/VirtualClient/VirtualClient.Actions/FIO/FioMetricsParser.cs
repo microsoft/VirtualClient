@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     {
         private const double NanosecondsToMilliseconds = 0.000001;
         private IList<Metric> resultingMetrics;
+        // private string fioVersion;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FioMetricsParser"/> class.
@@ -95,6 +96,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             List<Metric> metrics = new List<Metric>();
+
             if (this.ParseDataIntegrityMetrics)
             {
                 this.ParseDataIntegrityVerificationMetrics(metrics);
@@ -102,6 +104,7 @@ namespace VirtualClient.Actions
             else
             {
                 this.ParseReadWriteMetrics(metrics);
+                this.ParseFioVersion(metrics);
             }
 
             return metrics;
@@ -282,6 +285,19 @@ namespace VirtualClient.Actions
 
                     metrics.Add(new Metric(metricName, measurementValue, metricUnit, metricRelativity, verbosity: verbosity, metadata: metricMetaData));
                 }
+            }
+        }
+
+        private void ParseFioVersion(List<Metric> metrics)
+        {
+            JToken resultsJson = JObject.Parse(this.RawText);
+
+            JToken fioVersionToken = resultsJson["fio version"];
+            if (fioVersionToken != null)
+            {
+                var metricMetaData = new Dictionary<string, IConvertible>();
+                metricMetaData["fio version"] = fioVersionToken.Value<string>();
+                metrics.Add(new Metric("IsFioVersionCaptured", 1, null, MetricRelativity.Undefined, verbosity: 1, metadata: metricMetaData));
             }
         }
 

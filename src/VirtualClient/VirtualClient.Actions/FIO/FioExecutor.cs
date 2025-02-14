@@ -843,6 +843,19 @@ namespace VirtualClient.Actions
             }
 
             IList<Metric> metrics = parser.Parse();
+            string fioVersion = null;
+
+            var fioVersionMetric = metrics.FirstOrDefault(m => m.Name == "IsFioVersionCaptured");
+            if (fioVersionMetric != null && fioVersionMetric.Metadata.TryGetValue("fio version", out var versionValue))
+            {
+                fioVersion = versionValue?.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(fioVersion))
+            {
+                this.MetadataContract.Add("fio_version", fioVersion, MetadataContractCategory.Dependencies);
+            }
+
             if (this.MetricFilters?.Any() == true)
             {
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
