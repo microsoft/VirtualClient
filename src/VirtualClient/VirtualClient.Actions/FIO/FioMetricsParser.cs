@@ -18,7 +18,6 @@ namespace VirtualClient.Actions
     {
         private const double NanosecondsToMilliseconds = 0.000001;
         private IList<Metric> resultingMetrics;
-        // private string fioVersion;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FioMetricsParser"/> class.
