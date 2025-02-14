@@ -10,6 +10,16 @@ namespace VirtualClient.Contracts
     public class MetricUnit
     {
         /// <summary>
+        /// Amps
+        /// </summary>
+        public const string Amps = "amps";
+
+        /// <summary>
+        /// Celcius
+        /// </summary>
+        public const string Celcius = "celcius";
+
+        /// <summary>
         /// Petabytes
         /// </summary>
         public const string Petabytes = "petabytes";
@@ -25,9 +35,19 @@ namespace VirtualClient.Contracts
         public const string Gigabytes = "gigabytes";
 
         /// <summary>
+        /// Gigabytes/Sec
+        /// </summary>
+        public const string GigabytesPerSecond = "gigabytes/sec";
+
+        /// <summary>
         /// Megabytes
         /// </summary>
         public const string Megabytes = "megabytes";
+
+        /// <summary>
+        /// Megabytes/Sec
+        /// </summary>
+        public const string MegabytesPerSecond = "megabytes/sec";
 
         /// <summary>
         /// Megahertz
@@ -45,9 +65,14 @@ namespace VirtualClient.Contracts
         public const string Bytes = "bytes";
 
         /// <summary>
+        /// Bytes/Sec
+        /// </summary>
+        public const string BytesPerSecond = "bytes/sec";
+
+        /// <summary>
         /// Count
         /// </summary>
-        public const string Count = "Count";
+        public const string Count = "count";
 
         /// <summary>
         /// Kilobytes per second
@@ -55,9 +80,9 @@ namespace VirtualClient.Contracts
         public const string KilobytesPerSecond = "kilobytes/sec";
 
         /// <summary>
-        /// Megabytes per second
+        /// Mebibytes
         /// </summary>
-        public const string MegabytesPerSecond = "megabytes/sec";
+        public const string Mebibytes = "mebibytes";
 
         /// <summary>
         /// Mebibytes per second
@@ -108,5 +133,10 @@ namespace VirtualClient.Contracts
         /// Transactions/sec
         /// </summary>
         public const string TransactionsPerSec = "transactions/sec";
+
+        /// <summary>
+        /// Watts
+        /// </summary>
+        public const string Watts = "watts";
     }
 }
