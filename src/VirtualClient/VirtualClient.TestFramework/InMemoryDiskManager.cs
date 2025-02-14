@@ -123,6 +123,16 @@ namespace VirtualClient
             return Task.FromResult((IEnumerable<Disk>)this);
         }
 
+        /// <summary>
+        /// Grabs the available data directory on the system.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="diskFilter">Disk filter to </param>
+        public Task<IEnumerable<string>> GetDiskPathsAsync(string diskFilter, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         private void AddVolumeToDisk(Disk disk, FileSystemType fileSystemType)
         {
             DiskVolume newVolume = null;

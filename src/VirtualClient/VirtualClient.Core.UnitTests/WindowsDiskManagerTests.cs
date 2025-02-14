@@ -1483,6 +1483,94 @@ namespace VirtualClient
             actualDisks.ToList().ForEach(disk => Assert.IsTrue(disk.Volumes.Count() == 2));
         }
 
+        [Test]
+        public async Task WindowsDiskManagerReturnsListofDiskPaths()
+        {
+            this.testProcess.OnHasExited = () => true;
+            this.testProcess.OnStart = () => true;
+
+            this.standardInput.BytesWritten += (sender, data) =>
+            {
+                string input = data.ToString().Trim();
+                if (input.Contains($"select disk"))
+                {
+                    int diskIndex = int.Parse(Regex.Match(input, "[0-9]+").Value);
+                    this.testProcess.StandardOutput.Append($"Disk {diskIndex} is now the selected disk.");
+                }
+                else if (input.Contains($"select partition"))
+                {
+                    int partitionIndex = int.Parse(Regex.Match(input, "[0-9]+").Value);
+                    this.testProcess.StandardOutput.Append($"Partition {partitionIndex} is now the selected partition.");
+                }
+                else if (input.Contains("list disk"))
+                {
+                    StringBuilder listDiskResults = new StringBuilder()
+                        .AppendLine("           ")
+                        .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                        .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                        .AppendLine(" Disk 0    Online          127 GB  1024 KB          ");
+
+                    this.testProcess.StandardOutput.Append(listDiskResults.ToString());
+                }
+                else if (input.Contains("list partition"))
+                {
+                    StringBuilder listPartitionResults = new StringBuilder()
+                       .AppendLine("           ")
+                       .AppendLine(" Partition ###  Type              Size     Offset")
+                       .AppendLine(" -------------  ----------------  -------  -------")
+                       .AppendLine(" Partition 1    Primary            500 MB  1024 KB")
+                       .AppendLine(" Partition 2    Primary            126 GB   501 MB");
+
+                    this.testProcess.StandardOutput.Append(listPartitionResults.ToString());
+                }
+                else if (input.Contains($"detail disk"))
+                {
+                    StringBuilder detailDiskResults = new StringBuilder()
+                        .AppendLine("           ")
+                        .AppendLine("Virtual HD ATA Device")
+                        .AppendLine("Disk ID: EF349D83")
+                        .AppendLine("Type   : ATA")
+                        .AppendLine("Status : Online")
+                        .AppendLine("Path   : 0")
+                        .AppendLine("Target : 0")
+                        .AppendLine("LUN ID : 0")
+                        .AppendLine("           ")
+                        .AppendLine("  Volume ###  Ltr  Label        Fs     Type        Size     Status     Info    ")
+                        .AppendLine("  ----------  ---  -----------  -----  ----------  -------  ---------  --------")
+                        .AppendLine("  Volume 0         System Rese  NTFS   Partition    500 MB  Healthy    System  ")
+                        .AppendLine("  Volume 1     C   Windows      NTFS   Partition    126 GB  Healthy    Boot    ");
+
+                    this.testProcess.StandardOutput.Append(detailDiskResults.ToString());
+                }
+                else if (input.Contains($"detail partition"))
+                {
+                    StringBuilder detailPartitionResults = new StringBuilder()
+                       .AppendLine("           ")
+                       .AppendLine("Partition 1")
+                       .AppendLine("Type  : 07")
+                       .AppendLine("Hidden: No")
+                       .AppendLine("Active: Yes")
+                       .AppendLine("Offset in Bytes: 525336576")
+                       .AppendLine("           ")
+                       .AppendLine("  Volume ###  Ltr  Label        Fs     Type        Size     Status     Info    ")
+                       .AppendLine("  ----------  ---  -----------  -----  ----------  -------  ---------  --------")
+                       .AppendLine("  Volume 1     C   Windows      NTFS   Partition    126 GB  Healthy    Boot    ");
+
+                    this.testProcess.StandardOutput.Append(detailPartitionResults.ToString());
+                }
+            };
+
+            List<string> accessPaths = new List<string>
+            {
+                "C:\\"
+            };
+
+            IEnumerable<string> diskPaths = await this.diskManager.GetDiskPathsAsync(DiskFilters.DefaultDiskFilter, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            CollectionAssert.AreEqual(diskPaths, accessPaths);
+        }
+
         private class TestWindowsDiskManager : WindowsDiskManager
         {
             public TestWindowsDiskManager(ProcessManager processManager)

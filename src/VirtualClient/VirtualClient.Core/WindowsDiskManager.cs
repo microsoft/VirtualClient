@@ -473,6 +473,45 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Grabs the available data directory on the system.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="diskFilter">Disk filter to </param>
+        /// <returns></returns>
+        /// <exception cref="WorkloadException"></exception>
+        public override Task<IEnumerable<string>> GetDiskPathsAsync(string diskFilter, CancellationToken cancellationToken)
+        {
+            List<string> diskPaths = new List<string>();
+
+            return this.Logger.LogMessageAsync($"{nameof(WindowsDiskManager)}.GetDiskPaths", EventContext.Persisted(), async () =>
+            {
+                IEnumerable<Disk> disks = await this.GetDisksAsync(cancellationToken).ConfigureAwait(false);
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Win32NT).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                foreach (Disk disk in disksToTest)
+                {
+                    string diskPath = $"{disk.GetPreferredAccessPath(PlatformID.Win32NT)}";
+
+                    if (!string.IsNullOrEmpty(diskPath))
+                    {
+                        diskPaths.Add(diskPath);
+                    }
+                }
+
+                return diskPaths.AsEnumerable();
+            });
+        }
+
+        /// <summary>
         /// Returns as set of lines that are all the exact same width.
         /// </summary>
         /// <param name="lines">The original lines</param>
