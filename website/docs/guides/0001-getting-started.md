@@ -97,7 +97,7 @@ programs such as 'unzip' or '7zip'.
 If preferable, the Virtual Client source code can be built on your local system. This is useful for picking up the absolute latest changes
 to the source code and for testing changes locally. Before attempting to build the Virtual Client repo, ensure the fo
 
-- [Install the .NET SDK 8.0.X](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [Install the .NET SDK 9.0.x](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - Build artifacts are output to the following locations. The 'bin' directory is where all compiled binaries/executables are output. The 'obj' directory
   will contain intermediate files used during compilation. The 'packages' directory will contain any packages that are created during build + packaging 
   processes.
@@ -130,10 +130,10 @@ The following section provides instructions for building on Windows systems.
 - The build process will create ready-to-run builds of the Virtual Client for all supported platforms and architectures. Virtual Client executable and binaries can be found in the repo 'out' directory in corresponding architecture/runtimes folder locations. 
 
   ```bash
-  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\VirtualClient
-  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\VirtualClient.exe
-  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net8.0\linux-x64\publish\VirtualClient
-  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net8.0\win-x64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net9.0\linux-arm64\publish\VirtualClient
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net9.0\win-arm64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net9.0\linux-x64\publish\VirtualClient
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net9.0\win-x64\publish\VirtualClient.exe
   ```
 - VirtualClient is a self-contained .NET application. The application can be run from the build output locations noted above or copied to another
   system. When simply copy the contents of the `/publish/` folder specific to the platform/architecture to the system on which you want to run. 
