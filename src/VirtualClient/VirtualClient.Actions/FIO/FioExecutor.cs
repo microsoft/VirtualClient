@@ -845,17 +845,20 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = parser.Parse();
             string fioVersion = null;
 
-            var fioVersionMetric = metrics.FirstOrDefault(m => m.Name == "IsFioVersionCaptured");
-            if (fioVersionMetric != null && fioVersionMetric.Metadata.TryGetValue("fio version", out var versionValue))
+            if (this.TestFocus != FioExecutor.TestFocusDataIntegrity)
             {
-                fioVersion = versionValue?.ToString();
-            }
+                var fioVersionMetric = metrics.FirstOrDefault(m => m.Name != "data_integrity_errors");
+                if (fioVersionMetric != null && fioVersionMetric.Metadata.TryGetValue("fio_version", out var versionValue))
+                {
+                    fioVersion = versionValue?.ToString();
+                }
 
-            if (!string.IsNullOrEmpty(fioVersion))
-            {
-                this.MetadataContract.Add("fio_version", fioVersion, MetadataContractCategory.Dependencies);
+                if (!string.IsNullOrEmpty(fioVersion))
+                {
+                    this.MetadataContract.Add("fio_version", fioVersion, MetadataContractCategory.Dependencies);
+                }
             }
-
+            
             if (this.MetricFilters?.Any() == true)
             {
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
@@ -888,7 +891,8 @@ namespace VirtualClient.Actions
                metricCategorization,
                commandArguments,
                this.Tags,
-               telemetryContext);
+               telemetryContext,
+               toolVersion: fioVersion);
         }
 
         /// <summary>

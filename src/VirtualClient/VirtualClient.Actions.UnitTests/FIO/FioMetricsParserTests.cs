@@ -76,8 +76,7 @@ namespace VirtualClient.Actions
             { "h000750_000", 0.010000 },
             { "h001000_000", 0.010000 },
             { "h002000_000", 0.010000 },
-            { "hgt002000_000", 0.010000 },
-            { "IsFioVersionCaptured", 1}
+            { "hgt002000_000", 0.010000 }
         };
 
         private static readonly IDictionary<string, double> ExpectedWriteMetrics = new Dictionary<string, double>
@@ -135,8 +134,7 @@ namespace VirtualClient.Actions
             { "h000750_000", 0.010000 },
             { "h001000_000", 0.010000 },
             { "h002000_000", 0.010000 },
-            { "hgt002000_000", 0.010000 },
-            { "IsFioVersionCaptured", 1}
+            { "hgt002000_000", 0.010000 }
         };
 
         [Test]
@@ -171,7 +169,7 @@ namespace VirtualClient.Actions
             Assert.DoesNotThrow(() => metrics = parser.Parse());
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
-            Assert.IsTrue(metrics.Count() == 53);
+            Assert.IsTrue(metrics.Count() == 52);
         }
 
         [Test]
@@ -186,7 +184,7 @@ namespace VirtualClient.Actions
             Assert.DoesNotThrow(() => metrics = parser.Parse());
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
-            Assert.IsTrue(metrics.Count() == 53);
+            Assert.IsTrue(metrics.Count() == 52);
         }
 
         [Test]
@@ -199,7 +197,7 @@ namespace VirtualClient.Actions
 
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
-            Assert.IsTrue(metrics.Count() == 54);
+            Assert.IsTrue(metrics.Count() == 53);
 
             CollectionAssert.AreEquivalent(FioMetricsParserTests.ExpectedReadMetrics.Keys, metrics.Select(m => m.Name));
         }
@@ -214,7 +212,7 @@ namespace VirtualClient.Actions
 
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
-            Assert.IsTrue(metrics.Count() == 54);
+            Assert.IsTrue(metrics.Count() == 53);
 
             CollectionAssert.AreEquivalent(FioMetricsParserTests.ExpectedWriteMetrics.Keys, metrics.Select(m => m.Name));
         }
@@ -229,7 +227,7 @@ namespace VirtualClient.Actions
 
             Assert.IsNotNull(metrics);
             Assert.IsNotEmpty(metrics);
-            Assert.IsTrue(metrics.Count() == 85);
+            Assert.IsTrue(metrics.Count() == 84);
 
             CollectionAssert.AreEquivalent(
                 FioMetricsParserTests.ExpectedReadMetrics.Keys.Union(FioMetricsParserTests.ExpectedWriteMetrics.Keys),
