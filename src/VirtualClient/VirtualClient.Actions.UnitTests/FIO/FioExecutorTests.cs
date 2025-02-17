@@ -135,7 +135,7 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
-        public async Task FioExecutorRunsCommandWithJobFile()
+        public void FioExecutorRunsCommandWithJobFile()
         {
             this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
             this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "jobfile1path";
@@ -143,18 +143,33 @@ namespace VirtualClient.Actions.DiskPerformance
             DependencyPath workloadPlatformSpecificPackage =
                 this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            string updatedJobFilePath = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1path");
+
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
-                await executor.ExecuteAsync(CancellationToken.None);
+                string expectedCommand = "/home/any/fio";
+                string expectedArguments = $"{updatedJobFilePath} --output-format=json";
+                string expectedTestedInstance = "remote_disk_123";
+                string expectedMountPath = "/any/mount/path1";
 
-                string updatedJobFilePath = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1path");
+                Disk diskToTest = this.disks.Where(disk => !disk.IsOperatingSystem()).First();
+                (diskToTest.Volumes.First().AccessPaths as List<string>).Clear();
+                (diskToTest.Volumes.First().AccessPaths as List<string>).Add(expectedMountPath);
 
-                Assert.AreEqual($"{updatedJobFilePath} --output-format=json", executor.CommandLine);
+                DiskWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcess(expectedCommand, expectedArguments, expectedTestedInstance, diskToTest);
+
+                Assert.IsNotNull(workloadProcess);
+                Assert.IsNotNull(workloadProcess.Process);
+                Assert.IsTrue($"{workloadProcess.Command} {workloadProcess.CommandArguments}".StartsWith($"sudo {expectedCommand} {expectedArguments}"));
+                Assert.AreEqual(expectedTestedInstance, workloadProcess.Categorization);
+                Assert.AreEqual(1, workloadProcess.TestFiles.Count());
+                Assert.IsTrue(workloadProcess.TestFiles.First().StartsWith(expectedMountPath));
+                Assert.IsTrue(workloadProcess.CommandArguments.Contains($"--filename={expectedMountPath}"));
             }
         }
 
         [Test]
-        public async Task FioExecutorRunsCommandWithMultipleJobFiles()
+        public void FioExecutorRunsCommandWithMultipleJobFiles()
         {
             this.profileParameters[nameof(TestFioExecutor.CommandLine)] = null;
             this.profileParameters[nameof(TestFioExecutor.JobFiles)] = "path/to/jobfile1,path/jobfile2;path/jobfile3";
@@ -162,15 +177,30 @@ namespace VirtualClient.Actions.DiskPerformance
             DependencyPath workloadPlatformSpecificPackage =
                 this.mockFixture.ToPlatformSpecificPath(this.mockWorkloadPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
 
-            using (TestFioExecutor executor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            string updatedJobFile1Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1");
+            string updatedJobFile2Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile2");
+            string updatedJobFile3Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile3");
+
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
-                await executor.ExecuteAsync(CancellationToken.None);
+                string expectedCommand = "/home/any/fio";
+                string expectedArguments = $"{updatedJobFile1Path} {updatedJobFile2Path} {updatedJobFile3Path} --output-format=json";
+                string expectedTestedInstance = "remote_disk_123";
+                string expectedMountPath = "/any/mount/path1";
 
-                string updatedJobFile1Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile1");
-                string updatedJobFile2Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile2");
-                string updatedJobFile3Path = this.mockFixture.PlatformSpecifics.Combine(workloadPlatformSpecificPackage.Path, "jobfile3");
+                Disk diskToTest = this.disks.Where(disk => !disk.IsOperatingSystem()).First();
+                (diskToTest.Volumes.First().AccessPaths as List<string>).Clear();
+                (diskToTest.Volumes.First().AccessPaths as List<string>).Add(expectedMountPath);
 
-                Assert.AreEqual($"{updatedJobFile1Path} {updatedJobFile2Path} {updatedJobFile3Path} --output-format=json", executor.CommandLine);
+                DiskWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcess(expectedCommand, expectedArguments, expectedTestedInstance, diskToTest);
+
+                Assert.IsNotNull(workloadProcess);
+                Assert.IsNotNull(workloadProcess.Process);
+                Assert.IsTrue($"{workloadProcess.Command} {workloadProcess.CommandArguments}".StartsWith($"sudo {expectedCommand} {expectedArguments}"));
+                Assert.AreEqual(expectedTestedInstance, workloadProcess.Categorization);
+                Assert.AreEqual(1, workloadProcess.TestFiles.Count());
+                Assert.IsTrue(workloadProcess.TestFiles.First().StartsWith(expectedMountPath));
+                Assert.IsTrue(workloadProcess.CommandArguments.Contains($"--filename={expectedMountPath}"));
             }
         }
 

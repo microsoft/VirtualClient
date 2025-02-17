@@ -980,7 +980,11 @@ namespace VirtualClient.Actions
 
             foreach (string key in this.Parameters.Keys)
             {
-                text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", this.Parameters.GetValue<string>(key));
+                string value = this.Parameters.GetValue<string>(key);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", value);
+                }
             }
 
             this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
