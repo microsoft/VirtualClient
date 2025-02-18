@@ -16,7 +16,6 @@ namespace VirtualClient.Actions
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -33,7 +32,6 @@ namespace VirtualClient.Actions
         public const string TestFocusDataIntegrity = "DataIntegrity";
 
         private const string FileNameParameterDelimiter = ",";
-        private string command;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FioExecutor"/> class.
@@ -295,13 +293,9 @@ namespace VirtualClient.Actions
                         return;
                     }
 
-                    if (string.IsNullOrEmpty(this.JobFiles))
+                    if (!string.IsNullOrEmpty(this.JobFiles))
                     {
-                        this.command = this.CommandLine;
-                    }
-                    else
-                    {
-                        this.command = await this.GetCommandForJobFilesAsync(cancellationToken);
+                        this.CommandLine = await this.GetCommandForJobFilesAsync(cancellationToken);
                     }
 
                     // Apply parameters to the FIO command line options.
@@ -349,7 +343,7 @@ namespace VirtualClient.Actions
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
 
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.command, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
@@ -383,6 +377,11 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
                         }
                     }
+                }
+
+                if (!string.IsNullOrEmpty(this.JobFiles))
+                {
+                    this.CommandLine = null;
                 }
             }
         }
@@ -503,7 +502,7 @@ namespace VirtualClient.Actions
             {
                 await this.EvaluateParametersAsync(CancellationToken.None, true);
 
-                relatedContext.AddContext("commandLine", this.command);
+                relatedContext.AddContext("commandLine", this.CommandLine);
                 relatedContext.AddContext("testScenario", this.MetricScenario);
             });
         }
