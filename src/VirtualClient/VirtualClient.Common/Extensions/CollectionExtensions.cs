@@ -36,13 +36,9 @@ namespace VirtualClient.Common.Extensions
 
             foreach (KeyValuePair<string, T> entry in items)
             {
-                if (withReplace)
+                if (withReplace || !dictionary.ContainsKey(entry.Key))
                 {
                     dictionary[entry.Key] = entry.Value;
-                }
-                else
-                {
-                    dictionary.Add(entry.Key, entry.Value);
                 }
             }
         }

@@ -8,7 +8,6 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -17,7 +16,6 @@ namespace VirtualClient.Actions
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -295,6 +293,11 @@ namespace VirtualClient.Actions
                         return;
                     }
 
+                    if (!string.IsNullOrEmpty(this.JobFiles))
+                    {
+                        this.CommandLine = await this.GetCommandForJobFilesAsync(cancellationToken);
+                    }
+
                     // Apply parameters to the FIO command line options.
                     await this.EvaluateParametersAsync(telemetryContext);
 
@@ -340,11 +343,6 @@ namespace VirtualClient.Actions
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
 
-                    if (this.JobFiles != null)
-                    {
-                        await this.SetCommandLineForJobFilesAsync(cancellationToken);
-                    }
-
                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -379,6 +377,11 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
                         }
                     }
+                }
+
+                if (!string.IsNullOrEmpty(this.JobFiles))
+                {
+                    this.CommandLine = null;
                 }
             }
         }
@@ -944,13 +947,13 @@ namespace VirtualClient.Actions
             return sanitizedFilePath;
         }
 
-        private async Task SetCommandLineForJobFilesAsync(CancellationToken cancellationToken)
+        private async Task<string> GetCommandForJobFilesAsync(CancellationToken cancellationToken)
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                 .ConfigureAwait(false);
 
-            this.CommandLine = string.Empty;
+            string command = string.Empty;
 
             string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
             foreach (string templateJobFilePath in templateJobFilePaths)
@@ -960,11 +963,12 @@ namespace VirtualClient.Actions
                 string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, templateJobFileName);
                 this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
 
-                // Update command line to include the new job file.
-                this.CommandLine += $"{updatedJobFilePath} ";
+                // Update command to include the new job file.
+                command += $"{updatedJobFilePath} ";
             }
 
-            this.CommandLine = $"{this.CommandLine.Trim()} --output-format=json";
+            command = $"{command.Trim()} --output-format=json";
+            return command;
         }
 
         private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
@@ -973,8 +977,11 @@ namespace VirtualClient.Actions
 
             foreach (string key in this.Parameters.Keys)
             {
-                // text = text.Replace($"${{{key.ToLower()}}}", this.Parameters.GetValue<string>(key));
-                text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", this.Parameters.GetValue<string>(key));
+                string value = this.Parameters.GetValue<string>(key);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", value);
+                }
             }
 
             this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);

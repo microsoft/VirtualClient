@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void LzbenchMetricsParserVerifyMetricsFpRate()
+        public void LzbenchMetricsParserVerifyMetrics()
         {
             string outputPath = Path.Combine(this.ExamplePath, "LzbenchResultsExample.csv");
             this.rawText = File.ReadAllText(outputPath);

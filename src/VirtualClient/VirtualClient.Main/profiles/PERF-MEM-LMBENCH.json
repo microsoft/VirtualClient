@@ -8,8 +8,7 @@
         "Notes_Runtime": "The benchmark takes approximately 6 to 8 minutes per 1 GB of RAM targeted. The default profile uses 25% of the total RAM."
     },
     "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "10",
+        "CompilerVersion": "",
         "CompilerFlags": "CPPFLAGS=\"-I /usr/include/tirpc\"",
         "MemorySizeMB": "{calculate({SystemMemoryMegabytes} / 4)}"
     },
@@ -38,7 +37,6 @@
             "Type": "CompilerInstallation",
             "Parameters": {
                 "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion"
             }
         },

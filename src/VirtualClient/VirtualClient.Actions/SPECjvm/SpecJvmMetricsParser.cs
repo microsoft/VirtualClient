@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     public class SpecJvmMetricsParser : MetricsParser
     {
         private static string operationPerSecond = "ops/m";
+        private List<Metric> metrics;
 
         /// <summary>
         /// Constructor for <see cref="SpecJvmMetricsParser"/>
@@ -26,15 +27,13 @@ namespace VirtualClient.Actions
         {
         }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
             try
             {
                 this.Preprocess();
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
 
                 // If the line doesn't have column, it's individual result.
                 // If the line has column, it's the summary line.
@@ -47,7 +46,7 @@ namespace VirtualClient.Actions
                         string[] nameAndValue = Regex.Split(line, columnRegex.ToString(), columnRegex.Options);
                         string metricName = nameAndValue[0].Trim();
                         double metricValue = Convert.ToDouble(nameAndValue[1].Replace(SpecJvmMetricsParser.operationPerSecond, string.Empty));
-                        this.Metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
+                        this.metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
                     }
                     else
                     {
@@ -56,11 +55,11 @@ namespace VirtualClient.Actions
                         string metricName = nameAndValue[0].Trim();
                         string[] a = line.Split(" ");
                         double metricValue = Convert.ToDouble(nameAndValue[1]);
-                        this.Metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
+                        this.metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
                     }
                 }
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {

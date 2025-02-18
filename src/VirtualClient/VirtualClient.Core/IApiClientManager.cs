@@ -41,6 +41,15 @@ namespace VirtualClient
         int GetApiPort(ClientInstance instance = null);
 
         /// <summary>
+        /// Get all an existing/cached proxy API client.
+        /// </summary>
+        /// <returns>
+        /// List of <see cref="IProxyApiClient"/> that can be used to interface with a target
+        /// Virtual Client proxy API service.
+        /// </returns>
+        IEnumerable<IProxyApiClient> GetProxyApiClients();
+
+        /// <summary>
         /// Gets an existing/cached proxy API client or creates a new one adding it to the cache.
         /// </summary>
         /// <param name="id">The ID of the proxy API client to use for lookups.</param>

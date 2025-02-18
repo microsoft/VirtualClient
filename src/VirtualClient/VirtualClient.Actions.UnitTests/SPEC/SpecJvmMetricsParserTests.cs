@@ -40,7 +40,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SpecJvmParserVerifyMetricsFpRate()
+        public void SpecJvmParserVerifyMetrics()
         {
             string outputPath = Path.Combine(this.ExamplePath, "SPECjvm2008.012.txt");
             this.rawText = File.ReadAllText(outputPath);

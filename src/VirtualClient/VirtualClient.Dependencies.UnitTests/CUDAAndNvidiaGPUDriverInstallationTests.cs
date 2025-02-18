@@ -27,18 +27,18 @@ namespace VirtualClient.Dependencies
     {
         private const string UpdateCommand = "apt update";
         private const string BuildEssentialInstallationCommand = "apt install build-essential -yq";
-        private const string GetRunFileCommand = "wget https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run";
-        private const string RunRunFileCommand = "sh cuda_11.6.0_510.39.01_linux.run --silent --toolkit";
+        private const string GetRunFileCommand = "wget https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run";
+        private const string RunRunFileCommand = "sh cuda_12.4.0_550.54.14_linux.run --silent --toolkit";
 
-        private const string ExportPathCommand = $"bash -c \"echo 'export PATH=/usr/local/cuda-11.6/bin${{PATH:+:${{PATH}}}}' | " +
+        private const string ExportPathCommand = $"bash -c \"echo 'export PATH=/usr/local/cuda-12.4/bin${{PATH:+:${{PATH}}}}' | " +
             $"sudo tee -a /home/anyuser/.bashrc\"";
 
-        private const string ExportLibraryPathCommand = $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-11.6/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
+        private const string ExportLibraryPathCommand = $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
             $"sudo tee -a /home/anyuser/.bashrc\"";
 
         private const string UpgradeCommand = "apt upgrade -y";
-        private const string InstallDriverCommand = "apt install nvidia-driver-510-server nvidia-dkms-510-server -y";
-        private const string InstallFabricManagerCommand = "apt install cuda-drivers-fabricmanager-510 -y";
+        private const string InstallDriverCommand = "apt install nvidia-driver-550-server nvidia-dkms-550-server -y";
+        private const string InstallFabricManagerCommand = "apt install cuda-drivers-fabricmanager-550 -y";
 
         private MockFixture fixture;
         private TestComponent component;
@@ -162,10 +162,10 @@ namespace VirtualClient.Dependencies
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "LinuxCudaVersion", "11.6" },
-                { "LinuxDriverVersion", "510" },
+                { "LinuxCudaVersion", "12.4" },
+                { "LinuxDriverVersion", "550" },
                 { "Username", "anyuser" },
-                { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
+                { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run" },
                 { "RebootRequired", false }
             };
 

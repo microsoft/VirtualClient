@@ -25,6 +25,7 @@ namespace VirtualClient
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
 
     /// <summary>
     /// Fixture that encapsulates the setting up and mocking
@@ -61,7 +62,6 @@ namespace VirtualClient
 
         static MockFixture()
         {
-            VirtualClientComponent.LogToFile = true;
             VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 

@@ -7,7 +7,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -15,6 +14,15 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// </summary>
     public class CPSClientExecutor : CPSExecutor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CPSClientExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public CPSClientExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSClientExecutor"/> class.
         /// </summary>
@@ -36,7 +44,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             return $"-c -r {this.Connections} " +
                 $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
                 $"-i {this.DisplayInterval} -wt {this.WarmupTime} -t {this.TestDuration} " +
-                $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)}".Trim();
+                $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)} " +
+                $"{this.AdditionalParams}".Trim();
         }
     }
 }

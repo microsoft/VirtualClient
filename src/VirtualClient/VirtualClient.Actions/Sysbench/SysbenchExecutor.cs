@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Sysbench workload executor.
@@ -34,6 +35,11 @@ namespace VirtualClient.Actions
         /// Default table count for a 'select' workload type
         /// </summary>
         public const int SelectWorkloadDefaultTableCount = 1;
+
+        /// <summary>
+        /// const for python command.
+        /// </summary>
+        protected const string PythonCommand = "python3";
 
         private readonly IStateManager stateManager;
         private static readonly string[] SelectWorkloads =
@@ -176,6 +182,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public string Action
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
+                return action?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
@@ -210,10 +228,7 @@ namespace VirtualClient.Actions
             int tableCount = tables.GetValueOrDefault(DefaultTableCount);
 
             // if not using the configurable scenario, must use 10 tables
-            // if using a workload that must use only 1 table, table count adjusted as such 
-
             tableCount = (databaseScenario == SysbenchScenario.Configure) ? tableCount : DefaultTableCount;
-            tableCount = (SelectWorkloads.Contains(workload, StringComparer.OrdinalIgnoreCase)) ? SelectWorkloadDefaultTableCount : tableCount;
 
             return tableCount;
         }
@@ -299,7 +314,10 @@ namespace VirtualClient.Actions
             DependencyPath package = await this.GetPackageAsync(this.PackageName, cancellationToken);
             this.SysbenchPackagePath = package.Path;
 
-            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+            if (this.Action != ClientAction.TruncateDatabase)
+            {
+                await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+            }
 
             this.InitializeApiClients(telemetryContext, cancellationToken);
 
@@ -375,6 +393,43 @@ namespace VirtualClient.Actions
             }
            
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
+        }
+
+        /// <summary>
+        /// Add metrics to telemtry.
+        /// </summary>
+        /// <param name="arguments"></param>
+        /// <param name="process"></param>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        protected void AddMetric(string arguments, IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                this.MetadataContract.AddForScenario(
+                    "Sysbench",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
+                string text = process.StandardOutput.ToString();
+
+                List<Metric> metrics = new List<Metric>();
+                double duration = (process.ExitTime - process.StartTime).TotalMinutes;
+                metrics.Add(new Metric("PopulateDatabaseTime_Minutes ", duration, "minutes", MetricRelativity.LowerIsBetter));
+
+                this.Logger.LogMetrics(
+                    toolName: "Sysbench",
+                    scenarioName: this.MetricScenario ?? this.Scenario,
+                    process.StartTime,
+                    process.ExitTime,
+                    metrics,
+                    null,
+                    scenarioArguments: arguments,
+                    this.Tags,
+                    telemetryContext);
+            }
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -459,6 +514,27 @@ namespace VirtualClient.Actions
         {
             public const string OLTP = nameof(OLTP);
             public const string TPCC = nameof(TPCC);
+        }
+
+        /// <summary>
+        /// Supported Sysbench Client actions.
+        /// </summary>
+        internal class ClientAction
+        {
+            /// <summary>
+            /// Creates Database on MySQL server and Users on Server and any Clients.
+            /// </summary>
+            public const string PopulateDatabase = nameof(PopulateDatabase);
+
+            /// <summary>
+            /// Truncates all tables existing in database
+            /// </summary>
+            public const string TruncateDatabase = nameof(TruncateDatabase);
+
+            /// <summary>
+            /// Truncates all tables existing in database
+            /// </summary>
+            public const string RunWorkload = nameof(RunWorkload);
         }
     }
 }

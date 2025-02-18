@@ -7,8 +7,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "10",
+        "CompilerVersion": "",
         "ThreadCount": null
     },
     "Actions": [
@@ -17,7 +16,6 @@
             "Parameters": {
                 "Scenario": "ExecuteCoremarkProBenchmark",
                 "ThreadCount": "$.Parameters.ThreadCount",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
                 "PackageName": "coremarkpro"
             }
@@ -43,7 +41,6 @@
             "Type": "CompilerInstallation",
             "Parameters": {
                 "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
                 "CygwinPackages": "gcc-g++,gcc,perl"
             }

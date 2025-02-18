@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.CommandLine;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -48,12 +49,29 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Parameter to checkout to a specific branch, commit or tag in the repository
+        /// </summary>
+        public string Commit
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(GitRepoClone.Commit), string.Empty);
+            }
+
+            set
+            {
+                this.Parameters[nameof(GitRepoClone.Commit)] = value;
+            }
+        }
+
+        /// <summary>
         /// Executes the git clone operation.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             telemetryContext.AddContext("repoUri", this.RepoUri);
             telemetryContext.AddContext("packagesDirectory", this.PlatformSpecifics.PackagesDirectory);
+            telemetryContext.AddContext("Commit", this.Commit);
 
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             ProcessManager processManager = systemManagement.ProcessManager;
@@ -99,6 +117,11 @@ namespace VirtualClient.Dependencies
                 DependencyPath package = new DependencyPath(this.PackageName, this.Combine(this.PlatformSpecifics.PackagesDirectory, this.PackageName));
                 await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken)
                     .ConfigureAwait(false);
+            }
+
+            if (!string.IsNullOrEmpty(this.Commit))
+            {
+                await this.ExecuteCommandAsync("git", $"-C {cloneDirectory} checkout {this.Commit}", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken);
             }
         }
     }

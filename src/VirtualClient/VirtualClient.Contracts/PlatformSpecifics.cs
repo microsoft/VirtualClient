@@ -137,7 +137,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory where state objects are stored.
         /// </summary>
-        public string StateDirectory { get; }
+        public string StateDirectory { get; set; }
 
         /// <summary>
         /// The directory where built-in tools/toolsets are stored.
@@ -154,6 +154,32 @@ namespace VirtualClient.Contracts
         /// Whether VC is running in the context of docker container.
         /// </summary>
         internal static bool RunningInContainer { get; set; } = PlatformSpecifics.IsRunningInContainer();
+
+        /// <summary>
+        /// Get the logged in user/username. On Windows systems, the user is discoverable even when running as Administrator.
+        /// On Linux systems, the user can be discovered using certain environment variables when running under sudo/root.
+        /// </summary>
+        public string GetLoggedInUser()
+        {
+            string loggedInUserName = Environment.UserName;
+            if (string.Equals(loggedInUserName, "root"))
+            {
+                loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
+                {
+                    loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
+                    if (string.IsNullOrEmpty(loggedInUserName))
+                    {
+                        throw new EnvironmentSetupException(
+                            $"Unable to determine logged in username. The expected environment variables '{EnvironmentVariable.SUDO_USER}' and " +
+                            $"'{EnvironmentVariable.VC_SUDO_USER}' do not exist or are set to 'root' (i.e. potentially when running as sudo/root).",
+                            ErrorReason.EnvironmentIsInsufficent);
+                    }
+                }
+            }
+
+            return loggedInUserName;
+        }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a

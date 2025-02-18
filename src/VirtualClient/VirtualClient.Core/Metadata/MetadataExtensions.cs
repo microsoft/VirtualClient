@@ -6,6 +6,7 @@ namespace VirtualClient.Metadata
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -220,22 +221,21 @@ namespace VirtualClient.Metadata
                             break;
                     }
 
-                    string osName = null;
                     if (systemManagement.Platform == PlatformID.Win32NT)
                     {
-                        osName = "Windows";
+                        metadata.Add("osName", "Windows");
                     }
                     else if (systemManagement.Platform == PlatformID.Unix)
                     {
                         LinuxDistributionInfo distro = await systemManagement.GetLinuxDistributionAsync(CancellationToken.None);
-                        osName = distro.LinuxDistribution.ToString();
+                        metadata.Add("osName", distro.OperationSystemFullName);
                     }
 
                     // Operating System Metadata
                     // -------------------------------------------------
                     metadata.Add("computerName", Environment.MachineName);
                     metadata.Add("osFamily", osFamily);
-                    metadata.Add("osName", osName);
+                    
                     metadata.Add("osDescription", Environment.OSVersion.VersionString);
                     metadata.Add("osVersion", Environment.OSVersion.Version.ToString());
                     metadata.Add("osPlatformArchitecture", systemManagement.PlatformArchitectureName);

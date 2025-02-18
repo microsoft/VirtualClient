@@ -22,13 +22,7 @@
 
 
     <ItemGroup>
-        <None Update="Resources\TEST-PROFILE-1.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\TEST-PROFILE-3.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\TEST-PROFILE-2.json">
+        <None Update="Resources\*.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="Examples\**\*.*">

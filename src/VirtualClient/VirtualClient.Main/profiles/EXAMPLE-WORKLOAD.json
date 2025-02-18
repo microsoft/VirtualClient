@@ -27,6 +27,17 @@
                 "ProfilingPeriod": "00:00:30",
                 "ProfilingWarmUpPeriod": "00:00:05",
                 "Tags": "Test,VC"
+            },
+            "ExampleExtensions": {
+                "OpenSource": true,
+                "Contacts": [
+                    "virtualclient@microsoft.com"
+                ],
+                "Documentation": {
+                    "General": "https://microsoft.github.io/VirtualClient",
+                    "Profiles": "https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles",
+                    "Usage": "https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line"
+                }
             }
         }
     ],

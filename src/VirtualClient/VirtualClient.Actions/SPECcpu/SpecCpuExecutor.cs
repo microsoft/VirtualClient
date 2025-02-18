@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -87,17 +88,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Compiler version
-        /// </summary>
-        public string CompilerVersion
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.CompilerVersion));
-            }
-        }
-
-        /// <summary>
         /// Iterations.
         /// Recommand Default: 2
         /// </summary>
@@ -118,6 +108,28 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.PeakOptimizingFlags), "-g -Ofast -march=native -flto");
+            }
+        }
+
+        /// <summary>
+        /// Threads.
+        /// </summary>
+        public int Threads
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Threads), Environment.ProcessorCount);
+            }
+        }
+
+        /// <summary>
+        /// Copies.
+        /// </summary>
+        public int Copies
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Copies), Environment.ProcessorCount);
             }
         }
 
@@ -325,6 +337,7 @@ namespace VirtualClient.Actions
 
                     SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
+                    metrics.LogConsole(this.Scenario);
 
                     this.Logger.LogMetrics(
                         toolName: "SPECcpu",
@@ -376,9 +389,8 @@ namespace VirtualClient.Actions
         {
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
-            int coreCount = Environment.ProcessorCount;
 
-            string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
+            string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {this.Copies} --threads {this.Threads} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
             // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
@@ -410,14 +422,48 @@ namespace VirtualClient.Actions
                 true);
             }
 
+            string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", cancellationToken);
+
+            if (string.IsNullOrEmpty(compilerVersion))
+            {
+                throw new WorkloadException("gcc version not found.");
+            }
+
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(
                 SpecCpuConfigPlaceHolder.Gcc10Workaround,
-                Convert.ToInt32(this.CompilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
+                Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
                 StringComparison.OrdinalIgnoreCase);
 
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
+        }
+
+        private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, CancellationToken cancellationToken)
+        {
+            string command = compilerName;
+            string commandArguments = "-dumpversion";
+
+            string version = string.Empty;
+
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
+            {
+                try
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        version = process.StandardOutput.ToString().Trim().Split(".")[0];
+                    }
+                }
+                catch
+                {
+                    version = string.Empty;
+                }
+            }
+
+            return version;
         }
 
         internal class SpecCpuState : State

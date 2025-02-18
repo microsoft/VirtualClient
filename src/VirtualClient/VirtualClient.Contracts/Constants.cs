@@ -181,6 +181,11 @@ namespace VirtualClient.Contracts
         public const string VC_PASSWORD = nameof(VC_PASSWORD);
 
         /// <summary>
+        /// Name = VC_LOGS_DIR
+        /// </summary>
+        public const string VC_LOGS_DIR = nameof(VC_LOGS_DIR);
+
+        /// <summary>
         /// Name = VC_LIBRARY_PATH
         /// </summary>
         public const string VC_LIBRARY_PATH = nameof(VC_LIBRARY_PATH);
@@ -189,6 +194,16 @@ namespace VirtualClient.Contracts
         /// Name = VC_PACKAGES_DIR
         /// </summary>
         public const string VC_PACKAGES_DIR = nameof(VC_PACKAGES_DIR);
+
+        /// <summary>
+        /// Name = VC_STATE_DIR
+        /// </summary>
+        public const string VC_STATE_DIR = nameof(VC_STATE_DIR);
+
+        /// <summary>
+        /// Name = VC_SUDO_USER
+        /// </summary>
+        public const string VC_SUDO_USER = nameof(VC_SUDO_USER);
     }
 
     /// <summary>
