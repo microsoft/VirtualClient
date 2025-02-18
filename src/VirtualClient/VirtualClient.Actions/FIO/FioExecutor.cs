@@ -8,7 +8,6 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -34,6 +33,7 @@ namespace VirtualClient.Actions
         public const string TestFocusDataIntegrity = "DataIntegrity";
 
         private const string FileNameParameterDelimiter = ",";
+        private string command;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FioExecutor"/> class.
@@ -295,6 +295,15 @@ namespace VirtualClient.Actions
                         return;
                     }
 
+                    if (string.IsNullOrEmpty(this.JobFiles))
+                    {
+                        this.command = this.CommandLine;
+                    }
+                    else
+                    {
+                        this.command = await this.GetCommandForJobFilesAsync(cancellationToken);
+                    }
+
                     // Apply parameters to the FIO command line options.
                     await this.EvaluateParametersAsync(telemetryContext);
 
@@ -340,18 +349,7 @@ namespace VirtualClient.Actions
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
 
-                    string commandLine;
-
-                    if (string.IsNullOrEmpty(this.JobFiles))
-                    {
-                        commandLine = this.CommandLine;
-                    }
-                    else
-                    {
-                        commandLine = await this.GetCommandForJobFilesAsync(cancellationToken);
-                    }
-
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.command, disksToTest, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
@@ -505,7 +503,7 @@ namespace VirtualClient.Actions
             {
                 await this.EvaluateParametersAsync(CancellationToken.None, true);
 
-                relatedContext.AddContext("commandLine", this.CommandLine);
+                relatedContext.AddContext("commandLine", this.command);
                 relatedContext.AddContext("testScenario", this.MetricScenario);
             });
         }
