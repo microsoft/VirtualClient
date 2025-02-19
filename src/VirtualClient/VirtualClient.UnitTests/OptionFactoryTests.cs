@@ -508,8 +508,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
-        [TestCase("/home/any/directory/path")]
+        [Platform(Include = "Win", Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
+        [Platform(Include = "Win,Unix,Linux,MacOsX"), TestCase("/home/any/directory/path")]
         public void LogDirectoryOptionSupportsFullPaths(string path)
         {
             Option option = OptionFactory.CreateLogDirectoryOption();
@@ -707,8 +707,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
-        [TestCase("/home/any/directory/path")]
+        [Platform(Include = "Win", Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
+        [Platform(Include = "Win,Unix,Linux,MacOsX"), TestCase("/home/any/directory/path")]
         public void PackageDirectoryOptionSupportsFullPaths(string path)
         {
             Option option = OptionFactory.CreatePackageDirectoryOption();
@@ -1060,8 +1060,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
-        [TestCase("/home/any/directory/path")]
+        [Platform(Include = "Win", Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
+        [Platform(Include = "Win,Unix,Linux,MacOsX"), TestCase("/home/any/directory/path")]
         public void StateDirectoryOptionSupportsFullPaths(string path)
         {
             Option option = OptionFactory.CreateStateDirectoryOption();
