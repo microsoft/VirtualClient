@@ -7,12 +7,15 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
+    using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
+    using System.IO;
     using System.Linq;
     using System.Security;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
@@ -22,6 +25,12 @@ namespace VirtualClient
     [Category("Unit")]
     public class OptionFactoryTests
     {
+        [OneTimeSetUp]
+        public void SetupFixture()
+        {
+            Environment.CurrentDirectory = MockFixture.GetDirectory(typeof(OptionFactoryTests));
+        }
+
         [Test]
         [TestCase("--port")]
         [TestCase("--api-port")]
@@ -493,9 +502,40 @@ namespace VirtualClient
         public void LogDirectoryOptionSupportsExpectedAliases(string alias)
         {
                 Option option = OptionFactory.CreateLogDirectoryOption();
-                ParseResult result = option.Parse($"{alias}=\\Any\\Directory\\Path");
+                ParseResult result = option.Parse($"{alias}=C:\\Any\\Directory\\Path");
 
                 Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("C:\\Any\\Directory\\Path")]
+        [TestCase("/home/any/directory/path")]
+        public void LogDirectoryOptionSupportsFullPaths(string path)
+        {
+            Option option = OptionFactory.CreateLogDirectoryOption();
+            ParseResult result = option.Parse($"--log-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--log-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void LogDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateLogDirectoryOption();
+            ParseResult result = option.Parse($"--log-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--log-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]
@@ -664,6 +704,37 @@ namespace VirtualClient
             ParseResult result = option.Parse($"{alias}=\\Any\\Directory\\Path");
 
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("C:\\Any\\Directory\\Path")]
+        [TestCase("/home/any/directory/path")]
+        public void PackageDirectoryOptionSupportsFullPaths(string path)
+        {
+            Option option = OptionFactory.CreatePackageDirectoryOption();
+            ParseResult result = option.Parse($"--package-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--package-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void PackageDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreatePackageDirectoryOption();
+            ParseResult result = option.Parse($"--package-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--package-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]
@@ -989,6 +1060,37 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("C:\\Any\\Directory\\Path")]
+        [TestCase("/home/any/directory/path")]
+        public void StateDirectoryOptionSupportsFullPaths(string path)
+        {
+            Option option = OptionFactory.CreateStateDirectoryOption();
+            ParseResult result = option.Parse($"--state-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--state-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void StateDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateStateDirectoryOption();
+            ParseResult result = option.Parse($"--state-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--state-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase("--system")]
         [TestCase("--s")]
         public void SystemOptionSupportsExpectedAliases(string alias)
@@ -1111,9 +1213,9 @@ namespace VirtualClient
             {
                 string sasPart = "--packages=https://anystorageaccount.blob.core.windows.net/?sv=2020&ss=b&srt=c&sp=rwlacx&se=2Z&st=2021Z&spr=https";
                 string eventhubPart = "--eventhub=\"Endpoint=sb://xxx.servicebus.windows.net/;S=Az;SKey=EZ=\"";
-                string itertionPart = "--iterations=2";
+                string iterationPart = "--iterations=2";
                 CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { }, tokenSource);
-                ParseResult result = commandBuilder.Build().Parse($"{sasPart} {itertionPart} {eventhubPart}");
+                ParseResult result = commandBuilder.Build().Parse($"{sasPart} {iterationPart} {eventhubPart}");
             }
         }
 
