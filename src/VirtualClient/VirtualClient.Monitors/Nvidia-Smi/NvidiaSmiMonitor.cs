@@ -5,7 +5,6 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -14,12 +13,12 @@ namespace VirtualClient.Monitors
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// The Performance Counter Monitor for Virtual Client
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64")]
     public class NvidiaSmiMonitor : VirtualClientIntervalBasedMonitor
     {
         /// <summary>
@@ -31,30 +30,60 @@ namespace VirtualClient.Monitors
         }
 
         /// <inheritdoc/>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
             // logic will block without returning. Monitors are typically expected to be fire-and-forget.
 
-            switch (this.Platform)
+            return Task.Run(async () =>
             {
-                case PlatformID.Win32NT:
-                    // This is not supported on Windows, skipping
-                    break;
+                try
+                {
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        // Check that nvidia-smi is installed. If not, we exit the monitor.
+                        bool toolsetInstalled = await this.VerifyToolsetInstalledAsync(telemetryContext, cancellationToken);
 
-                case PlatformID.Unix:
-                    await this.QueryC2CAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                    await this.QueryGpuAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                    break;
-            }
+                        if (toolsetInstalled)
+                        {
+                            await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
+
+                            int iterations = 0;
+                            while (!cancellationToken.IsCancellationRequested)
+                            {
+                                try
+                                {
+                                    iterations++;
+                                    if (this.IsIterationComplete(iterations))
+                                    {
+                                        break;
+                                    }
+
+                                    await this.WaitAsync(this.MonitorFrequency, cancellationToken);
+                                    await this.QueryC2CAsync(telemetryContext, cancellationToken);
+                                    await this.QueryGpuAsync(telemetryContext, cancellationToken);
+                                }
+                                catch (Exception exc)
+                                {
+                                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception exc)
+                {
+                    // Do not allow the monitor to crash the application.
+                    this.Logger.LogErrorMessage(exc, telemetryContext);
+                }
+            });
         }
 
         /// <inheritdoc/>
         protected override void Validate()
         {
             base.Validate();
+
             if (this.MonitorFrequency <= TimeSpan.Zero)
             {
                 throw new MonitorException(
@@ -66,35 +95,37 @@ namespace VirtualClient.Monitors
 
         private async Task QueryC2CAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-
-            // This is the Nvidia smi c2c command
             string command = "nvidia-smi";
-            string c2cCommandArguments = "c2c -s";
-
-            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
-                .ConfigureAwait(false);
+            string commandArguments = "c2c -s";
 
             try
             {
-                DateTime startTime = DateTime.UtcNow;
-                IProcessProxy process = await this.ExecuteCommandAsync(command, c2cCommandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true);
-                DateTime endTime = DateTime.UtcNow;
-
-                if (!cancellationToken.IsCancellationRequested)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
                 {
-                    // We cannot log the process details here. The output is too large.
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia-Smi-c2c", logToFile: true);
-                    process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
-
-                    if (process.StandardOutput.Length > 0)
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        NvidiaSmiC2CParser parser = new NvidiaSmiC2CParser(process.StandardOutput.ToString());
-                        IList<Metric> metrics = parser.Parse();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia_SMI_GPU_Links");
+                        process.ThrowIfMonitorFailed();
 
-                        if (metrics?.Any() == true)
+                        if (process.StandardOutput.Length > 0)
                         {
-                            this.Logger.LogPerformanceCounters("nvidia", metrics, startTime, endTime, telemetryContext);
+                            string results = process.StandardOutput.ToString();
+                            IList<Metric> metrics = NvidiaSmiResultsParser.ParseC2CResults(results);
+
+                            if (metrics?.Any() == true)
+                            {
+                                this.Logger.LogMetrics(
+                                    "nvidia-smi",
+                                    "Nvidia GPU Links",
+                                    process.StartTime,
+                                    process.ExitTime,
+                                    metrics,
+                                    "GPU",
+                                    $"{command} {commandArguments}",
+                                    null,
+                                    telemetryContext,
+                                    toolResults: results);
+                            }
                         }
                     }
                 }
@@ -112,9 +143,6 @@ namespace VirtualClient.Monitors
        
         private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-            IFileSystem fileSystem = systemManagement.FileSystem;
-
             // This is the Nvidia smi query gpu command
             // e.g.
             // nvidia-smi --query-gpu=--query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory,
@@ -125,9 +153,9 @@ namespace VirtualClient.Monitors
             // ecc.errors.uncorrected.volatile.total,ecc.errors.uncorrected.aggregate.device_memory,ecc.errors.uncorrected.aggregate.dram,ecc.errors.uncorrected.aggregate.sram,
             // ecc.errors.uncorrected.aggregate.total
             // --format=csv,nounits
-            int totalSamples = (int)this.MonitorFrequency.TotalSeconds;
+
             string command = "nvidia-smi";
-            string commandArguments = "--query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory," +
+            string commandArguments = "--query-gpu=timestamp,index,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory," +
                 "power.draw.average,clocks.gr,clocks.sm,clocks.video,clocks.mem,memory.total,memory.free,memory.used,power.draw.instant,pcie.link.gen.gpucurrent," +
                 "pcie.link.width.current,ecc.errors.corrected.volatile.device_memory,ecc.errors.corrected.volatile.dram,ecc.errors.corrected.volatile.sram," +
                 "ecc.errors.corrected.volatile.total,ecc.errors.corrected.aggregate.device_memory,ecc.errors.corrected.aggregate.dram,ecc.errors.corrected.aggregate.sram," +
@@ -136,57 +164,79 @@ namespace VirtualClient.Monitors
                 "ecc.errors.uncorrected.aggregate.total " + 
                 "--format=csv,nounits";
 
-            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
-                .ConfigureAwait(false);
-
             DateTime nextIteration = DateTime.UtcNow;
 
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                try
+                await this.WaitAsync(nextIteration, cancellationToken);
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, null, telemetryContext, cancellationToken))
                 {
-                    await this.WaitAsync(nextIteration, cancellationToken);
-                    nextIteration = DateTime.UtcNow.Add(this.MonitorFrequency);
-
-                    using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        // We cannot log the process details here. The output is too large.
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia_SMI_GPU_Status");
+                        process.ThrowIfMonitorFailed();
 
-                        DateTime startTime = DateTime.UtcNow;
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        DateTime endTime = DateTime.UtcNow;
-
-                        if (!cancellationToken.IsCancellationRequested)
+                        if (process.StandardOutput.Length > 0)
                         {
-                            // We cannot log the process details here. The output is too large.
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia-Smi-gpu", logToFile: true);
-                            process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
+                            string results = process.StandardOutput.ToString();
+                            IList<Metric> metrics = NvidiaSmiResultsParser.ParseQueryResults(results);
 
-                            if (process.StandardOutput.Length > 0)
+                            if (metrics?.Any() == true)
                             {
-                                NvidiaSmiQueryGpuParser parser = new NvidiaSmiQueryGpuParser(process.StandardOutput.ToString());
-                                IList<Metric> metrics = parser.Parse();
-
-                                if (metrics?.Any() == true)
+                                foreach (var metric in metrics)
                                 {
-                                    this.Logger.LogPerformanceCounters("nvidia", metrics, startTime, endTime, telemetryContext);
+                                    metric.Metadata.TryGetValue("gpu_index", out IConvertible index);
+
+                                    this.Logger.LogMetrics(
+                                        "nvidia-smi",
+                                        "Nvidia GPU Status",
+                                        process.StartTime,
+                                        process.ExitTime,
+                                        metric.Name,
+                                        metric.Value,
+                                        metric.Unit,
+                                        $"GPU {index}".Trim(),
+                                        $"{command} {commandArguments}",
+                                        new List<string> { "Nvidia", "GPU", $"GPU {index}" },
+                                        telemetryContext,
+                                        description: metric.Description,
+                                        relativity: metric.Relativity,
+                                        toolResults: results);
                                 }
                             }
                         }
                     }
                 }
-                catch (OperationCanceledException)
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected whenever ctrl-C is used.
+            }
+            catch (Exception exc)
+            {
+                // This would be expected on new VM while nvidia-smi is still being installed.
+                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+            }
+        }
+
+        private async Task<bool> VerifyToolsetInstalledAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            bool isInstalled = false;
+            using (IProcessProxy process = await this.ExecuteCommandAsync("nvidia-smi", "-h", null, telemetryContext, cancellationToken))
+            {
+                isInstalled = process.ExitCode == 0;
+                if (!isInstalled)
                 {
-                    // Expected whenever ctrl-C is used.
-                }
-                catch (Exception exc)
-                {
-                    // This would be expected on new VM while nvidia-smi is still being installed.
-                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    this.Logger.LogMessage(
+                        "The Nvidia SMI toolset (nvidia-smi) is not installed. This monitor will not execute.",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddProcessContext(process));
                 }
             }
+
+            return isInstalled;
         }
     }
 }

@@ -14,6 +14,7 @@ namespace VirtualClient
     using System.Net;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Actions;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
@@ -459,7 +460,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogDirectoryOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--ldir", "--log-dir" })
+            Option<string> option = new Option<string>(
+                new string[] { "--ldir", "--log-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
             {
                 Name = "LogDirectory",
                 Description = "Defines an alternate directory to which log files should be written.",
@@ -649,7 +652,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreatePackageDirectoryOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--pdir", "--package-dir" })
+            Option<string> option = new Option<string>(
+                new string[] { "--pdir", "--package-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
             {
                 Name = "PackageDirectory",
                 Description = "Defines an alternate directory to which packages will be downloaded.",
@@ -899,7 +904,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateStateDirectoryOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--sdir", "--state-dir" })
+            Option<string> option = new Option<string>(
+                new string[] { "--sdir", "--state-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
             {
                 Name = "StateDirectory",
                 Description = "Defines an alternate directory to which state files/documents will be written.",
@@ -1065,6 +1072,21 @@ namespace VirtualClient
             }
 
             return delimitedValues;
+        }
+
+        private static string ParseDirectory(ArgumentResult arg)
+        {
+            string directory = arg.Tokens?.FirstOrDefault()?.Value?.Trim();
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                if (!Path.IsPathRooted(directory))
+                {
+                    // Relative path
+                    directory = Path.GetFullPath(directory);
+                }
+            }
+
+            return directory;
         }
 
         private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
