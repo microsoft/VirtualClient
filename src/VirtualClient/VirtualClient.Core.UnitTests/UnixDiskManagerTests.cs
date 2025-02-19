@@ -350,21 +350,17 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task UnixDiskManagerReturnsListofDiskPaths()
+        public async Task UnixDiskManagerReturnsListofFilteredDisks()
         {
             this.testProcess.OnHasExited = () => true;
             this.testProcess.OnStart = () => true;
             this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
 
-            List<string> accessPaths = new List<string>
-            {
-                "/mnt",
-            };
 
-            IEnumerable<string> diskPaths = await this.diskManager.GetDiskPathsAsync("osdisk:false", CancellationToken.None)
+            IEnumerable<Disk> disks = await this.diskManager.GetDisksAsync("osdisk:false", CancellationToken.None)
                 .ConfigureAwait(false);
 
-            CollectionAssert.AreEqual(diskPaths, accessPaths);
+            Assert.AreEqual(disks.Count(), 3);
         }
 
         private class TestUnixDiskManager : UnixDiskManager

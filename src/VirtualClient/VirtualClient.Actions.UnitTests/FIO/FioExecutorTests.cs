@@ -56,7 +56,7 @@ namespace VirtualClient.Actions.DiskPerformance
 
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("fio", this.mockFixture.GetPackagePath("fio")));
             this.mockFixture.File.OnFileExists().Returns(true);
             this.mockFixture.File.Setup(file => file.ReadAllText(It.IsAny<string>())).Returns(string.Empty);
@@ -190,39 +190,6 @@ namespace VirtualClient.Actions.DiskPerformance
 
                 Assert.AreEqual($"--name=disk_fill --size=496GB --numjobs=1 --rw=write --bs=256k --iodepth=64 --direct=1 --thread", commandLine);
                 Assert.AreEqual($"disk_fill", testName);
-            }
-        }
-
-        [Test]
-        public async Task FioExecutorCreatesExpectedMountPointsForDisksUnderTest_RemoteDiskScenario()
-        {
-            // Clear any access points out.
-            this.disks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
-
-            List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
-
-            this.mockFixture.DiskManager
-                .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
-                {
-                    (volume.AccessPaths as List<string>).Add(mountPoint);
-                })
-                .Returns(Task.CompletedTask);
-
-            using (TestFioExecutor workloadExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
-            {
-                await workloadExecutor.ExecuteAsync(CancellationToken.None);
-
-                Assert.IsTrue(this.disks.Skip(1).All(d => d.Volumes.First().AccessPaths?.Any() == true));
-
-                string expectedMountPoint1 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdd1");
-                Assert.AreEqual(expectedMountPoint1, this.disks.ElementAt(1).Volumes.First().AccessPaths.First());
-
-                string expectedMountPoint2 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sde1");
-                Assert.AreEqual(expectedMountPoint2, this.disks.ElementAt(2).Volumes.First().AccessPaths.First());
-
-                string expectedMountPoint3 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdf1");
-                Assert.AreEqual(expectedMountPoint3, this.disks.ElementAt(3).Volumes.First().AccessPaths.First());
             }
         }
 

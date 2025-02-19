@@ -1484,7 +1484,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task WindowsDiskManagerReturnsListofDiskPaths()
+        public async Task WindowsDiskManagerReturnsListofFilteredDisks()
         {
             this.testProcess.OnHasExited = () => true;
             this.testProcess.OnStart = () => true;
@@ -1560,15 +1560,10 @@ namespace VirtualClient
                 }
             };
 
-            List<string> accessPaths = new List<string>
-            {
-                "C:\\"
-            };
-
-            IEnumerable<string> diskPaths = await this.diskManager.GetDiskPathsAsync(DiskFilters.DefaultDiskFilter, CancellationToken.None)
+            IEnumerable<Disk> disks = await this.diskManager.GetDisksAsync(DiskFilters.DefaultDiskFilter, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            CollectionAssert.AreEqual(diskPaths, accessPaths);
+            Assert.AreEqual(disks.Count(), 1);
         }
 
         private class TestWindowsDiskManager : WindowsDiskManager

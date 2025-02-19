@@ -473,42 +473,18 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Grabs the available data directory on the system.
+        /// Gets the set of physical disks that exist on the system.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <param name="diskFilter">Disk filter to </param>
-        /// <returns></returns>
-        /// <exception cref="WorkloadException"></exception>
-        public override Task<IEnumerable<string>> GetDiskPathsAsync(string diskFilter, CancellationToken cancellationToken)
+        /// <param name="diskFilter">Optional filter for disks.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public override async Task<IEnumerable<Disk>> GetDisksAsync(string diskFilter, CancellationToken cancellationToken)
         {
-            List<string> diskPaths = new List<string>();
+            IEnumerable<Disk> disks = await this.GetDisksAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            return this.Logger.LogMessageAsync($"{nameof(WindowsDiskManager)}.GetDiskPaths", EventContext.Persisted(), async () =>
-            {
-                IEnumerable<Disk> disks = await this.GetDisksAsync(cancellationToken).ConfigureAwait(false);
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Win32NT).ToList();
+            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Win32NT).ToList();
 
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    string diskPath = $"{disk.GetPreferredAccessPath(PlatformID.Win32NT)}";
-
-                    if (!string.IsNullOrEmpty(diskPath))
-                    {
-                        diskPaths.Add(diskPath);
-                    }
-                }
-
-                return diskPaths.AsEnumerable();
-            });
+            return filteredDisks;
         }
 
         /// <summary>

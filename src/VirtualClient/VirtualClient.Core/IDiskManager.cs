@@ -40,10 +40,10 @@ namespace VirtualClient
         Task<IEnumerable<Disk>> GetDisksAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Grabs the available data directory on the system.
+        /// Gets the set of physical disks that exist on the system.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <param name="diskFilter">Disk filter to </param>
-        Task<IEnumerable<string>> GetDiskPathsAsync(string diskFilter, CancellationToken cancellationToken);
+        /// <param name="diskFilter">Optional filter for disks.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        Task<IEnumerable<Disk>> GetDisksAsync(string diskFilter, CancellationToken cancellationToken);
     }
 }

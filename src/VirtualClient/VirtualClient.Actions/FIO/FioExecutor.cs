@@ -300,7 +300,9 @@ namespace VirtualClient.Actions
 
                     string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
 
-                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
+                    this.DiskFilter = string.IsNullOrWhiteSpace(this.DiskFilter) ? DiskFilters.DefaultDiskFilter : this.DiskFilter;
+
+                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(this.DiskFilter, cancellationToken)
                         .ConfigureAwait(false);
 
                     if (disks?.Any() != true)
@@ -310,32 +312,10 @@ namespace VirtualClient.Actions
                             ErrorReason.WorkloadUnexpectedAnomaly);
                     }
 
-                    IEnumerable<Disk> disksToTest = this.GetDisksToTest(disks);
-
-                    if (disksToTest?.Any() != true)
-                    {
-                        throw new WorkloadException(
-                            "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                            "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                            "of the existing disks.",
-                            ErrorReason.DependencyNotFound);
-                    }
-
-                    if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
-                    {
-                        // Refresh the disks to pickup the mount point changes.
-                        await Task.Delay(1000).ConfigureAwait(false);
-                        IEnumerable<Disk> updatedDisks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        disksToTest = this.GetDisksToTest(updatedDisks);
-                    }
-
                     telemetryContext.AddContext(nameof(this.DiskFilter), this.DiskFilter);
                     telemetryContext.AddContext("executable", this.ExecutablePath);
                     telemetryContext.AddContext(nameof(ioEngine), ioEngine);
                     telemetryContext.AddContext(nameof(disks), disks);
-                    telemetryContext.AddContext(nameof(disksToTest), disksToTest);
 
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
@@ -345,7 +325,7 @@ namespace VirtualClient.Actions
                         await this.SetCommandLineForJobFilesAsync(cancellationToken);
                     }
 
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disks, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {

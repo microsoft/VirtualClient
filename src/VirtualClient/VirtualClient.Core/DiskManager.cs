@@ -55,6 +55,6 @@ namespace VirtualClient
         public abstract Task<IEnumerable<Disk>> GetDisksAsync(CancellationToken cancellationToken);
 
         /// <inheritdoc/>
-        public abstract Task<IEnumerable<string>> GetDiskPathsAsync(string diskFilter, CancellationToken cancellationToken);
+        public abstract Task<IEnumerable<Disk>> GetDisksAsync(string diskFilter, CancellationToken cancellationToken);
     }
 }
