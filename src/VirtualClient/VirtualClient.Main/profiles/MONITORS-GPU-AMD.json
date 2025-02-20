@@ -1,7 +1,7 @@
 {
   "Description": "Default Monitors for AMD GPU systems.",
   "Metadata": {
-    "SupportedPlatforms": "linux-x64,win-x64",
+    "SupportedPlatforms": "linux-x64, win-x64",
     "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
   },
   "Parameters": {
@@ -12,9 +12,19 @@
     {
       "Type": "AmdSmiMonitor",
       "Parameters": {
-          "Scenario": "AmdGpuCounters",
-          "MonitorFrequency": "$.Parameters.MonitorFrequency",
-          "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+        "Scenario": "AmdGpuCounters",
+        "Subsystem": "metric",
+        "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+      }
+    },
+    {
+      "Type": "AmdSmiMonitor",
+      "Parameters": {
+        "Scenario": "AmdGpuCounters",
+        "Subsystem": "xgmi",
+        "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
     },
     {
