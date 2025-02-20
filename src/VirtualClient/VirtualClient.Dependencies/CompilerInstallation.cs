@@ -43,13 +43,13 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The name of the compiler (e.g. gnu).
+        /// The name of the compiler (e.g. gcc).
         /// </summary>
         public string CompilerName
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CompilerInstallation.CompilerName), "gnu");
+                return this.Parameters.GetValue<string>(nameof(CompilerInstallation.CompilerName), "gcc");
             }
         }
 
@@ -98,7 +98,7 @@ namespace VirtualClient.Dependencies
         {
             switch (this.CompilerName.ToLowerInvariant())
             {
-                case Compilers.Gnu:
+                case Compilers.Gcc:
                     if (this.Platform == PlatformID.Unix)
                     {
                         await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
@@ -395,11 +395,6 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class Compilers
     {
-        /// <summary>
-        /// Gnu compiler.
-        /// </summary>
-        public const string Gnu = "gnu";
-
         /// <summary>
         /// Gcc compiler.
         /// </summary>
