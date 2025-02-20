@@ -508,10 +508,9 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Include = "Win"), TestCase("C:\\Any\\Directory\\Path")]
-        [Platform(Include = "Unix"), TestCase("/home/any/directory/path")]
-        public void LogDirectoryOptionSupportsFullPaths(string path)
+        public void LogDirectoryOptionSupportsFullPaths()
         {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
             Option option = OptionFactory.CreateLogDirectoryOption();
             ParseResult result = option.Parse($"--log-dir={path}");
 
@@ -707,10 +706,9 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Include = "Win"), TestCase("C:\\Any\\Directory\\Path")]
-        [Platform(Include = "Unix"), TestCase("/home/any/directory/path")]
-        public void PackageDirectoryOptionSupportsFullPaths(string path)
+        public void PackageDirectoryOptionSupportsFullPaths()
         {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
             Option option = OptionFactory.CreatePackageDirectoryOption();
             ParseResult result = option.Parse($"--package-dir={path}");
 
@@ -1060,10 +1058,9 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Include = "Win"), TestCase("C:\\Any\\Directory\\Path")]
-        [Platform(Include = "Unix"), TestCase("/home/any/directory/path")]
-        public void StateDirectoryOptionSupportsFullPaths(string path)
+        public void StateDirectoryOptionSupportsFullPaths()
         {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
             Option option = OptionFactory.CreateStateDirectoryOption();
             ParseResult result = option.Parse($"--state-dir={path}");
 
