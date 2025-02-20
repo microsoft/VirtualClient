@@ -37,6 +37,11 @@ namespace VirtualClient
         DiskFilterNotSupported = 301,
 
         /// <summary>
+        /// Process failed execution.
+        /// </summary>
+        ProcessFailed = 313,
+
+        /// <summary>
         /// The workload failed during execution.
         /// </summary>
         WorkloadFailed = 315,
