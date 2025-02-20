@@ -323,7 +323,7 @@ namespace VirtualClient.Actions
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
 
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disks, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
