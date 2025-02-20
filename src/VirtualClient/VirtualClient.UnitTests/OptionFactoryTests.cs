@@ -508,8 +508,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Include = "Win", Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
-        [Platform(Include = "Win,Unix,Linux,MacOsX"), TestCase("/home/any/directory/path")]
+        [TestCase("C:\\Any\\Directory\\Path")]
+        [TestCase("/home/any/directory/path")]
         public void LogDirectoryOptionSupportsFullPaths(string path)
         {
             Option option = OptionFactory.CreateLogDirectoryOption();
@@ -548,7 +548,7 @@ namespace VirtualClient
                 int expectedLevel = (int)level;
                 Option option = OptionFactory.CreateLogLevelOption();
                 ParseResult result = option.Parse($"{alias}={expectedLevel}");
-
+    
                 Assert.IsFalse(result.Errors.Any());
                 Assert.AreEqual(expectedLevel, int.Parse(result.Tokens.ElementAt(1).Value));
             }
@@ -707,8 +707,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Include = "Win", Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
-        [Platform(Include = "Win,Unix,Linux,MacOsX"), TestCase("/home/any/directory/path")]
+        [TestCase("C:\\Any\\Directory\\Path")]
+        [TestCase("/home/any/directory/path")]
         public void PackageDirectoryOptionSupportsFullPaths(string path)
         {
             Option option = OptionFactory.CreatePackageDirectoryOption();
@@ -1060,8 +1060,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [Platform(Include = "Win", Exclude = "Unix,Linux,MacOsX"), TestCase("C:\\Any\\Directory\\Path")]
-        [Platform(Include = "Win,Unix,Linux,MacOsX"), TestCase("/home/any/directory/path")]
+        [TestCase("C:\\Any\\Directory\\Path")]
+        [TestCase("/home/any/directory/path")]
         public void StateDirectoryOptionSupportsFullPaths(string path)
         {
             Option option = OptionFactory.CreateStateDirectoryOption();
