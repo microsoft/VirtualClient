@@ -1,0 +1,90 @@
+{
+  "Description": "SPECjbb2015 workload profile for compete",
+  "MinimumExecutionInterval": "00:01:00",
+  "MinimumRequiredExecutionTime": "02:00:00",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "(4-cores)=05:00:00,(16-cores)=03:00:00,(64-cores)=02:00:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "CMN": "-XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:+UseTransparentHugePages -XX:-UseAdaptiveSizePolicy -XX:-UsePerfData",
+    "LogicalProcessors": "{LogicalCoreCount}",
+    "SystemMemoryGB": "{SystemMemoryGigabytes}",
+    "InitialHeapSizeInGb": "{calculate({SystemMemoryGB} * 7/8 )}",
+    "MaxHeapSizeInGb": "{calculate({SystemMemoryGB} * 7/8 )}",
+    "NurserySizeInGb": "{calculate({SystemMemoryGB} * 25/32 )}",
+    "MemoryFlag": "{calculate({SystemMemoryGB} / 36 )}",
+    "Comment_MemoryFlag": "MemoryFlag is in effect an enum, which gets the values 0,1,2; where 0 indicates the heap is deemed small (and CSML flags apply), 1 - medium (and CMID flags apply), 2 - larger (no memory flags). Warning: This method of calculating MemoryFlag is hacky and works for Cloud VMs, but might fail when/if the heap size is too close to 32GiB or 64GiB.",
+
+    "WbSaturateCount": "96",
+    "WbRunnerCount": "10",
+    "WbTier2Count": "14",
+    "WbTier3Count": "24",
+    "IsNUMAEnabled": true,
+    "IsARMEnabled": "calculate((\"{isarm({platform})}\" == \"true\") ? \"-XX:+AvoidUnalignedAccesses\" : \"\")}",
+  "Actions": [
+    {
+      "Type": "SpecJbbExecutor",
+      "Parameters": {
+        "Scenario": "ExecuteJavaPerformanceBenchmark",
+        "WbSaturateCount": "$.Parameters.WbSaturateCount",
+        "WbRunnerCount": "$.Parameters.WbRunnerCount",
+        "SystemMemoryGB": "$.Parameters.SystemMemoryGB",
+        "WbTier2Count": "$.Parameters.WbTier2Count",
+        "WbTier3Count": "$.Parameters.WbTier3Count",
+        "IsNUMAEnabled": "$.Parameters.IsNUMAEnabled",
+        "IsARMEnabled": "$.Parameters.IsARMEnabled",
+        "MaxHeapSizeInGb": "$.Parameters.MaxHeapSizeInGb",
+        "NurserySizeInGb": "$.Parameters.NurserySizeInGb",
+        "InitialHeapSizeInGb": "$.Parameters.InitialHeapSizeInGb",
+        "LogicalProcessors": "$.Parameters.LogicalProcessors",
+        "MemoryFlag": "$.Parameters.MemoryFlag",
+        "CMN": "$.Parameters.CMN",
+        "NUMA": "{calculate({IsNUMAEnabled} ? \"-XX:+UseNUMA\" : \"-XX:-UseNUMA\" )}",
+        "ParallelGCThreads": "-XX:ParallelGCThreads={LogicalProcessors}",
+
+        "Xms": "-Xms{InitialHeapSizeInGb}G",
+        "Xmx": "-Xmx{MaxHeapSizeInGb}G",
+        "Xmn": "-Xmn{NurserySizeInGb}G",
+        "CSML": "-XX:+UseCompressedOops -XX:+UseCompressedClassPointers",
+        "CMID": "-XX:+UseCompressedOops -XX:ObjectAlignmentInBytes=16 -XX:+UseCompressedClassPointers",
+        "CSML_Flags": "{calculate(({MemoryFlag} == 0) ? \"{CSML}\" : \"\" )}",
+
+        "CMID_Flags": "{calculate(({MemoryFlag} == 1) ? \"{CMID}\" : \"\" )}",
+        "SpecJbb_forkjoin_WbTier1": "-Dspecjbb.forkjoin.workers.Tier1={calculate({LogicalProcessors} * 2)}",
+
+        "SpecJbb_WbSaturate": "-Dspecjbb.customerDriver.threads.saturate={WbSaturateCount}",
+        "SpecJbb_WbRunner": "-Dspecjbb.comm.connect.selector.runner.count={WbRunnerCount}",
+        "SpecJbb_forkjoin_WbTier2": "-Dspecjbb.forkjoin.workers.Tier2={WbTier2Count}",
+        "SpecJbb_forkjoin_WbTier3": "-Dspecjbb.forkjoin.workers.Tier3={WbTier3Count}",
+        "JavaFlags": "{CMN} {NUMA} {ParallelGCThreads} {Xms} {Xmx} {Xmn} {CSML_Flags} {CMID_Flags} {SpecJbb_forkjoin_WbTier1} {SpecJbb_WbSaturate} {SpecJbb_WbRunner} {SpecJbb_forkjoin_WbTier2} {SpecJbb_forkjoin_WbTier3} {IsARMEnabled}",
+        "PackageName": "specjbb2015",
+        "JdkPackageName": "javadevelopmentkit",
+        "Tags": "Java"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECjbbPackage",
+        "BlobContainer": "packages",
+        "BlobName": "specjbb.2015.0.0.zip",
+        "PackageName": "specjbb2015",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "JDKPackageDependencyInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-17.0.9.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    }
+  ]
+}
