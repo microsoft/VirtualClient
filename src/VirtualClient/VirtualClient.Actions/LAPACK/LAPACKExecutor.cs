@@ -90,9 +90,13 @@ namespace VirtualClient.Actions
             {
                 if (this.Platform == PlatformID.Unix)
                 {
-                    // Run make to generate all object files for fortran subroutines.
-                    await this.ExecuteCommandAsync("make", null, this.packageDirectory, cancellationToken)
-                            .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("make", this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
 
                     // Delete results file that gets generated.
                     if (this.fileSystem.File.Exists(this.ResultsFilePath))
@@ -104,20 +108,20 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            if (process.IsErrored())
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
-                                process.ThrowIfWorkloadFailed();
-                            }
-
+                            process.ThrowIfWorkloadFailed();
                             await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
                         }
                     }
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
-                    await this.ExecuteCygwinBashAsync("./cmakescript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync("./cmakescript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
 
                     // Delete results file that gets generated.
                     if (this.fileSystem.File.Exists(this.ResultsFilePath))
@@ -129,45 +133,11 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            if (process.IsErrored())
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
-                                process.ThrowIfWorkloadFailed();
-                            }
-
+                            process.ThrowIfWorkloadFailed();
                             await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
                         }
                     }
                 }
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(LAPACKExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait();
             }
         }
 

@@ -165,19 +165,39 @@ namespace VirtualClient.Actions
 
             if (this.Subsystem == DCGMIExecutor.Diagnostics)
             {
-                await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        @"nvidia-smi -pm 1",
+                        Environment.CurrentDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                    }
+                }
 
                 State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIExecutor), cancellationToken)
                         .ConfigureAwait(false);
 
                 if (installationState == null)
                 {
-                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        @"nvidia-smi -e 1",
+                        Environment.CurrentDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
 
                     await this.stateManager.SaveStateAsync(nameof(DCGMIExecutor), new State(), cancellationToken)
-                    .ConfigureAwait(false);
+                        .ConfigureAwait(false);
 
                     this.RequestReboot();
                 }
@@ -185,8 +205,18 @@ namespace VirtualClient.Actions
 
             if (this.Subsystem == DCGMIExecutor.Health)
             {
-                await this.ExecuteCommandAsync<DCGMIExecutor>(@"dcgmi health -s mpi", Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    @"dcgmi health -s mpi",
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                    }
+                }
             }
         }
 
@@ -245,57 +275,27 @@ namespace VirtualClient.Actions
             }
         }
 
-        /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="command">Command that needs to be executed</param>
-        /// <param name="workingDirectory">The directory where we want to execute the command</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>Output of the workload command.</returns>
-        protected async Task<string> ExecuteCommandAsync<TExecutor>(string command, string workingDirectory, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientComponent
-        {
-            string output = string.Empty;
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{command}'  at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", command);
-
-                await this.Logger.LogMessageAsync($"{typeof(TExecutor).Name}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        process.RedirectStandardOutput = true;
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "DCGMI", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
-                        }
-
-                        output = process.StandardOutput.ToString();
-                    }
-
-                    return output;
-                }).ConfigureAwait(false);
-            }
-
-            return output;
-        }
-
         private async Task ExecuteDCGMIDiagnosticsSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 string command = $"dcgmi diag -r {this.Level} -j";
                 DateTime startTime = DateTime.UtcNow;
+                string results = string.Empty;
 
-                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command, 
+                    Environment.CurrentDirectory, 
+                    telemetryContext, 
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        results = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
             }
@@ -307,9 +307,21 @@ namespace VirtualClient.Actions
             {
                 string command = "dcgmi discovery -l";
                 DateTime startTime = DateTime.UtcNow;
+                string results = string.Empty;
 
-                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken, 
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        results = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
             }
@@ -321,8 +333,21 @@ namespace VirtualClient.Actions
             {
                 string command = "dcgmi fieldgroup -l";
                 DateTime startTime = DateTime.UtcNow;
-                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                string results = string.Empty;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        results = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
             }
@@ -334,8 +359,21 @@ namespace VirtualClient.Actions
             {
                 string command = "dcgmi group -l";
                 DateTime startTime = DateTime.UtcNow;
-                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                string results = string.Empty;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken, 
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        results = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
             }
@@ -347,8 +385,21 @@ namespace VirtualClient.Actions
             {
                 string command = "dcgmi health -c -j";
                 DateTime startTime = DateTime.UtcNow;
-                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                string results = string.Empty;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        results = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
             }
@@ -360,8 +411,21 @@ namespace VirtualClient.Actions
             {
                 string command = "dcgmi modules -l";
                 DateTime startTime = DateTime.UtcNow;
-                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                string results = string.Empty;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        results = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
             }
@@ -371,21 +435,40 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                List<Task<string>> tasksList = new List<Task<string>>();
                 string dcgmproftestercommand = $"/usr/bin/dcgmproftester{(int)Convert.ToDouble(this.LinuxCudaVersion)} --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
                 string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
                 DateTime startTime = DateTime.UtcNow;
 
-                tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dcgmproftestercommand, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false)));
+                string dcgmiproftesterresults = string.Empty;
+                string dcgmidmonresults = string.Empty;
 
-                tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dmoncommand, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false)));
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    dcgmproftestercommand,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        dcgmiproftesterresults = process.StandardOutput.ToString();
+                    }
+                }
 
-                string[] outputresults = await Task.WhenAll<string>(tasksList);
-
-                string dcgmiproftesterresults = outputresults[0];
-                string dcgmidmonresults = outputresults[1];
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    dmoncommand,
+                    Environment.CurrentDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        dcgmidmonresults = process.StandardOutput.ToString();
+                    }
+                }
 
                 this.CaptureDmonResultsAsync(dcgmidmonresults, dmoncommand, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
                 this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, dcgmproftestercommand, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);

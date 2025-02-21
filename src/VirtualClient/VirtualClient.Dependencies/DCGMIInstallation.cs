@@ -133,8 +133,13 @@ namespace VirtualClient.Dependencies
             commands.Add(enableDCGMCommand);
             foreach (string command in commands)
             {
-                await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
             }
         }
 
@@ -164,8 +169,13 @@ namespace VirtualClient.Dependencies
             commands.Add(enableDCGMCommand);
             foreach (string command in commands)
             {
-                await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
             }
         }
 
@@ -197,32 +207,14 @@ namespace VirtualClient.Dependencies
             commands.Add(enableDCGMCommand);
             foreach (string command in commands)
             {
-                await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone();
-
-            return this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                string output = string.Empty;
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, null, workingDirectory))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{commandLine}' at directory '{workingDirectory}'.", EventContext.Persisted());
-
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
-                        process.ThrowIfDependencyInstallationFailed();
+                        process.ThrowIfWorkloadFailed();
                     }
                 }
-            });
+            }
         }
     }
 }

@@ -171,7 +171,7 @@ namespace VirtualClient.Actions
 
             }
 
-            await this.InstallDependenciesAsync(cancellationToken)
+            await this.InstallDependenciesAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait();
         }
 
@@ -270,12 +270,12 @@ namespace VirtualClient.Actions
                             {
                                 this.Logger.LogTraceMessage($"Synchronization: Stopping all workloads...");
 
-                                await this.StopDockerAsync(CancellationToken.None);
+                                await this.StopDockerAsync(relatedContext, CancellationToken.None);
                                 await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken);
                             }
                             else if (workloadInstructions.Type == InstructionsType.ClientServerStartExecution)
                             {
-                                await this.StopDockerAsync(CancellationToken.None);
+                                await this.StopDockerAsync(relatedContext, CancellationToken.None);
                                 await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken);
 
                                 this.Parameters[nameof(this.ServiceName)] = workloadInstructions.Properties[nameof(this.ServiceName)];
@@ -399,49 +399,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="command">Command that needs to be executed</param>
-        /// <param name="workingDirectory">The directory where we want to execute the command</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>Output of the workload command.</returns>
-        protected async Task<string> ExecuteCommandAsync(string command, string workingDirectory, CancellationToken cancellationToken)
-        {
-            string output = string.Empty;
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{command}'  at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", command);
-
-                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait();
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-
-                        output = process.StandardOutput.ToString();
-                    }
-
-                    return output;
-                }).ConfigureAwait();
-            }
-
-            return output;
-        }
-
-        /// <summary>
         /// Resets the file to empty file.
         /// </summary>
         /// <param name="filePath">Path to the file to reset</param>
@@ -461,30 +418,47 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Stopping docker services after a service is executed for freeing up the ports for next service to be executed.
         /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
-        protected async Task StopDockerAsync(CancellationToken cancellationToken)
+        protected async Task StopDockerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (this.IsMultiRoleLayout())
             {
                 string isSwarmNodeScriptPath = this.PlatformSpecifics.Combine(this.ScriptsDirectory, "isSwarmNode.sh");
-                string isSwarmNodeCommand = "bash " + isSwarmNodeScriptPath;
-                string isSwarmNode = await this.ExecuteCommandAsync(isSwarmNodeCommand, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait();
+                string isSwarmNode = string.Empty;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    "bash",
+                    isSwarmNodeScriptPath,
+                    this.PackageDirectory, 
+                    telemetryContext, 
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        isSwarmNode = process.StandardOutput.ToString();
+                    }
+                }
 
                 if (isSwarmNode.Trim('\n') == "true")
                 {
                     this.Logger.LogTraceMessage($"{isSwarmNode.Trim('\n')} is equal to true");
-                    if (this.IsInRole(ClientRole.Client))
-                    {
-                        await this.ExecuteCommandAsync("docker swarm leave", this.ServiceDirectory, cancellationToken)
-                            .ConfigureAwait();
-                    }
+                    string swarmLeaveCommand = this.IsInRole(ClientRole.Server) ? "docker swarm leave --force" : "docker swarm leave";
 
-                    if (this.IsInRole(ClientRole.Server))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        swarmLeaveCommand,
+                        this.ServiceDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
                     {
-                        await this.ExecuteCommandAsync("docker swarm leave --force", this.ServiceDirectory, cancellationToken)
-                            .ConfigureAwait();
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
                     }
                 }
 
@@ -492,24 +466,60 @@ namespace VirtualClient.Actions
                 do
                 {
                     await this.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
-                    isSwarmNode = await this.ExecuteCommandAsync(isSwarmNodeCommand, this.PackageDirectory, cancellationToken)
-                        .ConfigureAwait();
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "bash",
+                        isSwarmNodeScriptPath,
+                        this.PackageDirectory,
+                        telemetryContext,
+                        cancellationToken, 
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                            isSwarmNode = process.StandardOutput.ToString();
+                        }
+                    }
                 }
                 while (isSwarmNode.Trim('\n') == "true");
             }
             else
             {
                 string dockerProcessCountCommand = @"bash -c ""docker ps | wc -l""";
-                string numberOfDockerProcess = await this.ExecuteCommandAsync(dockerProcessCountCommand, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait();
+                string numberOfDockerProcess = string.Empty;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    dockerProcessCountCommand,
+                    this.PackageDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        numberOfDockerProcess = process.StandardOutput.ToString();
+                    }
+                }
 
                 if (int.Parse(numberOfDockerProcess) > 1)
                 {
                     string stopContainersScriptPath = this.PlatformSpecifics.Combine(this.ScriptsDirectory, "stopContainers.sh");
-                    string stopContainersCommand = "bash " + stopContainersScriptPath;
 
-                    await this.ExecuteCommandAsync(stopContainersCommand, this.ServiceDirectory, cancellationToken)
-                        .ConfigureAwait();
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "bash",
+                        stopContainersScriptPath,
+                        this.PackageDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
             }
         }
@@ -537,35 +547,87 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Install required dependencies like dockerCompose, pip installations.
         /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
-        private async Task InstallDependenciesAsync(CancellationToken cancellationToken)
+        private async Task InstallDependenciesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string dockerComposeScriptPath = this.PlatformSpecifics.Combine(this.ScriptsDirectory, "dockerComposeScript.sh");
-            string dockerComposeCommand = "bash " + dockerComposeScriptPath;
-            await this.ExecuteCommandAsync(dockerComposeCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait();
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                "bash",
+                dockerComposeScriptPath,
+                this.PackageDirectory,
+                telemetryContext,
+                cancellationToken,
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
             string dockerComposeFilePath = "/usr/local/bin/docker-compose";
             await this.SystemManager.MakeFileExecutableAsync(dockerComposeFilePath, this.Platform, cancellationToken)
                 .ConfigureAwait();
 
             string pipUpgradeCommand = "python3 -m pip install -U pip";
-            await this.ExecuteCommandAsync(pipUpgradeCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait();
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                pipUpgradeCommand,
+                this.PackageDirectory,
+                telemetryContext,
+                cancellationToken,
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
             string setupToolsUpgradeCommand = "python3 -m pip install -U setuptools";
-            await this.ExecuteCommandAsync(setupToolsUpgradeCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait();
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                setupToolsUpgradeCommand,
+                this.PackageDirectory,
+                telemetryContext,
+                cancellationToken, 
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
             // python3-pip installs pip3 and not pip, better to leave it on python which version of pip to use
             string pipInstallPackagesCommand = "-H python3 -m pip install aiohttp asyncio";
-            await this.ExecuteCommandAsync(pipInstallPackagesCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait();
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                pipInstallPackagesCommand,
+                this.PackageDirectory,
+                telemetryContext,
+                cancellationToken,
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
             string luarocksCommand = "luarocks install luasocket";
-            await this.ExecuteCommandAsync(luarocksCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait();
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                luarocksCommand,
+                this.PackageDirectory,
+                telemetryContext,
+                cancellationToken,
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
         }
 

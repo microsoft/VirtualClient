@@ -118,48 +118,39 @@ namespace VirtualClient.Actions
                 // Choose default file for compression and decompression if files/dirs are not provided.
                 if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
                 {
-                    await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.GzipDirectory, cancellationToken);
-                    await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.GzipDirectory, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "wget",
+                        $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                        this.GzipDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "unzip",
+                        "silesia.zip -d silesia",
+                        this.GzipDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
 
                 state.GzipStateInitialized = true;
             }
 
             await this.stateManager.SaveStateAsync<GzipState>($"{nameof(GzipState)}", state, cancellationToken);
-        }
-
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            string output = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(GzipExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    DateTime start = DateTime.Now;
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfWorkloadFailed();
-                        }
-
-                        output = process.StandardOutput.ToString();
-                    }
-                }).ConfigureAwait();
-            }
-
-            return output;
         }
 
         private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext)

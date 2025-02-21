@@ -190,7 +190,7 @@ namespace VirtualClient.Dependencies
             return gccVersion == ccVersion && ccVersion == gfortranVersion;
         }
 
-        private Task InstallCygwinAsync(DependencyPath cygwinInstallationPath, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task InstallCygwinAsync(DependencyPath cygwinInstallationPath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string cygwinCommandArguments;
             string cygwinInstallerPath = this.Combine(cygwinInstallationPath.Path, "cygwinsetup.exe");
@@ -204,7 +204,13 @@ namespace VirtualClient.Dependencies
                 cygwinCommandArguments = @$"--quiet-mode --root {cygwinInstallationPath.Path} --site http://cygwin.mirror.constant.com --packages make,cmake";
             }
 
-            return this.ExecuteCommandAsync(cygwinInstallerPath, cygwinCommandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            using (IProcessProxy process = await this.ExecuteCommandAsync(cygwinInstallerPath, cygwinCommandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfDependencyInstallationFailed();
+                }
+            }
         }
 
         private async Task InstallGccAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -213,23 +219,27 @@ namespace VirtualClient.Dependencies
             gccVersion = (string.IsNullOrEmpty(gccVersion)) ? string.Empty : gccVersion;
             string installedVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", telemetryContext, cancellationToken);
 
+            List<string> commands = new List<string>();
+
             switch (distro.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
-                    await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    commands.Add("add-apt-repository ppa:ubuntu-toolchain-r/test -y");
+                    commands.Add("apt update");
                     if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
-                        await this.ExecuteCommandAsync("apt", "purge gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("apt", "install build-essential gcc g++ gfortran make -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        commands.Add("apt purge gcc -y");
+                        commands.Add("apt install build-essential gcc g++ gfortran make -y --quiet");
                     }
                     else if (!string.IsNullOrEmpty(gccVersion))
                     {
                         await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
 
-                        await this.ExecuteCommandAsync("apt", @$"install build-essential gcc-{gccVersion} g++-{gccVersion} gfortran-{gccVersion} -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
+                        commands.Add($"apt install build-essential gcc-{gccVersion} g++-{gccVersion} gfortran-{gccVersion} -y --quiet");
+
+                        IEnumerable<string> setPriorityCommands = this.SetGccPriorityAsync(gccVersion);
+                        commands.Concat(setPriorityCommands);
                     }
 
                     break;
@@ -238,18 +248,21 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.RHEL8:
                     if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
-                        await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install libnsl -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install make gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        commands.Add("dnf install kernel-headers kernel-devel -y");
+                        commands.Add("dnf install binutils -y");
+                        commands.Add("dnf install glibc-headers glibc-devel -y");
+                        commands.Add("dnf install git -y");
+                        commands.Add("dnf install libnsl -y");
+                        commands.Add("dnf install make gcc -y");
                     }
                     else if (!string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
                         await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
+
+                        commands.Add($"dnf install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet");
+
+                        IEnumerable<string> setPriorityCommands = this.SetGccPriorityAsync(gccVersion);
+                        commands.Concat(setPriorityCommands);
                     }
 
                     break;
@@ -260,16 +273,27 @@ namespace VirtualClient.Dependencies
                         throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");
                     }
 
-                    await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install gcc gfortran -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    commands.Add("dnf install kernel-headers kernel-devel -y");
+                    commands.Add("dnf install binutils -y");
+                    commands.Add("dnf install glibc-headers glibc-devel -y");
+                    commands.Add("dnf install git -y");
+                    commands.Add("dnf install gcc gfortran -y");
 
                     break;
 
                 default:
                     throw new PlatformNotSupportedException($"This Linux distribution '{distro}' is not supported for this profile.");
+            }
+
+            foreach (string command in commands)
+            {
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfDependencyInstallationFailed();
+                    }
+                }
             }
         }
 
@@ -289,7 +313,13 @@ namespace VirtualClient.Dependencies
             {
                 try
                 {
-                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {package}", Environment.CurrentDirectory, telemetryContext, cancellationToken, this.successCodes);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {package}", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<DependencyException>(successCodes: this.successCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        }
+                    }
                 }
                 catch
                 {
@@ -300,7 +330,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
+        private IEnumerable<string> SetGccPriorityAsync(string gccVersion)
         {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
                         $"--slave /usr/bin/g++ g++ /usr/bin/g++-{gccVersion} " +
@@ -309,15 +339,12 @@ namespace VirtualClient.Dependencies
                         $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-{gccVersion} " +
                         $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion}";
 
-            await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
-
-            // Remove all existing alternatives for cpp before the subsequent "update-alternatives" of cpp
-            await this.ExecuteCommandAsync("update-alternatives", "--remove-all cpp", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-
-            // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
-            string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
-
-            await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgumentCpp, Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            return new List<string>()
+            {
+                $"update-alternatives {updateAlternativeArgument}",
+                $"update-alternatives --remove-all cpp",
+                $"update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0",
+            };
         }
 
         private async Task InstallCharmplusplusAsync(string charmplusplusVersion, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -329,35 +356,25 @@ namespace VirtualClient.Dependencies
             string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
             if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
             {
-                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfDependencyInstallationFailed();
+                    }
+                }
             }
 
             if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
             {
-                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfDependencyInstallationFailed();
+                    }
+                }
             }
-        }
-
-        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, int[] successCodes = null)
-        {
-            return this.RetryPolicy.ExecuteAsync(async () =>
-             {
-                 string output = string.Empty;
-                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                 {
-                     this.CleanupTasks.Add(() => process.SafeKill());
-                     this.LogProcessTrace(process);
-
-                     await process.StartAndWaitAsync(cancellationToken);
-
-                     if (!cancellationToken.IsCancellationRequested)
-                     {
-                         await this.LogProcessDetailsAsync(process, telemetryContext);
-
-                         process.ThrowIfErrored<DependencyException>(successCodes: this.successCodes, errorReason: ErrorReason.DependencyInstallationFailed);
-                     }
-                 }
-             });
         }
 
         private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -367,22 +384,12 @@ namespace VirtualClient.Dependencies
 
             string version = string.Empty;
 
-            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
             {
-                try
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    await process.StartAndWaitAsync(cancellationToken);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-
-                        version = process.StandardOutput.ToString().Trim().Split(".")[0];
-                    }
-                }
-                catch
-                {
-                    version = string.Empty;
+                    process.ThrowIfDependencyInstallationFailed();
+                    version = process.StandardOutput.ToString().Trim().Split(".")[0];
                 }
             }
 

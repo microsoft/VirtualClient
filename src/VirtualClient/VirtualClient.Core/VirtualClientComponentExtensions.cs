@@ -154,8 +154,7 @@ namespace VirtualClient
                 await process.StartAndWaitAsync(cancellationToken)
                     .ConfigureAwait(false);
 
-                await component.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
-                process.ThrowIfErrored<ProcessException>(process.StandardError.ToString(), ErrorReason.ProcessFailed);
+                await component.LogProcessDetailsAsync(process, telemetryContext, logToFile: component.LogToFile);
             }
 
             return process;
