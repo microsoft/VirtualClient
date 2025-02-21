@@ -47,6 +47,11 @@ namespace VirtualClient
         public Action OnGetDisks { get; set; }
 
         /// <summary>
+        /// Mimics the behavior of getting disks with filter.
+        /// </summary>
+        public Action<string> OnGetFilterDisks { get; set; }
+
+        /// <summary>
         /// Creates a mount point for the volume provided.
         /// </summary>
         /// <param name="volume">The partition/volume to which the mount point will be created.</param>
@@ -120,6 +125,17 @@ namespace VirtualClient
         public Task<IEnumerable<Disk>> GetDisksAsync(CancellationToken cancellationToken)
         {
             this.OnGetDisks?.Invoke();
+            return Task.FromResult((IEnumerable<Disk>)this);
+        }
+
+        /// <summary>
+        /// Gets the set of physical disks that exist on the system.
+        /// </summary>
+        /// <param name="diskFilter">Optional filter for disks.</param>"
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public Task<IEnumerable<Disk>> GetDisksAsync(string diskFilter, CancellationToken cancellationToken)
+        {
+            this.OnGetFilterDisks?.Invoke(diskFilter);
             return Task.FromResult((IEnumerable<Disk>)this);
         }
 
