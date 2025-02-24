@@ -4,7 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>VirtualClient.Core</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
-        <NoWarn>CA1060,CA1416;CA2200,SA1116,SA1508</NoWarn>
+        <NoWarn>CA1060;CA1416;CA2200;SA1116;SA1508</NoWarn>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
