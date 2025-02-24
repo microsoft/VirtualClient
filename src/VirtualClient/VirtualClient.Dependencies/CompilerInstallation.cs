@@ -103,7 +103,7 @@ namespace VirtualClient.Dependencies
                     {
                         await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
 
-                        if (!string.IsNullOrEmpty(this.CompilerVersion) && !await this.ConfirmGccVersionInstalledAsync(cancellationToken))
+                        if (!string.IsNullOrEmpty(this.CompilerVersion) && !await this.ConfirmGccVersionInstalledAsync(telemetryContext, cancellationToken))
                         {
                             throw new DependencyException($"gcc compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
                         }
@@ -149,30 +149,28 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// Waits for the expected version of the compiler to be confirmed installed on the system.
         /// </summary>
+        /// <param name="telemetryContext">The telemetry context for the operation.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async Task<bool> ConfirmGccVersionInstalledAsync(CancellationToken cancellationToken)
+        protected async Task<bool> ConfirmGccVersionInstalledAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             List<string> compilersToCheck = new List<string>() { Compilers.Gcc, Compilers.Cc };
             int confirmedCompilers = 0;
             foreach (string compiler in compilersToCheck)
             {
                 Regex versionConfirmationExpression = new Regex($@"{compiler}\s*\([\x20-\x7F]+\)\s*{this.CompilerVersion}", RegexOptions.Multiline);
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess(compiler, "--version"))
-                {
-                    this.Logger.LogTraceMessage($"Confirming expected compiler version installed...");
 
-                    await process.StartAndWaitAsync(cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(compiler, "--version", Environment.CurrentDirectory, telemetryContext, cancellationToken))
+                {
+                    this.Logger.LogTraceMessage($"Confirming expected compiler version installed...", telemetryContext);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion");
-
-                        ConsoleLogger.Default.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString());
+                        this.Logger.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString(), telemetryContext);
 
                         if (versionConfirmationExpression.IsMatch(process.StandardOutput.ToString()))
                         {
                             confirmedCompilers++;
-                            this.Logger.LogTraceMessage($"Compiler {compiler} confirmed for version {this.CompilerVersion}.");
+                            this.Logger.LogTraceMessage($"Compiler {compiler} confirmed for version {this.CompilerVersion}.", telemetryContext);
                         }
                     }
                 }
@@ -238,8 +236,8 @@ namespace VirtualClient.Dependencies
 
                         commands.Add($"apt install build-essential gcc-{gccVersion} g++-{gccVersion} gfortran-{gccVersion} -y --quiet");
 
-                        IEnumerable<string> setPriorityCommands = this.SetGccPriorityAsync(gccVersion);
-                        commands.Concat(setPriorityCommands);
+                        List<string> setPriorityCommands = this.SetGccPriorityAsync(gccVersion);
+                        commands = commands.Concat(setPriorityCommands).ToList();
                     }
 
                     break;
@@ -330,7 +328,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private IEnumerable<string> SetGccPriorityAsync(string gccVersion)
+        private List<string> SetGccPriorityAsync(string gccVersion)
         {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
                         $"--slave /usr/bin/g++ g++ /usr/bin/g++-{gccVersion} " +
@@ -351,8 +349,23 @@ namespace VirtualClient.Dependencies
         {
             // default latest
             charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
-            await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfDependencyInstallationFailed();
+                }
+            }
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfDependencyInstallationFailed();
+                }
+            }
+
             string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
             if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
             {
@@ -386,10 +399,13 @@ namespace VirtualClient.Dependencies
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
             {
-                if (!cancellationToken.IsCancellationRequested)
+                try
                 {
-                    process.ThrowIfDependencyInstallationFailed();
                     version = process.StandardOutput.ToString().Trim().Split(".")[0];
+                }
+                catch
+                {
+                    version = string.Empty;
                 }
             }
 

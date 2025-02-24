@@ -82,15 +82,43 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            this.SetupProcessManager("sudo", $"bash -c \"{SetupCommand}\"", Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", NvidiaDockerInstallationCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", ConfigureDockerRuntimeCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", RestartDockerCommand, Environment.CurrentDirectory);
+            List<string> expectedCommands = new List<string>()
+            {
+                $"sudo bash -c \"{SetupCommand}\"",
+                $"sudo {UpdateCommand}",
+                $"sudo {NvidiaDockerInstallationCommand}",
+                $"sudo {ConfigureDockerRuntimeCommand}",
+                $"sudo {RestartDockerCommand}"
+            };
+            int commandExecuted = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommands[commandExecuted] == $"{exe} {arguments}")
+                {
+                    commandExecuted++;
+                }
 
-            await this.component.ExecuteAsync(CancellationToken.None);
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
 
-            this.mockProcessManager.Verify();
+                return process;
+            };
+            using (TestComponent toolkitInstallation = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await toolkitInstallation.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(expectedCommands.Count, commandExecuted);
         }
 
         [Test]
@@ -100,10 +128,32 @@ namespace VirtualClient.Dependencies
 
             this.fixture.StateManager.OnGetState(nameof(NvidiaContainerToolkitInstallation)).ReturnsAsync(JObject.FromObject(this.mockState));
 
-            this.SetupProcessManager("sudo", SetupCommand);
+            int commandExecuted = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commandExecuted++;
 
-            await this.component.ExecuteAsync(CancellationToken.None);
-            Assert.Throws<MockException>(() => this.mockProcessManager.Verify());
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+            using (TestComponent toolkitInstallation = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await toolkitInstallation.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(0, commandExecuted);
         }
 
         [Test]
@@ -111,17 +161,16 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            this.SetupProcessManager("sudo", $"bash -c \"{SetupCommand}\"", Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", NvidiaDockerInstallationCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", ConfigureDockerRuntimeCommand, Environment.CurrentDirectory);
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                this.fixture.Process.ExitCode = 1;
+                this.fixture.Process.OnHasExited = () => true;
+                return this.fixture.Process;
+            };
 
-            var setup = this.SetupProcessManager("sudo", RestartDockerCommand, Environment.CurrentDirectory);
-            setup.Returns(NvidiaContainerToolkitInstallationTests.GetProcessProxy(1));
-
-            this.component.RetryPolicy = Policy.NoOpAsync();
-            DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
+            using TestComponent component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
         }
 
         private void SetupDefaultMockBehavior(PlatformID platformID)

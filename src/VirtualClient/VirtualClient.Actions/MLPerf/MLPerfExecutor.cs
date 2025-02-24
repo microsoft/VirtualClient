@@ -172,31 +172,22 @@ namespace VirtualClient.Actions
                         $"make run RUN_ARGS=\'--benchmarks={this.Model} --scenarios={this.scenarios[this.Model]} " +
                         $"--config_ver={config} --test_mode=AccuracyOnly --fast\'\"";
 
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", perfModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken)
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(perfModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken, runElevated: true)
                         .ConfigureAwait())
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            if (process.IsErrored())
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true);
-                                process.ThrowIfWorkloadFailed();
-                            }
-
+                            process.ThrowIfWorkloadFailed();
                             await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.PerformanceSummary);
                         }
                     }
 
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", accuracyModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken)
-                       .ConfigureAwait())
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(accuracyModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken, runElevated: true)                       
+                        .ConfigureAwait())
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-
+                            process.ThrowIfWorkloadFailed();
                             await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.AccuracySummary)
                                .ConfigureAwait();
                         }
@@ -224,7 +215,13 @@ namespace VirtualClient.Actions
             if (!state.Initialized)
             {
                 // add user in docker group and create scratch space
-                await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.NvidiaDirectory, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync($"usermod -aG docker {this.Username}", this.NvidiaDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
 
                 if (this.RequireCustomSystemSupport)
                 {
@@ -234,7 +231,7 @@ namespace VirtualClient.Actions
 
                 this.ReplaceMakefile();
 
-                await this.SetupEnvironmentAsync(cancellationToken);
+                await this.SetupEnvironmentAsync(telemetryContext, cancellationToken);
                 state.Initialized = true;
                 await this.stateManager.SaveStateAsync<MLPerfState>($"{nameof(MLPerfState)}", state, cancellationToken);
             }
@@ -318,9 +315,10 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Creates setup for MLPerf workload.
         /// </summary>
+        /// <param name="telemetryContext">Event context persisted.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns></returns>
-        protected async Task SetupEnvironmentAsync(CancellationToken cancellationToken)
+        protected async Task SetupEnvironmentAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string dockerExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()}";
 
@@ -328,68 +326,86 @@ namespace VirtualClient.Actions
             this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "models"));
             this.fileSystem.Directory.CreateDirectory(this.PlatformSpecifics.Combine(this.mlperfScratchSpace, "preprocessed_data"));
 
-            await this.ExecuteCommandAsync(
-                "sudo",
-                $"systemctl restart docker",
-                this.NvidiaDirectory,
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
-                $"systemctl start nvidia-fabricmanager",
-                this.NvidiaDirectory,
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo", 
-                $" -u {this.Username} bash -c \"make prebuild MLPERF_SCRATCH_PATH={this.mlperfScratchSpace}\"", 
-                this.NvidiaDirectory, 
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
-                $"docker ps",
-                this.NvidiaDirectory,
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
+            IEnumerable<string> dockerSetupCommands = new List<string>()
+            {
+                "systemctl restart docker",
+                "systemctl start nvidia-fabricmanager",
+                $"-u {this.Username} bash -c \"make prebuild MLPERF_SCRATCH_PATH={this.mlperfScratchSpace}\"",
+                "docker ps",
                 $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make clean\"",
-                this.NvidiaDirectory,
-                cancellationToken);
+                $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make link_dirs\"",
+            };
 
-            await this.ExecuteCommandAsync(
-                "sudo", 
-                $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make link_dirs\"", 
-                this.NvidiaDirectory, 
-                cancellationToken);
+            foreach (string dockerCommand in dockerSetupCommands)
+            {
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    dockerCommand, 
+                    this.NvidiaDirectory, 
+                    telemetryContext, 
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
+            }
 
             foreach (string benchmark in this.benchmarks)
             {
-                await this.ExecuteCommandAsync(
-                    "sudo", 
-                    $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make download_data BENCHMARKS={benchmark}\"", 
-                    this.NvidiaDirectory, 
-                    cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make download_data BENCHMARKS={benchmark}\"",
+                    this.NvidiaDirectory,
+                    telemetryContext,
+                    cancellationToken, 
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
 
-                await this.ExecuteCommandAsync(
-                    "sudo", 
-                    $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make download_model BENCHMARKS={benchmark}\"", 
-                    this.NvidiaDirectory, 
-                    cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make download_model BENCHMARKS={benchmark}\"",
+                    this.NvidiaDirectory,
+                    telemetryContext,
+                    cancellationToken, 
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
 
-                await this.ExecuteCommandAsync(
-                    "sudo", 
-                    $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make preprocess_data BENCHMARKS={benchmark}\"", 
-                    this.NvidiaDirectory, 
-                    cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make preprocess_data BENCHMARKS={benchmark}\"",
+                    this.NvidiaDirectory,
+                    telemetryContext,
+                    cancellationToken, 
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
             }
 
-            await this.ExecuteCommandAsync(
-                "sudo", 
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
                 $"{dockerExecCommand} sudo bash -c \"{this.ExportScratchSpace} && make build\"", 
                 this.NvidiaDirectory, 
-                cancellationToken);
+                telemetryContext, 
+                cancellationToken, 
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfWorkloadFailed();
+                }
+            }
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
@@ -505,33 +521,6 @@ namespace VirtualClient.Actions
                             $" Ubuntu, Debian, CentOD7, RHEL7, SUSE. ",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(MLPerfExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
             }
         }
 

@@ -82,46 +82,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="command">Command that needs to be executed</param>
-        /// <param name="workingDir">The directory where we want to execute the command</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="successCodes">Alternative exit codes to use to represent successful process exit.</param>
-        /// <returns>String output of the command.</returns>
-        protected async Task ExecuteCommandAsync(string command, string workingDir, CancellationToken cancellationToken, IEnumerable<int> successCodes = null)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{command}'  at directory '{workingDir}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("packageName", this.PackageName)
-                    .AddContext("packagePath", workingDir)
-                    .AddContext("command", "sudo")
-                    .AddContext("commandArguments", command);
-
-                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDir))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.LogProcessDetailsAsync(process, telemetryContext);
-
-                            process.ThrowIfErrored<WorkloadException>(
-                                successCodes ?? ProcessProxy.DefaultSuccessCodes,
-                                errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
         /// Initializes the environment and dependencies for running the Redis Memtier workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

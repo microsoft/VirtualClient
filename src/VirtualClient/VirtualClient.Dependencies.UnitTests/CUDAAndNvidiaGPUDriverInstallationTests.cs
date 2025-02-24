@@ -79,19 +79,47 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", GetRunFileCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", RunRunFileCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", ExportPathCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", ExportLibraryPathCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", UpgradeCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", InstallDriverCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", InstallFabricManagerCommand, Environment.CurrentDirectory);
+            List<string> expectedCommands = new List<string>()
+            {
+                $"sudo {UpdateCommand}",
+                $"sudo {BuildEssentialInstallationCommand}",
+                $"sudo {GetRunFileCommand}",
+                $"sudo {RunRunFileCommand}",
+                $"sudo {UpgradeCommand}",
+                $"sudo {InstallDriverCommand}",
+                $"sudo {InstallFabricManagerCommand}",
+                $"sudo {ExportPathCommand}",
+                $"sudo {ExportLibraryPathCommand}",
+            };
+            int commandExecuted = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommands[commandExecuted] == $"{exe} {arguments}")
+                {
+                    commandExecuted++;
+                }
 
-            await this.component.ExecuteAsync(CancellationToken.None);
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
 
-            this.mockProcessManager.Verify();
+                return process;
+            };
+            using (TestComponent driverInstallation = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await driverInstallation.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(expectedCommands.Count, commandExecuted);
         }
 
         [Test]
@@ -101,10 +129,32 @@ namespace VirtualClient.Dependencies
 
             this.fixture.StateManager.OnGetState(nameof(CudaAndNvidiaGPUDriverInstallation)).ReturnsAsync(JObject.FromObject(this.mockState));
 
-            this.SetupProcessManager("sudo", UpdateCommand);
+            int commandExecuted = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commandExecuted++;
 
-            await this.component.ExecuteAsync(CancellationToken.None);
-            Assert.Throws<MockException>(() => this.mockProcessManager.Verify());
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+            using (TestComponent driverInstallation = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await driverInstallation.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(0, commandExecuted);
         }
 
         [Test]
@@ -112,26 +162,23 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
 
-            this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", GetRunFileCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", RunRunFileCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", ExportPathCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", UpgradeCommand, Environment.CurrentDirectory);
-            this.SetupProcessManager("sudo", InstallDriverCommand, Environment.CurrentDirectory);
-            var setup = this.SetupProcessManager("sudo", InstallFabricManagerCommand, Environment.CurrentDirectory);
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                this.fixture.Process.ExitCode = 1;
+                this.fixture.Process.OnHasExited = () => true;
+                return this.fixture.Process;
+            };
 
-            setup.Returns(CUDAAndNvidiaGPUDriverInstallationTests.GetProcessProxy(1));
-
-            this.component.RetryPolicy = Policy.NoOpAsync();
-            DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
+            using TestComponent component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
         }
 
         [Test]
         public async Task CUDAAndNvidiaGPUDriverInstallationDependencyExecutesCorrectInsatllerCommandOnWindows()
         {
             this.SetupDefaultMockBehavior(PlatformID.Win32NT);
+
             this.fixture.Parameters["packageName"] = "NvidiaDrivers";
             this.fixture.Directory.Setup(di => di.Exists(It.IsAny<string>()))
                 .Returns(true);
@@ -145,12 +192,37 @@ namespace VirtualClient.Dependencies
             this.fixture.FileSystem.Setup(fe => fe.Directory.GetCurrentDirectory())
                 .Returns(this.mockPackage.Path);
 
-            this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
+            string expectedCommand = $"{this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe")} -y -s";
+            bool commandExecuted = false;
 
-            this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
 
-            await this.component.ExecuteAsync(CancellationToken.None);
-            this.mockProcessManager.Verify();                            
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+            using (TestComponent driverInstallation = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await driverInstallation.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(commandExecuted);
         }
 
         private void SetupDefaultMockBehavior(PlatformID platformID)

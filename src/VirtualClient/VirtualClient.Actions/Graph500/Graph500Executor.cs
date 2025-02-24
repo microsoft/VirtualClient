@@ -108,7 +108,7 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                using (IProcessProxy process = await this.ExecuteCommandAsync("make", this.CompilerFlags, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync("make", this.CompilerFlags, this.PackageDirectory, telemetryContext, cancellationToken))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -116,7 +116,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
