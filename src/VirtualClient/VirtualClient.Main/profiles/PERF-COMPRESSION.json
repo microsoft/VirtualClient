@@ -196,15 +196,6 @@
             }
         },
         {
-            "Type": "WgetPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallSilesia",
-                "PackageName": "7zip",
-                "PackageUri": "https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
-                "Extract": "true"
-            }
-        },
-        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
