@@ -4,16 +4,16 @@
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>VirtualClient.Api</AssemblyName>
         <RootNamespace>VirtualClient.Api</RootNamespace>
-        <NoWarn>AD0001,SA1508</NoWarn>
+        <NoWarn>AD0001;SA1508</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="Asp.Versioning.Mvc" Version="$(Asp_Versioning_Mvc_PackageVersion)" />
         <PackageReference Include="Microsoft.AspNetCore" Version="$(Microsoft_AspNetCore_PackageVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="$(Microsoft_AspNetCore_Authentication_PackageVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(Microsoft_AspNetCore_Mvc_PackageVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="$(Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion)" />
-	    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="$(Microsoft_AspNetCore_Mvc_Versioning_PackageVersion)" />
         <PackageReference Include="System.Diagnostics.Debug" Version="$(System_Diagnostics_Debug_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(Microsoft_Extensions_DependencyInjection_PackageVersion)" />
     </ItemGroup>
