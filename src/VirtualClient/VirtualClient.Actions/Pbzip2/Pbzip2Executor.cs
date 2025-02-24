@@ -122,8 +122,33 @@ namespace VirtualClient.Actions
                 // Choose default file for compression and decompression if files/dirs are not provided.
                 if (string.IsNullOrWhiteSpace(this.InputFiles))
                 {
-                    await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.Pbzip2Directory, cancellationToken);
-                    await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.Pbzip2Directory, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "wget",
+                        $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                        this.Pbzip2Directory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "unzip",
+                        "silesia.zip -d silesia",
+                        this.Pbzip2Directory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
 
                 state.Pbzip2StateInitialized = true;
@@ -159,35 +184,6 @@ namespace VirtualClient.Actions
                     commandArguments,
                     this.Tags,
                     telemetryContext);
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(Pbzip2Executor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
             }
         }
 

@@ -77,11 +77,26 @@ namespace VirtualClient.Dependencies
             if (this.Platform == PlatformID.Unix)
             {
                 await this.systemManagement.MakeFileExecutableAsync(destinyFile, this.Platform, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync(destinyFile, this.GetInstallArgument(), this.installDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(destinyFile, this.GetInstallArgument(), this.installDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed(errorMessage: process.StandardError.ToString());
+                    }
+                }
             }
             else
             {
-                await this.ExecuteCommandAsync("powershell", $"{destinyFile} {this.GetInstallArgument()}", this.installDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("powershell", $"{destinyFile} {this.GetInstallArgument()}", this.installDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfWorkloadFailed(errorMessage: process.StandardError.ToString());
+                    }
+                }
             }
 
             DependencyPath dotnetPackage = new DependencyPath(this.PackageName, this.installDirectory, "DotNet SDK", this.DotNetVersion);
@@ -104,26 +119,6 @@ namespace VirtualClient.Dependencies
             }
 
             return argument;
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone();
-            using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-            {
-                this.CleanupTasks.Add(() => process.SafeKill());
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
-
-                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, relatedContext)
-                        .ConfigureAwait(false);
-
-                    process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
-                }
-            }
         }
     }
 }

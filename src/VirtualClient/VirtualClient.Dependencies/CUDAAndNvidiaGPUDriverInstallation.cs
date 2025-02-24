@@ -243,8 +243,13 @@ namespace VirtualClient.Dependencies
             {
                 foreach (string command in commandsList)
                 {
-                    await this.ExecuteCommandAsync(command, null, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfDependencyInstallationFailed();
+                        }
+                    }
                 }
             }
         }
@@ -394,32 +399,13 @@ namespace VirtualClient.Dependencies
                 throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
             }
 
-            await this.ExecuteCommandAsync(installerPath, "-y -s", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        private Task ExecuteCommandAsync(string commandLine, string commandLineArgs, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return this.RetryPolicy.ExecuteAsync(async () =>
+            using (IProcessProxy process = await this.ExecuteCommandAsync(installerPath, "-y -s", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
             {
-                string output = string.Empty;
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, commandLineArgs, workingDirectory))
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    this.LogProcessTrace(process);
-
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "GpuDriverInstallation")
-                            .ConfigureAwait(false);
-
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                    }
+                    process.ThrowIfDependencyInstallationFailed();
                 }
-            });
+            }
         }
     }
 }

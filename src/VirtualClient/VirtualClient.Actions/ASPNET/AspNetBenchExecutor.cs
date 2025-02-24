@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -101,7 +102,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            Task serverTask = this.StartAspNetServerAsync(cancellationToken);
+            Task serverTask = this.StartAspNetServerAsync(telemetryContext, cancellationToken);
             await this.RunBombardierAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -150,8 +151,15 @@ namespace VirtualClient.Actions
             // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
-            await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, cancellationToken)
-                .ConfigureAwait(false);
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
+                .ConfigureAwait(false))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
             // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net8.0\Benchmarks.dll"
             this.aspnetBenchDllPath = this.Combine(
@@ -192,7 +200,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task StartAspNetServerAsync(CancellationToken cancellationToken)
+        private async Task StartAspNetServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // Example:
             // dotnet <path_to_binary>\Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:5000 --server Kestrel --kestrelTransport Sockets --protocol http
@@ -202,7 +210,13 @@ namespace VirtualClient.Actions
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
 
-            return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, cancellationToken, isServer: true);
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
+                .ConfigureAwait(false))
+            {
+                this.killServer = () => process.SafeKill();
+            }
+
+            return;
         }
 
         private async Task RunBombardierAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -218,44 +232,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBench", logToFile: true);
-
-                        process.ThrowIfWorkloadFailed();
+                        process.ThrowIfWorkloadFailed(process.StandardError.ToString());
                         this.CaptureMetrics(process, telemetryContext);
-                    }
-                }
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken, bool isServer = false)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                {
-                    if (isServer)
-                    {
-                        this.killServer = () => process.SafeKill();
-                    }
-
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                        
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-
-                        if (!isServer)
-                        {
-                            // We will kill the server at the end, exit code is -1, and we don't want it to log as failure.
-                            process.ThrowIfWorkloadFailed();
-                        }
                     }
                 }
             }

@@ -345,9 +345,9 @@ namespace VirtualClient.Actions
                 return base.InitializeAsync(context, cancellationToken);
             }
 
-            public new Task SetupEnvironmentAsync(CancellationToken cancellationToken)
+            public new Task SetupEnvironmentAsync(EventContext context, CancellationToken cancellationToken)
             {
-                return base.SetupEnvironmentAsync(cancellationToken);
+                return base.SetupEnvironmentAsync(context, cancellationToken);
             }
 
             public new Task CreateScratchSpace(CancellationToken cancellationToken)

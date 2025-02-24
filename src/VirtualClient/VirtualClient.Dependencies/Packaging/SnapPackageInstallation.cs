@@ -97,7 +97,7 @@ namespace VirtualClient.Dependencies
             List<string> toInstall = new List<string>();
             foreach (string package in packages)
             {
-                if (!this.AllowUpgrades && await this.IsPackageInstalledAsync(package, cancellationToken))
+                if (!this.AllowUpgrades && await this.IsPackageInstalledAsync(package, telemetryContext, cancellationToken))
                 {
                     this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.", EventContext.Persisted());
                 }
@@ -118,17 +118,24 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Snap update first.
-                await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, $"refresh", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, $"refresh", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false))
+                {
+                    process.ThrowIfDependencyInstallationFailed();
+                }
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+                }
             }).ConfigureAwait(false);
 
             this.Logger.LogTraceMessage($"VirtualClient installed Snap package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
 
             // Then, confirms that the packages were installed.
-            List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
+            List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, telemetryContext, cancellationToken).GetAwaiter().GetResult())).ToList();
             if (failedPackages?.Count > 0)
             {
                 throw new ProcessException(
@@ -142,64 +149,46 @@ namespace VirtualClient.Dependencies
             var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
                 .ConfigureAwait(false);
 
+            List<string> snapdSocketCommands = new List<string>();
+
             // for ubuntu, debian, centos8, rhel8, etc. no socket enabling needed
 
             switch (linuxDistributionInfo.LinuxDistribution)
             {
                 case LinuxDistribution.CentOS7:
                 case LinuxDistribution.RHEL7:
-                    await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd.socket", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    snapdSocketCommands.Add($"enable --now snapd.socket");
                     break;
                 case LinuxDistribution.SUSE:
-                    await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
-                    await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd.apparmor", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    snapdSocketCommands.Add($"enable --now snapd");
+                    snapdSocketCommands.Add($"enable --now snapd.apparmor");
                     break;
                 default:
                     break;
             }
+
+            foreach (string command in snapdSocketCommands)
+            {
+                using (IProcessProxy process = await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false))
+                {
+                    process.ThrowIfDependencyInstallationFailed();
+                }
+            }
         }
 
-        private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)
+        private async Task<bool> IsPackageInstalledAsync(string packageName, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-
-            using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, SnapPackageInstallation.SnapCommand, $"list {packageName}"))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, $"list {packageName}", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true)
+                .ConfigureAwait(false))
             {
-                this.CleanupTasks.Add(() => process.SafeKill());
-
-                await process.StartAndWaitAsync(cancellationToken)
-                       .ConfigureAwait(false);
-
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), logToFile: true);
                     process.ThrowIfDependencyInstallationFailed();
                 }
 
                 return process.ExitCode == 0;
             }
-        }
-
-        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone();
-            return this.InstallRetryPolicy.ExecuteAsync(async () =>
-            {
-                string output = string.Empty;
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
-
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
-                        process.ThrowIfDependencyInstallationFailed();
-                    }
-                }
-            });
         }
     }
 }

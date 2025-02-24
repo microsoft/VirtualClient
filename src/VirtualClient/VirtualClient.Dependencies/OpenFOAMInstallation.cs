@@ -76,8 +76,13 @@ namespace VirtualClient.Dependencies
 
                 foreach (var command in installationCommands)
                 {
-                    await this.ExecuteCommandAsync(command, null, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, null, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfDependencyInstallationFailed();
+                        }
+                    }
                 }
             }
             else
@@ -85,24 +90,6 @@ namespace VirtualClient.Dependencies
                 throw new DependencyException(
                     $"Linux distrubution {linuxDistroInfo.LinuxDistribution.ToString()} is not supported with OpenFOAM.",
                     ErrorReason.LinuxDistributionNotSupported);
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string command, string arguments, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments))
-            {
-                this.CleanupTasks.Add(() => process.SafeKill());
-                await process.StartAndWaitAsync(cancellationToken, null)
-                    .ConfigureAwait(false);
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext)
-                        .ConfigureAwait(false);
-
-                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                }
             }
         }
     }

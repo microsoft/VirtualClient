@@ -124,45 +124,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="command">The command to run.</param>
-        /// <param name="arguments">The command line arguments to supply to the command.</param>
-        /// <param name="workingDir">The working directory for the command.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="successCodes">Alternative exit codes to use to represent successful process exit.</param>
-        protected async Task ExecuteCommandAsync(string command, string arguments, string workingDir, CancellationToken cancellationToken, IEnumerable<int> successCodes = null)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{command}' '{arguments}' at directory '{workingDir}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("packagePath", workingDir)
-                    .AddContext("command", command)
-                    .AddContext("commandArguments", arguments);
-
-                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments, workingDir))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-
-                            process.ThrowIfErrored<WorkloadException>(
-                                successCodes ?? ProcessProxy.DefaultSuccessCodes,
-                                errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
         /// Initializes the environment and dependencies for running the Memcached Memtier workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

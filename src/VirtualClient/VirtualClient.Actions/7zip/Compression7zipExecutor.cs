@@ -87,13 +87,11 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("7z", commandLineArguments, this.Compressor7zipDirectory, telemetryContext, cancellationToken)
+                using (IProcessProxy process = await this.ExecuteCommandAsync("7z", commandLineArguments, this.Compressor7zipDirectory, telemetryContext, cancellationToken, runElevated: true)
                    .ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "7Zip", logToFile: true);
-
                         process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, telemetryContext, commandLineArguments);
                     }
@@ -119,8 +117,33 @@ namespace VirtualClient.Actions
                 // Choose default file for compression and decompression if files/dirs are not provided.
                 if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
                 {
-                    await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.Compressor7zipDirectory, cancellationToken);
-                    await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.Compressor7zipDirectory, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "wget",
+                        $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                        this.Compressor7zipDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "unzip",
+                        "silesia.zip -d silesia",
+                        this.Compressor7zipDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
 
                 state.Compressor7zipStateInitialized = true;
@@ -153,37 +176,6 @@ namespace VirtualClient.Actions
                 commandArguments,
                 this.Tags,
                 telemetryContext);
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(Compression7zipExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    DateTime start = DateTime.Now;
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait(false);
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
         }
 
         private string GetCommandLineArguments()

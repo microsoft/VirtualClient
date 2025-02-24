@@ -121,6 +121,7 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
+                "sudo gcc -dumpversion",
                 "sudo update-alternatives --remove-all gcc",
                 "sudo update-alternatives --remove-all gfortran",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
@@ -134,6 +135,14 @@ namespace VirtualClient.Dependencies
                     $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-123",
                 "sudo update-alternatives --remove-all cpp",
                 "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-123 1230",
+                "gcc --version",
+                "cc --version",
+                "sudo gcc -dumpversion",
+                "sudo cc -dumpversion",
+                "sudo gfortran -dumpversion",
+                "cc --version",
+                "gcc --version",
+                "gfortran --version"
             };
 
             int commandExecuted = 0;
@@ -389,7 +398,7 @@ namespace VirtualClient.Dependencies
                     process.StandardOutput.AppendLine($"{process.StartInfo.FileName} {versionOutput}");
                 };
 
-                Assert.IsTrue(compilerInstallation.ConfirmGccVersionInstalledAsync(CancellationToken.None)
+                Assert.IsTrue(compilerInstallation.ConfirmGccVersionInstalledAsync(EventContext.Persisted(), CancellationToken.None)
                     .GetAwaiter().GetResult());
             }
         }
@@ -429,7 +438,7 @@ namespace VirtualClient.Dependencies
                     compilers[process.StartInfo.FileName] = true;
                 };
 
-                Assert.IsTrue(compilerInstallation.ConfirmGccVersionInstalledAsync(CancellationToken.None)
+                Assert.IsTrue(compilerInstallation.ConfirmGccVersionInstalledAsync(EventContext.Persisted(), CancellationToken.None)
                     .GetAwaiter().GetResult());
                 Assert.IsTrue(compilers.Values.All(installed => installed));
             }
@@ -447,9 +456,9 @@ namespace VirtualClient.Dependencies
                 return base.ExecuteAsync(context, cancellationToken);
             }
 
-            public new Task<bool> ConfirmGccVersionInstalledAsync(CancellationToken cancellationToken)
+            public new Task<bool> ConfirmGccVersionInstalledAsync(EventContext context, CancellationToken cancellationToken)
             {
-                return base.ConfirmGccVersionInstalledAsync(cancellationToken);
+                return base.ConfirmGccVersionInstalledAsync(context, cancellationToken);
             }
         }
     }

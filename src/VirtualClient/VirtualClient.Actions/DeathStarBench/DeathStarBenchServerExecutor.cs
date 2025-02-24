@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -63,7 +64,7 @@ namespace VirtualClient.Actions
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
                     await this.DeleteStateAsync(telemetryContext, cancellationToken);
-                    await this.StopDockerAsync(this.ServerCancellationSource.Token);
+                    await this.StopDockerAsync(telemetryContext, this.ServerCancellationSource.Token);
                     await this.ExecuteServerAsync(telemetryContext, cancellationToken);
                     await this.SaveStateAsync(this.ServiceName, telemetryContext, cancellationToken);
 
@@ -94,27 +95,48 @@ namespace VirtualClient.Actions
                     this.ServerIpAddress = clientInstance.IPAddress;
 
                     string swarmHostCommand = $@"bash -c ""docker swarm init --advertise-addr {this.ServerIpAddress} | grep ' docker swarm join' >> token.txt""";
-                    await this.ExecuteCommandAsync(swarmHostCommand, this.ServiceDirectory, cancellationToken)
-                           .ConfigureAwait();
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(swarmHostCommand, this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
 
                     await this.SetOrUpdateClientCommandLine(cancellationToken)
                         .ConfigureAwait();
 
                     if (!string.Equals(this.ServiceName, DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
                     {
-                        await this.ExecuteCommandAsync(@$"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml {this.ServiceName}""", this.ServiceDirectory, cancellationToken)
-                            .ConfigureAwait();
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(@$"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml {this.ServiceName}""", this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
+                        }
                     }
                     else
                     {
-                        await this.ExecuteCommandAsync(@$"bash -c ""docker stack deploy --compose-file=docker-compose.yml {this.ServiceName}""", this.ServiceDirectory, cancellationToken)
-                            .ConfigureAwait();
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(@$"bash -c ""docker stack deploy --compose-file=docker-compose.yml {this.ServiceName}""", this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    await this.ExecuteCommandAsync($"docker-compose -f docker-compose.yml up -d", this.ServiceDirectory, cancellationToken)
-                        .ConfigureAwait();
+                    using (IProcessProxy process = await this.ExecuteCommandAsync($"docker-compose -f docker-compose.yml up -d", this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
 
                 // wait for docker services to be up and running.
@@ -123,13 +145,23 @@ namespace VirtualClient.Actions
 
                 if (string.Equals(this.ServiceName, DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
                 {
-                    await this.ExecuteCommandAsync("python3 scripts/write_movie_info.py -c datasets/tmdb/casts.json -m datasets/tmdb/movies.json", this.ServiceDirectory, cancellationToken)
-                        .ConfigureAwait();
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("python3 scripts/write_movie_info.py -c datasets/tmdb/casts.json -m datasets/tmdb/movies.json", this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
                 else if (string.Equals(this.ServiceName, DeathStarBenchExecutor.SocialNetwork, StringComparison.OrdinalIgnoreCase))
                 {
-                    await this.ExecuteCommandAsync(@$"bash -c ""python3 scripts/init_social_graph.py --graph={this.GraphType} --limit=1000""", this.ServiceDirectory, cancellationToken)
-                        .ConfigureAwait();
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(@$"bash -c ""python3 scripts/init_social_graph.py --graph={this.GraphType} --limit=1000""", this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
             }
             catch

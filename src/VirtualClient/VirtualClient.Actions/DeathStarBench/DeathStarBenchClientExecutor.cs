@@ -144,7 +144,7 @@ namespace VirtualClient.Actions
                     finally
                     {
                         this.Logger.LogTraceMessage("Client Stopping docker services...");
-                        await this.StopDockerAsync(CancellationToken.None);
+                        await this.StopDockerAsync(telemetryContext, CancellationToken.None);
 
                         this.Logger.LogTraceMessage("Deleting states...");
                         await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken);
@@ -206,7 +206,7 @@ namespace VirtualClient.Actions
                 await this.ResetServerAsync(telemetryContext, cancellationToken);
 
                 // stop docker services at client side.
-                await this.StopDockerAsync(cancellationToken);
+                await this.StopDockerAsync(telemetryContext, cancellationToken);
 
                 // 4) Request the server to start the next workload.
                 // ===========================================================================
@@ -244,7 +244,7 @@ namespace VirtualClient.Actions
                 finally
                 {
                     // Stop docker services at client side(If multiVM get out of swarm network and single VM stop the services).
-                    await this.StopDockerAsync(CancellationToken.None);
+                    await this.StopDockerAsync(telemetryContext, CancellationToken.None);
 
                     this.Logger.LogTraceMessage("Synchronization: Wait for server to stop workload...");
 
@@ -286,12 +286,30 @@ namespace VirtualClient.Actions
             {
                 string joinSwarmCommand = await this.GetJoinSwarmCommand(cancellationToken);
 
-                await this.ExecuteCommandAsync(joinSwarmCommand, this.ServiceDirectory, cancellationToken);
-                await this.WaitAsync(DeathStarBenchExecutor.ServerWarmUpTime, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(joinSwarmCommand, this.ServiceDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                    }
+                }
             }
 
-            await this.ExecuteCommandAsync("make clean", this.MakefileDirectory, cancellationToken);
-            await this.ExecuteCommandAsync("make", this.MakefileDirectory, cancellationToken);
+            using (IProcessProxy process = await this.ExecuteCommandAsync("make clean", this.MakefileDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync("make", this.MakefileDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+            }
 
             foreach (var action in this.actionScript[this.ServiceName].Keys)
             {

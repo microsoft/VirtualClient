@@ -165,9 +165,7 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
                         process.ThrowIfWorkloadFailed();
-
                         await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                     }
                 }
@@ -255,64 +253,89 @@ namespace VirtualClient.Actions
 
                 if (this.Platform == PlatformID.Unix)
                 {
-                    await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken);
-                    await this.WriteSpecCpuConfigAsync(cancellationToken);
-                    await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+
+                    await this.WriteSpecCpuConfigAsync(telemetryContext, cancellationToken);
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
                 }
                 else
                 {
                     // powershell -Command "Mount-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso""
-                    string mountIsoCmd = $"-Command \"Mount-DiskImage -ImagePath {isoFilePath}\"";
-                    await this.ExecuteCommandAsync("powershell", mountIsoCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("powershell", $"-Command \"Mount-DiskImage -ImagePath {isoFilePath}\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
 
+                    string driveLetter = string.Empty;
                     // powershell -Command "(Get-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso" | Get-Volume).DriveLetter "
-                    string getDriveLetterCmd = $"-Command \"(Get-DiskImage -ImagePath {isoFilePath}| Get-Volume).DriveLetter\"";
-                    string driveLetter = await this.ExecuteCommandAsync("powershell", getDriveLetterCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("powershell", $"-Command \"(Get-DiskImage -ImagePath {isoFilePath}| Get-Volume).DriveLetter\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+
+                        driveLetter = process.StandardOutput.ToString();
+                    }
 
                     // The reason for the echo is that there is a "pause" in the install.bat. The echo skips it.
                     // echo 1 | install.bat  C:\cpu2017
-                    string installCmd = $"/c echo 1 | {this.PlatformSpecifics.Combine($"{driveLetter.Trim()}:", "install.bat")} {this.PackageDirectory}";
-                    await this.ExecuteCommandAsync("cmd", installCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("cmd", $"/c echo 1 | {this.PlatformSpecifics.Combine($"{driveLetter.Trim()}:", "install.bat")} {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
 
-                    await this.WriteSpecCpuConfigAsync(cancellationToken);
+                    await this.WriteSpecCpuConfigAsync(telemetryContext, cancellationToken);
 
                     // powershell -Command "Dismount-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso""
-                    string dismountCmd = $"-Command \"Dismount-DiskImage -ImagePath {isoFilePath}\"";
-                    await this.ExecuteCommandAsync("powershell", dismountCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("powershell", $"-Command \"Dismount-DiskImage -ImagePath {isoFilePath}\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
                 }
 
                 state.SpecCpuInitialized = true;
             }
 
             await this.stateManager.SaveStateAsync<SpecCpuState>($"{nameof(SpecCpuState)}", state, cancellationToken);
-        }
-
-        private async Task<string> ExecuteCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = EventContext.Persisted()
-                .AddContext(nameof(command), command)
-                .AddContext(nameof(commandArguments), commandArguments);
-
-            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments, workingDirectory))
-            {
-                this.CleanupTasks.Add(() => process.SafeKill());
-                this.LogProcessTrace(process);
-
-                await process.StartAndWaitAsync(cancellationToken);
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    if (process.IsErrored())
-                    {
-                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-                    }
-                }
-
-                return process.StandardOutput.ToString();
-            }
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -400,7 +423,7 @@ namespace VirtualClient.Actions
             return cmd;
         }
 
-        private async Task WriteSpecCpuConfigAsync(CancellationToken cancellationToken)
+        private async Task WriteSpecCpuConfigAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // Copy SPECcpu configuration file to the config folder.
             string configurationFile = this.GetConfigurationFileName();
@@ -422,7 +445,7 @@ namespace VirtualClient.Actions
                 true);
             }
 
-            string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", cancellationToken);
+            string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", telemetryContext, cancellationToken);
 
             if (string.IsNullOrEmpty(compilerVersion))
             {
@@ -439,19 +462,17 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
         }
 
-        private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, CancellationToken cancellationToken)
+        private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = compilerName;
             string commandArguments = "-dumpversion";
 
             string version = string.Empty;
 
-            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
             {
                 try
                 {
-                    await process.StartAndWaitAsync(cancellationToken);
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         version = process.StandardOutput.ToString().Trim().Split(".")[0];

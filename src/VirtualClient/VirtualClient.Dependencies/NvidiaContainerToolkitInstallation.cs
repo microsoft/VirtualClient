@@ -100,8 +100,13 @@ namespace VirtualClient.Dependencies
 
             foreach (string command in installationCommands)
             {
-                await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfDependencyInstallationFailed();
+                    }
+                }
             }
         }
 
@@ -177,31 +182,6 @@ namespace VirtualClient.Dependencies
             }
 
             return commands;
-        }
-
-        private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone();
-
-            return this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, null, workingDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    this.LogProcessTrace(process);
-
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, relatedContext, "NvidiaToolkitInstallation")
-                            .ConfigureAwait(false);
-
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                    }
-                }
-            });
         }
     }
 }

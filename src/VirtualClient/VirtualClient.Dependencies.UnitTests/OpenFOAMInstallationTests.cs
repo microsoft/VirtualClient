@@ -52,22 +52,56 @@ namespace VirtualClient.Dependencies
         public async Task OpenFOAMInstallationDependencyStartsCorrectProcessesOnExecute(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
+            List<string> expectedCommands = new List<string>();
+
             if (architecture == Architecture.X64)
             {
-                this.SetupProcessManager("sudo", AddPublicKeyCommand);
-                this.SetupProcessManager("sudo", UpdateSoftwareRepositoriesCommand);
-                this.SetupProcessManager("sudo", UpdateAptPackageCommand);
-                this.SetupProcessManager("sudo", InstallOpenFOAMx64Command);
+                expectedCommands = new List<string>
+                {
+                    $"sudo {AddPublicKeyCommand}",
+                    $"sudo {UpdateSoftwareRepositoriesCommand}",
+                    $"sudo {UpdateAptPackageCommand}",
+                    $"sudo {InstallOpenFOAMx64Command}"
+                };
             }
             else
             {
-                this.SetupProcessManager("sudo", UpdateAptPackageCommand);
-                this.SetupProcessManager("sudo", InstallOpenFOAMarm64Command);
+                expectedCommands = new List<string>
+                {
+                    $"sudo {UpdateAptPackageCommand}",
+                    $"sudo {InstallOpenFOAMarm64Command}"
+                };
             }
-            
-            await this.component.ExecuteAsync(CancellationToken.None);
 
-            this.mockProcessManager.Verify();
+            int commandExecuted = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommands[commandExecuted] == $"{exe} {arguments}")
+                {
+                    commandExecuted++;
+                }
+
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+            using (TestComponent toolkitInstallation = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await toolkitInstallation.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(expectedCommands.Count, commandExecuted);
         }
 
         [Test]
@@ -77,25 +111,16 @@ namespace VirtualClient.Dependencies
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
-            if (architecture == Architecture.X64)
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
-                this.SetupProcessManager("sudo", AddPublicKeyCommand);
-                this.SetupProcessManager("sudo", UpdateSoftwareRepositoriesCommand);
-                this.SetupProcessManager("sudo", UpdateAptPackageCommand);
-                var setup = this.SetupProcessManager("sudo", InstallOpenFOAMx64Command);
+                this.fixture.Process.ExitCode = 1;
+                this.fixture.Process.OnHasExited = () => true;
+                return this.fixture.Process;
+            };
 
-                setup.Returns(OpenFOAMInstallationTests.GetProcessProxy(1));
-            }
-            else
-            {
-                this.SetupProcessManager("sudo", UpdateAptPackageCommand);
-                var setup = this.SetupProcessManager("sudo", InstallOpenFOAMarm64Command);
-
-                setup.Returns(OpenFOAMInstallationTests.GetProcessProxy(1));
-            }
-
-            DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
+            using TestComponent component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
         }
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
@@ -121,28 +146,6 @@ namespace VirtualClient.Dependencies
             this.fixture.SystemManagement.SetupGet(mgr => mgr.ProcessManager).Returns(this.mockProcessManager.Object);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
                 .Returns(false);
-        }
-
-        private ISetup<ProcessManager, IProcessProxy> SetupProcessManager(string expectedCmd, string expectedArgs = null, string expectedWorkingDirectory = null)
-        {
-            ISetup<ProcessManager, IProcessProxy> setup = this.mockProcessManager.Setup(mgr => mgr.CreateProcess(
-                It.Is<string>(cmd => cmd.Equals(expectedCmd)),
-                It.Is<string>(args => args == null || args.Equals(expectedArgs)),
-                It.Is<string>(wd => wd == null || wd.Equals(expectedWorkingDirectory))));
-
-            setup.Verifiable();
-            setup.Returns(OpenFOAMInstallationTests.GetProcessProxy());
-            return setup;
-        }
-
-        private static IProcessProxy GetProcessProxy(int exitCode = 0)
-        {
-            Mock<IProcessProxy> process = new Mock<IProcessProxy>();
-            process.SetupGet(p => p.ExitCode).Returns(exitCode);
-            process.SetupGet(p => p.HasExited).Returns(true);
-            process.SetupGet(p => p.StartInfo).Returns(new ProcessStartInfo());
-            process.SetupGet(p => p.ProcessDetails).Returns(new ProcessDetails());
-            return process.Object;
         }
 
         private class TestComponent : OpenFOAMInstallation
