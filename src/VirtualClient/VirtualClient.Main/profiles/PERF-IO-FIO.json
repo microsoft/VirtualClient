@@ -491,6 +491,12 @@
             }
         },
         {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints"
+            }
+        },
+        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
