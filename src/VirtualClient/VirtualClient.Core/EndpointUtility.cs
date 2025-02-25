@@ -17,7 +17,6 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
-    using YamlDotNet.Core.Tokens;
 
     /// <summary>
     /// Provides features for managing requirements for remote endpoint access.
