@@ -318,7 +318,7 @@ namespace VirtualClient
             if (storeName == DependencyStore.Content && packageUri)
             {
                 throw new SchemaException(
-                    $"The URI provided for '--{storeName}' is not supported. {Environment.NewLine}. The value must be one of the following supported identifiers:{ Environment.NewLine}" +
+                    $"The URI provided for '--{storeName}' is not supported. {Environment.NewLine}. The value must be one of the following supported identifiers: {Environment.NewLine}" +
                     $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
                     $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
                     $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
