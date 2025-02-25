@@ -151,6 +151,34 @@ namespace VirtualClient
 
         [Test]
         [TestCase(
+            "https://packages.virtualclient.microsoft.com",
+            "https://packages.virtualclient.microsoft.com/")]
+        public void EndpointUtilityCreatesTheExpectedBlobStoreReferenceForCDNUri(string uri, string expectedUri)
+        {
+            DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
+                DependencyStore.Packages,
+                uri,
+                this.mockFixture.CertificateManager.Object);
+
+            Assert.IsNotNull(store);
+            Assert.AreEqual(DependencyStore.Packages, store.StoreName);
+            Assert.AreEqual(DependencyStore.StoreTypeAzureCDN, store.StoreType);
+            Assert.AreEqual(new Uri(expectedUri).ToString(), store.EndpointUri.ToString());
+            Assert.IsNull(store.Credentials);
+        }
+
+        [Test]
+        [TestCase("https://packages.virtualclient.microsoft.com")]
+        public void EndpointUtilityCreatesTheExpectedBlobStoreReferenceForCDNUri(string uri)
+        {
+            Assert.Throws<SchemaException>(() => EndpointUtility.CreateBlobStoreReference(
+                DependencyStore.Content,
+                uri,
+                this.mockFixture.CertificateManager.Object));
+        }
+
+        [Test]
+        [TestCase(
             "https://anystorage.blob.core.windows.net",
             "https://anystorage.blob.core.windows.net/")]
         //

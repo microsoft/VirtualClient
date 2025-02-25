@@ -17,12 +17,18 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
+    using YamlDotNet.Core.Tokens;
 
     /// <summary>
     /// Provides features for managing requirements for remote endpoint access.
     /// </summary>
     public static class EndpointUtility
     {
+        private static readonly List<Uri> AllowedPackageUris = new List<Uri>()
+        {
+            new Uri("https://packages.virtualclient.microsoft.com")
+        };
+
         /// <summary>
         /// Creates a <see cref="DependencyBlobStore"/> definition from the connection properties provided.
         /// <list>
@@ -70,6 +76,10 @@ namespace VirtualClient
                 // or
                 // Custom URI
                 // https://any.service.azure.com/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=1753429a8bc4f91d
+                // or
+                // Package URI
+                // https://packages.virtualclient.microsoft.com
+
                 store = EndpointUtility.CreateBlobStoreReference(storeName, endpointUri, certificateManager);
             }
 
@@ -295,6 +305,33 @@ namespace VirtualClient
             return Regex.IsMatch(endpointUri.Query, "sv=|se=|spr=|sig=", RegexOptions.IgnoreCase);
         }
 
+        /// <summary>
+        /// Returns true/false whether the provided endpoint uri is allowed to access package.
+        /// (e.g. https://packages.virtualclient.microsoft.com)
+        /// </summary>
+        /// <param name="endpointUri">The URI to evaluate.</param>
+        /// <param name="storeName"></param>
+        /// <returns></returns>
+        /// <exception cref="DependencyException"></exception>
+        public static bool IsPackageUri(Uri endpointUri, string storeName)
+        {
+            bool packageUri = AllowedPackageUris.Any(uri => uri.Host.Equals(endpointUri.Host, StringComparison.OrdinalIgnoreCase));
+            if (storeName == DependencyStore.Content && packageUri)
+            {
+                throw new SchemaException(
+                    $"The URI provided for '--{storeName}' is not supported. {Environment.NewLine}. The value must be one of the following supported identifiers:{ Environment.NewLine}" +
+                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
+                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
+            }
+
+            return storeName == DependencyStore.Packages && packageUri;
+        }
+
         private static DependencyBlobStore CreateBlobStoreReference(string storeName, string connectionString)
         {
             storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
@@ -333,10 +370,12 @@ namespace VirtualClient
 
             if (string.IsNullOrWhiteSpace(endpointUri.Query))
             {
-                // 1) Basic URI without any query parameters
-                //    e.g. https://any.blob.core.windows.net
-
-                store = new DependencyBlobStore(storeName, endpointUri);
+                // Basic URI without any query parameters
+                // 1) If the given endpoint uri is a package uri (e.g. https://packages.virtualclient.microsoft.com ) then the package is retrieved from storage via CDN
+                // 2) If the given endpoint uri is a blob storage (e.g https://any.blob.core.windows.net) then the packages is retrieved from blob storage 
+                store = IsPackageUri(endpointUri, storeName) 
+                    ? new DependencyBlobStore(storeName, endpointUri, DependencyStore.StoreTypeAzureCDN)
+                    : new DependencyBlobStore(storeName, endpointUri);
             }
             else if (EndpointUtility.IsStorageAccountSasUri(endpointUri))
             {
