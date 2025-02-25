@@ -72,6 +72,13 @@
     ],
     "Dependencies": [
         {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Dnf": "lshw,parted"
+            }
+        },
+        {
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "InitializeDisks",
