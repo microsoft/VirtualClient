@@ -4,7 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>VirtualClient.TestExtensions</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
-        <NoWarn>CA2214,CS1591,SA1508</NoWarn>
+        <NoWarn>CA2214;CS1591;SA1508</NoWarn>
         <ImportTestExtensions>true</ImportTestExtensions>
     </PropertyGroup>
 
