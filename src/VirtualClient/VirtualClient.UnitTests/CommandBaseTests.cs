@@ -4,11 +4,22 @@
 namespace VirtualClient.UnitTests
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoFixture;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
+    using Moq;
     using NUnit.Framework;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Configuration;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -24,6 +35,7 @@ namespace VirtualClient.UnitTests
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
+            this.mockFixture.SetupCertificateMocks();
         }
 
         [Test]
@@ -204,6 +216,92 @@ namespace VirtualClient.UnitTests
             Assert.AreEqual(expectedDirectory, actualDirectory);
         }
 
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void CommandBaseCanCreateLoggers(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            TestCommandBase testCommand = new TestCommandBase();
+            List<string> loggerDefinitions = new List<string>();
+            testCommand.Loggers = loggerDefinitions;
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(new ConfigurationBuilder().Build(), this.mockFixture.PlatformSpecifics);
+            // 1 console, 3 serilog and 1 csv file logger
+            Assert.AreEqual(loggers.Count, 5);
+        }
+
+        [Test]
+        public void CommandBaseCanCreateEventHubLoggers()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+
+            TestCommandBase testCommand = new TestCommandBase(this.mockFixture.CertificateManager.Object);
+            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            List<string> loggerDefinitions = new List<string>();
+            loggerDefinitions.Add("eventHub=sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
+            testCommand.Loggers = loggerDefinitions;
+
+            var inMemorySettings = new Dictionary<string, string>
+            {
+                { "EventHubLogSettings:IsEnabled", "true" },
+                { "EventHubLogSettings:EventsHubName", "Events" },
+                { "EventHubLogSettings:CountersHubName", "Counters" },
+                { "EventHubLogSettings:MetricsHubName", "Metrics" },
+                { "EventHubLogSettings:TracesHubName", "Traces" },
+            };
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(inMemorySettings)
+                .Build();
+
+            var eventHubLogSettings = new EventHubLogSettings();
+            configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(configuration, this.mockFixture.PlatformSpecifics);
+            // 1 console, 3 serilog and 1 csv file logger, 3 eventhub
+            Assert.AreEqual(loggers.Count, 8);
+        }
+
+        [Test]
+        public void CommandBaseCanCreateMultipleLoggers()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+
+            TestCommandBase testCommand = new TestCommandBase(this.mockFixture.CertificateManager.Object);
+            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+            List<string> loggerDefinitions = new List<string>();
+            loggerDefinitions.Add("eventHub=sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
+            loggerDefinitions.Add(@"proxy=https://vc.com");
+            loggerDefinitions.Add("console");
+            loggerDefinitions.Add("file");
+            testCommand.Loggers = loggerDefinitions;
+
+            var inMemorySettings = new Dictionary<string, string>
+            {
+                { "EventHubLogSettings:IsEnabled", "true" },
+                { "EventHubLogSettings:EventsHubName", "Events" },
+                { "EventHubLogSettings:CountersHubName", "Counters" },
+                { "EventHubLogSettings:MetricsHubName", "Metrics" },
+                { "EventHubLogSettings:TracesHubName", "Traces" },
+            };
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(inMemorySettings)
+                .Build();
+
+            var eventHubLogSettings = new EventHubLogSettings();
+            configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(configuration, this.mockFixture.PlatformSpecifics);
+            // 1 console, 3 serilog and 1 csv file logger, 3 eventhub, 1 proxy
+            Assert.AreEqual(loggers.Count, 9);
+        }
+
         /// <summary>
         /// Not implemented yet.
         /// </summary>
@@ -215,6 +313,25 @@ namespace VirtualClient.UnitTests
         public new void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
         {
             base.EvaluateDirectoryPathOverrides(platformSpecifics);
+        }
+
+        private class TestCommandBase : CommandBase
+        {
+            public TestCommandBase(ICertificateManager certManager = null)
+                : base()
+            {
+                this.CertificateManager = certManager;
+            }
+
+            public IList<ILoggerProvider> CreateLogger(IConfiguration configuration, PlatformSpecifics platformSpecifics)
+            {
+                return base.CreateLoggerProviders(configuration, platformSpecifics, null);
+            }
+
+            public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

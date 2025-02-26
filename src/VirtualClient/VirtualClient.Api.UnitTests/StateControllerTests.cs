@@ -186,7 +186,6 @@ namespace VirtualClient.Api
             Assert.IsInstanceOf<JObject>(result.Value);
         }
 
-
         [Test]
         public async Task StateControllerReturnsTheExpectedResultWhenTheStateObjectDoesNotExist()
         {

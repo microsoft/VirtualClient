@@ -228,6 +228,9 @@ namespace VirtualClient
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
 
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false),
+
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
