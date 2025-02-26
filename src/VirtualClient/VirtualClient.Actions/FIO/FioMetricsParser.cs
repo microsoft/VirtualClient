@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     {
         private const double NanosecondsToMilliseconds = 0.000001;
         private IList<Metric> resultingMetrics;
+        private Dictionary<string, IConvertible> metricMetadata = new Dictionary<string, IConvertible>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FioMetricsParser"/> class.
@@ -95,6 +96,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             List<Metric> metrics = new List<Metric>();
+
             if (this.ParseDataIntegrityMetrics)
             {
                 this.ParseDataIntegrityVerificationMetrics(metrics);
@@ -261,14 +263,13 @@ namespace VirtualClient.Actions
         {
             var jobOptions = job.SelectToken("['job options']") as JObject;
 
-            var metricMetaData = new Dictionary<string, IConvertible>();
             foreach (var prop in jobOptions.Properties())
             {
-                metricMetaData[prop.Name] = prop.Value.ToString();
+                this.metricMetadata[prop.Name] = prop.Value.ToString();
             }
 
             JToken jobName = job.SelectToken("jobname") as JToken;
-            metricMetaData[nameof(jobName)] = jobName.ToString();
+            this.metricMetadata[nameof(jobName)] = jobName.ToString();
 
             JToken matchingToken = job.SelectToken(path);
             if (matchingToken != null)
@@ -280,7 +281,7 @@ namespace VirtualClient.Actions
                         measurementValue = measurementValue * conversionFactor.Value;
                     }
 
-                    metrics.Add(new Metric(metricName, measurementValue, metricUnit, metricRelativity, verbosity: verbosity, metadata: metricMetaData));
+                    metrics.Add(new Metric(metricName, measurementValue, metricUnit, metricRelativity, verbosity: verbosity, metadata: this.metricMetadata));
                 }
             }
         }
@@ -305,6 +306,14 @@ namespace VirtualClient.Actions
             {
                 metrics.Clear();
                 JToken resultsJson = JObject.Parse(this.RawText);
+
+                string fioVersion;
+                JToken fioVersionToken = resultsJson["fio version"];
+                if (fioVersionToken != null)
+                {
+                    fioVersion = fioVersionToken.Value<string>();
+                    this.metricMetadata["fio_version"] = fioVersion;
+                }
 
                 if (this.ParseReadMetrics)
                 {
