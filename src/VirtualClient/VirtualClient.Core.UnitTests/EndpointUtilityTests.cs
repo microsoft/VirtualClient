@@ -151,6 +151,10 @@ namespace VirtualClient
 
         [Test]
         [TestCase(
+            "packages.virtualclient.microsoft.com",
+            "https://packages.virtualclient.microsoft.com/")]
+        //
+        [TestCase(
             "https://packages.virtualclient.microsoft.com",
             "https://packages.virtualclient.microsoft.com/")]
         public void EndpointUtilityCreatesTheExpectedBlobStoreReferenceForCDNUri(string uri, string expectedUri)
@@ -169,7 +173,7 @@ namespace VirtualClient
 
         [Test]
         [TestCase("https://packages.virtualclient.microsoft.com")]
-        public void EndpointUtilityCreatesTheExpectedBlobStoreReferenceForCDNUri(string uri)
+        public void EndpointUtilityThrowsWhenCreatingBlobStoreReferenceForCDNUriIfUriIsValidButDependencyStoreIsContent(string uri)
         {
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateBlobStoreReference(
                 DependencyStore.Content,

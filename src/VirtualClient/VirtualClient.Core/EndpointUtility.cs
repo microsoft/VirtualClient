@@ -45,6 +45,7 @@ namespace VirtualClient
             certificateManager.ThrowIfNull(nameof(certificateManager));
 
             DependencyBlobStore store = null;
+            endpoint = ValidateAndFormatPackageUri(endpoint);
             string argumentValue = endpoint.Trim(new char[] { '\'', '"', ' ' });
 
             if (EndpointUtility.IsStorageAccountConnectionString(argumentValue))
@@ -326,6 +327,18 @@ namespace VirtualClient
             }
 
             return storeName == DependencyStore.Packages && packageUri;
+        }
+
+        /// <summary>
+        /// Returns the endpoint by verifying package uri checks.
+        /// if the endpoint is a package uri without http or https protocols then append the protocol else return the endpoint value.
+        /// </summary>
+        /// <param name="endpoint">endpoint to verify and format</param>
+        /// <returns></returns>
+        public static string ValidateAndFormatPackageUri(string endpoint)
+        {
+            string packageUri = new Uri(AllowedPackageUri).Host;
+            return packageUri == endpoint ? $"https://{endpoint}" : endpoint;
         }
 
         private static DependencyBlobStore CreateBlobStoreReference(string storeName, string connectionString)
