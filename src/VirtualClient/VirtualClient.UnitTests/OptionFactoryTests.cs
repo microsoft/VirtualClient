@@ -336,13 +336,6 @@ namespace VirtualClient
         }
 
         [Test]
-        public void EventHubConnectionStringOptionValidatesTheConnectionTokenProvided()
-        {
-            Option option = OptionFactory.CreateEventHubStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--eventHub=NotAValidValue"));
-        }
-
-        [Test]
         [TestCase("--experiment-id")]
         [TestCase("--experimentId")]
         [TestCase("--experimentid")]

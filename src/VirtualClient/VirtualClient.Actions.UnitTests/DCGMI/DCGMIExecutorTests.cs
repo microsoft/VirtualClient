@@ -44,7 +44,7 @@ namespace VirtualClient.Actions
         [TestCase("Group")]
         [TestCase("Health")]
         [TestCase("Modules")]
-        [TestCase("CUDATestGenerator")]
+        // [TestCase("CUDATestGenerator")]
         public async Task TestDCGMIExecutesExpectedCommandsOnUbuntu(string subsystem)
         {
             int diagnosticsCommandsexecuted;

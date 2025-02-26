@@ -25,7 +25,6 @@ namespace VirtualClient.Api
     public class StateControllerTests
     {
         private MockFixture mockFixture;
-        private IConfiguration mockConfiguration;
         private Mock<InMemoryFileSystemStream> mockFileStream;
         private State mockState;
         private Item<JObject> mockStateInstance;
@@ -35,7 +34,6 @@ namespace VirtualClient.Api
         public void SetupTests()
         {
             this.mockFixture = new MockFixture();
-            this.mockConfiguration = new ConfigurationBuilder().Build();
             this.mockFileStream = new Mock<InMemoryFileSystemStream>();
             this.mockState = new State(new Dictionary<string, IConvertible>
             {
