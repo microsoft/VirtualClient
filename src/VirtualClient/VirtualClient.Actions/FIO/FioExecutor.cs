@@ -367,48 +367,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Creates mount points for any disks that do not have them already.
-        /// </summary>
-        /// <param name="disks">This disks on which to create the mount points.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
-        {
-            bool mountPointsCreated = false;
-
-            // Don't mount any partition in OS drive.
-            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
-            {
-                // mount every volume that doesn't have an accessPath.
-                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
-                {
-                    string newMountPoint = volume.GetDefaultMountPoint();
-                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
-
-                    EventContext relatedContext = EventContext.Persisted().Clone()
-                        .AddContext(nameof(volume), volume)
-                        .AddContext("mountPoint", newMountPoint);
-
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
-                    {
-                        string newMountPoint = volume.GetDefaultMountPoint();
-                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
-                        {
-                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
-                        }
-
-                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        mountPointsCreated = true;
-
-                    }).ConfigureAwait(false);
-                }
-            }
-
-            return mountPointsCreated;
-        }
-
-        /// <summary>
         /// Creates a process to run FIO targeting the disks specified.
         /// </summary>
         /// <param name="executable">The full path to the FIO executable.</param>
