@@ -7,10 +7,10 @@ namespace VirtualClient.Api
     using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Reflection;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Asp.Versioning;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
@@ -40,13 +40,13 @@ namespace VirtualClient.Api
     /// https://www.skylinetechnologies.com/Blog/Skyline-Blog/December_2018/async-await-configureawait
     /// </remarks>
     [ApiController]
-    [Route(StateController.ApiRoute)]
+    [ApiVersion(1.0)]
+    [ApiVersion(2.0)]
+    [Route("/api/State")]
     public class StateController : ControllerBase
     {
         private const string ApiName = "StateApi";
-        private const string ApiRoute = "/api/State";
 
-        private static readonly Assembly ControllerAssembly = Assembly.GetAssembly(typeof(StateController));
         private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
         private static readonly JsonSerializerSettings StateSerializationSettings = new JsonSerializerSettings
         {

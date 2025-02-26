@@ -7,6 +7,7 @@ namespace VirtualClient.Api
     using System.ComponentModel;
     using System.Threading;
     using System.Threading.Tasks;
+    using Asp.Versioning;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
@@ -33,6 +34,8 @@ namespace VirtualClient.Api
     /// https://www.skylinetechnologies.com/Blog/Skyline-Blog/December_2018/async-await-configureawait
     /// </remarks>
     [ApiController]
+    [ApiVersion(1.0)]
+    [ApiVersion(2.0)]
     [Route("/api/heartbeat")]
     public class HeartbeatController : ControllerBase
     {

@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <IsPackable>true</IsPackable>
-        <NoWarn>NU5100,NU5110,NU5111,NU5118,NU5128,NU5131</NoWarn>
+        <NoWarn>NU5100;NU5110;NU5111;NU5118;NU5128;NU5131</NoWarn>
     </PropertyGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
