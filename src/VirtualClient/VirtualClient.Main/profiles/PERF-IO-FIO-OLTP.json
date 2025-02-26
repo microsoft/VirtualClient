@@ -189,19 +189,19 @@
     ],
     "Dependencies": [
         {
-            "Type": "FormatDisks",
-            "Parameters": {
-                "Scenario": "InitializeDisks"
-            }
-        },
-        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "libaio1,libaio-dev",
-                "Packages-Dnf": "libaio,libaio-devel",
+                "Packages-Dnf": "libaio,libaio-devel,lshw,parted",
                 "Packages-Yum": "libaio,libaio-devel",
                 "Packages-Zypper": "libaio1,libaio-dev"
+            }
+        },
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
             }
         },
         {
