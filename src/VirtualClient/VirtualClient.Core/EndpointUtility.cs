@@ -23,10 +23,7 @@ namespace VirtualClient
     /// </summary>
     public static class EndpointUtility
     {
-        private static readonly List<Uri> AllowedPackageUris = new List<Uri>()
-        {
-            new Uri("https://packages.virtualclient.microsoft.com")
-        };
+        private const string AllowedPackageUri = "https://packages.virtualclient.microsoft.com";
 
         /// <summary>
         /// Creates a <see cref="DependencyBlobStore"/> definition from the connection properties provided.
@@ -314,7 +311,7 @@ namespace VirtualClient
         /// <exception cref="DependencyException"></exception>
         public static bool IsPackageUri(Uri endpointUri, string storeName)
         {
-            bool packageUri = AllowedPackageUris.Any(uri => uri.Host.Equals(endpointUri.Host, StringComparison.OrdinalIgnoreCase));
+            bool packageUri = new Uri(AllowedPackageUri).Host.Equals(endpointUri.Host, StringComparison.OrdinalIgnoreCase);
             if (storeName == DependencyStore.Content && packageUri)
             {
                 throw new SchemaException(
