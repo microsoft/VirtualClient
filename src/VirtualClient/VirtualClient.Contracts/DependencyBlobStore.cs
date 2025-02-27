@@ -40,6 +40,20 @@ namespace VirtualClient
         /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.
         /// </summary>
         /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>
+        /// <param name="endpointUri">The endpoint URI to the target Storage Account (e.g. SAS URI, Packages URI).</param>
+        /// <param name="storeType">A friendly name for the content store that can be referenced by other parts of the application (e.g. Monitoring)..</param>
+        public DependencyBlobStore(string storeName, Uri endpointUri, string storeType)
+            : base(storeName, storeType)
+        {
+            endpointUri.ThrowIfNull(nameof(endpointUri));
+            storeType.ThrowIfNullOrWhiteSpace(nameof(storeType));
+            this.EndpointUri = endpointUri;
+        }
+
+        /// <summary>
+        /// Initializes an instance of the <see cref="DependencyBlobStore"/> class.
+        /// </summary>
+        /// <param name="storeName">The name of the content store (e.g. Content, Packages).</param>
         /// <param name="endpointUri">The endpoint URI to the target Storage Account (e.g. SAS URI).</param>
         /// <param name="credentials">An identity token credential to use for authentication against the Storage Account.</param>
         public DependencyBlobStore(string storeName, Uri endpointUri, TokenCredential credentials)
