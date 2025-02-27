@@ -47,6 +47,11 @@ namespace VirtualClient
         public const string StoreTypeProxyApi = "ProxyApi";
 
         /// <summary>
+        /// Store Type = AzureCDN
+        /// </summary>
+        public const string StoreTypeAzureCDN = "AzureCDN";
+
+        /// <summary>
         /// Telemetry store name.
         /// </summary>
         public const string Telemetry = nameof(DependencyStore.Telemetry);
