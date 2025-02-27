@@ -13,16 +13,8 @@
       "Type": "AmdSmiMonitor",
       "Parameters": {
         "Scenario": "AmdGpuCounters",
-        "Subsystem": "metric",
-        "MonitorFrequency": "$.Parameters.MonitorFrequency",
-        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
-      }
-    },
-    {
-      "Type": "AmdSmiMonitor",
-      "Parameters": {
-        "Scenario": "AmdGpuCounters",
-        "Subsystem": "xgmi",
+        "SubsystemMetric": true,
+        "SubsystemXgmi": true,
         "MonitorFrequency": "$.Parameters.MonitorFrequency",
         "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
