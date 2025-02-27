@@ -488,42 +488,16 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "libaio1t64,libaio-dev",
+                "Packages-Apt": "libaio1t64,libaio-dev,fio",
                 "Packages-Dnf": "libaio,libaio-devel,lshw,parted",
                 "Packages-Yum": "libaio,libaio-devel",
                 "Packages-Zypper": "libaio1,libaio-dev"
             }
         },
         {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "CreateSymbolicLink",
-                "SupportedPlatforms": "linux-x64",
-                "Command": "rm /usr/lib/x86_64-linux-gnu/libaio.so.1 && ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1"
-            }
-        },
-        {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "CreateSymbolicLink",
-                "SupportedPlatforms": "linux-arm64",
-                "Command": "rm /usr/lib/aarch64-linux-gnu/libaio.so.1 && ln -s /usr/lib/aarch64-linux-gnu/libaio.so.1t64 /usr/lib/aarch64-linux-gnu/libaio.so.1"
-            }
-        },
-        {
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "InitializeDisks"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallFIOPackage",
-                "BlobContainer": "packages",
-                "BlobName": "fio.3.30.0.zip",
-                "PackageName": "fio",
-                "Extract": true
             }
         }
     ]
