@@ -554,7 +554,7 @@ namespace VirtualClient
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
-                {
+                { 
                     "{LogicalCoreCount}",
                     expectedLogicalCores.ToString()
                 },
@@ -1070,7 +1070,7 @@ namespace VirtualClient
         [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferencesInParameterSets_DiskSpd_Profile_Scenario_1()
         {
-            this.SetupDefaults(PlatformID.Win32NT, Architecture.Arm64);
+            this.SetupDefaults(PlatformID.Win32NT);
 
             int expectedLogicalCores = 16;
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
@@ -1079,8 +1079,6 @@ namespace VirtualClient
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
                 { "Scenario", "RandomWrite_4k_BlockSize" },
-                {"Isarmenabled", "{calculate((\"{isarm({platform})}\" == \"true\") ? \"-XX:+AvoidUnalignedAccesses\" : \"\")}"},
-                {"platform", "{platform}"},
                 { "PackageName", "diskspd" },
                 { "DiskFilter", "BiggestSize" },
                 { "CommandLine", "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration} -Suw -W15 -D -L -Rtext" },
@@ -1098,7 +1096,6 @@ namespace VirtualClient
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
 
             Assert.AreEqual("RandomWrite_4k_BlockSize", parameters["Scenario"]);
-            Assert.AreEqual("-XX:+AvoidUnalignedAccesses", parameters["Isarmenabled"]);
             Assert.AreEqual("diskspd", parameters["PackageName"]);
             Assert.AreEqual("BiggestSize", parameters["DiskFilter"]);
             Assert.AreEqual("-c496GB -b4K -r4K -t8 -o64 -w100 -d60 -Suw -W15 -D -L -Rtext", parameters["CommandLine"]);

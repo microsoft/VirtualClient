@@ -25,8 +25,8 @@ namespace VirtualClient
         // {fn(512 / 16)]}
         // {fn(512 / {LogicalThreadCount})}
         private static readonly Regex CalculateExpression = new Regex(
-    @"\{calculate\(([0-9L\*\/\+\-\(\)\s]+)\)\}",
-    RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            @"\{calculate\(([0-9\*\/\+\-\(\)\s]+)\)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {calculate({IsTLSEnabled} ? "Yes" : "No")}
@@ -42,10 +42,6 @@ namespace VirtualClient
         private static readonly Regex CalculateComparisionExpression = new Regex(
             @"\{calculate\((\d+\s*(?:==|!=|<|>|<=|>=|&&|\|\|)\s*\d+)\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        private static readonly Regex CalculateStringEqualityExpression = new Regex(
-           @"\{calculate\(([a-zA-Z0-9\-]+)\s*==\s*([a-zA-Z0-9\-]+)\)\}",
-           RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {Expression...}
@@ -71,22 +67,11 @@ namespace VirtualClient
             @"\{PackagePath/Platform\:([a-z0-9-_\. ]+)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        // e.g. {isarm("arm")}
-        private static readonly Regex IsArmExpression = new Regex(
-            @"\{isarm\(\s*[""']?(.*?)[""']?\s*\)\}",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         // e.g.
         // {Platform}
         private static readonly Regex PlatformExpression = new Regex(
             @"\{Platform\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        // e.g.
-        // {armplatform(string)} 
-        // private static readonly Regex ArmExpression = new Regex(
-        // @"arm",
-        // RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {LogicalCoreCount}
@@ -189,7 +174,6 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-
             // Expression: {PackagePath:xyz}
             // Resolves to the path to the package folder location (e.g. /home/users/virtualclient/packages/redis).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
@@ -457,6 +441,7 @@ namespace VirtualClient
                     {
                         string function = match.Groups[1].Value;
                         long result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<long>(function);
+
                         evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
                     }
                 }
@@ -496,92 +481,6 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
-
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.CalculateStringEqualityExpression.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-                    foreach (Match match in matches)
-                    {
-                        string function = match.Groups[1].Value;
-                        // Here, we evaluate the string comparison. You may need to adapt this if your function requires additional logic.
-                        bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
-
-                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-                    }
-                }
-
-                return new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                };
-            }),
-
-            // new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
-            // {
-            //    bool isMatched = false;
-            //    string evaluatedExpression = expression;
-            //    // Use the IsArmExpression regex to find matches
-            //    MatchCollection matches = ProfileExpressionEvaluator.IsArmExpression.Matches(expression);
-            //    if (matches?.Any() == true)
-            //    {
-            //        isMatched = true;
-            //        foreach (Match match in matches)
-            //        {
-            //            // Get the captured argument from the match
-            //            string argument = match.Groups[1].Value.Trim();
-            //            // Check if the argument is "arm" (case insensitive)
-            //            bool result = string.Equals(argument, "arm", StringComparison.OrdinalIgnoreCase);
-            //            // Optionally modify the evaluated expression to show the result
-            //            evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, result.ToString());
-            //        }
-            //    }
-            //    return Task.FromResult(new EvaluationResult
-            //    {
-            //        IsMatched = isMatched,
-            //        Outcome = evaluatedExpression
-            //    });
-            // }),
-
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(
-  (dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-
-                // Find all "isarm(string)" occurrences using the regex
-                MatchCollection matches = IsArmExpression.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-
-                    // Replace each "isarm(string)" match individually with "true" or "false"
-                    foreach (Match match in matches)
-                    {
-                        string matchedString = match.Groups[1].Value;
-            
-                        // Check if the matched string contains 'arm' (case-insensitive)
-                        bool containsArm = matchedString.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0;
-            
-                        // Replace the match in the original expression
-                        evaluatedExpression = evaluatedExpression.Replace(match.Value, containsArm ? "true" : "false");
-                    }
-                }
-
-                return Task.FromResult(new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                });
-            }),
-
             // Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
             // Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
             // **IMPORTANT**
@@ -614,7 +513,7 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
-            }),
+            })
         };
 
         private ProfileExpressionEvaluator()
