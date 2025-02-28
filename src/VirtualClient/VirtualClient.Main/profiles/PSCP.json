@@ -1,0 +1,33 @@
+{
+  "Description": "PSCP Installation Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:05:00",
+    "SupportedPlatforms": "win-x64,win-arm64,,win-arm32",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "PscpPath": "C:\\ToolkitUserFiles\\Binaries\\Putty"
+  },
+  "Actions": [
+    {
+      "Type": "PSCPInstallation",
+      "Parameters": {
+        "Scenario": "PSCPInstallation",
+        "PackageName": "pscp",
+        "PscpPath": "$.Parameters.PscpPath"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "PSCPInstallation",
+        "BlobContainer": "packages",
+        "BlobName": "pscp.zip",
+        "PackageName": "pscp",
+        "Extract": true
+      }
+    }
+  ]
+}
