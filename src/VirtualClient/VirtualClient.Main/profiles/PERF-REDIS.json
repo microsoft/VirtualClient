@@ -221,7 +221,7 @@
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
                 "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
-                "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
+                "Packages-Dnf": "zlib-devel,pcre2-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
             }
         },
         {
@@ -230,7 +230,7 @@
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
                 "Packages-Yum": "wget,numactl,tcl-devel",
-                "Packages-Dnf": "wget,numactl,tcl-devel"
+                "Packages-Dnf": "wget,build-essential,numactl,tcl-devel"
             }
         },
         {
@@ -255,14 +255,32 @@
         },
         {
             "Type": "ExecuteCommand",
-          "Parameters": {
-            "Scenario": "CompileRedis",
-            "SupportedPlatforms": "linux-x64,linux-arm64",
-            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
-            "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
-            "Command": "make BUILD_TLS={BUILD_TLS}",
-            "WorkingDirectory": "{PackagePath:redis}"
-          }
+            "Parameters": {
+                "Scenario": "MakeRedisPackages",
+                "SupportedPlatfrms": "linux-x64,linux-arm64",
+                "Command": "make hiredis lua jemalloc linenoise hdr_histogram",
+                "WorkingDirectory": "{PackagePath:redis}/deps"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MakeRedis",
+                "SupportedPlatfrms": "linux-x64,linux-arm64",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:redis}"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileRedis",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
+                "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
+                "Command": "make BUILD_TLS={BUILD_TLS}",
+                "WorkingDirectory": "{PackagePath:redis}"
+            }
         },
         {
             "Type": "GitRepoClone",
