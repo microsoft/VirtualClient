@@ -295,7 +295,7 @@
             "Parameters": {
                 "Scenario": "CompileMemtier",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "git checkout 1.4.0&&autoreconf -ivf",
+                "Command": "git checkout 1.4.0",
                 "WorkingDirectory": "{PackagePath:memtier}"
             }
         },
@@ -314,7 +314,7 @@
             "Parameters": {
                 "Scenario": "CompileMemtier",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "bash -c './configure'&&make",
+                "Command": "autoreconf -ivf&&bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
             }
         },

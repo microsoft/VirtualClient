@@ -68,7 +68,7 @@ AS_IF([test "x$enable_tls" != "xno"], [
 # clock_gettime requires -lrt on old glibc only.
 AC_SEARCH_LIBS([clock_gettime], [rt], , AC_MSG_ERROR([rt is required libevent.]))
 
-#AC_CHECK_LIB([pcre2], [pcre2_compile], , AC_MSG_ERROR([pcre2 is required; try installing libpcre3-dev.]))
+# AC_CHECK_LIB([pcre], [pcre_compile], , AC_MSG_ERROR([pcre is required; try installing libpcre3-dev.]))
 AC_CHECK_LIB([z], [deflateInit_], , AC_MSG_ERROR([zlib is required; try installing zlib1g-dev.]))
 AC_CHECK_LIB([pthread], [pthread_create], , AC_MSG_ERROR([pthread is required.]))
 AC_CHECK_LIB([socket], [gai_strerror])
