@@ -221,7 +221,7 @@
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
                 "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
-                "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
+                "Packages-Dnf": "zlib-devel,pcre2-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
             }
         },
         {
@@ -230,7 +230,7 @@
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
                 "Packages-Yum": "wget,numactl,tcl-devel",
-                "Packages-Dnf": "wget,numactl,tcl-devel"
+                "Packages-Dnf": "wget,build-essential,numactl,tcl-devel"
             }
         },
         {
@@ -251,6 +251,24 @@
                 "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
                 "SubPath": "redis-6.2.1",
                 "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MakeRedisPackages",
+                "SupportedPlatfrms": "linux-x64,linux-arm64",
+                "Command": "make hiredis lua jemalloc linenoise hdr_histogram",
+                "WorkingDirectory": "{PackagePath:redis}/deps"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MakeRedis",
+                "SupportedPlatfrms": "linux-x64,linux-arm64",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:redis}"
             }
         },
         {
@@ -277,7 +295,26 @@
             "Parameters": {
                 "Scenario": "CompileMemtier",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
+                "Command": "git checkout 1.4.0&&autoreconf -ivf",
+                "WorkingDirectory": "{PackagePath:memtier}"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileMemtier",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "ConfigureFilePath": "{ScriptPath:redis}/configure.ac",
+                "Command": "cp {ConfigureFilePath} configure.ac",
+                "WorkingDirectory": "{PackagePath:memtier}"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileMemtier",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "Command": "bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
             }
         },
