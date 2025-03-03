@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
-            this.mockFixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
+            this.mockFixture.SetupPackage("wget", expectedFiles: "linux-x64/wget2");
             this.mockFixture.SetupFile("memcached", "memcached-1.6.17/memcached", new byte[0]);
         }
 

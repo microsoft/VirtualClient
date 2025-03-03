@@ -554,10 +554,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.ThrowIfLayoutNotDefined();
             this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             telemetryContext.AddContext("package", workloadPackage);
 
             this.Role = clientInstance.Role;

@@ -21,20 +21,18 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class CtsTrafficExecutorTests
+    public class CtsTrafficExecutorTests : MockFixture
     {
-        private MockFixture mockFixture;
-        private DependencyPath mockCtsTrafficPackage;
+        private DependencyPath mockPackage;
 
-        public void SetupDefaults(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64)
+        public void SetupTest(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
-            this.mockCtsTrafficPackage = new DependencyPath("ctstraffic", this.mockFixture.GetPackagePath("ctstraffic"));
+            this.Setup(platform, architecture);
+            this.mockPackage = new DependencyPath("ctstraffic", this.GetPackagePath("ctstraffic"));
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            this.Parameters = new Dictionary<string, IConvertible>
             {
-                ["PackageName"] = this.mockCtsTrafficPackage.Name,
+                ["PackageName"] = this.mockPackage.Name,
                 ["PrimaryPort"] = "4445",
                 ["SecondaryPort"] = "4444",
                 ["NumaNode"] = 0,
@@ -44,10 +42,10 @@ namespace VirtualClient.Actions
                 ["ServerExitLimit"] = 1
             };
 
-            this.mockFixture.PackageManager.OnGetPackage("ctstraffic").ReturnsAsync(this.mockCtsTrafficPackage);
+            this.SetupPackage(this.mockPackage);
 
-            this.mockFixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
+            this.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
         }
 
         [Test]
@@ -60,20 +58,20 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CtsTrafficClientExecutorIntializesTheExpectedAPIClients_MultiVM_Environment()
         {
-            this.SetupDefaults();
-            using (var executor = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.SetupTest();
+            using (var executor = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 // Setup: API calls.
-                this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(serverInstance.IPAddress, It.IsAny<IPAddress>(), It.IsAny<int?>()))
+                this.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(serverInstance.IPAddress, It.IsAny<IPAddress>(), It.IsAny<int?>()))
                    .Returns<string, IPAddress, int?>((id, ip, port) =>
                    {
                        Assert.IsTrue(id.Equals(serverInstance.IPAddress.ToString()));
                        Assert.AreEqual(ip, serverIPAddress);
 
-                       return this.mockFixture.ApiClient.Object;
+                       return this.ApiClient.Object;
                    });
 
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None);
@@ -85,16 +83,16 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task CtsTrafficExecutorConfirmsTheExpectedWorkloadPackagesOnInitialization(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaults(platform, architecture);
+            this.SetupTest(platform, architecture);
 
-            using (var component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var component = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 await component.InitializeAsync(EventContext.None, CancellationToken.None);
 
-                this.mockFixture.PackageManager.Verify(mgr => mgr.GetPackageAsync("ctstraffic", It.IsAny<CancellationToken>()));
+                this.PackageManager.Verify(mgr => mgr.GetPackageAsync("ctstraffic", It.IsAny<CancellationToken>()));
 
                 Assert.AreEqual(
-                    this.mockFixture.ToPlatformSpecificPath(this.mockCtsTrafficPackage, platform, architecture).Path,
+                    this.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path,
                     component.CtsTrafficPackagePath);
             }
         }
@@ -102,10 +100,10 @@ namespace VirtualClient.Actions
         [Test]
         public void CtsTrafficExecutorThrowsWhenTheCtsTrafficPackageIsNotFound()
         {
-            this.SetupDefaults();
-            this.mockFixture.PackageManager.OnGetPackage("ctstraffic").ReturnsAsync(null as DependencyPath);
+            this.SetupTest();
+            this.PackageManager.OnGetPackage("ctstraffic").ReturnsAsync(null as DependencyPath);
 
-            using (var component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var component = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 DependencyException exception = Assert.ThrowsAsync<DependencyException>(
                         () => component.InitializeAsync(EventContext.None, CancellationToken.None));
@@ -117,12 +115,12 @@ namespace VirtualClient.Actions
         [Test]
         public void CtsTrafficExecutorThrowsIfAnUnsupportedRoleIsSupplied()
         {
-            this.SetupDefaults();
+            this.SetupTest();
 
             string agentId = $"{Environment.MachineName}-Other";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            using (var component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var component = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
             }
@@ -131,9 +129,9 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CtsTrafficExecutorExecutesOnTheClientRoleSystem()
         {
-            this.SetupDefaults();
+            this.SetupTest();
 
-            using (var component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var component = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 await component.ExecuteAsync(CancellationToken.None);
 
@@ -145,12 +143,12 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CtsTrafficExecutorExecutesOnTheServerRoleSystem()
         {
-            this.SetupDefaults();
+            this.SetupTest();
 
             // Make the current system look like it is performing the server role.
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns($"{Environment.MachineName}-Server");
+            this.SystemManagement.SetupGet(obj => obj.AgentId).Returns($"{Environment.MachineName}-Server");
 
-            using (TestCtsTrafficExecutor component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestCtsTrafficExecutor component = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 await component.ExecuteAsync(CancellationToken.None);
 
@@ -162,11 +160,11 @@ namespace VirtualClient.Actions
         [Test]
         public void CtsTrafficExecutorThrowsIfTheExpectedCtsTrafficExeDoesNotExist()
         {
-            this.SetupDefaults(PlatformID.Win32NT);
-            using (var executor = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.SetupTest(PlatformID.Win32NT);
+            using (var executor = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 // ctsTraffic.exe not found.
-                this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("ctsTraffic.exe")))).Returns(false);
+                this.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("ctsTraffic.exe")))).Returns(false);
                 Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
             }
         }
@@ -174,11 +172,11 @@ namespace VirtualClient.Actions
         [Test]
         public void CtsTrafficExecutorThrowsIfTheExpectedProcessInNumaNodeExeDoesNotExist()
         {
-            this.SetupDefaults(PlatformID.Win32NT);
-            using (var executor = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.SetupTest(PlatformID.Win32NT);
+            using (var executor = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))
             {
                 // ctsTraffic.exe not found.
-                this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("StartProcessInNumaNode.exe")))).Returns(false);
+                this.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("StartProcessInNumaNode.exe")))).Returns(false);
                 Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
             }
         }

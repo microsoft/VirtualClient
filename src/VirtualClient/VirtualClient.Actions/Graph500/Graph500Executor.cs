@@ -93,12 +93,10 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
-            this.PackageDirectory = this.PlatformSpecifics.Combine(workloadPackage.Path, "src");
-            this.ExecutableFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "graph500_reference_bfs_sssp");
+            this.PackageDirectory = this.Combine(workloadPackage.Path, "src");
+            this.ExecutableFilePath = this.Combine(this.PackageDirectory, "graph500_reference_bfs_sssp");
         }
 
         /// <summary>

@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
                 @"linux-x64/hotelreservation/wrk2",
             };
 
-            this.mockFixture.SetupWorkloadPackage("deathstarbench", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("deathstarbench", expectedFiles: expectedFiles);
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>

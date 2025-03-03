@@ -5,20 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -26,61 +20,27 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MLPerfTrainingExecutorTests
     {
-        private DependencyFixture mockFixture;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(MLPerfTrainingExecutorTests), "Examples", "MLPerfTraining");
+
+        private MockFixture mockFixture;
         private DependencyPath mockPackage;
         private IEnumerable<Disk> disks;
-        private string output;
+        private string exampleResults;
         private List<string> commandsExecuted = new List<string>();
 
-        [SetUp]
-        public void SetupTests()
-        {
-            this.mockFixture = new DependencyFixture();
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
-        }
-
-        [Test]
-        public async Task MLPerfTrainingExecutorInitializesWorkloadAsExpected()
-        { 
-            List<string> expectedCommands = new List<string>
-            {
-                "sudo usermod -aG docker anyuser",
-                "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
-                "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model"
-            };
-
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await MLPerfTrainingExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
-            }
-
-            CollectionAssert.AreEqual(expectedCommands, commandsExecuted);
-        }
-
-        [Test]
-        public async Task MLPerfTrainingExecutorExecutesAsExpected()
-        {
-            IEnumerable<string> expectedCommands = this.GetExpectedCommands();
-            
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await MLPerfTrainingExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
-                await MLPerfTrainingExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
-            }
-
-            CollectionAssert.AreEqual(expectedCommands.ToArray(), commandsExecuted);
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platformID)
+        public void SetupTest(PlatformID platformID)
         {
             this.commandsExecuted = new List<string>();
-            this.mockFixture = new DependencyFixture();
+
+            this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platformID);
-            this.mockPackage = new DependencyPath("MLPerfTraining", this.mockFixture.PlatformSpecifics.GetPackagePath("mlperf"));
+            this.mockPackage = new DependencyPath("mlperftraining", this.mockFixture.GetPackagePath("mlperf"));
 
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
-            this.mockFixture.DiskManager.AddRange(this.disks);
-            this.mockFixture.SetupWorkloadPackage("mlperftraining", expectedFiles: @"win-x64\diskspd.exe");
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.disks);
+
+            this.mockFixture.SetupPackage(this.mockPackage);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -96,18 +56,51 @@ namespace VirtualClient.Actions
                 { nameof(MLPerfTrainingExecutor.PackageName), "mlperftraining"}
             };
 
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "MLPerfTraining", "Example_bert_real_output.txt");
-            this.output = File.ReadAllText(outputPath);
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(MLPerfTrainingExecutorTests.ExamplesDirectory, "Example_bert_real_output.txt"));
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 this.commandsExecuted.Add($"{command} {arguments}".Trim());
-                process.StandardOutput.Append(this.output);
+                IProcessProxy process = new InMemoryProcess();
+                process.StandardOutput.Append(this.exampleResults);
 
                 return process;
             };
+        }
+
+        [Test]
+        public async Task MLPerfTrainingExecutorInitializesWorkloadAsExpected()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            List<string> expectedCommands = new List<string>
+            {
+                "sudo usermod -aG docker anyuser",
+                "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
+                "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model"
+            };
+
+            using (TestMLPerfTrainingExecutor executor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+            }
+
+            CollectionAssert.AreEqual(expectedCommands, commandsExecuted);
+        }
+
+        [Test]
+        public async Task MLPerfTrainingExecutorExecutesAsExpected()
+        {
+            this.SetupTest(PlatformID.Unix);
+            IEnumerable<string> expectedCommands = this.GetExpectedCommands();
+            
+            using (TestMLPerfTrainingExecutor executor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            CollectionAssert.AreEqual(expectedCommands.ToArray(), commandsExecuted);
         }
 
         private IEnumerable<string> GetExpectedCommands()

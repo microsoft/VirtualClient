@@ -98,14 +98,14 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.SetupFile(cygwinPath);
-            this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("lapack", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("LapackTestScript.sh", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_LAPACK.txt"));
-                    this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: @"win-x64\TESTING\testing_results.txt");
+                    this.mockFixture.SetupPackage("lapack", expectedFiles: @"win-x64\TESTING\testing_results.txt");
                 }
 
                 return process;
@@ -136,14 +136,14 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("lapack", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("LapackTestScript.sh", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_LAPACK.txt"));
-                    this.mockFixture.SetupWorkloadPackage("lapack", expectedFiles: @"linux-x64/TESTING/testing_results.txt");
+                    this.mockFixture.SetupPackage("lapack", expectedFiles: @"linux-x64/TESTING/testing_results.txt");
                 }
                 else if (arguments.Contains("--version", StringComparison.OrdinalIgnoreCase))
                 {

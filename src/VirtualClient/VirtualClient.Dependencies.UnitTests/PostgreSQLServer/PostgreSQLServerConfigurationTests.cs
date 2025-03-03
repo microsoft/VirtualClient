@@ -6,16 +6,13 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Dependencies.MySqlServer;
@@ -24,13 +21,37 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class PostgreSQLServerConfigurationTests
     {
-        private MockFixture fixture;
+        private MockFixture mockFixture;
         private DependencyPath mockPackage;
         private string packagePath;
 
-        [SetUp]
-        public void SetupDefaultMockBehavior()
+        public void SetupTest(PlatformID platform, Architecture architecture)
         {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform, architecture);
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { "PackageName", "postgresql" },
+                { "ServerPassword", "postgresqlpassword" },
+                { "Port", 5432 },
+                { "DatabaseName", "hammerdbtest" },
+                { "SharedMemoryBuffer", "454567" }
+            };
+
+            this.mockPackage = new DependencyPath("postgresql", this.mockFixture.GetPackagePath("postgresql"));
+
+            this.mockFixture.FileSystem.Setup(fs => fs.Directory.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.FileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.packagePath = this.mockFixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
+
+            IEnumerable<Disk> disks;
+            disks = this.mockFixture.CreateDisks(platform, true);
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
         [Test]
@@ -38,8 +59,8 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForConfigureServerCommand(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehavior(platform, architecture);
-            this.fixture.Parameters["Action"] = "ConfigureServer";
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["Action"] = "ConfigureServer";
 
             string tempPackagePath;
 
@@ -59,7 +80,7 @@ namespace VirtualClient.Dependencies
 
             int commandNumber = 0;
 
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 string expectedCommand = expectedCommands[commandNumber];
                 string executedCommand = $"{exe} {arguments}";
@@ -82,12 +103,12 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            this.fixture.StateManager.OnSaveState((stateId, state) =>
+            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
             {
                 Assert.IsNotNull(state);
             });
 
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture))
+            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture))
             {
                 await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -98,17 +119,17 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public void PostgreSQLServerConfigurationThrowsExceptionWhenConfigureServerProcessIsErrored(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehavior(platform, architecture);
-            this.fixture.Parameters["Action"] = "ConfigureServer";
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["Action"] = "ConfigureServer";
 
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
-                this.fixture.Process.ExitCode = 1;
-                this.fixture.Process.OnHasExited = () => true;
-                return this.fixture.Process;
+                this.mockFixture.Process.ExitCode = 1;
+                this.mockFixture.Process.OnHasExited = () => true;
+                return this.mockFixture.Process;
             };
 
-            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture);
+            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
             DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
             Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
         }
@@ -118,15 +139,15 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task PostgreSQLConfigurationSkipsDatabaseCreationWhenOneExists(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehavior(platform, architecture);
-            this.fixture.Parameters["Action"] = "CreateDatabase";
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["Action"] = "CreateDatabase";
 
-            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(
                 new MySQLServerConfiguration.ConfigurationState(MySQLServerConfiguration.ConfigurationAction.CreateDatabase)));
 
             int commandsExecuted = 0;
 
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandsExecuted++;
 
@@ -145,7 +166,7 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture))
+            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture))
             {
                 await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
@@ -158,8 +179,8 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForDistributeDatabaseCommand(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehavior(platform, architecture);
-            this.fixture.Parameters["Action"] = "DistributeDatabase";
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["Action"] = "DistributeDatabase";
             string expectedCommand;
 
             if (platform == PlatformID.Unix)
@@ -172,7 +193,7 @@ namespace VirtualClient.Dependencies
                 expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"D:\\\\;E:\\\\;F:\\\\;\" --password [A-Za-z0-9+/=]+";
             }
 
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 string executedCommand = $"{exe} {arguments}";
                 Assert.IsTrue(Regex.IsMatch(executedCommand, expectedCommand));
@@ -192,38 +213,15 @@ namespace VirtualClient.Dependencies
                 return process;
             };
 
-            this.fixture.StateManager.OnSaveState((stateId, state) =>
+            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
             {
                 Assert.IsNotNull(state);
             });
 
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.fixture))
+            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture))
             {
                 await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
-        }
-
-        public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
-        {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(platform, architecture);
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { "PackageName", "postgresql" },
-                { "ServerPassword", "postgresqlpassword" },
-                { "Port", 5432 },
-                { "DatabaseName", "hammerdbtest" },
-                { "SharedMemoryBuffer", "454567" }
-            };
-
-            this.mockPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.packagePath = this.fixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
-
-            IEnumerable<Disk> disks;
-            disks = this.fixture.CreateDisks(platform, true);
-            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
         private class TestPostgreSQLServerConfiguration : PostgreSQLServerConfiguration

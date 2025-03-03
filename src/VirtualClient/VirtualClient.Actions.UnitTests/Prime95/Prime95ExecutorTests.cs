@@ -18,15 +18,45 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class Prime95ExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPackage;
-        private string rawText;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(Prime95ExecutorTests), "Examples", "Prime95");
 
-        [SetUp]
-        public void SetUpFixture()
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
+        private string exampleResults;
+
+        public void SetupTest(PlatformID platform)
         {
-            this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(Path.Combine("Examples", "Prime95", "prime95_results_example_pass.txt"));
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform);
+            this.mockPackage = new DependencyPath("prime95", this.mockFixture.GetPackagePath("prime95"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(Prime95ExecutorTests.ExamplesDirectory, "prime95_results_example_pass.txt"));
+
+            this.mockFixture.File.Reset();
+            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleResults);
+
+            this.mockFixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.mockFixture.FileSystem.SetupGet(fs => fs.File)
+                .Returns(this.mockFixture.File.Object);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(Prime95Executor.PackageName), "prime95" },
+                { nameof(Prime95Executor.Scenario), "Prime95Workload" },
+                { nameof(Prime95Executor.Duration), "00:30:00" },
+                { nameof(Prime95Executor.MinTortureFFT), "4" },
+                { nameof(Prime95Executor.MaxTortureFFT), "8192" },
+                { nameof(Prime95Executor.UseHyperthreading), true },
+                { nameof(Prime95Executor.ThreadCount), 2 }
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
         }
 
         [Test]
@@ -34,10 +64,10 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void Prime95ExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platform);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
-            using (TestPrime95Executor prime95Executor = new TestPrime95Executor(this.fixture))
+            using (TestPrime95Executor prime95Executor = new TestPrime95Executor(this.mockFixture))
             {
                 DependencyException exception = Assert.ThrowsAsync<DependencyException>(
                     () => prime95Executor.InitializeAsync(EventContext.None, CancellationToken.None));
@@ -51,13 +81,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/mprime")]
         public async Task Prime95ExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string command)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
 
-            using (TestPrime95Executor prime95Executor = new TestPrime95Executor(this.fixture))
+            using (TestPrime95Executor prime95Executor = new TestPrime95Executor(this.mockFixture))
             {
                 bool commandExecuted = false;
                 string expectedCommand = $@"{this.mockPackage.Path}{command} -t";
-                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if(expectedCommand == $"{exe} {arguments}")
                     {
@@ -89,28 +119,28 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void Prime95ExecutorValidatesProfileParameters(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
 
-            this.fixture.Parameters[nameof(Prime95Executor.Duration)] = TimeSpan.Zero.ToString();
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
+            this.mockFixture.Parameters[nameof(Prime95Executor.Duration)] = TimeSpan.Zero.ToString();
+            using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
+            using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = -1;
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
+            this.mockFixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = -1;
+            using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = 100;
-            this.fixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = 1;
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
+            this.mockFixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = 100;
+            this.mockFixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = 1;
+            using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
@@ -121,13 +151,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void Prime95ExecutorThrowsWhenTheWorkloadDoesNotProduceValidResults(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.SetupTest(platform);
+            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync("");
 
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
+            using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
@@ -141,51 +171,19 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/results.txt")]
         public void Prime95ExecutorThrowsWhenWorkloadResultsFileNotFound(PlatformID platform, string resultsPath)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.Exists(this.mockPackage.Path + resultsPath))
+            this.SetupTest(platform);
+            this.mockFixture.File.Setup(fe => fe.Exists(this.mockPackage.Path + resultsPath))
                 .Returns(false);
 
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
+            using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
 
                 Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
             }
-        }
-
-        private void SetupDefaultBehavior(PlatformID platform)
-        {
-            this.fixture.Setup(platform);
-            this.mockPackage = new DependencyPath("prime95", this.fixture.PlatformSpecifics.GetPackagePath("prime95"));
-            this.fixture.PackageManager.OnGetPackage("prime95").ReturnsAsync(this.mockPackage);
-
-            this.fixture.File.Reset();
-            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawText);
-
-            this.fixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
-
-            this.fixture.FileSystem.SetupGet(fs => fs.File)
-                .Returns(this.fixture.File.Object);
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(Prime95Executor.PackageName), "prime95" },
-                { nameof(Prime95Executor.Scenario), "Prime95Workload" },
-                { nameof(Prime95Executor.Duration), "00:30:00" },
-                { nameof(Prime95Executor.MinTortureFFT), "4" },
-                { nameof(Prime95Executor.MaxTortureFFT), "8192" },
-                { nameof(Prime95Executor.UseHyperthreading), true },
-                { nameof(Prime95Executor.ThreadCount), 2 }
-            };
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         private class TestPrime95Executor : Prime95Executor

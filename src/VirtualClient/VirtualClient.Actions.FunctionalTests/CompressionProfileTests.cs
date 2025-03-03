@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(platformID, architecture);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("Compression");
+            this.mockFixture.SetupPackage("Compression");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

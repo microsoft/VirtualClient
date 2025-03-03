@@ -87,7 +87,7 @@
         <Microsoft_Extensions_Http_Polly_PackageVersion>8.0.8</Microsoft_Extensions_Http_Polly_PackageVersion>
 
         <!-- Microsoft.Windows.Compatibility -->
-        <Microsoft_Windows_Compatibility_PackageVersion>8.0.11</Microsoft_Windows_Compatibility_PackageVersion>
+        <Microsoft_Windows_Compatibility_PackageVersion>8.0.13</Microsoft_Windows_Compatibility_PackageVersion>
 
         <!-- Microsoft.Win32.Registry -->
         <Microsoft_Win32_Registry_PackageVersion>5.0.0</Microsoft_Win32_Registry_PackageVersion>
@@ -120,7 +120,7 @@
         <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
 
         <!-- SSH.Net -->
-        <SSH_Net_PackageVersion>2024.0.0</SSH_Net_PackageVersion>
+        <SSH_Net_PackageVersion>2024.2.0</SSH_Net_PackageVersion>
 
         <!-- System.CommandLine -->
         <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>

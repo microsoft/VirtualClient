@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
+            this.mockFixture.SetupPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -85,7 +85,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
+            this.mockFixture.SetupPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
 
             string expectedStateId = nameof(CudaAndNvidiaGPUDriverInstallation);
             await this.mockFixture.StateManager.SaveStateAsync(expectedStateId, JObject.Parse("{ \"any\": \"state\" }"), CancellationToken.None)

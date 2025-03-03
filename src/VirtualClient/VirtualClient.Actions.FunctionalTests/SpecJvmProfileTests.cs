@@ -102,8 +102,8 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("specjvm2008", expectedFiles: @"win-x64\SPECjvm2008.jar");
-            this.mockFixture.SetupWorkloadPackage("javadevelopmentkit", metadata, expectedFiles: @"win-x64\bin\java.exe");
+            this.mockFixture.SetupPackage("specjvm2008", expectedFiles: @"win-x64\SPECjvm2008.jar");
+            this.mockFixture.SetupPackage("javadevelopmentkit", metadata, expectedFiles: @"win-x64\bin\java.exe");
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
@@ -146,8 +146,8 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("specjvm2008", expectedFiles: @"linux-x64/SPECjvm2008.jar");
-            this.mockFixture.SetupWorkloadPackage("javadevelopmentkit", metadata, expectedFiles: @"linux-x64/bin/java");
+            this.mockFixture.SetupPackage("specjvm2008", expectedFiles: @"linux-x64/SPECjvm2008.jar");
+            this.mockFixture.SetupPackage("javadevelopmentkit", metadata, expectedFiles: @"linux-x64/bin/java");
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));

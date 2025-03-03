@@ -16,6 +16,7 @@
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="$(Microsoft_Windows_Compatibility_PackageVersion)" />
         <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
     </ItemGroup>
 
