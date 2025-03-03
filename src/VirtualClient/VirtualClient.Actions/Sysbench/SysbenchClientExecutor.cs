@@ -182,6 +182,10 @@ namespace VirtualClient.Actions
                         {
                             await this.PrepareOLTPMySQLDatabase(telemetryContext, cancellationToken);
                         }
+                        else if (this.Action == ClientAction.Cleanup)
+                        {
+                            await this.CleanUpDatabase(telemetryContext, cancellationToken);
+                        }
                         else
                         {
                             await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
@@ -211,6 +215,35 @@ namespace VirtualClient.Actions
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                SysbenchExecutor.PythonCommand,
+                script + this.sysbenchExecutionArguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                }
+            }
+        }
+
+        private async Task CleanUpDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+
+            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                                    .FirstOrDefault()?.IPAddress
+                                    ?? "localhost";
+
+            string sysbenchCleanupArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount}  --hostIpAddress {serverIp}";
+
+            string script = $"{this.SysbenchPackagePath}/cleanup-database.py ";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 SysbenchExecutor.PythonCommand,
@@ -288,7 +321,7 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount}";
             this.sysbenchPrepareArguments = $"{this.sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
