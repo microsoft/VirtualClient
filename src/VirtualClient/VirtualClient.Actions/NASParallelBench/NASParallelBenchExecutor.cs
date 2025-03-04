@@ -59,17 +59,12 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.PackagePath = workloadPackage.Path;
 
-            await this.BuildBinariesAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            await this.BuildBinariesAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>

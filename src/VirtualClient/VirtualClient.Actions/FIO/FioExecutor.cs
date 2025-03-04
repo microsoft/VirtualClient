@@ -781,6 +781,22 @@ namespace VirtualClient.Actions
             }
 
             IList<Metric> metrics = parser.Parse();
+            string fioVersion = null;
+
+            if (this.TestFocus != FioExecutor.TestFocusDataIntegrity)
+            {
+                var fioVersionMetric = metrics.FirstOrDefault(m => m.Name != "data_integrity_errors");
+                if (fioVersionMetric != null && fioVersionMetric.Metadata.TryGetValue("fio_version", out var versionValue))
+                {
+                    fioVersion = versionValue?.ToString();
+                }
+
+                if (!string.IsNullOrEmpty(fioVersion))
+                {
+                    this.MetadataContract.Add("fio_version", fioVersion, MetadataContractCategory.Dependencies);
+                }
+            }
+            
             if (this.MetricFilters?.Any() == true)
             {
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
@@ -813,7 +829,8 @@ namespace VirtualClient.Actions
                metricCategorization,
                commandArguments,
                this.Tags,
-               telemetryContext);
+               telemetryContext,
+               toolVersion: fioVersion);
         }
 
         /// <summary>
@@ -887,13 +904,11 @@ namespace VirtualClient.Actions
 
         private async Task<string> GetCommandForJobFilesAsync(CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             string command = string.Empty;
-
             string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
+
             foreach (string templateJobFilePath in templateJobFilePaths)
             {
                 // Create/update new job file at runtime.

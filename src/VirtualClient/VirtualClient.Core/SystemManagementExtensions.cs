@@ -5,10 +5,10 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net.NetworkInformation;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Win32;
@@ -24,6 +24,47 @@ namespace VirtualClient
     /// </summary>
     public static class SystemManagementExtensions
     {
+        /// <summary>
+        /// Returns the package/dependency path information if it is registered.
+        /// </summary>
+        /// <param name="systemManagement">Provides dependencies for interfacing with the system.</param>
+        /// <param name="packageName">The name of the package (e.g. openssl).</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="throwIfNotfound">True to throw an exception if the package does not exist on the system.</param>
+        public static async Task<DependencyPath> GetPlatformSpecificPackageAsync(this ISystemManagement systemManagement, string packageName, CancellationToken cancellationToken, bool throwIfNotfound = true)
+        {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
+
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            IPackageManager packageManager = systemManagement.PackageManager;
+            PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
+
+            DependencyPath platformSpecificPackage = null;
+            DependencyPath package = await packageManager.GetPackageAsync(packageName, cancellationToken, throwIfNotfound);
+
+            if (package != null)
+            {
+                package = platformSpecifics.ToPlatformSpecificPath(
+                    package,
+                    platformSpecifics.Platform,
+                    platformSpecifics.CpuArchitecture);
+
+                if (fileSystem.Directory.Exists(package.Path))
+                {
+                    platformSpecificPackage = package;
+                }
+                else if (throwIfNotfound)
+                {
+                    throw new DependencyException(
+                        $"The package '{packageName}' exists but does not contain a folder for platform/architecture '{platformSpecifics.PlatformArchitectureName}'.",
+                        ErrorReason.WorkloadDependencyMissing);
+                }
+            }
+
+            return platformSpecificPackage;
+        }
+
         /// <summary>
         /// Returns a set of device drivers on the system.
         /// </summary>

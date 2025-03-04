@@ -11,6 +11,7 @@ namespace VirtualClient.Contracts
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Newtonsoft.Json;

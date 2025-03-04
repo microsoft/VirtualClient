@@ -345,10 +345,8 @@ namespace VirtualClient
                 command = "CoreInfo64a.exe";
             }
 
-            DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(
                 VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
-                this.Platform,
-                this.CpuArchitecture,
                 CancellationToken.None);
 
             string coreInfoExe = this.PlatformSpecifics.Combine(package.Path, command);

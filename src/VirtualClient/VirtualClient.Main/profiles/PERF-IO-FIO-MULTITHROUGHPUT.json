@@ -72,20 +72,20 @@
     ],
     "Dependencies": [
         {
-            "Type": "FormatDisks",
-            "Parameters": {
-                "Scenario": "InitializeDisks",
-                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
-            }
-        },
-        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "libaio1,libaio-dev",
-                "Packages-Dnf": "libaio,libaio-devel, lshw",
+                "Packages-Dnf": "libaio,libaio-devel,lshw,parted",
                 "Packages-Yum": "libaio,libaio-devel",
                 "Packages-Zypper": "libaio1,libaio-dev"
+            }
+        },
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks",
+                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

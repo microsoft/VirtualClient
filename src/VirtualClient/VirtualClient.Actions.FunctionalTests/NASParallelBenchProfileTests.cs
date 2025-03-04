@@ -176,7 +176,7 @@ namespace VirtualClient.Actions
                 };
             }
 
-            this.mockFixture.SetupWorkloadPackage("nasparallelbench", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("nasparallelbench", expectedFiles: expectedFiles);
         }
     }
 }

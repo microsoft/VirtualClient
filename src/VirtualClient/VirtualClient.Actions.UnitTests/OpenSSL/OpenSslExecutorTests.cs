@@ -297,13 +297,13 @@ namespace VirtualClient.Actions.CpuPerformance
             // The package that contains the OpenSSL toolsets.
             if (platform == PlatformID.Unix)
             {
-                this.fixture.SetupWorkloadPackage(
+                this.fixture.SetupPackage(
                     "OpenSSL",
                     expectedFiles: $"{PlatformSpecifics.GetPlatformArchitectureName(platform, architecture)}/bin/openssl");
             }
             else
             {
-                this.fixture.SetupWorkloadPackage(
+                this.fixture.SetupPackage(
                     "OpenSSL",
                     expectedFiles: $@"{PlatformSpecifics.GetPlatformArchitectureName(platform, architecture)}\bin\openssl.exe");
             }

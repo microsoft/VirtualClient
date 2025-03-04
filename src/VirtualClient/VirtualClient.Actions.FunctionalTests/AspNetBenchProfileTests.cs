@@ -131,17 +131,17 @@ namespace VirtualClient.Actions
             if (platform == PlatformID.Win32NT)
             {
                 this.mockFixture.Setup(PlatformID.Win32NT);
-                this.mockFixture.SetupWorkloadPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
-                this.mockFixture.SetupWorkloadPackage("bombardier", expectedFiles: @"win-x64\bombardier.exe");
-                this.mockFixture.SetupWorkloadPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet.exe");
+                this.mockFixture.SetupPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
+                this.mockFixture.SetupPackage("bombardier", expectedFiles: @"win-x64\bombardier.exe");
+                this.mockFixture.SetupPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet.exe");
             }
             else
             {
                 this.mockFixture.Setup(PlatformID.Unix);
 
-                this.mockFixture.SetupWorkloadPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
-                this.mockFixture.SetupWorkloadPackage("bombardier", expectedFiles: @"linux-x64\bombardier");
-                this.mockFixture.SetupWorkloadPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet");
+                this.mockFixture.SetupPackage("aspnetbenchmarks", expectedFiles: @"aspnetbench");
+                this.mockFixture.SetupPackage("bombardier", expectedFiles: @"linux-x64\bombardier");
+                this.mockFixture.SetupPackage("dotnetsdk", expectedFiles: @"packages\dotnet\dotnet");
             }
 
             this.mockFixture.SetupDisks(withRemoteDisks: false);

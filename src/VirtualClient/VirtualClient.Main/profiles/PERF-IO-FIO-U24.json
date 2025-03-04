@@ -1,9 +1,9 @@
 {
-    "Description": "FIO I/O Stress Performance Workload",
+    "Description": "FIO I/O Stress Performance Workload on Ubuntu 24",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "02:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Ubuntu24"
     },
     "Parameters": {
         "DiskFillSize": "500G",
@@ -488,7 +488,7 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "libaio1,libaio-dev",
+                "Packages-Apt": "libaio1t64,libaio-dev,fio",
                 "Packages-Dnf": "libaio,libaio-devel,lshw,parted",
                 "Packages-Yum": "libaio,libaio-devel",
                 "Packages-Zypper": "libaio1,libaio-dev"
@@ -498,16 +498,6 @@
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "InitializeDisks"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallFIOPackage",
-                "BlobContainer": "packages",
-                "BlobName": "fio.3.30.0.zip",
-                "PackageName": "fio",
-                "Extract": true
             }
         }
     ]

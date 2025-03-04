@@ -470,7 +470,7 @@ namespace VirtualClient.Actions
                     this.fixture.Combine(platformArch, "SomeTool2")
                 };
 
-            this.fixture.SetupWorkloadPackage(workloadName, expectedFiles: expectedBinaries.ToArray());
+            this.fixture.SetupPackage(workloadName, expectedFiles: expectedBinaries.ToArray());
             this.workloadPackage = this.fixture.PackageManager.First();
 
             // Expectation 4: The executor already executed once and applied expected settings. This requires a reboot.

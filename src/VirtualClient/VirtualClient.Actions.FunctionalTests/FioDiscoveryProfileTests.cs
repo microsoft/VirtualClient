@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupWorkloadPackage("fio", expectedFiles: $@"linux-x64/fio");
+            this.mockFixture.SetupPackage("fio", expectedFiles: $@"linux-x64/fio");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupWorkloadPackage("fio", expectedFiles: $@"linux-x64/fio");
+            this.mockFixture.SetupPackage("fio", expectedFiles: $@"linux-x64/fio");
             string jobFilePath = this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.ScriptsDirectory, "fio/oltp-c.fio.jobfile");
             this.mockFixture.SetupFile(jobFilePath, Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("oltp-c.fio.jobfile")));
 

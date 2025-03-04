@@ -3,48 +3,37 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using Newtonsoft.Json.Linq;
-    using NUnit.Framework;
-    using Polly;
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Net;
-    using System.Net.Http;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Actions.NetworkPerformance;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.LatteExecutor2;
 
     [TestFixture]
     [Category("Unit")]
     public class LatteServerExecutorTests2
     {
-        private MockFixture mockFixture;
-        private DependencyPath mockPath;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "Examples", "Latte");
 
-        [SetUp]
-        public void SetupTest()
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
+
+        public void SetupTest(PlatformID platformID, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
-
-        }
-
-        public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
-        {
             this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockPackage = new DependencyPath("latte", this.mockFixture.PlatformSpecifics.GetPackagePath("latte"));
+            this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["PackageName"] = "latte";
             this.mockFixture.Parameters["Connections"] = "256";
             this.mockFixture.Parameters["TestDuration"] = "300";
             this.mockFixture.Parameters["WarmupTime"] = "300";
@@ -54,12 +43,10 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Workload"] = "CPS";
             this.mockFixture.Parameters["Scenario"] = "LatteMock";
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "Latte", "Latte_Results_Example.txt");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = File.ReadAllText(this.mockFixture.Combine(LatteServerExecutorTests2.ExamplesDirectory, "Latte_Results_Example.txt"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+                .ReturnsAsync(exampleResults);
         }
 
         [Test]
@@ -67,26 +54,27 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task LatteServerExecutorExecutesAsExpectedForResetInstructions(PlatformID platformID, Architecture architecture)
         {
-            this.SetupDefaultMockApiBehavior(platformID, architecture);
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            this.SetupTest(platformID, architecture);
+            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
-            TestLatteServerExecutor executor = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-            string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            int processExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            using (TestLatteServerExecutor executor = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                processExecuted++;
-                commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
-            };
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                string agentId = $"{Environment.MachineName}-Server";
+                this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            TestLatteServerExecutor component = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+                int processExecuted = 0;
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                {
+                    processExecuted++;
+                    commandsExecuted.Add($"{file} {arguments}".Trim());
+                    return this.mockFixture.Process;
+                };
 
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            Assert.AreEqual(0, processExecuted);
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.AreEqual(0, processExecuted);
+            }
         }
 
         [Test]
@@ -94,27 +82,28 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task LatteServerExecutorExecutesAsExpectedForStartInstructions(PlatformID platformID, Architecture architecture)
         {
-            this.SetupDefaultMockApiBehavior(platformID, architecture);
+            this.SetupTest(platformID, architecture);
             this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerStartExecution;
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, Architecture.X64).Path;
+            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platformID, Architecture.X64).Path;
             List<string> commandsExecuted = new List<string>();
-            TestLatteServerExecutor executor = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-            string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            int processExecuted = 0;
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            using (TestLatteServerExecutor executor = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                processExecuted++;
-                commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
-            };
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                string agentId = $"{Environment.MachineName}-Server";
+                this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            TestLatteServerExecutor component = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+                int processExecuted = 0;
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                {
+                    processExecuted++;
+                    commandsExecuted.Add($"{file} {arguments}".Trim());
+                    return this.mockFixture.Process;
+                };
 
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            Assert.AreEqual(0, processExecuted);
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.AreEqual(0, processExecuted);
+            }
         }
 
         private class TestLatteServerExecutor : LatteServerExecutor2

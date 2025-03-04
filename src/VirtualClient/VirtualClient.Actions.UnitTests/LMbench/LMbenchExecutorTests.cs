@@ -5,19 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Contracts;
     using VirtualClient.Common.Telemetry;
-    using System.Reflection;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -27,7 +21,7 @@ namespace VirtualClient.Actions
         private DependencyPath mockPackage;
 
         [SetUp]
-        public void SetupDefaults()
+        public void SetupTest()
         {
             this.Setup(PlatformID.Unix);
 
@@ -35,7 +29,7 @@ namespace VirtualClient.Actions
             // workload is compiled using Make and has a build step that runs the memory test. This uses commands in the
             // 'scripts' folder.
             this.mockPackage = new DependencyPath("lmbench", this.PlatformSpecifics.GetPackagePath("lmbench"));
-            this.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.SetupPackage(this.mockPackage);
             this.Directory.Setup(dir => dir.Exists(It.IsAny<string>())).Returns(true);
 
             this.Parameters = new Dictionary<string, IConvertible>()

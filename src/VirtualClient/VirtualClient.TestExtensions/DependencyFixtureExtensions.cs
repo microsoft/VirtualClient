@@ -303,7 +303,7 @@ namespace VirtualClient
         /// exactly as supplied (e.g. fio.exe -> ...\VirtualClient\packages\fio\1.0.0\fio.exe,
         /// runtimes\win-x64\fio.exe -> ...\VirtualClient\packages\fio\1.0.0\runtimes\win-x64\fio.exe)
         /// </param>
-        public static DependencyFixture SetupWorkloadPackage(
+        public static DependencyFixture SetupPackage(
             this DependencyFixture fixture, 
             string packageName,
             IDictionary<string, IConvertible> metadata = null,
