@@ -47,11 +47,6 @@ namespace VirtualClient
         public Action OnGetDisks { get; set; }
 
         /// <summary>
-        /// Mimics the behavior of getting disks with filter.
-        /// </summary>
-        public Action<string> OnGetFilterDisks { get; set; }
-
-        /// <summary>
         /// Creates a mount point for the volume provided.
         /// </summary>
         /// <param name="volume">The partition/volume to which the mount point will be created.</param>
