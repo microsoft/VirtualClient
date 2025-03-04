@@ -169,21 +169,6 @@ namespace VirtualClient
             });
         }
 
-        /// <summary>
-        /// Gets the set of physical disks that exist on the system.
-        /// </summary>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="diskFilter">The filter to apply to the disks.</param>
-        public override async Task<IEnumerable<Disk>> GetDisksAsync(string diskFilter, CancellationToken cancellationToken)
-        {
-            IEnumerable<Disk> disks = await this.GetDisksAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Unix).ToList();
-
-            return filteredDisks;
-        }
-
         private Task AssignMountPointAsync(DiskVolume volume, string mountPoint, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             int retries = -1;

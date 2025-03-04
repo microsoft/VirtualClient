@@ -56,7 +56,7 @@ namespace VirtualClient.Actions.DiskPerformance
 
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("fio", this.mockFixture.GetPackagePath("fio")));
             this.mockFixture.File.OnFileExists().Returns(true);
             this.mockFixture.File.Setup(file => file.ReadAllText(It.IsAny<string>())).Returns(string.Empty);

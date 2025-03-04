@@ -357,7 +357,7 @@ namespace VirtualClient
             this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
 
 
-            IEnumerable<Disk> disks = await this.diskManager.GetDisksAsync("osdisk:false", CancellationToken.None)
+            IEnumerable<Disk> disks = await this.diskManager.GetFilteredDisksAsync(PlatformID.Unix, "osdisk:false", CancellationToken.None)
                 .ConfigureAwait(false);
 
             Assert.AreEqual(disks.Count(), 3);

@@ -1560,7 +1560,7 @@ namespace VirtualClient
                 }
             };
 
-            IEnumerable<Disk> disks = await this.diskManager.GetDisksAsync(DiskFilters.DefaultDiskFilter, CancellationToken.None)
+            IEnumerable<Disk> disks = await this.diskManager.GetFilteredDisksAsync(PlatformID.Win32NT, DiskFilters.DefaultDiskFilter, CancellationToken.None)
                 .ConfigureAwait(false);
 
             Assert.AreEqual(disks.Count(), 1);

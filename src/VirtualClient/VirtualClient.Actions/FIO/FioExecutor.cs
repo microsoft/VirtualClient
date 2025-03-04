@@ -305,7 +305,7 @@ namespace VirtualClient.Actions
 
                     this.DiskFilter = string.IsNullOrWhiteSpace(this.DiskFilter) ? DiskFilters.DefaultDiskFilter : this.DiskFilter;
 
-                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(this.DiskFilter, cancellationToken)
+                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetFilteredDisksAsync(this.Platform, this.DiskFilter, cancellationToken)
                         .ConfigureAwait(false);
 
                     if (disks?.Any() != true)
