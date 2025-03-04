@@ -349,6 +349,20 @@ namespace VirtualClient
             Assert.IsTrue(attempts == 4);
         }
 
+        [Test]
+        public async Task UnixDiskManagerReturnsListofFilteredDisks()
+        {
+            this.testProcess.OnHasExited = () => true;
+            this.testProcess.OnStart = () => true;
+            this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
+
+
+            IEnumerable<Disk> disks = await this.diskManager.GetFilteredDisksAsync(PlatformID.Unix, "osdisk:false", CancellationToken.None)
+                .ConfigureAwait(false);
+
+            Assert.AreEqual(disks.Count(), 3);
+        }
+
         private class TestUnixDiskManager : UnixDiskManager
         {
             public TestUnixDiskManager(ProcessManager processManager)

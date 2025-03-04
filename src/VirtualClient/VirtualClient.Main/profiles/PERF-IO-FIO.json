@@ -501,6 +501,12 @@
             }
         },
         {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints"
+            }
+        },
+        {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallFIOPackage",
