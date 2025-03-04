@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -140,6 +141,20 @@ namespace VirtualClient.Actions
                     {
                         SysbenchMetricsParser parser = new SysbenchMetricsParser(text);
                         IList<Metric> metrics = parser.Parse();
+                        string sysbenchVersion = null;
+
+                        var sysbenchVersionMetric = metrics.FirstOrDefault();
+                        if (sysbenchVersionMetric != null && sysbenchVersionMetric.Metadata.TryGetValue("sysbench_version", out var versionValue))
+                        {
+                            sysbenchVersion = versionValue?.ToString();
+                        }
+
+                        if (!string.IsNullOrEmpty(sysbenchVersion))
+                        {
+                            this.MetadataContract.Add("sysbench_version", sysbenchVersion, MetadataContractCategory.Dependencies);
+                        }
+
+                        this.MetadataContract.Apply(telemetryContext);
 
                         this.Logger.LogMetrics(
                             toolName: "Sysbench",
@@ -150,7 +165,8 @@ namespace VirtualClient.Actions
                             null,
                             scenarioArguments: this.sysbenchLoggingArguments,
                             this.Tags,
-                            telemetryContext);
+                            telemetryContext,
+                            toolVersion: sysbenchVersion);
                     }
                     catch (Exception exc)
                     {
@@ -247,7 +263,7 @@ namespace VirtualClient.Actions
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 SysbenchExecutor.PythonCommand,
-                script + this.sysbenchExecutionArguments,
+                script + sysbenchCleanupArguments,
                 this.SysbenchPackagePath,
                 telemetryContext,
                 cancellationToken))
@@ -256,8 +272,6 @@ namespace VirtualClient.Actions
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
                 }
             }
         }

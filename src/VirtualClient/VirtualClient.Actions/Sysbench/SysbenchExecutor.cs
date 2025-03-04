@@ -411,7 +411,7 @@ namespace VirtualClient.Actions
 
                 List<Metric> metrics = new List<Metric>();
                 double duration = (process.ExitTime - process.StartTime).TotalMinutes;
-                metrics.Add(new Metric("PopulateDatabaseTime_Minutes", duration, "minutes", MetricRelativity.LowerIsBetter));
+                metrics.Add(new Metric("PopulateDatabaseDuration", duration, "minutes", MetricRelativity.LowerIsBetter));
 
                 this.Logger.LogMetrics(
                     toolName: "Sysbench",

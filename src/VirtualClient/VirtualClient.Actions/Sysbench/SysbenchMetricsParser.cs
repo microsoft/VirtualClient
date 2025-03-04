@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            var match = Regex.Match(this.RawText, @"sysbench\s+([\d\.]+-[\w\d]+)");
+            var match = Regex.Match(this.RawText, @"sysbench\s+([\d]+\.[\d]+\.[\d]+(?:-\w+)?)");
             string sysbenchversion = match.Success ? match.Groups[1].Value : string.Empty;
             this.metricMetadata["sysbench_version"] = sysbenchversion;
             this.Preprocess();
