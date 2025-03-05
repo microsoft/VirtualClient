@@ -21,10 +21,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extensions_Configuration_Json_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(Microsoft_Extensions_Logging_Console_PackageVersion)" />
-        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
     </ItemGroup>
 
     <ItemGroup>

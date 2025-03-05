@@ -315,6 +315,12 @@ namespace VirtualClient
             fixture.PackageManager.RegisterPackageAsync(package, CancellationToken.None)
                 .GetAwaiter().GetResult();
 
+            // Platform-specific directories.
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.LinuxArm64));
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.LinuxX64));
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.WinArm64));
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.WinX64));
+
             if (expectedFiles?.Any() == true)
             {
                 foreach (string filePath in expectedFiles)
