@@ -75,5 +75,15 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(LinuxDistribution.AzLinux, this.testParser.Parse().LinuxDistribution);
             Assert.AreEqual("Microsoft Azure Linux 3.0", this.testParser.Parse().OperationSystemFullName);
         }
+
+        [Test]
+        public void OsReleaseFileParserRecognizeAwsLinux()
+        {
+            string outputPath = Path.Combine(this.ExamplePath, "AwsLinuxExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new OsReleaseFileParser(this.rawText);
+            Assert.AreEqual(LinuxDistribution.AwsLinux, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual("Amazon Linux 2023.6.20250218", this.testParser.Parse().OperationSystemFullName);
+        }
     }
 }
