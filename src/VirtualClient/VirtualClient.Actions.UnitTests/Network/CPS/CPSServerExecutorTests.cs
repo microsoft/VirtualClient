@@ -24,36 +24,55 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class CPSServerExecutorTests
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests2), "Examples", "CPS");
+
         private MockFixture mockFixture;
-        private DependencyPath mockPath;
-        private NetworkingWorkloadState networkingWorkloadState;
+        private DependencyPath mockPackage;
+        private NetworkingWorkloadState workloadState;
+
+        public void SetupApiCalls()
+        {
+            this.workloadState = new NetworkingWorkloadState();
+            this.workloadState.Scenario = "AnyScenario";
+            this.workloadState.Tool = NetworkingWorkloadTool.CPS;
+            this.workloadState.ToolState = NetworkingWorkloadToolState.Running;
+            this.workloadState.Protocol = "UDP";
+            this.workloadState.TestMode = "MockTestMode";
+
+            var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.workloadState);
+
+            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+        }
 
         [SetUp]
         public void SetupTest()
         {
             this.mockFixture = new MockFixture();
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockPackage = new DependencyPath("cps", this.mockFixture.PlatformSpecifics.GetPackagePath("cps"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["PackageName"] = "cps";
             this.mockFixture.Parameters["Connections"] = "256";
             this.mockFixture.Parameters["TestDuration"] = "300";
             this.mockFixture.Parameters["WarmupTime"] = "30";
             this.mockFixture.Parameters["Delaytime"] = "0";
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = File.ReadAllText(this.mockFixture.Combine(CPSServerExecutorTests.ExamplesDirectory, "CPS_Example_Results_Server.txt"));
 
-            this.mockFixture.Process.StandardOutput.Append(results);
+            this.mockFixture.Process.StandardOutput.Append(exampleResults);
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+                .ReturnsAsync(exampleResults);
 
-            this.SetupNetworkingWorkloadState();
+            this.SetupApiCalls();
         }
 
         [Test]
@@ -88,20 +107,6 @@ namespace VirtualClient.Actions
             Assert.AreEqual(1, processExecuted);
         }
 
-        private void SetupNetworkingWorkloadState()
-        {
-            this.networkingWorkloadState = new NetworkingWorkloadState();
-            this.networkingWorkloadState.Scenario = "AnyScenario";
-            this.networkingWorkloadState.Tool = NetworkingWorkloadTool.CPS;
-            this.networkingWorkloadState.ToolState = NetworkingWorkloadToolState.Running;
-            this.networkingWorkloadState.Protocol = "UDP";
-            this.networkingWorkloadState.TestMode = "MockTestMode";
-
-            var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.networkingWorkloadState);
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
-        }
         private class TestCPSServerExecutor : CPSServerExecutor
         {
             public TestCPSServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

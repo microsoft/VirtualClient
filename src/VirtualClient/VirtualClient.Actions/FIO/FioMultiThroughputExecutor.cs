@@ -543,9 +543,7 @@ namespace VirtualClient.Actions
                 telemetryContext.AddContext(nameof(ioEngine), ioEngine);
                 telemetryContext.AddContext(nameof(this.TemplateJobFile), this.TemplateJobFile);
 
-                IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-                DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                    .ConfigureAwait(false);
+                DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
                 string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
                 string templateJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, this.TemplateJobFile);
@@ -558,8 +556,7 @@ namespace VirtualClient.Actions
                 metricsMetadata[nameof(this.CommandLine)] = process.CommandArguments;
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
-                    .ConfigureAwait(false);
+                    await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata);
                 }
             }
         }

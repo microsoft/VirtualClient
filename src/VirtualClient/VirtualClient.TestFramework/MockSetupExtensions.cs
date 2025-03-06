@@ -5,18 +5,19 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
-    using System.Net;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using Moq.Language;
     using Moq.Language.Flow;
     using Newtonsoft.Json.Linq;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -26,31 +27,7 @@ namespace VirtualClient
     /// </summary>
     public static class MockSetupExtensions
     {
-        /// <summary>
-        /// Removes all instances of services that match the type defined from the dependencies
-        /// collectin.
-        /// </summary>
-        /// <typeparam name="TService">The data type of the services to remove.</typeparam>
-        /// <param name="dependencies">The service dependency collection from which the services will be removed.</param>
-        public static IServiceCollection RemoveAll<TService>(this IServiceCollection dependencies)
-        {
-            dependencies.ThrowIfNull(nameof(dependencies));
-
-            List<ServiceDescriptor> descriptorsToRemove = new List<ServiceDescriptor>();
-            Type targetType = typeof(TService);
-            for (int i = 0; i < dependencies.Count; i++)
-            {
-                ServiceDescriptor descriptor = dependencies[i];
-                if (descriptor.ServiceType == targetType || descriptor.ServiceType.GetInterfaces().Contains(targetType))
-                {
-                    descriptorsToRemove.Add(descriptor);
-                }
-            }
-
-            descriptorsToRemove.ForEach(descriptor => dependencies.Remove(descriptor));
-
-            return dependencies;
-        }
+        private static Random randomGen = new Random();
 
         /// <summary>
         /// Setup default behavior for creating/saving state objects using the <see cref="IApiClient"/>.
@@ -85,6 +62,16 @@ namespace VirtualClient
             {
                 return apiClient.Setup(client => client.CreateStateAsync<TState>(stateId, It.IsAny<TState>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
             }
+        }
+
+        /// <summary>
+        /// Setup default behavior for retrieving disks using an <see cref="IDiskManager"/> instance.
+        /// </summary>
+        public static ISetup<IDiskManager, Task<IEnumerable<Disk>>> OnGetDisks(this Mock<IDiskManager> diskManager)
+        {
+            diskManager.ThrowIfNull(nameof(diskManager));
+
+            return diskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()));
         }
 
         /// <summary>
@@ -337,6 +324,111 @@ namespace VirtualClient
                 {
                     evaluate.Invoke(stateId, state);
                 });
+        }
+
+        /// <summary>
+        /// Setup default properties and behaviors for a mock <see cref="IFileInfo"/> object.
+        /// </summary>
+        public static Mock<IFileInfo> Setup(this Mock<IFileInfo> mockFileInfo, string filePath, bool exists = true, long length = 12345, DateTime? creationTime = null, DateTime? lastModified = null)
+        {
+            string directoryPath = MockFixture.GetDirectoryName(filePath);
+
+            Mock<IDirectoryInfo> mockDirectoryInfo = new Mock<IDirectoryInfo>();
+            mockDirectoryInfo.Setup(dir => dir.Name).Returns(Path.GetFileName(filePath));
+            mockDirectoryInfo.Setup(dir => dir.Exists).Returns(exists);
+            mockDirectoryInfo.Setup(dir => dir.FullName).Returns(directoryPath);
+            mockDirectoryInfo.Setup(dir => dir.CreationTime).Returns(creationTime != null ? creationTime.Value : DateTime.Now.AddMinutes(-5));
+            mockDirectoryInfo.Setup(dir => dir.CreationTimeUtc).Returns(creationTime != null ? creationTime.Value : DateTime.UtcNow.AddMinutes(-5));
+            mockDirectoryInfo.Setup(dir => dir.LastAccessTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockDirectoryInfo.Setup(dir => dir.LastAccessTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+            mockDirectoryInfo.Setup(dir => dir.LastWriteTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockDirectoryInfo.Setup(dir => dir.LastWriteTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+
+            mockFileInfo.Setup(file => file.Name).Returns(Path.GetFileName(filePath));
+            mockFileInfo.Setup(file => file.Exists).Returns(exists);
+            mockFileInfo.Setup(file => file.FullName).Returns(filePath);
+            mockFileInfo.Setup(file => file.Directory).Returns(mockDirectoryInfo.Object);
+            mockFileInfo.Setup(file => file.DirectoryName).Returns(directoryPath);
+            mockFileInfo.Setup(file => file.Extension).Returns(Path.GetExtension(filePath));
+            mockFileInfo.Setup(file => file.CreationTime).Returns(creationTime != null ? creationTime.Value : DateTime.Now.AddMinutes(-5));
+            mockFileInfo.Setup(file => file.CreationTimeUtc).Returns(creationTime != null ? creationTime.Value : DateTime.UtcNow.AddMinutes(-5));
+            mockFileInfo.Setup(file => file.LastAccessTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockFileInfo.Setup(file => file.LastAccessTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+            mockFileInfo.Setup(file => file.LastWriteTime).Returns(lastModified != null ? lastModified.Value : DateTime.Now);
+            mockFileInfo.Setup(file => file.LastWriteTimeUtc).Returns(lastModified != null ? lastModified.Value : DateTime.UtcNow);
+            mockFileInfo.Setup(file => file.Length).Returns(12345);
+
+            return mockFileInfo;
+        }
+
+        /// <summary>
+        /// Setup default property values and behaviors for a mock system/OS process.
+        /// </summary>
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Mock object support.")]
+        public static Mock<IProcessProxy> Setup(
+            this Mock<IProcessProxy> mockProcess,
+            string command = null,
+            string commandArguments = null,
+            string workingDirectory = null,
+            string standardOutput = null,
+            string standardError = null,
+            int? processId = null,
+            int? exitCode = null,
+            bool hasExited = true)
+        {
+            mockProcess.ThrowIfNull(nameof(mockProcess));
+
+            ProcessStartInfo mockStartInfo = MockSetupExtensions.CreateMockProcessStartInfo(command, commandArguments, workingDirectory);
+            
+            ConcurrentBuffer standardOut = new ConcurrentBuffer();
+            if (!string.IsNullOrWhiteSpace(standardOutput))
+            {
+                standardOut.Append(standardOutput);
+            }
+
+            ConcurrentBuffer standardErr = new ConcurrentBuffer();
+            if (!string.IsNullOrWhiteSpace(standardError))
+            {
+                standardOut.Append(standardError);
+            }
+
+            int effectiveProcessId = processId ?? MockSetupExtensions.randomGen.Next(100, 10000000);
+
+            mockProcess.SetupGet(p => p.ExitCode).Returns(exitCode ?? 0);
+            mockProcess.SetupGet(p => p.HasExited).Returns(hasExited);
+            mockProcess.SetupGet(p => p.Id).Returns(effectiveProcessId);
+            mockProcess.SetupGet(p => p.StartInfo).Returns(mockStartInfo);
+            mockProcess.SetupGet(p => p.Name).Returns(Path.GetFileNameWithoutExtension(mockStartInfo.FileName));
+            mockProcess.SetupGet(p => p.StandardError).Returns(standardErr);
+            mockProcess.SetupGet(p => p.StandardOutput).Returns(standardOut);
+            mockProcess.SetupGet(p => p.StandardInput).Returns(new StreamWriter(new MemoryStream()));
+            mockProcess.Setup(p => p.Start()).Returns(true);
+            mockProcess.SetupGet(p => p.ProcessDetails).Returns(new ProcessDetails
+            {
+                Id = effectiveProcessId,
+                CommandLine = $"{command} {commandArguments}",
+                ExitCode = exitCode ?? 0,
+                StandardError = standardError,
+                StandardOutput = standardOutput,
+                ToolName = Path.GetFileNameWithoutExtension(command),
+                WorkingDirectory = workingDirectory
+            });
+
+            return mockProcess;
+        }
+
+        private static ProcessStartInfo CreateMockProcessStartInfo(string command = null, string commandArguments = null, string workingDirectory = null)
+        {
+            return new ProcessStartInfo
+            {
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                Arguments = commandArguments ?? "--option1=value --option2=1234",
+                FileName = command ?? "SomeCommand.exe",
+                UseShellExecute = false,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                WorkingDirectory = workingDirectory ?? "./Any/Working/Directory"
+            };
         }
     }
 }

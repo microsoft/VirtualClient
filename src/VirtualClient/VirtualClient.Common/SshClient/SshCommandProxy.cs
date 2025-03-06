@@ -38,7 +38,7 @@ namespace VirtualClient.Common
         public virtual string Error => this.UnderlyingSshCommand.Error;
 
         /// <inheritdoc />
-        public virtual int ExitStatus => this.UnderlyingSshCommand.ExitStatus;
+        public virtual int ExitStatus => this.UnderlyingSshCommand.ExitStatus ?? -1;
 
         /// <inheritdoc />
         public virtual string Result => this.UnderlyingSshCommand.Result;

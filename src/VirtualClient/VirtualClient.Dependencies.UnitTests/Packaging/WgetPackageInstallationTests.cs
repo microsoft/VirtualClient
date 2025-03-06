@@ -19,8 +19,9 @@ namespace VirtualClient.Dependencies
     internal class WgetPackageInstallationTests
     {
         private MockFixture mockFixture;
+        private DependencyPath mockPackage;
 
-        public void SetupDefaults(PlatformID platform, Architecture architecture)
+        public void SetupTest(PlatformID platform, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
@@ -43,10 +44,15 @@ namespace VirtualClient.Dependencies
             }
 
             // The wget/wget2 toolset is used to download the packages from the internet.
-            this.mockFixture.PackageManager.OnGetPackage("wget").ReturnsAsync(new DependencyPath("wget", this.mockFixture.GetPackagePath("wget")));
+            this.mockPackage = new DependencyPath("wget", this.mockFixture.GetPackagePath("wget"));
+            this.mockFixture.SetupPackage(this.mockPackage);
 
             // Setup the wget/wget2 files to exist
-            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.Contains("wget")))).Returns(true);
+            this.mockFixture.Directory.Setup(dir => dir.Exists(It.Is<string>(f => f.Contains("wget"))))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.Contains("wget"))))
+                .Returns(true);
         }
 
         [Test]
@@ -54,7 +60,7 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public void WgetPackageInstallationThrowsIfTheWgetTooletPackageIsNotFoundOnWindows(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaults(platform, architecture);
+            this.SetupTest(platform, architecture);
 
             // Setup the case where the package is not found on the system.
             this.mockFixture.PackageManager.OnGetPackage("wget").ReturnsAsync(null as DependencyPath);
@@ -72,7 +78,7 @@ namespace VirtualClient.Dependencies
         [TestCase(Architecture.Arm64)]
         public async Task WgetPackageInstallationExecutesTheExpectedOperationsOnUnixSystems(Architecture architecture)
         {
-            this.SetupDefaults(PlatformID.Unix, architecture);
+            this.SetupTest(PlatformID.Unix, architecture);
 
             using (WgetPackageInstallation installation = new WgetPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -117,7 +123,7 @@ namespace VirtualClient.Dependencies
         [TestCase(Architecture.Arm64)]
         public async Task WgetPackageInstallationExecutesTheExpectedOperationsOnWindowsSystems(Architecture architecture)
         {
-            this.SetupDefaults(PlatformID.Win32NT, architecture);
+            this.SetupTest(PlatformID.Win32NT, architecture);
 
             using (WgetPackageInstallation installation = new WgetPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -164,7 +170,7 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "wget.exe")]
         public async Task WgetPackageInstallationExecutesTheExpectedOperationsForNonArchiveFileType(PlatformID platform, Architecture architecture, string wgetBinary)
         {
-            this.SetupDefaults(platform, architecture);
+            this.SetupTest(platform, architecture);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
                 {
@@ -217,7 +223,7 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task WgetPackageInstallationRetriesOnTransientFailures(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaults(platform, architecture);
+            this.SetupTest(platform, architecture);
 
             using (WgetPackageInstallation installation = new WgetPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {

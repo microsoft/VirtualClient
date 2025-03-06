@@ -966,13 +966,11 @@ namespace VirtualClient.Actions
 
         private async Task<string> GetCommandForJobFilesAsync(CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             string command = string.Empty;
-
             string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
+
             foreach (string templateJobFilePath in templateJobFilePaths)
             {
                 // Create/update new job file at runtime.

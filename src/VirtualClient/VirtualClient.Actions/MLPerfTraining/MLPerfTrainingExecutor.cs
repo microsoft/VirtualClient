@@ -152,9 +152,8 @@ namespace VirtualClient.Actions
 
             await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken);
-            this.executionPath = this.PlatformSpecifics.Combine(workloadPackage.Path, "NVIDIA", "benchmarks", this.Model, "implementations", this.Implementation);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            this.executionPath = this.Combine(workloadPackage.Path, "NVIDIA", "benchmarks", this.Model, "implementations", this.Implementation);
 
             await this.SetupDocker(telemetryContext, cancellationToken);
         }

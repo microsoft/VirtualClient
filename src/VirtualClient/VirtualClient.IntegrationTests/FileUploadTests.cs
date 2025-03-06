@@ -12,6 +12,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using NUnit.Framework;
     using VirtualClient.Contracts;
     using VirtualClient.Monitors;

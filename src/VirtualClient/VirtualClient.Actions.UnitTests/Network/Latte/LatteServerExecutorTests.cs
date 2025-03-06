@@ -3,18 +3,17 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using NUnit.Framework;
-    using Polly;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
     using System.Net.Http;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
+    using Polly;
     using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
@@ -24,43 +23,33 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LatteServerExecutorTests
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(LatteExecutorTests2), "Examples", "Latte");
+
         private MockFixture mockFixture;
-        private DependencyPath mockPath;
+        private DependencyPath mockPackage;
         private NetworkingWorkloadState networkingWorkloadState;
 
         [SetUp]
         public void SetupTest()
         {
             this.mockFixture = new MockFixture();
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockPackage = new DependencyPath("networking", this.mockFixture.PlatformSpecifics.GetPackagePath("networking"));
+            this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["PackageName"] = "networking";
             this.mockFixture.Parameters["Connections"] = "256";
             this.mockFixture.Parameters["TestDuration"] = "300";
             this.mockFixture.Parameters["WarmupTime"] = "300";
             this.mockFixture.Parameters["Protocol"] = "Tcp";
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "Latte", "Latte_Results_Example.txt");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = File.ReadAllText(this.mockFixture.Combine(LatteServerExecutorTests.ExamplesDirectory, "Latte_Results_Example.txt"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+                .ReturnsAsync(exampleResults);
 
             this.SetupNetworkingWorkloadState();
-        }
-
-        [Test]
-        [Ignore("The networking workload is being refactored/rewritten. As such the unit tests will be rewritten as well.")]
-        public void LatteServerExecutorThrowsOnUnsupportedOS()
-        {
-            this.mockFixture.SystemManagement.SetupGet(sm => sm.Platform).Returns(PlatformID.Other);
-            TestLatteServerExecutor component = new TestLatteServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-
-            Assert.ThrowsAsync<NotSupportedException>(() => component.ExecuteAsync(CancellationToken.None));
         }
 
         [Test]

@@ -60,25 +60,19 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.packageDirectory = workloadPackage.Path;
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
-                    .ConfigureAwait(false);
-
+                DependencyPath cygwinPackage = await this.GetPackageAsync("cygwin", CancellationToken.None, throwIfNotfound: true);
                 this.cygwinPackageDirectory = cygwinPackage.Path;
             }
 
-            await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.packageDirectory, @"lapack_testing.py"), this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.systemManagement.MakeFileExecutableAsync(this.Combine(this.packageDirectory, @"lapack_testing.py"), this.Platform, cancellationToken);
 
-            this.ScriptFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "LapackTestScript.sh");
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
+            this.ScriptFilePath = this.Combine(workloadPackage.Path, "LapackTestScript.sh");
+            this.ResultsFilePath = this.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
         }
 
         /// <summary>

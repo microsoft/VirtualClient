@@ -102,8 +102,7 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             Task serverTask = this.StartAspNetServerAsync(cancellationToken);
-            await this.RunBombardierAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            await this.RunBombardierAsync(telemetryContext, cancellationToken);
 
             this.killServer.Invoke();
         }
@@ -114,29 +113,17 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // This workload needs three packages: aspnetbenchmarks, dotnetsdk, bombardier
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (workloadPackage == null)
-            {
-                throw new DependencyException(
-                    $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None, throwIfNotfound: true);
 
             // the directory we are looking for is at the src/Benchmarks
             this.aspnetBenchDirectory = this.Combine(workloadPackage.Path, "src", "Benchmarks");
 
-            DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath bombardierPackage = await this.GetPlatformSpecificPackageAsync(this.BombardierPackageName, cancellationToken);
             this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
 
-            await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken);
 
-            DependencyPath dotnetSdkPackage = await this.packageManager.GetPackageAsync(this.DotNetSdkPackageName, CancellationToken.None)
-                .ConfigureAwait(false);
+            DependencyPath dotnetSdkPackage = await this.packageManager.GetPackageAsync(this.DotNetSdkPackageName, CancellationToken.None);
 
             if (dotnetSdkPackage == null)
             {
@@ -150,8 +137,7 @@ namespace VirtualClient.Actions
             // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
-            await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, cancellationToken);
 
             // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net8.0\Benchmarks.dll"
             this.aspnetBenchDllPath = this.Combine(

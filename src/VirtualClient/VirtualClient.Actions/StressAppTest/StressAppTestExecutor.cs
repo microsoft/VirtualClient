@@ -87,16 +87,13 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
-                this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.PackageDirectory = workloadPackage.Path;
 
             switch (this.Platform)
             {
                 case PlatformID.Unix:
-                    this.ExecutableName = this.PlatformSpecifics.Combine(this.PackageDirectory, "stressapptest");
+                    this.ExecutableName = this.Combine(this.PackageDirectory, "stressapptest");
                     break;
 
                 default:
@@ -106,8 +103,7 @@ namespace VirtualClient.Actions
                         ErrorReason.PlatformNotSupported);
             }
 
-            await this.systemManagement.MakeFileExecutableAsync(this.ExecutableName, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.MakeFileExecutableAsync(this.ExecutableName, this.Platform, cancellationToken);
 
             if (!this.fileSystem.File.Exists(this.ExecutableName))
             {

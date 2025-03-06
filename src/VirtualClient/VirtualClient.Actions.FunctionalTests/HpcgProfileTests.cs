@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
             {
                 { PackageMetadata.ExecutablePath, "spack" }
             };
-            this.mockFixture.SetupWorkloadPackage("spack", specifics, expectedFiles: @"spack");
+            this.mockFixture.SetupPackage("spack", specifics, expectedFiles: @"spack");
             this.mockFixture.SetupDisks(withRemoteDisks: false);
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))

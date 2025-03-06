@@ -161,10 +161,7 @@ namespace VirtualClient.Actions
             this.ThrowIfLayoutNotDefined();
             this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             telemetryContext.AddContext("package", workloadPackage);
 
             this.Role = clientInstance.Role;
@@ -174,26 +171,25 @@ namespace VirtualClient.Actions
             this.ProcessName = "ntttcp";
             this.Tool = "NTttcp";
 
-            string resultsDir = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Scenario);
+            string resultsDir = this.Combine(workloadPackage.Path, this.Scenario);
             this.fileSystem.Directory.CreateDirectory(resultsDir);
 
-            this.ResultsPath = this.PlatformSpecifics.Combine(resultsDir, NTttcpClientExecutor2.OutputFileName);
+            this.ResultsPath = this.Combine(resultsDir, NTttcpClientExecutor2.OutputFileName);
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "NTttcp.exe");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "NTttcp.exe");
             }
             else if (this.Platform == PlatformID.Unix)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "ntttcp");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "ntttcp");
             }
             else
             {
                 throw new NotSupportedException($"{this.Platform} is not supported");
             }
 
-            await this.SystemManager.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.SystemManager.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
         }
 
         /// <summary>

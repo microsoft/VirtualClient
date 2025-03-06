@@ -86,12 +86,6 @@
         <!-- Microsoft.Extensions.Http.Polly -->
         <Microsoft_Extensions_Http_Polly_PackageVersion>8.0.8</Microsoft_Extensions_Http_Polly_PackageVersion>
 
-        <!-- Microsoft.Windows.Compatibility -->
-        <Microsoft_Windows_Compatibility_PackageVersion>8.0.11</Microsoft_Windows_Compatibility_PackageVersion>
-
-        <!-- Microsoft.Win32.Registry -->
-        <Microsoft_Win32_Registry_PackageVersion>5.0.0</Microsoft_Win32_Registry_PackageVersion>
-
         <!-- Moq -->
         <Moq_PackageVersion>4.18.2</Moq_PackageVersion>
 
@@ -120,7 +114,7 @@
         <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
 
         <!-- SSH.Net -->
-        <SSH_Net_PackageVersion>2024.0.0</SSH_Net_PackageVersion>
+        <SSH_Net_PackageVersion>2024.2.0</SSH_Net_PackageVersion>
 
         <!-- System.CommandLine -->
         <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>
@@ -155,6 +149,9 @@
         <!-- System.Security.Principal.Windows -->
         <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
 
+        <!-- System.ServiceProcess.ServiceController -->
+        <System_ServiceProcess_ServiceController_PackageVersion>8.0.1</System_ServiceProcess_ServiceController_PackageVersion>
+        
         <!-- YamlDotNet -->
         <YamlDotNet_PackageVersion>15.1.1</YamlDotNet_PackageVersion>
 
@@ -180,7 +177,7 @@
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <AssemblyVersion Condition="'$(VCBuildVersion)' != ''">$(VCBuildVersion)</AssemblyVersion>
-        <AssemblyVersion>1.16.25</AssemblyVersion>
+        <AssemblyVersion>1.16.28</AssemblyVersion>
     </PropertyGroup>
 
     <!--
