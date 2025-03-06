@@ -287,29 +287,21 @@
             "Parameters": {
                 "Scenario": "CloneMemtierRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
-                "PackageName": "memtier"
+                "PackageName": "memtier",
+                "Commit": "1.4.0"
             }
         },
         {
             "Type": "ExecuteCommand",
             "Parameters": {
-                "Scenario": "CompileMemtier",
+                "Scenario": "EditMemtierConfig",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "git checkout 1.4.0",
-                "WorkingDirectory": "{PackagePath:memtier}"
+                "ConfigureFilePath": "{PackagePath:memtier}/configure.ac",
+                "Command": "sed -i 40s/^[^#]/#&/; {ConfigureFilePath}&&sed -i 74s/^[^#]/#&/; {ConfigureFilePath}",
+		"WorkingDirectory": "{PackagePath:memtier}"
             }
         },
-        {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "CompileMemtier",
-                "SupportedPlatforms": "linux-x64,linux-arm64",
-                "ConfigureFilePath": "{ScriptPath:redis}/configure.ac",
-                "Command": "cp {ConfigureFilePath} configure.ac",
-                "WorkingDirectory": "{PackagePath:memtier}"
-            }
-        },
-        {
+	{
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemtier",
