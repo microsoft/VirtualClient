@@ -173,6 +173,15 @@ namespace VirtualClient.Monitors
                                 string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
                                 FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
 
+                                // Do not assume the file still exists. Check to see if the file remains on the
+                                // system so that we do not end up in an endless retry loop trying to upload a file that
+                                // does not exist.
+                                if (!this.fileSystem.File.Exists(descriptor.FilePath))
+                                {
+                                    await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                    continue;
+                                }
+
                                 try
                                 {
                                     await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
