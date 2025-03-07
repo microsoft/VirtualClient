@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
             this.mockPackage = new DependencyPath("workloadPackage", this.mockFixture.GetPackagePath("workloadPackage"));
             this.mockFixture.SetupPackage(this.mockPackage);
 
-            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(!OperatingSystem.IsWindows(), ScriptExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+            this.exampleResults = File.ReadAllText(Path.Combine(ScriptExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))

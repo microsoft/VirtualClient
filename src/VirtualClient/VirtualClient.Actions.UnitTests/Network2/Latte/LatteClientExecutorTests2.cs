@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["WarmupTime"] = 300;
             this.mockFixture.Parameters["Protocol"] = "Tcp";
 
-            string exampleResults = File.ReadAllText(this.mockFixture.Combine(!OperatingSystem.IsWindows(), LatteClientExecutorTests2.ExamplesDirectory, "Latte_Results_Example.txt"));
+            string exampleResults = File.ReadAllText(Path.Combine(LatteClientExecutorTests2.ExamplesDirectory, "Latte_Results_Example.txt"));
 
             LatteWorkloadState executionStartedState = new LatteWorkloadState(ClientServerStatus.ExecutionStarted);
             Item<LatteWorkloadState> expectedStateItem = new Item<LatteWorkloadState>(nameof(LatteWorkloadState), executionStartedState);

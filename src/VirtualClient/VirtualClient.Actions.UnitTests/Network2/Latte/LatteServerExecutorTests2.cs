@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Workload"] = "CPS";
             this.mockFixture.Parameters["Scenario"] = "LatteMock";
 
-            string exampleResults = File.ReadAllText(this.mockFixture.Combine(!OperatingSystem.IsWindows(), LatteServerExecutorTests2.ExamplesDirectory, "Latte_Results_Example.txt"));
+            string exampleResults = File.ReadAllText(Path.Combine(LatteServerExecutorTests2.ExamplesDirectory, "Latte_Results_Example.txt"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(exampleResults);

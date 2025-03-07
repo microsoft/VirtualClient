@@ -375,30 +375,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Combines the path segments into a valid path for the platform/OS.
-        /// </summary>
-        /// <param name="useUnixStylePathsOnly"></param>
-        /// <param name="pathSegments">Individual segments of a full path.</param>
-        public string Combine(bool useUnixStylePathsOnly, params string[] pathSegments)
-        {
-            pathSegments.ThrowIfNullOrEmpty(nameof(pathSegments));
-
-            string fullPath = null;
-            switch (this.Platform)
-            {
-                case PlatformID.Win32NT:
-                    fullPath = this.StandardizePath(string.Join('\\', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p))), useUnixStylePathsOnly);
-                    break;
-
-                case PlatformID.Unix:
-                    fullPath = this.StandardizePath(string.Join('/', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p))), useUnixStylePathsOnly);
-                    break;
-            }
-
-            return fullPath;
-        }
-
-        /// <summary>
         /// Returns the value of the environment variable as defined for the current process.
         /// </summary>
         /// <param name="variableName">The name of the environment variable.</param>
@@ -554,18 +530,6 @@ namespace VirtualClient.Contracts
         public string StandardizePath(string path)
         {
             return PlatformSpecifics.StandardizePath(this.Platform, path, this.UseUnixStylePathsOnly);
-        }
-
-        /// <summary>
-        /// Standardizes/normalizes the path based upon the platform/OS ensuring
-        /// a valid path is 
-        /// </summary>
-        /// <param name="path">The path to standardize.</param>
-        /// <param name="useUnixStylePathsOnly"></param>
-        /// <returns>A path standardized for the OS platform.</returns>
-        public string StandardizePath(string path, bool useUnixStylePathsOnly)
-        {
-            return PlatformSpecifics.StandardizePath(this.Platform, path, useUnixStylePathsOnly);
         }
 
         /// <summary>

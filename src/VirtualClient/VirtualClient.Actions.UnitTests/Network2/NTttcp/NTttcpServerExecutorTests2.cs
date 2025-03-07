@@ -47,7 +47,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Workload"] = "CPS";
             this.mockFixture.Parameters["Scenario"] = "NTttcpMock";
 
-            string exampleResults = File.ReadAllText(this.mockFixture.Combine(!OperatingSystem.IsWindows(), NTttcpServerExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
+            string exampleResults = File.ReadAllText(Path.Combine(NTttcpServerExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(exampleResults);
