@@ -23,6 +23,8 @@
         <!-- Asp.Versioning.Mvc -->
         <Asp_Versioning_Mvc_PackageVersion>8.1.0</Asp_Versioning_Mvc_PackageVersion>
 
+        <VirtualClient_PackageVersion>1.16.32</VirtualClient_PackageVersion>
+
         <!-- AutoFixture -->
         <AutoFixture_PackageVersion>4.17.0</AutoFixture_PackageVersion>
 
