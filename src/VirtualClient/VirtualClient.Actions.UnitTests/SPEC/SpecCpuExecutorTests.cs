@@ -119,7 +119,7 @@ namespace VirtualClient.Actions
                 $"powershell -Command \"Mount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
                 $"powershell -Command \"(Get-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso| Get-Volume).DriveLetter\"",
                 $"cmd /c echo 1 | X:\\install.bat {this.mockPackage.Path}",
-                "gcc -dumpversion",
+                "C:\\tools\\cygwin\\bin\\gcc -dumpversion",
                 $"powershell -Command \"Dismount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
                 $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable intrate"
             };
@@ -420,6 +420,8 @@ namespace VirtualClient.Actions
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
             this.mockFixture.FileInfo.Setup(file => file.New(It.IsAny<string>()))
                 .Returns(new Mock<IFileInfo>().Object);
+
+            this.mockFixture.SetEnvironmentVariable("ChocolateyToolsLocation", "C:\\tools");
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
