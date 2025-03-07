@@ -529,7 +529,7 @@ namespace VirtualClient.Contracts
         /// <returns>A path standardized for the OS platform.</returns>
         public string StandardizePath(string path)
         {
-            return PlatformSpecifics.StandardizePath(this.Platform, path, this.UseUnixStylePathsOnly);
+            return PlatformSpecifics.StandardizePath(this.Platform, path, !OperatingSystem.IsWindows());
         }
 
         /// <summary>
