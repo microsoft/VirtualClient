@@ -39,6 +39,7 @@ namespace VirtualClient.Contracts
             Regex marinerRegex = new Regex("Name=(\")?(CBL-Mariner|Microsoft Azure Linux)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex suseRegex = new Regex("Name=(\")?SUSE", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex fedoraRegex = new Regex("Name=(\")?Fedora", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            Regex awsLinuxRegex = new Regex("Name=(\")?Amazon Linux", RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
             Dictionary<Regex, LinuxDistribution> distroMapping = new Dictionary<Regex, LinuxDistribution>()
             {
@@ -51,7 +52,8 @@ namespace VirtualClient.Contracts
                 { centos8Regex, LinuxDistribution.CentOS8 },
                 { suseRegex, LinuxDistribution.SUSE },
                 { marinerRegex, LinuxDistribution.AzLinux },
-                { fedoraRegex, LinuxDistribution.Fedora }
+                { fedoraRegex, LinuxDistribution.Fedora },
+                { awsLinuxRegex, LinuxDistribution.AwsLinux }
             };
 
             LinuxDistribution distribution = LinuxDistribution.Unknown;
