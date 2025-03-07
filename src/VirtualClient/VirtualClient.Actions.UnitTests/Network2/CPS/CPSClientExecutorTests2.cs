@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Delaytime"] = 30;
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
-            string exampleFilePath = this.mockFixture.Combine(CPSClientExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt", !OperatingSystem.IsWindows());
+            string exampleFilePath = this.mockFixture.Combine(!OperatingSystem.IsWindows(), CPSClientExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt");
             Console.WriteLine(exampleFilePath);
 
             string exampleResults = File.ReadAllText(exampleFilePath);
