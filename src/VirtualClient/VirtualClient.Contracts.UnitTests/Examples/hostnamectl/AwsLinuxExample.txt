@@ -1,0 +1,11 @@
+﻿   Static hostname: arm64-ct79-vcuser1
+   Pretty hostname: ARM64-CT79-vcuser1
+Transient hostname: ARM64-CT79-vcuser1
+         Icon name: computer-desktop
+           Chassis: desktop
+        Machine ID: 26ae5f478d834c38838208981747c006
+           Boot ID: 67bf1d1af77b496484ec5cfa0fcd27d5
+  Operating System: Amazon Linux
+       CPE OS Name: cpe:2.3:o:amazon:amazon_linux:2023
+            Kernel: Amazon Linux 2023.6.20250218
+      Architecture: arm64a

@@ -197,6 +197,7 @@ namespace VirtualClient.Dependencies
                     case LinuxDistribution.CentOS8:
                     case LinuxDistribution.RHEL8:
                     case LinuxDistribution.AzLinux:
+                    case LinuxDistribution.AwsLinux:
                         installer = this.InstantiateDnfInstaller();
                         break;
 
