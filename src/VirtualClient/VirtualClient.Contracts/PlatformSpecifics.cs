@@ -387,11 +387,11 @@ namespace VirtualClient.Contracts
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    fullPath = this.StandardizePath(string.Join('\\', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p)), useUnixStylePathsOnly));
+                    fullPath = this.StandardizePath(string.Join('\\', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p))), useUnixStylePathsOnly);
                     break;
 
                 case PlatformID.Unix:
-                    fullPath = this.StandardizePath(string.Join('/', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p)), useUnixStylePathsOnly));
+                    fullPath = this.StandardizePath(string.Join('/', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p))), useUnixStylePathsOnly);
                     break;
             }
 
