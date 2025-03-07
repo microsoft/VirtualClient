@@ -550,6 +550,17 @@ namespace VirtualClient.Contracts
         /// a valid path is 
         /// </summary>
         /// <param name="path">The path to standardize.</param>
+        /// <returns>A path standardized for the OS platform.</returns>
+        public string StandardizePath(string path)
+        {
+            return PlatformSpecifics.StandardizePath(this.Platform, path, this.UseUnixStylePathsOnly);
+        }
+
+        /// <summary>
+        /// Standardizes/normalizes the path based upon the platform/OS ensuring
+        /// a valid path is 
+        /// </summary>
+        /// <param name="path">The path to standardize.</param>
         /// <param name="useUnixStylePathsOnly"></param>
         /// <returns>A path standardized for the OS platform.</returns>
         public string StandardizePath(string path, bool useUnixStylePathsOnly = false)
