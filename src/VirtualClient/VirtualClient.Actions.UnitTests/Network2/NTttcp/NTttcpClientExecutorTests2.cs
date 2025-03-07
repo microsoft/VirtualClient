@@ -52,7 +52,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["ConnectionsPerThread"] = 2;
             this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
 
-            string exampleResults = File.ReadAllText(Path.Combine(NTttcpClientExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
+            string exampleResults = File.ReadAllText(this.mockFixture.Combine(!OperatingSystem.IsWindows(), NTttcpClientExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
 
             NTttcpWorkloadState executionStartedState = new NTttcpWorkloadState(ClientServerStatus.ExecutionStarted);
             Item<NTttcpWorkloadState> expectedStateItem = new Item<NTttcpWorkloadState>(nameof(NTttcpWorkloadState), executionStartedState);
