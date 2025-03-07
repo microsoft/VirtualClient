@@ -334,6 +334,11 @@ namespace VirtualClient
             return this.PlatformSpecifics.Combine(pathSegments);
         }
 
+        public string Combine(bool useUnixStylePathsOnly, params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.Combine(useUnixStylePathsOnly, pathSegments);
+        }
+
         /// <summary>
         /// Returns the value of the environment variable from the underlying <see cref="PlatformSpecifics"/> instance.
         /// </summary>

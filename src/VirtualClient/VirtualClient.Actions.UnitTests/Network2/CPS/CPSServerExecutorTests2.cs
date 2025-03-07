@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Scenario"] = "CPSMock";
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
-            string exampleFilePath = Path.Combine(CPSServerExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt");
+            string exampleFilePath = this.mockFixture.Combine(!OperatingSystem.IsWindows(), CPSServerExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt");
             Console.WriteLine(exampleFilePath);
 
             string exampleResults = File.ReadAllText(exampleFilePath);
