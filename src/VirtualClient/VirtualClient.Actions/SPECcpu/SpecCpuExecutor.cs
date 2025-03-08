@@ -443,8 +443,14 @@ namespace VirtualClient.Actions
         {
             string command = compilerName;
             string commandArguments = "-dumpversion";
-
+            string chocolateyToolsLocation = this.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
+            string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
             string version = string.Empty;
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                command = this.PlatformSpecifics.Combine(cygwinInstallationPath, "bin", compilerName);
+            }
 
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
             {
