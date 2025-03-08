@@ -135,7 +135,7 @@ namespace VirtualClient.Actions
                     output.Append("X");
                 }
 
-                if (exe == "gcc" && arguments == "-dumpversion")
+                if (exe == "C:\\tools\\cygwin\\bin\\gcc" && arguments == "-dumpversion")
                 {
                     return new InMemoryProcess
                     {
@@ -421,7 +421,7 @@ namespace VirtualClient.Actions
             this.mockFixture.FileInfo.Setup(file => file.New(It.IsAny<string>()))
                 .Returns(new Mock<IFileInfo>().Object);
 
-            this.mockFixture.SetEnvironmentVariable("ChocolateyToolsLocation", "C:\\tools");
+            this.mockFixture.SetEnvironmentVariable("ChocolateyToolsLocation", this.mockFixture.Combine("C:", "tools"));
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
