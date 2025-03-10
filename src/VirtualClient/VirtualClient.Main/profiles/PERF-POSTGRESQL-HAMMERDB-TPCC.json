@@ -9,6 +9,7 @@
     "Parameters": {
         "DatabaseName": "hammerdb_tpcc",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "DataDirectory": "",
         "Port": "5432",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
         "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
@@ -49,14 +50,16 @@
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "FormatDisks",
-                "Role": "Server"
+                "Role": "Server",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
-                "Role": "Server"
+                "Role": "Server",
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
@@ -129,7 +132,8 @@
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "postgresql",
                 "Port": "$.Parameters.Port",
-                "Role": "Server"
+                "Role": "Server",
+                "DataDirectory": "$.Parameters.DataDirectory"
             }
         },
         {
