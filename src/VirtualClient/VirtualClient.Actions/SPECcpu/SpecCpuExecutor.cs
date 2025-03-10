@@ -443,12 +443,12 @@ namespace VirtualClient.Actions
         {
             string command = compilerName;
             string commandArguments = "-dumpversion";
-            string chocolateyToolsLocation = this.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
-            string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
             string version = string.Empty;
 
             if (this.Platform == PlatformID.Win32NT)
             {
+                string chocolateyToolsLocation = this.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
+                string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
                 command = this.PlatformSpecifics.Combine(cygwinInstallationPath, "bin", compilerName);
             }
 
