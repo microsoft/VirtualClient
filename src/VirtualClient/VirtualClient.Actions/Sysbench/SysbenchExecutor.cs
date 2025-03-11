@@ -135,7 +135,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of records per table.
+        /// Database system used. e.g: MYSQL, PostgreSQL.
         /// </summary>
         public string DatabaseSystem
         {

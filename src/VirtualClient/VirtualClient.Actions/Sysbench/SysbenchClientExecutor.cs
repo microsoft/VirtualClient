@@ -6,11 +6,10 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -138,7 +137,7 @@ namespace VirtualClient.Actions
                 if (!string.IsNullOrEmpty(text)) 
                 {
                     try
-                    {
+                    {                        
                         SysbenchMetricsParser parser = new SysbenchMetricsParser(text);
                         IList<Metric> metrics = parser.Parse();
                         string sysbenchVersion = null;
@@ -182,6 +181,14 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
+                    if (this.DatabaseSystem == "MySQL")
+                    {
+                        string mysqlVersion = await this.GetMySQLVersionAsync(telemetryContext, cancellationToken);
+
+                        this.MetadataContract.Add("mysql_version", mysqlVersion, MetadataContractCategory.Dependencies);
+                        this.MetadataContract.Apply(telemetryContext);
+                    }
+
                     if (this.Benchmark == BenchmarkName.OLTP)
                     {
                         if (this.Action == ClientAction.TruncateDatabase)
@@ -360,6 +367,29 @@ namespace VirtualClient.Actions
 
                     this.AddMetric(this.sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns MySQL Version.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        private async Task<string> GetMySQLVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            try
+            { 
+                IProcessProxy mysqlversionprocess = await this.ExecuteCommandAsync("sudo", $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} -e \"SELECT VERSION();\"", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                string mysqlVersion = mysqlversionprocess.StandardOutput.ToString();
+
+                Regex regex = new Regex(@"(\d+\.\d+\.\d+)");
+                Match match = regex.Match(mysqlVersion);
+
+                return match.Success ? match.Groups[1].Value : string.Empty;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
             }
         }
     }
