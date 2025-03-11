@@ -330,10 +330,11 @@
             }
         },
         {
-            "Type": "LinuxPackageInstallation",
+            "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Dnf": "iptables"
+                "SupportedOperatingSystems": "AwsLinux",
+                "Command": "dnf install -y iptables"
             }
         },
         {
