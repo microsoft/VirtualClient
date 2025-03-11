@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
             this.mockPackage = new DependencyPath("prime95", this.mockFixture.GetPackagePath("prime95"));
             this.mockFixture.SetupPackage(this.mockPackage);
 
-            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(Prime95ExecutorTests.ExamplesDirectory, "prime95_results_example_pass.txt"));
+            this.exampleResults = File.ReadAllText(Path.Combine(Prime95ExecutorTests.ExamplesDirectory, "prime95_results_example_pass.txt"));
 
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
