@@ -355,6 +355,13 @@
             }
         },
         {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Dnf": "iptables"
+            }
+        },
+        {
             "Type": "NetworkConfigurationSetup",
             "Parameters": {
                 "Scenario": "ConfigureNetwork",
