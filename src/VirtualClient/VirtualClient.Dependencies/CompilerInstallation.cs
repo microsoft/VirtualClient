@@ -236,7 +236,6 @@ namespace VirtualClient.Dependencies
 
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
-                case LinuxDistribution.AwsLinux:
                     if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
                         await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -256,6 +255,7 @@ namespace VirtualClient.Dependencies
                     break;
 
                 case LinuxDistribution.AzLinux:
+                case LinuxDistribution.AwsLinux:
                     if (!string.IsNullOrEmpty(gccVersion))
                     {
                         throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");
