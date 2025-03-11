@@ -172,41 +172,67 @@ namespace VirtualClient.Proxy
         /// </summary>
         public void Flush(TimeSpan? timeout = null)
         {
-            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromMinutes(2);
-            DateTime flushTimeout = DateTime.UtcNow.Add(effectiveTimeout);
-
-            this.FlushMessages?.Invoke(this, new ProxyChannelEventArgs(
-                this.Buffer,
-                new
-                {
-                    flushing = true,
-                    messageCount = this.Buffer.Count
-                }));
-
-            // Allow time for the flush to finish.
-            while (this.Buffer.Any())
+            try
             {
-                if (DateTime.UtcNow >= flushTimeout)
-                {
-                    lock (this.bufferLock)
-                    {
-                        if (this.Buffer.Any())
-                        {
-                            this.MessagesDropped?.Invoke(this, new ProxyChannelEventArgs(
-                                this.Buffer,
-                                new
-                                {
-                                    flushing = true,
-                                    messageCount = this.Buffer.Count,
-                                    reason = $"Flush timeout '{effectiveTimeout}' exceeded before buffer cleared."
-                                }));
+                TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromMinutes(2);
+                DateTime flushTimeout = DateTime.UtcNow.Add(effectiveTimeout);
 
-                            break;
+                this.FlushMessages?.Invoke(this, new ProxyChannelEventArgs(
+                    this.Buffer,
+                    new
+                    {
+                        flushing = true,
+                        messageCount = this.Buffer.Count
+                    }));
+
+                // Allow time for the flush to finish.
+                while (true)
+                {
+                    try
+                    {
+                        lock (this.bufferLock)
+                        {
+                            if (!this.Buffer.Any())
+                            {
+                                break;
+                            }
+
+                            if (DateTime.UtcNow >= flushTimeout)
+                            {
+                                if (this.Buffer.Any())
+                                {
+                                    this.MessagesDropped?.Invoke(this, new ProxyChannelEventArgs(
+                                        this.Buffer,
+                                        new
+                                        {
+                                            flushing = true,
+                                            messageCount = this.Buffer.Count,
+                                            reason = $"Flush timeout '{effectiveTimeout}' exceeded before buffer cleared."
+                                        }));
+
+                                    break;
+                                }
+                            }
                         }
+
+                        Thread.Sleep(2000); 
+                    }
+                    catch
+                    {
+                        // Do not allow an unhandled error to crash the application. We hit the following
+                        // rare occurrence bug in scale operations as an example:
+                        //
+                        // Unhandled exception: System.AggregateException: One or more errors occurred. (Collection was modified; enumeration operation may not execute.)
+                        // ---> System.InvalidOperationException: Collection was modified; enumeration operation may not execute. at System.Collections.Generic.Queue`1.Enumerator.MoveNext()
+                        // at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection) at VirtualClient.Proxy.ProxyChannelEventArgs..ctor(IEnumerable`1 messages, Object context)
+                        // at VirtualClient.Proxy.ProxyTelemetryChannel.Flush(Nullable`1 timeout) at VirtualClient.DependencyFactory.<>c__DisplayClass15_0.<FlushTelemetry>b__0(IFlushableChannel channel)
+                        Thread.Sleep(2000);
                     }
                 }
-
-                Thread.Sleep(2000);
+            }
+            catch
+            {
+                // Do not allow an unhandled error to crash the application.
             }
         }
 
