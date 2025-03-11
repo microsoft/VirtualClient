@@ -301,6 +301,7 @@ namespace VirtualClient.Dependencies
 
             if (this.DisableFirewall)
             {
+                rcLocalContents.Add("if ! command -v iptables &> /dev/null; then sudo dnf install -y iptables; fi");
                 rcLocalContents.Add("iptables -I OUTPUT -j NOTRACK  # disable connection tracking");
                 rcLocalContents.Add("iptables -I PREROUTING -j NOTRACK  # disable connection tracking");
                 rcLocalContents.Add("iptables -P INPUT ACCEPT  # accept all inbound traffic");
