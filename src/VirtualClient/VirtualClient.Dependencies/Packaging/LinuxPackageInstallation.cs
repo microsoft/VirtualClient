@@ -186,6 +186,9 @@ namespace VirtualClient.Dependencies
             if (this.Platform == PlatformID.Unix)
             {
                 this.linuxDistroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
+                
+                telemetryContext.AddContext("LinuxDistribution", this.linuxDistroInfo.LinuxDistribution.ToString());
+
                 VirtualClientComponent installer;
                 switch (this.linuxDistroInfo.LinuxDistribution)
                 {
