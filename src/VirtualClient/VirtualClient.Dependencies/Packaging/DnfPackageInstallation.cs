@@ -102,18 +102,11 @@ namespace VirtualClient.Dependencies
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
 
             // Dnf installtion only applies to Linux.
-            if (this.Platform != PlatformID.Unix)
+            if (this.Platform != PlatformID.Unix || packages == null || !packages.Any())
             {
                 return;
             }
 
-            var linuxDistribution = this.GetLinuxDistribution(telemetryContext);
-
-            if (linuxDistribution != LinuxDistribution.AwsLinux && (packages == null || !packages.Any()))
-            {
-                return;
-            }
-            
             if (!string.IsNullOrEmpty(this.Repositories))
             {
                 List<string> repos = this.Packages.Split(',', ';').ToList();
@@ -138,11 +131,6 @@ namespace VirtualClient.Dependencies
                 {
                     toInstall.Add(package);
                 }
-            }
-
-            if (linuxDistribution == LinuxDistribution.AwsLinux)
-            {
-                toInstall.Add("iptables");
             }
 
             // Nothing to install.
@@ -179,27 +167,13 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private LinuxDistribution GetLinuxDistribution(EventContext telemetryContext)
-        {
-            try
-            {
-                var linuxDistributionInfo = this.systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-                telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
-
-                return linuxDistributionInfo.LinuxDistribution;
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogErrorMessage($"Failed to get Linux distribution information. Exception: {ex.Message}", ex, EventContext.Persisted());
-                
-                return LinuxDistribution.Unknown;
-            }
-        }
-
         private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)
         {
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
+
+            var linuxDistributionInfo = systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            bool isAwsLinux = linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux;
 
             using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, DnfPackageInstallation.DnfCommand, $"list {packageName}"))
             {
@@ -212,6 +186,11 @@ namespace VirtualClient.Dependencies
                 {
                     await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Dnf")
                         .ConfigureAwait(false);
+
+                    if (isAwsLinux)
+                    {
+                        return process.ExitCode == 0;
+                    }
 
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
