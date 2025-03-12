@@ -154,6 +154,9 @@ namespace VirtualClient.Dependencies
 
                 // install iptables in AwsLinux
                 var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+                
+                telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
+
                 if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
                 {
                     await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"install -y iptables", Environment.CurrentDirectory, telemetryContext, cancellationToken)
