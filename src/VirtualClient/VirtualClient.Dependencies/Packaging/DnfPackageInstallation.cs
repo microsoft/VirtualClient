@@ -102,7 +102,14 @@ namespace VirtualClient.Dependencies
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
 
             // Dnf installtion only applies to Linux.
-            if (this.Platform != PlatformID.Unix || packages == null || !packages.Any())
+            if (this.Platform != PlatformID.Unix)
+            {
+                return;
+            }
+
+            var linuxDistribution = this.GetLinuxDistribution(telemetryContext);
+
+            if (linuxDistribution != LinuxDistribution.AwsLinux && (packages == null || !packages.Any()))
             {
                 return;
             }
@@ -133,7 +140,10 @@ namespace VirtualClient.Dependencies
                 }
             }
 
-            this.AddAwsLinuxPackages(toInstall, telemetryContext);
+            if (linuxDistribution == LinuxDistribution.AwsLinux)
+            {
+                toInstall.Add("iptables");
+            }
 
             // Nothing to install.
             if (toInstall.Count == 0)
@@ -169,7 +179,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private void AddAwsLinuxPackages(List<string> toInstall, EventContext telemetryContext)
+        private LinuxDistribution GetLinuxDistribution(EventContext telemetryContext)
         {
             try
             {
@@ -177,14 +187,13 @@ namespace VirtualClient.Dependencies
 
                 telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
 
-                if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
-                {
-                    toInstall.Add("iptables");
-                }
+                return linuxDistributionInfo.LinuxDistribution;
             }
             catch (Exception ex)
             {
                 this.Logger.LogErrorMessage($"Failed to get Linux distribution information. Exception: {ex.Message}", ex, EventContext.Persisted());
+                
+                return LinuxDistribution.Unknown;
             }
         }
 
