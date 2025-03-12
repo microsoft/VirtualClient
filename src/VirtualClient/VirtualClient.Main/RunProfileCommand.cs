@@ -569,12 +569,26 @@ namespace VirtualClient
             string profile = profiles.First();
             string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
 
+            AddLinuxDistributionInfo(systemManagement);
+
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 ["executionProfilePath"] = profileFullPath
             });
+        }
+
+        private void AddLinuxDistributionInfo(ISystemManagement systemManagement)
+        {
+            try
+            {
+                EventContext.PersistentProperties.Add("linuxDistributionInfo", systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult())
+            }
+            catch
+            {
+                // Best Effort only
+            }
         }
 
         /// <summary>

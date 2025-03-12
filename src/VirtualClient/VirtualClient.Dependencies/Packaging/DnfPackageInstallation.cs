@@ -119,6 +119,8 @@ namespace VirtualClient.Dependencies
                 }
             }
 
+            await this.InstallAwsLinuxPackagesAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
             // Determine which packages should be installed, and which can be skipped.
             List<string> toInstall = new List<string>();
             foreach (string package in packages)
@@ -152,17 +154,6 @@ namespace VirtualClient.Dependencies
                 await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
-                // install iptables in AwsLinux
-                var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
-                
-                telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
-
-                if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
-                {
-                    await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"install -y iptables", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
             }).ConfigureAwait(false);
 
             this.Logger.LogTraceMessage($"VirtualClient installed Dnf package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
@@ -175,6 +166,19 @@ namespace VirtualClient.Dependencies
                 throw new ProcessException(
                     $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
                     ErrorReason.DependencyInstallationFailed);
+            }
+        }
+
+        private async Task InstallAwsLinuxPackagesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+            telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
+
+            if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
+            {
+                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"install -y iptables", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
