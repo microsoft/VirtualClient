@@ -119,8 +119,6 @@ namespace VirtualClient.Dependencies
                 }
             }
 
-            await this.InstallAwsLinuxPackagesAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
             // Determine which packages should be installed, and which can be skipped.
             List<string> toInstall = new List<string>();
             foreach (string package in packages)
@@ -134,6 +132,8 @@ namespace VirtualClient.Dependencies
                     toInstall.Add(package);
                 }
             }
+
+            this.AddAwsLinuxPackages(toInstall, telemetryContext);
 
             // Nothing to install.
             if (toInstall.Count == 0)
@@ -169,16 +169,22 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task InstallAwsLinuxPackagesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private void AddAwsLinuxPackages(List<string> toInstall, EventContext telemetryContext)
         {
-            var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
-
-            telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
-
-            if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
+            try
             {
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"install -y iptables", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                var linuxDistributionInfo = this.systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+                telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution.ToString());
+
+                if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
+                {
+                    toInstall.Add("iptables");
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogErrorMessage($"Failed to get Linux distribution information. Exception: {ex.Message}", ex, EventContext.Persisted());
             }
         }
 
