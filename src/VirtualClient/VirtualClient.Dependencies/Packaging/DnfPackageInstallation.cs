@@ -106,7 +106,7 @@ namespace VirtualClient.Dependencies
             {
                 return;
             }
-
+            
             if (!string.IsNullOrEmpty(this.Repositories))
             {
                 List<string> repos = this.Packages.Split(',', ';').ToList();
@@ -151,6 +151,14 @@ namespace VirtualClient.Dependencies
                 // retries are expended.
                 await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
+                // install iptables in AwsLinux
+                var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+                if (linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux)
+                {
+                    await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"install -y iptables", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
             }).ConfigureAwait(false);
 
