@@ -119,11 +119,15 @@ namespace VirtualClient.Dependencies
                 }
             }
 
+            var linuxDistributionInfo = systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            bool isAwsLinux = linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux;
+
             // Determine which packages should be installed, and which can be skipped.
             List<string> toInstall = new List<string>();
             foreach (string package in packages)
             {
-                if (!this.AllowUpgrades && await this.IsPackageInstalledAsync(package, cancellationToken))
+                if (!isAwsLinux && !this.AllowUpgrades && await this.IsPackageInstalledAsync(package, cancellationToken))
                 {
                     this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.", EventContext.Persisted());
                 }
@@ -157,23 +161,22 @@ namespace VirtualClient.Dependencies
             this.Logger.LogTraceMessage($"VirtualClient installed Dnf package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
 
             // Then, confirms that the packages were installed.
-            List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
-
-            if (failedPackages?.Count > 0)
+            if (!isAwsLinux)
             {
-                throw new ProcessException(
-                    $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
-                    ErrorReason.DependencyInstallationFailed);
+                List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
+
+                if (failedPackages?.Count > 0)
+                {
+                    throw new ProcessException(
+                        $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
+                        ErrorReason.DependencyInstallationFailed);
+                }
             }
         }
 
         private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)
         {
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-
-            var linuxDistributionInfo = systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-            bool isAwsLinux = linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux;
 
             using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, DnfPackageInstallation.DnfCommand, $"list {packageName}"))
             {
@@ -186,11 +189,6 @@ namespace VirtualClient.Dependencies
                 {
                     await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Dnf")
                         .ConfigureAwait(false);
-
-                    if (isAwsLinux)
-                    {
-                        return process.ExitCode == 0;
-                    }
 
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
