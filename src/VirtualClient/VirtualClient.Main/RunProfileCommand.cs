@@ -583,7 +583,7 @@ namespace VirtualClient
         {
             try
             {
-                EventContext.PersistentProperties.Add("linuxDistributionInfo", systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult())
+                EventContext.PersistentProperties.Add("linuxDistributionInfo", systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult());
             }
             catch
             {
