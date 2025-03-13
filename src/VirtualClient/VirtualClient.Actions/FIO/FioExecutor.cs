@@ -230,6 +230,11 @@ namespace VirtualClient.Actions
         protected List<DiskWorkloadProcess> WorkloadProcesses { get; } = new List<DiskWorkloadProcess>();
 
         /// <summary>
+        /// Workload package dependency path.
+        /// </summary>
+        protected DependencyPath WorkloadPackage { get; set; }
+
+        /// <summary>
         /// Provides features for management of the system/environment.
         /// </summary>
         protected ISystemManagement SystemManagement
@@ -295,7 +300,7 @@ namespace VirtualClient.Actions
 
                     if (!string.IsNullOrEmpty(this.JobFiles))
                     {
-                        this.CommandLine = await this.GetCommandForJobFilesAsync(cancellationToken);
+                        this.CommandLine = this.GetCommandForJobFilesAsync(cancellationToken);
                     }
 
                     // Apply parameters to the FIO command line options.
@@ -566,19 +571,19 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
+            this.WorkloadPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (workloadPackage == null)
+            if (this.WorkloadPackage == null)
             {
                 // This is to allow user to use custom installed FIO
                 this.ExecutablePath = this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio";
             }
             else
             {
-                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+                this.WorkloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(this.WorkloadPackage, this.Platform, this.CpuArchitecture);
 
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
+                this.ExecutablePath = this.PlatformSpecifics.Combine(this.WorkloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
 
                 this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(this.ExecutablePath);
 
@@ -964,9 +969,15 @@ namespace VirtualClient.Actions
             return sanitizedFilePath;
         }
 
-        private async Task<string> GetCommandForJobFilesAsync(CancellationToken cancellationToken)
+        private string GetCommandForJobFilesAsync(CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
+            string updatedJobFileFolder = Path.Combine(jobFileFolder, "updated");
+
+            if (!this.SystemManagement.FileSystem.Directory.Exists(updatedJobFileFolder))
+            {
+                this.SystemManagement.FileSystem.Directory.CreateDirectory(updatedJobFileFolder);
+            }
 
             string command = string.Empty;
             string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
@@ -975,7 +986,7 @@ namespace VirtualClient.Actions
             {
                 // Create/update new job file at runtime.
                 string templateJobFileName = Path.GetFileName(templateJobFilePath);
-                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, templateJobFileName);
+                string updatedJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, "updated", templateJobFileName);
                 this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
 
                 // Update command to include the new job file.
