@@ -230,11 +230,6 @@ namespace VirtualClient.Actions
         protected List<DiskWorkloadProcess> WorkloadProcesses { get; } = new List<DiskWorkloadProcess>();
 
         /// <summary>
-        /// Workload package dependency path.
-        /// </summary>
-        protected DependencyPath WorkloadPackage { get; set; }
-
-        /// <summary>
         /// Provides features for management of the system/environment.
         /// </summary>
         protected ISystemManagement SystemManagement
@@ -571,19 +566,19 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            this.WorkloadPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
+            DependencyPath workloadPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (this.WorkloadPackage == null)
+            if (workloadPackage == null)
             {
                 // This is to allow user to use custom installed FIO
                 this.ExecutablePath = this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio";
             }
             else
             {
-                this.WorkloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(this.WorkloadPackage, this.Platform, this.CpuArchitecture);
+                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
 
-                this.ExecutablePath = this.PlatformSpecifics.Combine(this.WorkloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
+                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
 
                 this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(this.ExecutablePath);
 
