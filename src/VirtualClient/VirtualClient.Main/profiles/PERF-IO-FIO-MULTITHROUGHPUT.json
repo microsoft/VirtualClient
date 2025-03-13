@@ -75,10 +75,10 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "libaio1,libaio-dev",
-                "Packages-Dnf": "libaio,libaio-devel,lshw,parted",
-                "Packages-Yum": "libaio,libaio-devel",
-                "Packages-Zypper": "libaio1,libaio-dev"
+                "Packages-Apt": "fio,libaio-dev",
+                "Packages-Dnf": "fio,libaio-devel,lshw,parted",
+                "Packages-Yum": "fio,libaio-devel",
+                "Packages-Zypper": "fio,libaio-dev"
             }
         },
         {
@@ -86,16 +86,6 @@
             "Parameters": {
                 "Scenario": "InitializeDisks",
                 "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallFIOPackage",
-                "BlobContainer": "packages",
-                "BlobName": "fio.3.30.0.zip",
-                "PackageName": "fio",
-                "Extract": true
             }
         }
     ]
