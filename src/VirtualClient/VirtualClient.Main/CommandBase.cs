@@ -644,7 +644,7 @@ namespace VirtualClient
             }
 
             if (!this.loggerDefinitions.Any(l => l.Equals("proxy", StringComparison.OrdinalIgnoreCase) || l.StartsWith("proxy=", StringComparison.OrdinalIgnoreCase))
-                && this.ProxyApiUri!=null)
+                && this.ProxyApiUri != null)
             {
                 this.loggerDefinitions.Add($"proxy={this.ProxyApiUri.ToString()}");
             }
@@ -659,7 +659,7 @@ namespace VirtualClient
                     definitionValue = loggerDefinition.Substring(loggerDefinition.IndexOf("=", StringComparison.Ordinal) + 1);
                 }
 
-                switch(loggerName.ToLowerInvariant())
+                switch (loggerName.ToLowerInvariant())
                 {
                     case "console":
                         CommandBase.AddConsoleLogging(loggingProviders, this.LoggingLevel);
@@ -680,7 +680,14 @@ namespace VirtualClient
 
                     default:
                         // TODO: Support referencing logger by namespace
-                        throw new NotSupportedException($"Specified logger '{loggerName}' is not supported.");
+                        if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
+                        {
+                            throw new TypeLoadException($"Specified logger '{loggerName}' is not supported, nor is it an ILoggerProvider in component type cache.");
+                        }
+
+                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(loggerName, definitionValue);
+                        loggingProviders.Add(customLoggerProvider);
+                        break;
                 }
             }
 
