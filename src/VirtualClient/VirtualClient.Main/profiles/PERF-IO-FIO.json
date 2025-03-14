@@ -499,6 +499,17 @@
             "Parameters": {
                 "Scenario": "InitializeDisks"
             }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFIOPackage",
+                "SupportedPlatforms": "win-x64",
+                "BlobContainer": "packages",
+                "BlobName": "fio.3.30.0.zip",
+                "PackageName": "fio",
+                "Extract": true
+            }
         }
     ]
 }
