@@ -1,0 +1,1167 @@
+GPU: 0
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 137 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 245 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 131 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 131 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 263 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 38 °C
+        MEM: 31 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 4915 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 1
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 137 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 232 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 251 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 39 °C
+        MEM: 33 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 431 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 2
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 138 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 247 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 132 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 133 MHz
+            MIN_CLK: 265 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 38 °C
+        MEM: 31 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 2196 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 3
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 135 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 253 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 131 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 271 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 36 °C
+        MEM: 31 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 1027 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 4
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 140 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 232 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 250 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 37 °C
+        MEM: 29 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 2657 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 5
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 138 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 237 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 132 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 131 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 255 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 38 °C
+        MEM: 34 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 18 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 6
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 135 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 262 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 262 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 902 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 36 °C
+        MEM: 30 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 993 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
+
+GPU: 7
+    USAGE:
+        GFX_ACTIVITY: 0 %
+        UMC_ACTIVITY: 0 %
+        MM_ACTIVITY: N/A
+        VCN_ACTIVITY: [0 %, 0 %, 0 %, 0 %]
+        JPEG_ACTIVITY: [N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A, N/A,
+            N/A, N/A, N/A]
+    POWER:
+        SOCKET_POWER: 139 W
+        GFX_VOLTAGE: N/A mV
+        SOC_VOLTAGE: N/A mV
+        MEM_VOLTAGE: N/A mV
+        THROTTLE_STATUS: UNTHROTTLED
+        POWER_MANAGEMENT: ENABLED
+    CLOCK:
+        GFX_0:
+            CLK: 219 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: DISABLED
+        GFX_1:
+            CLK: 132 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_2:
+            CLK: 131 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_3:
+            CLK: 132 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_4:
+            CLK: 132 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_5:
+            CLK: 132 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_6:
+            CLK: 132 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        GFX_7:
+            CLK: 132 MHz
+            MIN_CLK: 238 MHz
+            MAX_CLK: 2100 MHz
+            CLK_LOCKED: DISABLED
+            DEEP_SLEEP: ENABLED
+        MEM_0:
+            CLK: 900 MHz
+            MIN_CLK: 900 MHz
+            MAX_CLK: 1300 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: DISABLED
+        VCLK_0:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_1:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_2:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        VCLK_3:
+            CLK: 29 MHz
+            MIN_CLK: 914 MHz
+            MAX_CLK: 1333 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_0:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_1:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_2:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+        DCLK_3:
+            CLK: 22 MHz
+            MIN_CLK: 711 MHz
+            MAX_CLK: 1143 MHz
+            CLK_LOCKED: N/A
+            DEEP_SLEEP: ENABLED
+    TEMPERATURE:
+        EDGE: N/A
+        HOTSPOT: 37 °C
+        MEM: 31 °C
+    PCIE:
+        WIDTH: 16
+        SPEED: 32 GT/s
+        BANDWIDTH: 3091 Mb/s
+        REPLAY_COUNT: 0
+        L0_TO_RECOVERY_COUNT: 1
+        REPLAY_ROLL_OVER_COUNT: 0
+        NAK_SENT_COUNT: 0
+        NAK_RECEIVED_COUNT: 0
+        CURRENT_BANDWIDTH_SENT: N/A
+        CURRENT_BANDWIDTH_RECEIVED: N/A
+        MAX_PACKET_SIZE: N/A
+    MEM_USAGE:
+        TOTAL_VRAM: 196048 MB
+        USED_VRAM: 282 MB
+        FREE_VRAM: 195766 MB
+        TOTAL_VISIBLE_VRAM: 196048 MB
+        USED_VISIBLE_VRAM: 282 MB
+        FREE_VISIBLE_VRAM: 195766 MB
+        TOTAL_GTT: 885866 MB
+        USED_GTT: 17 MB
+        FREE_GTT: 885849 MB
