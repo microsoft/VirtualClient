@@ -4,7 +4,7 @@ EXIT_CODE=0
 SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE}"))"
 
 # The default build version is defined in the repo VERSION file.
-PACKAGE_VERSION=$(cat "$SCRIPT_DIR/../../../VERSION") | 's/^[[:space:]]*//;s/[[:space:]]*$//'
+PACKAGE_VERSION=$(cat "$SCRIPT_DIR/../../../VERSION")
 
 # The default build version can be overridden by the 'VCBuildVersion' 
 # environment variable

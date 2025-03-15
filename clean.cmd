@@ -7,6 +7,8 @@ if /i "%~1" == "--help" Goto :Usage
 
 set EXIT_CODE=0
 set REPO_DIR=%~dp0
+set SCRIPT_DIR=%~dp0
+set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 
 if exist %REPO_DIR%out\bin (
     echo:
@@ -40,9 +42,17 @@ Goto :End
 
 :Usage
 echo:
+echo:
+echo Deletes build artifacts from the repo.
+echo:
 echo Usage:
 echo ---------------------
-echo %~0
+echo clean.cmd
+echo:
+echo Examples
+echo ---------------------
+echo %SCRIPT_DIR%^> clean.cmd
+echo:
 Goto :Finish
 
 
@@ -52,6 +62,8 @@ set EXIT_CODE=%ERRORLEVEL%
 
 :End
 set REPO_DIR=
+set SCRIPT_DIR=
+
 echo Clean Stage Exit Code: 0
 
 

@@ -3,7 +3,7 @@
 set EXIT_CODE=0
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
-set BUILD_CONFIGURATION=Release
+set BUILD_CONFIGURATION=
 set BUILD_FLAGS=-p:PublishTrimmed=true
 set BUILD_VERSION=
 set VC_SOLUTION_DIR=%SCRIPT_DIR%\src\VirtualClient
@@ -13,13 +13,6 @@ if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
 
 for %%a in (%*) do (
-
-    rem Build Configurations:
-    rem 1) Release (Default)
-    rem 2) Debug
-    rem
-    rem Pass in the --debug flag to use 'Debug' build configuration
-    if /i "%%a" == "--debug" set BUILD_CONFIGURATION=Debug
 
     rem Pass in the --notrim flag to opt out of trimming the project 
     rem assemblies during build.
@@ -32,7 +25,20 @@ set /p BUILD_VERSION=<%SCRIPT_DIR%\VERSION
 rem The default build version can be overridden by the 'VCBuildVersion' 
 rem environment variable
 if defined VCBuildVersion (
+    echo:
+    echo Using 'VCBuildVersion' = %VCBuildVersion%
     set BUILD_VERSION=%VCBuildVersion%
+)
+
+rem The default build configuration is 'Release'.
+set BUILD_CONFIGURATION=Release
+
+rem The default build configuration (e.g. Release) can be overridden 
+rem by the 'VCBuildConfiguration' environment variable
+if defined VCBuildConfiguration (
+    echo:
+    echo Using 'VCBuildConfiguration' = %VCBuildConfiguration%
+    set BUILD_CONFIGURATION=%VCBuildConfiguration%
 )
 
 echo:
@@ -78,24 +84,22 @@ Goto :End
 
 :Usage
 echo:
-echo Builds the source code in the repo.
 echo:
-echo Options:
-echo ---------------------
-echo --debug  - Flag requests build configuration to be 'Debug' vs. the default 'Release'. 
+echo Builds the source code in the repo. 
 echo:
 echo Usage:
 echo ---------------------
-echo build.cmd [--debug]
+echo build.cmd
 echo:
 echo Examples:
 echo ---------------------
+echo # Use defaults
 echo %SCRIPT_DIR%^> build.cmd
 echo:
-echo %SCRIPT_DIR%^> build.cmd --debug
-echo:
+echo # Set specific version and configuration
 echo %SCRIPT_DIR%^> set VCBuildVersion=1.16.25
-echo %SCRIPT_DIR%^> build.cmd --debug
+echo %SCRIPT_DIR%^> set VCBuildConfiguration=Debug
+echo %SCRIPT_DIR%^> build.cmd
 Goto :Finish
 
 

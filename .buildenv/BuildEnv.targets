@@ -204,7 +204,8 @@
         <Message Text="DocumentationMarkDownFile     : '$(DocumentationMarkDownFile)'" Importance="High" />
         <Message Text="AppxPackageDir                : '$(AppxPackageDir)'" Importance="High" />
         <Message Text="AssemblySearchPaths           : '$(AssemblySearchPaths)'" Importance="High" />
-        <Message Text="************************************************************" />
+        <Message Text="************************************************************" Importance="High" />
+        <Message Text=" " Importance="High" />
     </Target>
 
 </Project>

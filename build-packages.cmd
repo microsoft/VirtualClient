@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 set EXIT_CODE=0
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
-set BUILD_CONFIGURATION=Release
+set BUILD_CONFIGURATION=
 set BUILD_VERSION=
 set PACKAGE_SUFFIX=
 set SUFFIX_FOUND=
@@ -41,25 +41,26 @@ for %%a in (%*) do (
     )
 )
 
-for %%a in (%*) do (
-
-    rem Build Configurations:
-    rem 1) Release (Default)
-    rem 2) Debug
-    rem
-    rem Pass in the --debug flag to use 'Debug' build configuration
-    if /i "%%a" == "--debug" (
-        set BUILD_CONFIGURATION=Debug
-    )
-)
-
 rem The default build version is defined in the repo VERSION file.
 set /p BUILD_VERSION=<%SCRIPT_DIR%\VERSION
 
-rem The default build version can be overridden by the 'VCBUILD_VERSION' 
+rem The default build version can be overridden by the 'VCBuildVersion' 
 rem environment variable
-if defined VCBUILD_VERSION (
-    set BUILD_VERSION=%VCBUILD_VERSION%
+if defined VCBuildVersion (
+    echo:
+    echo Using 'VCBuildVersion' = %VCBuildVersion%
+    set BUILD_VERSION=%VCBuildVersion%
+)
+
+rem The default build configuration is 'Release'.
+set BUILD_CONFIGURATION=Release
+
+rem The default build configuration (e.g. Release) can be overridden 
+rem by the 'VCBuildConfiguration' environment variable
+if defined VCBuildConfiguration (
+    echo:
+    echo Using 'VCBuildConfiguration' = %VCBuildConfiguration%
+    set BUILD_CONFIGURATION=%VCBuildConfiguration%
 )
 
 set PACKAGE_VERSION=%BUILD_VERSION%
@@ -84,19 +85,19 @@ call dotnet restore %PACKAGES_PROJECT% --force
 echo:
 echo [Create NuGet Package] VirtualClient.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c Release ^
+call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.Framework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Release ^
+call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.Framework.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.TestFramework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Release ^
+call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.TestFramework.nuspec && echo: || Goto :Error
 
 Goto :End
@@ -104,28 +105,32 @@ Goto :End
 
 :Usage
 echo:
+echo:
 echo Creates packages from the build artifacts (e.g. NuGet).
 echo:
 echo Options:
 echo ---------------------
-echo --debug   - Flag requests build configuration to be 'Debug' vs. the default 'Release'.
-echo --suffix  - Flag requests a suffix be added to the packages produced (e.g. virtualclient.1.16.25-beta).
-echo             Valid values include: alpha, beta.
+echo --suffix  - Defines a suffix to place on the package names. Valid values include: alpha, beta.
 echo:
 echo Usage:
 echo ---------------------
-echo build-packages.cmd [--debug] [--suffix <alpha|beta>]
+echo build-packages.cmd [--suffix ^<alpha^|beta^>]
 echo:
 echo Examples:
 echo ---------------------
+echo # Use defaults
+echo %SCRIPT_DIR%^> build.cmd
 echo %SCRIPT_DIR%^> build-packages.cmd
 echo:
-echo %SCRIPT_DIR%^> build-packages.cmd --debug
-echo:
+echo # Set package suffix
+echo %SCRIPT_DIR%^> build.cmd
 echo %SCRIPT_DIR%^> build-packages.cmd --suffix beta
 echo:
+echo # Set specific version and configuration
 echo %SCRIPT_DIR%^> set VCBUILD_VERSION=1.16.25
-echo %SCRIPT_DIR%^> build.cmd --debug --suffix beta
+echo %SCRIPT_DIR%^> set VCBuildConfiguration=Debug
+echo %SCRIPT_DIR%^> build.cmd
+echo %SCRIPT_DIR%^> build-packages.cmd
 Goto :Finish
 
 
@@ -137,6 +142,8 @@ set EXIT_CODE=%ERRORLEVEL%
 REM Reset environment variables
 set BUILD_CONFIGURATION=
 set BUILD_VERSION=
+set PACKAGE_DIR=
+set PACKAGES_PROJECT=
 set PACKAGE_SUFFIX=
 set PACKAGE_VERSION=
 set SCRIPT_DIR=
