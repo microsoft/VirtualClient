@@ -145,6 +145,10 @@
         <Message Text="OutputType                    : '$(OutputType)'" Importance="High" />
         <Message Text="ModuleName                    : '$(ModuleName)'" Importance="High" />
         <Message Text="ModulePath                    : '$(ModulePath)'" Importance="High" />
+        <Message Text="AssemblyVersion               : '$(AssemblyVersion)'" Importance="High" />
+        <Message Text="FileVersion                   : '$(FileVersion)'" Importance="High" />
+        <Message Text="PackageVersion                : '$(Version)'" Importance="High" Condition="'$(Version)' != '' and '$(Version)' != '1.0.0'" />
+        <Message Text="Product                       : '$(Product)'" Importance="High" />
         <Message Text="BuildInParallel               : '$(BuildInParallel)'" Importance="High" />
         <Message Text="BuildEnvPath                  : '$(BuildEnvPath)'" Importance="High" />
         <Message Text="BuildEnvRulesPath             : '$(BuildEnvRulesPath)'" Importance="High" />

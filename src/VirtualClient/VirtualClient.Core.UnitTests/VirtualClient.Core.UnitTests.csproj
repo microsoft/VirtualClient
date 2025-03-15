@@ -48,6 +48,10 @@
         </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="S:\microsoft\virtualclient2\src\VirtualClient\TestResources\Results_CtsTraffic.csv" Link="Results_CtsTraffic.csv" />
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

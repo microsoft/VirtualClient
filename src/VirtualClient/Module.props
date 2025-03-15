@@ -175,9 +175,14 @@
     <PropertyGroup>
         <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion Condition="'$(VCBuildVersion)' != ''">$(VCBuildVersion)</AssemblyVersion>
-        <AssemblyVersion>1.16.28</AssemblyVersion>
+        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">1.0.0.0</AssemblyVersion>
+        <AssemblyInformationalVersion>$(AssemblyVersion)</AssemblyInformationalVersion>
+        <FileVersion>$(AssemblyVersion)</FileVersion>
+        <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+        <Product>Virtual Client Framework</Product>
+        <Product Condition="'$(OutputType)' == 'Exe'">Virtual Client Platform</Product>
+        <ProductName>Virtual Client</ProductName>
+        <ProductVersion>$(AssemblyVersion)</ProductVersion>
     </PropertyGroup>
 
     <!--
