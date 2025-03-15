@@ -324,8 +324,6 @@ namespace VirtualClient.Monitors
                 {
                     try
                     {
-                        await Task.Delay(this.MonitorFrequency, cancellationToken);
-
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             List<Metric> metrics = new List<Metric>();
@@ -350,6 +348,8 @@ namespace VirtualClient.Monitors
                                 this.Logger.LogPerformanceCounters(".NET SDK", metrics, metrics.Min(m => m.StartTime), DateTime.UtcNow, telemetryContext);
                             }
                         }
+
+                        await Task.Delay(this.MonitorFrequency, cancellationToken);
                     }
                     catch (TaskCanceledException)
                     {
