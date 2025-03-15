@@ -1,71 +1,118 @@
 @echo Off
 
-set ExitCode=0
+set EXIT_CODE=0
+set SCRIPT_DIR=%~dp0
+set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
+set BUILD_CONFIGURATION=Release
+set BUILD_FLAGS=-p:PublishTrimmed=true
+set BUILD_VERSION=
+set VC_SOLUTION_DIR=%SCRIPT_DIR%\src\VirtualClient
 
 if /i "%~1" == "/?" Goto :Usage
 if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
 
-set "VCBuildVersion="
+for %%a in (%*) do (
 
-REM The "VCBuildVersion" environment variable is referenced by the MSBuild processes during build.
-REM All binaries will be compiled with this version (e.g. .dlls + .exes). The packaging process uses 
-REM the same environment variable to define the version of the NuGet package(s) produced. The build 
-REM version can be overridden on the command line.
-if /i NOT "%~1" == "" (
-    set VCBuildVersion=%~1
+    rem Build Configurations:
+    rem 1) Release (Default)
+    rem 2) Debug
+    rem
+    rem Pass in the --debug flag to use 'Debug' build configuration
+    if /i "%%a" == "--debug" set BUILD_CONFIGURATION=Debug
+
+    rem Pass in the --notrim flag to opt out of trimming the project 
+    rem assemblies during build.
+    if /i "%%a" == "--notrim" set BUILD_FLAGS=
 )
 
-REM Default version to the VERSION file but append -alpha for manual builds
-if /i "%VCBuildVersion%" == "" (
-    set /p VCBuildVersion=<VERSION
+rem The default build version is defined in the repo VERSION file.
+set /p BUILD_VERSION=<%SCRIPT_DIR%\VERSION
+
+rem The default build version can be overridden by the 'VCBuildVersion' 
+rem environment variable
+if defined VCBuildVersion (
+    set BUILD_VERSION=%VCBuildVersion%
 )
-
-set VCSolutionDir=%~dp0src\VirtualClient
-
-set TrimFlag="-p:PublishTrimmed=true"
-set TrimFlag=""
-if /i "%~1" == "noTrim" set TrimFlag=""
 
 echo:
-echo [Building Source Code] VirtualClient %VCBuildVersion%
+echo **********************************************************************
+echo Build Version : %BUILD_VERSION%
+echo Repo Root     : %SCRIPT_DIR%
+echo Configuration : %BUILD_CONFIGURATION%
+echo Flags         : %BUILD_FLAGS%
+echo **********************************************************************
+
+echo:
+echo [Build Solution]
 echo -------------------------------------------------------
-call dotnet build "%VCSolutionDir%\VirtualClient.sln" -c Release && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c Release --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c Release --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c Release --self-contained %TrimFlag% && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c Release --self-contained %TrimFlag% && echo: || Goto :Error
+call dotnet build "%VC_SOLUTION_DIR%\VirtualClient.sln" -c %BUILD_CONFIGURATION% ^
+-p:AssemblyVersion=%BUILD_VERSION% && echo: || Goto :Error
+
+echo:
+echo [Build Virtual Client: linux-x64]"
+echo ----------------------------------------------------------------------
+call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% --self-contained ^
+-p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+
+echo:
+echo [Build Virtual Client: linux-arm64]"
+echo ----------------------------------------------------------------------
+call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% --self-contained ^
+-p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+
+echo:
+echo [Build Virtual Client: win-x64]"
+echo ----------------------------------------------------------------------
+call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% --self-contained ^
+-p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+
+echo:
+echo [Build Virtual Client: win-arm64]"
+echo ----------------------------------------------------------------------
+call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% --self-contained ^
+-p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+
 Goto :End
+
 
 :Usage
 echo:
+echo Builds the source code in the repo.
+echo:
+echo Options:
+echo ---------------------
+echo --debug  - Flag requests build configuration to be 'Debug' vs. the default 'Release'. 
+echo:
 echo Usage:
 echo ---------------------
-echo %~0
-echo %~0 {buildVersion}
-echo:
+echo build.cmd [--debug]
 echo:
 echo Examples:
 echo ---------------------
-echo # Build using default build version
-echo %~0
+echo %SCRIPT_DIR%^> build.cmd
 echo:
-echo # Pass the build version into the command
-echo %~0 1.0.1485.571
+echo %SCRIPT_DIR%^> build.cmd --debug
 echo:
-echo # Set the build version in an environment variable, then build
-echo set VCBuildVersion=1.0.1485.571
-echo %~0
+echo %SCRIPT_DIR%^> set VCBuildVersion=1.16.25
+echo %SCRIPT_DIR%^> build.cmd --debug
 Goto :Finish
 
+
 :Error
-set ExitCode=%ERRORLEVEL%
+set EXIT_CODE=%ERRORLEVEL%
+
 
 :End
 REM Reset environment variables
-set TrimFlag=
-set VCSolutionDir=
-echo Build Stage Exit Code: %ExitCode%
+set BUILD_FLAGS=
+set BUILD_CONFIGURATION=
+set BUILD_VERSION=
+set SCRIPT_DIR=
+set VC_SOLUTION_DIR=
+
+echo Build Stage Exit Code: %EXIT_CODE%
+
 
 :Finish
-exit /B %ExitCode%
+exit /B %EXIT_CODE%

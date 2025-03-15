@@ -1,10 +1,12 @@
 ﻿#!/bin/bash
 
-if [ $# -eq 1 ]; then
-    PACKAGE_VERSION="$1"
-else
-    # Set a default version if no argument is provided
-    PACKAGE_VERSION="1.0.0"
+# The default build version is defined in the repo VERSION file.
+PACKAGE_VERSION=$(cat "$SCRIPT_DIR/../../../VERSION") | 's/^[[:space:]]*//;s/[[:space:]]*$//'
+
+# The default build version can be overridden by the 'VCBuildVersion' 
+# environment variable
+if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
+    PACKAGE_VERSION="$VCBuildVersion"
 fi
 
 # Define variables

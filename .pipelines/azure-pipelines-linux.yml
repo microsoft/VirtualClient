@@ -57,8 +57,8 @@ stages:
         version=$(cat $(Build.SourcesDirectory)/VERSION)
 
         # Set the file content as a pipeline variable
-        echo "##vso[task.setvariable variable=VcVersion]$version"
-      displayName: 'Set VC Version'
+        echo "$version"
+      displayName: 'Show VC Build Version'
 
     - script: chmod -R +x $(Build.SourcesDirectory)
       displayName: 'Allow scripts to be executable on Linux'
@@ -68,19 +68,19 @@ stages:
       # displayName: 'Clean Output Directories'
       
       # Build the repo.
-    - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
+    - script: $(Build.SourcesDirectory)/build.sh
       displayName: 'Build Solutions'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh
       displayName: 'Build rpm package for linux arm64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh
       displayName: 'Build rpm package for linux x64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh
       displayName: 'Build deb package for linux arm64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh
       displayName: 'Build deb package for linux x64'
 
       
