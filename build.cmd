@@ -5,6 +5,7 @@ set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 set BUILD_CONFIGURATION=
 set BUILD_FLAGS=-p:PublishTrimmed=true
+set BUILD_FLAGS=
 set BUILD_VERSION=
 set VC_SOLUTION_DIR=%SCRIPT_DIR%\src\VirtualClient
 
@@ -16,7 +17,7 @@ for %%a in (%*) do (
 
     rem Pass in the --notrim flag to opt out of trimming the project 
     rem assemblies during build.
-    if /i "%%a" == "--notrim" set BUILD_FLAGS=
+    if /i "%%a" == "--trim" set BUILD_FLAGS=-p:PublishTrimmed=true
 )
 
 rem The default build version is defined in the repo VERSION file.
