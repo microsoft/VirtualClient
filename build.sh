@@ -12,19 +12,16 @@ Usage() {
     echo ""
     echo "Options:"
     echo "---------------------"
-    echo "--debug  - Flag requests build configuration to be 'Debug' vs. the default 'Release'."
     echo "--trim   - Enables trimming for publish output."
     echo ""
     echo "Usage:"
     echo "---------------------"
-    echo "build.sh [--debug] [--trim]"
+    echo "build.sh [--trim]"
     echo ""
     echo "Examples"
     echo "---------------------"
     echo "user@system:~/repo$ ./build.sh"
-    echo "user@system:~/repo$ ./build.sh --debug"
     echo "user@system:~/repo$ ./build.sh --trim"
-    echo "user@system:~/repo$ ./build.sh --debug --trim"
     echo ""
     Finish
 }
@@ -50,9 +47,6 @@ while [[ $# -gt 0 ]]; do
     case "${1,,}" in
         "/?"|"-?"|"--help")
             Usage
-            ;;
-        "--debug")
-            BUILD_CONFIGURATION="Debug"
             ;;
         "--trim")
             BUILD_FLAGS="-p:PublishTrimmed=true"
