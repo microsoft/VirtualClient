@@ -65,8 +65,17 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+# The default build configuration is 'Release'.
+BUILD_CONFIGURATION="Release"
+
+# The default build configuration (e.g. Release) can be overridden 
+# by the 'VCBuildConfiguration' environment variable
+if [[ -v "VCBuildConfiguration" && -n "$VCBuildConfiguration" ]]; then
+    BUILD_CONFIGURATION=$VCBuildConfiguration
+fi
+
 # The default build version is defined in the repo VERSION file.
-BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION")
 
 # The default build version can be overridden by the 'VCBuildVersion' environment variable
 if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
@@ -85,8 +94,8 @@ echo "**********************************************************************"
 echo ""
 echo "[Build Solution]"
 echo "----------------------------------------------------------------------"
-dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c Release $BUILD_CONFIGURATION \
--p:AssemblyVersion=%BUILD_VERSION%
+dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c $BUILD_CONFIGURATION \
+-p:AssemblyVersion=%BUILD_VERSION
 
 result=$?
 if [ $result -ne 0 ]; then
@@ -97,7 +106,7 @@ echo ""
 echo "[Build Virtual Client: linux-x64]"
 echo "----------------------------------------------------------------------"
 dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=%BUILD_VERSION% $BUILD_FLAGS
+-p:AssemblyVersion=%BUILD_VERSION $BUILD_FLAGS
 
 result=$?
 if [ $result -ne 0 ]; then
@@ -108,7 +117,7 @@ echo ""
 echo "Build Virtual Client: linux-arm64]"
 echo "----------------------------------------------------------------------"
 dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=%BUILD_VERSION% $BUILD_FLAGS
+-p:AssemblyVersion=%BUILD_VERSION $BUILD_FLAGS
 
 result=$?
 if [ $result -ne 0 ]; then
@@ -119,7 +128,7 @@ echo ""
 echo "Build Virtual Client: win-x64]"
 echo "----------------------------------------------------------------------"
 dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=%BUILD_VERSION% $BUILD_FLAGS
+-p:AssemblyVersion=%BUILD_VERSION $BUILD_FLAGS
 
 result=$?
 if [ $result -ne 0 ]; then
@@ -130,12 +139,12 @@ echo ""
 echo "[Build Virtual Client: win-arm64]"
 echo "----------------------------------------------------------------------"
 dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=%BUILD_VERSION% $BUILD_FLAGS
+-p:AssemblyVersion=%BUILD_VERSION $BUILD_FLAGS
 
-    result=$?
-    if [ $result -ne 0 ]; then
-        Error
-    fi
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
 done
 
 End
