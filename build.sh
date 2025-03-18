@@ -1,30 +1,27 @@
 #!/bin/bash
 
 EXIT_CODE=0
-BUILD_CONFIGURATION=""
-BUILD_FLAGS="-p:PublishTrimmed=true"
+BUILD_CONFIGURATION="Release"
+BUILD_FLAGS=""
 BUILD_VERSION=""
 SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE}"))"
 
 Usage() {
     echo ""
-    echo "Builds the source code in the repo."
+    echo "Builds the source code in the repo. "
+    echo ""
+    echo "Options:"
+    echo "---------------------"
+    echo "--trim   - Enables trimming for publish output."
     echo ""
     echo "Usage:"
     echo "---------------------"
-    echo "build.sh"
+    echo "build.sh [--trim]"
     echo ""
     echo "Examples"
     echo "---------------------"
-    echo "# Use defaults"
-    echo "user@system:~/repo$ chmod +x *.sh"
     echo "user@system:~/repo$ ./build.sh"
-    echo ""
-    echo "# Set specific version and configuration"
-    echo "user@system:~/repo$ export VCBuildVersion=\"1.16.25\""
-    echo "user@system:~/repo$ export VCBuildConfiguration=\"Debug\""
-    echo "user@system:~/repo$ chmod +x *.sh"
-    echo "user@system:~/repo$ ./build.sh"
+    echo "user@system:~/repo$ ./build.sh --trim"
     echo ""
     Finish
 }
@@ -45,22 +42,22 @@ Finish() {
     exit $EXIT_CODE
 }
 
-for ((i=1; i<=$#; i++)); do
-    arg="${!i}"
-  
-    if [ "$arg" == "/?" ] || [ "$arg" == "-?" ] || [ "$arg" == "--help" ]; then
-        Usage
-    fi
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "${1,,}" in
+        "/?"|"-?"|"--help")
+            Usage
+            ;;
+        "--trim")
+            BUILD_FLAGS="-p:PublishTrimmed=true"
+            ;;
+        *)
+            echo "Unknown option: $1"
+            Usage
+            ;;
+    esac
+    shift
 done
-
-# The default build version is defined in the repo VERSION file.
-BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION")
-
-# The default build version can be overridden by the 'VCBuildVersion' 
-# environment variable
-if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
-    BUILD_VERSION=$VCBuildVersion
-fi
 
 # The default build configuration is 'Release'.
 BUILD_CONFIGURATION="Release"
@@ -71,6 +68,14 @@ if [[ -v "VCBuildConfiguration" && -n "$VCBuildConfiguration" ]]; then
     BUILD_CONFIGURATION=$VCBuildConfiguration
 fi
 
+# The default build version is defined in the repo VERSION file.
+BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+# The default build version can be overridden by the 'VCBuildVersion' environment variable
+if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
+    BUILD_VERSION=$VCBuildVersion
+fi
+
 echo ""
 echo "**********************************************************************"
 echo "Build Version : $BUILD_VERSION"
@@ -78,6 +83,7 @@ echo "Repo Root     : $SCRIPT_DIR"
 echo "Configuration : $BUILD_CONFIGURATION"
 echo "Flags         : $BUILD_FLAGS"
 echo "**********************************************************************"
+
 
 echo ""
 echo "[Build Solution]"
@@ -102,7 +108,7 @@ if [ $result -ne 0 ]; then
 fi
 
 echo ""
-echo "Build Virtual Client: linux-arm64]"
+echo "[Build Virtual Client: linux-arm64]"
 echo "----------------------------------------------------------------------"
 dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION --self-contained \
 -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
@@ -113,7 +119,7 @@ if [ $result -ne 0 ]; then
 fi
 
 echo ""
-echo "Build Virtual Client: win-x64]"
+echo "[Build Virtual Client: win-x64]"
 echo "----------------------------------------------------------------------"
 dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION --self-contained \
 -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
