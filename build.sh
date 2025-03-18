@@ -69,7 +69,7 @@ if [[ -v "VCBuildConfiguration" && -n "$VCBuildConfiguration" ]]; then
 fi
 
 # The default build version is defined in the repo VERSION file.
-BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION")
+BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION") | 's/^[[:space:]]*//;s/[[:space:]]*$//'
 
 # The default build version can be overridden by the 'VCBuildVersion' environment variable
 if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
