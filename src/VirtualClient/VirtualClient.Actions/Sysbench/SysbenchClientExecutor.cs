@@ -208,7 +208,7 @@ namespace VirtualClient.Actions
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
             this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {SensitiveData.ObscureSecrets(this.SuperUserPassword)}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
@@ -236,7 +236,7 @@ namespace VirtualClient.Actions
             int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
             this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {SensitiveData.ObscureSecrets(this.SuperUserPassword)}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
@@ -289,7 +289,7 @@ namespace VirtualClient.Actions
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
             this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
-            this.sysbenchPrepareArguments = $"{this.sysbenchLoggingArguments} --password {this.SuperUserPassword}";
+            this.sysbenchPrepareArguments = $"{this.sysbenchLoggingArguments} --password {SensitiveData.ObscureSecrets(this.SuperUserPassword)}";
 
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                                     .FirstOrDefault()?.IPAddress
