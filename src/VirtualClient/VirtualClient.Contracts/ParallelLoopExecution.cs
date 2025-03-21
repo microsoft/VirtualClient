@@ -68,6 +68,12 @@ namespace VirtualClient.Contracts
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                if (!VirtualClientComponent.IsSupported(component))
+                {
+                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} {component.TypeName} bot supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    break;
+                }
+
                 if (!string.IsNullOrWhiteSpace(component.Scenario))
                 {
                     this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} Component = {component.TypeName} (scenario={component.Scenario})", LogLevel.Information, telemetryContext);
