@@ -5,7 +5,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(4-cores)=02:00:00,(16-cores)=05:00:00,(64-cores)=10:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
         "CompilerVersion": "",
