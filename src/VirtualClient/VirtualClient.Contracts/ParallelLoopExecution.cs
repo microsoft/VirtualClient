@@ -70,7 +70,7 @@ namespace VirtualClient.Contracts
             {
                 if (!VirtualClientComponent.IsSupported(component))
                 {
-                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} {component.TypeName} bot supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
                     break;
                 }
 
