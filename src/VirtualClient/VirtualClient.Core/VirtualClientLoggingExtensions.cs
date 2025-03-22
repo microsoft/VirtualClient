@@ -53,6 +53,7 @@ namespace VirtualClient
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
             process.ProcessDetails.ToolName = toolName;
             process.ProcessDetails.GeneratedResults = results;
+            process.ProcessDetails.CommandLine = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
             return LogProcessDetailsAsync(component, process.ProcessDetails, telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars);
         }
 
