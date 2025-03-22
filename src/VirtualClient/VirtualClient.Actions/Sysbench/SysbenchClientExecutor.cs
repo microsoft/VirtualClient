@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
             {
                 this.MetadataContract.AddForScenario(
                     "Sysbench",
-                    process.FullCommand(),
+                    SensitiveData.ObscureSecrets(process.FullCommand()),
                     toolVersion: null);
 
                 this.MetadataContract.Apply(telemetryContext);

@@ -174,6 +174,9 @@ namespace VirtualClient
 
             try
             {
+                // Obscure sensitive data in the command line
+                processDetails.CommandLine = SensitiveData.ObscureSecrets(processDetails.CommandLine);
+
                 // Examples:
                 // --------------
                 // GeekbenchExecutor.ProcessDetails
