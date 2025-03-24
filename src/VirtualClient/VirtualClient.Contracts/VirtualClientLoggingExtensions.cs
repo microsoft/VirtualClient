@@ -369,6 +369,8 @@ namespace VirtualClient.Contracts
             eventContext.ThrowIfNull(nameof(eventContext));
             errorMessage.ThrowIfNullOrWhiteSpace(nameof(errorMessage));
 
+            errorMessage = SensitiveData.ObscureSecrets(errorMessage);
+
             if (error != null)
             {
                 EventContext errorContext = eventContext.Clone();
@@ -481,6 +483,8 @@ namespace VirtualClient.Contracts
             {
                 if (eventContext != null)
                 {
+                    message = SensitiveData.ObscureSecrets(message);
+
                     // Note:
                     // The log type is used to route messages to the appropriate logger underneath. In practice, there
                     // are numerous loggers undernath an ILogger instance. For example, the Virtual Client logs to multiple

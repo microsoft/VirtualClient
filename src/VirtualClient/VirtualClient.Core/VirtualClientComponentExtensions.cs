@@ -128,7 +128,7 @@ namespace VirtualClient
                     throw new NotSupportedException($"The application of a username is not supported unless running elevated. Use the '{nameof(runElevated)}' parameter.");
                 }
             }
-
+            
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
                 .AddContext(nameof(commandArguments), commandArguments)

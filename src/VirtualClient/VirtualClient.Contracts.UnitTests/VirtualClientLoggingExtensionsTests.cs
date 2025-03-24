@@ -17,6 +17,7 @@ namespace VirtualClient.Contracts
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -1000,7 +1001,7 @@ namespace VirtualClient.Contracts
             {
                 Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
                 Assert.IsInstanceOf<EventContext>(state);
-                
+
                 if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
                 {
                     Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
@@ -1044,6 +1045,35 @@ namespace VirtualClient.Contracts
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
             Assert.IsTrue(expectedProcessResultsCaptured);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsAsyncObscuresSecrets()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "run",
+                    Arguments = "password=secret123"
+                }
+            };
+
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
+                {
+                    (state as EventContext).Properties.TryGetValue("process", out object processContext);
+                    string actualProcessInfo = processContext.ToJson();
+
+                    Assert.IsFalse(actualProcessInfo.ToString().Contains("secret123"));
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { }, logToTelemetry: true)
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -2470,6 +2500,15 @@ namespace VirtualClient.Contracts
             {
                 Assert.AreEqual(originalValues[entry.Key], entry.Value.ToString());
             }
+        }
+
+        [Test]
+        public static void ObscureSecretsObscuresErrorMessage()
+        {
+            string errorMessage = "\"Segmentation fault\\nTraceback (most recent call last):\\n  File \\\"/home/junovmadmin/nuget/packages/virtualclient/1.16.3000.1676/content/linux-arm64/packages/sysbench-1.0.20.rev1/run-workload.py\\\", line 37, in <module>\\n    subprocess.run(f'sudo src/sysbench tpcc --db-driver=pgsql --tables={tableCount} --scale={warehouses} --threads={threadCount} --pgsql-user=postgres --pgsql-password={password} --pgsql-db={dbName} --pgsql-host={hostIp} --time={durationSecs} run', shell=True, check=True)\\n  File \\\"/usr/lib/python3.8/subprocess.py\\\", line 516, in run\\n    raise CalledProcessError(retcode, process.args,\\nsubprocess.CalledProcessError: Command 'sudo src/sysbench tpcc --db-driver=pgsql --tables=10 --scale=100 --threads=4 --pgsql-user=postgres --pgsql-password=DeYbDIY6UwuQMsV2U8iDPO2aq8A9x54Ak3EtUu+u5UU= --pgsql-db=sbtest --pgsql-host=10.0.1.1 --time=1800 run' returned non-zero exit status 139.\\n";
+            string obscuredMessage = SensitiveData.ObscureSecrets(errorMessage);
+
+            Assert.IsFalse(obscuredMessage.Contains("DeYbDIY6UwuQMsV2U8iDPO2aq8A9x54Ak3EtUu+u5UU="));
         }
 
         private static Tuple<string, string> GetAccessTokenPair()

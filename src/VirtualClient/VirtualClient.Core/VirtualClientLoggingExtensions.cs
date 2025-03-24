@@ -176,6 +176,8 @@ namespace VirtualClient
             {
                 // Obscure sensitive data in the command line
                 processDetails.CommandLine = SensitiveData.ObscureSecrets(processDetails.CommandLine);
+                processDetails.StandardOutput = SensitiveData.ObscureSecrets(processDetails.CommandLine);
+                processDetails.StandardError = SensitiveData.ObscureSecrets(processDetails.CommandLine);
 
                 // Examples:
                 // --------------
@@ -232,6 +234,11 @@ namespace VirtualClient
 
             try
             {
+                // Obscure sensitive data in the command line
+                process.ProcessDetails.CommandLine = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
+                process.ProcessDetails.StandardOutput = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
+                process.ProcessDetails.StandardError = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
+
                 // Examples:
                 // --------------
                 // GeekbenchExecutor.ProcessDetails

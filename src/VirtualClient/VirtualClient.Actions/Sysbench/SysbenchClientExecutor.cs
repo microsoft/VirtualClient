@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
             {
                 this.MetadataContract.AddForScenario(
                     "Sysbench",
-                    SensitiveData.ObscureSecrets(process.FullCommand()),
+                    process.FullCommand(),
                     toolVersion: null);
 
                 this.MetadataContract.Apply(telemetryContext);
@@ -250,7 +250,7 @@ namespace VirtualClient.Actions
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+                    process.ThrowIfErrored<WorkloadException>(SensitiveData.ObscureSecrets(process.StandardError.ToString()), ErrorReason.WorkloadFailed);
 
                     this.CaptureMetrics(process, telemetryContext, cancellationToken);
                 }
@@ -277,7 +277,7 @@ namespace VirtualClient.Actions
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+                    process.ThrowIfDependencyInstallationFailed(SensitiveData.ObscureSecrets(process.StandardError.ToString()));
                 }
             }
         }

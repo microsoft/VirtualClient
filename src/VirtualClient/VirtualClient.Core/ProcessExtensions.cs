@@ -206,6 +206,8 @@ namespace VirtualClient
             where TError : VirtualClientException
         {
             process.ThrowIfNull(nameof(process));
+            process.ProcessDetails.StandardError = SensitiveData.ObscureSecrets(process.ProcessDetails.StandardError);
+            errorMessage = SensitiveData.ObscureSecrets(errorMessage);
             process.ThrowIfErrored<TError>(ProcessProxy.DefaultSuccessCodes, errorMessage, errorReason);
         }
 
