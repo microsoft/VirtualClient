@@ -129,7 +129,7 @@ namespace VirtualClient.Actions
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(SensitiveData.ObscureSecrets(process.StandardError.ToString()), ErrorReason.WorkloadUnexpectedAnomaly);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
 
                     this.AddMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
                 }

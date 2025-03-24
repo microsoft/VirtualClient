@@ -17,6 +17,7 @@ namespace VirtualClient.Contracts
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -1074,6 +1075,40 @@ namespace VirtualClient.Contracts
             TestExecutor component = new TestExecutor(this.mockFixture);
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { }, logToTelemetry: true)
                 .ConfigureAwait(false);
+        }
+
+        [Test]
+        public void LogErrorMessageObscuresSecrets()
+        {
+            Exception expectedError = null;
+            try
+            {
+                // To ensure a call stack is included.
+                throw new Exception("An error occurred, password=secret123");
+            }
+            catch (Exception exc)
+            {
+                expectedError = exc;
+            }
+
+            this.mockLogger.Object.LogErrorMessage(expectedError, this.mockEventContext);
+
+            this.mockLogger
+                .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    Assert.IsNotNull(state);
+                    Assert.IsTrue(state.Properties.ContainsKey("error"));
+                    Assert.IsTrue(state.Properties.ContainsKey("errorCallstack"));
+
+                    List<object> errorEntries = state.Properties["error"] as List<object>;
+                    Assert.IsNotNull(errorEntries);
+                    Assert.IsTrue(errorEntries.Count == 1);
+
+                    Assert.IsFalse(JsonConvert.SerializeObject(errorEntries.First()).Contains("secret123"));
+                });
+
+            this.mockLogger.Object.LogErrorMessage(expectedError, this.mockEventContext);
         }
 
         [Test]
