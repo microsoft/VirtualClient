@@ -1049,16 +1049,20 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsAsyncObscuresSecrets()
+        [TestCase(0, "run password=secret123", null)]
+        [TestCase(1, "run password=secret123", "run password=secret123")]
+        public async Task LogProcessDetailsAsyncObscuresSecrets(int exitCode, string standardOutput, string standardError)
         {
             InMemoryProcess process = new InMemoryProcess
             {
-                ExitCode = 0,
+                ExitCode = exitCode,
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "run",
                     Arguments = "password=secret123"
-                }
+                },
+                StandardOutput = new ConcurrentBuffer(new StringBuilder(standardOutput)),
+                StandardError = new ConcurrentBuffer(new StringBuilder(standardError))
             };
 
             this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
