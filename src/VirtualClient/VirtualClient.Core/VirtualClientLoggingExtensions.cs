@@ -176,8 +176,8 @@ namespace VirtualClient
             {
                 // Obscure sensitive data in the command line
                 processDetails.CommandLine = SensitiveData.ObscureSecrets(processDetails.CommandLine);
-                processDetails.StandardOutput = SensitiveData.ObscureSecrets(processDetails.CommandLine);
-                processDetails.StandardError = SensitiveData.ObscureSecrets(processDetails.CommandLine);
+                processDetails.StandardOutput = SensitiveData.ObscureSecrets(processDetails.StandardOutput);
+                processDetails.StandardError = SensitiveData.ObscureSecrets(processDetails.StandardError);
 
                 // Examples:
                 // --------------
@@ -236,8 +236,8 @@ namespace VirtualClient
             {
                 // Obscure sensitive data in the command line
                 process.ProcessDetails.CommandLine = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
-                process.ProcessDetails.StandardOutput = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
-                process.ProcessDetails.StandardError = SensitiveData.ObscureSecrets(process.ProcessDetails.CommandLine);
+                process.ProcessDetails.StandardOutput = SensitiveData.ObscureSecrets(process.ProcessDetails.StandardOutput);
+                process.ProcessDetails.StandardError = SensitiveData.ObscureSecrets(process.ProcessDetails.StandardError);
 
                 // Examples:
                 // --------------

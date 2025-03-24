@@ -993,7 +993,7 @@ namespace VirtualClient.Contracts
                 StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
                 StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
             };
-
+            
             string expectedResults = "Any results output by the process.";
             bool expectedProcessDetailsCaptured = false;
             bool expectedProcessResultsCaptured = false;
