@@ -29,6 +29,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -41,10 +43,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 6100);
-            this.Parameters.SetIfNotDefined(nameof(this.MessagesPerSecond), "max");
-            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
         }
 
         /// <summary>

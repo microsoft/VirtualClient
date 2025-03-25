@@ -29,6 +29,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
