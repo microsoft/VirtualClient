@@ -132,6 +132,7 @@ namespace VirtualClient.Dependencies
                 this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(programFilesPath, package, "bin"), append: true);
             }
 
+            this.SetEnvironmentVariable(EnvironmentVariable.PATH, "C:\\tools\\cygwin\\bin", EnvironmentVariableTarget.User, append: true);
             // choco list doesn't work well enough and is going thorugh a rename/deprecating
             // https://docs.chocolatey.org/en-us/choco/commands/list
             // Need to add the list/verify function once chocolatey releases 2.0
