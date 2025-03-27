@@ -369,6 +369,8 @@ namespace VirtualClient.Contracts
             eventContext.ThrowIfNull(nameof(eventContext));
             errorMessage.ThrowIfNullOrWhiteSpace(nameof(errorMessage));
 
+            errorMessage = SensitiveData.ObscureSecrets(errorMessage);
+
             if (error != null)
             {
                 EventContext errorContext = eventContext.Clone();

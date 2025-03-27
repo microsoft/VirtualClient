@@ -83,7 +83,7 @@ namespace VirtualClient
             {
                 apiHost.UseMiddleware<ApiExceptionMiddleware>(dependencies.GetService<ILogger>());
                 apiHost.MapControllers();
-                apiHost.Urls.Add($"http://localhost:{apiPort}");
+                apiHost.Urls.Add($"http://*:{apiPort}");
                 
                 await apiHost.RunAsync();
             }

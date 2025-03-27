@@ -38,6 +38,12 @@ namespace VirtualClient.Contracts
             List<Task> componentTasks = new List<Task>();
             foreach (VirtualClientComponent component in this)
             {
+                if (!VirtualClientComponent.IsSupported(component))
+                {
+                    this.Logger.LogMessage($"{nameof(ParallelExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    continue;
+                }
+
                 if (!string.IsNullOrWhiteSpace(component.Scenario))
                 {
                     this.Logger.LogMessage($"{nameof(ParallelExecution)} Component = {component.TypeName} (scenario={component.Scenario})", LogLevel.Information, telemetryContext);

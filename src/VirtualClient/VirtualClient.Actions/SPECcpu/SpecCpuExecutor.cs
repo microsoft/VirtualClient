@@ -413,6 +413,18 @@ namespace VirtualClient.Actions
                     this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunShell),
                     this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunShell),
                     true);
+
+                string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", cancellationToken);
+
+                if (string.IsNullOrEmpty(compilerVersion))
+                {
+                    throw new WorkloadException("gcc version not found.");
+                }
+
+                templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.Gcc10Workaround,
+                Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
+                StringComparison.OrdinalIgnoreCase);
             }
             else
             {
@@ -420,22 +432,15 @@ namespace VirtualClient.Actions
                 this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunBat),
                 this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunBat),
                 true);
-            }
 
-            string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", cancellationToken);
-
-            if (string.IsNullOrEmpty(compilerVersion))
-            {
-                throw new WorkloadException("gcc version not found.");
+                templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.Gcc10Workaround,
+                SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent,
+                StringComparison.OrdinalIgnoreCase);
             }
 
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);
-            templateText = templateText.Replace(
-                SpecCpuConfigPlaceHolder.Gcc10Workaround,
-                Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
-                StringComparison.OrdinalIgnoreCase);
-
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
         }
 
@@ -443,7 +448,6 @@ namespace VirtualClient.Actions
         {
             string command = compilerName;
             string commandArguments = "-dumpversion";
-
             string version = string.Empty;
 
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
