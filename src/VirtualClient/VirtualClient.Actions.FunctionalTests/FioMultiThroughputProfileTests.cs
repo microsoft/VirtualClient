@@ -58,12 +58,8 @@ namespace VirtualClient.Actions
 
                 // Apt packages expectations
                 // There are a few Apt packages that must be installed for the FIO workload to run.
-                WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio1");
                 WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio-dev");
-
-                // Workload dependency package expectations
-                // The FIO workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "fio");
+                WorkloadAssert.AptPackageInstalled(this.mockFixture, "fio");
             }
         }
 
@@ -103,34 +99,12 @@ namespace VirtualClient.Actions
             }
         }
 
-        [Test]
-        [TestCase("PERF-IO-FIO-MULTITHROUGHPUT.json")]
-        public void FioWorkloadMultiThroughputProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
-        {
-            // Setup disks the expected scenarios:
-            // - Disks are formatted and ready
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withUnformatted: false);
-
-            // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
-
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
-            {
-                executor.ExecuteDependencies = false;
-
-                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Contains("fio"));
-            }
-        }
-
         private static IEnumerable<string> GetFioStressProfileExpectedCommands(PlatformID platform)
         {
             return new List<string>
             {
-                "/home/user/tools/VirtualClient/packages/fio/linux-x64/fio /home/user/tools/VirtualClient/packages/fio/linux-x64/FioMultiThroughputExecutoroltp-c.fio.jobfile --section initrandomio --section initsequentialio",
-                "/home/user/tools/VirtualClient/packages/fio/linux-x64/fio /home/user/tools/VirtualClient/packages/fio/linux-x64/FioMultiThroughputExecutoroltp-c.fio.jobfile --section randomreader --section randomwriter --section sequentialwriter"
+                "fio /home/user/tools/VirtualClient/scripts/fio/updated/FioMultiThroughputExecutoroltp-c.fio.jobfile --section initrandomio --section initsequentialio",
+                "fio /home/user/tools/VirtualClient/scripts/fio/updated/FioMultiThroughputExecutoroltp-c.fio.jobfile --section randomreader --section randomwriter --section sequentialwriter"
             };
         }
     }

@@ -33,9 +33,6 @@ jobs:
       with:
         dotnet-version: 8.0.101
 
-    - name: Restore dependencies
-      run: ./build-restore.cmd
-
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:

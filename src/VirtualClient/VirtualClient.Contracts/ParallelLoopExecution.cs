@@ -53,6 +53,12 @@ namespace VirtualClient.Contracts
             this.timeoutTask = Task.Delay(this.Duration, cancellationToken);
             foreach (VirtualClientComponent component in this)
             {
+                if (!VirtualClientComponent.IsSupported(component))
+                {
+                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    continue;
+                }
+
                 // Wrap each component execution in a loop, and ensure we respect the timeout.
                 componentTasks.Add(this.ExecuteComponentLoopAsync(component, telemetryContext, cancellationToken));
             }

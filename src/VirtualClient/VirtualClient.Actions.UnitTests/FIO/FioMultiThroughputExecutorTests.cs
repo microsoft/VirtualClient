@@ -106,7 +106,7 @@ namespace VirtualClient.Actions
                 {
                     if (!arguments.Contains("chmod"))
                     {
-                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockPackage.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]} " +
                             $"--section initrandomio --section initsequentialio " +
@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockPackage.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
                             $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));
@@ -360,7 +360,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockPackage.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
                             $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));
@@ -388,7 +388,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockPackage.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
                             $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));

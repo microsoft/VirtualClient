@@ -295,7 +295,7 @@ namespace VirtualClient.Actions
 
                     if (!string.IsNullOrEmpty(this.JobFiles))
                     {
-                        this.CommandLine = await this.GetCommandForJobFilesAsync(cancellationToken);
+                        this.CommandLine = this.GetCommandForJobFilesAsync(cancellationToken);
                     }
 
                     // Apply parameters to the FIO command line options.
@@ -902,9 +902,15 @@ namespace VirtualClient.Actions
             return sanitizedFilePath;
         }
 
-        private async Task<string> GetCommandForJobFilesAsync(CancellationToken cancellationToken)
+        private string GetCommandForJobFilesAsync(CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
+            string updatedJobFileFolder = Path.Combine(jobFileFolder, "updated");
+
+            if (!this.SystemManagement.FileSystem.Directory.Exists(updatedJobFileFolder))
+            {
+                this.SystemManagement.FileSystem.Directory.CreateDirectory(updatedJobFileFolder);
+            }
 
             string command = string.Empty;
             string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
@@ -913,7 +919,7 @@ namespace VirtualClient.Actions
             {
                 // Create/update new job file at runtime.
                 string templateJobFileName = Path.GetFileName(templateJobFilePath);
-                string updatedJobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, templateJobFileName);
+                string updatedJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, "updated", templateJobFileName);
                 this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
 
                 // Update command to include the new job file.

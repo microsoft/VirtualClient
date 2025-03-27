@@ -36,9 +36,6 @@ jobs:
     - name: Add permission to run shell
       run: chmod -R +x *.sh
 
-    - name: Restore dependencies
-      run: ./build-restore.sh
-
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:

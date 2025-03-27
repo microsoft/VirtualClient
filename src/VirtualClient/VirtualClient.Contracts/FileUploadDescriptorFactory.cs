@@ -151,30 +151,52 @@ namespace VirtualClient.Contracts
                 string resolvedValue;
                 foreach (Match match in matches)
                 {
-                    // Order of placeholder resolution:
-                    // 1) Metadata known by the VC runtime is applied first because it is definitive.
-                    // 2) Component metadata supplied to the factory.
-                    // 3) Component parameters supplied to the factory.
-                    if (FileUploadDescriptorFactory.TryResolvePlaceholder(runtimeMetadata, match.Groups[1].Value, out resolvedValue))
+                    string[] effectivePlaceholders = null;
+                    string templatePlaceholder = match.Groups[1].Value;
+                    if (templatePlaceholder.IndexOf('|') < 0)
                     {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else if (metadata?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(metadata, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else if (parameters?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(parameters, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                        effectivePlaceholders = new string[] { templatePlaceholder };
                     }
                     else
+                    {
+                        effectivePlaceholders = templatePlaceholder.Split("|", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    }
+
+                    bool placeholderMatched = false;
+                    foreach (string placeholder in effectivePlaceholders)
+                    {
+                        // Order of placeholder resolution:
+                        // 1) Metadata known by the VC runtime is applied first because it is definitive.
+                        // 2) Component metadata supplied to the factory.
+                        // 3) Component parameters supplied to the factory.
+                        if (FileUploadDescriptorFactory.TryResolvePlaceholder(runtimeMetadata, placeholder, out resolvedValue))
+                        {
+                            placeholderMatched = true;
+                            resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                            break;
+                        }
+                        else if (metadata?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(metadata, placeholder, out resolvedValue))
+                        {
+                            placeholderMatched = true;
+                            resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                            break;
+                        }
+                        else if (parameters?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(parameters, placeholder, out resolvedValue))
+                        {
+                            placeholderMatched = true;
+                            resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                            break;
+                        }
+                    }
+
+                    if (!placeholderMatched)
                     {
                         resolvedTemplate = resolvedTemplate.Replace(match.Value, string.Empty);
                     }
                 }
             }
 
-            return resolvedTemplate.Replace("//", "/");
+            return resolvedTemplate.Replace("//", "/").Trim('/');
         }
 
         private static bool TryResolvePlaceholder(IDictionary<string, IConvertible> metadata, string propertyName, out string resolvedValue)

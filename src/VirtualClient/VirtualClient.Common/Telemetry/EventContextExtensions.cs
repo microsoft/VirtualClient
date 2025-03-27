@@ -42,7 +42,7 @@ namespace VirtualClient.Common.Telemetry
                     errors.Add(new
                     {
                         errorType = currentError.GetType().FullName,
-                        errorMessage = currentError.Message
+                        errorMessage = SensitiveData.ObscureSecrets(currentError.Message)
                     });
 
                     currentError = currentError.InnerException;
@@ -65,11 +65,11 @@ namespace VirtualClient.Common.Telemetry
                 {
                     if (error.StackTrace.Length > maxCallStackLength)
                     {
-                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace.Substring(0, maxCallStackLength);
+                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = SensitiveData.ObscureSecrets(error.StackTrace.Substring(0, maxCallStackLength));
                     }
                     else
                     {
-                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace;
+                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = SensitiveData.ObscureSecrets(error.StackTrace);
                     }
                 }
             }
