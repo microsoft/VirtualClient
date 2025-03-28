@@ -34,6 +34,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -46,9 +48,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
-            this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
         }
 
         /// <summary>
