@@ -1,27 +1,25 @@
 # Redis Workload Profiles
-
 The following profiles run customer-representative or benchmarking scenarios using the Memtier or Redis workloads against
 a Redis server.
 
-- [Workload Details](./redis.md)
-- [Client/Server Workloads](../../guides/0020-client-server.md)
+* [Workload Details](./redis.md)  
+* [Client/Server Workloads](../../guides/0020-client-server.md)
 
 ## Client/Server Topology Support
-
 Redis workload profiles support running the workload on both a single system as well as in a client/server topology. This means that the workload supports
 operation on a single system or on 2 distinct systems. The client/server topology is typically used when it is desirable to include a network component in the
-overall performance evaluation. In a client/server topology, one system operates in the 'Client' role making calls to the system operating in the 'Server' role.
+overall performance evaluation. In a client/server topology, one system operates in the 'Client' role making calls to the system operating in the 'Server' role. 
 The Virtual Client instances running on the client and server systems will synchronize with each other before running the workload. In order to support a client/server topology,
 an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. An
 environment layout file is not required for the single system topology.
 
-- [Environment Layouts](../../guides/0020-client-server.md)
+* [Environment Layouts](../../guides/0020-client-server.md)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system(s)/VM(s) as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
 idea. The name of the client must match the name of the system or the value of the agent ID passed in on the command line.
 
-```bash
+``` bash
 # Single System (environment layout not required)
 ./VirtualClient --profile=PERF-REDIS.json --system=Juno --timeout=1440
 
@@ -50,86 +48,83 @@ idea. The name of the client must match the name of the system or the value of t
 ```
 
 ## PERF-REDIS.json
-
 Runs the Memtier workload against to generate various network traffic patterns against a Redis server. Although this is the default client workload
 the Redis benchmark itself can also be run to evaluate the performance of the Redis server.
 We have two profiles for Redis.One supports redis with TLS and one without TLS.
 
-- [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json)
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
 
-- **Supported Platform/Architectures**
-
-  - linux-x64
-  - linux-arm64
+* **Supported Platform/Architectures**
+  * linux-x64 
+  * linux-arm64
 
   **Note**: Client/Server mode not supported currently on Azurelinux 3.
 
-- **Supports Disconnected Scenarios**
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
 
-  - No. Internet connection required.
-
-- **Dependencies**  
+* **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
-
-  - Internet connection.
-  - The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  - The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+  * Internet connection.
+  * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
-  - [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
-
-- **Profile Parameters**  
+* **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
-  | Parameter            | Purpose                                                                                                                                                                                                                                                                                                                   | Default Value        |
-  | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-  | Duration             | Optional. Defines the length of time to execute the Memtier benchmark operations against the Redis servers for each scenario in the profile.                                                                                                                                                                              | 2 mins               |
-  | ClientInstances      | Optional. Defines the number of distinct client instances that to execute requests against each Redis server concurrently.                                                                                                                                                                                                | 1                    |
-  | EmitAggregateMetrics | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false                |
-  | EmitRawMetrics       | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option..                                                                                                                                                                                    | true                 |
-  | ServerInstances      | Optional. Defines the number of distinct Redis server instances to run concurrently. This allows the user to adjust alongside the number of client instances for higher scale situations.                                                                                                                                 | # logical processors |
-  | ServerThreadCount    | Optional. The number of threads to use by the Redis server to handle operations.                                                                                                                                                                                                                                          | 4                    |
-  | ServerPort           | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381)                                                                                                                            | 6379                 |
-  | IsTLSEnabled         | Optional. It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS                                                                                                                                                                                                                             | False                |
+  | Parameter                 | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Duration                  | Optional. Defines the length of time to execute the Memtier benchmark operations against the Redis servers for each scenario in the profile. | 2 mins |
+  | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against each Redis server concurrently. | 1 |
+  | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
+  | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.. | true |
+  | ServerInstances           | Optional. Defines the number of distinct Redis server instances to run concurrently. This allows the user to adjust alongside the number of client instances for higher scale situations.   | # logical processors |
+  | ServerThreadCount         | Optional. The number of threads to use by the Redis server to handle operations.  | 4 |
+  | ServerPort                | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381) | 6379 |
+  | IsTLSEnabled              | Optional. It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS| False |
 
-- **Component Parameters**  
+* **Component Parameters**  
   The following parameters describe the parameters within the profile components.
 
-  | Server Role Parameter | Purpose                                                                                                                                                                                 | Default Value                                                  |
-  | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-  | Scenario              | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile.                                          |                                                                |
-  | BindToCores           | True to instruct the Redis servers to bind to explicit cores on the system (e.g. 0, 1, 2, 3 )                                                                                           |                                                                |
-  | CommandLine           | The command line to use for executing the Redis server.                                                                                                                                 |                                                                |
-  | PackageName           | The name of the package that contains the Redis server binaries/scripts.                                                                                                                |                                                                |
-  | Port                  | The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381)     |                                                                |
-  | ServerInstances       | The number of distinct Redis server instances to run concurrently.                                                                                                                      | # logical processors                                           |
-  | ServerThreadCount     | The number of threads to use by the Redis server to handle operations.                                                                                                                  | 4                                                              |
-  | Username              | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon)</mark><br/><br/>Defines a specific username under which to run the Redis server. | The user account for the process that launches Virtual Client. |
-  | IsTLSEnabled          | It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS                                                                                                     | False                                                          |
+  | Server Role Parameter     | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | BindToCores               | True to instruct the Redis servers to bind to explicit cores on the system (e.g. 0, 1, 2, 3 ) | |
+  | CommandLine               | The command line to use for executing the Redis server. | |
+  | PackageName               | The name of the package that contains the Redis server binaries/scripts.    |               |
+  | Port                      | The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | |
+  | ServerInstances           | The number of distinct Redis server instances to run concurrently. | # logical processors |
+  | ServerThreadCount         | The number of threads to use by the Redis server to handle operations. | 4 |
+  | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon)</mark><br/><br/>Defines a specific username under which to run the Redis server. | The user account for the process that launches Virtual Client.  |
+  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS| False |
 
-  | Client Role Parameter | Purpose                                                                                                                                                                                                                                                                                                                                                                                          | Default Value |
-  | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-  | Scenario              | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile.                                                                                                                                                                                                                                                   |               |
-  | ClientInstances       | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux). | 8             |
-  | CommandLine           | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object.                                                            |               |
-  | EmitAggregateMetrics  | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable.                                                                        | false         |
-  | EmitRawMetrics        | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.                                                                                                                                                                                                                                                            | true          |
-  | PackageName           | The name of the package that contains the Memtier benchmark binaries/scripts.                                                                                                                                                                                                                                                                                                                    |               |
-  | WarmUp                | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps.                                                                                                                                                                                                                                                                   | false         |
-  | IsTLSEnabled          | It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS                                                                                                                                                                                                                                                                                                              | False         |
 
-- **Profile Runtimes**  
-  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile
+  | Client Role Parameter     | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | ClientInstances           | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 8 |
+  | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
+  | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
+  | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option. | true |
+  | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
+  | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
+  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "True" for TLS, "False" for no TLS| False |
+
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores.
+  number of system cores. 
 
-- **Usage Examples**  
+* **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-  ```bash
+  ``` bash
   # When running on a single system (environment layout not required)
   ./VirtualClient --profile=PERF-REDIS.json --system=Demo --timeout=250 --packageStore="{BlobConnectionString|SAS Uri}"
 
