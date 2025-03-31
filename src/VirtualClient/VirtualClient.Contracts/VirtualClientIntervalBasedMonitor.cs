@@ -81,5 +81,21 @@ namespace VirtualClient.Contracts
                     nameof(VirtualClientIntervalBasedMonitor.MonitorIterations), -1);
             }
         }
+
+        /// <summary>
+        /// Returns true/false whether the current iterations provided exceeds the 
+        /// configured iterations.
+        /// </summary>
+        /// <param name="currentIteration">The current number of iterations.</param>
+        /// <returns>True if the expected iterations are completed. False if not.</returns>
+        public bool IsIterationComplete(long currentIteration)
+        {
+            if (this.MonitorIterations <= 0)
+            {
+                return false;
+            }
+
+            return currentIteration > this.MonitorIterations;
+        }
     }
 }

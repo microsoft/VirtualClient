@@ -7,41 +7,63 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Reflection;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
-    using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
     public class StressAppTestExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPackage;
-        private string rawText;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "Examples", "StressAppTest");
 
-        [SetUp]
-        public void SetUpFixture()
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
+        private string exampleResults;
+
+        public void SetupTest(PlatformID platform)
         {
-            this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(Path.Combine("Examples", "StressAppTest", "stressAppTestLog_pass.txt"));
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform);
+
+            this.mockPackage = new DependencyPath("stressapptest", this.mockFixture.GetPackagePath("stressapptest"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(StressAppTestExecutorTests.ExamplesDirectory, "stressAppTestLog_pass.txt"));
+
+            this.mockFixture.File.Reset();
+            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleResults);
+
+            this.mockFixture.FileSystem.SetupGet(fs => fs.File)
+                .Returns(this.mockFixture.File.Object);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(StressAppTestExecutor.PackageName), "stressapptest" },
+                { nameof(StressAppTestExecutor.CommandLine), "" },
+                { nameof(StressAppTestExecutor.Scenario), "ApplyStress" },
+                { nameof(StressAppTestExecutor.TimeInSeconds), "60" },
+                { nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy), false }
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
         }
 
         [Test]
         [TestCase(PlatformID.Unix)]
         public void StressAppTestExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platform);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
-            using (TestStressAppTestExecutor StressAppTestExecutor = new TestStressAppTestExecutor(this.fixture))
+            using (TestStressAppTestExecutor StressAppTestExecutor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 DependencyException exception = Assert.ThrowsAsync<DependencyException>(
                     () => StressAppTestExecutor.InitializeAsync(EventContext.None, CancellationToken.None));
@@ -54,13 +76,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/stressapptest")]
         public async Task StressAppTestExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string command)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
 
-            using (TestStressAppTestExecutor StressAppTestExecutor = new TestStressAppTestExecutor(this.fixture))
+            using (TestStressAppTestExecutor StressAppTestExecutor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 bool commandExecuted = false;
                 string expectedCommand = $@"{this.mockPackage.Path}{command} -s 60 -l stressapptestLogs";
-                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if ($"{exe} {arguments}".Contains(expectedCommand))
                     {
@@ -91,24 +113,24 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void StressAppTestExecutorThrowsOnInvalidProfileDefinition(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
 
-            this.fixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = string.Empty;
-            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = string.Empty;
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = "ApplyStress";
-            this.fixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "-l logfile.txt";
-            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = "ApplyStress";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "-l logfile.txt";
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
-            this.fixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "0";
-            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "0";
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
@@ -118,13 +140,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void StressAppTestExecutorThrowsWhenTheWorkloadDoesNotProduceValidResults(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.SetupTest(platform);
+            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync("");
 
-            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual("Invalid results. The StressAppTest workload did not produce valid results.", exception.Message);
@@ -135,48 +157,20 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/stressapptest")]
         public void StressAppTestExecutorThrowsWhenWorkloadResultsFileNotFound(PlatformID platform, string executablePath)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
+            this.SetupTest(platform);
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(false);
 
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(this.mockPackage.Path + executablePath))
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(this.mockPackage.Path + executablePath))
                 .Returns(true);
 
-            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
             }
-        }
-
-        private void SetupDefaultBehavior(PlatformID platform)
-        {
-            this.fixture.Setup(platform);
-            this.mockPackage = new DependencyPath("StressAppTest", this.fixture.PlatformSpecifics.GetPackagePath("StressAppTest"));
-            this.fixture.PackageManager.OnGetPackage("StressAppTest").ReturnsAsync(this.mockPackage);
-
-            this.fixture.File.Reset();
-            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawText);
-
-            this.fixture.FileSystem.SetupGet(fs => fs.File)
-                .Returns(this.fixture.File.Object);
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(StressAppTestExecutor.PackageName), "StressAppTest" },
-                { nameof(StressAppTestExecutor.CommandLine), "" },
-                { nameof(StressAppTestExecutor.Scenario), "ApplyStress" },
-                { nameof(StressAppTestExecutor.TimeInSeconds), "60" },
-                { nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy), false }
-            };
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         private class TestStressAppTestExecutor : StressAppTestExecutor

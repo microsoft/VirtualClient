@@ -6,7 +6,7 @@
         <RunCodeAnalysis>false</RunCodeAnalysis>
         <RunAnalyzers>true</RunAnalyzers>
         <RootNamespace>VirtualClient.Actions</RootNamespace>
-        <NoWarn>SA1116,SA1117,SA1118,AsyncFixer02</NoWarn>
+        <NoWarn>SA1116;SA1117;SA1118;AsyncFixer02</NoWarn>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 

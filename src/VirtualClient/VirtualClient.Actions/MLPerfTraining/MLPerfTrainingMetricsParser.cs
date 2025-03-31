@@ -14,6 +14,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class MLPerfTrainingMetricsParser : MetricsParser
     {
+        private List<Metric> metrics;
+
         /// <summary>
         /// Constructor for <see cref="MLPerfTrainingMetricsParser"/>
         /// </summary>
@@ -23,13 +25,11 @@ namespace VirtualClient.Actions
         {
         }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
             this.Preprocess();
-            this.Metrics = new List<Metric>();
+            this.metrics = new List<Metric>();
 
             string patternDelimiterE2E = $@"'e2e_time':\s*{TextParsingExtensions.DoubleTypeRegex}";
             string patternDelimiterTrainingPerSec = $@"'training_sequences_per_second':\s*{TextParsingExtensions.DoubleTypeRegex}";
@@ -43,12 +43,12 @@ namespace VirtualClient.Actions
             this.AddMetrics("raw_train_time", patternDelimiterRawTrainTime, "s", MetricRelativity.LowerIsBetter);
             this.AddMetrics("eval_mlm_accuracy", patternDelimiterAccuracy, null, MetricRelativity.HigherIsBetter);
 
-            if (!this.Metrics.Any())
+            if (!this.metrics.Any())
             {
                 throw new SchemaException("The MlPerf Training output file has incorrect format for parsing");
             }
 
-            return this.Metrics;
+            return this.metrics;
         }
 
         private void AddMetrics(string metricName, string patternDelimiter, string metricUnit, MetricRelativity metricRelativity)
@@ -57,7 +57,7 @@ namespace VirtualClient.Actions
             var matches = regex.Matches(this.PreprocessedText);
             if (matches.Count > 0)
             {
-                this.Metrics.Add(new Metric(metricName, matches.Average(mt => double.Parse(mt.Groups[1].Value.Trim())), metricUnit, metricRelativity));
+                this.metrics.Add(new Metric(metricName, matches.Average(mt => double.Parse(mt.Groups[1].Value.Trim())), metricUnit, metricRelativity));
             }
         }
     }

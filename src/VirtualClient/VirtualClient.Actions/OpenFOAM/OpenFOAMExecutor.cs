@@ -166,11 +166,8 @@ namespace VirtualClient.Actions
         private async Task InitializeExecutorPropertiesAsync(CancellationToken cancellationToken, EventContext telemetryContext)
         {
             this.fileSystem = this.Dependencies.GetService<IFileSystem>();
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
 
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.PackagePath = workloadPackage.Path;
 
             if (this.CpuArchitecture == Architecture.Arm64)
@@ -179,14 +176,14 @@ namespace VirtualClient.Actions
                 this.CopySimulationFilesFromDownloadedPackage();
             }
                 
-            this.AllRunWrapperExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, "tools", "AllrunWrapper");
-            this.AllRunExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "Allrun");
+            this.AllRunWrapperExecutablePath = this.Combine(this.PackagePath, "tools", "AllrunWrapper");
+            this.AllRunExecutablePath = this.Combine(this.PackagePath, this.Simulation, "Allrun");
             string allRunExecutionCommand = $"{this.AllRunWrapperExecutablePath} {this.AllRunExecutablePath}";
-            this.AllCleanExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "Allclean");
-            this.IterationsFilePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "system", "controlDict");
+            this.AllCleanExecutablePath = this.Combine(this.PackagePath, this.Simulation, "Allclean");
+            this.IterationsFilePath = this.Combine(this.PackagePath, this.Simulation, "system", "controlDict");
 
             this.ResultsFileName = "log." + this.Solver;
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, this.ResultsFileName);
+            this.ResultsFilePath = this.Combine(this.PackagePath, this.Simulation, this.ResultsFileName);
 
             this.executionCommands = new List<string>
             {

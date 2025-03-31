@@ -569,12 +569,26 @@ namespace VirtualClient
             string profile = profiles.First();
             string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
 
+            AddLinuxDistributionInfo(systemManagement);
+
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 ["executionProfilePath"] = profileFullPath
             });
+        }
+
+        private void AddLinuxDistributionInfo(ISystemManagement systemManagement)
+        {
+            try
+            {
+                EventContext.PersistentProperties.Add("linuxDistributionInfo", systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult());
+            }
+            catch
+            {
+                // Best Effort only
+            }
         }
 
         /// <summary>
@@ -825,7 +839,7 @@ namespace VirtualClient
             if (this.Metadata?.Any() == true)
             {
                 // Command-line metadata overrides metadata in the profile itself.
-                profile.Parameters.AddRange(this.Metadata, true);
+                profile.Metadata.AddRange(this.Metadata, true);
             }
 
             if (this.Parameters?.Any() == true)
@@ -870,9 +884,11 @@ namespace VirtualClient
 
             EventContext telemetryContext = EventContext.Persisted();
             ConsoleLogger.Default.LogMessage($"Experiment ID: {this.ExperimentId}", telemetryContext);
-            ConsoleLogger.Default.LogMessage($"Agent ID: {this.AgentId}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Client ID: {this.ClientId}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Log To File: {this.LogToFile}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Package Directory: {platformSpecifics.PackagesDirectory}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"State Directory: {platformSpecifics.StateDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {

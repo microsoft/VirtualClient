@@ -188,7 +188,7 @@ namespace VirtualClient.Actions
 
             this.ValidateParameters();
 
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             this.HPLDirectory = workloadPackage.Path;
 

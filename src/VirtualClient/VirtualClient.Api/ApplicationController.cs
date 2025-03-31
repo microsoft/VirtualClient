@@ -35,6 +35,8 @@ namespace VirtualClient.Api
     /// https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/implementing-the-event-based-asynchronous-pattern
     /// </remarks>
     [ApiController]
+    [ApiVersion(1.0)]
+    [ApiVersion(2.0)]
     [Route("/api/application")]
     public class ApplicationController : ControllerBase
     {
@@ -63,7 +65,6 @@ namespace VirtualClient.Api
         [Consumes("application/json")]
         [Produces("application/json")]
         [Description("Instructs the Virtual Client application to exit.")]
-        [ApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public Task<IActionResult> ExitAsync()

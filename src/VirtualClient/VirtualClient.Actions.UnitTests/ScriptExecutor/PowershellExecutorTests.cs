@@ -4,12 +4,12 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
@@ -19,22 +19,53 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class PowershellExecutorTests
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PowershellExecutorTests), "Examples", "ScriptExecutor");
+
         private MockFixture fixture;
         private DependencyPath mockPackage;
-        private string rawText;
+        private string exampleResults;
 
-        [SetUp]
-        public void SetUpFixture()
+        public void SetupTest(PlatformID platform = PlatformID.Win32NT)
         {
             this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(Path.Combine("Examples", "ScriptExecutor", "validJsonExample.json"));
+            this.fixture.Setup(platform);
+            this.mockPackage = new DependencyPath("workloadPackage", this.fixture.GetPackagePath("workloadPackage"));
+            this.fixture.SetupPackage(this.mockPackage);
+
+            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+
+            this.exampleResults = File.ReadAllText(Path.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleResults);
+
+            this.fixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.fixture.FileSystem.SetupGet(fs => fs.File)
+                .Returns(this.fixture.File.Object);
+
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(PowershellExecutor.PackageName), "workloadPackage" },
+                { nameof(PowershellExecutor.Scenario), "GenericScriptWorkload" },
+                { nameof(PowershellExecutor.CommandLine), "parameter1 parameter2" },
+                { nameof(PowershellExecutor.ScriptPath), "genericScript.ps1" },
+                { nameof(PowershellExecutor.LogPaths), "*.log;*.txt;*.json" },
+                { nameof(PowershellExecutor.ToolName), "GenericTool" }
+            };
+
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         [Test]
         [TestCase(PlatformID.Win32NT)]
         public void PowershellExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
             using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
@@ -50,7 +81,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1")]
         public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
             this.fixture.Parameters["ScriptPath"] = command;
 
             string workingDirectory = $"{this.mockPackage.Path}{platformSpecificPath}";
@@ -92,7 +123,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, @"\win-x64\")]
         public void PowershellExecutorDoesNotThrowWhenTheWorkloadDoesNotProduceValidMetricsFile(PlatformID platform, string platformSpecificPath)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
             this.fixture.File.Setup(fe => fe.Exists($"{this.mockPackage.Path}{platformSpecificPath}test-metrics.json"))
                 .Returns(false);
 
@@ -102,38 +133,6 @@ namespace VirtualClient.Actions
 
                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
             }            
-        }
-
-        private void SetupDefaultBehavior(PlatformID platform)
-        {
-            this.fixture.Setup(platform);
-            this.mockPackage = new DependencyPath("workloadPackage", this.fixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
-            this.fixture.PackageManager.OnGetPackage("workloadPackage").ReturnsAsync(this.mockPackage);
-            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
-
-            this.fixture.File.Reset();
-            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawText);
-
-            this.fixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
-
-            this.fixture.FileSystem.SetupGet(fs => fs.File)
-                .Returns(this.fixture.File.Object);
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(PowershellExecutor.PackageName), "workloadPackage" },
-                { nameof(PowershellExecutor.Scenario), "GenericScriptWorkload" },
-                { nameof(PowershellExecutor.CommandLine), "parameter1 parameter2" },
-                { nameof(PowershellExecutor.ScriptPath), "genericScript.ps1" },
-                { nameof(PowershellExecutor.LogPaths), "*.log;*.txt;*.json" },
-                { nameof(PowershellExecutor.ToolName), "GenericTool" }
-            };
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         private class TestPowershellExecutor : PowershellExecutor

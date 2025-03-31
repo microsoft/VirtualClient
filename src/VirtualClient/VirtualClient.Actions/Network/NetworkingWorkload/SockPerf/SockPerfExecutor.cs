@@ -25,6 +25,17 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfExecutor"/> class.
         /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public SockPerfExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SockPerfExecutor"/> class.
+        /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
         public SockPerfExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
@@ -32,10 +43,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 6100);
-            this.Parameters.SetIfNotDefined(nameof(this.MessagesPerSecond), "max");
-            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
         }
 
         /// <summary>

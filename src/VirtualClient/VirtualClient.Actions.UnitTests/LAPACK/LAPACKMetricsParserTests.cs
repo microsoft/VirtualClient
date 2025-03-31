@@ -16,7 +16,7 @@ namespace VirtualClient.Actions
 {
     [TestFixture]
     [Category("Unit")]
-    class LAPACKParserUnitTests
+    class LAPACKMetricsParserTests
     {
         private string rawText;
         private LAPACKMetricsParser testParser;

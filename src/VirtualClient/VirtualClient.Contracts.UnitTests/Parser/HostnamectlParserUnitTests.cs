@@ -134,5 +134,15 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(LinuxDistribution.RHEL8, this.testParser.Parse().LinuxDistribution);
             Assert.AreEqual("Red Hat Enterprise Linux 9.3 (Plow)", this.testParser.Parse().OperationSystemFullName);
         }
+
+        [Test]
+        public void HostnamectlParserRecognizeAwsLinux()
+        {
+            string outputPath = Path.Combine(this.ExamplePath, "AwsLinuxExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new HostnamectlParser(this.rawText);
+            Assert.AreEqual(LinuxDistribution.AwsLinux, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual("Amazon Linux", this.testParser.Parse().OperationSystemFullName);
+        }
     }
 }

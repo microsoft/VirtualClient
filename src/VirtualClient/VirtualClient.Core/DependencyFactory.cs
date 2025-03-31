@@ -230,8 +230,8 @@ namespace VirtualClient
         {
             logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
 
-            // 100MB
-            const long maxFileSizeBytes = 100000000;
+            // 10MB
+            const long maxFileSizeBytes = 10000000;
 
             ILoggerProvider loggerProvider = null;
 
@@ -272,10 +272,10 @@ namespace VirtualClient
         {
             csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
 
-            // 50MB
+            // 10MB
             // General Sizing:
-            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
-            const long maxFileSizeBytes = 50000000;
+            // Around 17,200 metric records will fit inside of a single CSV file at 10MB.
+            const long maxFileSizeBytes = 10000000;
 
             ILoggerProvider loggerProvider = null;
 

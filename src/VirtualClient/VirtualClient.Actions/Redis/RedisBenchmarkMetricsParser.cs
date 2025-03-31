@@ -108,6 +108,7 @@ namespace VirtualClient.Actions
                             reqPerSec,
                             MetricUnit.RequestsPerSec,
                             relativity: MetricRelativity.HigherIsBetter,
+                            verbosity: 0,
                             description: "Total number of requests/operations per second during the period of time."));
                     }
 
@@ -158,6 +159,7 @@ namespace VirtualClient.Actions
                             p99Latency,
                             MetricUnit.Milliseconds,
                             relativity: MetricRelativity.LowerIsBetter,
+                            verbosity: 0,
                             description: "The latency for 99% of all requests was at or under this value."));
                     }
 

@@ -5,11 +5,13 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Drawing;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net.Http;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -191,8 +193,8 @@ namespace VirtualClient
             component.ThrowIfNull(nameof(component));
             packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
 
-            IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
-            return packageManager.GetPlatformSpecificPackageAsync(packageName, component.Platform, component.CpuArchitecture, cancellationToken, throwIfNotfound);
+            ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
+            return systemManagement.GetPlatformSpecificPackageAsync(packageName, cancellationToken, throwIfNotfound);
         }
 
         /// <summary>
@@ -266,6 +268,78 @@ namespace VirtualClient
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Prepares the binary at the path specified to be executable on the OS/system platform
+        /// (e.g. chmod +x on Linux).
+        /// </summary>
+        /// <param name="component">The component.</param>
+        /// <param name="filePath">The path to the binary.</param>
+        /// <param name="platform">The OS platform on which the binary should be executable.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task MakeFileExecutableAsync(this VirtualClientComponent component, string filePath, PlatformID platform, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
+            PlatformSpecifics.ThrowIfNotSupported(platform);
+
+            ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
+            if (!systemManagement.FileSystem.File.Exists(filePath))
+            {
+                throw new DependencyException($"The file at path '{filePath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
+            }
+
+            switch (platform)
+            {
+                case PlatformID.Unix:
+                    using (IProcessProxy chmod = systemManagement.ProcessManager.CreateElevatedProcess(platform, "chmod", $"+x \"{filePath}\""))
+                    {
+                        await chmod.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                        chmod.ThrowIfErrored<WorkloadException>(
+                            ProcessProxy.DefaultSuccessCodes,
+                            $"Failed to attribute the binary at path '{filePath}' as executable.");
+                    }
+
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Prepares the binaries at the path specified to be executable on the OS/system platform
+        /// (e.g. chmod +x on Linux).
+        /// </summary>
+        /// <param name="component">The component.</param>
+        /// <param name="directoryPath">The path to the directory of files/binaries.</param>
+        /// <param name="platform">The OS platform on which the binary should be executable.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task MakeFilesExecutableAsync(this VirtualClientComponent component, string directoryPath, PlatformID platform, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            directoryPath.ThrowIfNullOrWhiteSpace(nameof(directoryPath));
+            PlatformSpecifics.ThrowIfNotSupported(platform);
+
+            ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
+            if (!systemManagement.FileSystem.Directory.Exists(directoryPath))
+            {
+                throw new DependencyException($"The directory '{directoryPath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
+            }
+
+            switch (platform)
+            {
+                case PlatformID.Unix:
+                    // https://chmodcommand.com/chmod-2777/
+                    // chmod 2777 sets everything to read/write/executable in the defined directory and make new file/directory inherit parent folder.
+                    using (IProcessProxy chmod = systemManagement.ProcessManager.CreateElevatedProcess(platform, "chmod", $"-R 2777 \"{directoryPath}\""))
+                    {
+                        await chmod.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                        chmod.ThrowIfErrored<WorkloadException>(
+                            ProcessProxy.DefaultSuccessCodes,
+                            $"Failed to attribute the binaries in the directory '{directoryPath}' as executable.");
+                    }
+
+                    break;
+            }
         }
 
         /// <summary>

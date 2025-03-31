@@ -13,7 +13,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -26,7 +25,18 @@ namespace VirtualClient.Actions.NetworkPerformance
         private IFileSystem fileSystem;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CPSClientExecutor"/> class.
+        /// Initializes a new instance of the <see cref="CPSExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public CPSExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
+                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CPSExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
@@ -36,16 +46,6 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.fileSystem = dependencies.GetService<IFileSystem>();
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
                 .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
-            this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
-            this.Parameters.SetIfNotDefined(nameof(this.DisplayInterval), 10);
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionsPerThread), 100);
-            this.Parameters.SetIfNotDefined(nameof(this.MaxPendingRequestsPerThread), 100);
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 7201);
-            this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
-            this.Parameters.SetIfNotDefined(nameof(this.DelayTime), 0);
-            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
         }
 
         /// <summary>
@@ -167,6 +167,17 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 return this.Parameters.GetValue<int>(nameof(this.ConfidenceLevel), 99);
+            }
+        }
+
+        /// <summary>
+        /// gets additional optional parameters.
+        /// </summary>
+        public string AdditionalParams
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.AdditionalParams), string.Empty);
             }
         }
 

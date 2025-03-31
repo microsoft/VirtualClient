@@ -12,9 +12,9 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Text.RegularExpressions;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Actions;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
@@ -30,27 +30,6 @@ namespace VirtualClient
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
 
         /// <summary>
-        /// Command line option defines the ID of the agent to use with telemetry data reported from the system.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateAgentIdOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--agent-id", "--agentId", "--agentid", "--agent", "--client-id", "--clientId", "--clientid", "--client", "--a" })
-            {
-                Name = "AgentId",
-                Description = "A name/identifier to describe the instance of the application (the agent) that will be included with all " +
-                    "telemetry/data emitted during operations.",
-                ArgumentHelpName = "id",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
         /// Command line option defines the port on which the local self-hosted REST API service
         /// should list for HTTP traffic.
         /// </summary>
@@ -58,8 +37,10 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateApiPortOption(bool required = true, object defaultValue = null)
         {
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
             Option<IDictionary<string, int>> option = new Option<IDictionary<string, int>>(
-                new string[] { "--api-port", "--port" },
+                new string[] { "--port", "--api-port" },
                 new ParseArgument<IDictionary<string, int>>(result =>
                 {
                     IDictionary<string, int> apiPorts = new Dictionary<string, int>();
@@ -150,6 +131,29 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the ID of the agent to use with telemetry data reported from the system.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateClientIdOption(bool required = false, object defaultValue = null)
+        {
+            // Note:
+            // Only the first 2 of these will display in help output (i.e. --help).
+            Option<string> option = new Option<string>(new string[] { "--c", "--client", "--client-id", "--clientId", "--clientid", "--agent-id", "--agentId", "--agentid" })
+            {
+                Name = "ClientId",
+                Description = "A name/identifier to describe the instance of the application (the agent) that will be included with all " +
+                    "telemetry/data emitted during operations.",
+                ArgumentHelpName = "id",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines a template for the virtual folder structure to use when uploading 
         /// files to a target storage account (e.g. /{experimentId}/{agentId}/{toolName}/{role}/{scenario}).
         /// </summary>
@@ -157,7 +161,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateContentPathTemplateOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--content-path-template", "--contentPathTemplate", "--contentpathtemplate", "--content-path", "--contentPath", "--contentpath", "--cp" })
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
+            Option<string> option = new Option<string>(new string[] { "--cp", "--content-path", "--content-path-template", "--contentPathTemplate", "--contentpathtemplate", "--contentPath", "--contentpath" })
             {
                 Name = "ContentPathTemplate",
                 Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
@@ -184,8 +190,11 @@ namespace VirtualClient
             // We will be adding support for other cloud stores in the future (e.g. AWS, Google). The logic on the command
             // line will handle this by creating different DependencyStore definitions to represent the various stores that 
             // are supported.
+
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--content-store", "--contentStore", "--contentstore", "--content", "--cs" },
+                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore",   },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,
@@ -266,8 +275,10 @@ namespace VirtualClient
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
         public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
         {
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyEventHubStore> option = new Option<DependencyEventHubStore>(
-                new string[] { "--event-hub", "--eventHub", "--eventhub", "--eh", "--eventHubConnectionString" },
+                new string[] { "--eh", "--eventhub", "--event-hub", "--eventHub", "--eventHubConnectionString", "--eventhubconnectionstring" },
                 new ParseArgument<DependencyEventHubStore>(result => OptionFactory.ParseEventHubStore(
                     result,
                     DependencyStore.Telemetry,
@@ -291,8 +302,10 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateExitWaitOption(bool required = true, object defaultValue = null)
         {
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--exit-wait", "--flush-wait", "--wt" },
+                new string[] { "--wait", "--exit-wait", "--flush-wait" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "ExitWait",
@@ -314,7 +327,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateExperimentIdOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--experiment-id", "--experimentId", "--experimentid", "--experiment", "--e" })
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
+            Option<string> option = new Option<string>(new string[] { "--e", "--experiment", "--experiment-id", "--experimentId", "--experimentid" })
             {
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
@@ -334,7 +349,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateFailFastFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--fail-fast", "--ff" })
+            Option<bool> option = new Option<bool>(new string[] { "--ff", "--fail-fast" })
             {
                 Name = "FailFast",
                 Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",
@@ -354,7 +369,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateIPAddressOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--ip-address", "--ipAddress", "--ipaddress", "--ip" })
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
+            Option<string> option = new Option<string>(new string[] { "--ip", "--ip-address" })
             {
                 Name = "IPAddress",
                 Description = "The IP address of a remote/target application API instance to monitor.",
@@ -387,7 +404,7 @@ namespace VirtualClient
         public static Option CreateIterationsOption(bool required = false, object defaultValue = null)
         {
             Option<ProfileTiming> option = new Option<ProfileTiming>(
-                new string[] { "--iterations", "--i" },
+                new string[] { "--i", "--iterations" },
                 new ParseArgument<ProfileTiming>(arg => OptionFactory.ParseProfileIterations(arg)))
             {
                 Name = "Iterations",
@@ -418,12 +435,37 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLayoutPathOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--layout-path", "--layout", "--layoutPath", "--layoutpath", "--lp" })
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
+            Option<string> option = new Option<string>(new string[] { "--lp", "--layout", "--layout-path", "--layoutPath", "--layoutpath",  })
             {
                 Name = "LayoutPath",
                 Description = "The path to the environment layout .json file required for client/server operations. The contents of this " +
                     "file are used by the self-hosted API service for example to enable individual instances of the application running on different " +
                     "systems to synchronize with each other.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an alternate directory on the system in 
+        /// which to write log files.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLogDirectoryOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--ldir", "--log-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
+            {
+                Name = "LogDirectory",
+                Description = "Defines an alternate directory to which log files should be written.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -441,10 +483,10 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogLevelOption(bool required = true, object defaultValue = null)
         {
-            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--log-level", "--ll" })
+            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--ll", "--log-level" })
             {
                 Name = "LoggingLevel",
-                Description = "indicates the logging level for telemetry output (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).",
+                Description = "Indicates the logging level for telemetry output (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).",
                 ArgumentHelpName = "level",
                 AllowMultipleArgumentsPerToken = false,
             };
@@ -479,7 +521,7 @@ namespace VirtualClient
         public static Option CreateLogRetentionOption(bool required = true, object defaultValue = null)
         {
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--log-retention", "--lr" },
+                new string[] { "--lr", "--log-retention" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "LogRetention",
@@ -503,7 +545,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogToFileFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--log-to-file", "--ltf" })
+            Option<bool> option = new Option<bool>(new string[] { "--ltf", "--log-to-file" })
             {
                 Name = "LogToFile",
                 Description = "Flag indicates that the output of processes should be logged to files in the logs directory.",
@@ -525,7 +567,7 @@ namespace VirtualClient
         public static Option CreateMetadataOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--metadata", "--mt" },
+                new string[] { "--mt", "--metadata" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Metadata",
@@ -547,7 +589,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateMonitorFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--monitor", "--mon" })
+            Option<bool> option = new Option<bool>(new string[] { "--mon", "--monitor" })
             {
                 Name = "Monitor",
                 Description = "Indicates the Virtual Client should monitor itself or another instance via the API for heartbeats (e.g. online, offline). " +
@@ -569,7 +611,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateNameOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--name", "--n" })
+            Option<string> option = new Option<string>(new string[] { "--n", "--name" })
             {
                 Name = "Name",
                 Description = "The logical name of a package as it should be registered on the system (e.g. anypackage.1.0.0.zip -> anypackage).",
@@ -589,10 +631,33 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateOutputDirectoryOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--output-path", "--output", "--path" })
+            Option<string> option = new Option<string>(new string[] { "--path", "--output", "--output-path" })
             {
                 Name = "OutputPath",
                 Description = "The directory to which file output should be written.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an alternate directory on the system in 
+        /// which to download dependency packages.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreatePackageDirectoryOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--pdir", "--package-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
+            {
+                Name = "PackageDirectory",
+                Description = "Defines an alternate directory to which packages will be downloaded.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -609,7 +674,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreatePackageOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--package", "--pkg" })
+            Option<string> option = new Option<string>(new string[] { "--pkg", "--package" })
             {
                 Name = "Package",
                 Description = "The physical name of a package to bootstrap/install as it is defined in a package store (e.g. anypackage.1.0.0.zip).",
@@ -632,8 +697,10 @@ namespace VirtualClient
         /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
         public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
+            // Note:
+            // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--package-store", "--packageStore", "--packagestore", "--packages", "--ps" },
+                new string[] { "--ps", "--packages", "--package-store", "--packageStore", "--packagestore"  },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Packages,
@@ -660,7 +727,7 @@ namespace VirtualClient
         public static Option CreateParametersOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--parameters", "--pm" },
+                new string[] { "--pm", "--parameters" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Parameters",
@@ -711,7 +778,7 @@ namespace VirtualClient
         public static Option CreateProfileOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
             Option<IEnumerable<DependencyProfileReference>> option = new Option<IEnumerable<DependencyProfileReference>>(
-                new string[] { "--profile", "--p" },
+                new string[] { "--p", "--profile" },
                 new ParseArgument<IEnumerable<DependencyProfileReference>>(result => OptionFactory.ParseProfiles(
                     result,
                     certificateManager ?? OptionFactory.defaultCertificateManager,
@@ -736,7 +803,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateProxyApiOption(bool required = false, object defaultValue = null)
         {
-            Option<Uri> option = new Option<Uri>(new string[] { "--proxy-api", "--proxy" })
+            Option<Uri> option = new Option<Uri>(new string[] { "--proxy", "--proxy-api" })
             {
                 Name = "ProxyApiUri",
                 Description = "A URI to a proxy API service that the Virtual Client can used to download dependencies/packages as well as to upload content/files and telemetry.",
@@ -782,7 +849,7 @@ namespace VirtualClient
         public static Option CreateScenariosOption(bool required = false, object defaultValue = null)
         {
             Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(
-                new string[] { "--scenarios", "--sc" },
+                new string[] { "--sc", "--scenarios" },
                 new ParseArgument<IEnumerable<string>>(result =>
                 {
                     IEnumerable<string> scenarios = null;
@@ -816,11 +883,34 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateSeedOption(bool required = true, object defaultValue = null)
         {
-            Option<int> option = new Option<int>(new string[] { "--seed", "--sd" })
+            Option<int> option = new Option<int>(new string[] { "--sd", "--seed" })
             {
                 Name = "RandomizationSeed",
                 Description = "A seed that can be used to guarantee identical randomization bases for workloads that require it.",
                 ArgumentHelpName = "integer",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an alternate directory on the system in 
+        /// which to write state files/documents.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateStateDirectoryOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--sdir", "--state-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
+            {
+                Name = "StateDirectory",
+                Description = "Defines an alternate directory to which state files/documents will be written.",
+                ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -836,7 +926,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateSystemOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--system", "--s" })
+            Option<string> option = new Option<string>(new string[] { "--s", "--system" })
             {
                 Name = "ExecutionSystem",
                 Description = "The execution system/environment platform (e.g. Azure).",
@@ -857,7 +947,7 @@ namespace VirtualClient
         public static Option CreateTimeoutOption(bool required = true, object defaultValue = null)
         {
             Option<ProfileTiming> option = new Option<ProfileTiming>(
-                new string[] { "--timeout", "--t" },
+                new string[] { "--t", "--timeout" },
                 new ParseArgument<ProfileTiming>(arg => OptionFactory.ParseProfileTimeout(arg)))
             {
                 Name = "Timeout",
@@ -982,6 +1072,21 @@ namespace VirtualClient
             }
 
             return delimitedValues;
+        }
+
+        private static string ParseDirectory(ArgumentResult arg)
+        {
+            string directory = arg.Tokens?.FirstOrDefault()?.Value?.Trim();
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                if (!Path.IsPathRooted(directory))
+                {
+                    // Relative path
+                    directory = Path.GetFullPath(directory);
+                }
+            }
+
+            return directory;
         }
 
         private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)

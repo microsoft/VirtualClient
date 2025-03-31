@@ -8,7 +8,6 @@ namespace VirtualClient.Actions
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -23,12 +22,11 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     class FioMultiThroughputExecutorTests
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests2), "Examples", "FIO");
+
         private MockFixture mockFixture;
-        private DependencyPath mockPath;
-        private static readonly string ExamplesPath = Path.Combine(
-            Path.GetDirectoryName(Assembly.GetAssembly(typeof(FioMetricsParserTests)).Location),
-            "Examples",
-            "FIO");
+        private DependencyPath mockPackage;
+        
         private ConcurrentBuffer defaultOutput = new ConcurrentBuffer();
         private IEnumerable<Disk> disks;
         private IProcessProxy defaultMemoryProcess;
@@ -38,7 +36,7 @@ namespace VirtualClient.Actions
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
-            this.mockPath = this.mockFixture.Create<DependencyPath>();
+            this.mockPackage = this.mockFixture.Create<DependencyPath>();
             this.mockFixture.SetupMocks();
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
@@ -70,11 +68,12 @@ namespace VirtualClient.Actions
                 { nameof(FioMultiThroughputExecutor.PackageName), "fio" }
             };
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
 
-            string rawtext = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "Results_FIO.json"));
-            string templateJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "oltp-c.fio.jobfile"));
+            string rawtext = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesDirectory, "Results_FIO.json"));
+            string templateJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesDirectory, "oltp-c.fio.jobfile"));
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>())).Returns(templateJobFile);
 
             this.defaultOutput.Clear();
@@ -107,7 +106,7 @@ namespace VirtualClient.Actions
                 {
                     if (!arguments.Contains("chmod"))
                     {
-                        Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]} " +
                             $"--section initrandomio --section initsequentialio " +
@@ -186,7 +185,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
                             $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));
@@ -218,7 +217,7 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
-            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio1.jobfile"));
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesDirectory, "expectedoltp-c.fio1.jobfile"));
 
             using (TestFioMultiThroughputExecutor fioMultiThroughputExecutor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -254,7 +253,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
             this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialDiskCount), "2");
-            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio2.jobfile"));
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesDirectory, "expectedoltp-c.fio2.jobfile"));
 
             using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -284,7 +283,7 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
-            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio3.jobfile"));
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesDirectory, "expectedoltp-c.fio3.jobfile"));
 
             using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -361,7 +360,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
                             $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));
@@ -389,7 +388,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
+                        Assert.IsTrue(arguments.Equals($"{this.mockPackage.Path}/linux-x64/fio {this.mockFixture.PlatformSpecifics.GetScriptPath("fio")}/updated/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{executor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
                             $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --fallocate=none"));

@@ -113,7 +113,7 @@ namespace VirtualClient
             ILogger logger = dependencies.GetService<ILogger>();
 
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
-                this.AgentId,
+                this.ClientId,
                 Guid.NewGuid().ToString(),
                 platformSpecifics,
                 logger);

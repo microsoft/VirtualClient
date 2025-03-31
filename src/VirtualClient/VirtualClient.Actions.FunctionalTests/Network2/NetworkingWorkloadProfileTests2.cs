@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
-            this.mockFixture.SetupWorkloadPackage("visualstudiocruntime");
+            this.mockFixture.SetupPackage("visualstudiocruntime");
 
             if (platformID == PlatformID.Unix)
             {

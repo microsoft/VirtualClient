@@ -20,31 +20,71 @@
         We are moving towards a new model where Virtual Client can install packages. This new model expects packages
         to exist in a 'packages' directory. If they don't exist there, the package will be downloaded from either a NuGet feed
         or Blob store as defined in the profile (see the PERF-CPU-OPENSSL.json profile).
+        
+        Note that we are excluding the following .dlls in order to keep the overall NuGet package size
+        below 250MB (NuGet.org max package size limit). These .dlls are confirmed to be unnecessary for
+        VirtualClient.
+        
+        - Microsoft.AspNetCore.Razor.Language.dll
+        - Microsoft.Diagnostics.Tracing.TraceEvent.dll
         -->
         
         <!-- 
         win-x64
         =============================================================================================
         -->
+<<<<<<< HEAD
         <file src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\win-x64\**\*" exclude="**\*.pdb;*.xml" target="content\win-x64" />
+=======
+        <file 
+            src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\**\*" 
+            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll" 
+            target="content\win-x64" 
+            />
+>>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
 
         <!-- 
         win-arm64
         =============================================================================================
         -->
 
+<<<<<<< HEAD
         <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\win-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\win-arm64" />
+=======
+        <file
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\**\*"
+            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
+            target="content\win-arm64"
+            />
+>>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
 
         <!-- 
         linux-x64
         =============================================================================================
         -->
+<<<<<<< HEAD
         <file src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\linux-x64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-x64" />
+=======
+        <file
+            src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\**\*"
+            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
+            target="content\linux-x64"
+            />
+>>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
 
         <!-- 
         linux-arm64
         =============================================================================================
         -->
+<<<<<<< HEAD
         <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\linux-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-arm64" />
+=======
+        <file
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\**\*"
+            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
+            target="content\linux-arm64"
+            />
+
+>>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
     </files>
 </package>

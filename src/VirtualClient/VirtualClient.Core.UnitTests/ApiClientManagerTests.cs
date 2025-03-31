@@ -1,8 +1,11 @@
 namespace VirtualClient
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Proxy;
 
     [TestFixture]
     [Category("Unit")]
@@ -106,6 +109,24 @@ namespace VirtualClient
 
             actualClient = clientManager.GetOrCreateApiClient("AnyServer", new ClientInstance("AnyServer", "1.2.3.5", ClientRole.Server));
             Assert.AreEqual($"http://1.2.3.5:4502/", actualClient.BaseUri.ToString());
+        }
+
+        [Test]
+        public void ApiClientManagerCreatesTheExpectedProxyApiClient()
+        {
+            Uri uri = new Uri("http://1.2.3.5:4502/");
+            ApiClientManager clientManager = new ApiClientManager();
+
+            Assert.IsEmpty(clientManager.GetProxyApiClients());
+
+            clientManager.GetOrCreateProxyApiClient("1", uri);
+            IProxyApiClient proxyClient = clientManager.GetProxyApiClient("1");
+            Assert.AreEqual(proxyClient.BaseUri, uri);
+
+            IEnumerable<IProxyApiClient> proxyList = clientManager.GetProxyApiClients();
+            Assert.IsNotEmpty(proxyList);
+
+            Assert.AreEqual(proxyList.FirstOrDefault().BaseUri, uri);
         }
     }
 }

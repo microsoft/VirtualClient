@@ -6,7 +6,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,7 +14,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -32,6 +30,17 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Initializes a new instance of the <see cref="NTttcpExecutor"/> class.
         /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public NTttcpExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NTttcpExecutor"/> class.
+        /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
         public NTttcpExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
@@ -39,9 +48,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
-            this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
         }
 
         /// <summary>

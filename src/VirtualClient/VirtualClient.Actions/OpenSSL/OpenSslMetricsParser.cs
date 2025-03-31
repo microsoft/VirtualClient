@@ -171,7 +171,7 @@ namespace VirtualClient.Actions
                     // aes-128-cbc   -1040172814.93   1589805.17k  1657786.91k  1674053.70k   1677365.52k    1633415.99k
                     if (metricValue >= 0)
                     {
-                        metrics.Add(new Metric(metricName, metricValue, MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter));
+                        metrics.Add(new Metric(metricName, metricValue, MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
                     }
                 }
             }
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
                     {
                         if (metricName.Contains("/"))
                         {
-                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter));
+                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter, verbosity: 0));
                         }
                         else
                         {
@@ -208,7 +208,7 @@ namespace VirtualClient.Actions
                     {
                         if (metricName.Contains("/"))
                         {
-                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter));
+                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter, verbosity: 0));
                         }
                         else
                         {
@@ -229,7 +229,7 @@ namespace VirtualClient.Actions
                     {
                         if (metricName.Contains("/"))
                         {
-                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter));
+                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter, verbosity: 0));
                         }
                         else
                         {

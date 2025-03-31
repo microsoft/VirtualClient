@@ -134,8 +134,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait();
+            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
 
             this.InitializeApiClients();
 
@@ -148,9 +147,7 @@ namespace VirtualClient.Actions
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
             }
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait();
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             this.PackageDirectory = workloadPackage.Path;
             this.ScriptsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "scripts");
@@ -171,8 +168,7 @@ namespace VirtualClient.Actions
 
             }
 
-            await this.InstallDependenciesAsync(cancellationToken)
-                .ConfigureAwait();
+            await this.InstallDependenciesAsync(cancellationToken);
         }
 
         /// <summary>

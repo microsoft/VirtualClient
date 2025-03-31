@@ -7,12 +7,15 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
+    using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
+    using System.IO;
     using System.Linq;
     using System.Security;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
@@ -22,20 +25,10 @@ namespace VirtualClient
     [Category("Unit")]
     public class OptionFactoryTests
     {
-        [Test]
-        [TestCase("--agent-id")]
-        [TestCase("--agentId")]
-        [TestCase("--agentid")]
-        [TestCase("--client-id")]
-        [TestCase("--clientId")]
-        [TestCase("--clientid")]
-        [TestCase("--client")]
-        [TestCase("--a")]
-        public void AgentIdOptionSupportsExpectedAliases(string alias)
+        [OneTimeSetUp]
+        public void SetupFixture()
         {
-            Option option = OptionFactory.CreateAgentIdOption();
-            ParseResult result = option.Parse($"{alias}=Agent");
-            Assert.IsFalse(result.Errors.Any());
+            Environment.CurrentDirectory = MockFixture.GetDirectory(typeof(OptionFactoryTests));
         }
 
         [Test]
@@ -135,6 +128,22 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--agent-id")]
+        [TestCase("--agentId")]
+        [TestCase("--agentid")]
+        [TestCase("--client-id")]
+        [TestCase("--clientId")]
+        [TestCase("--clientid")]
+        [TestCase("--client")]
+        [TestCase("--c")]
+        public void ClientIdOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateClientIdOption();
+            ParseResult result = option.Parse($"{alias}=Agent");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCase("--content-store")]
         [TestCase("--contentStore")]
         [TestCase("--contentstore")]
@@ -152,7 +161,7 @@ namespace VirtualClient
         public void ContentStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreateContentStoreOption();
-            ParseResult result = option.Parse($"--contentStore={connectionToken}");
+            ParseResult result = option.Parse($"--content-store={connectionToken}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -161,7 +170,7 @@ namespace VirtualClient
         public void ContentStoreOptionSupportsValidStorageAccountSasUris(string uri)
         {
             Option option = OptionFactory.CreateContentStoreOption();
-            ParseResult result = option.Parse($"--contentStore={uri}");
+            ParseResult result = option.Parse($"--content-store={uri}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -172,7 +181,7 @@ namespace VirtualClient
             var mockCertManager = new Mock<ICertificateManager>();
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--contentStore={argument}");
+            ParseResult result = option.Parse($"--content-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -183,7 +192,7 @@ namespace VirtualClient
             var mockCertManager = new Mock<ICertificateManager>();
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--contentStore={argument}");
+            ParseResult result = option.Parse($"--content-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -279,6 +288,8 @@ namespace VirtualClient
         [TestCase("--event-hub")]
         [TestCase("--eventHub")]
         [TestCase("--eventhub")]
+        [TestCase("--eventhubconnectionstring")]
+        [TestCase("--eventHubConnectionString")]
         [TestCase("--eh")]
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
@@ -292,7 +303,7 @@ namespace VirtualClient
         public void EventHubConnectionStringOptionSupportsAccessPolicyConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreateEventHubStoreOption();
-            ParseResult result = option.Parse($"--eventhub={connectionToken}");
+            ParseResult result = option.Parse($"--event-hub={connectionToken}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -301,7 +312,7 @@ namespace VirtualClient
         public void EventHubConnectionStringOptionSupportsConnectionStringsWithManagedIdentyReferences(string argument)
         {
             Option option = OptionFactory.CreateEventHubStoreOption();
-            ParseResult result = option.Parse($"--eventhub={argument}");
+            ParseResult result = option.Parse($"--event-hub={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -310,7 +321,7 @@ namespace VirtualClient
         public void EventHubConnectionStringOptionSupportsUrisWithManagedIdentityReferences(string argument)
         {
             Option option = OptionFactory.CreateEventHubStoreOption();
-            ParseResult result = option.Parse($"--eventhub={argument}");
+            ParseResult result = option.Parse($"--event-hub={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -394,7 +405,7 @@ namespace VirtualClient
         [Test]
         [TestCase("--exit-wait")]
         [TestCase("--flush-wait")]
-        [TestCase("--wt")]
+        [TestCase("--wait")]
         public void ExitWaitOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateExitWaitOption();
@@ -424,8 +435,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--ip-address")]
-        [TestCase("--ipAddress")]
-        [TestCase("--ipaddress")]
         [TestCase("--ip")]
         public void IPAddressOptionSupportsExpectedAliases(string alias)
         {
@@ -438,13 +447,13 @@ namespace VirtualClient
         public void IPAddressOptionValueMustBeAValidIPv4OrIPv6Format()
         {
             Option option = OptionFactory.CreateIPAddressOption();
-            Assert.Throws<ArgumentException>(() => option.Parse("--ipAddress=NotAnIP"));
+            Assert.Throws<ArgumentException>(() => option.Parse("--ip-address=NotAnIP"));
 
             // IPv4 format
-            Assert.DoesNotThrow(() => option.Parse($"--ipAddress=10.0.1.128"));
+            Assert.DoesNotThrow(() => option.Parse($"--ip-address=10.0.1.128"));
 
             // IPv6 format
-            Assert.DoesNotThrow(() => option.Parse($"--ipAddress=2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+            Assert.DoesNotThrow(() => option.Parse($"--ip-address=2001:db8:85a3:8d3:1319:8a2e:370:7348"));
         }
 
         [Test]
@@ -485,6 +494,47 @@ namespace VirtualClient
             Option option = OptionFactory.CreateLayoutPathOption();
             ParseResult result = option.Parse($"{alias}=C:\\any\\path");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--log-dir")]
+        [TestCase("--ldir")]
+        public void LogDirectoryOptionSupportsExpectedAliases(string alias)
+        {
+                Option option = OptionFactory.CreateLogDirectoryOption();
+                ParseResult result = option.Parse($"{alias}=C:\\Any\\Directory\\Path");
+
+                Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void LogDirectoryOptionSupportsFullPaths()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreateLogDirectoryOption();
+            ParseResult result = option.Parse($"--log-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--log-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void LogDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateLogDirectoryOption();
+            ParseResult result = option.Parse($"--log-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--log-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]
@@ -645,6 +695,47 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--package-dir")]
+        [TestCase("--pdir")]
+        public void PackageDirectoryOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreatePackageDirectoryOption();
+            ParseResult result = option.Parse($"{alias}=\\Any\\Directory\\Path");
+
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void PackageDirectoryOptionSupportsFullPaths()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreatePackageDirectoryOption();
+            ParseResult result = option.Parse($"--package-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--package-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void PackageDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreatePackageDirectoryOption();
+            ParseResult result = option.Parse($"--package-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--package-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase("--package-store")]
         [TestCase("--packageStore")]
         [TestCase("--packagestore")]
@@ -662,7 +753,7 @@ namespace VirtualClient
         public void PackageStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreatePackageStoreOption();
-            ParseResult result = option.Parse($"--packageStore={connectionToken}");
+            ParseResult result = option.Parse($"--package-store={connectionToken}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -671,7 +762,7 @@ namespace VirtualClient
         public void PackageStoreOptionSupportsValidStorageAccountSasUris(string uri)
         {
             Option option = OptionFactory.CreatePackageStoreOption();
-            ParseResult result = option.Parse($"--packageStore={uri}");
+            ParseResult result = option.Parse($"--package-store={uri}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -682,7 +773,7 @@ namespace VirtualClient
             var mockCertManager = new Mock<ICertificateManager>();
 
             Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--packageStore={argument}");
+            ParseResult result = option.Parse($"--package-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -693,7 +784,7 @@ namespace VirtualClient
             var mockCertManager = new Mock<ICertificateManager>();
 
             Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--packageStore={argument}");
+            ParseResult result = option.Parse($"--package-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -721,7 +812,7 @@ namespace VirtualClient
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--packageStore={argument}");
+            ParseResult result = option.Parse($"--package-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -749,7 +840,7 @@ namespace VirtualClient
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--packageStore={argument}");
+            ParseResult result = option.Parse($"--package-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -757,7 +848,7 @@ namespace VirtualClient
         public void PackageStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreatePackageStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--packageStore=NotAValidConnectionStringOrSasTokenUri"));
+            Assert.Throws<SchemaException>(() => option.Parse($"--package-store=NotAValidConnectionStringOrSasTokenUri"));
         }
 
         [Test]
@@ -769,7 +860,7 @@ namespace VirtualClient
 
             Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
             Assert.Throws<CryptographicException>(() => option.Parse(
-                $"--packageStore=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
+                $"--package-store=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
         }
 
         [Test]
@@ -781,7 +872,7 @@ namespace VirtualClient
 
             Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
             Assert.Throws<SecurityException>(() => option.Parse(
-                $"--packageStore=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
+                $"--package-store=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
         }
 
         [Test]
@@ -886,11 +977,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--packageStore=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--packageStore=https://any.blob.store --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--package-store=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--package-store=https://any.blob.store --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--packageStore=https://any.blob.store" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --packageStore=https://any.blob.store"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--package-store=https://any.blob.store" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --package-store=https://any.blob.store"));
             }
         }
 
@@ -901,11 +992,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--contentStore=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--contentStore=https://any.blob.store --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--content-store=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--content-store=https://any.blob.store --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--contentStore=https://any.blob.store" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --contentStore=https://any.blob.store"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--content-store=https://any.blob.store" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --content-store=https://any.blob.store"));
             }
         }
 
@@ -953,6 +1044,47 @@ namespace VirtualClient
             Option option = OptionFactory.CreateSeedOption();
             ParseResult result = option.Parse($"{alias}=1234");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--state-dir")]
+        [TestCase("--sdir")]
+        public void StateDirectoryOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateStateDirectoryOption();
+            ParseResult result = option.Parse($"{alias}=\\Any\\Directory\\Path");
+
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void StateDirectoryOptionSupportsFullPaths()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreateStateDirectoryOption();
+            ParseResult result = option.Parse($"--state-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--state-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void StateDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateStateDirectoryOption();
+            ParseResult result = option.Parse($"--state-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--state-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]
@@ -1078,9 +1210,9 @@ namespace VirtualClient
             {
                 string sasPart = "--packages=https://anystorageaccount.blob.core.windows.net/?sv=2020&ss=b&srt=c&sp=rwlacx&se=2Z&st=2021Z&spr=https";
                 string eventhubPart = "--eventhub=\"Endpoint=sb://xxx.servicebus.windows.net/;S=Az;SKey=EZ=\"";
-                string itertionPart = "--iterations=2";
+                string iterationPart = "--iterations=2";
                 CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { }, tokenSource);
-                ParseResult result = commandBuilder.Build().Parse($"{sasPart} {itertionPart} {eventhubPart}");
+                ParseResult result = commandBuilder.Build().Parse($"{sasPart} {iterationPart} {eventhubPart}");
             }
         }
 

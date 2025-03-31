@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Telemetry;
 
     /// <summary>
@@ -37,6 +38,21 @@ namespace VirtualClient.Contracts
             List<Task> componentTasks = new List<Task>();
             foreach (VirtualClientComponent component in this)
             {
+                if (!VirtualClientComponent.IsSupported(component))
+                {
+                    this.Logger.LogMessage($"{nameof(ParallelExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(component.Scenario))
+                {
+                    this.Logger.LogMessage($"{nameof(ParallelExecution)} Component = {component.TypeName} (scenario={component.Scenario})", LogLevel.Information, telemetryContext);
+                }
+                else
+                {
+                    this.Logger.LogMessage($"{nameof(ParallelExecution)} Component = {component.TypeName}", LogLevel.Information, telemetryContext);
+                }
+
                 componentTasks.Add(component.ExecuteAsync(cancellationToken));
             }
 

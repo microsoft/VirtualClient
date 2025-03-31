@@ -1,46 +1,143 @@
 #!/bin/bash
 
-if [ -n "$1" ]; then
-    VCBuildVersion="$1"
-fi
+EXIT_CODE=0
+BUILD_CONFIGURATION="Release"
+BUILD_FLAGS=""
+BUILD_VERSION=""
+SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE}"))"
 
-if [ -z "$VCBuildVersion" ]; then
-    VCBuildVersion=$(cat VERSION)
-fi
+Usage() {
+    echo ""
+    echo "Builds the source code in the repo. "
+    echo ""
+    echo "Options:"
+    echo "---------------------"
+    echo "--trim   - Enables trimming for publish output."
+    echo ""
+    echo "Usage:"
+    echo "---------------------"
+    echo "build.sh [--trim]"
+    echo ""
+    echo "Examples"
+    echo "---------------------"
+    echo "user@system:~/repo$ ./build.sh"
+    echo "user@system:~/repo$ ./build.sh --trim"
+    echo ""
+    Finish
+}
 
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        --build-all)
-            BUILD_ALL=true
+Error() {
+    EXIT_CODE=1
+    End
+}
+
+End() {
+    echo ""
+    echo "Build Stage Exit Code: $EXIT_CODE"
+    echo ""
+    Finish
+}
+
+Finish() {
+    exit $EXIT_CODE
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "${1,,}" in
+        "/?"|"-?"|"--help")
+            Usage
+            ;;
+        "--trim")
+            BUILD_FLAGS="-p:PublishTrimmed=true"
             ;;
         *)
+            echo "Unknown option: $1"
+            Usage
             ;;
     esac
     shift
 done
 
-PUBLISH_FLAGS="--self-contained -p:InvariantGlobalization=true"
-ARCH=$(uname -m)
+# The default build configuration is 'Release'.
+BUILD_CONFIGURATION="Release"
 
-if [ "$ARCH" == "x86_64" ]; then
-    ARCH="linux-x64"
-elif [ "$ARCH" == "aarch64" ]; then
-    ARCH="linux-arm64"
-else
-    echo "Unsupported architecture: $ARCH"
+# The default build configuration (e.g. Release) can be overridden 
+# by the 'VCBuildConfiguration' environment variable
+if [[ -v "VCBuildConfiguration" && -n "$VCBuildConfiguration" ]]; then
+    BUILD_CONFIGURATION=$VCBuildConfiguration
 fi
 
-echo "Building VirtualClient solution."
-dotnet build src/VirtualClient/VirtualClient.sln -c Release -p:VCBuildVersion=$VCBuildVersion
+# The default build version is defined in the repo VERSION file.
+BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-
-if [ "$BUILD_ALL" = true ]; then
-    echo "Publishing VirtualClient for all platforms."
-    dotnet publish src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj -r linux-x64 -c Release $PUBLISH_FLAGS
-    dotnet publish src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj -r linux-arm64 -c Release $PUBLISH_FLAGS
-    dotnet publish src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj -r win-x64 -c Release $PUBLISH_FLAGS
-    dotnet publish src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj -r win-arm64 -c Release $PUBLISH_FLAGS
-else
-    echo "Publishing VirtualClient for architecture: $ARCH"
-    dotnet publish src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj -r $ARCH -c Release $PUBLISH_FLAGS
+# The default build version can be overridden by the 'VCBuildVersion' environment variable
+if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
+    BUILD_VERSION=$VCBuildVersion
 fi
+
+echo ""
+echo "**********************************************************************"
+echo "Build Version : $BUILD_VERSION"
+echo "Repo Root     : $SCRIPT_DIR"
+echo "Configuration : $BUILD_CONFIGURATION"
+echo "Flags         : $BUILD_FLAGS"
+echo "**********************************************************************"
+
+
+echo ""
+echo "[Build Solution]"
+echo "----------------------------------------------------------------------"
+dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c $BUILD_CONFIGURATION \
+-p:AssemblyVersion=$BUILD_VERSION
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Build Virtual Client: linux-x64]"
+echo "----------------------------------------------------------------------"
+dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION --self-contained \
+-p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Build Virtual Client: linux-arm64]"
+echo "----------------------------------------------------------------------"
+dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION --self-contained \
+-p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Build Virtual Client: win-x64]"
+echo "----------------------------------------------------------------------"
+dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION --self-contained \
+-p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Build Virtual Client: win-arm64]"
+echo "----------------------------------------------------------------------"
+dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION --self-contained \
+-p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+End

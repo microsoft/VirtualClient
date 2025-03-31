@@ -4,7 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Core</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
-        <NoWarn>CA1060,CA1416;CA2200,SA1116,SA1508</NoWarn>
+        <NoWarn>CA1060;CA1416;CA2200;SA1116;SA1508</NoWarn>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
@@ -13,7 +13,6 @@
         <PackageReference Include="Azure.Identity" Version="$(Azure_Identity_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion)" />
-        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
         <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="$(System_Diagnostics_PerformanceCounter_PackageVersion)" />
     </ItemGroup>
 

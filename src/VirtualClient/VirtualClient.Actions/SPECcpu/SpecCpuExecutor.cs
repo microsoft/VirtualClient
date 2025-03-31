@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -83,17 +84,6 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.BaseOptimizingFlags), "-g -O3 -march=native");
-            }
-        }
-
-        /// <summary>
-        /// Compiler version
-        /// </summary>
-        public string CompilerVersion
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.CompilerVersion));
             }
         }
 
@@ -347,6 +337,7 @@ namespace VirtualClient.Actions
 
                     SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
+                    metrics.LogConsole(this.Scenario);
 
                     this.Logger.LogMetrics(
                         toolName: "SPECcpu",
@@ -422,6 +413,18 @@ namespace VirtualClient.Actions
                     this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunShell),
                     this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunShell),
                     true);
+
+                string compilerVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", cancellationToken);
+
+                if (string.IsNullOrEmpty(compilerVersion))
+                {
+                    throw new WorkloadException("gcc version not found.");
+                }
+
+                templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.Gcc10Workaround,
+                Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
+                StringComparison.OrdinalIgnoreCase);
             }
             else
             {
@@ -429,16 +432,42 @@ namespace VirtualClient.Actions
                 this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunBat),
                 this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunBat),
                 true);
+
+                templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.Gcc10Workaround,
+                SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent,
+                StringComparison.OrdinalIgnoreCase);
             }
 
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);
-            templateText = templateText.Replace(
-                SpecCpuConfigPlaceHolder.Gcc10Workaround,
-                Convert.ToInt32(this.CompilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
-                StringComparison.OrdinalIgnoreCase);
-
             await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
+        }
+
+        private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, CancellationToken cancellationToken)
+        {
+            string command = compilerName;
+            string commandArguments = "-dumpversion";
+            string version = string.Empty;
+
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments))
+            {
+                try
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        version = process.StandardOutput.ToString().Trim().Split(".")[0];
+                    }
+                }
+                catch
+                {
+                    version = string.Empty;
+                }
+            }
+
+            return version;
         }
 
         internal class SpecCpuState : State

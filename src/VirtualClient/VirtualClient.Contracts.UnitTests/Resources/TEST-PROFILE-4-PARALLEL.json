@@ -11,7 +11,7 @@
     },
     "Actions": [
         {
-            "Type": "ParallelExecution",
+            "Type": "ParallelLoopExecution",
             "Metadata": {
                 "Property4": 7777,
                 "Property5": "Value_B"

@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
 
@@ -21,175 +22,7 @@ namespace VirtualClient.Actions
     {
         private MockFixture mockFixture;
 
-        [Test]
-        public void SpecJbbExecutorThrowsIfCannotFindSpecJbbPackage()
-        {
-            this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
-            this.mockFixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(value: null);
-
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                Assert.ThrowsAsync<DependencyException>(() => specJbbExecutor.ExecuteAsync(CancellationToken.None));
-            }
-        }
-
-        [Test]
-        public void SpecJbbExecutorThrowsIfCannotFindJdkPackage()
-        {
-            this.SetupDefaultMockBehaviors(PlatformID.Unix);
-            this.mockFixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(value: null);
-
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                Assert.ThrowsAsync<DependencyException>(() => specJbbExecutor.ExecuteAsync(CancellationToken.None));
-            }
-        }
-
-        [Test]
-        public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInWindows()
-        {
-            this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
-            // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            // 87040MB is 85GB
-            string expectedCommand =
-                @$"java.exe -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
-                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
-
-            bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                if (expectedCommand == $"{exe} {arguments}")
-                {
-                    commandExecuted = true;
-                }
-
-                return new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-            };
-
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.IsTrue(commandExecuted);
-        }
-
-        [Test]
-        public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInLinux()
-        {
-            this.SetupDefaultMockBehaviors(PlatformID.Unix);
-
-            // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = 
-                @$"sudo java -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
-                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
-
-            bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                if (expectedCommand == $"{exe} {arguments}")
-                {
-                    commandExecuted = true;
-                }
-
-                return new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-            };
-
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.IsTrue(commandExecuted);
-        }
-
-        [Test]
-        public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInLinuxWithUserOverwriteCommand()
-        {
-            this.SetupDefaultMockBehaviors(PlatformID.Unix);
-
-            // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
-
-            ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = 
-                @$"sudo java -Flag1 -Flag2 -Xms1234m -XX:ParallelGCThreads={Environment.ProcessorCount} -Xmx87040m " +
-                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
-
-            this.mockFixture.Parameters["JavaFlags"] = "-Flag1 -Flag2 -Xms1234m";
-
-            bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                if (expectedCommand == $"{exe} {arguments}")
-                {
-                    commandExecuted = true;
-                }
-
-                return new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-            };
-
-            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.IsTrue(commandExecuted);
-        }
-
-        private class TestSpecJbbExecutor : SpecJbbExecutor
-        {
-            public TestSpecJbbExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
-                : base(dependencies, parameters)
-            {
-            }
-
-            public new Task ExecuteAsync(EventContext context, CancellationToken cancellationToken)
-            {
-                return base.ExecuteAsync(context, cancellationToken);
-            }
-        }
-
-        private void SetupDefaultMockBehaviors(PlatformID platform)
+        private void SetupTest(PlatformID platform)
         {
             if (platform == PlatformID.Win32NT)
             {
@@ -251,6 +84,174 @@ namespace VirtualClient.Actions
             // upload log files by default.
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
             this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
+        }
+
+        [Test]
+        public void SpecJbbExecutorThrowsIfCannotFindSpecJbbPackage()
+        {
+            this.SetupTest(PlatformID.Win32NT);
+            this.mockFixture.PackageManager.OnGetPackage("specjbb2015").ReturnsAsync(value: null);
+
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<DependencyException>(() => specJbbExecutor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecJbbExecutorThrowsIfCannotFindJdkPackage()
+        {
+            this.SetupTest(PlatformID.Unix);
+            this.mockFixture.PackageManager.OnGetPackage("javadevelopmentkit").ReturnsAsync(value: null);
+
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<DependencyException>(() => specJbbExecutor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInWindows()
+        {
+            this.SetupTest(PlatformID.Win32NT);
+            // Mocking 100GB of memory
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
+            ProcessStartInfo expectedInfo = new ProcessStartInfo();
+            // 87040MB is 85GB
+            string expectedCommand =
+                @$"java.exe -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
+                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(commandExecuted);
+        }
+
+        [Test]
+        public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInLinux()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            // Mocking 100GB of memory
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
+            ProcessStartInfo expectedInfo = new ProcessStartInfo();
+            string expectedCommand = 
+                @$"sudo java -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
+                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(commandExecuted);
+        }
+
+        [Test]
+        public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInLinuxWithUserOverwriteCommand()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            // Mocking 100GB of memory
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
+            ProcessStartInfo expectedInfo = new ProcessStartInfo();
+            string expectedCommand = 
+                @$"sudo java -Flag1 -Flag2 -Xms1234m -XX:ParallelGCThreads={Environment.ProcessorCount} -Xmx87040m " +
+                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+
+            this.mockFixture.Parameters["JavaFlags"] = "-Flag1 -Flag2 -Xms1234m";
+
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecJbbExecutor specJbbExecutor = new TestSpecJbbExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specJbbExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(commandExecuted);
+        }
+
+        private class TestSpecJbbExecutor : SpecJbbExecutor
+        {
+            public TestSpecJbbExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+                : base(dependencies, parameters)
+            {
+            }
+
+            public new Task ExecuteAsync(EventContext context, CancellationToken cancellationToken)
+            {
+                return base.ExecuteAsync(context, cancellationToken);
+            }
         }
     }
 }

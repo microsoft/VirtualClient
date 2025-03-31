@@ -7,8 +7,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
     },
     "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "10",
+        "CompilerVersion": "",
         "ThreadCount": null
     },
     "Actions": [
@@ -18,43 +17,41 @@
                 "Scenario": "ExecuteCoremarkBenchmark",
                 "PackageName": "coremark",
                 "ThreadCount": "$.Parameters.ThreadCount",
-                "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion"
             }
         }
     ],
-  "Dependencies": [
-    {
-      "Type": "ChocolateyInstallation",
-      "Parameters": {
-        "Scenario": "InstallChocolatey",
-        "PackageName": "chocolatey"
-      }
-    },
-    {
-      "Type": "ChocolateyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallCygwin",
-        "PackageName": "chocolatey",
-        "Packages": "cygwin,git"
-      }
-    },
-    {
-      "Type": "CompilerInstallation",
-      "Parameters": {
-        "Scenario": "InstallCompiler",
-        "CompilerName": "$.Parameters.CompilerName",
-        "CompilerVersion": "$.Parameters.CompilerVersion",
-        "CygwinPackages": "gcc-g++,gcc,perl"
-      }
-    },
-    {
-      "Type": "GitRepoClone",
-      "Parameters": {
-        "Scenario": "CloneRepo",
-        "RepoUri": "https://github.com/eembc/coremark.git",
-        "PackageName": "coremark"
-      }
-    }
-  ]
+    "Dependencies": [
+        {
+            "Type": "ChocolateyInstallation",
+            "Parameters": {
+                "Scenario": "InstallChocolatey",
+                "PackageName": "chocolatey"
+            }
+        },
+        {
+            "Type": "ChocolateyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallCygwin",
+                "PackageName": "chocolatey",
+                "Packages": "cygwin,git"
+            }
+        },
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "CompilerVersion": "$.Parameters.CompilerVersion",
+                "CygwinPackages": "gcc-g++,gcc,perl"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneRepo",
+                "RepoUri": "https://github.com/eembc/coremark.git",
+                "PackageName": "coremark"
+            }
+        }
+    ]
 }

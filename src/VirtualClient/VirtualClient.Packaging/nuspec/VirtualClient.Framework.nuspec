@@ -21,7 +21,6 @@
                 <dependency id="Microsoft.Extensions.DependencyInjection" version="$Microsoft_Extensions_DependencyInjection_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Logging" version="$Microsoft_Extensions_Logging_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Http.Polly" version="$Microsoft_Extensions_Http_Polly_Version$" exclude="Build,Analyzers" />
-                <dependency id="Microsoft.Win32.Registry" version="$Microsoft_Win32_Registry_Version$" exclude="Build,Analyzers" />
                 <dependency id="Newtonsoft.Json" version="$Newtonsoft_Json_Version$" exclude="Build,Analyzers" />
                 <dependency id="Polly" version="$Polly_Version$" exclude="Build,Analyzers" />
                 <dependency id="Serilog.Extensions.Logging" version="$Serilog_Extensions_Logging_Version$" exclude="Build,Analyzers" />

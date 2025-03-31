@@ -369,6 +369,8 @@ namespace VirtualClient.Contracts
             eventContext.ThrowIfNull(nameof(eventContext));
             errorMessage.ThrowIfNullOrWhiteSpace(nameof(errorMessage));
 
+            errorMessage = SensitiveData.ObscureSecrets(errorMessage);
+
             if (error != null)
             {
                 EventContext errorContext = eventContext.Clone();
@@ -435,6 +437,7 @@ namespace VirtualClient.Contracts
                 tags,
                 eventContext,
                 MetricRelativity.LowerIsBetter,
+                verbosity: 0,
                 "Indicates the component or toolset execution failed for the scenario defined.",
                 toolVersion: toolVersion);
         }
@@ -709,6 +712,7 @@ namespace VirtualClient.Contracts
                     tags,
                     eventContext,
                     metric.Relativity,
+                    metric.Verbosity,
                     metric.Description,
                     toolResults,
                     toolVersion,
@@ -733,6 +737,7 @@ namespace VirtualClient.Contracts
         /// <param name="tags">Tags associated with the test.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="relativity">The relationship of the metric value to an outcome (e.g. higher/lower is better).</param>
+        /// <param name="verbosity">Metric verbosity. Default to 1.</param>
         /// <param name="description">A description of the metric.</param>
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
@@ -752,6 +757,7 @@ namespace VirtualClient.Contracts
             IEnumerable<string> tags,
             EventContext eventContext,
             MetricRelativity relativity = MetricRelativity.Undefined,
+            int verbosity = 1,
             string description = null,
             string toolResults = null,
             string toolVersion = null,
@@ -776,6 +782,7 @@ namespace VirtualClient.Contracts
                 { "metricCategorization", metricCategorization ?? string.Empty },
                 { "metricDescription", description ?? string.Empty },
                 { "metricRelativity", relativity.ToString() },
+                { "metricVerbosity", verbosity.ToString() },
                 { "toolName", toolName },
                 { "toolVersion", toolVersion ?? string.Empty },
                 { "toolResults", toolResults ?? string.Empty },
@@ -951,6 +958,7 @@ namespace VirtualClient.Contracts
                 tags,
                 eventContext,
                 MetricRelativity.HigherIsBetter,
+                verbosity: 2,
                 "Indicates the component or toolset execution succeeded for the scenario defined.",
                 toolVersion: toolVersion);
         }

@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     public class StressNgMetricsParser : MetricsParser
     {
         private const string BogusOperationsPerSecond = "BogoOps/s";
+        private List<Metric> metrics;
 
         /// <summary>
         /// Constructor for <see cref="StressNgMetricsParser"/>
@@ -25,15 +26,13 @@ namespace VirtualClient.Actions
         {
         }
 
-        private List<Metric> Metrics { get; set; }
-
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
             try
             {
                 this.Preprocess();
-                this.Metrics = new List<Metric>();
+                this.metrics = new List<Metric>();
 
                 IDeserializer deserializer = new DeserializerBuilder()
                     .WithNamingConvention(PascalCaseNamingConvention.Instance)
@@ -43,15 +42,15 @@ namespace VirtualClient.Actions
 
                 foreach (StressNgStressorResult stressor in parsedResult.Metrics)
                 {
-                    this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops", stressor.BogoOps, "BogoOps"));
-                    this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-usr-sys-time", stressor.BogoOpsPerSecondUsrSysTime, BogusOperationsPerSecond));
-                    this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-real-time", stressor.BogoOpsPerSecondRealTime, BogusOperationsPerSecond));
-                    this.Metrics.Add(new Metric($"{stressor.Stressor}-wall-clock-time", stressor.WallClockTime, "second"));
-                    this.Metrics.Add(new Metric($"{stressor.Stressor}-user-time", stressor.UserTime, "second"));
-                    this.Metrics.Add(new Metric($"{stressor.Stressor}-system-time", stressor.SystemTime, "second"));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops", stressor.BogoOps, "BogoOps", MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-usr-sys-time", stressor.BogoOpsPerSecondUsrSysTime, BogusOperationsPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-real-time", stressor.BogoOpsPerSecondRealTime, BogusOperationsPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-wall-clock-time", stressor.WallClockTime, "second", MetricRelativity.LowerIsBetter, verbosity: 2));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-user-time", stressor.UserTime, "second", MetricRelativity.LowerIsBetter, verbosity: 2));
+                    this.metrics.Add(new Metric($"{stressor.Stressor}-system-time", stressor.SystemTime, "second", MetricRelativity.LowerIsBetter, verbosity: 2));
                 }
 
-                return this.Metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {

@@ -20,14 +20,17 @@
         the same versions of a specific package across the board as a general rule. 
         -->
 
+        <!-- Asp.Versioning.Mvc -->
+        <Asp_Versioning_Mvc_PackageVersion>8.1.0</Asp_Versioning_Mvc_PackageVersion>
+
         <!-- AutoFixture -->
         <AutoFixture_PackageVersion>4.18.1</AutoFixture_PackageVersion>
 
         <!-- Azure.Identity -->
-        <Azure_Identity_PackageVersion>1.11.4</Azure_Identity_PackageVersion>
+        <Azure_Identity_PackageVersion>1.13.2</Azure_Identity_PackageVersion>
 
         <!-- Azure.Messaging.EventHubs -->
-        <Azure_Messaging_EventHubs_PackageVersion>5.9.3</Azure_Messaging_EventHubs_PackageVersion>
+        <Azure_Messaging_EventHubs_PackageVersion>5.11.5</Azure_Messaging_EventHubs_PackageVersion>
 
         <!-- Azure.Storage.Blobs -->
         <Azure_Storage_Blobs_PackageVersion>12.18.0</Azure_Storage_Blobs_PackageVersion>
@@ -36,7 +39,7 @@
         <MathNet_Numerics_Signed_PackageVersion>5.0.0</MathNet_Numerics_Signed_PackageVersion>
 
         <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson -->
-        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>9.0.0</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
+        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>9.0.3</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
 
         <!-- Microsoft.CodeAnalysis.Common -->
         <Microsoft_CodeAnalysis_Common_PackageVersion>4.7.0</Microsoft_CodeAnalysis_Common_PackageVersion>
@@ -48,31 +51,28 @@
         <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>2.0.61</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration -->
-        <Microsoft_Extensions_Configuration_PackageVersion>9.0.0</Microsoft_Extensions_Configuration_PackageVersion>
+        <Microsoft_Extensions_Configuration_PackageVersion>9.0.3</Microsoft_Extensions_Configuration_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration.Json -->
-        <Microsoft_Extensions_Configuration_Json_PackageVersion>9.0.0</Microsoft_Extensions_Configuration_Json_PackageVersion>
+        <Microsoft_Extensions_Configuration_Json_PackageVersion>9.0.3</Microsoft_Extensions_Configuration_Json_PackageVersion>
 
         <!-- Microsoft.Extensions.DependencyInjection -->
-        <Microsoft_Extensions_DependencyInjection_PackageVersion>9.0.0</Microsoft_Extensions_DependencyInjection_PackageVersion>
+        <Microsoft_Extensions_DependencyInjection_PackageVersion>9.0.3</Microsoft_Extensions_DependencyInjection_PackageVersion>
 
         <!-- Microsoft.Extensions.Logging -->
-        <Microsoft_Extensions_Logging_PackageVersion>9.0.0</Microsoft_Extensions_Logging_PackageVersion>
+        <Microsoft_Extensions_Logging_PackageVersion>9.0.3</Microsoft_Extensions_Logging_PackageVersion>
 
         <!-- Microsoft.Extensions.Logging.Console -->
-        <Microsoft_Extensions_Logging_Console_PackageVersion>9.0.0</Microsoft_Extensions_Logging_Console_PackageVersion>
+        <Microsoft_Extensions_Logging_Console_PackageVersion>9.0.3</Microsoft_Extensions_Logging_Console_PackageVersion>
 
         <!-- Microsoft.NET.Test.Sdk -->
         <Microsoft_NET_Test_Sdk_PackageVersion>17.11.1</Microsoft_NET_Test_Sdk_PackageVersion>
 
         <!-- Microsoft.Extensions.Http.Polly -->
-        <Microsoft_Extensions_Http_Polly_PackageVersion>9.0.0</Microsoft_Extensions_Http_Polly_PackageVersion>
+        <Microsoft_Extensions_Http_Polly_PackageVersion>9.0.3</Microsoft_Extensions_Http_Polly_PackageVersion>
 
         <!-- Microsoft.Windows.Compatibility -->
-        <Microsoft_Windows_Compatibility_PackageVersion>9.0.0</Microsoft_Windows_Compatibility_PackageVersion>
-
-        <!-- Microsoft.Win32.Registry -->
-        <Microsoft_Win32_Registry_PackageVersion>5.0.0</Microsoft_Win32_Registry_PackageVersion>
+        <Microsoft_Windows_Compatibility_PackageVersion>9.0.3</Microsoft_Windows_Compatibility_PackageVersion>
 
         <!-- Moq -->
         <Moq_PackageVersion>4.18.2</Moq_PackageVersion>
@@ -89,6 +89,9 @@
         <!-- Polly -->
         <Polly_PackageVersion>8.5.0</Polly_PackageVersion>
 
+        <!-- Polly.Extensions.Http -->
+        <Polly_Extensions_Http_PackageVersion>3.0.0</Polly_Extensions_Http_PackageVersion>
+
         <!-- Serilog.Extensions.Logging -->
         <Serilog_Extensions_Logging_PackageVersion>7.0.0</Serilog_Extensions_Logging_PackageVersion>
 
@@ -99,7 +102,7 @@
         <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
 
         <!-- SSH.Net -->
-        <SSH_Net_PackageVersion>2024.0.0</SSH_Net_PackageVersion>
+        <SSH_Net_PackageVersion>2024.2.0</SSH_Net_PackageVersion>
 
         <!-- System.CommandLine -->
         <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>
@@ -108,13 +111,13 @@
         <System_Diagnostics_Debug_PackageVersion>4.3.0</System_Diagnostics_Debug_PackageVersion>
 
         <!-- System.Diagnostics.EventLog -->
-        <System_Diagnostics_EventLog_PackageVersion>7.0.0</System_Diagnostics_EventLog_PackageVersion>
+        <System_Diagnostics_EventLog_PackageVersion>9.0.3</System_Diagnostics_EventLog_PackageVersion>
 
         <!-- System.Diagnostics.PerformanceCounter -->
-        <System_Diagnostics_PerformanceCounter_PackageVersion>7.0.0</System_Diagnostics_PerformanceCounter_PackageVersion>
+        <System_Diagnostics_PerformanceCounter_PackageVersion>9.0.3</System_Diagnostics_PerformanceCounter_PackageVersion>
 
         <!-- System.IO.Abstractions -->
-        <System_IO_Abstractions_PackageVersion>19.1.5</System_IO_Abstractions_PackageVersion>
+        <System_IO_Abstractions_PackageVersion>21.0.29</System_IO_Abstractions_PackageVersion>
 
         <!-- System.IO.FileSystem.AccessControl -->
         <System_IO_FileSystem_AccessControl_PackageVersion>5.0.0</System_IO_FileSystem_AccessControl_PackageVersion>
@@ -129,11 +132,14 @@
         <System_Net_NameResolution_PackageVersion>4.3.0</System_Net_NameResolution_PackageVersion>
 
         <!-- System.Reflection.Metadata -->
-        <System_Reflection_Metadata_PackageVersion>9.0.0</System_Reflection_Metadata_PackageVersion>
+        <System_Reflection_Metadata_PackageVersion>9.0.3</System_Reflection_Metadata_PackageVersion>
 
         <!-- System.Security.Principal.Windows -->
         <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
 
+        <!-- System.ServiceProcess.ServiceController -->
+        <System_ServiceProcess_ServiceController_PackageVersion>9.0.3</System_ServiceProcess_ServiceController_PackageVersion>
+        
         <!-- YamlDotNet -->
         <YamlDotNet_PackageVersion>15.1.1</YamlDotNet_PackageVersion>
 
@@ -157,9 +163,14 @@
     <PropertyGroup>
         <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion Condition="'$(VCBuildVersion)' != ''">$(VCBuildVersion)</AssemblyVersion>
-        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">1.0.0.0</AssemblyVersion>
+        <AssemblyInformationalVersion>$(AssemblyVersion)</AssemblyInformationalVersion>
+        <FileVersion>$(AssemblyVersion)</FileVersion>
+        <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+        <Product>Virtual Client Framework</Product>
+        <Product Condition="'$(OutputType)' == 'Exe'">Virtual Client Platform</Product>
+        <ProductName>Virtual Client</ProductName>
+        <ProductVersion>$(AssemblyVersion)</ProductVersion>
     </PropertyGroup>
 
     <!--

@@ -76,6 +76,15 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Creates a metric
+        /// </summary>
+        public Metric(string name, double value, string unit, MetricRelativity relativity, int verbosity, IEnumerable<string> tags = null, string description = null, IDictionary<string, IConvertible> metadata = null)
+            : this(name, value, unit, relativity, tags: tags, description: description, metadata: metadata)
+        {
+            this.Verbosity = verbosity;
+        }
+
+        /// <summary>
         /// Represents the case where a valid measurement could not be taken.
         /// </summary>
         public static Metric None { get; } = new Metric("n/a", 0);
@@ -125,6 +134,12 @@ namespace VirtualClient.Contracts
         /// Telemetry context for metric.
         /// </summary>
         public IDictionary<string, IConvertible> Metadata { get; }
+
+        /// <summary>
+        /// Metric verbosity to descript importance of metric. Default to 1, which means standard.
+        /// Verbosity 0: Critical. Verbosity 1: Standard. Verbosity 2: Informational.
+        /// </summary>
+        public int Verbosity { get; set; } = 1;
 
         /// <summary>
         /// Determines if two objects are equal.
@@ -212,7 +227,7 @@ namespace VirtualClient.Contracts
         public override int GetHashCode()
         {
             StringBuilder hashBuilder = new StringBuilder()
-                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
+                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{this.Verbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
 
             return hashBuilder.ToString().ToLowerInvariant().GetHashCode(StringComparison.OrdinalIgnoreCase);
         }

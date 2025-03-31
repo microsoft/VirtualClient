@@ -22,10 +22,34 @@ namespace VirtualClient.Dependencies
     {
         private MockFixture mockFixture;
 
+        public void SetupTest(PlatformID platform)
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform);
+
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Reset();
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsRegex(".*msmpisuccess.lock")))
+                .Returns(false);
+
+            DependencyPath package = new DependencyPath("msmpi", this.mockFixture.PlatformSpecifics.GetPackagePath("msmpi"));
+            this.mockFixture.SetupPackage(package);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(MsmpiInstallation.PackageName), "msmpi" }
+            };
+        }
+
         [Test]
         public async Task MsmpiInstallationRunsTheExpectedCommandInWindows()
         {
-            this.SetupMockFixture(PlatformID.Win32NT);
+            this.SetupTest(PlatformID.Win32NT);
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
@@ -61,31 +85,12 @@ namespace VirtualClient.Dependencies
         [Test]
         public void MsmpiInstallationDoesNotExecuteOnLinuxSystems()
         {
-            this.SetupMockFixture(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 Assert.IsFalse(VirtualClientComponent.IsSupported(installation));
             }
-        }
-
-        private void SetupMockFixture(PlatformID platform)
-        {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform);
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsRegex(".*msmpisuccess.lock")))
-                .Returns(false);
-
-            DependencyPath package = new DependencyPath("msmpi", this.mockFixture.PlatformSpecifics.GetPackagePath("msmpi"));
-            this.mockFixture.PackageManager.OnGetPackage("msmpi").ReturnsAsync(package);
-
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(MsmpiInstallation.PackageName), "msmpi" }
-            };
         }
 
         private class TestMsmpiInstallation : MsmpiInstallation

@@ -39,6 +39,8 @@ namespace VirtualClient.Api
     /// https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/implementing-the-event-based-asynchronous-pattern
     /// </remarks>
     [ApiController]
+    [ApiVersion(1.0)]
+    [ApiVersion(2.0)]
     [Route("/api/events")]
     public class EventsController : ControllerBase
     {
@@ -68,7 +70,6 @@ namespace VirtualClient.Api
         [Consumes("application/json")]
         [Produces("application/json")]
         [Description("Receives an instruction and passes it along to subscribers.")]
-        [ApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status423Locked)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -119,7 +120,7 @@ namespace VirtualClient.Api
         [Consumes("application/json")]
         [Produces("application/json")]
         [Description("Receives an instruction and passes it along to subscribers.")]
-        [ApiVersion("1.0")]
+        [MapToApiVersion(1.0)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status423Locked)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -175,7 +176,7 @@ namespace VirtualClient.Api
         [Consumes("application/json")]
         [Produces("application/json")]
         [Description("Receives an instruction and passes it along to subscribers.")]
-        [ApiVersion("2.0")]
+        [MapToApiVersion(2.0)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status423Locked)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

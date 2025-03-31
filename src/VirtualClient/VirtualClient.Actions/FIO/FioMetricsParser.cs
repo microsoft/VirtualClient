@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     {
         private const double NanosecondsToMilliseconds = 0.000001;
         private IList<Metric> resultingMetrics;
+        private Dictionary<string, IConvertible> metricMetadata = new Dictionary<string, IConvertible>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FioMetricsParser"/> class.
@@ -95,6 +96,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             List<Metric> metrics = new List<Metric>();
+
             if (this.ParseDataIntegrityMetrics)
             {
                 this.ParseDataIntegrityVerificationMetrics(metrics);
@@ -120,30 +122,29 @@ namespace VirtualClient.Actions
             {
                 foreach (JToken job in jobs)
                 {
-                    this.AddMeasurement(metrics, job, $"latency_us.2", "h000000_002");
-                    this.AddMeasurement(metrics, job, $"latency_us.4", "h000000_004");
-                    this.AddMeasurement(metrics, job, $"latency_us.10", "h000000_010");
-                    this.AddMeasurement(metrics, job, $"latency_us.20", "h000000_020");
-                    this.AddMeasurement(metrics, job, $"latency_us.50", "h000000_050");
-                    this.AddMeasurement(metrics, job, $"latency_us.100", "h000000_100");
-                    this.AddMeasurement(metrics, job, $"latency_us.250", "h000000_250");
-                    this.AddMeasurement(metrics, job, $"latency_us.500", "h000000_500");
-                    this.AddMeasurement(metrics, job, $"latency_us.750", "h000000_750");
-                    this.AddMeasurement(metrics, job, $"latency_us.1000", "h000001_000");
+                    this.AddMeasurement(metrics, job, $"latency_us.2", "h000000_002", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.4", "h000000_004", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.10", "h000000_010", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.20", "h000000_020", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.50", "h000000_050", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.100", "h000000_100", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.250", "h000000_250", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.500", "h000000_500", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.750", "h000000_750", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_us.1000", "h000001_000", verbosity: 2);
 
-                    this.AddMeasurement(metrics, job, $"latency_ms.2", "h000002_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.4", "h000004_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.10", "h000010_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.20", "h000020_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.50", "h000050_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.100", "h000100_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.250", "h000250_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.500", "h000500_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.750", "h000750_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.1000", "h001000_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.2000", "h002000_000");
-                    this.AddMeasurement(metrics, job, $"latency_ms.['>=2000']", "hgt002000_000");
-
+                    this.AddMeasurement(metrics, job, $"latency_ms.2", "h000002_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.4", "h000004_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.10", "h000010_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.20", "h000020_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.50", "h000050_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.100", "h000100_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.250", "h000250_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.500", "h000500_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.750", "h000750_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.1000", "h001000_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.2000", "h002000_000", verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"latency_ms.['>=2000']", "hgt002000_000", verbosity: 2);
                 }
             }
         }
@@ -161,44 +162,43 @@ namespace VirtualClient.Actions
             {
                 foreach (JToken job in jobs)
                 {
-                    this.AddMeasurement(metrics, job, $"read.io_bytes", "read_bytes", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.total_ios", "read_ios", null, MetricRelativity.HigherIsBetter);
-                   
-                    this.AddMeasurement(metrics, job, $"read.short_ios", "read_ios_short", null, MetricRelativity.LowerIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.drop_ios", "read_ios_dropped", null, MetricRelativity.LowerIsBetter);
+                    this.AddMeasurement(metrics, job, $"read.io_bytes", "read_bytes", null, MetricRelativity.HigherIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"read.total_ios", "read_ios", null, MetricRelativity.HigherIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"read.short_ios", "read_ios_short", null, MetricRelativity.LowerIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"read.drop_ios", "read_ios_dropped", null, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"read.bw", "read_bandwidth", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"read.bw_min", "read_bandwidth_min", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"read.bw_max", "read_bandwidth_max", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.bw_mean", "read_bandwidth_mean", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.bw_dev", "read_bandwidth_stdev", MetricUnit.KilobytesPerSecond, MetricRelativity.LowerIsBetter);
+                    this.AddMeasurement(metrics, job, $"read.bw_mean", "read_bandwidth_mean", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0);
+                    this.AddMeasurement(metrics, job, $"read.bw_dev", "read_bandwidth_stdev", MetricUnit.KilobytesPerSecond, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"read.iops", "read_iops", null, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"read.iops_min", "read_iops_min", null, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"read.iops_max", "read_iops_max", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.iops_mean", "read_iops_mean", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.iops_stddev", "read_iops_stdev", null, MetricRelativity.LowerIsBetter);
+                    this.AddMeasurement(metrics, job, $"read.iops_mean", "read_iops_mean", null, MetricRelativity.HigherIsBetter, verbosity: 0);
+                    this.AddMeasurement(metrics, job, $"read.iops_stddev", "read_iops_stdev", null, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"read.lat_ns.min", "read_latency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.lat_ns.max", "read_latency_max", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.lat_ns.mean", "read_latency_mean", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"read.lat_ns.stddev", "read_latency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"read.lat_ns.stddev", "read_latency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"read.clat_ns.min", "read_completionlatency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.max", "read_completionlatency_max", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.mean", "read_completionlatency_mean", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"read.clat_ns.stddev", "read_completionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"read.clat_ns.stddev", "read_completionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
-                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['50.000000']", "read_completionlatency_p50", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['50.000000']", "read_completionlatency_p50", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 0);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['70.000000']", "read_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['90.000000']", "read_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.000000']", "read_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.000000']", "read_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 0);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.990000']", "read_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
 
                     this.AddMeasurement(metrics, job, $"read.slat_ns.min", "read_submissionlatency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.slat_ns.max", "read_submissionlatency_max", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"read.slat_ns.mean", "read_submissionlatency_mean", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"read.slat_ns.stddev", "read_submissionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"read.slat_ns.stddev", "read_submissionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
                 }
             }
@@ -217,60 +217,59 @@ namespace VirtualClient.Actions
             {
                 foreach (JToken job in jobs)
                 {
-                    this.AddMeasurement(metrics, job, $"write.io_bytes", "write_bytes", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.total_ios", "write_ios", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.short_ios", "write_ios_short", null, MetricRelativity.LowerIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.drop_ios", "write_ios_dropped", null, MetricRelativity.LowerIsBetter);
+                    this.AddMeasurement(metrics, job, $"write.io_bytes", "write_bytes", null, MetricRelativity.HigherIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"write.total_ios", "write_ios", null, MetricRelativity.HigherIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"write.short_ios", "write_ios_short", null, MetricRelativity.LowerIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"write.drop_ios", "write_ios_dropped", null, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"write.bw", "write_bandwidth", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"write.bw_min", "write_bandwidth_min", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"write.bw_max", "write_bandwidth_max", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.bw_mean", "write_bandwidth_mean", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.bw_dev", "write_bandwidth_stdev", MetricUnit.KilobytesPerSecond, MetricRelativity.LowerIsBetter);
+                    this.AddMeasurement(metrics, job, $"write.bw_mean", "write_bandwidth_mean", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0);
+                    this.AddMeasurement(metrics, job, $"write.bw_dev", "write_bandwidth_stdev", MetricUnit.KilobytesPerSecond, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"write.iops", "write_iops", null, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"write.iops_min", "write_iops_min", null, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"write.iops_max", "write_iops_max", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.iops_mean", "write_iops_mean", null, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.iops_stddev", "write_iops_stdev", null, MetricRelativity.LowerIsBetter);
+                    this.AddMeasurement(metrics, job, $"write.iops_mean", "write_iops_mean", null, MetricRelativity.HigherIsBetter, verbosity: 0);
+                    this.AddMeasurement(metrics, job, $"write.iops_stddev", "write_iops_stdev", null, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"write.lat_ns.min", "write_latency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.lat_ns.max", "write_latency_max", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.lat_ns.mean", "write_latency_mean", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"write.lat_ns.stddev", "write_latency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"write.lat_ns.stddev", "write_latency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"write.clat_ns.min", "write_completionlatency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.clat_ns.max", "write_completionlatency_max", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.clat_ns.mean", "write_completionlatency_mean", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"write.clat_ns.stddev", "write_completionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"write.clat_ns.stddev", "write_completionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
-                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['50.000000']", "write_completionlatency_p50", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['50.000000']", "write_completionlatency_p50", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 0);
                     this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['70.000000']", "write_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['90.000000']", "write_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['99.000000']", "write_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['99.000000']", "write_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 0);
                     this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['99.990000']", "write_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
 
                     this.AddMeasurement(metrics, job, $"write.slat_ns.min", "write_submissionlatency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.slat_ns.max", "write_submissionlatency_max", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
                     this.AddMeasurement(metrics, job, $"write.slat_ns.mean", "write_submissionlatency_mean", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
-                    this.AddMeasurement(metrics, job, $"write.slat_ns.stddev", "write_submissionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor);
+                    this.AddMeasurement(metrics, job, $"write.slat_ns.stddev", "write_submissionlatency_stdev", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
                 }
             }
         }
 
-        private void AddMeasurement(IList<Metric> metrics, JToken job, string path, string metricName, string metricUnit = null, MetricRelativity metricRelativity = MetricRelativity.Undefined, double? conversionFactor = null)
+        private void AddMeasurement(IList<Metric> metrics, JToken job, string path, string metricName, string metricUnit = null, MetricRelativity metricRelativity = MetricRelativity.Undefined, double? conversionFactor = null, int verbosity = 1)
         {
             var jobOptions = job.SelectToken("['job options']") as JObject;
 
-            var metricMetaData = new Dictionary<string, IConvertible>();
             foreach (var prop in jobOptions.Properties())
             {
-                metricMetaData[prop.Name] = prop.Value.ToString();
+                this.metricMetadata[prop.Name] = prop.Value.ToString();
             }
 
             JToken jobName = job.SelectToken("jobname") as JToken;
-            metricMetaData[nameof(jobName)] = jobName.ToString();
+            this.metricMetadata[nameof(jobName)] = jobName.ToString();
 
             JToken matchingToken = job.SelectToken(path);
             if (matchingToken != null)
@@ -282,7 +281,7 @@ namespace VirtualClient.Actions
                         measurementValue = measurementValue * conversionFactor.Value;
                     }
 
-                    metrics.Add(new Metric(metricName, measurementValue, metricUnit, metricRelativity, metadata: metricMetaData));
+                    metrics.Add(new Metric(metricName, measurementValue, metricUnit, metricRelativity, verbosity: verbosity, metadata: this.metricMetadata));
                 }
             }
         }
@@ -307,6 +306,14 @@ namespace VirtualClient.Actions
             {
                 metrics.Clear();
                 JToken resultsJson = JObject.Parse(this.RawText);
+
+                string fioVersion;
+                JToken fioVersionToken = resultsJson["fio version"];
+                if (fioVersionToken != null)
+                {
+                    fioVersion = fioVersionToken.Value<string>();
+                    this.metricMetadata["fio_version"] = fioVersion;
+                }
 
                 if (this.ParseReadMetrics)
                 {

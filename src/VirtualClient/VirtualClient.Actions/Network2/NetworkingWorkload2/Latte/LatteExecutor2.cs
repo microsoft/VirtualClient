@@ -147,10 +147,7 @@ namespace VirtualClient.Actions
             this.ThrowIfLayoutNotDefined();
             this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             telemetryContext.AddContext("package", workloadPackage);
 
             string role = clientInstance.Role;
@@ -161,11 +158,11 @@ namespace VirtualClient.Actions
             this.Name = $"{this.Scenario} {role}";
             this.ProcessName = "latte";
             this.Tool = "Latte";
-            string resultsDir = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Scenario);
+            string resultsDir = this.Combine(workloadPackage.Path, this.Scenario);
             this.fileSystem.Directory.CreateDirectory(resultsDir);
 
-            this.ResultsPath = this.PlatformSpecifics.Combine(resultsDir, LatteExecutor2.OutputFileName);
-            this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "latte.exe");
+            this.ResultsPath = this.Combine(resultsDir, LatteExecutor2.OutputFileName);
+            this.ExecutablePath = this.Combine(workloadPackage.Path, "latte.exe");
         }
 
         /// <summary>

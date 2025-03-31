@@ -57,8 +57,8 @@ stages:
         version=$(cat $(Build.SourcesDirectory)/VERSION)
 
         # Set the file content as a pipeline variable
-        echo "##vso[task.setvariable variable=VcVersion]$version"
-      displayName: 'Set VC Version'
+        echo "$version"
+      displayName: 'Show VC Build Version'
 
     - script: chmod -R +x $(Build.SourcesDirectory)
       displayName: 'Allow scripts to be executable on Linux'
@@ -68,19 +68,19 @@ stages:
       # displayName: 'Clean Output Directories'
       
       # Build the repo.
-    - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
+    - script: $(Build.SourcesDirectory)/build.sh
       displayName: 'Build Solutions'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh
       displayName: 'Build rpm package for linux arm64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh
       displayName: 'Build rpm package for linux x64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh
       displayName: 'Build deb package for linux arm64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh
       displayName: 'Build deb package for linux x64'
 
       
@@ -195,7 +195,6 @@ stages:
     # AzLinux
     - task: PublishLinuxPackagesPMC@0
       displayName: 'AzLinux 3.0 rpm publish x64'
-      enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -204,9 +203,9 @@ stages:
         service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'azurelinux-3.0-prod-base-x86_64-yum'
+
     - task: PublishLinuxPackagesPMC@0
       displayName: 'AzLinux 3.0 rpm publish aarch64'
-      enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -218,7 +217,6 @@ stages:
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish x64'
-      enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -230,7 +228,6 @@ stages:
       
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 2.0 rpm publish aarch64'
-      enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -242,7 +239,6 @@ stages:
     
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
-      enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -254,7 +250,6 @@ stages:
         
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Mariner 1.0 rpm publish'
-      enabled: false
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -631,7 +626,7 @@ stages:
         
     # Ubuntu
     - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 17.10 deb publish'
+      displayName: 'Ubuntu 23.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
         authType: 'wif'
@@ -639,8 +634,140 @@ stages:
         tenant_ID: $(tenantId) # no quotations
         service_principal_ID: $(servicePrincipalId) # no quotations
         package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-artful-prod-apt'
-        release: 'artful'
+        repository: 'microsoft-ubuntu-noble-prod-apt'
+        release: 'noble'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 23.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-mantic-prod-apt'
+        release: 'mantic'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 23.04 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-lunar-prod-apt'
+        release: 'lunar'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 22.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-kinetic-prod-apt'
+        release: 'kinetic'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 22.04 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-jammy-prod-apt'
+        release: 'jammy'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 21.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-impish-prod-apt'
+        release: 'impish'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 21.04 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-hirsute-prod-apt'
+        release: 'hirsute'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 20.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-groovy-prod-apt'
+        release: 'groovy'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 20.04 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-focal-prod-apt'
+        release: 'focal'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 19.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-eoan-prod-apt'
+        release: 'eoan'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 19.04 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-disco-prod-apt'
+        release: 'disco'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 18.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-cosmic-prod-apt'
+        release: 'cosmic'
 
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Ubuntu 18.04 deb publish'
@@ -654,127 +781,9 @@ stages:
         repository: 'microsoft-ubuntu-bionic-prod-apt'
         release: 'bionic'
 
+    # Disable legacy ubuntu publish
     - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 18.10 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-cosmic-prod-apt'
-        release: 'cosmic'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 19.04 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-disco-prod-apt'
-        release: 'disco'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 19.10 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-eoan-prod-apt'
-        release: 'eoan'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 20.04 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-focal-prod-apt'
-        release: 'focal'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 20.10 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-groovy-prod-apt'
-        release: 'groovy'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 21.04 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-hirsute-prod-apt'
-        release: 'hirsute'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 21.10 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-impish-prod-apt'
-        release: 'impish'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 22.04 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-jammy-prod-apt'
-        release: 'jammy'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 22.10 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-kinetic-prod-apt'
-        release: 'kinetic'
-        
-    - task: PublishLinuxPackagesPMC@0
-      displayName: 'Ubuntu 23.04 deb publish'
-      inputs:
-        profile: 'prod' # or 'tuxdev'
-        authType: 'wif'
-        auth_token: $(idToken) # no quotations
-        tenant_ID: $(tenantId) # no quotations
-        service_principal_ID: $(servicePrincipalId) # no quotations
-        package_path: '$(Agent.BuildDirectory)/drop/packages'
-        repository: 'microsoft-ubuntu-lunar-prod-apt'
-        release: 'lunar'
-        
-    - task: PublishLinuxPackagesPMC@0
+      enabled: false
       displayName: 'Ubuntu 14.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
@@ -787,6 +796,7 @@ stages:
         release: 'trusty'
         
     - task: PublishLinuxPackagesPMC@0
+      enabled: false
       displayName: 'Ubuntu 15.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
@@ -799,6 +809,7 @@ stages:
         release: 'wily'
         
     - task: PublishLinuxPackagesPMC@0
+      enabled: false
       displayName: 'Ubuntu 16.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
@@ -811,6 +822,7 @@ stages:
         release: 'xenial'
         
     - task: PublishLinuxPackagesPMC@0
+      enabled: false
       displayName: 'Ubuntu 16.10 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
@@ -823,6 +835,7 @@ stages:
         release: 'yakkety'
         
     - task: PublishLinuxPackagesPMC@0
+      enabled: false
       displayName: 'Ubuntu 17.04 deb publish'
       inputs:
         profile: 'prod' # or 'tuxdev'
@@ -833,3 +846,16 @@ stages:
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-ubuntu-zesty-prod-apt'
         release: 'zesty'
+
+    - task: PublishLinuxPackagesPMC@0
+      enabled: false
+      displayName: 'Ubuntu 17.10 deb publish'
+      inputs:
+        profile: 'prod' # or 'tuxdev'
+        authType: 'wif'
+        auth_token: $(idToken) # no quotations
+        tenant_ID: $(tenantId) # no quotations
+        service_principal_ID: $(servicePrincipalId) # no quotations
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-artful-prod-apt'
+        release: 'artful'

@@ -6,7 +6,7 @@
         <RunCodeAnalysis>false</RunCodeAnalysis>
         <RunAnalyzers>true</RunAnalyzers>
         <RootNamespace>VirtualClient.Dependencies</RootNamespace>
-        <NoWarn>AsyncFixer02,SA1025,SA1116,SA1118</NoWarn>
+        <NoWarn>AsyncFixer02;SA1025;SA1116;SA1118</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

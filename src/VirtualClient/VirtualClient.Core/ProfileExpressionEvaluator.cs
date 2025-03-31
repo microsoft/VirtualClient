@@ -9,9 +9,7 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.Scripting;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
@@ -25,8 +23,8 @@ namespace VirtualClient
         // {fn(512 / 16)]}
         // {fn(512 / {LogicalThreadCount})}
         private static readonly Regex CalculateExpression = new Regex(
-            @"\{calculate\(([0-9\*\/\+\-\(\)\s]+)\)\}",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    @"\{calculate\(([0-9L\*\/\+\-\(\)\s]+)\)\}",
+    RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {calculate({IsTLSEnabled} ? "Yes" : "No")}
@@ -441,7 +439,6 @@ namespace VirtualClient
                     {
                         string function = match.Groups[1].Value;
                         long result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<long>(function);
-
                         evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
                     }
                 }

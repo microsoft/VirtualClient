@@ -3,13 +3,9 @@
 
 namespace VirtualClient.Actions
 {
-    using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Text.RegularExpressions;
-    using System.Web.Services.Description;
     using VirtualClient.Contracts;
-    using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
     /// Parser for AmdSmi output document.

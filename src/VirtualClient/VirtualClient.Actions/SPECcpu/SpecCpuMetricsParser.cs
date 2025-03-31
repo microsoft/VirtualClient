@@ -22,6 +22,8 @@ namespace VirtualClient.Actions
         /// </summary>
         private static readonly Regex SpecCpuDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
 
+        private List<Metric> metrics = new List<Metric>();
+
         /// <summary>
         /// Constructor for <see cref="SpecCpuMetricsParser"/>
         /// </summary>
@@ -61,13 +63,14 @@ namespace VirtualClient.Actions
                 this.ParseSpecCpuResult();
                 this.ParseSpecCpuSummaryResult();
 
-                List<Metric> metrics = new List<Metric>();
+                this.metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
+                this.metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                this.metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
 
-                metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
-                metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
-                metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                // Every score in SPECcpu is critical metric.
+                this.metrics.ForEach(m => m.Verbosity = 0);
 
-                return metrics;
+                return this.metrics;
             }
             catch (Exception exc)
             {

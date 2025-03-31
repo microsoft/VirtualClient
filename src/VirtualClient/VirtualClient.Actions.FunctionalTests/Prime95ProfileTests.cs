@@ -96,12 +96,12 @@ namespace VirtualClient.Actions
             this.fixture.Setup(platform);
             if (platform == PlatformID.Win32NT)
             {
-                this.fixture.SetupWorkloadPackage("prime95", expectedFiles: @"win-x64/prime95.exe");
+                this.fixture.SetupPackage("prime95", expectedFiles: @"win-x64/prime95.exe");
                 this.fixture.SetupFile("prime95", @"win-x64\results.txt", TestDependencies.GetResourceFileContents("Results_Prime95.txt"));
             }
             else
             {
-                this.fixture.SetupWorkloadPackage("prime95", expectedFiles: @"linux-x64/mprime");
+                this.fixture.SetupPackage("prime95", expectedFiles: @"linux-x64/mprime");
                 this.fixture.SetupFile("prime95", @"linux-x64/results.txt", TestDependencies.GetResourceFileContents("Results_Prime95.txt"));
             }
         }

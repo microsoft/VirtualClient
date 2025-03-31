@@ -6,13 +6,22 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System;
     using System.Collections.Generic;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient.Common.Platform;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// NTttcp(Test Bandwith and Throughput) Tool Server Executor. 
     /// </summary>
     public class NTttcpServerExecutor : NTttcpExecutor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NTttcpServerExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public NTttcpServerExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="NTttcpServerExecutor"/> class.
         /// </summary>

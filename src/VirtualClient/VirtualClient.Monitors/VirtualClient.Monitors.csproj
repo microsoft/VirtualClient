@@ -4,7 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Monitors</AssemblyName>
         <RootNamespace>VirtualClient.Monitors</RootNamespace>
-        <NoWarn>CA1416;CA2227,SA1116</NoWarn>
+        <NoWarn>CA1416;CA2227;SA1116</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

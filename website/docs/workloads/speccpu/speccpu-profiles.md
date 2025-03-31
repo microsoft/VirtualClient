@@ -20,13 +20,11 @@ for evaluating the performance of the CPU for processing calculations.
   * win-x64
   * win-arm64
 
+  **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
+  **Note**: Not supported currently on Ubuntu 24.
+
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
-
-* **Supported Compilers**  
-  The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
-
-  * GCC Compiler Versions = 8, 9, 10
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -78,13 +76,10 @@ for evaluating the performance of the CPU for processing calculations.
   * win-x64
   * win-arm64
 
+  **Note**: Not supported currently on Ubuntu 24.
+
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
-
-* **Supported Compilers**  
-  The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
-
-  * GCC Compiler Versions = 8, 9, 10
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -135,11 +130,6 @@ for evaluating the performance of the CPU for processing calculations.
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
-* **Supported Compilers**  
-  The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
-
-  * GCC Compiler Versions = 8, 9, 10
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -187,11 +177,6 @@ for evaluating the performance of the CPU for processing calculations.
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
-
-* **Supported Compilers**  
-  The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
-
-  * GCC Compiler Versions = 8, 9, 10
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

@@ -25,25 +25,49 @@ namespace VirtualClient.Actions.NASParallelBench
         private const string ExampleBenchmark = "bt.S.x";
         private const string ExampleUsername = "my-username";
         private MockFixture mockFixture;
-        private DependencyPath mockPath;
+        private DependencyPath mockPackage;
         private State expectedState;
 
-        [SetUp]
-        public void SetupTests()
+        public void SetupTest(PlatformID platformID)
         {
             this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platformID);
 
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("nasparallelbench", this.mockFixture.PlatformSpecifics.GetPackagePath("nasparallelbench"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                ["PackageName"] = this.mockPackage.Name,
+                ["Benchmark"] = NASParallelBenchClientExecutorTests.ExampleBenchmark,
+                ["Username"] = NASParallelBenchClientExecutorTests.ExampleUsername
+            };
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.mockFixture.Process;
+
+            string npbBuildState = "NpbBuildState";
+            this.expectedState = new State(new Dictionary<string, IConvertible>
+            {
+                [npbBuildState] = "completed"
+            });
+
+            Item<JObject> expectedStateItem = new Item<JObject>(npbBuildState, JObject.FromObject(this.expectedState));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(
+                It.IsAny<String>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
         }
 
         [Test]
         public void NASParallelBenchClientExecutorThrowsWhenABenchmarkIsNotFound()
         {
+            this.SetupTest(PlatformID.Unix);
+
             this.mockFixture.FileSystem.Setup(d => d.File.Exists(It.IsAny<string>()))
                 .Returns(false);
 
-            using (NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(
-                this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exc.Reason);
@@ -57,9 +81,10 @@ namespace VirtualClient.Actions.NASParallelBench
         [TestCase("dt.S.x SH", true)]
         [TestCase("dt.S.x BH", true)]
         [TestCase("dt.S.x WH", true)]
-        public async Task NasParallelBenchClientExecutorDoesNotExecuteUnsupportedBenchmarks(
-            string Benchmark, bool MultiTierScenario)
+        public async Task NasParallelBenchClientExecutorDoesNotExecuteUnsupportedBenchmarks(string Benchmark, bool MultiTierScenario)
         {
+            this.SetupTest(PlatformID.Unix);
+
             if (!MultiTierScenario)
             {
                 this.mockFixture.Layout = null;
@@ -86,6 +111,8 @@ namespace VirtualClient.Actions.NASParallelBench
         [Test]
         public async Task NASParallelBenchClientExecutorUsesMPIOptionInMultiSystemScenarios()
         {
+            this.SetupTest(PlatformID.Unix);
+
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual(cmd, "sudo");
@@ -106,6 +133,8 @@ namespace VirtualClient.Actions.NASParallelBench
         [Test]
         public async Task NASParallelBenchClientExecutorUsesOMPOptionInSingleSystemScenarios()
         {
+            this.SetupTest(PlatformID.Unix);
+
             this.mockFixture.Layout = null;
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
@@ -121,38 +150,6 @@ namespace VirtualClient.Actions.NASParallelBench
             {
                 await executor.ExecuteAsync(CancellationToken.None);
             }
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platformID)
-        {
-            this.mockFixture.Setup(platformID);
-
-            this.mockPath = this.mockFixture.Create<DependencyPath>();
-            DependencyPath mockPackage = new DependencyPath(
-                "nasparallelbench", this.mockFixture.PlatformSpecifics.GetPackagePath("nasparallelbench"));
-
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                ["PackageName"] = this.mockPath.Name,
-                ["Benchmark"] = NASParallelBenchClientExecutorTests.ExampleBenchmark,
-                ["Username"] = NASParallelBenchClientExecutorTests.ExampleUsername
-            };
-
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.mockFixture.Process;
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(mockPackage);
-
-            string npbBuildState = "NpbBuildState";
-            this.expectedState = new State(new Dictionary<string, IConvertible>
-            {
-                [npbBuildState] = "completed"
-            });
-
-            Item<JObject> expectedStateItem = new Item<JObject>(npbBuildState, JObject.FromObject(this.expectedState));
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(
-                It.IsAny<String>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
         }
     }
 }

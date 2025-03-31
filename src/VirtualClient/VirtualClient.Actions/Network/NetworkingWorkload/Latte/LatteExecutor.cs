@@ -23,6 +23,17 @@ namespace VirtualClient.Actions.NetworkPerformance
         private const string OutputFileName = "latte-results.xml";
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="LatteExecutor"/> class.
+        /// </summary>
+        /// <param name="component">Component to copy.</param>
+        public LatteExecutor(VirtualClientComponent component)
+           : base(component)
+        {
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
