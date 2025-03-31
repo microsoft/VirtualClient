@@ -33,58 +33,42 @@
         win-x64
         =============================================================================================
         -->
-<<<<<<< HEAD
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\win-x64\**\*" exclude="**\*.pdb;*.xml" target="content\win-x64" />
-=======
         <file 
-            src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\**\*" 
+            src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\win-x64\**\*" 
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll" 
             target="content\win-x64" 
             />
->>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
 
         <!-- 
         win-arm64
         =============================================================================================
         -->
 
-<<<<<<< HEAD
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\win-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\win-arm64" />
-=======
         <file
-            src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\**\*"
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\win-arm64\**\*"
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
             target="content\win-arm64"
             />
->>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
 
         <!-- 
         linux-x64
         =============================================================================================
         -->
-<<<<<<< HEAD
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\linux-x64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-x64" />
-=======
         <file
-            src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\**\*"
+            src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\linux-x64\**\*"
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
             target="content\linux-x64"
             />
->>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
 
         <!-- 
         linux-arm64
         =============================================================================================
         -->
-<<<<<<< HEAD
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\linux-arm64\**\*" exclude="**\*.pdb;*.xml" target="content\linux-arm64" />
-=======
         <file
-            src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\**\*"
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\linux-arm64\**\*"
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
             target="content\linux-arm64"
             />
 
->>>>>>> 83b9bd3ccd76f6a826bbbe2b1e4f3d1c49f845c3
     </files>
 </package>
