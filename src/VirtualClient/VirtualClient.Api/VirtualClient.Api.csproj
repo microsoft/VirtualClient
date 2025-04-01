@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Api</AssemblyName>
         <RootNamespace>VirtualClient.Api</RootNamespace>
         <NoWarn>AD0001;SA1508</NoWarn>
@@ -9,10 +9,8 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="Asp.Versioning.Mvc" Version="$(Asp_Versioning_Mvc_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore" Version="$(Microsoft_AspNetCore_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(Microsoft_AspNetCore_Mvc_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="$(Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(Microsoft_Extensions_DependencyInjection_PackageVersion)" />
         

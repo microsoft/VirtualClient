@@ -28,12 +28,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void CoreMarkParserViewDataTable()
-        {
-            this.testParser.CoreMarkResult.PrintDataTableFormatted();
-        }
-
-        [Test]
         public void CoreMarkParserVerifyMetricsSingleThread()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);

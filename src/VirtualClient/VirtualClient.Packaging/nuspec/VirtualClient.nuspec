@@ -11,7 +11,7 @@
         <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
 
         <dependencies>
-            <group targetFramework=".net8.0"></group>
+            <group targetFramework=".net9.0"></group>
         </dependencies>
     </metadata>
 
@@ -34,7 +34,7 @@
         =============================================================================================
         -->
         <file 
-            src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\**\*" 
+            src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\win-x64\**\*" 
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll" 
             target="content\win-x64" 
             />
@@ -45,7 +45,7 @@
         -->
 
         <file
-            src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\**\*"
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\win-arm64\**\*"
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
             target="content\win-arm64"
             />
@@ -55,7 +55,7 @@
         =============================================================================================
         -->
         <file
-            src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\**\*"
+            src="$BinConfigDir$\x64\VirtualClient.Main\net9.0\linux-x64\**\*"
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
             target="content\linux-x64"
             />
@@ -65,7 +65,7 @@
         =============================================================================================
         -->
         <file
-            src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\**\*"
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\linux-arm64\**\*"
             exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
             target="content\linux-arm64"
             />

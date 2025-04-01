@@ -35,7 +35,6 @@ namespace VirtualClient.Actions
         public void OpenFOAMResultsParserParsesTheExpectedExecutionTimesFromResults()
         {
             this.testParser.Parse();
-            this.testParser.ExecutionTimes.PrintDataTableFormatted();
             Assert.AreEqual(4, this.testParser.ExecutionTimes.Columns.Count);
             Assert.AreEqual(313, this.testParser.ExecutionTimes.Rows.Count);
         }
