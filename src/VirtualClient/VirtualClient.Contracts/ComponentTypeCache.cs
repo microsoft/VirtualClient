@@ -60,11 +60,13 @@ namespace VirtualClient.Contracts
             }
             catch (BadImageFormatException)
             {
-                // Expected for certain types of assemblies that are not .NET intermediate
-                // language assemblies (IL).
+                // For the case that our exclusions miss assemblies that are NOT intermediate/IL
+                // assemblies, we need to handle this until we have a better model.
             }
             catch (FileLoadException)
             {
+                // For the case that we are loading extensions and the assembly may have
+                // been already loaded.
             }
         }
 
@@ -93,6 +95,11 @@ namespace VirtualClient.Contracts
                     {
                         // For the case that our exclusions miss assemblies that are NOT intermediate/IL
                         // assemblies, we need to handle this until we have a better model.
+                    }
+                    catch (FileLoadException)
+                    {
+                        // For the case that we are loading extensions and the assembly may have
+                        // been already loaded.
                     }
                 }
             }

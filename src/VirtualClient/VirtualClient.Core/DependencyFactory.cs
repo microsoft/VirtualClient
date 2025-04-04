@@ -230,8 +230,8 @@ namespace VirtualClient
         {
             logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
 
-            // 10MB
-            const long maxFileSizeBytes = 10000000;
+            // 20MB
+            const long maxFileSizeBytes = 20000000;
 
             ILoggerProvider loggerProvider = null;
 
@@ -240,19 +240,21 @@ namespace VirtualClient
                 LoggerConfiguration logConfiguration = null;
                 if (formatter != null)
                 {
-                    logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                    logConfiguration = new LoggerConfiguration().WriteTo.File(
                         formatter,
                         logFilePath,
                         fileSizeLimitBytes: maxFileSizeBytes,
-                        retainedFileCountLimit: 10,
+                        rollOnFileSizeLimit: true,
+                        retainedFileCountLimit: 50,
                         flushToDiskInterval: flushInterval);
                 }
                 else
                 {
-                    logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                    logConfiguration = new LoggerConfiguration().WriteTo.File(
                         logFilePath,
                         fileSizeLimitBytes: maxFileSizeBytes,
-                        retainedFileCountLimit: 10,
+                        rollOnFileSizeLimit: true,
+                        retainedFileCountLimit: 50,
                         flushToDiskInterval: flushInterval);
                 }
 
@@ -272,10 +274,10 @@ namespace VirtualClient
         {
             csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
 
-            // 10MB
+            // 20MB
             // General Sizing:
-            // Around 17,200 metric records will fit inside of a single CSV file at 10MB.
-            const long maxFileSizeBytes = 10000000;
+            // Around 34,400 metric records will fit inside of a single CSV file at 20MB.
+            const long maxFileSizeBytes = 20000000;
 
             ILoggerProvider loggerProvider = null;
 
