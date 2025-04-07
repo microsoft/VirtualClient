@@ -62,7 +62,7 @@
             "Parameters": {
                 "Scenario": "InstallSPECcpuPackage",
                 "BlobContainer": "packages",
-                "BlobName": "speccpu.2017.1.1.8.zip",
+                "BlobName": "speccpu.2017.1.1.9-danielbowers.zip",
                 "PackageName": "speccpu2017",
                 "Extract": true
             }
