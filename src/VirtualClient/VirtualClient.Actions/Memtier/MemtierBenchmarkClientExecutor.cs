@@ -514,7 +514,7 @@ namespace VirtualClient.Actions
                             if (!cancellationToken.IsCancellationRequested)
                             {
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Memtier", logToFile: true);
-                                process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
+                                process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes, errorReason: ErrorReason.CompilationFailed);
 
                                 // The Memtier workload for whatever reason emits the following statement in standard error:
                                 // 'Writing results to stdout'. We will throw if there is any other information in standard error. Certain

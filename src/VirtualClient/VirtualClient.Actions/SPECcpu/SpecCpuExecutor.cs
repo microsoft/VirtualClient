@@ -307,7 +307,7 @@ namespace VirtualClient.Actions
                     if (process.IsErrored())
                     {
                         await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
-                        process.ThrowIfWorkloadFailed();
+                        process.ThrowIfWorkloadFailed(errorReason: ErrorReason.CompilationFailed);
                     }
                 }
 

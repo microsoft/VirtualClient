@@ -193,6 +193,11 @@ namespace VirtualClient
         InvalidOrMissingLicense = 512,
 
         /// <summary>
+        /// Compilation of the workload failed.
+        /// </summary>
+        CompilationFailed = 513,
+
+        /// <summary>
         /// Disk format operations failed.
         /// </summary>
         DiskFormatFailed = 515,
