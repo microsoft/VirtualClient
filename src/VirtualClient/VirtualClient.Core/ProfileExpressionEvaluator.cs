@@ -102,6 +102,12 @@ namespace VirtualClient
             @"\{([a-z0-9_-]+)\.(TotalDays|TotalHours|TotalMilliseconds|TotalMinutes|TotalSeconds)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // e.g.
+        // {ExperimentId}
+        private static readonly Regex ExperimentIdExpression = new Regex(
+            @"\{ExperimentId\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// The set of expressions and evaluators supported by the editor. Additional expressions
         /// and evaluators can be added (e.g. {PackagePath/Special:redis}).
@@ -510,7 +516,33 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
-            })
+            }),
+            // Expression: {ExperimentId}
+            // Resolves to the runtime value of ExperimentId.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ExperimentIdExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
+                    string experimentId = systemInfo.ExperimentId;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, experimentId);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
         };
 
         private ProfileExpressionEvaluator()
