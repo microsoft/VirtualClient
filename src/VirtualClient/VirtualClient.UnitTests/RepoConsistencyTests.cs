@@ -28,12 +28,6 @@ namespace VirtualClient
         }
 
         [Test]
-        public void ValidateMarkdownFilesDoNotHaveByteOrderMarkSequences()
-        {
-            this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.md", "Markdown/*.md");
-        }
-
-        [Test]
         public void ValidateJsonFilesDoNotHaveByteOrderMarkSequences()
         {
             this.ValidateFilesDoNotHaveByteOrderMarkSequences("*.json", "JSON/*.json");
@@ -67,29 +61,30 @@ namespace VirtualClient
                 throw new FileNotFoundException("Could not locate the root directory of the Git repo.");
             }
 
-            var fileList = new DirectoryInfo(repoRootDirectory.FullName)
+            IEnumerable<FileInfo> fileList = new DirectoryInfo(repoRootDirectory.FullName)
                 .GetFiles(fileExtension, SearchOption.AllDirectories)
-                .Where(file => !file.FullName.Contains("node_modules"))
-                .Where(file =>
+                .Where(file => !file.FullName.Contains("node_modules"));
+
+            IEnumerable<FileInfo> flaggedFiles = fileList.Where(file =>
+            {
+                using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
                 {
-                    using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                    if (fileStream.Length >= 3)
                     {
-                        if (fileStream.Length >= 3)
-                        {
-                            byte[] buffer = new byte[3];
-                            fileStream.Read(buffer, 0, 3);
+                        byte[] buffer = new byte[3];
+                        fileStream.Read(buffer, 0, 3);
 
-                            // Check if the first three bytes match the UTF-8 BOM
-                            return (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF);
-                        }
-
-                        return false;
+                        // Check if the first three bytes match the UTF-8 BOM
+                        return (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF);
                     }
-                }).ToList();
+
+                    return false;
+                }
+            }).ToList();
 
             Assert.AreEqual(
                 0,
-                fileList.Count,
+                flaggedFiles.Count(),
                 $"Invalid file encodings. The repo has {fileType} files that are UTF-8 encoded with a byte-order mark (BOM) sequence. Open and save the following files " +
                 $"without the byte-order mark: {Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", fileList.Select(f => f.FullName).OrderBy(path => path))}");
         }

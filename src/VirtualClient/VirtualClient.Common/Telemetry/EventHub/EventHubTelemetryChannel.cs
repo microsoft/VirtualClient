@@ -371,13 +371,23 @@ namespace VirtualClient.Common.Telemetry
 
         private Task StartEventTransmissionBackgroundTask()
         {
-            return Task.Factory.StartNew(this.TransmitEventsInTheBackground, this.cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
-                .ContinueWith(
-                    task =>
-                    {
-                        string msg = $"{typeof(EventHubTelemetryChannel)}: Unhandled exception in transmission channel: {task.Exception.Message}";
-                    },
-                    TaskContinuationOptions.OnlyOnFaulted);
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Factory.StartNew(this.TransmitEventsInTheBackground, this.cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+                        .ContinueWith(
+                            task =>
+                            {
+                                string msg = $"{typeof(EventHubTelemetryChannel)}: Unhandled exception in transmission channel: {task.Exception.Message}";
+                            },
+                            TaskContinuationOptions.OnlyOnFaulted);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when a Cancellation is requested.
+                }
+            });
         }
 
         private void TransmitEventsInTheBackground()
