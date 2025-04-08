@@ -26,25 +26,25 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class CPSServerExecutorTests2
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(CPSServerExecutorTests2), "Examples", "CPS");
+
         private MockFixture mockFixture;
         private DependencyPath mockPath;
 
-        [SetUp]
-        public void SetupTest()
+        public void SetupTest(PlatformID platformID, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
-
-        }
-
-        public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
-        {
             this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.mockPath = new DependencyPath("cps", this.mockFixture.PlatformSpecifics.GetPackagePath("cps"));
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["PackageName"] = "cps";
             this.mockFixture.Parameters["Connections"] = 256;
             this.mockFixture.Parameters["TestDuration"] = 300;
             this.mockFixture.Parameters["WarmupTime"] = 30;
@@ -55,12 +55,10 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Scenario"] = "CPSMock";
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = File.ReadAllText(Path.Combine(CPSServerExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+                .ReturnsAsync(exampleResults);
         }
 
         [Test]
@@ -70,7 +68,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task CPSServerExecutorExecutesAsExpectedForResetInstructions(PlatformID platformID, Architecture architecture)
         {
-            this.SetupDefaultMockApiBehavior(platformID, architecture);
+            this.SetupTest(platformID, architecture);
             string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
             TestCPSServerExecutor executor = new TestCPSServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
@@ -113,7 +111,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task CPSServerExecutorExecutesAsExpectedForStartInstructions(PlatformID platformID, Architecture architecture)
         {
-            this.SetupDefaultMockApiBehavior(platformID, architecture);
+            this.SetupTest(platformID, architecture);
             this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerStartExecution;
             string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();

@@ -1180,7 +1180,7 @@ namespace VirtualClient
 
                 // Use the certificate for testing, e.g., with HttpClientHandler or other scenarios.
 
-                return new X509Certificate2(certBytes, "password");
+                return X509CertificateLoader.LoadPkcs12(certBytes, "password");
             }
         }
 

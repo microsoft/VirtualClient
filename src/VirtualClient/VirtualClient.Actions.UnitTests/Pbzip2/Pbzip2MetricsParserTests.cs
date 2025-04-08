@@ -37,7 +37,6 @@ namespace VirtualClient.Actions
         {
             this.testParser = new Pbzip2MetricsParser(this.rawText, compression);
             this.testParser.Parse();
-            this.testParser.SizeAndTime.PrintDataTableFormatted();
             Assert.AreEqual(4, this.testParser.SizeAndTime.Columns.Count);
             Assert.AreEqual(25, this.testParser.SizeAndTime.Rows.Count);
         }

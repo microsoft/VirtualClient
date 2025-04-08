@@ -55,8 +55,6 @@ namespace VirtualClient.Actions
                 WorkloadAssert.DisksAreInitialized(this.mockFixture);
                 WorkloadAssert.DisksHaveAccessPaths(this.mockFixture);
 
-                // Workload dependency package expectations
-                // The FIO workload dependency package should have been installed at this point.
                 WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "fio");
             }
         }
@@ -81,12 +79,8 @@ namespace VirtualClient.Actions
 
                 // Apt packages expectations
                 // There are a few Apt packages that must be installed for the FIO workload to run.
-                WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio1");
                 WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio-dev");
-
-                // Workload dependency package expectations
-                // The FIO workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "fio");
+                WorkloadAssert.AptPackageInstalled(this.mockFixture, "fio");
             }
         }
 
@@ -103,7 +97,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupWorkloadPackage("fio", expectedFiles: $@"win-x64\fio.exe");
+            this.mockFixture.SetupPackage("fio", expectedFiles: $@"win-x64\fio.exe");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -137,7 +131,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupWorkloadPackage("fio", expectedFiles: $@"linux-x64/fio");
+            this.mockFixture.SetupPackage("fio", expectedFiles: $@"linux-x64/fio");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

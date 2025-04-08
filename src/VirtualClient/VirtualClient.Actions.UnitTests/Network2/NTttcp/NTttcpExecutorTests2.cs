@@ -3,42 +3,34 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Actions.NetworkPerformance;
-    using VirtualClient.Contracts;
-    using Polly;
-    using System.Net.Http;
-    using System.Net;
-    using System.IO;
-    using System.Reflection;
-    using System.Runtime.InteropServices;
-    using System.Linq;
-    using System.Net.Sockets;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Moq;
+    using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
     public class NTttcpExecutorTests2
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests2), "Examples", "NTttcp");
+
         private MockFixture mockFixture;
-        private DependencyPath mockPath;
-        private DependencyPath currentDirectoryPath;
+        private DependencyPath mockPackage;
         private string apiClientId;
         private IPAddress ipAddress;
 
-        [SetUp]
-        public void SetupTest()
-        {
-            this.mockFixture = new MockFixture();            
-        }
-
-        private void SetupDefaultMockApiBehavior()
+        private void SetupApiCalls()
         {
             this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
                 .Returns<string, IPAddress, int?>((id, ip, port) =>
@@ -49,28 +41,27 @@ namespace VirtualClient.Actions
                 });
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64, String role = ClientRole.Client)
+        private void SetupTest(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64, String role = ClientRole.Client)
         {
+            this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture, agentId: role == ClientRole.Client ? "ClientAgent" : "ServerAgent").SetupLayout(
                 new ClientInstance("ClientAgent", "1.2.3.4", ClientRole.Client),
                 new ClientInstance("ServerAgent", "1.2.3.5", ClientRole.Server));
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+
+            this.mockPackage = new DependencyPath("ntttcp", this.mockFixture.PlatformSpecifics.GetPackagePath("ntttcp"));
+            this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["PackageName"] = "ntttcp";
             this.mockFixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.currentDirectoryPath = new DependencyPath("Network", currentDirectory);
-            string resultsPath = this.mockFixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "NTttcp", "ClientOutput.xml");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = File.ReadAllText(this.mockFixture.Combine(NTttcpExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+                .ReturnsAsync(exampleResults);
 
-            this.SetupDefaultMockApiBehavior();
+            this.SetupApiCalls();
         }
 
         [Test]
@@ -80,11 +71,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsOnInitializationWhenProtocolIsInvalid_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             this.mockFixture.Parameters["Protocol"] = ProtocolType.Unspecified;
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            Assert.ThrowsAsync<NotSupportedException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+            }
         }
 
         [Test]
@@ -95,11 +88,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsOnInitializationWhenProtocolIsInvalid_Win(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             this.mockFixture.Parameters["Protocol"] = ProtocolType.Unspecified;
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            Assert.ThrowsAsync<NotSupportedException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+            }
         }
 
         [Test]
@@ -109,12 +104,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsOnInitializationWhenScenarioIsEmpty_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
-            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            }
         }
 
         [Test]
@@ -125,12 +122,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsOnInitializationWhenScenarioIsEmpty_Win(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
-            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            }
         }
 
         [Test]
@@ -141,19 +140,20 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public async Task NTttcpExecutorInitializesItsDependencyPackageAsExpected_Win(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            string expectedPackage = "Networking";
+            this.SetupTest(platformID, architecture, role);
+            string expectedPackage = "ntttcp";
             this.mockFixture.PackageManager.OnGetPackage(expectedPackage)
                 .Callback<string, CancellationToken>((actualPackage, token) =>
                 {
                     Assert.AreEqual(expectedPackage, actualPackage);
                 })
-                .ReturnsAsync(this.mockPath);
+                .ReturnsAsync(this.mockPackage);
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await component.InitializeAsync(EventContext.None, CancellationToken.None);
-
-            this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            }
         }
 
         [Test]
@@ -163,19 +163,20 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public async Task NTttcpExecutorInitializesItsDependencyPackageAsExpected_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            string expectedPackage = "Networking";
+            this.SetupTest(platformID, architecture, role);
+            string expectedPackage = "ntttcp";
             this.mockFixture.PackageManager.OnGetPackage(expectedPackage)
                 .Callback<string, CancellationToken>((actualPackage, token) =>
                 {
                     Assert.AreEqual(expectedPackage, actualPackage);
                 })
-                .ReturnsAsync(this.mockPath);
+                .ReturnsAsync(this.mockPackage);
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await component.InitializeAsync(EventContext.None, CancellationToken.None);
-
-            this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            }
         }
 
         [Test]
@@ -186,22 +187,24 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Win(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            using TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-
-            ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-            if (role == ClientRole.Client)
+            this.SetupTest(platformID, architecture, role);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
-                Assert.AreEqual(this.ipAddress, serverIPAddress);
-            }
-            else
-            {
-                Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
-                Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+
+                ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+                if (role == ClientRole.Client)
+                {
+                    Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
+                    Assert.AreEqual(this.ipAddress, serverIPAddress);
+                }
+                else
+                {
+                    Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
+                    Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                }
             }
         }
 
@@ -212,22 +215,24 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            using TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-
-            ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-            if (role == ClientRole.Client)
+            this.SetupTest(platformID, architecture, role);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
-                Assert.AreEqual(this.ipAddress, serverIPAddress);
-            }
-            else
-            {
-                Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
-                Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+
+                ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+                if (role == ClientRole.Client)
+                {
+                    Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
+                    Assert.AreEqual(this.ipAddress, serverIPAddress);
+                }
+                else
+                {
+                    Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
+                    Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                }
             }
         }
 
@@ -239,12 +244,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound_Win(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platformID, architecture, role);
+            this.mockFixture.ResetPackages();
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
-            Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            }
         }
 
         [Test]
@@ -254,12 +261,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platformID, architecture, role);
+            this.mockFixture.ResetPackages();
 
-            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
-            Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            }
         }
 
         [Test]
@@ -269,13 +278,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsIfAnUnsupportedRoleIsSupplied_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             string agentId = $"{Environment.MachineName}-Other";
             this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
             }
         }
@@ -288,13 +297,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorThrowsIfAnUnsupportedRoleIsSupplied_Windows(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             string agentId = $"{Environment.MachineName}-Other";
             this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
             }
         }
@@ -306,11 +315,12 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined_Unix(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
             }
         }
@@ -323,11 +333,12 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public void NTttcpExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined_Windows(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
             }
         }
@@ -337,14 +348,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public async Task NTttcpExecutorExecutesTheExpectedLogicForTheServerRole_Linux(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
 
-            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await executor.ExecuteAsync(CancellationToken.None);
 
-                Assert.IsTrue(!component.IsNTttcpClientExecuted);
-                Assert.IsTrue(component.IsNetworkingWorkloadServerExecuted);
+                Assert.IsTrue(!executor.IsNTttcpClientExecuted);
+                Assert.IsTrue(executor.IsNetworkingWorkloadServerExecuted);
             }
         }
 
@@ -354,14 +365,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
         public async Task NTttcpExecutorExecutesTheExpectedLogicForTheServerRole_Windows(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
 
-            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await executor.ExecuteAsync(CancellationToken.None);
 
-                Assert.IsTrue(!component.IsNTttcpClientExecuted);
-                Assert.IsTrue(component.IsNetworkingWorkloadServerExecuted);
+                Assert.IsTrue(!executor.IsNTttcpClientExecuted);
+                Assert.IsTrue(executor.IsNetworkingWorkloadServerExecuted);
             }
         }
 
@@ -370,13 +381,15 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         public async Task NTttcpExecutorExecutesTheExpectedLogicForTheClientRole_Linux(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
 
-            TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
 
-            Assert.IsTrue(component.IsNTttcpClientExecuted);
-            Assert.IsTrue(!component.IsNetworkingWorkloadServerExecuted);
+                Assert.IsTrue(executor.IsNTttcpClientExecuted);
+                Assert.IsTrue(!executor.IsNetworkingWorkloadServerExecuted);
+            }
         }
 
         [Test]
@@ -385,13 +398,15 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         public async Task NTttcpExecutorExecutesTheExpectedLogicForTheClientRole_Windows(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
 
-            TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
 
-            Assert.IsTrue(component.IsNTttcpClientExecuted);
-            Assert.IsTrue(!component.IsNetworkingWorkloadServerExecuted);
+                Assert.IsTrue(executor.IsNTttcpClientExecuted);
+                Assert.IsTrue(!executor.IsNetworkingWorkloadServerExecuted);
+            }
         }
 
         protected class TestNTttcpExecutor : NTttcpExecutor2

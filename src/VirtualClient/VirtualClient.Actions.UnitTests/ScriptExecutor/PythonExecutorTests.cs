@@ -9,6 +9,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
@@ -18,15 +19,46 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class PythonExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPackage;
-        private string rawText;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PythonExecutorTests), "Examples", "ScriptExecutor");
 
-        [SetUp]
-        public void SetUpFixture()
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
+        private string exampleResults;
+
+        public void SetupTest(PlatformID platform)
         {
-            this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(Path.Combine("Examples", "ScriptExecutor", "validJsonExample.json"));
+            this.mockFixture = new MockFixture();
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(PythonExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+
+            this.mockFixture.Setup(platform);
+            this.mockPackage = new DependencyPath("workloadPackage", this.mockFixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+
+            this.mockFixture.File.Reset();
+            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleResults);
+
+            this.mockFixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.mockFixture.FileSystem.SetupGet(fs => fs.File)
+                .Returns(this.mockFixture.File.Object);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(PythonExecutor.PackageName), "workloadPackage" },
+                { nameof(PythonExecutor.Scenario), "GenericScriptWorkload" },
+                { nameof(PythonExecutor.CommandLine), "parameter1 parameter2" },
+                { nameof(PythonExecutor.ScriptPath), "genericScript.py" },
+                { nameof(PythonExecutor.LogPaths), "*.log;*.txt;*.json" },
+                { nameof(PythonExecutor.ToolName), "GenericTool" },
+                { nameof(PythonExecutor.UsePython3), true }
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
         }
 
         [Test]
@@ -34,10 +66,10 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void PythonExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platform);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
-            using (TestPythonExecutor executor = new TestPythonExecutor(this.fixture))
+            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
             {
                 DependencyException exception = Assert.ThrowsAsync<DependencyException>(
                     () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
@@ -53,17 +85,17 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", false, "python")]
         public async Task PythonExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool usePython3, string pythonVersion)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.Parameters["ScriptPath"] = command;
-            this.fixture.Parameters["UsePython3"] = usePython3;
+            this.SetupTest(platform);
+            this.mockFixture.Parameters["ScriptPath"] = command;
+            this.mockFixture.Parameters["UsePython3"] = usePython3;
 
             string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}{command} parameter1 parameter2";
 
-            using (TestPythonExecutor executor = new TestPythonExecutor(this.fixture))
+            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
             {
                 bool commandExecuted = false;
                 string expectedCommand = $"{pythonVersion} {fullCommand}";
-                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if (expectedCommand == $"{exe} {arguments}")
                     {
@@ -96,49 +128,16 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/")]
         public void PythonExecutorDoesNotThrowWhenTheWorkloadDoesNotProduceValidMetricsFile(PlatformID platform, string platformSpecificPath)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.Exists($"{this.mockPackage.Path}{platformSpecificPath}test-metrics.json"))
+            this.SetupTest(platform);
+            this.mockFixture.File.Setup(fe => fe.Exists($"{this.mockPackage.Path}{platformSpecificPath}test-metrics.json"))
                 .Returns(false);
 
-            using (TestPythonExecutor executor = new TestPythonExecutor(this.fixture))
+            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
             }
-        }
-
-        private void SetupDefaultBehavior(PlatformID platform)
-        {
-            this.fixture.Setup(platform);
-            this.mockPackage = new DependencyPath("workloadPackage", this.fixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
-            this.fixture.PackageManager.OnGetPackage("workloadPackage").ReturnsAsync(this.mockPackage);
-            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
-
-            this.fixture.File.Reset();
-            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawText);
-
-            this.fixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
-
-            this.fixture.FileSystem.SetupGet(fs => fs.File)
-                .Returns(this.fixture.File.Object);
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(PythonExecutor.PackageName), "workloadPackage" },
-                { nameof(PythonExecutor.Scenario), "GenericScriptWorkload" },
-                { nameof(PythonExecutor.CommandLine), "parameter1 parameter2" },
-                { nameof(PythonExecutor.ScriptPath), "genericScript.py" },
-                { nameof(PythonExecutor.LogPaths), "*.log;*.txt;*.json" },
-                { nameof(PythonExecutor.ToolName), "GenericTool" },
-                { nameof(PythonExecutor.UsePython3), true }
-            };
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         private class TestPythonExecutor : PythonExecutor

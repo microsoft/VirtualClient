@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
 
             DeathStarBenchExecutor.StateConfirmationPollingTimeout = TimeSpan.FromSeconds(1);
 
-            this.mockFixture.SetupWorkloadPackage("deathstarbench");
+            this.mockFixture.SetupPackage("deathstarbench");
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
         }
 
@@ -92,7 +92,7 @@ namespace VirtualClient.Actions
                 @"linux-x64/hotelreservation/wrk2/results.txt",
             };
 
-            this.mockFixture.SetupWorkloadPackage("deathstarbench", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("deathstarbench", expectedFiles: expectedFiles);
             this.mockFixture.SetupFile("deathstarbench/linux-x64/socialnetwork/wrk2", "results.txt", TestDependencies.GetResourceFileContents("Results_DeathStarBench.txt"));
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
 

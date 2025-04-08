@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
@@ -19,15 +20,46 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class ScriptExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPackage;
-        private string rawText;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "Examples", "ScriptExecutor");
 
-        [SetUp]
-        public void SetUpFixture()
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
+        private string exampleResults;
+
+        public void SetupTest(PlatformID platform)
         {
-            this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(Path.Combine("Examples", "ScriptExecutor", "validJsonExample.json"));
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform);
+            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+
+            this.mockPackage = new DependencyPath("workloadPackage", this.mockFixture.GetPackagePath("workloadPackage"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.exampleResults = File.ReadAllText(Path.Combine(ScriptExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+
+            this.mockFixture.File.Reset();
+            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleResults);
+
+            this.mockFixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.mockFixture.FileSystem.SetupGet(fs => fs.File)
+                .Returns(this.mockFixture.File.Object);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(ScriptExecutor.PackageName), "workloadPackage" },
+                { nameof(ScriptExecutor.Scenario), "GenericScriptWorkload" },
+                { nameof(ScriptExecutor.CommandLine), "parameter1 parameter2" },
+                { nameof(ScriptExecutor.ScriptPath), "genericScript.bat" },
+                { nameof(ScriptExecutor.LogPaths), "*.log;*.txt;*.json" },
+                { nameof(ScriptExecutor.ToolName), "GenericTool" }
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
         }
 
         [Test]
@@ -35,10 +67,10 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void ScriptExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platform);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
-            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
             {
                 DependencyException exception = Assert.ThrowsAsync<DependencyException>(
                     () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
@@ -52,14 +84,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.sh")]
         public async Task ScriptExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.Parameters["ScriptPath"] = command;
+            this.SetupTest(platform);
+            this.mockFixture.Parameters["ScriptPath"] = command;
 
-            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
             {
                 bool commandExecuted = false;
                 string expectedCommand = $"{this.mockPackage.Path}{platformSpecificPath}{command} parameter1 parameter2";
-                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if (expectedCommand == $"{exe} {arguments}")
                     {
@@ -92,13 +124,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/")]
         public void ScriptExecutorDoesNotThrowWhenTheWorkloadDoesNotProduceValidMetricsFile(PlatformID platform, string platformSpecificPath)
         {
-            this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.Exists($"{this.mockPackage.Path}{platformSpecificPath}test-metrics.json"))
+            this.SetupTest(platform);
+            this.mockFixture.File.Setup(fe => fe.Exists($"{this.mockPackage.Path}{platformSpecificPath}test-metrics.json"))
                 .Returns(false);
 
-            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
             }
@@ -109,17 +141,17 @@ namespace VirtualClient.Actions
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void ScriptExecutorMovesTheLogFilesToCorrectDirectory_Win(PlatformID platform, string platformSpecificPath)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
 
             bool destinitionPathCorrect = false;
-            string logsDir = this.fixture.PlatformSpecifics.LogsDirectory.Replace(@"\", @"\\");
+            string logsDir = this.mockFixture.PlatformSpecifics.LogsDirectory.Replace(@"\", @"\\");
 
-            this.fixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+            this.mockFixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
                 .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
                 {
                     if (Regex.IsMatch(
                         destinitionPath, 
-                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}"))
+                        $"{logsDir}.{this.mockFixture.Parameters["ToolName"].ToString().ToLower()}.{this.mockFixture.Parameters["Scenario"].ToString().ToLower()}"))
                     {
                         destinitionPathCorrect = true;
                     }
@@ -129,9 +161,9 @@ namespace VirtualClient.Actions
                     }
                 });
 
-            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(destinitionPathCorrect, true);
@@ -142,17 +174,17 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, @"/linux-x64/")]
         public void ScriptExecutorMovesTheLogFilesToCorrectDirectory_Unix(PlatformID platform, string platformSpecificPath)
         {
-            this.SetupDefaultBehavior(platform);
+            this.SetupTest(platform);
 
             bool destinitionPathCorrect = false;
-            string logsDir = this.fixture.PlatformSpecifics.LogsDirectory.Replace(@"\", @"\\");
+            string logsDir = this.mockFixture.PlatformSpecifics.LogsDirectory.Replace(@"\", @"\\");
 
-            this.fixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+            this.mockFixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
                 .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
                 {
                     if (Regex.IsMatch(
                         destinitionPath, 
-                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}"))
+                        $"{logsDir}.{this.mockFixture.Parameters["ToolName"].ToString().ToLower()}.{this.mockFixture.Parameters["Scenario"].ToString().ToLower()}"))
                     {
                         destinitionPathCorrect = true;
                     }
@@ -162,45 +194,13 @@ namespace VirtualClient.Actions
                     }
                 });
 
-            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(destinitionPathCorrect, true);
             }
-        }
-
-        private void SetupDefaultBehavior(PlatformID platform)
-        {
-            this.fixture.Setup(platform);
-            this.mockPackage = new DependencyPath("workloadPackage", this.fixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
-            this.fixture.PackageManager.OnGetPackage("workloadPackage").ReturnsAsync(this.mockPackage);
-            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
-
-            this.fixture.File.Reset();
-            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawText);
-
-            this.fixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
-
-            this.fixture.FileSystem.SetupGet(fs => fs.File)
-                .Returns(this.fixture.File.Object);
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(ScriptExecutor.PackageName), "workloadPackage" },
-                { nameof(ScriptExecutor.Scenario), "GenericScriptWorkload" },
-                { nameof(ScriptExecutor.CommandLine), "parameter1 parameter2" },
-                { nameof(ScriptExecutor.ScriptPath), "genericScript.bat" },
-                { nameof(ScriptExecutor.LogPaths), "*.log;*.txt;*.json" },
-                { nameof(ScriptExecutor.ToolName), "GenericTool" }
-            };
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         private class TestScriptExecutor : ScriptExecutor

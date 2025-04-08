@@ -145,7 +145,7 @@ namespace VirtualClient.Actions
                 $"{platformArch}/pitzDaily/log.simpleFoam"
             };
 
-            this.mockFixture.SetupWorkloadPackage("openfoam", expectedFiles: expectedFiles.ToArray());
+            this.mockFixture.SetupPackage("openfoam", expectedFiles: expectedFiles.ToArray());
 
             string resultsFileContent = TestDependencies.GetResourceFileContents("OpenFoamResults.txt");
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/airFoil2D/log.simpleFoam", resultsFileContent);

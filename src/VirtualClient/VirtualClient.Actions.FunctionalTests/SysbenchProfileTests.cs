@@ -73,7 +73,7 @@ namespace VirtualClient.Actions
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
             this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupWorkloadPackage("sysbench");
+            this.fixture.SetupPackage("sysbench");
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "OLTP", databaseSystem: "MySQL");
@@ -111,8 +111,8 @@ namespace VirtualClient.Actions
             DependencyPath mySqlPackage = new DependencyPath("mysql-server", this.fixture.GetPackagePath("mysql-server"));
             this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
 
-            this.fixture.SetupWorkloadPackage("sysbench");
-            this.fixture.SetupWorkloadPackage("mysql-server");
+            this.fixture.SetupPackage("sysbench");
+            this.fixture.SetupPackage("mysql-server");
 
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
             this.fixture.SetupDirectory(this.mySQLPackagePath);
@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
             this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupWorkloadPackage("sysbench");
+            this.fixture.SetupPackage("sysbench");
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "TPCC", databaseSystem: "MySQL");
@@ -218,8 +218,8 @@ namespace VirtualClient.Actions
             DependencyPath mySqlPackage = new DependencyPath("mysql-server", this.fixture.GetPackagePath("mysql-server"));
             this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
 
-            this.fixture.SetupWorkloadPackage("sysbench");
-            this.fixture.SetupWorkloadPackage("mysql-server");
+            this.fixture.SetupPackage("sysbench");
+            this.fixture.SetupPackage("mysql-server");
 
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
             this.fixture.SetupDirectory(this.mySQLPackagePath);
@@ -288,7 +288,7 @@ namespace VirtualClient.Actions
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
             this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupWorkloadPackage("sysbench");
+            this.fixture.SetupPackage("sysbench");
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "OLTP", databaseSystem: "PostgreSQL");
@@ -326,8 +326,8 @@ namespace VirtualClient.Actions
             DependencyPath postgreSQLPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.postgreSQLPackagePath = this.fixture.ToPlatformSpecificPath(postgreSQLPackage, platform, architecture).Path;
 
-            this.fixture.SetupWorkloadPackage("sysbench");
-            this.fixture.SetupWorkloadPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
+            this.fixture.SetupPackage("sysbench");
+            this.fixture.SetupPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
 
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
             this.fixture.SetupDirectory(this.postgreSQLPackagePath);
@@ -395,7 +395,7 @@ namespace VirtualClient.Actions
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
             this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupWorkloadPackage("sysbench");
+            this.fixture.SetupPackage("sysbench");
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "TPCC", databaseSystem: "PostgreSQL");
@@ -433,8 +433,8 @@ namespace VirtualClient.Actions
             DependencyPath postgreSQLPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.postgreSQLPackagePath = this.fixture.ToPlatformSpecificPath(postgreSQLPackage, platform, architecture).Path;
 
-            this.fixture.SetupWorkloadPackage("sysbench");
-            this.fixture.SetupWorkloadPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
+            this.fixture.SetupPackage("sysbench");
+            this.fixture.SetupPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
 
             this.fixture.SetupDirectory(this.sysbenchPackagePath);
             this.fixture.SetupDirectory(this.postgreSQLPackagePath);

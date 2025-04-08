@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient.Core</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <NoWarn>CA1060;CA1416;CA2200;SA1116;SA1508</NoWarn>
@@ -11,9 +11,8 @@
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Azure.Identity" Version="$(Azure_Identity_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="$(Microsoft_AspNetCore_Hosting_PackageVersion)" />
+        <!-- PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(Microsoft_Extensions_FileSystemGlobbing_PackageVersion)" /-->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion)" />
-        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
         <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="$(System_Diagnostics_PerformanceCounter_PackageVersion)" />
     </ItemGroup>
 

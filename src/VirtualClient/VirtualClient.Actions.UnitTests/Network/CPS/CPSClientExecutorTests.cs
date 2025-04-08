@@ -34,6 +34,10 @@ namespace VirtualClient.Actions
             this.mockFixture = new MockFixture();
             this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 

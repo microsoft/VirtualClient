@@ -128,8 +128,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.WebServerPackage = await this.PackageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-               .ConfigureAwait(false);
+            this.WebServerPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             if (this.Platform == PlatformID.Win32NT)
             {
@@ -143,8 +142,7 @@ namespace VirtualClient.Actions
                 this.WebServerExecutablePath = this.Combine(this.WebServerPackage.Path, "ExampleWorkload");
 
                 // Binaries on Unix/Linux must be attributed with an attribute that makes them "executable".
-                await this.SystemManagement.MakeFileExecutableAsync(this.WebServerExecutablePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.SystemManagement.MakeFileExecutableAsync(this.WebServerExecutablePath, this.Platform, cancellationToken);
             }
         }
 

@@ -83,7 +83,7 @@ namespace VirtualClient.Actions
             this.fixture.Setup(platform);
             if (platform == PlatformID.Unix)
             {
-                this.fixture.SetupWorkloadPackage("stressapptest", expectedFiles: @"linux-x64/stressapptest");
+                this.fixture.SetupPackage("stressapptest", expectedFiles: @"linux-x64/stressapptest");
                 this.fixture.SetupFile("stressapptest", @"linux-x64/stressapptestLogs_1.txt", TestDependencies.GetResourceFileContents("Results_StressAppTest.txt"));                
             }
         }

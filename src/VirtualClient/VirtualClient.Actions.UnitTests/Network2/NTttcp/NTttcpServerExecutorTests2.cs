@@ -26,37 +26,31 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class NTttcpServerExecutorTests2
     {
-        private MockFixture mockFixture;
-        private DependencyPath mockPath;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpServerExecutorTests2), "Examples", "NTttcp");
 
-        [SetUp]
-        public void SetupTest()
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
+
+        public void SetupTest(PlatformID platformID, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
-
-        }
-
-        public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
-        {
             this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockPackage = new DependencyPath("ntttcp", this.mockFixture.PlatformSpecifics.GetPackagePath("ntttcp"));
+            this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["PackageName"] = "ntttcp";
             this.mockFixture.Parameters["Protocol"] = "TCP";
             this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerReset;
             this.mockFixture.Parameters["Port"] = 5001;
             this.mockFixture.Parameters["Workload"] = "CPS";
             this.mockFixture.Parameters["Scenario"] = "NTttcpMock";
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "NTttcp", "ClientOutput.xml");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = File.ReadAllText(Path.Combine(NTttcpServerExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+                .ReturnsAsync(exampleResults);
         }
 
         [Test]
@@ -66,8 +60,8 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task NTttcpServerExecutorExecutesAsExpectedForResetInstructions(PlatformID platformID, Architecture architecture)
         {
-            this.SetupDefaultMockApiBehavior(platformID, architecture);
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            this.SetupTest(platformID, architecture);
+            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
             TestNTttcpServerExecutor executor = new TestNTttcpServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             await executor.InitializeAsync(EventContext.None, CancellationToken.None);
@@ -108,9 +102,9 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
         public async Task NTttcpServerExecutorExecutesAsExpectedForStartInstructions(PlatformID platformID, Architecture architecture)
         {
-            this.SetupDefaultMockApiBehavior(platformID, architecture);
+            this.SetupTest(platformID, architecture);
             this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerStartExecution;
-            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platformID, architecture).Path;
+            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platformID, architecture).Path;
             List<string> commandsExecuted = new List<string>();
             TestNTttcpServerExecutor executor = new TestNTttcpServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             await executor.InitializeAsync(EventContext.None, CancellationToken.None);

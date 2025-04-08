@@ -20,6 +20,9 @@ for evaluating the performance of the CPU for processing calculations.
   * win-x64
   * win-arm64
 
+  **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
+  **Note**: Not supported currently on Ubuntu 24.
+
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -72,6 +75,8 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-arm64
   * win-x64
   * win-arm64
+
+  **Note**: Not supported currently on Ubuntu 24.
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.

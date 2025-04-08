@@ -473,7 +473,23 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
                 }
 
-                if (this.PackageStore != null)
+                if(this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
+                {
+                    DependencyBlobStore blobStore = this.PackageStore as DependencyBlobStore;
+                    IConvertible packageSource = null;
+                    this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
+
+                    ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces-blobs.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
+                        .CreateLogger("Proxy");
+
+                    CommandBase.proxyApiDebugLoggers.Add(debugLogger);
+
+                    blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
+
+                    // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
+                    apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), blobStore.EndpointUri);
+                }
+                else if (this.PackageStore != null)
                 {
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
                 }

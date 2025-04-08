@@ -16,6 +16,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
+    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -229,9 +230,9 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
-        /// Mock ssh client manager.
+        /// Mock SSH client manager.
         /// </summary>
-        public InMemorySshClientManager SshClientManager { get; set; }
+        public Mock<ISshClientManager> SshClientManager { get; set; }
 
         /// <summary>
         /// The mock process that will be created by the process manager.
@@ -252,6 +253,17 @@ namespace VirtualClient
         /// A mock profile timing/timeout definition.
         /// </summary>
         public ProfileTiming Timing { get; set; }
+
+        /// <summary>
+        /// Returns the contents of the file at the path defined by the path segments
+        /// (e.g. [ "/home/users/examples", "toolset", "example.txt" ])
+        /// </summary>
+        /// <param name="pathSegments"></param>
+        /// <returns></returns>
+        public static string ReadFile(params string[] pathSegments)
+        {
+            return System.IO.File.ReadAllText(MockFixture.CurrentPlatform.Combine(pathSegments));
+        }
 
         /// <summary>
         /// Gets a directory path relevant to the test class type (.dll location) that is formatted
@@ -390,19 +402,19 @@ namespace VirtualClient
         /// <summary>
         /// Sets up or resets the fixture to default mock behaviors.
         /// </summary>
-        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false)
+        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false, MockBehavior mockBehavior = MockBehavior.Loose)
         {
             this.SetupMocks(true);
 
-            this.ApiClient = new Mock<IApiClient>();
-            this.ApiClientManager = new Mock<IApiClientManager>();
-            this.CertificateManager = new Mock<ICertificateManager>();
-            this.FileSystem = new Mock<IFileSystem>();
-            this.File = new Mock<IFile>();
-            this.FileInfo = new Mock<IFileInfoFactory>();
-            this.FileStream = new Mock<IFileStreamFactory>();
-            this.Directory = new Mock<IDirectory>();
-            this.DirectoryInfo = new Mock<IDirectoryInfo>();
+            this.ApiClient = new Mock<IApiClient>(mockBehavior);
+            this.ApiClientManager = new Mock<IApiClientManager>(mockBehavior);
+            this.CertificateManager = new Mock<ICertificateManager>(mockBehavior);
+            this.FileSystem = new Mock<IFileSystem>(mockBehavior);
+            this.File = new Mock<IFile>(mockBehavior);
+            this.FileInfo = new Mock<IFileInfoFactory>(mockBehavior);
+            this.FileStream = new Mock<IFileStreamFactory>(mockBehavior);
+            this.Directory = new Mock<IDirectory>(mockBehavior);
+            this.DirectoryInfo = new Mock<IDirectoryInfo>(mockBehavior);
 
             this.Directory.Setup(dir => dir.CreateDirectory(It.IsAny<string>())).Returns(this.DirectoryInfo.Object);
             this.FileSystem.SetupGet(fs => fs.File).Returns(this.File.Object);
@@ -423,19 +435,19 @@ namespace VirtualClient
                     return mockFile.Object;
                 });
 
-            this.DiskManager = new Mock<IDiskManager>();
+            this.DiskManager = new Mock<IDiskManager>(mockBehavior);
             this.Logger = new InMemoryLogger();
-            this.FirewallManager = new Mock<IFirewallManager>();
+            this.FirewallManager = new Mock<IFirewallManager>(mockBehavior);
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly: useUnixStylePathsOnly);
             VirtualClient.Contracts.PlatformSpecifics.RunningInContainer = false;
             this.ProcessManager = new InMemoryProcessManager(platform);
-            this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();
-            this.PackageManager = new Mock<IPackageManager>();
+            this.PackageManager = new Mock<IPackageManager>(mockBehavior);
             this.PackageManager.SetupGet(pm => pm.PlatformSpecifics).Returns(this.PlatformSpecifics);
-            this.ContentBlobManager = new Mock<IBlobManager>();
-            this.PackagesBlobManager = new Mock<IBlobManager>();
-            this.StateManager = new Mock<IStateManager>();
+            this.ContentBlobManager = new Mock<IBlobManager>(mockBehavior);
+            this.PackagesBlobManager = new Mock<IBlobManager>(mockBehavior);
+            this.SshClientManager = new Mock<ISshClientManager>(mockBehavior);
+            this.StateManager = new Mock<IStateManager>(mockBehavior);
             this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
             this.Parameters = new Dictionary<string, IConvertible>();
             this.Parameters[nameof(VirtualClientComponent.Scenario)] = "AnyScenario";
@@ -502,7 +514,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(() => this.PackageManager.Object);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(() => this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(() => this.ProcessManager);
-            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(() => this.SshClientManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(() => this.SshClientManager.Object);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(() => this.StateManager.Object);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -560,7 +572,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
-            this.Dependencies.AddSingleton<ISshClientManager>((p) => this.SshClientManager);
+            this.Dependencies.AddSingleton<ISshClientManager>((p) => this.SshClientManager.Object);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<IPackageManager>((p) => this.PackageManager.Object);

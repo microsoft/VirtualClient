@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>VirtualClient</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
@@ -14,9 +14,8 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
-        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
         <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="$(System_ServiceProcess_ServiceController_PackageVersion)" />
     </ItemGroup>
 
     <ItemGroup>

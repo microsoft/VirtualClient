@@ -8,8 +8,8 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
@@ -19,41 +19,55 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class DeathStarBenchExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPath;
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
 
-        [SetUp]
-        public void SetupTests()
+        private void SetupTest(PlatformID platformID)
         {
-            this.fixture = new MockFixture();
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platformID);
+
+            this.mockPackage = new DependencyPath("deathstarbench", this.mockFixture.PlatformSpecifics.GetPackagePath("deathstarbench"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                [nameof(DeathStarBenchExecutor.PackageName)] = this.mockPackage.Name,
+                [nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork"
+            };
+
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.mockFixture.Process;
+            
         }
 
         [Test]
         public void DeathStarBenchExecutorDoesNotRunOnUnsupportedPlatformAsync()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
+            this.SetupTest(PlatformID.Win32NT);
 
-            using (TestDeathStarBenchExecutor deathStarBenchExecutor = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                Assert.IsFalse(VirtualClientComponent.IsSupported(deathStarBenchExecutor));
+                Assert.IsFalse(VirtualClientComponent.IsSupported(executor));
             }
         }
 
         [Test]
         public void DeathStarBenchExecutorThrowsOnUnsupportedLinuxDistro()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
-            using (TestDeathStarBenchExecutor DeathStarBenchExecutor = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
                 {
                     OperationSystemFullName = "TestOS",
                     LinuxDistribution = LinuxDistribution.Debian
                 };
-                this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => DeathStarBenchExecutor.ExecuteAsync(CancellationToken.None));
+
+                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.IsTrue(workloadException.Reason == ErrorReason.LinuxDistributionNotSupported);
             }
         }
@@ -61,19 +75,22 @@ namespace VirtualClient.Actions
         [Test]
         public async Task DeathStarBenchExecutorServerDoesNotStartItselfOnMultiVMScenario()
         {
+            this.SetupTest(PlatformID.Unix);
+
             string agentId = $"{Environment.MachineName}-Server";
-            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            TestDeathStarBenchExecutor component = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            Assert.IsTrue(!component.IsDeathStarBenchServerExecuted);
+            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(!executor.IsDeathStarBenchServerExecuted);
+            }
         }
 
         [Test]
         public async Task DeathStarBenchExecutorInstallsDepedenciesAsExpected()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             IEnumerable<string> expectedCommands = new List<string>
             {
@@ -85,16 +102,16 @@ namespace VirtualClient.Actions
                 @"luarocks install luasocket",
             };
 
-            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 int executed = 0;
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     if (expectedCommands.Contains(arguments))
                     {
                         executed++;
                     }
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.OnInitialize(EventContext.None, CancellationToken.None);
@@ -106,58 +123,43 @@ namespace VirtualClient.Actions
         [Test]
         public async Task DeathStarBenchExecutorExecutesTheExpectedLogicWhenInNoRoleIsSpecified()
         {
-            this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
+            this.SetupTest(PlatformID.Unix);
+
+            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
             IEnumerable<string> expectedCommands = new List<string>
             {
                 @"bash -c ""docker ps | wc -l"""
             };
 
-            using (TestDeathStarBenchExecutor component = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     if (expectedCommands.Contains(arguments))
                     {
-                        this.fixture.Process.StandardOutput.Append("3");
+                        this.mockFixture.Process.StandardOutput.Append("3");
                     }
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                Assert.IsTrue(component.IsDeathStarBenchClientExecuted);
-                Assert.IsTrue(component.IsDeathStarBenchServerExecuted);
+                Assert.IsTrue(executor.IsDeathStarBenchClientExecuted);
+                Assert.IsTrue(executor.IsDeathStarBenchServerExecuted);
             }
         }
 
         [Test]
         public async Task DeathStarBenchExecutesTheExpectedLogicForTheClientRole()
         {
-            using (TestDeathStarBenchExecutor component = new TestDeathStarBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            this.SetupTest(PlatformID.Unix);
 
-                Assert.IsTrue(!component.IsDeathStarBenchServerExecuted);
-                Assert.IsTrue(component.IsDeathStarBenchClientExecuted);
+            using (TestDeathStarBenchExecutor executor = new TestDeathStarBenchExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                Assert.IsTrue(!executor.IsDeathStarBenchServerExecuted);
+                Assert.IsTrue(executor.IsDeathStarBenchClientExecuted);
             }
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platformID)
-        {
-
-            this.fixture.Setup(platformID);
-
-            this.mockPath = this.fixture.Create<DependencyPath>();
-            DependencyPath mockPackage = new DependencyPath("deathstarbench", this.fixture.PlatformSpecifics.GetPackagePath("deathstarbench"));
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                [nameof(DeathStarBenchExecutor.PackageName)] = this.mockPath.Name,
-                [nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork"
-            };
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(mockPackage);
         }
 
         private class TestDeathStarBenchExecutor : DeathStarBenchExecutor

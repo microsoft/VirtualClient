@@ -3,74 +3,61 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Actions.NetworkPerformance;
-    using VirtualClient.Contracts;
-    using Polly;
-    using System.Net.Http;
-    using System.Net;
-    using System.IO;
-    using System.Reflection;
-    using System.Runtime.InteropServices;
-    using System.Linq;
-    using System.Net.Sockets;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Moq;
+    using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
-    public class SockPerfExecutorTests2
+    public class SockPerfExecutorTests2 : MockFixture
     {
-        private MockFixture mockFixture;
-        private DependencyPath mockPath;
-        private DependencyPath currentDirectoryPath;
+        private DependencyPath mockPackage;
         private string apiClientId;
         private IPAddress ipAddress;
 
-        [SetUp]
-        public void SetupTest()
+        private void SetupApiCalls()
         {
-            this.mockFixture = new MockFixture();            
-        }
-
-        private void SetupDefaultMockApiBehavior()
-        {
-            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
+            this.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
                  .Returns<string, IPAddress, int?>((id, ip, port) =>
                  {
                     this.apiClientId = id;
                     this.ipAddress = ip;
-                    return this.mockFixture.ApiClient.Object;
+                    return this.ApiClient.Object;
                 });
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64, String role = ClientRole.Client)
+        private void SetupTest(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64, String role = ClientRole.Client)
         {
-            this.mockFixture.Setup(platform, architecture, agentId: role == ClientRole.Client ? "ClientAgent" : "ServerAgent").SetupLayout(
+            this.Setup(platform, architecture, agentId: role == ClientRole.Client ? "ClientAgent" : "ServerAgent").SetupLayout(
                 new ClientInstance("ClientAgent", "1.2.3.4", ClientRole.Client),
                 new ClientInstance("ServerAgent", "1.2.3.5", ClientRole.Server));
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+
+            this.mockPackage = new DependencyPath("sockperf", this.GetPackagePath("sockperf"));
+            this.SetupPackage(this.mockPackage);
+            this.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["Protocol"] = "TCP";
+            this.Parameters["PackageName"] = "sockperf";
+            this.Parameters["Protocol"] = "TCP";
 
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.currentDirectoryPath = new DependencyPath("Network", currentDirectory);
-            string resultsPath = this.mockFixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "SockPerf", "SockPerfClientExample1.txt");
-            string results = File.ReadAllText(resultsPath);
+            string exampleResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "SockPerf", "SockPerfClientExample1.txt");
 
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
+            this.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(exampleResults);
 
-            this.SetupDefaultMockApiBehavior();
+            this.SetupApiCalls();
         }
 
         [Test]
@@ -80,11 +67,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void SockPerfExecutorThrowsOnInitializationWhenProtocolIsInvalid(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters["Protocol"] = ProtocolType.IP;
+            this.SetupTest(platformID, architecture, role);
+            this.Parameters["Protocol"] = ProtocolType.IP;
 
-            using TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            Assert.ThrowsAsync<NotSupportedException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+            }
         }
 
         [Test]
@@ -94,12 +83,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void SockPerfExecutorThrowsOnInitializationWhenScenarioIsEmpty(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = "";
+            this.SetupTest(platformID, architecture, role);
+            this.Parameters[nameof(VirtualClientComponent.Scenario)] = "";
 
-            using TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
-            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            }
         }
 
         
@@ -110,19 +101,20 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public async Task SockPerfExecutorInitializesItsDependencyPackageAsExpected(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            string expectedPackage = "Networking";
-            this.mockFixture.PackageManager.OnGetPackage(expectedPackage)
+            this.SetupTest(platformID, architecture, role);
+            string expectedPackage = "sockperf";
+            this.PackageManager.OnGetPackage(expectedPackage)
                 .Callback<string, CancellationToken>((actualPackage, token) =>
                 {
                     Assert.AreEqual(expectedPackage, actualPackage);
                 })
-                .ReturnsAsync(this.mockPath);
+                .ReturnsAsync(this.mockPackage);
 
-            using TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await component.InitializeAsync(EventContext.None, CancellationToken.None);
-
-            this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                this.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+            }
         }
 
         [Test]
@@ -132,22 +124,24 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public async Task SockPerfExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            using TestSockPerfExecutor executor = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-
-            ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-            if(role == ClientRole.Client)
+            this.SetupTest(platformID, architecture, role);
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
             {
-                Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
-                Assert.AreEqual(this.ipAddress, serverIPAddress);
-            }
-            else
-            {
-                Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
-                Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+
+                ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+                if (role == ClientRole.Client)
+                {
+                    Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
+                    Assert.AreEqual(this.ipAddress, serverIPAddress);
+                }
+                else
+                {
+                    Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
+                    Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                }
             }
         }
 
@@ -158,12 +152,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void SockPerfExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+            this.SetupTest(platformID, architecture, role);
+            this.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
-            using TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
-            Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
+            {
+                DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            }
         }
 
         [Test]
@@ -173,13 +169,13 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void SockPerfExecutorThrowsIfAnUnsupportedRoleIsSupplied(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
             string agentId = $"{Environment.MachineName}-Other";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            using (TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
             {
-                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
             }
         }
@@ -191,11 +187,11 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public void SockPerfExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            using (TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.SetupTest(platformID, architecture, role);
+            this.Dependencies.RemoveAll<EnvironmentLayout>();
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
             {
-                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
             }
         }
@@ -205,14 +201,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         public async Task SockPerfExecutorExecutesTheExpectedLogicForTheServerRole(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
 
-            using (TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
             {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-                Assert.IsTrue(!component.IsSockPerfClientExecuted);
-                Assert.IsTrue(component.IsNetworkingWorkloadServerExecuted);
+                Assert.IsTrue(!executor.IsSockPerfClientExecuted);
+                Assert.IsTrue(executor.IsNetworkingWorkloadServerExecuted);
             }
         }
 
@@ -221,13 +217,15 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         public async Task SockPerfExecutorExecutesTheExpectedLogicForTheClientRole(PlatformID platformID, Architecture architecture, string role)
         {
-            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.SetupTest(platformID, architecture, role);
 
-            TestSockPerfExecutor component = new TestSockPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-            Assert.IsTrue(component.IsSockPerfClientExecuted);
-            Assert.IsTrue(!component.IsNetworkingWorkloadServerExecuted);
+                Assert.IsTrue(executor.IsSockPerfClientExecuted);
+                Assert.IsTrue(!executor.IsNetworkingWorkloadServerExecuted);
+            }
         }
 
         private class TestSockPerfExecutor : SockPerfExecutor2

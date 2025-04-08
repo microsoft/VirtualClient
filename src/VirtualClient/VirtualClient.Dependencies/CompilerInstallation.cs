@@ -255,6 +255,7 @@ namespace VirtualClient.Dependencies
                     break;
 
                 case LinuxDistribution.AzLinux:
+                case LinuxDistribution.AwsLinux:
                     if (!string.IsNullOrEmpty(gccVersion))
                     {
                         throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");

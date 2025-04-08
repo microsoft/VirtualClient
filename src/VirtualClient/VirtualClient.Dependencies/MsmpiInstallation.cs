@@ -42,7 +42,7 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected async override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, CancellationToken.None);
 
             string packageDirectory = workloadPackage.Path;
 

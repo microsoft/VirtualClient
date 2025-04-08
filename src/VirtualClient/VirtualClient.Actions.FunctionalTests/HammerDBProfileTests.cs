@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
 
             DependencyPath hammerdbPackage = new DependencyPath("hammerdb", this.fixture.GetPackagePath("hammerdb"));
             this.hammerdbPackagePath = this.fixture.ToPlatformSpecificPath(hammerdbPackage, platform, architecture).Path;
-            this.fixture.SetupWorkloadPackage("hammerdb");
+            this.fixture.SetupPackage("hammerdb");
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetUnixProfileExpectedCommands(singleVM: false);
@@ -108,8 +108,8 @@ namespace VirtualClient.Actions
             DependencyPath postgreSqlPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.postgreSQLPackagePath = this.fixture.ToPlatformSpecificPath(postgreSqlPackage, platform, architecture).Path;
 
-            this.fixture.SetupWorkloadPackage("hammerdb");
-            this.fixture.SetupWorkloadPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
+            this.fixture.SetupPackage("hammerdb");
+            this.fixture.SetupPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
 
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
             this.fixture.SetupDirectory(this.postgreSQLPackagePath);
@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
 
             DependencyPath hammerdbPackage = new DependencyPath("hammerdb", this.fixture.GetPackagePath("hammerdb"));
             this.hammerdbPackagePath = this.fixture.ToPlatformSpecificPath(hammerdbPackage, platform, architecture).Path;
-            this.fixture.SetupWorkloadPackage("hammerdb");
+            this.fixture.SetupPackage("hammerdb");
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetWindowsProfileExpectedCommands(singleVM: false);
@@ -189,8 +189,8 @@ namespace VirtualClient.Actions
             DependencyPath postgreSqlPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
             this.postgreSQLPackagePath = this.fixture.ToPlatformSpecificPath(postgreSqlPackage, platform, architecture).Path;
 
-            this.fixture.SetupWorkloadPackage("hammerdb");
-            this.fixture.SetupWorkloadPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "C:\\Program Files\\PostgreSQL\\14" } });
+            this.fixture.SetupPackage("hammerdb");
+            this.fixture.SetupPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "C:\\Program Files\\PostgreSQL\\14" } });
 
             this.fixture.SetupDirectory(this.hammerdbPackagePath);
             this.fixture.SetupDirectory(this.postgreSQLPackagePath);

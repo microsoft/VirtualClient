@@ -1,16 +1,21 @@
 ﻿#!/bin/bash
 
-if [ $# -eq 1 ]; then
-    PACKAGE_VERSION="$1"
-else
-    # Set a default version if no argument is provided
-    PACKAGE_VERSION="1.0.0"
+EXIT_CODE=0
+SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE}"))"
+
+# The default build version is defined in the repo VERSION file.
+PACKAGE_VERSION=$(cat "$SCRIPT_DIR/../../../VERSION")
+
+# The default build version can be overridden by the 'VCBuildVersion' 
+# environment variable
+if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
+    PACKAGE_VERSION="$VCBuildVersion"
 fi
 
 # Define variables
 PACKAGE_NAME="virtualclient"
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)/../../../"
-BUILD_DIR="$REPO_ROOT/out/bin/Release/ARM64/VirtualClient.Main/net8.0/linux-arm64/"
+BUILD_DIR="$REPO_ROOT/out/bin/Release/ARM64/VirtualClient.Main/net9.0/linux-arm64/"
 DEB_DIR="$REPO_ROOT/out/packages/deb_arm64"
 OUT_DIR="$REPO_ROOT/out/packages/"
 

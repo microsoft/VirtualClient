@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -543,13 +544,16 @@ namespace VirtualClient.Actions
                 telemetryContext.AddContext(nameof(ioEngine), ioEngine);
                 telemetryContext.AddContext(nameof(this.TemplateJobFile), this.TemplateJobFile);
 
-                IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-                DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                    .ConfigureAwait(false);
-
                 string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
+                string updatedJobFileFolder = Path.Combine(jobFileFolder, "updated");
+
+                if (!this.SystemManagement.FileSystem.Directory.Exists(updatedJobFileFolder))
+                {
+                    this.SystemManagement.FileSystem.Directory.CreateDirectory(updatedJobFileFolder);
+                }
+
                 string templateJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, this.TemplateJobFile);
-                string jobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, nameof(FioMultiThroughputExecutor) + this.TemplateJobFile);
+                string jobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, "updated", nameof(FioMultiThroughputExecutor) + this.TemplateJobFile);
 
                 this.CreateOrUpdateJobFile(templateJobFilePath, jobFilePath);
 
@@ -558,8 +562,7 @@ namespace VirtualClient.Actions
                 metricsMetadata[nameof(this.CommandLine)] = process.CommandArguments;
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
-                    .ConfigureAwait(false);
+                    await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata);
                 }
             }
         }

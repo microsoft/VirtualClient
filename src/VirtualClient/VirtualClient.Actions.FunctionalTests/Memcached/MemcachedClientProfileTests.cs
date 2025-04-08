@@ -36,7 +36,7 @@ namespace VirtualClient.Actions
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.mockFixture.SetupWorkloadPackage("memtier", expectedFiles: "memtier_benchmark");
+            this.mockFixture.SetupPackage("memtier", expectedFiles: "memtier_benchmark");
         }
 
         [Test]

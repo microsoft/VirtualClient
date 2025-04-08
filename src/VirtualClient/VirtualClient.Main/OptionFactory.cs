@@ -324,7 +324,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--e", "--experiment", "--experiment-id", "--experimentId", "--experimentid"  })
+            Option<string> option = new Option<string>(new string[] { "--e", "--experiment", "--experiment-id", "--experimentId", "--experimentid" })
             {
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
@@ -582,7 +582,7 @@ namespace VirtualClient
         public static Option CreateMetadataOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--mt", "--metadata"},
+                new string[] { "--mt", "--metadata" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Metadata",

@@ -60,7 +60,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The memory chip capacity (in-bytes).
         /// </summary>
-        public long Capacity
+        public new long Capacity
         {
             get
             {

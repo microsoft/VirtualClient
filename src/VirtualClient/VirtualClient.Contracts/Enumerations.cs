@@ -556,7 +556,12 @@ namespace VirtualClient
         /// <summary>
         /// MSFT internal CentOS based distro AzLinux (Previously Mariner)
         /// </summary>
-        AzLinux
+        AzLinux,
+
+        /// <summary>
+        /// AwsLinux
+        /// </summary>
+        AwsLinux
     }
 
     /// <summary>

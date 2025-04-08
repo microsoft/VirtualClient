@@ -18,39 +18,45 @@ namespace VirtualClient.Dependencies.MySqlServer
     [Category("Unit")]
     public class MySQLServerInstallationTests
     {
-        private MockFixture fixture;
+        private MockFixture mockFixture;
         private DependencyPath mockPackage;
         private string packagePath;
 
-        [SetUp]
-        public void SetUpDefaultBehavior()
+        public void SetupTest()
         {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(PlatformID.Unix);
-            this.fixture.Parameters["PackageName"] = "mysql-server";
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Unix);
+            this.mockFixture.Parameters["PackageName"] = "mysql-server";
 
-            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
                 new ClientInstance($"{Environment.MachineName}-Client", "1.2.3.5", "Client")
             });
 
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
-            this.mockPackage = new DependencyPath("mysql-server", this.fixture.GetPackagePath("mysql-server"));
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.packagePath = this.fixture.ToPlatformSpecificPath(this.mockPackage, PlatformID.Unix, Architecture.X64).Path;
+            this.mockPackage = new DependencyPath("mysql-server", this.mockFixture.GetPackagePath("mysql-server"));
+
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.SetupPackage(this.mockPackage);
+            this.packagePath = this.mockFixture.ToPlatformSpecificPath(this.mockPackage, PlatformID.Unix, Architecture.X64).Path;
 
             IEnumerable<Disk> disks;
-            disks = this.fixture.CreateDisks(PlatformID.Unix, true);
-            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
+            disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
         [Test]
         public async Task MySQLInstallationExecutesTheExpectedProcessForCreateDatabaseCommand()
         {
-            this.fixture.Parameters["Action"] = "InstallServer";
+            this.SetupTest();
+            this.mockFixture.Parameters["Action"] = "InstallServer";
 
             string[] expectedCommands =
             {
@@ -60,7 +66,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             int commandNumber = 0;
             bool commandExecuted = false;
 
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 string expectedCommand = expectedCommands[commandNumber];
 
@@ -88,12 +94,12 @@ namespace VirtualClient.Dependencies.MySqlServer
                 return process;
             };
 
-            this.fixture.StateManager.OnSaveState((stateId, state) =>
+            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
             {
                 Assert.IsNotNull(state);
             });
 
-            using (TestMySQLServerInstallation component = new TestMySQLServerInstallation(this.fixture))
+            using (TestMySQLServerInstallation component = new TestMySQLServerInstallation(this.mockFixture))
             {
                 await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }

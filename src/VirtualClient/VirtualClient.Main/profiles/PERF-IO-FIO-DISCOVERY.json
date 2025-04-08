@@ -492,10 +492,10 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "libaio1,libaio-dev",
-                "Packages-Dnf": "libaio,libaio-devel,lshw,parted",
-                "Packages-Yum": "libaio,libaio-devel",
-                "Packages-Zypper": "libaio1,libaio-dev"
+                "Packages-Apt": "fio,libaio-dev",
+                "Packages-Dnf": "fio,libaio-devel,lshw,parted",
+                "Packages-Yum": "fio,libaio-devel",
+                "Packages-Zypper": "fio,libaio-dev"
             }
         },
         {
@@ -509,6 +509,7 @@
             "Type": "DependencyPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallFIOPackage",
+                "SupportedPlatforms": "win-x64",
                 "BlobContainer": "packages",
                 "BlobName": "fio.3.30.0.zip",
                 "PackageName": "fio",

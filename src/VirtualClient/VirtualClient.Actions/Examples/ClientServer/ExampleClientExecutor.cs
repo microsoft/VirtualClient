@@ -162,8 +162,7 @@ namespace VirtualClient.Actions
             // execute the workload/test.
 
             // We will be referencing the workload package/paths later on. The binaries/executables we will run on in this package.
-            this.WorkloadPackage = await this.PackageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             if (this.Platform == PlatformID.Win32NT)
             {
@@ -177,8 +176,7 @@ namespace VirtualClient.Actions
                 this.WorkloadExecutablePath = this.Combine(this.WorkloadPackage.Path, "ExampleWorkload");
 
                 // Binaries on Unix/Linux must be attributed with an attribute that makes them "executable".
-                await this.SystemManagement.MakeFileExecutableAsync(this.WorkloadExecutablePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.SystemManagement.MakeFileExecutableAsync(this.WorkloadExecutablePath, this.Platform, cancellationToken);
             }
 
             // We also typically check to make sure any expected binaries, scripts, executables etc... that are required are found

@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
@@ -26,35 +27,91 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class DeathStarBenchClientExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPath;
-        private DependencyPath currentDirectoryPath;
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(DeathStarBenchClientExecutorTests), "Examples", "DeathStarBench");
+
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
         private string apiClientId;
         private IPAddress ipAddress;
-        private string rawString;
+        private string exampleResults;
+
+        public void SetupApiCalls(string serviceName)
+        {
+            DeathStarBenchState expectedState = new DeathStarBenchState(serviceName, true);
+            Item<DeathStarBenchState> expectedStateItem = new Item<DeathStarBenchState>(nameof(DeathStarBenchState), expectedState);
+
+            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
+                .Returns<string, IPAddress, int?>((id, ip, port) =>
+                {
+                    this.apiClientId = id;
+                    this.ipAddress = ip;
+                    return this.mockFixture.ApiClient.Object;
+                });
+
+            State executionState = new State(new Dictionary<string, IConvertible>
+            {
+                [nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm"
+            });
+
+            Item<JObject> expectedCommand = new Item<JObject>(nameof(DeathStarBenchExecutor.SwarmCommand), JObject.FromObject(executionState));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(DeathStarBenchExecutor.SwarmCommand), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedCommand));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
+        }
 
         [SetUp]
-        public void SetupTests()
+        public void SetupTest()
         {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(PlatformID.Unix);
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Unix);
 
-            this.mockPath = this.fixture.Create<DependencyPath>();
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.PackageName)] = "deathstarbench";
+            this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.ThreadCount)] = "20";
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.ConnectionCount)] = "1000";
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "600s";
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.RequestPerSec)] = "1000";
+            this.mockFixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";
+            this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm";
 
-            this.SetupDefaultMockFileSystemBehavior();
-            this.SetUpDefaultParameters();
-            this.SetupDefaultMockApiBehavior();
+            this.mockPackage = new DependencyPath("deathstarbench", this.mockFixture.GetPackagePath("deathstarbench"));
+            this.mockFixture.SetupPackage(this.mockPackage);
 
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.PackageName)] = "DeathStarBench";
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(DeathStarBenchClientExecutorTests.ExamplesDirectory, "DeathStarBenchOutputExample.txt"));
+            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleResults);
+
+            this.SetupApiCalls("socialnetwork");
         }
 
         [Test]
         public async Task DeathStarBenchClientExecutorIntializeLocalAPIClientOnSingleVMSetup()
         {
-            this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
@@ -66,7 +123,7 @@ namespace VirtualClient.Actions
         [Test]
         public async Task DeathStarBenchClientExecutorIntializeServerAPIClientOnMultiVMSetup()
         {
-            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
@@ -82,21 +139,21 @@ namespace VirtualClient.Actions
         public async Task DeathStarBenchClientExecutorExecutesExpectedCommands_SocialNetworkScenario_MultiVM()
         {
             string serviceName = "socialnetwork";
-            string binaryPath = this.fixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
+            string binaryPath = this.mockFixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
+            this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
 
             List<string> expectedCommands = new List<string>
             {
                 // On Unix/Linux systems, everything will be case-sensitive. As such the commands below are expected to be
                 // exactly the same as what is executed.
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/dockerComposeScript.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
                 $"sudo python3 -m pip install -U pip",
                 $"sudo python3 -m pip install -U setuptools",
                 $"sudo -H python3 -m pip install aiohttp asyncio",
                 $"sudo luarocks install luasocket",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
@@ -104,19 +161,19 @@ namespace VirtualClient.Actions
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read -R 1000 >> results.txt\"",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-user-timeline.lua http://localhost:8080/wrk2-api/user-timeline/read -R 1000 >> results.txt\"",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/mixed-workload.lua http://localhost:8080 -R 1000 >> results.txt\"",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh"
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh"
             };
 
             List<string> actualCommands = new List<string>();
 
-            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.SetupDefaultMockApiBehavior(serviceName);
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.SetupApiCalls(serviceName);
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     actualCommands.Add($"{command} {arguments}".Trim());
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None)
@@ -130,40 +187,40 @@ namespace VirtualClient.Actions
         public async Task DeathStarBenchClientExecutorExecutesExpectedCommands_MediaMicroservicesScenario_MultiVM()
         {
             string serviceName = "mediamicroservices";
-            string binaryPath = this.fixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
+            string binaryPath = this.mockFixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
+            this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
 
             List<string> expectedCommands = new List<string>
             {
                 // On Unix/Linux systems, everything will be case-sensitive. As such the commands below are expected to be
                 // exactly the same as what is executed.
-                $"sudo chmod +x \"{this.mockPath.Path}/linux-x64/mediamicroservices/wrk2/wrk\"",
-                $"sudo chmod +x \"{this.mockPath.Path}/linux-x64/mediamicroservices/wrk2/deps/luajit/src/luajit\"",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/dockerComposeScript.sh",
+                $"sudo chmod +x \"{this.mockPackage.Path}/linux-x64/mediamicroservices/wrk2/wrk\"",
+                $"sudo chmod +x \"{this.mockPackage.Path}/linux-x64/mediamicroservices/wrk2/deps/luajit/src/luajit\"",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
                 $"sudo python3 -m pip install -U pip",
                 $"sudo python3 -m pip install -U setuptools",
                 $"sudo -H python3 -m pip install aiohttp asyncio",
                 $"sudo luarocks install luasocket",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 1000 >> results.txt\"",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
             };
 
             List<string> actualCommands = new List<string>();
 
-            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.SetupDefaultMockApiBehavior(serviceName);
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.SetupApiCalls(serviceName);
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     actualCommands.Add($"{command} {arguments}".Trim());
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None)
@@ -177,38 +234,38 @@ namespace VirtualClient.Actions
         public async Task DeathStarBenchClientExecutorExecutesExpectedCommands_HotelReservationScenario_MultiVM()
         {
             string serviceName = "hotelreservation";
-            string binaryPath = this.fixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
+            string binaryPath = this.mockFixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
+            this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
 
             List<string> expectedCommands = new List<string>
             {
                 // On Unix/Linux systems, everything will be case-sensitive. As such the commands below are expected to be
                 // exactly the same as what is executed.
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/dockerComposeScript.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
                 $"sudo python3 -m pip install -U pip",
                 $"sudo python3 -m pip install -U setuptools",
                 $"sudo -H python3 -m pip install aiohttp asyncio",
                 $"sudo luarocks install luasocket",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
                 $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/hotel-reservation/mixed-workload_type_1.lua http://0.0.0.0:5000 -R 1000 >> results.txt\"",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh",
-                $"sudo bash {this.mockPath.Path}/linux-x64/scripts/isSwarmNode.sh"
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
+                $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh"
             };
 
             List<string> actualCommands = new List<string>();
 
-            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.SetupDefaultMockApiBehavior(serviceName);
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.SetupApiCalls(serviceName);
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     actualCommands.Add($"{command} {arguments}".Trim());
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None)
@@ -216,75 +273,6 @@ namespace VirtualClient.Actions
 
                 CollectionAssert.AreEqual(expectedCommands, actualCommands);
             }
-        }
-
-        private void SetUpDefaultParameters()
-        {
-            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.ThreadCount)] = "20";
-            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.ConnectionCount)] = "1000";
-            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "600s";
-            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.RequestPerSec)] = "1000";
-            this.fixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm";
-        }
-
-        private void SetupDefaultMockFileSystemBehavior()
-        {
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.currentDirectoryPath = new DependencyPath("DeathStarBench", currentDirectory);
-
-            this.fixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            string resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "DeathStarBench", "DeathStarBenchOutputExample.txt");
-
-            this.rawString = File.ReadAllText(resultsPath);
-            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawString);
-        }
-
-        private void SetupDefaultMockApiBehavior()
-        {
-            this.fixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
-                .Returns<string, IPAddress, int?>((id, ip, port) =>
-                {
-                    this.apiClientId = id;
-                    this.ipAddress = ip;
-                    return this.fixture.ApiClient.Object;
-                });
-
-            var swarmCommand = new State(new Dictionary<string, IConvertible>
-            {
-                [nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm"
-            });
-
-            Item<JObject> expectedCommand = new Item<JObject>(nameof(DeathStarBenchExecutor.SwarmCommand), JObject.FromObject(swarmCommand));
-
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(DeathStarBenchExecutor.SwarmCommand), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedCommand));
-        }
-
-        private void SetupDefaultMockApiBehavior(string serviceName)
-        {
-            DeathStarBenchState expectedState = new DeathStarBenchState(serviceName, true);
-            Item<DeathStarBenchState> expectedStateItem = new Item<DeathStarBenchState>(nameof(DeathStarBenchState), expectedState);
-
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
-
-            this.fixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.fixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.fixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
         }
 
         private class TestDeathStarBenchClientExecutor : DeathStarBenchClientExecutor

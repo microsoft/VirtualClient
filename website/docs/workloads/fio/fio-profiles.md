@@ -40,6 +40,13 @@ aspects of the workload execution.
   * linux-arm64
   * win-x64
 
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+  * Ubuntu 24
+  * Azlinux 3
+
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -167,6 +174,8 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   * Ubuntu 18
   * Ubuntu 20
   * Ubuntu 22
+  * Ubuntu 24
+  * Azlinux 3
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -330,6 +339,13 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
   * linux-arm64
   * win-x64  
 
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+  * Ubuntu 24
+  * Azlinux 3
+
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -453,6 +469,13 @@ Therefore, they are performed on different disks
   * linux-x64
   * linux-arm64
   * win-x64  
+
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+  * Ubuntu 24
+  * Azlinux 3
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
