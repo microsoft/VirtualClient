@@ -5,21 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Polly;
     using VirtualClient;
     using VirtualClient.Actions.Memtier;
-    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Core;
 
     /// <summary>
     /// Redis Benchmark Client Executor.

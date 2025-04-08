@@ -17,7 +17,6 @@ namespace VirtualClient
     using Serilog.Formatting;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Logging;
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;

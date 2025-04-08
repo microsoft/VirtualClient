@@ -20,6 +20,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Core;
 
     /// <summary>
     /// Azure Networking Workload Executor tests networking between 2 VMs (client and server).

@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Core;
 
     /// <summary>
     /// An example Virtual Client component responsible for executing a client-side role responsibilities 

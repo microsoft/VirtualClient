@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient.Core
 {
     using System;
     using System.Collections.Generic;
@@ -23,7 +23,9 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Core;
 
     /// <summary>
     /// The base class for all Virtual Client profile actions and monitors.

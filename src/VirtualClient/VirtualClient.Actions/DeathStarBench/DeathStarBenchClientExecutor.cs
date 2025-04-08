@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Core;
 
     /// <summary>
     /// Executes DeathStarBench Client and generates HTTP load.

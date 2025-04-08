@@ -19,6 +19,7 @@ namespace VirtualClient.Metadata
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
 
     [TestFixture]
     [Category("Integration")]

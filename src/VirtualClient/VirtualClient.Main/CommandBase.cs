@@ -578,7 +578,7 @@ namespace VirtualClient
 
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
-            loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(level)
+            loggerProviders.Add(new VirtualClient.Logging.ConsoleLoggerProvider(level)
                 .HandleTraces());
         }
 

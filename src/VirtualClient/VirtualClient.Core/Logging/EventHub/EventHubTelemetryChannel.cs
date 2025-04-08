@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using System;
     using System.Collections;
@@ -13,6 +13,7 @@ namespace VirtualClient.Common.Telemetry
     using global::Azure.Messaging.EventHubs;
     using global::Azure.Messaging.EventHubs.Producer;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Buffers <see cref="EventData"/> items for efficient batched transmission.

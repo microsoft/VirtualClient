@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Core;
 
     /// <summary>
     /// Class encapsulating logic to execute and collect metrics for

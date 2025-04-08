@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Core;
 
     /// <summary>
     /// Allows an action defined in a profile to be sent to one or more remote instances of the
