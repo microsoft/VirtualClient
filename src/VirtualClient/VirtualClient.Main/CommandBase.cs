@@ -424,6 +424,8 @@ namespace VirtualClient
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
+            ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
+
             IList<ILoggerProvider> loggerProviders = this.CreateLoggerProviders(
                 configuration,
                 platformSpecifics,
@@ -473,7 +475,7 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
                 }
 
-                if(this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
+                if (this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
                 {
                     DependencyBlobStore blobStore = this.PackageStore as DependencyBlobStore;
                     IConvertible packageSource = null;
@@ -701,7 +703,7 @@ namespace VirtualClient
                             throw new TypeLoadException($"Specified logger '{loggerName}' is not supported, nor is it an ILoggerProvider in component type cache.");
                         }
 
-                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(loggerName, definitionValue);
+                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, definitionValue);
                         loggingProviders.Add(customLoggerProvider);
                         break;
                 }

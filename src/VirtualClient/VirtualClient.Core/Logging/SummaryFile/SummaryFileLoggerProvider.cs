@@ -11,25 +11,19 @@ namespace VirtualClient.Logging
 
     /// <summary>
     /// Provides methods for creating <see cref="ILogger"/> instances that can be used
-    /// to write metrics data to a CSV file.
+    /// to write summary file.
     /// </summary>
     public sealed class SummaryFileLoggerProvider : ILoggerProvider
     {
         private string filePath;
-        private long maxFileSize;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SummaryFileLoggerProvider"/> class.
-        /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
-        /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
+        /// <param name="filePath">The path to the CSV file to which the metrics should be written.</param>
         /// </summary>
-        public SummaryFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes)
+        public SummaryFileLoggerProvider(string filePath)
         {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
-            maximumFileSizeBytes.ThrowIfInvalid(nameof(maximumFileSizeBytes), (size) => size > 0);
-
-            this.filePath = csvFilePath;
-            this.maxFileSize = maximumFileSizeBytes;
+            this.filePath = filePath;
         }
 
         /// <summary>
@@ -43,7 +37,7 @@ namespace VirtualClient.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            SummaryFileLogger logger = new SummaryFileLogger(this.filePath, this.maxFileSize);
+            SummaryFileLogger logger = new SummaryFileLogger(this.filePath);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
             {
                 logger.Flush();

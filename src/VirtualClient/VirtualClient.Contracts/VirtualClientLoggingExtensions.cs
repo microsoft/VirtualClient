@@ -807,7 +807,7 @@ namespace VirtualClient.Contracts
             EventContext metricsContext = eventContext.Clone();
             metricsContext.Properties.AddRange(properties, withReplace: true);
 
-            VirtualClientLoggingExtensions.LogMessage(logger, $"{toolName}.ScenarioResult", LogLevel.Information, LogType.Metrics, metricsContext);
+            VirtualClientLoggingExtensions.LogMessage(logger, $"{toolName}.ScenarioResult", LogLevel.Information, LogType.Metric, metricsContext);
         }
 
         /// <summary>
@@ -891,7 +891,7 @@ namespace VirtualClient.Contracts
                             counterContext.Properties["units"] = counter.Unit ?? string.Empty;
                         }
 
-                        VirtualClientLoggingExtensions.LogMessage(logger, scenarioName, LogLevel.Information, LogType.Metrics, counterContext);
+                        VirtualClientLoggingExtensions.LogMessage(logger, scenarioName, LogLevel.Information, LogType.Metric, counterContext);
                     }
                 }
             }

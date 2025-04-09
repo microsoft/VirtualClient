@@ -9,6 +9,7 @@ namespace VirtualClient.Logging
     using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace VirtualClient.Logging
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
@@ -24,50 +26,36 @@ namespace VirtualClient.Logging
     /// </summary>
     public class SummaryFileLogger : ILogger, IFlushableChannel, IDisposable
     {
-        private static readonly AssemblyName LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
-        private static readonly AssemblyName ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
         private ConcurrentBuffer buffer;
-        private string filePath;
-        private string fileNameNoExtension;
         private string fileDirectory;
-        private string fileExtension;
-        private List<string> filePaths;
+        private string filePath;
         private IAsyncPolicy fileAccessRetryPolicy;
         private IFileSystem fileSystem;
         private Task flushTask;
         private bool initialized;
-        private long maxFileSizeBytes;
         private SemaphoreSlim semaphore;
         private bool disposed;
-
-        static SummaryFileLogger()
-        {
-            SummaryFileLogger.LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
-            SummaryFileLogger.ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
-           
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SummaryFileLogger"/> class.
         /// </summary>
-        /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
-        /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
+        /// <param name="filePath">The path to the CSV file to which the metrics should be written.</param>
         /// <param name="retryPolicy"></param>
-        public SummaryFileLogger(string csvFilePath, long maximumFileSizeBytes, IAsyncPolicy retryPolicy = null)
+        public SummaryFileLogger(string filePath, IAsyncPolicy retryPolicy = null)
         {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, "summary.txt");
+            }
 
-            this.filePath = csvFilePath;
-            this.fileNameNoExtension = Path.GetFileNameWithoutExtension(csvFilePath);
-            this.fileDirectory = Path.GetDirectoryName(csvFilePath);
-            this.fileExtension = Path.GetExtension(csvFilePath);
-            this.filePaths = new List<string>();
+            this.filePath = filePath;
+            this.fileDirectory = Path.GetDirectoryName(filePath);
             this.fileSystem = new FileSystem();
             this.buffer = new ConcurrentBuffer();
             this.fileAccessRetryPolicy = retryPolicy ?? Policy.Handle<IOException>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries));
-            this.maxFileSizeBytes = maximumFileSizeBytes;
             this.semaphore = new SemaphoreSlim(1, 1);
         }
 
@@ -108,40 +96,31 @@ namespace VirtualClient.Logging
 
             if (eventContext != null)
             {
-                if (eventId.Id == (int)LogType.Metrics)
+                try
                 {
-                    try
+                    this.semaphore.Wait();
+                    if (eventId.Id == (int)LogType.Metric)
                     {
-                        try
-                        {
-                            this.semaphore.Wait();
-                            string message = SummaryFileLogger.CreateMessage(eventContext);
-                            this.buffer.Append(message);
-                        }
-                        finally
-                        {
-                            this.semaphore.Release();
-                        }
+                        string message = SummaryFileLogger.CreateMetricMessage(eventContext);
+                        this.buffer.Append(message);
 
-                        if (this.flushTask == null)
-                        {
-                            this.flushTask = this.MonitorBufferAsync();
-                        }
                     }
-                    catch
+                    else if (eventId.Id == (int)LogType.Error)
                     {
-                        // Best effort. We do not want to crash the application on failures to access
-                        // the CSV file.
+                        string message = SummaryFileLogger.CreateErrorMessage(eventContext);
+                        this.buffer.Append(message);
                     }
                 }
-            }
-        }
+                finally
+                {
+                    this.semaphore.Release();
+                }
 
-        internal static string CreateMessage(EventContext context)
-        {
-            StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append(Environment.NewLine);
-            return messageBuilder.ToString();
+                if (this.flushTask == null)
+                {
+                    this.flushTask = this.MonitorBufferAsync();
+                }
+            }
         }
 
         /// <summary>
@@ -157,6 +136,22 @@ namespace VirtualClient.Logging
                     this.disposed = true;
                 }
             }
+        }
+
+        private static string CreateMetricMessage(EventContext context)
+        {
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.Append(Environment.NewLine);
+            messageBuilder.Append("Metric");
+            return messageBuilder.ToString();
+        }
+
+        private static string CreateErrorMessage(EventContext context)
+        {
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.Append(Environment.NewLine);
+            messageBuilder.Append("Error");
+            return messageBuilder.ToString();
         }
 
         private Task MonitorBufferAsync()
@@ -194,20 +189,14 @@ namespace VirtualClient.Logging
                     try
                     {
                         await this.semaphore.WaitAsync();
-                        string latestFilePath = this.filePaths.Last();
 
-                        using (FileSystemStream fileStream = this.fileSystem.FileStream.New(latestFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                        using (FileSystemStream fileStream = this.fileSystem.FileStream.New(this.filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                         {
                             if (fileStream.Length == 0)
                             {
                             }
 
                             byte[] bufferContents = SummaryFileLogger.ContentEncoding.GetBytes(this.buffer.ToString());
-
-                            if (fileStream.Length + bufferContents.Length > this.maxFileSizeBytes)
-                            {
-                                this.filePaths.Add(Path.Combine(this.fileDirectory, $"{this.fileNameNoExtension}_{this.filePaths.Count}{this.fileExtension}"));
-                            }
 
                             fileStream.Position = fileStream.Length;
                             fileStream.Write(bufferContents);
@@ -229,16 +218,6 @@ namespace VirtualClient.Logging
             if (!this.fileSystem.Directory.Exists(this.fileDirectory))
             {
                 this.fileSystem.Directory.CreateDirectory(this.fileDirectory);
-            }
-
-            IEnumerable<string> matchingFiles = this.fileSystem.Directory.EnumerateFiles(this.fileDirectory, $"{this.fileNameNoExtension}*{this.fileExtension}");
-            if (matchingFiles?.Any() != true)
-            {
-                this.filePaths.Add(this.filePath);
-            }
-            else
-            {
-                this.filePaths.AddRange(matchingFiles.OrderBy(file => file));
             }
         }
     }

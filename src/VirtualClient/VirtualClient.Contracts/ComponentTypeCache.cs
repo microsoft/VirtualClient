@@ -156,7 +156,7 @@ namespace VirtualClient.Contracts
                 IEnumerable<Type> componentTypes = null;
                 if (dependencyType.IsInterface)
                 {
-                    componentTypes = componentAssembly.GetTypes()?.Where(type => type.IsAssignableFrom(dependencyType));
+                    componentTypes = componentAssembly.GetTypes()?.Where(type => dependencyType.IsAssignableFrom(type));
                 }
                 else
                 {

@@ -322,7 +322,7 @@ namespace VirtualClient.Contracts
         [Test]
         [TestCase(LogType.Error)]
         [TestCase(LogType.SystemEvent)]
-        [TestCase(LogType.Metrics)]
+        [TestCase(LogType.Metric)]
         [TestCase(LogType.Trace)]
         [TestCase(LogType.Undefined)]
         public void LogMessageExtensionLogsTheExpectedEventsForTheVariousLogTypeDesignations(LogType expectedLogType)
@@ -606,7 +606,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -687,7 +687,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -750,7 +750,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -794,7 +794,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenarioName")
@@ -881,7 +881,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name == ("PerformanceCounter")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
                 It.Is<EventContext>(context => context.Properties.Count == 12
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -940,7 +940,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name == ("PerformanceCounter")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
                 It.Is<EventContext>(context => context.Properties.Count == 12
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -1824,7 +1824,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -1873,7 +1873,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -1934,7 +1934,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
@@ -1983,7 +1983,7 @@ namespace VirtualClient.Contracts
 
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.Properties.Count == 16
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId

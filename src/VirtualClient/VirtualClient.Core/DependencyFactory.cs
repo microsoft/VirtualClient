@@ -675,7 +675,7 @@ namespace VirtualClient
         /// </summary>
         internal static ILoggerProvider HandleMetrics(this ILoggerProvider loggerProvider)
         {
-            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metrics);
+            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metric);
         }
 
         /// <summary>
@@ -684,7 +684,7 @@ namespace VirtualClient
         /// </summary>
         internal static ILoggerProvider HandlePerformanceCounters(this ILoggerProvider loggerProvider)
         {
-            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metrics && eventId.Name == "PerformanceCounter");
+            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metric && eventId.Name == "PerformanceCounter");
         }
 
         /// <summary>

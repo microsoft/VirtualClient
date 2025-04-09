@@ -41,6 +41,8 @@ This logger sends telemetry data to EventHub. EventHub logger is documented in d
 
 An example to add EventHub logger is to specify '--logger=eventhub=eventhubconnectionstring' on command line.
 
+## Summary File Logger
+--logger=VirtualClient.Logging.SummaryFileLogger
 
 ## Proxy EventHub Logger
 
