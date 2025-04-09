@@ -18,7 +18,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Core;
 
     /// <summary>
     /// Latte server executor.

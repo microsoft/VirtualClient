@@ -17,7 +17,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
-    using VirtualClient.Core;
     using static System.Net.Mime.MediaTypeNames;
 
     /// <summary>

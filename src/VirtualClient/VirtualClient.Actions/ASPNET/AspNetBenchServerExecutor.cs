@@ -12,7 +12,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Actions.Memtier;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Core;
 
     /// <summary>
     /// Redis Benchmark Client Executor.

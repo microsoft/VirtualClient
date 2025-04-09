@@ -7,8 +7,6 @@ namespace VirtualClient.Logging
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
@@ -16,7 +14,6 @@ namespace VirtualClient.Logging
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -26,6 +23,11 @@ namespace VirtualClient.Logging
     /// </summary>
     public class SummaryFileLogger : ILogger, IFlushableChannel, IDisposable
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public const int MaxLineLength = 150;
+
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
         private ConcurrentBuffer buffer;
@@ -103,11 +105,10 @@ namespace VirtualClient.Logging
                     {
                         string message = SummaryFileLogger.CreateMetricMessage(eventContext);
                         this.buffer.Append(message);
-
                     }
                     else if (eventId.Id == (int)LogType.Error)
                     {
-                        string message = SummaryFileLogger.CreateErrorMessage(eventContext);
+                        string message = SummaryFileLogger.CreateErrorMessage(eventId, eventContext);
                         this.buffer.Append(message);
                     }
                 }
@@ -141,16 +142,31 @@ namespace VirtualClient.Logging
         private static string CreateMetricMessage(EventContext context)
         {
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append(Environment.NewLine);
-            messageBuilder.Append("Metric");
+            string scenarioName = context.Properties["scenarioName"].ToString();
+            string metricName = context.Properties["metricName"].ToString();
+            double metricValue = (double)context.Properties["metricValue"];
+            string metricUnit = context.Properties["metricUnit"].ToString();
+
+            messageBuilder.AppendMessage($"| Scenario: {scenarioName} | Name: {metricName} | Value: {metricValue} | Unit: {metricUnit} |" + Environment.NewLine);
+            messageBuilder.AppendMessage(Environment.NewLine);
             return messageBuilder.ToString();
         }
 
-        private static string CreateErrorMessage(EventContext context)
+        private static string CreateErrorMessage(EventId eventId, EventContext context)
         {
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append(Environment.NewLine);
-            messageBuilder.Append("Error");
+            string errorMessage = eventId.Name;
+            var errors = context.Properties[EventContextExtensions.ErrorProperty] as List<object>;
+            foreach (dynamic error in errors)
+            {
+                messageBuilder.AppendMessage($"*** Error ***" + Environment.NewLine);
+                messageBuilder.AppendMessage($"Error Type: {error.errorType}" + Environment.NewLine);
+                messageBuilder.AppendMessage($"Error Message: {error.errorMessage}" + Environment.NewLine);
+            }
+
+            messageBuilder.AppendMessage($"Error Call Stack: {context.Properties[EventContextExtensions.ErrorCallstackProperty]}" + Environment.NewLine);
+            messageBuilder.AppendMessage(Environment.NewLine);
+
             return messageBuilder.ToString();
         }
 
@@ -219,6 +235,53 @@ namespace VirtualClient.Logging
             {
                 this.fileSystem.Directory.CreateDirectory(this.fileDirectory);
             }
+        }
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    internal static class SummaryStringBuilderExtensions
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stringBuilder"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        internal static void AppendMessage(this StringBuilder stringBuilder, string message)
+        {
+            string datetime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            string prefix = $"{datetime} | ";
+            int prefixLength = prefix.Length;
+
+            // The max length of the actual message per line
+            int maxMessageLength = SummaryFileLogger.MaxLineLength - prefixLength;
+
+            int currentIndex = 0;
+            string[] lines = message.Split(Environment.NewLine, StringSplitOptions.None);
+            foreach (string line in lines)
+            {
+                while (currentIndex < line.Length)
+                {
+                    int remaining = line.Length - currentIndex;
+                    int lengthToTake = Math.Min(remaining, maxMessageLength);
+                    string lineSegment = line.Substring(currentIndex, lengthToTake);
+
+                    if (currentIndex == 0)
+                    {
+                        stringBuilder.AppendLine(prefix + lineSegment);
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(new string(' ', prefixLength) + lineSegment);
+                    }
+
+                    currentIndex += lengthToTake;
+                }
+            }
+            
         }
     }
 }

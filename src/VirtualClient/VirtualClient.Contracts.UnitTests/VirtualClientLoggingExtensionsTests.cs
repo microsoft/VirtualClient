@@ -591,7 +591,7 @@ namespace VirtualClient.Contracts
             DateTime expectedEndTime = DateTime.UtcNow;
             List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
 
-            this.mockLogger.Object.LogMetrics(
+            this.mockLogger.Object.LogMetric(
                 expectedToolName,
                 expectedScenarioName,
                 expectedStartTime,
@@ -666,7 +666,7 @@ namespace VirtualClient.Contracts
                { "Key2","Value2" }
             };
 
-            this.mockLogger.Object.LogMetrics(
+            this.mockLogger.Object.LogMetric(
                 expectedToolName,
                 expectedScenarioName,
                 expectedStartTime,
@@ -735,7 +735,7 @@ namespace VirtualClient.Contracts
             DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
             DateTime expectedEndTime = DateTime.UtcNow;
 
-            this.mockLogger.Object.LogMetrics(
+            this.mockLogger.Object.LogMetric(
                 expectedToolName,
                 expectedScenarioName,
                 expectedStartTime,
@@ -779,7 +779,7 @@ namespace VirtualClient.Contracts
             DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
             DateTime expectedEndTime = DateTime.UtcNow;
 
-            this.mockLogger.Object.LogMetrics(
+            this.mockLogger.Object.LogMetric(
                 expectedToolName,
                 expectedScenarioName,
                 expectedStartTime,
@@ -833,7 +833,7 @@ namespace VirtualClient.Contracts
                     Assert.IsFalse(object.ReferenceEquals(originalContext, actualContext));
                 });
 
-            this.mockLogger.Object.LogMetrics(
+            this.mockLogger.Object.LogMetric(
                 "AnyTool",
                 "AnyScenario",
                 DateTime.UtcNow,

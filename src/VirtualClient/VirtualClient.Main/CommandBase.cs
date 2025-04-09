@@ -697,7 +697,6 @@ namespace VirtualClient
                         break;
 
                     default:
-                        // TODO: Support referencing logger by namespace
                         if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
                         {
                             throw new TypeLoadException($"Specified logger '{loggerName}' is not supported, nor is it an ILoggerProvider in component type cache.");

@@ -194,7 +194,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore",   },
+                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore", },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,

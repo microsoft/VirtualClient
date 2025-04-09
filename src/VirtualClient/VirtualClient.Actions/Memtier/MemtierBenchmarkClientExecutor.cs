@@ -20,7 +20,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
-    using VirtualClient.Core;
     using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
     /// <summary>
@@ -365,7 +364,7 @@ namespace VirtualClient.Actions
 
                             foreach (Metric metric in metrics)
                             {
-                                this.Logger.LogMetrics(
+                                this.Logger.LogMetric(
                                     $"Memtier-{this.Benchmark}",
                                     this.MetricScenario ?? this.Scenario,
                                     processInfo.StartTime,
@@ -391,7 +390,7 @@ namespace VirtualClient.Actions
 
                         foreach (Metric metric in aggregateMetrics)
                         {
-                            this.Logger.LogMetrics(
+                            this.Logger.LogMetric(
                                 $"Memtier-{this.Benchmark}",
                                 this.MetricScenario ?? this.Scenario,
                                 processReference.StartTime,

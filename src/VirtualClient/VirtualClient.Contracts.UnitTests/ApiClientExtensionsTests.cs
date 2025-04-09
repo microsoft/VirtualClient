@@ -16,7 +16,6 @@ namespace VirtualClient.Contracts
     using Polly;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Core;
 
     [TestFixture]
     [Category("Unit")]

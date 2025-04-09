@@ -423,7 +423,7 @@ namespace VirtualClient.Contracts
             string toolVersion = null,
             IEnumerable<string> tags = null)
         {
-            VirtualClientLoggingExtensions.LogMetrics(
+            VirtualClientLoggingExtensions.LogMetric(
                 logger,
                 toolName,
                 scenarioName,
@@ -678,7 +678,6 @@ namespace VirtualClient.Contracts
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
-        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
         public static void LogMetrics(
             this ILogger logger,
             string toolName,
@@ -691,14 +690,13 @@ namespace VirtualClient.Contracts
             IEnumerable<string> tags,
             EventContext eventContext,
             string toolResults = null,
-            string toolVersion = null,
-            bool supportOriginalSchema = false)
+            string toolVersion = null)
         {
             logger.ThrowIfNull(nameof(logger));
 
             foreach (Metric metric in metrics)
             {
-                VirtualClientLoggingExtensions.LogMetrics(
+                VirtualClientLoggingExtensions.LogMetric(
                     logger,
                     toolName,
                     scenarioName,
@@ -716,8 +714,7 @@ namespace VirtualClient.Contracts
                     metric.Description,
                     toolResults,
                     toolVersion,
-                    metric.Metadata,
-                    supportOriginalSchema);
+                    metric.Metadata);
             }
         }
 
@@ -742,8 +739,7 @@ namespace VirtualClient.Contracts
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
         /// <param name="metricMetadata">Telemetry context related to metric.</param>
-        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
-        public static void LogMetrics(
+        public static void LogMetric(
             this ILogger logger,
             string toolName,
             string scenarioName,
@@ -761,8 +757,7 @@ namespace VirtualClient.Contracts
             string description = null,
             string toolResults = null,
             string toolVersion = null,
-            IEnumerable<KeyValuePair<string, IConvertible>> metricMetadata = null,
-            bool supportOriginalSchema = false)
+            IEnumerable<KeyValuePair<string, IConvertible>> metricMetadata = null)
         {
             logger.ThrowIfNull(nameof(logger));
             scenarioName.ThrowIfNullOrWhiteSpace(nameof(scenarioName));
@@ -789,20 +784,6 @@ namespace VirtualClient.Contracts
                 { "tags", tags != null ? string.Join(',', tags) : string.Empty },
                 { "metadata_metrics", metricMetadata as object ?? string.Empty }
             };
-
-            // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-            // output. To enable a seamless transition, we are supporting the old and the new schema
-            // until we have all systems using the latest version of the Virtual Client.
-            if (supportOriginalSchema)
-            {
-                properties["testName"] = scenarioName;
-                properties["testResult"] = metricValue;
-                properties["units"] = metricUnits ?? string.Empty;
-                properties["testedInstance"] = metricCategorization ?? string.Empty;
-                properties["testArguments"] = scenarioArguments ?? string.Empty;
-                properties["testStartTime"] = scenarioStartTime;
-                properties["testEndTime"] = scenarioEndTime;
-            }
 
             EventContext metricsContext = eventContext.Clone();
             metricsContext.Properties.AddRange(properties, withReplace: true);
@@ -851,8 +832,7 @@ namespace VirtualClient.Contracts
         /// <param name="endTime">The time at which the performance counter capture process ended.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
-        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
-        public static void LogPerformanceCounters(this ILogger logger, string toolName, IEnumerable<Metric> counters, DateTime startTime, DateTime endTime, EventContext eventContext, string toolVersion = null, bool supportOriginalSchema = false)
+        public static void LogPerformanceCounters(this ILogger logger, string toolName, IEnumerable<Metric> counters, DateTime startTime, DateTime endTime, EventContext eventContext, string toolVersion = null)
         {
             logger.ThrowIfNull(nameof(logger));
             eventContext.ThrowIfNull(nameof(eventContext));
@@ -877,19 +857,6 @@ namespace VirtualClient.Contracts
                         counterContext.Properties["toolVersion"] = toolVersion;
                         counterContext.Properties["tags"] = counter.Tags != null ? $"{string.Join(",", counter.Tags)}" : string.Empty;
                         counterContext.Properties["metadata_metrics"] = counter.Metadata as object;
-
-                        // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-                        // output. To enable a seamless transition, we are supporting the old and the new schema
-                        // until we have all systems using the latest version of the Virtual Client.
-                        if (supportOriginalSchema)
-                        {
-                            counterContext.Properties["counterName"] = counter.Name;
-                            counterContext.Properties["counterValue"] = counter.Value;
-                            counterContext.Properties["testName"] = scenarioName;
-                            counterContext.Properties["testStartTime"] = startTime;
-                            counterContext.Properties["testEndTime"] = endTime;
-                            counterContext.Properties["units"] = counter.Unit ?? string.Empty;
-                        }
 
                         VirtualClientLoggingExtensions.LogMessage(logger, scenarioName, LogLevel.Information, LogType.Metric, counterContext);
                     }
@@ -945,7 +912,7 @@ namespace VirtualClient.Contracts
             string toolVersion = null,
             IEnumerable<string> tags = null)
         {
-            logger.LogMetrics(
+            logger.LogMetric(
                 toolName,
                 scenarioName,
                 scenarioStartTime,
