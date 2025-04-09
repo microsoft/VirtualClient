@@ -85,8 +85,17 @@ namespace VirtualClient.Actions
                 if (this.Platform == PlatformID.Unix)
                 {
                     // Run make to generate all object files for fortran subroutines.
-                    await this.ExecuteCommandAsync("make", null, this.packageDirectory, cancellationToken)
-                            .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("make", null, this.packageDirectory, telemetryContext, cancellationToken))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
+                                process.ThrowIfWorkloadFailed(errorReason: ErrorReason.CompilationFailed);
+                            }
+                        }
+                    }
 
                     // Delete results file that gets generated.
                     if (this.fileSystem.File.Exists(this.ResultsFilePath))

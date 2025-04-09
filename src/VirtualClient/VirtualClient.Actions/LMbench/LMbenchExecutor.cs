@@ -174,7 +174,7 @@ namespace VirtualClient.Actions
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, relatedContext, "LMbench_Build");
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.CompilationFailed);
                     }
                 }
             });

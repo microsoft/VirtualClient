@@ -256,7 +256,7 @@ namespace VirtualClient.Actions
                 if (this.Platform == PlatformID.Unix)
                 {
                     await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken, ErrorReason.CompilationFailed);
                     await this.WriteSpecCpuConfigAsync(cancellationToken);
                     await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken);
@@ -289,7 +289,7 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SpecCpuState>($"{nameof(SpecCpuState)}", state, cancellationToken);
         }
 
-        private async Task<string> ExecuteCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<string> ExecuteCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, ErrorReason errorReason = ErrorReason.WorkloadFailed)
         {
             EventContext relatedContext = EventContext.Persisted()
                 .AddContext(nameof(command), command)
@@ -307,7 +307,7 @@ namespace VirtualClient.Actions
                     if (process.IsErrored())
                     {
                         await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
-                        process.ThrowIfWorkloadFailed(errorReason: ErrorReason.CompilationFailed);
+                        process.ThrowIfWorkloadFailed(errorReason: errorReason);
                     }
                 }
 
