@@ -323,7 +323,6 @@ namespace VirtualClient
                     level,
                     new SerilogJsonTextFormatter()).HandleTraces();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
@@ -333,7 +332,6 @@ namespace VirtualClient
                     LogLevel.Trace,
                     new SerilogJsonTextFormatter(propertiesToExcludeForMetrics)).HandleMetrics();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Metrics/Results in CSV Format
@@ -341,7 +339,6 @@ namespace VirtualClient
                     Path.Combine(logFileDirectory, 
                     settings.MetricsCsvFileName)).HandleMetrics();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // System Events
@@ -351,7 +348,6 @@ namespace VirtualClient
                     LogLevel.Trace,
                     new SerilogJsonTextFormatter(propertiesToExcludeForEvents)).HandleSystemEvents();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));
                 loggerProviders.Add(eventsLoggerProvider);
             }
 
