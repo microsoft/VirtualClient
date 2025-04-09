@@ -7,14 +7,10 @@ namespace VirtualClient.Logging
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
-    using global::Serilog;
     using global::Serilog.Core;
     using global::Serilog.Events;
     using global::Serilog.Parsing;
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
-    using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -34,48 +30,17 @@ namespace VirtualClient.Logging
             { LogLevel.Critical, LogEventLevel.Fatal }
         };
 
-        /// <summary>
-        /// Serializer settings to use when serializing/deserializing objects to/from
-        /// JSON.
-        /// </summary>
-        private static readonly JsonSerializerSettings SerializationSettings = new JsonSerializerSettings
-        {
-            // Format: 2012-03-21T05:40:12.340Z
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            Formatting = Formatting.None,
-            NullValueHandling = NullValueHandling.Ignore,
-
-            // We tried using PreserveReferenceHandling.All and Object, but ran into issues
-            // when deserializing string arrays and read only dictionaries
-            ReferenceLoopHandling = ReferenceLoopHandling.Error,
-
-            // This is the default setting, but to avoid remote code execution bugs do NOT change
-            // this to any other setting.
-            TypeNameHandling = TypeNameHandling.None,
-
-            // By default, serialize enum values to their string representation.
-            Converters = new JsonConverter[] { new StringEnumConverter() },
-
-            // By default, ALL properties in the JSON structure will be camel-cased including
-            // dictionary keys.
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
-        };
-
         private Logger logger;
         private LogLevel minumumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerilogFileLogger"/> class.
         /// </summary>
-        /// <param name="configuration">
-        /// Configuration settings that will be supplied to the Serilog logger
-        /// used by the <see cref="ILogger"/> instance.
-        /// </param>
+        /// <param name="logger">The Serilog logger to use.</param>
         /// <param name="level">The minimum logging severity level.</param>
-        public SerilogFileLogger(LoggerConfiguration configuration, LogLevel level)
+        public SerilogFileLogger(Logger logger, LogLevel level)
         {
-            configuration.ThrowIfNull(nameof(configuration));
-            this.logger = configuration.CreateLogger();
+            this.logger = logger;
             this.minumumLogLevel = level;
         }
 
