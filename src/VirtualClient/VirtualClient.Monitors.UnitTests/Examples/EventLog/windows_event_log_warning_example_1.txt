@@ -1,0 +1,23 @@
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System>
+    <Provider Name="Microsoft-Windows-Search" Guid="{CA4E628D-8567-4896-AB6B-835B221F373F}" EventSourceName="Windows Search Service" />
+    <EventID Qualifiers="32768">10024</EventID>
+    <Version>0</Version>
+    <Level>3</Level>
+    <Task>3</Task>
+    <Opcode>0</Opcode>
+    <Keywords>0x80000000000000</Keywords>
+    <TimeCreated SystemTime="2025-03-28T16:13:09.8269843Z" />
+    <EventRecordID>32120</EventRecordID>
+    <Correlation />
+    <Execution ProcessID="30888" ThreadID="0" />
+    <Channel>Application</Channel>
+    <Computer>computer01</Computer>
+    <Security />
+  </System>
+  <EventData>
+    <Data Name="ExtraInfo">
+    </Data>
+    <Data Name="FilterHostProcessID">23576</Data>
+  </EventData>
+</Event>
