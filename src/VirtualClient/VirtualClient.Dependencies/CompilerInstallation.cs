@@ -18,6 +18,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
     using VirtualClient.Metadata;
 
     /// <summary>

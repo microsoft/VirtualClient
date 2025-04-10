@@ -28,6 +28,7 @@ namespace VirtualClient
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Validation;
+    using VirtualClient.Logging;
     using VirtualClient.Metadata;
 
     /// <summary>

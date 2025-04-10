@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using System;
     using System.Collections.Generic;
@@ -13,6 +13,7 @@ namespace VirtualClient.Common.Telemetry
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Provides an <see cref="ILogger"/> implementation for writing telemetry events

@@ -157,6 +157,16 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--logger=console")]
+        [TestCase("--logger=console --logger=file")]
+        public void LoggerOptionSupportsMultipleLoggerInputs(string input)
+        {
+            Option option = OptionFactory.CreateLoggerOption();
+            ParseResult result = option.Parse(input);
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCaseSource(nameof(GetExampleStorageAccountConnectionStrings))]
         public void ContentStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
         {
@@ -323,69 +333,6 @@ namespace VirtualClient
             Option option = OptionFactory.CreateEventHubStoreOption();
             ParseResult result = option.Parse($"--event-hub={argument}");
             Assert.IsFalse(result.Errors.Any());
-        }
-
-        [Test]
-        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdConnectionStrings), new object[] { DependencyStore.StoreTypeAzureEventHubNamespace })]
-        public void EventHubConnectionStringOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
-        {
-            var mockCertManager = new Mock<ICertificateManager>();
-
-            mockCertManager
-                .Setup(c => c.GetCertificateFromStoreAsync(
-                    "123456789",
-                    It.IsAny<IEnumerable<StoreLocation>>(),
-                    StoreName.My))
-                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
-
-            // Setup:
-            // A matching certificate is found in the local store.
-            mockCertManager
-                .Setup(c => c.GetCertificateFromStoreAsync(
-                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
-                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
-                    It.IsAny<IEnumerable<StoreLocation>>(),
-                    StoreName.My))
-                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
-
-            Option option = OptionFactory.CreateEventHubStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--eventhub={argument}");
-            Assert.IsFalse(result.Errors.Any());
-        }
-
-        [Test]
-        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdUris), new object[] { DependencyStore.StoreTypeAzureEventHubNamespace })]
-        public void EventHubConnectionStringOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
-        {
-            var mockCertManager = new Mock<ICertificateManager>();
-
-            mockCertManager
-                .Setup(c => c.GetCertificateFromStoreAsync(
-                    "123456789",
-                    It.IsAny<IEnumerable<StoreLocation>>(),
-                    StoreName.My))
-                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
-
-            // Setup:
-            // A matching certificate is found in the local store.
-            mockCertManager
-                .Setup(c => c.GetCertificateFromStoreAsync(
-                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
-                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
-                    It.IsAny<IEnumerable<StoreLocation>>(),
-                    StoreName.My))
-                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
-
-            Option option = OptionFactory.CreateEventHubStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--eventhub={argument}");
-            Assert.IsFalse(result.Errors.Any());
-        }
-
-        [Test]
-        public void EventHubConnectionStringOptionValidatesTheConnectionTokenProvided()
-        {
-            Option option = OptionFactory.CreateEventHubStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--eventHub=NotAValidValue"));
         }
 
         [Test]

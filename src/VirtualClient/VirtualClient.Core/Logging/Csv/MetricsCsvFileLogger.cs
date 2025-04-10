@@ -136,7 +136,7 @@ namespace VirtualClient.Logging
 
             if (eventContext != null)
             {
-                if (eventId.Id == (int)LogType.Metrics)
+                if (eventId.Id == (int)LogType.Metric)
                 {
                     try
                     {

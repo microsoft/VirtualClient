@@ -9,6 +9,7 @@ namespace VirtualClient.Contracts
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -26,7 +27,8 @@ namespace VirtualClient.Contracts
         // or even extensions libraries. They are dynamically loaded at runtime.
         private static readonly List<Type> ComponentDependencyTypes = new List<Type>
         {
-            typeof(VirtualClientComponent)
+            typeof(VirtualClientComponent),
+            typeof(ILoggerProvider)
         };
 
         private ComponentTypeCache()
@@ -154,7 +156,7 @@ namespace VirtualClient.Contracts
                 IEnumerable<Type> componentTypes = null;
                 if (dependencyType.IsInterface)
                 {
-                    componentTypes = componentAssembly.GetTypes()?.Where(type => type.IsAssignableFrom(dependencyType));
+                    componentTypes = componentAssembly.GetTypes()?.Where(type => dependencyType.IsAssignableFrom(type));
                 }
                 else
                 {

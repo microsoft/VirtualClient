@@ -25,6 +25,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// The main entry point for the program
@@ -228,6 +229,9 @@ namespace VirtualClient
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
 
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false),
+
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
@@ -429,7 +433,7 @@ namespace VirtualClient
         private static void InitializeStartupLogging(string[] args)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
-            loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(LogLevel.Trace));
+            loggerProviders.Add(new ConsoleLoggerProvider(LogLevel.Trace));
 
             Program.Logger = new LoggerFactory(loggerProviders).CreateLogger("VirtualClient");
         }

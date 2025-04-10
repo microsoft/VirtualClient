@@ -218,7 +218,7 @@ namespace VirtualClient.Actions
                 IList<Metric> metrics = geekbenchMetricsParser.Parse();
                 foreach (Metric metric in metrics)
                 {
-                    this.Logger.LogMetrics(
+                    this.Logger.LogMetric(
                         this.PackageName,
                         this.Scenario,
                         process.StartTime,

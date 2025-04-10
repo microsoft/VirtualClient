@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Logging
+namespace VirtualClient.Logging
 {
     using System;
     using System.Collections.Generic;

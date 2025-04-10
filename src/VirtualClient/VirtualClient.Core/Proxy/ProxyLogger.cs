@@ -23,7 +23,7 @@ namespace VirtualClient.Proxy
             { LogType.Undefined, "Traces" },
             { LogType.Error, "Errors" },
             { LogType.Trace, "Traces" },
-            { LogType.Metrics, "Metrics" },
+            { LogType.Metric, "Metrics" },
             { LogType.SystemEvent, "Events" }
         };
 

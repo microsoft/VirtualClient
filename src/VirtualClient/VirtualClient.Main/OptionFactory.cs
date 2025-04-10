@@ -194,7 +194,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore",   },
+                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore", },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,
@@ -272,17 +272,12 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
-        public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
+        public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null)
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<DependencyEventHubStore> option = new Option<DependencyEventHubStore>(
-                new string[] { "--eh", "--eventhub", "--event-hub", "--eventHub", "--eventHubConnectionString", "--eventhubconnectionstring" },
-                new ParseArgument<DependencyEventHubStore>(result => OptionFactory.ParseEventHubStore(
-                    result,
-                    DependencyStore.Telemetry,
-                    certificateManager ?? OptionFactory.defaultCertificateManager)))
+            Option<string> option = new Option<string>(
+                new string[] { "--eh", "--eventhub", "--event-hub", "--eventHub", "--eventHubConnectionString", "--eventhubconnectionstring" })
             {
                 Name = "EventHubStore",
                 Description = "An endpoint URI or connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
@@ -468,6 +463,26 @@ namespace VirtualClient
                 Description = "Defines an alternate directory to which log files should be written.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLoggerOption(bool required = true, object defaultValue = null)
+        {
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "-l", "--logger" })
+            {
+                Name = "Loggers",
+                Description = "Defines custom logger definitions.",
+                ArgumentHelpName = "logger-definition",
+                AllowMultipleArgumentsPerToken = false,
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -1116,27 +1131,6 @@ namespace VirtualClient
                     $"See the following documentation for additional details and examples:{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
-            }
-
-
-            return store;
-        }
-
-        private static DependencyEventHubStore ParseEventHubStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager)
-        {
-            string endpoint = OptionFactory.GetValue(parsedResult);
-            DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(storeName, endpoint, certificateManager);
-
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
             }
 
             return store;
