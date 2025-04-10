@@ -1,0 +1,20 @@
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System>
+    <Provider Name="Microsoft-Windows-Security-SPP" Guid="{E23B33B0-C8C9-472C-A5F9-F2BDFEA0F156}" EventSourceName="Software Protection Platform Service" />
+    <EventID Qualifiers="49152">16394</EventID>
+    <Version>0</Version>
+    <Level>4</Level>
+    <Task>0</Task>
+    <Opcode>0</Opcode>
+    <Keywords>0x80000000000000</Keywords>
+    <TimeCreated SystemTime="2025-03-28T18:58:40.3500678Z" />
+    <EventRecordID>32196</EventRecordID>
+    <Correlation />
+    <Execution ProcessID="25048" ThreadID="0" />
+    <Channel>Application</Channel>
+    <Computer>computer01</Computer>
+    <Security />
+  </System>
+  <EventData>
+  </EventData>
+</Event>
