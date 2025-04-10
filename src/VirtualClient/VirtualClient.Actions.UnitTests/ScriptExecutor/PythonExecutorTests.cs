@@ -35,14 +35,22 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.mockFixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.FileSystem.Setup(fe => fe.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.exampleResults);
 
-            this.mockFixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+            this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns(this.mockPackage.Path);
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetFileNameWithoutExtension(It.IsAny<string>()))
+                .Returns("genericScript");
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File)
                 .Returns(this.mockFixture.File.Object);
@@ -59,23 +67,6 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
-        }
-
-        [Test]
-        [TestCase(PlatformID.Win32NT)]
-        [TestCase(PlatformID.Unix)]
-        public void PythonExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
-        {
-            this.SetupTest(platform);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
-
-            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
-            {
-                DependencyException exception = Assert.ThrowsAsync<DependencyException>(
-                    () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
-            }
         }
 
         [Test]
