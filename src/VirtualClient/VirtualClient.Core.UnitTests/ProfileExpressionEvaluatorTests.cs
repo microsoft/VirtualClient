@@ -890,8 +890,6 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
-            // "BUILD_TLS": "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}",
-            // {calculate(calculate(512 / (4 / 2)) ? "Yes" : "No")}
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {   
                 { "Duration1" , "08:10:45" },

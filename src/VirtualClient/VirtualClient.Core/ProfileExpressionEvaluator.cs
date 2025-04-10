@@ -28,6 +28,10 @@ namespace VirtualClient
 
         // e.g
         // Expression: {calculate(1.00:00:00 + 00:00:10)}
+        // Expression: {calculate({Duration} + 00:00:10)}
+        // Expression: {calculate(1.00:00:00 + {Duration})}
+        // Expression: {calculate(1.00:00:00 + {Duration} - 00:10:45)}
+        // Expression: {calculate(1.00:00:00 - 00:00:10)}
         private static readonly Regex CalculateTimeSpan = new Regex(
             @"\{calculate\(\s*((?:\d{1,2}(?:\.\d{2})?:\d{2}:\d{2}\s*[\+\-]\s*)*\d{1,2}(?:\.\d{2})?:\d{2}:\d{2})\s*\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
