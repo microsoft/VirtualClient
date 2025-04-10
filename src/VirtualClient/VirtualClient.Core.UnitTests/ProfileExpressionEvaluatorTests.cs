@@ -554,7 +554,7 @@ namespace VirtualClient
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
-                {
+                { 
                     "{LogicalCoreCount}",
                     expectedLogicalCores.ToString()
                 },
