@@ -604,33 +604,7 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
-            }),
-            // Expression: {ExperimentId}
-            // Resolves to the runtime value of ExperimentId.
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ExperimentIdExpression.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-                    ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
-                    string experimentId = systemInfo.ExperimentId;
-
-                    foreach (Match match in matches)
-                    {
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, experimentId);
-                    }
-                }
-
-                return Task.FromResult(new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                });
-            }),
+            })
         };
 
         private ProfileExpressionEvaluator()
