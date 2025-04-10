@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -13,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -82,12 +82,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ToolName), string.Empty);
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.ToolName)] = value;
+                return this.Parameters.GetValue<string>(nameof(this.ToolName));
             }
         }
 
@@ -97,14 +92,14 @@ namespace VirtualClient.Actions
         public string ExecutablePath { get; set; }
 
         /// <summary>
-        /// The path to the directory containing script executable.
-        /// </summary>
-        public string ExecutableDirectory { get; set; }
-
-        /// <summary>
         /// A retry policy to apply to file access/move operations.
         /// </summary>
         public IAsyncPolicy FileOperationsRetryPolicy { get; set; } = RetryPolicies.FileOperations;
+
+        /// <summary>
+        /// The path to the workload package.
+        /// </summary>
+        protected DependencyPath WorkloadPackage { get; set; }
 
         /// <summary>
         /// Initializes the environment for execution of the provided script.
@@ -113,36 +108,20 @@ namespace VirtualClient.Actions
         {
             await this.EvaluateParametersAsync(cancellationToken);
 
-            string scriptFileLocation = string.Empty;
-            if (!string.IsNullOrWhiteSpace(this.PackageName))
-            {
-                DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
-                this.ExecutablePath = this.Combine(workloadPackage.Path, this.ScriptPath);
-            }
-            else if (this.fileSystem.Path.IsPathRooted(this.ScriptPath))
-            {
-                this.ExecutablePath = this.ScriptPath;
-            }
-            else
-            {
-                throw new DependencyException(
-                    $"Either {nameof(this.PackageName)} should be provided or the {nameof(this.ScriptPath)} should be a full path with a rooted value. " +
-                    $"The provided values for {nameof(this.PackageName)} is '{this.PackageName}', while provided value for {nameof(this.ScriptPath)} is {this.ScriptPath}.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
+            this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, this.ScriptPath);
+
+            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
             {
                 throw new DependencyException(
-                    $"The expected workload script was not found at '{this.ExecutablePath}'. The script cannot be executed " +
-                    $"successfully without this binary/executable.",
-                    ErrorReason.WorkloadDependencyMissing);
+                    $"The expected workload binary/executable was not found in the '{this.PackageName}' package. The script cannot be executed " +
+                    $"successfully without this binary/executable. Check that the workload package was installed successfully and that the executable " +
+                    $"exists in the path expected '{this.ExecutablePath}'.",
+                    ErrorReason.DependencyNotFound);
             }
-
-            this.ExecutableDirectory = this.fileSystem.Path.GetDirectoryName(this.ExecutablePath);
-            this.ToolName = string.IsNullOrWhiteSpace(this.ToolName) ? $"{this.fileSystem.Path.GetFileNameWithoutExtension(this.ExecutablePath)}" : this.ToolName;
-            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
         }
 
         /// <summary>
@@ -159,7 +138,7 @@ namespace VirtualClient.Actions
                     .AddContext(nameof(command), command)
                     .AddContext(nameof(commandArguments), commandArguments);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkloadPackage.Path, telemetryContext, cancellationToken, false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -186,7 +165,8 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                string metricsFilePath = this.Combine(this.ExecutableDirectory, "test-metrics.json");
+                string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
+                telemetryContext.AddContext(nameof(metricsFilePath), metricsFilePath);
                 bool metricsFileFound = false;
 
                 try
@@ -194,7 +174,6 @@ namespace VirtualClient.Actions
                     if (this.fileSystem.File.Exists(metricsFilePath))
                     {
                         metricsFileFound = true;
-                        telemetryContext.AddContext(nameof(metricsFilePath), metricsFilePath);
                         string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
 
                         JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
@@ -222,7 +201,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Captures the workload logs based on LogFiles parameter of ScriptExecutor.
         /// All the files inmatching sub-folders and all the matching files along with metrics file will be moved to the 
-        /// central Virtual Client logs directory. If the content store (--cs) argument is used with Virtual Client, then
+        /// central Virtual Client logs directory. If the cintent store (--cs) argument is used with Virtual Client, then
         /// the captured logs will also be uploaded to blob content store.
         /// </summary>
         protected async Task CaptureLogsAsync(CancellationToken cancellationToken)
@@ -238,12 +217,7 @@ namespace VirtualClient.Actions
 
             foreach (string logPath in this.LogPaths.Split(";"))
             {
-                if (string.IsNullOrWhiteSpace(logPath))
-                {
-                    continue;
-                }
-
-                string fullLogPath = this.Combine(this.ExecutableDirectory, logPath);
+                string fullLogPath = this.Combine(this.WorkloadPackage.Path, logPath);
 
                 // Check for Matching Sub-Directories 
                 if (this.fileSystem.Directory.Exists(fullLogPath))
@@ -255,14 +229,14 @@ namespace VirtualClient.Actions
                 }
 
                 // Check for Matching FileNames
-                foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.ExecutableDirectory, logPath, SearchOption.AllDirectories))
+                foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.WorkloadPackage.Path, logPath, SearchOption.AllDirectories))
                 {
                     await this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
                 }
             }
 
             // Move test-metrics.json file if that exists
-            string metricsFilePath = this.Combine(this.ExecutableDirectory, "test-metrics.json");
+            string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
             if (this.fileSystem.File.Exists(metricsFilePath))
             {
                 await this.RequestUploadAndMoveToLogsDirectory(metricsFilePath, destinitionLogsDir, cancellationToken);
@@ -294,11 +268,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task RequestUploadAndMoveToLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
         {
-            if (string.Equals(sourcePath, this.ExecutablePath))
-            {
-                return;
-            }
-
             if (this.TryGetContentStoreManager(out IBlobManager blobManager))
             {
                 await this.RequestUpload(sourcePath);

@@ -36,22 +36,14 @@ namespace VirtualClient.Actions
 
             this.exampleResults = File.ReadAllText(Path.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
+            this.fixture.File.Reset();
+            this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.fixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.fixture.FileSystem.Setup(fe => fe.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.exampleResults);
 
-            this.fixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
-
-            this.fixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
-                .Returns(this.mockPackage.Path);
-
-            this.fixture.FileSystem.Setup(fe => fe.Path.GetFileNameWithoutExtension(It.IsAny<string>()))
-                .Returns("genericScript");
+            this.fixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
 
             this.fixture.FileSystem.SetupGet(fs => fs.File)
                 .Returns(this.fixture.File.Object);
@@ -70,6 +62,22 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [TestCase(PlatformID.Win32NT)]
+        public void PowershellExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
+        {
+            this.SetupTest(platform);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+
+            using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
+            {
+                DependencyException exception = Assert.ThrowsAsync<DependencyException>(
+                    () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+                
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1")]
         public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command)
         {
@@ -78,9 +86,6 @@ namespace VirtualClient.Actions
 
             string workingDirectory = $"{this.mockPackage.Path}{platformSpecificPath}";
             string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}\\{command} parameter1 parameter2";
-
-            this.fixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
-                .Returns(workingDirectory);
 
             using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
             {
@@ -105,9 +110,6 @@ namespace VirtualClient.Actions
                         OnHasExited = () => true
                     };
                 };
-
-                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
-                    .ConfigureAwait(false);
 
                 await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
