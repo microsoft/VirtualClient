@@ -703,6 +703,28 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsExperimentIdReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{ExperimentId}", "abcde-12345" },
+                { "--port=1234 --exptId={ExperimentId}", $"--port=1234 --exptId=abcde-12345" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.ExperimentId)
+                .Returns($"abcde-12345");
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);
@@ -861,6 +883,35 @@ namespace VirtualClient
             // Match
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters2);
             Assert.AreEqual("--port=1234", parameters2["CommandLine"].ToString());
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTimeSpanAddAndSubtractFunctionReferencesInParameterSets_Scenario_1()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {   
+                { "Duration1" , "08:10:45" },
+                { "Duration2" , "1.01:15:50" },
+                { "TotalDuration1", "{calculate({Duration1} + 3.20:10:30 )}" },
+                { "TotalDuration2", "{calculate({Duration1} + {Duration2} )}" },
+                { "TotalDuration3", "{calculate(00:01:45 + {Duration2} )}" },
+                { "TotalDuration4", "{calculate({Duration1} - 3.20:10:30 )}" },
+                { "TotalDuration5", "{calculate({Duration2} - {Duration1} )}" },
+                { "TotalDuration6", "{calculate(10:01:45 - {Duration1} )}" },
+                { "TotalDuration7", "{calculate({Duration1} + 1.00:10:30 + {Duration2} - 00:00:10)}" }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("4.04:21:15", parameters["TotalDuration1"]);
+            Assert.AreEqual("1.09:26:35", parameters["TotalDuration2"]);
+            Assert.AreEqual("1.01:17:35", parameters["TotalDuration3"]);
+            Assert.AreEqual("00:00:00", parameters["TotalDuration4"]);
+            Assert.AreEqual("17:05:05", parameters["TotalDuration5"]);
+            Assert.AreEqual("01:51:00", parameters["TotalDuration6"]);
+            Assert.AreEqual("2.09:36:55", parameters["TotalDuration7"]);
         }
 
         [Test]
