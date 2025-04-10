@@ -5,7 +5,8 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(8-cores)=04:00:00,(16-cores)=06:00:00,(64-cores)=08:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24"
     },
     "Parameters": {
         "CompilerVersion": "",
@@ -62,7 +63,7 @@
             "Parameters": {
                 "Scenario": "InstallSPECcpuPackage",
                 "BlobContainer": "packages",
-                "BlobName": "speccpu.2017.1.1.8.zip",
+                "BlobName": "speccpu.2017.1.1.9-danielbowers.zip",
                 "PackageName": "speccpu2017",
                 "Extract": true
             }
