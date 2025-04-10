@@ -187,7 +187,6 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 string metricsFilePath = this.Combine(this.ExecutableDirectory, "test-metrics.json");
-                telemetryContext.AddContext(nameof(metricsFilePath), metricsFilePath);
                 bool metricsFileFound = false;
 
                 try
@@ -195,6 +194,7 @@ namespace VirtualClient.Actions
                     if (this.fileSystem.File.Exists(metricsFilePath))
                     {
                         metricsFileFound = true;
+                        telemetryContext.AddContext(nameof(metricsFilePath), metricsFilePath);
                         string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
 
                         JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Captures the workload logs based on LogFiles parameter of ScriptExecutor.
         /// All the files inmatching sub-folders and all the matching files along with metrics file will be moved to the 
-        /// central Virtual Client logs directory. If the cintent store (--cs) argument is used with Virtual Client, then
+        /// central Virtual Client logs directory. If the content store (--cs) argument is used with Virtual Client, then
         /// the captured logs will also be uploaded to blob content store.
         /// </summary>
         protected async Task CaptureLogsAsync(CancellationToken cancellationToken)
@@ -238,6 +238,11 @@ namespace VirtualClient.Actions
 
             foreach (string logPath in this.LogPaths.Split(";"))
             {
+                if (string.IsNullOrWhiteSpace(logPath))
+                {
+                    continue;
+                }
+
                 string fullLogPath = this.Combine(this.ExecutableDirectory, logPath);
 
                 // Check for Matching Sub-Directories 
@@ -289,6 +294,11 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task RequestUploadAndMoveToLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
         {
+            if (string.Equals(sourcePath, this.ExecutablePath))
+            {
+                return;
+            }
+
             if (this.TryGetContentStoreManager(out IBlobManager blobManager))
             {
                 await this.RequestUpload(sourcePath);
