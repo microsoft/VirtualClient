@@ -15,8 +15,8 @@ namespace VirtualClient.Common.Telemetry
     /// </summary>
     public static class EventContextExtensions
     {
-        private const string ErrorProperty = "error";
-        private const string ErrorCallstackProperty = "errorCallstack";
+        internal const string ErrorProperty = "error";
+        internal const string ErrorCallstackProperty = "errorCallstack";
         private const int MaxCallStackLength = 2000;
 
         /// <summary>

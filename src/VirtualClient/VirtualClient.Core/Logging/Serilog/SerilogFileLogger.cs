@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using System;
     using System.Collections;
@@ -12,6 +12,7 @@ namespace VirtualClient.Common.Telemetry
     using global::Serilog.Parsing;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>

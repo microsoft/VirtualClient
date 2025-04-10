@@ -5,15 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Net.Sockets;
-    using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -23,12 +17,9 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
-    using static VirtualClient.Actions.LatteExecutor2;
-    using static VirtualClient.Actions.NTttcpExecutor2;
 
     /// <summary>
     /// Executes the client side of SockPerf.

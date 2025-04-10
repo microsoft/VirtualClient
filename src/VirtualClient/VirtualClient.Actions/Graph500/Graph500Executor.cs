@@ -166,7 +166,7 @@ namespace VirtualClient.Actions
 
                     foreach (Metric result in metrics)
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "Graph500",
                             "Graph500",
                             process.StartTime,

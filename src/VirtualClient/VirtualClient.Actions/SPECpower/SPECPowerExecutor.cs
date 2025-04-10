@@ -230,7 +230,7 @@ namespace VirtualClient.Actions
                     }
 
                     // This is reported as a metric so SPEC Power shows up on the dashboard
-                    this.Logger.LogMetrics(
+                    this.Logger.LogMetric(
                         "SPECpower",
                         "MonitorProcess",
                         this.StartTime,

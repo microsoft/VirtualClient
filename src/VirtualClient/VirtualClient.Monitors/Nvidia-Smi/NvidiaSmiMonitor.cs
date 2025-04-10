@@ -189,7 +189,7 @@ namespace VirtualClient.Monitors
                                 {
                                     metric.Metadata.TryGetValue("gpu_index", out IConvertible index);
 
-                                    this.Logger.LogMetrics(
+                                    this.Logger.LogMetric(
                                         "nvidia-smi",
                                         "Nvidia GPU Status",
                                         process.StartTime,

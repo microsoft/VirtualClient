@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using Azure.Core;
 

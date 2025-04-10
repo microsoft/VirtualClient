@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using System;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Provides methods for creating <see cref="ILogger"/> instances that can

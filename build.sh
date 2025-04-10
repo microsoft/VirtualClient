@@ -4,24 +4,36 @@ EXIT_CODE=0
 BUILD_CONFIGURATION="Release"
 BUILD_FLAGS=""
 BUILD_VERSION=""
-SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE}"))"
+SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE[0]}"))"
+
+# Runtime build flags
+BUILD_LINUX_X64=false
+BUILD_LINUX_ARM64=false
+BUILD_WIN_X64=false
+BUILD_WIN_ARM64=false
+ANY_RUNTIME_SELECTED=false
 
 Usage() {
     echo ""
-    echo "Builds the source code in the repo. "
+    echo "Builds the source code in the repo."
     echo ""
     echo "Options:"
     echo "---------------------"
-    echo "--trim   - Enables trimming for publish output."
+    echo "--trim         Enables trimming for publish output."
+    echo "--linux-x64    Build only for linux-x64 runtime."
+    echo "--linux-arm64  Build only for linux-arm64 runtime."
+    echo "--win-x64      Build only for win-x64 runtime."
+    echo "--win-arm64    Build only for win-arm64 runtime."
     echo ""
     echo "Usage:"
     echo "---------------------"
-    echo "build.sh [--trim]"
+    echo "./build.sh [--trim] [--linux-x64] [--linux-arm64] [--win-x64] [--win-arm64]"
     echo ""
-    echo "Examples"
+    echo "Examples:"
     echo "---------------------"
-    echo "user@system:~/repo$ ./build.sh"
-    echo "user@system:~/repo$ ./build.sh --trim"
+    echo "./build.sh"
+    echo "./build.sh --win-x64 --trim"
+    echo "./build.sh --linux-arm64"
     echo ""
     Finish
 }
@@ -51,6 +63,22 @@ while [[ $# -gt 0 ]]; do
         "--trim")
             BUILD_FLAGS="-p:PublishTrimmed=true"
             ;;
+        "--linux-x64")
+            BUILD_LINUX_X64=true
+            ANY_RUNTIME_SELECTED=true
+            ;;
+        "--linux-arm64")
+            BUILD_LINUX_ARM64=true
+            ANY_RUNTIME_SELECTED=true
+            ;;
+        "--win-x64")
+            BUILD_WIN_X64=true
+            ANY_RUNTIME_SELECTED=true
+            ;;
+        "--win-arm64")
+            BUILD_WIN_ARM64=true
+            ANY_RUNTIME_SELECTED=true
+            ;;
         *)
             echo "Unknown option: $1"
             Usage
@@ -59,20 +87,25 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# The default build configuration is 'Release'.
-BUILD_CONFIGURATION="Release"
+# Set defaults if no runtime is explicitly selected
+if [[ "$ANY_RUNTIME_SELECTED" == false ]]; then
+    BUILD_LINUX_X64=true
+    BUILD_LINUX_ARM64=true
+    BUILD_WIN_X64=true
+    BUILD_WIN_ARM64=true
+fi
 
-# The default build configuration (e.g. Release) can be overridden 
-# by the 'VCBuildConfiguration' environment variable
-if [[ -v "VCBuildConfiguration" && -n "$VCBuildConfiguration" ]]; then
+# Build configuration override
+if [[ -n "$VCBuildConfiguration" ]]; then
     BUILD_CONFIGURATION=$VCBuildConfiguration
 fi
 
-# The default build version is defined in the repo VERSION file.
-BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+# Build version override
+if [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+    BUILD_VERSION=$(cat "$SCRIPT_DIR/VERSION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+fi
 
-# The default build version can be overridden by the 'VCBuildVersion' environment variable
-if [[ -v "VCBuildVersion" && -n "$VCBuildVersion" ]]; then
+if [[ -n "$VCBuildVersion" ]]; then
     BUILD_VERSION=$VCBuildVersion
 fi
 
@@ -84,60 +117,43 @@ echo "Configuration : $BUILD_CONFIGURATION"
 echo "Flags         : $BUILD_FLAGS"
 echo "**********************************************************************"
 
-
 echo ""
 echo "[Build Solution]"
 echo "----------------------------------------------------------------------"
 dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c $BUILD_CONFIGURATION \
--p:AssemblyVersion=$BUILD_VERSION
+-p:AssemblyVersion=$BUILD_VERSION || Error
 
-result=$?
-if [ $result -ne 0 ]; then
-    Error
+# Runtime-specific builds
+if [[ "$BUILD_LINUX_X64" == true ]]; then
+    echo ""
+    echo "[Build Virtual Client: linux-x64]"
+    echo "----------------------------------------------------------------------"
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION --self-contained \
+    -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $BUILD_FLAGS || Error
 fi
 
-echo ""
-echo "[Build Virtual Client: linux-x64]"
-echo "----------------------------------------------------------------------"
-dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
+if [[ "$BUILD_LINUX_ARM64" == true ]]; then
+    echo ""
+    echo "[Build Virtual Client: linux-arm64]"
+    echo "----------------------------------------------------------------------"
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION --self-contained \
+    -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $BUILD_FLAGS || Error
 fi
 
-echo ""
-echo "[Build Virtual Client: linux-arm64]"
-echo "----------------------------------------------------------------------"
-dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
+if [[ "$BUILD_WIN_X64" == true ]]; then
+    echo ""
+    echo "[Build Virtual Client: win-x64]"
+    echo "----------------------------------------------------------------------"
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION --self-contained \
+    -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS || Error
 fi
 
-echo ""
-echo "[Build Virtual Client: win-x64]"
-echo "----------------------------------------------------------------------"
-dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
-fi
-
-echo ""
-echo "[Build Virtual Client: win-arm64]"
-echo "----------------------------------------------------------------------"
-dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION --self-contained \
--p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
+if [[ "$BUILD_WIN_ARM64" == true ]]; then
+    echo ""
+    echo "[Build Virtual Client: win-arm64]"
+    echo "----------------------------------------------------------------------"
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION --self-contained \
+    -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS || Error
 fi
 
 End

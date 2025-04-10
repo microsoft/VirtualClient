@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Microsoft.Extensions.Logging;
     using NUnit.Framework;
 
     [TestFixture]
@@ -22,7 +23,8 @@ namespace VirtualClient.Contracts
                 {
                     List<Type> expectedTypes = new List<Type>
                     {
-                        typeof(VirtualClientComponent)
+                        typeof(VirtualClientComponent),
+                        typeof(ILoggerProvider)
                     };
 
                     ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
@@ -47,7 +49,8 @@ namespace VirtualClient.Contracts
                 {
                     List<Type> expectedTypes = new List<Type>
                     {
-                        typeof(VirtualClientComponent)
+                        typeof(VirtualClientComponent),
+                        typeof(ILoggerProvider)
                     };
 
                     ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);

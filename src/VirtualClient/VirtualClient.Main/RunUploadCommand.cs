@@ -13,6 +13,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
     using VirtualClient.Monitors;
 
     /// <summary>

@@ -489,7 +489,7 @@ namespace VirtualClient.Actions
 
             foreach (Metric result in metrics)
             {
-                this.Logger.LogMetrics(
+                this.Logger.LogMetric(
                     "HPLinpack",
                     $"{this.Scenario}_{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     startTime,
