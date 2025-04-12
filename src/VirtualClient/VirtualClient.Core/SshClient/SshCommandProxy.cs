@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common
+namespace VirtualClient.SshClient
 {
     using System;
     using System.Collections.Generic;
     using Renci.SshNet;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
 
     /// <summary>

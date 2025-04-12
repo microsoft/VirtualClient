@@ -1,35 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common
+namespace VirtualClient
 {
     using System.Diagnostics;
     using System.IO;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Provides methods for creating and managing processes on a Windows system.
+    /// Provides methods for creating and managing processes on a Linux/Unix system.
     /// </summary>
-    public class WindowsProcessManager : ProcessManager
+    public class UnixProcessManager : ProcessManager
     {
         /// <inheritdoc />
         public override IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null)
         {
             command.ThrowIfNullOrWhiteSpace(nameof(command));
 
-            return new ProcessProxy(new Process
+            Process process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = command,
                     Arguments = arguments,
-                    WorkingDirectory = workingDir ?? Path.GetDirectoryName(command),
+                    WorkingDirectory = workingDir ?? Path.GetDirectoryName(command).Replace('\\', '/'),
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,
                     RedirectStandardOutput = true
                 }
-            });
+            };
+
+            return new ProcessProxy(process);
         }
     }
 }

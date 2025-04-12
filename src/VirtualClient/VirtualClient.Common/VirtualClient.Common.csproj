@@ -7,9 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)"/>
-        <PackageReference Include="System.Private.Uri" Version="$(System_Private_Uri_PackageVersion)"/>
-        <PackageReference Include="System.Text.RegularExpressions" Version="$(System_Text_RegularExpressions_PackageVersion)"/>
+        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
+        <PackageReference Include="System.Private.Uri" Version="$(System_Private_Uri_PackageVersion)" />
+        <PackageReference Include="System.Text.RegularExpressions" Version="$(System_Text_RegularExpressions_PackageVersion)" />
         <PackageReference Include="Azure.Messaging.EventHubs" Version="$(Azure_Messaging_EventHubs_PackageVersion)" />
         <PackageReference Include="Azure.Storage.Blobs" Version="$(Azure_Storage_Blobs_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="$(Microsoft_Extensions_Configuration_PackageVersion)" />

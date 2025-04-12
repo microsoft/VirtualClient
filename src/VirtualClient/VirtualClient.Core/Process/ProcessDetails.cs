@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace VirtualClient.Common
+namespace VirtualClient
 {
     /// <summary>
     /// Process details.

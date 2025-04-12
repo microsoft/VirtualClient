@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -10,6 +10,7 @@ namespace VirtualClient.Common
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
 
     /// <summary>

@@ -86,28 +86,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Kills the process if it is still running and handles any errors that
-        /// can occurs if the process has gone out of scope.
-        /// </summary>
-        /// <param name="process">The process to kill.</param>
-        /// <param name="logger">The logger to use to write trace information.</param>
-        public static void SafeKill(this IProcessProxy process, ILogger logger = null)
-        {
-            if (process != null)
-            {
-                try
-                {
-                    process.Kill();
-                }
-                catch (Exception exc)
-                {
-                    // Best effort here.
-                    logger?.LogTraceMessage($"Kill Process Failure. Error = {exc.Message}");
-                }
-            }
-        }
-
-        /// <summary>
         /// Kills the associated process and it's child/dependent processes if it is still running and 
         /// handles any errors that can occurs if the process has gone out of scope.
         /// </summary>

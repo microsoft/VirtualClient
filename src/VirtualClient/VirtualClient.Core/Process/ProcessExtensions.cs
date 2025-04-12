@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common
+namespace VirtualClient
 {
     using System;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -31,7 +32,8 @@ namespace VirtualClient.Common
         /// can occurs if the process has gone out of scope.
         /// </summary>
         /// <param name="process">The process to kill.</param>
-        public static void SafeKill(this IProcessProxy process)
+        /// <param name="logger">The logger to use to write trace information.</param>
+        public static void SafeKill(this IProcessProxy process, ILogger logger = null)
         {
             if (process != null)
             {
@@ -64,6 +66,7 @@ namespace VirtualClient.Common
 
                     // Best effort here.
                     Console.WriteLine($"Process Cleanup Error: ID={processId}, Name={processName}, Error={exc.Message}");
+                    logger?.LogTraceMessage($"Process Cleanup Error: ID={processId}, Name={processName}, Error={exc.Message}");
                 }
             }
         }

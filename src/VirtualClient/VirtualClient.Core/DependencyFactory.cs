@@ -24,6 +24,7 @@ namespace VirtualClient
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Logging;
     using VirtualClient.Proxy;
+    using VirtualClient.SshClient;
 
     /// <summary>
     /// Factory for creating workload runtime dependencies.
