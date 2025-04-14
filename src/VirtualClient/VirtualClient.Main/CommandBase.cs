@@ -641,7 +641,7 @@ namespace VirtualClient
         protected IList<ILoggerProvider> CreateLoggerProviders(IConfiguration configuration, PlatformSpecifics platformSpecifics, string source = null)
         {
             List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
-            this.loggerDefinitions = this.Loggers.ToList();
+            this.loggerDefinitions = this.Loggers?.ToList() ?? new List<string>();
 
             // Add default console and file logging
             if (!this.loggerDefinitions.Any(l => l.Equals("console", StringComparison.OrdinalIgnoreCase) || l.StartsWith("console=", StringComparison.OrdinalIgnoreCase)))
