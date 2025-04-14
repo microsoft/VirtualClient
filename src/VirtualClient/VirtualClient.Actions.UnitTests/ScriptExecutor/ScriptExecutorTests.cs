@@ -37,14 +37,22 @@ namespace VirtualClient.Actions
 
             this.exampleResults = File.ReadAllText(Path.Combine(ScriptExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.mockFixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.FileSystem.Setup(fe => fe.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.exampleResults);
 
-            this.mockFixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+            this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns(this.mockPackage.Path);
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetFileNameWithoutExtension(It.IsAny<string>()))
+                .Returns("genericScript");
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File)
                 .Returns(this.mockFixture.File.Object);
@@ -65,7 +73,7 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Win32NT)]
         [TestCase(PlatformID.Unix)]
-        public void ScriptExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
+        public void ScriptExecutorThrowsOnInitializationWhenPackageNameIsProvidedButTheWorkloadPackageIsNotFound(PlatformID platform)
         {
             this.SetupTest(platform);
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
@@ -76,6 +84,44 @@ namespace VirtualClient.Actions
                     () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
 
                 Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public void ScriptExecutorThrowsOnInitializationWhenPackageNameIsNotProvidedAndScriptPathIsNotRooted(PlatformID platform)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters["ScriptPath"] = "script.ps1";
+            this.mockFixture.Parameters["PackageName"] = string.Empty;
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                DependencyException exception = Assert.ThrowsAsync<DependencyException>(
+                    () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+                Assert.IsTrue(exception.Message.StartsWith($"Either {nameof(executor.PackageName)} should be provided or the {nameof(executor.ScriptPath)} should be a full path with a rooted value."));
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public void ScriptExecutorThrowsOnInitializationWhenNoFileExistsAtExecutablePath(PlatformID platform)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
+                .Returns(false);
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                DependencyException exception = Assert.ThrowsAsync<DependencyException>(
+                    () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+                Assert.IsTrue(exception.Message.StartsWith($"The expected workload script was not found at '{executor.ExecutablePath}'"));
             }
         }
 
@@ -110,6 +156,9 @@ namespace VirtualClient.Actions
                         OnHasExited = () => true
                     };
                 };
+
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
 
                 await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
@@ -213,6 +262,11 @@ namespace VirtualClient.Actions
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
                 return base.InitializeAsync(telemetryContext, cancellationToken);
+            }
+
+            public new Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+            {
+                return base.ExecuteAsync(telemetryContext, cancellationToken);
             }
         }
     }
