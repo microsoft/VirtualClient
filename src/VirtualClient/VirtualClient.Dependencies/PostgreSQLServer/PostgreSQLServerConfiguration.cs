@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Security.Cryptography;
@@ -79,6 +80,17 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Directory for the PostgreSQL database within the disk.
+        /// </summary>
+        public string DataDirectory
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DataDirectory), string.Empty);
+            }
+        }
+
+        /// <summary>
         /// Database Name to create and utilize
         /// </summary>
         public string DatabaseName
@@ -108,8 +120,15 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
-                return Convert.ToBase64String(hashBytes);
+                if (this.Parameters.ContainsKey(nameof(this.SuperUserPassword)))
+                {
+                    return this.Parameters.GetValue<string>(nameof(this.SuperUserPassword));
+                }
+                else
+                {
+                    byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                    return Convert.ToBase64String(hashBytes);
+                }
             }
         }
 
@@ -267,7 +286,18 @@ namespace VirtualClient.Dependencies
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)};";
+                    string path = disk.GetPreferredAccessPath(this.Platform);
+
+                    if (!string.IsNullOrEmpty(this.DataDirectory))
+                    {
+                        path = Path.Join(path, this.DataDirectory);
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                    }
+
+                    diskPaths += $"{path};";
                 }
             }
 
