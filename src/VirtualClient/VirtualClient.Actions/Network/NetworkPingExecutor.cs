@@ -181,7 +181,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (responseTimes.Any())
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -200,7 +200,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (networkConnections.Any())
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -219,7 +219,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (networkBlips.Any())
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -233,7 +233,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             telemetryContext,
                             MetricRelativity.LowerIsBetter);
 
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -249,7 +249,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                         foreach (NetworkBlip blip in networkBlips)
                         {
-                            this.Logger.LogMetrics(
+                            this.Logger.LogMetric(
                                 "NetworkPing",
                                 "Network Ping",
                                 startTime,

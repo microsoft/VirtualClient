@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using System;
     using System.Collections;
@@ -13,6 +13,7 @@ namespace VirtualClient.Common.Telemetry
     using global::Azure.Messaging.EventHubs;
     using global::Azure.Messaging.EventHubs.Producer;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Buffers <see cref="EventData"/> items for efficient batched transmission.
@@ -371,13 +372,23 @@ namespace VirtualClient.Common.Telemetry
 
         private Task StartEventTransmissionBackgroundTask()
         {
-            return Task.Factory.StartNew(this.TransmitEventsInTheBackground, this.cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
-                .ContinueWith(
-                    task =>
-                    {
-                        string msg = $"{typeof(EventHubTelemetryChannel)}: Unhandled exception in transmission channel: {task.Exception.Message}";
-                    },
-                    TaskContinuationOptions.OnlyOnFaulted);
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Factory.StartNew(this.TransmitEventsInTheBackground, this.cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+                        .ContinueWith(
+                            task =>
+                            {
+                                string msg = $"{typeof(EventHubTelemetryChannel)}: Unhandled exception in transmission channel: {task.Exception.Message}";
+                            },
+                            TaskContinuationOptions.OnlyOnFaulted);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when a Cancellation is requested.
+                }
+            });
         }
 
         private void TransmitEventsInTheBackground()

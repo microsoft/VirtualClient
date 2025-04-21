@@ -16,6 +16,7 @@ namespace VirtualClient
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// This is the main class that will take an execution profile and execute it

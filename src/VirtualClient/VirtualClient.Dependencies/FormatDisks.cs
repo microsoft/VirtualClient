@@ -11,9 +11,9 @@ namespace VirtualClient.Dependencies
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// An abstract virtual client action that formats the disks before execution

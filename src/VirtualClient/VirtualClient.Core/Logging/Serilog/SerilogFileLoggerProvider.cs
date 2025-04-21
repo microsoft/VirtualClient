@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common.Telemetry
+namespace VirtualClient.Logging
 {
     using System;
+    using System.Collections.Generic;
     using global::Serilog;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
@@ -14,10 +16,12 @@ namespace VirtualClient.Common.Telemetry
     /// be used to log events/messages to a local file.
     /// </summary>
     [LoggerSpecialization(Name = SpecializationConstant.StructuredLogging)]
-    public sealed class SerilogFileLoggerProvider : ILoggerProvider
+    public sealed class SerilogFileLoggerProvider : ILoggerProvider, IDisposable
     {
         private LoggerConfiguration configuration;
         private LogLevel minumumLogLevel;
+        private IList<IDisposable> disposables;
+        private bool disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerilogFileLoggerProvider"/> class.
@@ -32,6 +36,7 @@ namespace VirtualClient.Common.Telemetry
             configuration.ThrowIfNull(nameof(configuration));
             this.configuration = configuration;
             this.minumumLogLevel = level;
+            this.disposables = new List<IDisposable>();
         }
 
         /// <summary>
@@ -45,7 +50,9 @@ namespace VirtualClient.Common.Telemetry
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            return new SerilogFileLogger(this.configuration, this.minumumLogLevel);
+            Serilog.Core.Logger logger = this.configuration.CreateLogger();
+            this.disposables.Add(logger);
+            return new SerilogFileLogger(logger, this.minumumLogLevel);
         }
 
         /// <summary>
@@ -53,7 +60,34 @@ namespace VirtualClient.Common.Telemetry
         /// </summary>
         public void Dispose()
         {
+            this.Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes of resources used by the instance.
+        /// </summary>
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (!this.disposed)
+                {
+                    foreach (IDisposable disposable in this.disposables)
+                    {
+                        try
+                        {
+                            disposable.Dispose();
+                        }
+                        catch
+                        {
+                            // Best effort
+                        }
+                    }
+
+                    this.disposed = true;
+                }
+            }
         }
     }
 }

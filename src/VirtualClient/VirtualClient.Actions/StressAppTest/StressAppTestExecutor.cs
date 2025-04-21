@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
                 {
                     telemetryContext.AddContext("testRunResult", metric.Tags[0] ?? string.Empty);
 
-                    this.Logger.LogMetrics(
+                    this.Logger.LogMetric(
                         toolName: "StressAppTest",
                         scenarioName: this.Scenario,
                         process.StartTime,

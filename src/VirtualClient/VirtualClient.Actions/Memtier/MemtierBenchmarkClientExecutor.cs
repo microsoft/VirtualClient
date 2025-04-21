@@ -7,7 +7,6 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
-    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -365,7 +364,7 @@ namespace VirtualClient.Actions
 
                             foreach (Metric metric in metrics)
                             {
-                                this.Logger.LogMetrics(
+                                this.Logger.LogMetric(
                                     $"Memtier-{this.Benchmark}",
                                     this.MetricScenario ?? this.Scenario,
                                     processInfo.StartTime,
@@ -391,7 +390,7 @@ namespace VirtualClient.Actions
 
                         foreach (Metric metric in aggregateMetrics)
                         {
-                            this.Logger.LogMetrics(
+                            this.Logger.LogMetric(
                                 $"Memtier-{this.Benchmark}",
                                 this.MetricScenario ?? this.Scenario,
                                 processReference.StartTime,

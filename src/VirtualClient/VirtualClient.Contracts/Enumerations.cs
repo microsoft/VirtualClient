@@ -597,7 +597,12 @@ namespace VirtualClient
         /// <summary>
         /// Test metrics/results data.
         /// </summary>
-        Metrics = 105,
+        Metric = 105,
+
+        /// <summary>
+        /// Collection of metrics.
+        /// </summary>
+        MetricsCollection = 106,
     }
 
     /// <summary>
