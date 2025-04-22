@@ -53,6 +53,34 @@ namespace VirtualClient.Actions
             this.fixture.FileSystem.Setup(fe => fe.Path.GetFileNameWithoutExtension(It.IsAny<string>()))
                 .Returns("genericScript");
 
+            this.fixture.FileSystem.Setup(fe => fe.Path.Combine(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns((string path1, string path2) =>
+                {
+                    string combinedPath = Path.Combine(path1, path2);
+                    return this.fixture.Platform == PlatformID.Unix
+                        ? combinedPath.Replace('\\', '/') // Convert to Unix-style path
+                        : combinedPath;
+                });
+
+            this.fixture.FileSystem.Setup(fe => fe.Path.GetFullPath(It.IsAny<string>()))
+                .Returns((string path1) =>
+                {
+                    string fullPath = Path.GetFullPath(path1);
+
+                    // If the platform is Unix, convert to Unix-style path and remove the drive letter dynamically
+                    if (this.fixture.Platform == PlatformID.Unix)
+                    {
+                        fullPath = fullPath.Replace('\\', '/'); // Convert to Unix-style path
+                        int colonIndex = fullPath.IndexOf(':');
+                        if (colonIndex != -1)
+                        {
+                            fullPath = fullPath.Substring(colonIndex + 1); // Remove the drive letter and colon
+                        }
+                    }
+
+                    return fullPath;
+                });
+
             this.fixture.FileSystem.SetupGet(fs => fs.File)
                 .Returns(this.fixture.File.Object);
 

@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -26,7 +25,6 @@ namespace VirtualClient.Actions
     public class ScriptExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
-        private IPackageManager packageManager;
         private ISystemManagement systemManagement;
 
         /// <summary>
@@ -38,7 +36,6 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
-            this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
         }
 
@@ -54,7 +51,8 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The relative Script Path to be used to initiate the script
+        /// The Script Path can be an absolute Path, or be relative to the Virtual Client Executable 
+        /// or be relative to platformspecific package if the script is downloaded using DependencyPackageInstallation.
         /// </summary>
         public string ScriptPath
         {
@@ -117,8 +115,7 @@ namespace VirtualClient.Actions
             if (!string.IsNullOrWhiteSpace(this.PackageName))
             {
                 DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-
-                this.ExecutablePath = this.Combine(workloadPackage.Path, this.ScriptPath);
+                this.ExecutablePath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(workloadPackage.Path, this.ScriptPath));
             }
             else if (this.fileSystem.Path.IsPathRooted(this.ScriptPath))
             {
@@ -126,10 +123,7 @@ namespace VirtualClient.Actions
             }
             else
             {
-                throw new DependencyException(
-                    $"Either {nameof(this.PackageName)} should be provided or the {nameof(this.ScriptPath)} should be a full path with a rooted value. " +
-                    $"The provided values for {nameof(this.PackageName)} is '{this.PackageName}', while provided value for {nameof(this.ScriptPath)} is {this.ScriptPath}.",
-                    ErrorReason.WorkloadDependencyMissing);
+                this.ExecutablePath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(this.PlatformSpecifics.CurrentDirectory, this.ScriptPath));
             }
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
@@ -243,7 +237,7 @@ namespace VirtualClient.Actions
                     continue;
                 }
 
-                string fullLogPath = this.Combine(this.ExecutableDirectory, logPath);
+                string fullLogPath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(this.ExecutableDirectory, logPath));
 
                 // Check for Matching Sub-Directories 
                 if (this.fileSystem.Directory.Exists(fullLogPath))
