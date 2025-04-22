@@ -95,8 +95,7 @@ namespace VirtualClient.Contracts
                 }
                 catch (Exception ex)
                 {
-                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} Component = {component.TypeName} encountered an error: {ex.Message}", LogLevel.Error, telemetryContext);
-                    break;
+                    throw new WorkloadException($"{component.TypeName} task execution failed.", ex, ErrorReason.WorkloadFailed);
                 }
             }
         }
