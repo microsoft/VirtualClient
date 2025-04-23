@@ -74,27 +74,28 @@ namespace VirtualClient.Contracts
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (!string.IsNullOrWhiteSpace(component.Scenario))
+                try
                 {
-                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} Component = {component.TypeName} (scenario={component.Scenario})", LogLevel.Information, telemetryContext);
-                }
-                else
-                {
-                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} Component = {component.TypeName}", LogLevel.Information, telemetryContext);
-                }
+                    string scenarioMessage = string.IsNullOrWhiteSpace(component.Scenario)
+                    ? $"{nameof(ParallelLoopExecution)} Component = {component.TypeName}"
+                    : $"{nameof(ParallelLoopExecution)} Component = {component.TypeName} (scenario={component.Scenario})";
 
-                // Create a task to execute the component, respecting the timeout.
-                Task componentExecutionTask = component.ExecuteAsync(cancellationToken);
+                    this.Logger.LogMessage(scenarioMessage, LogLevel.Information, telemetryContext);
 
-                // Wait for the task to complete or timeout, also determining which task completed.
-                if (await Task.WhenAny(componentExecutionTask, this.timeoutTask) == componentExecutionTask)
-                {
-                    // The component has finished execution, restart the loop.
-                    continue;
+                    // Execute the component task with timeout handling.
+                    Task componentExecutionTask = component.ExecuteAsync(cancellationToken);
+                    Task completedTask = await Task.WhenAny(componentExecutionTask, this.timeoutTask);
+
+                    if (completedTask == this.timeoutTask)
+                    {
+                        break;
+                    }
+
+                    await componentExecutionTask;
                 }
-                else
+                catch (Exception ex)
                 {
-                    break;
+                    throw new WorkloadException($"{component.TypeName} task execution failed.", ex, ErrorReason.WorkloadFailed);
                 }
             }
         }
