@@ -374,7 +374,7 @@ namespace VirtualClient.Actions
                     case "24.10":
                         await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_24.10_gcc/lib/libarmpl.a", cancellationToken);
-                        break; ;\
+                        break;
                     case "25.04.1":
                         await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_25.04.1_gcc/lib/libarmpl.a", cancellationToken);
