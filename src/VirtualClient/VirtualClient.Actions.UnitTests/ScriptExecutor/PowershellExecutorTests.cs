@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
-            this.exampleResults = File.ReadAllText(this.fixture.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+            this.exampleResults = File.ReadAllText(Path.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
