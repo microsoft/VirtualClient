@@ -23,6 +23,7 @@ namespace VirtualClient
         // {fn(512 / 16)]}
         // {fn(512 / {LogicalThreadCount})}
         private static readonly Regex CalculateExpression = new Regex(
+<<<<<<< HEAD
             @"\{calculate\(([0-9L\*\/\+\-\(\)\s]+)\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -35,6 +36,10 @@ namespace VirtualClient
         private static readonly Regex CalculateTimeSpan = new Regex(
             @"\{calculate\(\s*((?:\d{1,2}(?:\.\d{2})?:\d{2}:\d{2}\s*[\+\-]\s*)*\d{1,2}(?:\.\d{2})?:\d{2}:\d{2})\s*\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+=======
+    @"\{calculate\(([0-9L\*\/\+\-\(\)\s]+)\)\}",
+    RegexOptions.Compiled | RegexOptions.IgnoreCase);
+>>>>>>> 5b921c50c (changes for other PR)
 
         // e.g.
         // {calculate({IsTLSEnabled} ? "Yes" : "No")}
@@ -110,12 +115,6 @@ namespace VirtualClient
         // {Duration.TotalSeconds}
         private static readonly Regex TimeSpanExpression = new Regex(
             @"\{([a-z0-9_-]+)\.(TotalDays|TotalHours|TotalMilliseconds|TotalMinutes|TotalSeconds)\}",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        // e.g.
-        // {ExperimentId}
-        private static readonly Regex ExperimentIdExpression = new Regex(
-            @"\{ExperimentId\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -260,32 +259,6 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
-            }),
-            // Expression: {ExperimentId}
-            // Resolves to the runtime value of ExperimentId.
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ExperimentIdExpression.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-                    ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
-                    string experimentId = systemInfo.ExperimentId;
-
-                    foreach (Match match in matches)
-                    {
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, experimentId);
-                    }
-                }
-
-                return Task.FromResult(new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                });
             }),
             // e.g.
             // {Duration.TotalDays}
@@ -461,58 +434,6 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
-            }),
-            // Expression: {calculate(1.00:00:00 + 00:00:10)}
-            //
-            // **IMPORTANT**
-            // This expression evaluation MUST come last after ALL other expression evaluators, before numerical arithmentic calculations.
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.CalculateTimeSpan.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-                    foreach (Match match in matches)
-                    {
-                        TimeSpan result = TimeSpan.Zero;
-
-                        string function = match.Groups[0].Value;
-
-                        // Pattern to extract tokens: timespans and operators
-                        var timespanExtractionPattern = new Regex(@"(\d+\.\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}|[\+\-])");
-                        var timespanMatches = timespanExtractionPattern.Matches(function);
-
-                        if (timespanMatches.Count > 0)
-                        {
-                            // Parse and evaluate
-                            result = TimeSpan.Parse(timespanMatches[0].Value);
-                            for (int i = 1; i < timespanMatches.Count - 1; i += 2)
-                            {
-                                string op = timespanMatches[i].Value;
-                                TimeSpan next = TimeSpan.Parse(timespanMatches[i + 1].Value);
-
-                                result = op == "+" ? result + next : result - next;
-                            
-                                // Clamp to zero if it goes negative
-                                if (result < TimeSpan.Zero)
-                                {
-                                    result = TimeSpan.Zero;
-                                }
-                            }
-                        }
-
-                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-                    }
-                }
-
-                return Task.FromResult(new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                });
             }),
             // Expression: {calculate(512 * 4)}
             // Expression: {calculate(512 / (4 / 2))}

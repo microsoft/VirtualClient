@@ -554,7 +554,7 @@ namespace VirtualClient
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
-                { 
+                {
                     "{LogicalCoreCount}",
                     expectedLogicalCores.ToString()
                 },
@@ -693,28 +693,6 @@ namespace VirtualClient
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
-
-            foreach (var entry in expressions)
-            {
-                string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
-                Assert.AreEqual(expectedExpression, actualExpression);
-            }
-        }
-
-        [Test]
-        public async Task ProfileExpressionEvaluatorSupportsExperimentIdReferences()
-        {
-            this.SetupDefaults(PlatformID.Win32NT);
-
-            Dictionary<string, string> expressions = new Dictionary<string, string>
-            {
-                { "{ExperimentId}", "abcde-12345" },
-                { "--port=1234 --exptId={ExperimentId}", $"--port=1234 --exptId=abcde-12345" }
-            };
-
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.ExperimentId)
-                .Returns($"abcde-12345");
 
             foreach (var entry in expressions)
             {
@@ -886,6 +864,7 @@ namespace VirtualClient
         }
 
         [Test]
+<<<<<<< HEAD
         public async Task ProfileExpressionEvaluatorSupportsTimeSpanAddAndSubtractFunctionReferencesInParameterSets_Scenario_1()
         {
             this.SetupDefaults(PlatformID.Win32NT);
@@ -915,6 +894,8 @@ namespace VirtualClient
         }
 
         [Test]
+=======
+>>>>>>> 5b921c50c (changes for other PR)
         public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_1()
         {
             this.SetupDefaults(PlatformID.Win32NT);
