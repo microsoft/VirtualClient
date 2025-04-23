@@ -7,6 +7,8 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Abstractions;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -59,10 +61,20 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        // Handle Windows-style paths explicitly
-                        filePath = filePath.Replace('/', '\\'); // Normalize to Windows-style path
-                        int lastBackslashIndex = filePath.LastIndexOf('\\');
-                        return lastBackslashIndex > 1 ? filePath.Substring(0, lastBackslashIndex) : null;
+                        string winPath = filePath.Replace('/', '\\');
+                        string drive = winPath.Length >= 2 && winPath[1] == ':' ? winPath.Substring(0, 2) : "";
+                        string[] segments = winPath.Substring(drive.Length)
+                                                 .Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var pathParts = new Stack<string>();
+                        foreach (var segment in segments)
+                        {
+                            if (segment == ".." && pathParts.Count > 0) pathParts.Pop();
+                            else if (segment != "." && segment != "..") pathParts.Push(segment);
+                        }
+
+                        var resolved = string.Join("\\", pathParts.Reverse());
+                        return string.IsNullOrEmpty(drive) ? resolved : $"{drive}\\{resolved}";
                     }
                 });
 

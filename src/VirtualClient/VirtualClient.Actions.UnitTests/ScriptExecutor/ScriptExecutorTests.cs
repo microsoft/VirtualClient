@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -105,9 +106,20 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        // Simulate Windows-style behavior
-                        string fullPath = Path.GetFullPath(path1).Replace('/', '\\'); // Normalize to Windows-style path
-                        return fullPath;
+                        string winPath = path1.Replace('/', '\\');
+                        string drive = winPath.Length >= 2 && winPath[1] == ':' ? winPath.Substring(0, 2) : "";
+                        string[] segments = winPath.Substring(drive.Length)
+                                                 .Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var pathParts = new Stack<string>();
+                        foreach (var segment in segments)
+                        {
+                            if (segment == ".." && pathParts.Count > 0) pathParts.Pop();
+                            else if (segment != "." && segment != "..") pathParts.Push(segment);
+                        }
+
+                        var resolved = string.Join("\\", pathParts.Reverse());
+                        return string.IsNullOrEmpty(drive) ? resolved : $"{drive}\\{resolved}";
                     }
                 });
 
