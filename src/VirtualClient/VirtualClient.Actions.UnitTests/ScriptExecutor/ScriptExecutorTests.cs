@@ -51,20 +51,7 @@ namespace VirtualClient.Actions
             this.mockFixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
                 .Returns((string filePath) =>
                 {
-                    if (this.mockFixture.Platform == PlatformID.Unix)
-                    {
-                        // Handle Unix-style paths explicitly
-                        filePath = filePath.Replace('\\', '/'); // Normalize to Unix-style path
-                        int lastSlashIndex = filePath.LastIndexOf('/');
-                        return lastSlashIndex > 0 ? filePath.Substring(0, lastSlashIndex) : null;
-                    }
-                    else
-                    {
-                        // Handle Windows-style paths explicitly
-                        filePath = filePath.Replace('/', '\\'); // Normalize to Windows-style path
-                        int lastBackslashIndex = filePath.LastIndexOf('\\');
-                        return lastBackslashIndex > 1 ? filePath.Substring(0, lastBackslashIndex) : null;
-                    }
+                    return Path.GetDirectoryName(filePath);
                 });
 
             this.mockFixture.FileSystem.Setup(fe => fe.Path.GetFileNameWithoutExtension(It.IsAny<string>()))
@@ -73,42 +60,29 @@ namespace VirtualClient.Actions
             this.mockFixture.FileSystem.Setup(fe => fe.Path.Combine(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns((string path1, string path2) =>
                 {
-                    if (this.mockFixture.Platform == PlatformID.Unix)
-                    {
-                        // Normalize to Unix-style path
-                        path1 = path1.Replace('\\', '/').TrimEnd('/');
-                        path2 = path2.Replace('\\', '/').TrimStart('/');
-                        return $"{path1}/{path2}";
-                    }
-                    else
-                    {
-                        // Normalize to Windows-style path
-                        path1 = path1.Replace('/', '\\').TrimEnd('\\');
-                        path2 = path2.Replace('/', '\\').TrimStart('\\');
-                        return $"{path1}\\{path2}";
-                    }
+                    string combinedPath = Path.Combine(path1, path2);
+                    return this.mockFixture.Platform == PlatformID.Unix
+                        ? combinedPath.Replace('\\', '/') // Convert to Unix-style path
+                        : combinedPath;
                 });
 
             this.mockFixture.FileSystem.Setup(fe => fe.Path.GetFullPath(It.IsAny<string>()))
                 .Returns((string path1) =>
                 {
+                    string fullPath = Path.GetFullPath(path1);
+                
+                    // If the platform is Unix, convert to Unix-style path and remove the drive letter dynamically
                     if (this.mockFixture.Platform == PlatformID.Unix)
                     {
-                        // Simulate Unix-style behavior
-                        string fullPath = Path.GetFullPath(path1).Replace('\\', '/'); // Normalize to Unix-style path
+                        fullPath = fullPath.Replace('\\', '/'); // Convert to Unix-style path
                         int colonIndex = fullPath.IndexOf(':');
                         if (colonIndex != -1)
                         {
                             fullPath = fullPath.Substring(colonIndex + 1); // Remove the drive letter and colon
                         }
-                        return fullPath;
                     }
-                    else
-                    {
-                        // Simulate Windows-style behavior
-                        string fullPath = Path.GetFullPath(path1).Replace('/', '\\'); // Normalize to Windows-style path
-                        return fullPath;
-                    }
+
+                    return fullPath;
                 });
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File)
