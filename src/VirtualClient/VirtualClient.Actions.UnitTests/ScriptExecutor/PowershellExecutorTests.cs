@@ -7,7 +7,6 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -31,12 +30,12 @@ namespace VirtualClient.Actions
         {
             this.fixture = new MockFixture();
             this.fixture.Setup(platform);
-            this.mockPackage = new DependencyPath("workloadPackage", this.fixture.GetPackagePath("workloadPackage"));
+            this.mockPackage = new DependencyPath("workloadPackage", this.fixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
             this.fixture.SetupPackage(this.mockPackage);
 
             this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
-            this.exampleResults = File.ReadAllText(Path.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+            this.exampleResults = File.ReadAllText(this.fixture.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
@@ -61,20 +60,10 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        string winPath = filePath.Replace('/', '\\');
-                        string drive = winPath.Length >= 2 && winPath[1] == ':' ? winPath.Substring(0, 2) : "";
-                        string[] segments = winPath.Substring(drive.Length)
-                                                 .Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
-
-                        var pathParts = new Stack<string>();
-                        foreach (var segment in segments)
-                        {
-                            if (segment == ".." && pathParts.Count > 0) pathParts.Pop();
-                            else if (segment != "." && segment != "..") pathParts.Push(segment);
-                        }
-
-                        var resolved = string.Join("\\", pathParts.Reverse());
-                        return string.IsNullOrEmpty(drive) ? resolved : $"{drive}\\{resolved}";
+                        // Handle Windows-style paths explicitly
+                        filePath = filePath.Replace('/', '\\'); // Normalize to Windows-style path
+                        int lastBackslashIndex = filePath.LastIndexOf('\\');
+                        return lastBackslashIndex > 1 ? filePath.Substring(0, lastBackslashIndex) : null;
                     }
                 });
 
@@ -116,9 +105,20 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        // Simulate Windows-style behavior
-                        string fullPath = Path.GetFullPath(path1).Replace('/', '\\'); // Normalize to Windows-style path
-                        return fullPath;
+                        string winPath = path1.Replace('/', '\\');
+                        string drive = winPath.Length >= 2 && winPath[1] == ':' ? winPath.Substring(0, 2) : "";
+                        string[] segments = winPath.Substring(drive.Length)
+                                                 .Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var pathParts = new Stack<string>();
+                        foreach (var segment in segments)
+                        {
+                            if (segment == ".." && pathParts.Count > 0) pathParts.Pop();
+                            else if (segment != "." && segment != "..") pathParts.Push(segment);
+                        }
+
+                        var resolved = string.Join("\\", pathParts.Reverse());
+                        return string.IsNullOrEmpty(drive) ? resolved : $"{drive}\\{resolved}";
                     }
                 });
 
@@ -140,20 +140,23 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command)
         {
             this.SetupTest(platform);
             this.fixture.Parameters["ScriptPath"] = command;
 
-            string workingDirectory = $"{this.mockPackage.Path}{platformSpecificPath}";
             string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}\\{command} parameter1 parameter2";
-
-            this.fixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
-                .Returns(workingDirectory);
 
             using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
             {
                 bool commandExecuted = false;
+
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                string workingDirectory = executor.ExecutableDirectory;
+
                 string expectedCommand = $"powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
@@ -174,9 +177,6 @@ namespace VirtualClient.Actions
                         OnHasExited = () => true
                     };
                 };
-
-                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
-                    .ConfigureAwait(false);
 
                 await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);

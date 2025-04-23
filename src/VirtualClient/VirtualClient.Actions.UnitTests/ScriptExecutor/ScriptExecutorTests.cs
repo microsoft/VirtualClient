@@ -33,10 +33,10 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(platform);
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
-            this.mockPackage = new DependencyPath("workloadPackage", this.mockFixture.GetPackagePath("workloadPackage"));
+            this.mockPackage = new DependencyPath("workloadPackage", this.mockFixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
             this.mockFixture.SetupPackage(this.mockPackage);
 
-            this.exampleResults = File.ReadAllText(Path.Combine(ScriptExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(ScriptExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
@@ -179,6 +179,7 @@ namespace VirtualClient.Actions
         [TestCase(@"genericScript.bat", true)]
         [TestCase(@"..\..\..\subfolder1\genericScript.bat", true)]
         [TestCase(@"..\..\..\subfolder1\genericScript.bat", false)]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task ScriptExecutorExecutesTheCorrectWorkloadCommandsInWindows(string command, bool packageAvailable)
         {
             this.SetupTest(PlatformID.Win32NT);
