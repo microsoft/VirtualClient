@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -35,14 +36,90 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
-            this.mockFixture.File.Reset();
-            this.mockFixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.mockFixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.FileSystem.Setup(fe => fe.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.exampleResults);
 
-            this.mockFixture.File.Setup(fe => fe.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+            this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns((string filePath) =>
+                {
+                    if (this.mockFixture.Platform == PlatformID.Unix)
+                    {
+                        // Handle Unix-style paths explicitly
+                        filePath = filePath.Replace('\\', '/'); // Normalize to Unix-style path
+                        int lastSlashIndex = filePath.LastIndexOf('/');
+                        return lastSlashIndex > 0 ? filePath.Substring(0, lastSlashIndex) : null;
+                    }
+                    else
+                    {
+                        // Handle Windows-style paths explicitly
+                        filePath = filePath.Replace('/', '\\'); // Normalize to Windows-style path
+                        int lastBackslashIndex = filePath.LastIndexOf('\\');
+                        return lastBackslashIndex > 1 ? filePath.Substring(0, lastBackslashIndex) : null;
+                    }
+                });
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetFileNameWithoutExtension(It.IsAny<string>()))
+                .Returns("genericScript");
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.Combine(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns((string path1, string path2) =>
+                {
+                    if (this.mockFixture.Platform == PlatformID.Unix)
+                    {
+                        // Normalize to Unix-style path
+                        path1 = path1.Replace('\\', '/').TrimEnd('/');
+                        path2 = path2.Replace('\\', '/').TrimStart('/');
+                        return $"{path1}/{path2}";
+                    }
+                    else
+                    {
+                        // Normalize to Windows-style path
+                        path1 = path1.Replace('/', '\\').TrimEnd('\\');
+                        path2 = path2.Replace('/', '\\').TrimStart('\\');
+                        return $"{path1}\\{path2}";
+                    }
+                });
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetFullPath(It.IsAny<string>()))
+                .Returns((string path1) =>
+                {
+                    if (this.mockFixture.Platform == PlatformID.Unix)
+                    {
+                        // Simulate Unix-style behavior
+                        string fullPath = Path.GetFullPath(path1).Replace('\\', '/'); // Normalize to Unix-style path
+                        int colonIndex = fullPath.IndexOf(':');
+                        if (colonIndex != -1)
+                        {
+                            fullPath = fullPath.Substring(colonIndex + 1); // Remove the drive letter and colon
+                        }
+                        return fullPath;
+                    }
+                    else
+                    {
+                        string winPath = path1.Replace('/', '\\');
+                        string drive = winPath.Length >= 2 && winPath[1] == ':' ? winPath.Substring(0, 2) : "";
+                        string[] segments = winPath.Substring(drive.Length)
+                                                 .Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var pathParts = new Stack<string>();
+                        foreach (var segment in segments)
+                        {
+                            if (segment == ".." && pathParts.Count > 0) pathParts.Pop();
+                            else if (segment != "." && segment != "..") pathParts.Push(segment);
+                        }
+
+                        var resolved = string.Join("\\", pathParts.Reverse());
+                        return string.IsNullOrEmpty(drive) ? resolved : $"{drive}\\{resolved}";
+                    }
+                });
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File)
                 .Returns(this.mockFixture.File.Object);
@@ -59,23 +136,6 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
-        }
-
-        [Test]
-        [TestCase(PlatformID.Win32NT)]
-        [TestCase(PlatformID.Unix)]
-        public void PythonExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
-        {
-            this.SetupTest(platform);
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
-
-            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
-            {
-                DependencyException exception = Assert.ThrowsAsync<DependencyException>(
-                    () => executor.InitializeAsync(EventContext.None, CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
-            }
         }
 
         [Test]

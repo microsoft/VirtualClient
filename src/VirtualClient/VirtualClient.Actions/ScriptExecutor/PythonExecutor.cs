@@ -8,11 +8,9 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// The Generic Script executor for Python
@@ -62,7 +60,7 @@ namespace VirtualClient.Actions
                    .AddContext(nameof(command), command)
                    .AddContext(nameof(commandArguments), commandArguments);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkloadPackage.Path, telemetryContext, cancellationToken, false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
