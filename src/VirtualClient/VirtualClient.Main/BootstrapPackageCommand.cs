@@ -16,7 +16,7 @@ namespace VirtualClient
     /// Command executes the operations to bootstrap/install dependencies on the system
     /// prior to running a Virtual Client profile.
     /// </summary>
-    public class RunBootstrapCommand : CommandBase
+    public class BootstrapPackageCommand : CommandBase
     {
         /// <summary>
         /// The name of the package to bootstrap/install.
@@ -36,11 +36,11 @@ namespace VirtualClient
         /// <returns>The exit code for the command operations.</returns>
         public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
-            RunProfileCommand profileExecutionCommand = new RunProfileCommand
+            ExecuteProfileCommand profileExecutionCommand = new ExecuteProfileCommand
             {
                 ClientId = this.ClientId,
                 ContentStore = this.ContentStore,
-                Debug = this.Debug,
+                Verbose = this.Verbose,
                 Timeout = ProfileTiming.OneIteration(),
                 EventHubStore = this.EventHubStore,
                 ExecutionSystem = this.ExecutionSystem,

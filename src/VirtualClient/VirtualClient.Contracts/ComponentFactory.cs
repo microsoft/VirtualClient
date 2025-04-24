@@ -102,6 +102,7 @@ namespace VirtualClient.Contracts
             bool? logToFile = null)
         {
             VirtualClientComponent component = component = (VirtualClientComponent)Activator.CreateInstance(type, dependencies, componentDescription.Parameters);
+            component.ComponentType = componentDescription.ComponentType;
             component.ExecutionSeed = randomizationSeed;
 
             // Metadata is merged at each level down the hierarchy. Metadata at higher levels
@@ -163,6 +164,8 @@ namespace VirtualClient.Contracts
                         randomizationSeed,
                         failFast,
                         logToFile);
+
+                    childComponent.ComponentType = componentDescription.ComponentType;
 
                     componentCollection.Add(childComponent);
                 }

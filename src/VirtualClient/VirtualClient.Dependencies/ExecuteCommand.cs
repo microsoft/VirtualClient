@@ -31,7 +31,9 @@ namespace VirtualClient.Dependencies
         public ExecuteCommand(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
+            this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
+                this.MaxRetries, 
+                (retries) => TimeSpan.FromSeconds(retries + 1));
         }
 
         /// <summary>
@@ -43,6 +45,18 @@ namespace VirtualClient.Dependencies
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.Command));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the maximum number of retries on failures of the
+        /// command execution. Default = 0;
+        /// </summary>
+        public int MaxRetries
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MaxRetries), 0);
             }
         }
 
@@ -144,8 +158,8 @@ namespace VirtualClient.Dependencies
                                 {
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
-                                        process.ThrowIfDependencyInstallationFailed();
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, this.LogFolderName);
+                                        process.ThrowIfComponentOperationFailed(this.ComponentType);
                                     }
                                 }
                             });

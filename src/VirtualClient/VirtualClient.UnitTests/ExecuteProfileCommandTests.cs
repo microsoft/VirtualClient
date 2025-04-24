@@ -22,7 +22,7 @@ namespace VirtualClient
 
     [TestFixture]
     [Category("Unit")]
-    public class RunProfileCommandTests
+    public class ExecuteProfileCommandTests
     {
         private static readonly string ProfilesDirectory = PlatformSpecifics.StandardizePath(
             Environment.OSVersion.Platform,
@@ -40,7 +40,7 @@ namespace VirtualClient
             this.command = new TestRunProfileCommand
             {
                 ClientId = "AnyAgent",
-                Debug = false,
+                Verbose = false,
                 Timeout = ProfileTiming.OneIteration(),
                 ExecutionSystem = "AnySystem",
                 ExperimentId = Guid.NewGuid().ToString(),
@@ -156,11 +156,11 @@ namespace VirtualClient
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles,this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -203,11 +203,11 @@ namespace VirtualClient
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -235,11 +235,11 @@ namespace VirtualClient
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -261,19 +261,19 @@ namespace VirtualClient
 
             List<string> profiles = new List<string>
             {
-                Path.Combine(RunProfileCommandTests.ProfilesDirectory, profile1),
-                Path.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)
+                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1),
+                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)
             };
 
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -310,19 +310,19 @@ namespace VirtualClient
 
             List<string> profiles = new List<string>
             {
-                Path.Combine(RunProfileCommandTests.ProfilesDirectory, profile1),
-                Path.Combine(RunProfileCommandTests.ProfilesDirectory, noMonitorsProfile)
+                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1),
+                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, noMonitorsProfile)
             };
 
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(noMonitorsProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, noMonitorsProfile)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, noMonitorsProfile)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -352,14 +352,14 @@ namespace VirtualClient
 
             List<string> profiles = new List<string>
             {
-                Path.Combine(RunProfileCommandTests.ProfilesDirectory, profile1),
+                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1),
             };
 
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, profile1)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -395,14 +395,14 @@ namespace VirtualClient
 
             List<string> profiles = new List<string>
             {
-                Path.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile),
+                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile),
             };
 
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(RunProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -423,7 +423,7 @@ namespace VirtualClient
                 profile.Monitors.Select(a => a.Parameters["Scenario"].ToString()));
         }
 
-        private class TestRunProfileCommand : RunProfileCommand
+        private class TestRunProfileCommand : ExecuteProfileCommand
         {
             public new PlatformExtensions Extensions
             {

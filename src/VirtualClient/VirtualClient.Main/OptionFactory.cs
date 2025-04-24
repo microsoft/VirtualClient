@@ -154,6 +154,23 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line argument allows the user to define a command to execute in another 
+        /// runtime (e.g. PowerShell, Python).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Argument<string> CreateCommandArgument(bool required = false, object defaultValue = null)
+        {
+            // Single command execution is also supported. Behind the scenes this uses a
+            // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
+            // while additionally having the full set of other options available for profile execution.
+            Argument<string> commandArgument = new Argument<string>("Command");
+            commandArgument.SetDefaultValue(defaultValue);
+
+            return commandArgument;
+        }
+
+        /// <summary>
         /// Command line option defines a template for the virtual folder structure to use when uploading 
         /// files to a target storage account (e.g. /{experimentId}/{agentId}/{toolName}/{role}/{scenario}).
         /// </summary>
@@ -205,26 +222,6 @@ namespace VirtualClient
                 Description = "An endpoint URI or connection string to the Storage Account to which content logs/files can be uploaded.",
                 ArgumentHelpName = "connectionstring|sas",
                 AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines whether debug output should be emitted on the console/terminal.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateDebugFlag(bool required = true, object defaultValue = null)
-        {
-            Option<bool> option = new Option<bool>(new string[] { "--debug", "--verbose" })
-            {
-                Name = "Debug",
-                Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
-                ArgumentHelpName = "Flag",
-                AllowMultipleArgumentsPerToken = false,
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -984,6 +981,26 @@ namespace VirtualClient
 
                 return string.Empty;
             });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines whether debug output should be emitted on the console/terminal.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateVerboseFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--verbose", "--debug" })
+            {
+                Name = "Verbose",
+                Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
+            };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
