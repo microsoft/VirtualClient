@@ -171,13 +171,13 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
 ### Script-Based Extensions
 The script-based extensions model allows developers and users to provide interpreted scripts written in languages such as Python or PowerShell to to a build of the
 Virtual Client runtime/executable. Virtual Client has out-of-box support for running custom scripts and for defining the full workflow specifics within a custom profile.
-This extensions model does not typically require any work in the Virtual Client codebase. Users/developers place their extensions in a Virtual Client package the same as
+This extensions model does not typically require any work in the Virtual Client codebase. Users/developers place their scripts locally in the system or as an extension in a Virtual Client package the same as
 other packages and include any content or binaries (if required) to support the script executions. The folder structure for extensions is covered more in-depth in the 
-`Developing Extensions` documentation noted at the top.
+`Developing Extensions` documentation noted at the top. An alternative to using 'packages' is to place the script in the system where Virtual Client is being executed and provide the absolute path to it, or path relative to the Virtual Client Executable.
 
 Regarding the subject of binaries required to support scripts, the Virtual Client team offers versions of certain script-based/interpreted languages such as PowerShell 7/Core
 and Python. These packages can be referenced in a Virtual Client profile and downloaded to support the execution of scripts that depend upon them. The following section describes 
-how to incorporate script-based extensions.
+how to incorporate script-based extensions:
 
 * **Place Script Extensions Folder in Default 'packages' Location**  
   The default way to incorporate script-based extensions into the Virtual Client runtime is to add the extensions package into the Virtual Client default 'packages' folder.
@@ -329,7 +329,65 @@ how to incorporate script-based extensions.
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-1.json
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-2.json
   ```
+
+* **Place the Script on local system and provide either absolute path or relative path to the Virtual Client Executable**
+
+  The script can be placed on the local system and the absolute path to the script can be provided in the profile. The user can also provide a script path relative to the Virtual Client executable, in the profile. 
   
+  Sample Profile Definition with Absolute Path:
+  ``` json
+
+  {
+    "Description": "Profile to execute script-based extensions with absolute Path of the Script..",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": { },
+    "Actions": [
+        {
+            "Type": "PowerShellExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteWorkload1",
+                "ScriptPath": "C:\\AnyPath\\Execute.ps1",
+                "PackageName": "powershell7"
+          }
+        },
+        {
+            "Type": "PythonExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteWorkload2",
+                "ScriptPath": "C:\\AnyPath\\install.py",
+                "PackageName": "python3"
+          }
+        }
+    ]
+  }
+
+  ```
+
+    Sample Profile Definition with Path relative to Virtual Client executable (This assumes Linux setting, for windows, '\\' will be used instead of '/'):
+  ``` json
+
+  {
+    "Description": "Profile to execute script-based extensions with ScriptPath relative to Virtual Client Executable..",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64"
+    },
+    "Parameters": { },
+    "Actions": [
+		{
+            "Type": "PythonExecutor",
+            "Parameters": {
+				"Scenario": "ExecuteWorkload2",
+                "ScriptPath": "../../../anyFolder/install.py",
+                "PackageName": "python3"
+          }
+        }
+    ]
+  }
+
+  ```
+
 ## Downloaded Extensions from a Package Store
 The default for most Virtual Client scenarios is to download extensions from a package store. The `VirtualClient bootstrap` command can be used to download
 extensions from a package store and install them.
@@ -377,6 +435,9 @@ and requirements.
   * **Package Directory Structure Recommendations**  
     Script-based automation suites are integrated into Virtual Client as packages (see the section on Script-Based Extensions above). The patterns recommended
     above make it easier for script-based automation suites to be integrated following conventions that allow for cross-platform, cross-architecture support.
+
+    An alternate to the use of 'packages' is to provide either the absolute path of scripts or the path relative to the Virtual Client executable. 
+    This is particularly useful for testing/debugging scenarios where developers are compiling extensions binaries on the same system enabling a fast inner-development loop.
 
   * **Script Design Recommendations**  
     Virtual Client provides structured telemetry capture facilities out of the box for any component is defined in a profile and that runs as part of a
@@ -443,7 +504,7 @@ This component can be used to execute generic scripts using facilities common to
     |  Scenario    | Name of the scenario |
     |  ToolName    | Name of the Script/Tool being executed |
     |  CommandLine | The command line arguments to be used with the script/executable |
-    |  ScriptPath  | Relative Path of the script inside the workload package that needs to be invoked. |
+    |  ScriptPath  | The Script Path can be an absolute Path, or be relative to the Virtual Client Executable or be relative to platformspecific package if the script is downloaded as a package using DependencyPackageInstallation. |
     |  LogPaths    | A list of file/folder paths separated by semicolons ";". Note that Virtual Client will move any log files found to the central "logs" directory in the Virtual Client executable parent directory. | 
     |  PackageName | Name of the workload package built for running the script. If the workload package is being downloaded from blob package store, this needs to match with the package name defined in DependencyPackageInstallation. | String |
     |  FailFast    | Flag indicates that the application should exit immediately on first/any errors regardless of their severity. | Boolean  |
