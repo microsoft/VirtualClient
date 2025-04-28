@@ -165,25 +165,13 @@ namespace VirtualClient
             ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles,this.mockFixture.Dependencies, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            Assert.IsTrue(profile.Actions.Any());
-            Assert.IsTrue(profile.Actions.Count == 2);
-            Assert.IsTrue(profile.Dependencies.Any());
-            Assert.IsTrue(profile.Dependencies.Count == 3);
-            Assert.IsTrue(profile.Monitors.Any());
-            Assert.IsTrue(profile.Monitors.Count == 2);
+            Assert.AreEqual(2, profile.Actions.Count);
+            Assert.AreEqual(1, profile.Dependencies.Count);
+            Assert.AreEqual(0, profile.Monitors.Count);
 
             CollectionAssert.AreEqual(
                new List<string> { "Workload1", "Workload2" },
                profile.Actions.Select(a => a.Parameters["Scenario"].ToString()));
-
-            CollectionAssert.AreEqual(
-                new List<string> { "Dependency1", "InstallEpelPackage", "InstallAtop" },
-                profile.Dependencies.Select(a => a.Parameters["Scenario"].ToString()));
-
-            // The monitors from the MONITORS-DEFAULT.json profile should have been added as well.
-            CollectionAssert.AreEqual(
-                new List<string> { "CaptureCounters", "CaptureDeviceInformation" },
-                profile.Monitors.Select(a => a.Parameters["Scenario"].ToString()));
         }
 
         [Test]

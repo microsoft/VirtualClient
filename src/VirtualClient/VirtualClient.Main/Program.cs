@@ -248,7 +248,7 @@ namespace VirtualClient
                 OptionFactory.CreatePackageDirectoryOption(required: false),
 
                 // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
+                OptionFactory.CreatePackageStoreOption(required: false, "https://virtualclient.blob.core.windows.net/packages"),
 
                 // --parameters
                 OptionFactory.CreateParametersOption(required: false),

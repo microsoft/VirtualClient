@@ -44,8 +44,8 @@ Runs the OpenFOAM workload which measures performance in terms of iterations per
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  ./VirtualClient --profile=PERF-OPENFOAM.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-OPENFOAM.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Iterations=10
-  ./VirtualClient --profile=PERF-OPENFOAM.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=airFoil2D,elbow,motorBike
+  ./VirtualClient --profile=PERF-OPENFOAM.json 
+  ./VirtualClient --profile=PERF-OPENFOAM.json --parameters=Iterations=10
+  ./VirtualClient --profile=PERF-OPENFOAM.json --scenarios=airFoil2D,elbow,motorBike
 
   ```

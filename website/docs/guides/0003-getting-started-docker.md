@@ -39,7 +39,7 @@ Use 'docker scan' to run Snyk tests against images to find vulnerabilities and l
 For Windows, the Dockerfile copied VC binaries to C:\VirtualClient. You can invoke a docker container using the following commands.
 
 ```bash
->docker run -d -p 3000:80 test-win-x64:1.0.1.3 C:\VirtualClient\VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --packages=https://virtualclient.blob.core.windows.net/packages
+>docker run -d -p 3000:80 test-win-x64:1.0.1.3 C:\VirtualClient\VirtualClient.exe --profile=PERF-CPU-OPENSSL.json 
 bad3c2a2fe95a3135264dc70ee63f89df7e1deb7875b3a0104b3231e248feaac
 ```
 

@@ -424,10 +424,11 @@ namespace VirtualClient
         }
 
         [Test]
-        public void IterationsOptionValueMustBeGreaterThanZero()
+        public void IterationsOptionValueMustBeGreaterThanZeroExceptNegativeOne()
         {
             Option option = OptionFactory.CreateIterationsOption();
-            Assert.Throws<ArgumentException>(() => option.Parse("--iterations=-1"));
+            Assert.DoesNotThrow(() => option.Parse("--iterations=-1"));
+            Assert.Throws<ArgumentException>(() => option.Parse("--iterations=-2"));
         }
 
         [Test]
