@@ -75,14 +75,14 @@ namespace VirtualClient.Proxy
         public DependencyStore StoreDescription { get; }
 
         /// <summary>
+        /// Defines an explicit source to use for blob downloads/uploads.
+        /// </summary>
+        public string Source { get; set; }
+
+        /// <summary>
         /// The API client for interacting with the proxy endpoint.
         /// </summary>
         protected IProxyApiClient ApiClient { get; }
-
-        /// <summary>
-        /// Defines an explicit source to use for blob downloads/uploads.
-        /// </summary>
-        protected string Source { get; }
 
         public async Task<DependencyDescriptor> DownloadBlobAsync(DependencyDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
         {
