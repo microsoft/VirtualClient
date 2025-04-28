@@ -37,14 +37,14 @@ namespace VirtualClient
         DiskFilterNotSupported = 301,
 
         /// <summary>
-        /// The workload failed during execution.
-        /// </summary>
-        WorkloadFailed = 315,
-
-        /// <summary>
         /// The workload results/results file was not found.
         /// </summary>
         WorkloadResultsNotFound = 314,
+
+        /// <summary>
+        /// The workload failed during execution.
+        /// </summary>
+        WorkloadFailed = 315,
 
         /// <summary>
         /// The workload failed during execution.
