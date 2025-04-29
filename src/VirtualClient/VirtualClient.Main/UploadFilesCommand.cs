@@ -20,7 +20,7 @@ namespace VirtualClient
     /// Command executes the operations to bootstrap/install dependencies on the system
     /// prior to running a Virtual Client profile.
     /// </summary>
-    public class RunUploadCommand : CommandBase
+    public class UploadFilesCommand : CommandBase
     {
         /// <summary>
         /// The source directory to watch for content upload requests/notifications.

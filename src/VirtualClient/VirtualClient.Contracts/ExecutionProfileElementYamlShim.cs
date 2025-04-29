@@ -51,6 +51,12 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The type of profile component (e.g. Action, Dependency, Monitor).
+        /// </summary>
+        [YamlIgnore]
+        public ComponentType ComponentType { get; internal set; }
+
+        /// <summary>
         /// The type of this element
         /// </summary>
         [YamlMember(Alias = "type", Order = 0, ScalarStyle = ScalarStyle.Plain)]

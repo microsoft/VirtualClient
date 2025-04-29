@@ -289,7 +289,7 @@ namespace VirtualClient
         [TestCase("--verbose")]
         public void DebugFlagSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateDebugFlag();
+            Option option = OptionFactory.CreateVerboseFlag();
             ParseResult result = option.Parse(alias);
             Assert.IsFalse(result.Errors.Any());
         }
