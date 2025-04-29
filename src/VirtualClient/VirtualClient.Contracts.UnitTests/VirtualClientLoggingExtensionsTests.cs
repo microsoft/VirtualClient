@@ -1429,11 +1429,11 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
                     Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
                     Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
                     Assert.IsFalse(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter unexpected");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
                     {
+                        Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
                         Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
                     }
 
@@ -1488,11 +1488,11 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
                     Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
                     Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
                     Assert.IsFalse(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter unexpected");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
                     {
+                        Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
                         Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
                     }
 
@@ -1549,11 +1549,11 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
                     Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
                     Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
                     Assert.IsTrue(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter missing");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
                     {
+                        Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
                         Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
                     }
 

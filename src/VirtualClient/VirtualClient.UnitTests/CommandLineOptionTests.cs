@@ -5,12 +5,14 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.CommandLine.Builder;
+    using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
-    using System.Configuration;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
+    using System.Threading.Tasks;
     using NUnit.Framework;
 
     [TestFixture]
@@ -22,29 +24,118 @@ namespace VirtualClient
             "Resources");
 
         [Test]
-        public void VirtualClientDefaultCommandRequiresTheProfileOptionBeSupplied()
+        [TestCase("pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory /home/user/logs")]
+        [TestCase("python /home/user/scripts/execute_script.py /home/user/logs")]
+        [TestCase("pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\"")]
+        [TestCase("python /home/user/scripts/execute_script.py \"/home/user/logs\"")]
+        public async Task VirtualClientHandlesCommandExecutionScenariosAsExpected(string commandLine)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                List<string> arguments = new List<string>();
-                Assert.Throws<ArgumentException>(() =>
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool commandFlowExecuted = false;
+                bool profileFlowExecuted = false;
+
+                string[] args = new string[] { commandLine };
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
-                    Assert.IsTrue(result.Errors.Any());
-                    result.ThrowOnUsageError();
+                    cmd.OnExecuteCommand = () => commandFlowExecuted = true;
+                    cmd.OnExecuteProfiles = () => profileFlowExecuted = true;
+
+                    Assert.AreEqual(commandLine, cmd.Command);
+                    Assert.IsNull(cmd.Profiles);
+
+                    return cmd.ExecuteAsync(args, tokenSource);
                 });
 
-                arguments.AddRange(new List<string>
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(commandFlowExecuted);
+                Assert.IsFalse(profileFlowExecuted);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientHandlesCommandExecutionScenariosWithProfilesAdditionallyReferencedAsExpected()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                string expectedCommand = "pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs";
+                bool commandFlowExecuted = false;
+                bool profileFlowExecuted = false;
+
+                string[] args = new string[]
                 {
-                    "--profile", "PERF-ANY-PROFILE.json"
+                    expectedCommand,
+                    "--profile=MONITORS-DEFAULT.json"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    cmd.OnExecuteCommand = () => commandFlowExecuted = true;
+                    cmd.OnExecuteProfiles = () => profileFlowExecuted = true;
+
+                    Assert.AreEqual(expectedCommand, cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.IsTrue(cmd.Profiles.First().ProfileName == "MONITORS-DEFAULT.json");
+
+                    return cmd.ExecuteAsync(args, tokenSource);
                 });
 
-                Assert.DoesNotThrow(() =>
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(commandFlowExecuted);
+                Assert.IsFalse(profileFlowExecuted);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientHandlesProfileExecutionScenariosAsExpected()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool commandFlowExecuted = false;
+                bool profileFlowExecuted = false;
+
+                string[] args = new string[]
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
-                    Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
+                    "--profile=ANY-PROFILE.json",
+                    "--profile=MONITORS-DEFAULT.json"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    cmd.OnExecuteCommand = () => commandFlowExecuted = true;
+                    cmd.OnExecuteProfiles = () => profileFlowExecuted = true;
+
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.IsTrue(cmd.Profiles.ElementAt(0).ProfileName == "ANY-PROFILE.json");
+                    Assert.IsTrue(cmd.Profiles.ElementAt(1).ProfileName == "MONITORS-DEFAULT.json");
+
+                    return cmd.ExecuteAsync(args, tokenSource);
                 });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(profileFlowExecuted);
+                Assert.IsFalse(commandFlowExecuted);
             }
         }
 
@@ -407,6 +498,25 @@ namespace VirtualClient
                     },
                     result.Tokens.Select(t => t.Value));
 
+            }
+        }
+
+        private class TestExecuteCommand : ExecuteCommand
+        {
+            public Action OnExecuteCommand { get; set; }
+
+            public Action OnExecuteProfiles { get; set; }
+
+            protected override Task<int> ExecuteCommandAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            {
+                this.OnExecuteCommand?.Invoke();
+                return Task.FromResult(0);
+            }
+
+            protected override Task<int> ExecuteProfilesAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            {
+                this.OnExecuteProfiles?.Invoke();
+                return Task.FromResult(0);
             }
         }
     }

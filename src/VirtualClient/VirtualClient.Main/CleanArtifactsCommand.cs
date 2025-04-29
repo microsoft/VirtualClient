@@ -19,7 +19,7 @@ namespace VirtualClient
     /// <summary>
     /// Command resets the Virtual Client environment for "first time" run scenarios.
     /// </summary>
-    public class ResetCommand : CommandBase
+    public class CleanArtifactsCommand : CommandBase
     {
         /// <summary>
         /// Executes the operations to reset the environment.

@@ -35,7 +35,7 @@ namespace VirtualClient
     /// Command executes the operations of the Virtual Client workload profile. This is the
     /// default/root command for the Virtual Client application.
     /// </summary>
-    internal class RunProfileCommand : CommandBase
+    internal class ExecuteProfileCommand : CommandBase
     {
         private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
 
@@ -54,11 +54,6 @@ namespace VirtualClient
         /// The path to the environment layout .json file.
         /// </summary>
         public string LayoutPath { get; set; }
-
-        /// <summary>
-        /// The workload/monitoring profiles to execute (e.g. PERF-CPU-OPENSSL.json).
-        /// </summary>
-        public IEnumerable<DependencyProfileReference> Profiles { get; set; }
 
         /// <summary>
         /// A seed that can be used to guarantee identical randomization bases for workloads that
@@ -202,10 +197,10 @@ namespace VirtualClient
 
                 if (VirtualClientRuntime.IsRebootRequested)
                 {
-                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", exitingContext);
+                    Program.LogMessage(logger, $"{nameof(ExecuteProfileCommand)}.RebootingSystem", exitingContext);
                 }
 
-                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", exitingContext);
+                Program.LogMessage(logger, $"{nameof(ExecuteProfileCommand)}.End", exitingContext);
                 Program.LogMessage(logger, $"Exit Code: {exitCode}", exitingContext);
 
                 TimeSpan remainingWait = TimeSpan.FromMinutes(2);
@@ -411,7 +406,7 @@ namespace VirtualClient
             // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
             if (this.ContentStore != null || this.ProxyApiUri != null)
             {
-                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.FileUploadMonitorProfile);
+                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(ExecuteProfileCommand.FileUploadMonitorProfile);
                 ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
                     .ConfigureAwait(false);
 
