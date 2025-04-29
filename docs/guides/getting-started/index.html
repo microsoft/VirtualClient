@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.fe082272.css">
-<script src="/VirtualClient/assets/js/runtime~main.b94d8235.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.d6d85890.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.3768d5b3.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -108,7 +108,7 @@ If you prefer to keep your system unchanged, consider running the Virtual Client
 <ul>
 <li>
 <p>Execute the following command to run an example VC profile. This profile runs an OpenSSL workload.</p>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#FFFFFF;--prism-background-color:#282C34"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#FFFFFF;background-color:#282C34"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#FFFFFF"><span class="token function" style="color:#79b6f2">sudo</span><span class="token plain"> ./VirtualClient </span><span class="token parameter variable" style="color:#cb4b16">--profile</span><span class="token operator" style="color:#fc929e">=</span><span class="token plain">GET-STARTED-OPENSSL.json </span><span class="token parameter variable" style="color:#cb4b16">--profile</span><span class="token operator" style="color:#fc929e">=</span><span class="token plain">MONITORS-NONE.json </span><span class="token parameter variable" style="color:#cb4b16">--iterations</span><span class="token operator" style="color:#fc929e">=</span><span class="token number" style="color:#5a9bcf">1</span><span class="token plain"> </span><span class="token parameter variable" style="color:#cb4b16">--packages</span><span class="token operator" style="color:#fc929e">=</span><span class="token plain">https://virtualclient.blob.core.windows.net/packages</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#FFFFFF;--prism-background-color:#282C34"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#FFFFFF;background-color:#282C34"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#FFFFFF"><span class="token function" style="color:#79b6f2">sudo</span><span class="token plain"> ./VirtualClient </span><span class="token parameter variable" style="color:#cb4b16">--profile</span><span class="token operator" style="color:#fc929e">=</span><span class="token plain">GET-STARTED-OPENSSL.json</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 </li>
 <li>
 <p><a href="https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json" target="_blank" rel="noopener noreferrer"><code>--profile=GET-STARTED-OPENSSL.json</code></a> tells VC to run a stripped down version of OpenSSL benchmark. With SHA256 algorithm.</p>
@@ -116,15 +116,6 @@ If you prefer to keep your system unchanged, consider running the Virtual Client
 <li>VC supports remote profile, you can reference a url to a json file.</li>
 <li><code>--profile=https://raw.githubusercontent.com/microsoft/VirtualClient/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json</code> is equavilent to <code>--profile=GET-STARTED-OPENSSL.json</code>.</li>
 </ul>
-</li>
-<li>
-<p>VirtualClient has a default profile, <a href="https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/MONITORS-NONE.json" target="_blank" rel="noopener noreferrer"><code>--profile=MONITORS-NONE.json</code></a> overrides that behavior in this one-time run.</p>
-</li>
-<li>
-<p><code>--iteration=1</code> Tells VC to run this profile once. Default behavior is to run profiles repetatively until timeout.</p>
-</li>
-<li>
-<p><code>--packages=https://virtualclient.blob.core.windows.net/packages</code> defines the packages store that VC will download OpenSSL binary from. Not every workload needs binary download. You can also use your own binary and package store if desired.</p>
 </li>
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="results-and-logs">Results and Logs<a class="hash-link" aria-label="Direct link to Results and Logs" title="Direct link to Results and Logs" href="/VirtualClient/docs/guides/getting-started/#results-and-logs">​</a></h2>
