@@ -45,5 +45,5 @@ hardware components</b>. Work is underway with partner teams in Azure to support
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-GPU-SUPERBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-SUPERBENCH.json
   ```

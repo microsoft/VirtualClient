@@ -1238,10 +1238,11 @@ namespace VirtualClient
                     $"numeric value (e.g. 3).");
             }
 
-            if (iterations <= 0)
+            if (iterations <= 0 && iterations != -1)
             {
                 throw new ArgumentException(
-                    $"Invalid value provided for the iterations option. The iterations parameter must be greater than zero.");
+                    $"Invalid iteartion value '{iterations}' provided for the iterations option. " +
+                    $"The iterations parameter must be greater than zero, or use -1 to indicate infinite iterations.");
             }
 
             return new ProfileTiming(iterations);

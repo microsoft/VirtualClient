@@ -37,9 +37,6 @@ namespace VirtualClient
     /// </summary>
     internal class ExecuteProfileCommand : CommandBase
     {
-        private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient.blob.core.windows.net/");
-        private const string DefaultMonitorsProfile = "MONITORS-DEFAULT.json";
-        private const string NoMonitorsProfile = "MONITORS-NONE.json";
         private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
 
         /// <summary>
@@ -108,6 +105,11 @@ namespace VirtualClient
                 // When timing constraints/hints are not provided on the command line, we run the
                 // application until it is explicitly stopped by the user or automation.
                 if (this.Timeout == null && this.Iterations == null)
+                {
+                    this.Timeout = ProfileTiming.OneIteration();
+                }
+
+                if (this.Iterations == ProfileTiming.Iterations(-1))
                 {
                     this.Timeout = ProfileTiming.Forever();
                 }
@@ -400,25 +402,6 @@ namespace VirtualClient
             }
 
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-
-            // If we are not just installing dependencies, then we may include a default monitor
-            // profile.
-            if (!this.InstallDependencies)
-            {
-                if (profile.Actions.Any()
-                   && !profiles.Any(p => p.Contains(ExecuteProfileCommand.NoMonitorsProfile, StringComparison.OrdinalIgnoreCase))
-                   && !profile.Monitors.Any())
-                {
-                    // We always run the default monitoring profile if a specific monitor profile is not provided.
-                    
-                    string defaultMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(ExecuteProfileCommand.DefaultMonitorsProfile);
-                    ExecutionProfile defaultMonitorProfile = await this.ReadExecutionProfileAsync(defaultMonitorProfilePath, dependencies, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    this.InitializeProfile(defaultMonitorProfile);
-                    profile = profile.MergeWith(defaultMonitorProfile);
-                }
-            }
 
             // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
             if (this.ContentStore != null || this.ProxyApiUri != null)
