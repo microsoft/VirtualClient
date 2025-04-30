@@ -612,6 +612,7 @@ namespace VirtualClient
                     string dependencyPackagePath = this.PlatformSpecifics.Combine(installationPath, installationDirectoryName.ToLowerInvariant());
 
                     // Account for blob dependencies that might have a path structure (e.g. /virtual/path/to/dependency.zip
+                    // dependency.zip
                     string dependencyName = PackageManager.GetPackageDirectoryName(description);
 
                     if (description.Extract)
@@ -624,6 +625,11 @@ namespace VirtualClient
                                 $"Additionally, the archive type must be defined in the description.",
                                 ErrorReason.DependencyDescriptionInvalid);
                         }
+                    }
+                    else
+                    {
+                        // without extraction, the package will be the file itself
+                        dependencyPackagePath = this.PlatformSpecifics.Combine(installationPath, dependencyName);
                     }
 
                     // e.g.
