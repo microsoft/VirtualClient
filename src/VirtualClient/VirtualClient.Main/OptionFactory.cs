@@ -1238,11 +1238,11 @@ namespace VirtualClient
                     $"numeric value (e.g. 3).");
             }
 
-            if (iterations <= 0 && iterations != -1)
+            if (iterations <= 0)
             {
                 throw new ArgumentException(
                     $"Invalid iteartion value '{iterations}' provided for the iterations option. " +
-                    $"The iterations parameter must be greater than zero, or use -1 to indicate infinite iterations.");
+                    $"The iterations parameter must be greater than zero.");
             }
 
             return new ProfileTiming(iterations);
@@ -1251,6 +1251,8 @@ namespace VirtualClient
         private static ProfileTiming ParseProfileTimeout(ArgumentResult parsedResult)
         {
             // Example Format:
+            // --timeout=-1
+            // --timeout=never
             // --timeout=1440
             // --timeout=1440,deterministic
             // --timeout=1440,deterministic*
@@ -1261,60 +1263,75 @@ namespace VirtualClient
 
             ProfileTiming timing = null;
             string argument = OptionFactory.GetValue(parsedResult);
-            string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
 
-            TimeSpan timeout = TimeSpan.Zero;
-            try
+            if (argument == "-1" || argument.Equals("never", StringComparison.OrdinalIgnoreCase))
             {
-                if (int.TryParse(parts[0], out int minutes))
-                {
-                    // The value is an integer representing minutes.
-                    timeout = TimeSpan.FromMinutes(minutes);
-                }
-                else
-                {
-                    // The value is a timespan format: 01.00:00:00.
-                    timeout = TimeSpan.Parse(parts[0]);
-                }
-            }
-            catch (FormatException)
-            {
-                throw new ArgumentException(
-                    $"Invalid timespan value provided for the timeout/duration option. The duration/timeout parameter must be " +
-                    $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
-            }
-
-            if (parts.Length == 1)
-            {
-                timing = new ProfileTiming(timeout);
-            }
-            else if (parts.Length == 2)
-            {
-                DeterminismScope levelOfDeterminism = DeterminismScope.Undefined;
-                string determinismScope = parts[1].ToLowerInvariant();
-                switch (determinismScope)
-                {
-                    case "deterministic":
-                        levelOfDeterminism = DeterminismScope.IndividualAction;
-                        break;
-
-                    case "deterministic*":
-                        levelOfDeterminism = DeterminismScope.AllActions;
-                        break;
-
-                    default:
-                        throw new ArgumentException(
-                            $"Invalid level of determinism value defined for the timeout/duration option. " +
-                            $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
-                }
-
-                timing = new ProfileTiming(timeout, levelOfDeterminism);
+                // Use -1 or never to indicate running forever
+                timing = ProfileTiming.Forever();
             }
             else
             {
-                throw new ArgumentException(
-                    $"Invalid level of determinism value defined for the timeout/duration option. " +
-                    $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                TimeSpan timeout = TimeSpan.Zero;
+                try
+                {
+                    if (int.TryParse(parts[0], out int minutes))
+                    {
+                        if (minutes <= 0)
+                        {
+                            throw new ArgumentException(
+                                $"Invalid timeout value '{argument}' provided for the timeout/duration option. " +
+                                $"The duration/timeout parameter must be greater than zero. Except using -1 to indicate run forever.");
+                        }
+                        // The value is an integer representing minutes.
+                        timeout = TimeSpan.FromMinutes(minutes);
+                    }
+                    else
+                    {
+                        // The value is a timespan format: 01.00:00:00.
+                        timeout = TimeSpan.Parse(parts[0]);
+                    }
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException(
+                        $"Invalid timespan value provided for the timeout/duration option. The duration/timeout parameter must be " +
+                        $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
+                }
+
+                if (parts.Length == 1)
+                {
+                    timing = new ProfileTiming(timeout);
+                }
+                else if (parts.Length == 2)
+                {
+                    DeterminismScope levelOfDeterminism = DeterminismScope.Undefined;
+                    string determinismScope = parts[1].ToLowerInvariant();
+                    switch (determinismScope)
+                    {
+                        case "deterministic":
+                            levelOfDeterminism = DeterminismScope.IndividualAction;
+                            break;
+
+                        case "deterministic*":
+                            levelOfDeterminism = DeterminismScope.AllActions;
+                            break;
+
+                        default:
+                            throw new ArgumentException(
+                                $"Invalid level of determinism value defined for the timeout/duration option. " +
+                                $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                    }
+
+                    timing = new ProfileTiming(timeout, levelOfDeterminism);
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Invalid level of determinism value defined for the timeout/duration option. " +
+                        $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                }
             }
 
             return timing;

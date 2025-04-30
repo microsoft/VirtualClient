@@ -625,13 +625,6 @@ namespace VirtualClient
                                 ErrorReason.DependencyDescriptionInvalid);
                         }
                     }
-                    else
-                    {
-                        // If the package does not need to be extracted, then we want to contain it within
-                        // a folder matching the package name (e.g. the package path).
-                        installationPath = this.PlatformSpecifics.Combine(installationPath, description.PackageName.ToLowerInvariant());
-                        dependencyPackagePath = installationPath;
-                    }
 
                     // e.g.
                     // /VirtualClient/packages/dependency.zip

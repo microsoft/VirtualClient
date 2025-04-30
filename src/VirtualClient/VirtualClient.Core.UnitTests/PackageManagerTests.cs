@@ -652,7 +652,7 @@ namespace VirtualClient
 
             this.mockPackageDescriptor.Extract = false;
             string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockPackageDescriptor.PackageName.ToLowerInvariant());
-            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.PackageName, this.mockPackageDescriptor.Name);
+            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.Name);
 
             bool confirmed = false;
             this.packageManager.OnDownloadDependencyPackage = (description, installationPath, token) =>
