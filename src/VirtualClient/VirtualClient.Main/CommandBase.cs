@@ -35,6 +35,7 @@ namespace VirtualClient
     /// </summary>
     public abstract class CommandBase
     {
+        private const string defaultPackageStoreUri = "https://virtualclient.blob.core.windows.net/packages";
         private static List<ILogger> proxyApiDebugLoggers = new List<ILogger>();
         private List<string> loggerDefinitions = new List<string>();
 
@@ -583,6 +584,13 @@ namespace VirtualClient
                 else if (this.PackageStore != null)
                 {
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
+                }
+
+                // Use default public package store if none is defined.
+                if (this.PackageStore == null)
+                {
+                    blobStores.Add(DependencyFactory.CreateBlobManager(
+                        EndpointUtility.CreateBlobStoreReference(DependencyStore.Packages, CommandBase.defaultPackageStoreUri, this.CertificateManager)));
                 }
             }
 
