@@ -933,6 +933,16 @@ namespace VirtualClient
         }
 
         [Test]
+        public void PackageStoreOptionDoesNotApplyDefaultWhenProxyIsUsed()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri" }, tokenSource);
+                ParseResult result = commandBuilder.Build().Parse("--proxy-api=http://anyuri");
+            }
+        }
+
+        [Test]
         public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithTheContentStoreOption()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
