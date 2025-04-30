@@ -424,11 +424,10 @@ namespace VirtualClient
         }
 
         [Test]
-        public void IterationsOptionValueMustBeGreaterThanZeroExceptNegativeOne()
+        public void IterationsOptionValueMustBeGreaterThanZero()
         {
             Option option = OptionFactory.CreateIterationsOption();
-            Assert.DoesNotThrow(() => option.Parse("--iterations=-1"));
-            Assert.Throws<ArgumentException>(() => option.Parse("--iterations=-2"));
+            Assert.Throws<ArgumentException>(() => option.Parse("--iterations=-1"));
         }
 
         [Test]
@@ -1063,6 +1062,9 @@ namespace VirtualClient
             Assert.DoesNotThrow(() => option.Parse("--timeout=01.00:30:00"));
             Assert.DoesNotThrow(() => option.Parse("--timeout=00:30:00"));
             Assert.DoesNotThrow(() => option.Parse("--timeout=1440"));
+            Assert.DoesNotThrow(() => option.Parse("--timeout=-1"));
+            Assert.Throws<ArgumentException>(() => option.Parse("--timeout=-2"));
+            Assert.DoesNotThrow(() => option.Parse("--timeout=NeVer"));
         }
 
         [Test]

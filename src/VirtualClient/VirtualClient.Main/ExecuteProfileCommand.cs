@@ -109,11 +109,6 @@ namespace VirtualClient
                     this.Timeout = ProfileTiming.OneIteration();
                 }
 
-                if (this.Iterations == ProfileTiming.Iterations(-1))
-                {
-                    this.Timeout = ProfileTiming.Forever();
-                }
-
                 if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
                 {
                     VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
