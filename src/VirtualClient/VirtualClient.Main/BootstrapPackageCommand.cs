@@ -6,8 +6,6 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
@@ -16,15 +14,15 @@ namespace VirtualClient
     /// Command executes the operations to bootstrap/install dependencies on the system
     /// prior to running a Virtual Client profile.
     /// </summary>
-    public class BootstrapPackageCommand : CommandBase
+    internal class BootstrapPackageCommand : ExecuteProfileCommand
     {
         /// <summary>
-        /// The name of the package to bootstrap/install.
+        /// The name (logical name) to use when registering the package.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The logical name of the package to bootstrap/install.
+        /// The name of the package (in storage) to bootstrap/install.
         /// </summary>
         public string Package { get; set; }
 
@@ -36,31 +34,27 @@ namespace VirtualClient
         /// <returns>The exit code for the command operations.</returns>
         public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
-            ExecuteProfileCommand profileExecutionCommand = new ExecuteProfileCommand
+            string registerAsName = this.Name;
+            if (String.IsNullOrWhiteSpace(registerAsName))
             {
-                ClientId = this.ClientId,
-                ContentStore = this.ContentStore,
-                Verbose = this.Verbose,
-                Timeout = ProfileTiming.OneIteration(),
-                EventHubStore = this.EventHubStore,
-                ExecutionSystem = this.ExecutionSystem,
-                ExperimentId = this.ExperimentId,
-                InstallDependencies = true,
-                Metadata = this.Metadata,
-                PackageStore = this.PackageStore,
-                Parameters = new Dictionary<string, IConvertible>
-                {
-                    { "Package", this.Package },
-                    { "RegisterAsName", this.Name }
-                },
-                Profiles = new List<DependencyProfileReference>
-                {
-                    new DependencyProfileReference("BOOTSTRAP-DEPENDENCIES.json")
-                },
-                ProxyApiUri = this.ProxyApiUri
+                registerAsName = Path.GetFileNameWithoutExtension(this.Package);
+            }
+
+            this.Timeout = ProfileTiming.OneIteration();
+            this.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("BOOTSTRAP-DEPENDENCIES.json")
             };
 
-            return profileExecutionCommand.ExecuteAsync(args, cancellationTokenSource);
+            if (this.Parameters == null)
+            {
+                this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            this.Parameters["Package"] = this.Package;
+            this.Parameters["RegisterAsName"] = registerAsName;
+
+            return base.ExecuteAsync(args, cancellationTokenSource);
         }
     }
 }

@@ -322,9 +322,6 @@ namespace VirtualClient
                 // --package
                 OptionFactory.CreatePackageOption(required: true),
 
-                // --name
-                OptionFactory.CreateNameOption(required: true),
-
                 // OPTIONAL
                 // -------------------------------------------------------------------
                  // --clean
@@ -342,8 +339,17 @@ namespace VirtualClient
                 // --experiment-id
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
+                // --iterations (for integration only. not used/always = 1)
+                OptionFactory.CreateIterationsOption(required: false),
+
+                // --layout-path (for integration only. not used.)
+                OptionFactory.CreateLayoutPathOption(required: false),
+
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
+
+                // --name
+                OptionFactory.CreateNameOption(required: false),
 
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
@@ -359,6 +365,9 @@ namespace VirtualClient
 
                 // --package-dir
                 OptionFactory.CreatePackageDirectoryOption(required: false),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
 
                 // --package-store
                 OptionFactory.CreatePackageStoreOption(required: false),
