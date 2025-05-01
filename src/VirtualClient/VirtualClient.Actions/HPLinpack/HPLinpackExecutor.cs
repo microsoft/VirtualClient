@@ -189,7 +189,6 @@ namespace VirtualClient.Actions
             this.ValidateParameters();
 
             DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-
             this.HPLDirectory = workloadPackage.Path;
 
             await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
@@ -270,7 +269,7 @@ namespace VirtualClient.Actions
 
         private void ThrowIfPlatformIsNotSupported()
         {
-            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.PerformanceLibrary != null)
+            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.CpuArchitecture != Architecture.X64 && this.PerformanceLibrary != null)
             {
                 throw new WorkloadException(
                     $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +
@@ -338,6 +337,18 @@ namespace VirtualClient.Actions
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"{this.hplPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                 await this.ExecuteCommandAsync($"./{this.hplPerfLibraryInfo}.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
             }
+
+            if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "AMD")
+            {
+                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                    .ConfigureAwait(false);
+
+                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD");
+                string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
+                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
+                await this.ExecuteCommandAsync("bash", "-c \"source amd-libs.cfg\"", $"{installPath}/4.2.0/gcc", telemetryContext, cancellationToken, runElevated: true);
+            }
         }
 
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -388,6 +399,14 @@ namespace VirtualClient.Actions
 
                 await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
+            }
+            else if (this.PerformanceLibrary == "AMD" && this.CpuArchitecture == Architecture.X64)
+            {
+                await this.fileSystem.File.ReplaceInFileAsync(
+                  makeFilePath, @"LAdir *=", "LAdir = $(AOCL_ROOT)", cancellationToken);
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                 makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory)}/4.2.0/gcc/lib/libblis.a", cancellationToken);
             }
             else if (this.PerformanceLibrary != null && this.CpuArchitecture != Architecture.Arm64)
             {
