@@ -325,6 +325,7 @@ namespace VirtualClient
         [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
+        [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
         [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
         [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
@@ -354,6 +355,29 @@ namespace VirtualClient
                 }, $"Option '{option}' is not supported.");
             }
         }
+
+        [Test]
+        public void VirtualClientBootstrapCommandHandlesNoOpArguments()
+        {
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "bootstrap",
+                    "--package", "anypackage.1.0.0.zip",
+                    "--iterations", "1",
+                    "--layoutPath", "/home/user/any/layout.json"
+                };
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    Assert.IsFalse(result.Errors.Any());
+                    result.ThrowOnUsageError();
+                });
+            }
+        }
+
 
         [Test]
         [TestCase("--clean", null)]

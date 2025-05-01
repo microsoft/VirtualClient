@@ -44,6 +44,7 @@ namespace VirtualClient
         /// </summary>
         protected CommandBase()
         {
+            this.CertificateManager = new CertificateManager();
         }
 
         /// <summary>
