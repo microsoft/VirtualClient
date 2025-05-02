@@ -113,13 +113,11 @@ namespace VirtualClient.Contracts
                 metadata.AddRange(componentDescription.Metadata, withReplace: false);
             }
 
-            // Extensions are merged at each level down the hierarchy. Extensions at higher levels
-            // takes priority overriding extensions at lower levels (i.e. withReplace: false).
-            // This allows extensions to be set at higher levels that is then in turn applied to
-            // components throughout the hierarchy.
+            // Extensions are merged at each level down the hierarchy. Parent component
+            // extensions are merged with child/subcomponent extensions.
             if (componentDescription.Extensions?.Any() == true)
             {
-                extensions.AddRange(componentDescription.Extensions, withReplace: false);
+                component.Extensions.AddRange(componentDescription.Extensions, withReplace: false);
             }
 
             if (failFast != null)
@@ -137,6 +135,10 @@ namespace VirtualClient.Contracts
                 component.Metadata.AddRange(metadata, withReplace: true);
             }
 
+            // Extensions at lower levels takes priority overriding extensions at higher levels.
+            // This allows extensions to be set at higher levels that is then in turn applied to
+            // components throughout the hierarchy while also supporting overriding individual parts
+            // of the extensions as needed in the child subcomponents.
             if (extensions?.Any() == true)
             {
                 component.Extensions.AddRange(extensions, withReplace: true);
@@ -159,7 +161,7 @@ namespace VirtualClient.Contracts
                         subcomponentType, 
                         dependencies, 
                         new Dictionary<string, IConvertible>(metadata, StringComparer.OrdinalIgnoreCase),
-                        extensions,
+                        component.Extensions, // Extensions for the parent component to include.
                         randomizationSeed,
                         failFast,
                         logToFile);
