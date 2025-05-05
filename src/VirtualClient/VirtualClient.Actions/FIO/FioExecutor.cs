@@ -303,7 +303,9 @@ namespace VirtualClient.Actions
 
                     string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
 
-                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
+                    this.DiskFilter = string.IsNullOrWhiteSpace(this.DiskFilter) ? DiskFilters.DefaultDiskFilter : this.DiskFilter;
+
+                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetFilteredDisksAsync(this.Platform, this.DiskFilter, cancellationToken)
                         .ConfigureAwait(false);
 
                     if (disks?.Any() != true)
@@ -313,37 +315,15 @@ namespace VirtualClient.Actions
                             ErrorReason.WorkloadUnexpectedAnomaly);
                     }
 
-                    IEnumerable<Disk> disksToTest = this.GetDisksToTest(disks);
-
-                    if (disksToTest?.Any() != true)
-                    {
-                        throw new WorkloadException(
-                            "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                            "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                            "of the existing disks.",
-                            ErrorReason.DependencyNotFound);
-                    }
-
-                    if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
-                    {
-                        // Refresh the disks to pickup the mount point changes.
-                        await Task.Delay(1000).ConfigureAwait(false);
-                        IEnumerable<Disk> updatedDisks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        disksToTest = this.GetDisksToTest(updatedDisks);
-                    }
-
                     telemetryContext.AddContext(nameof(this.DiskFilter), this.DiskFilter);
                     telemetryContext.AddContext("executable", this.ExecutablePath);
                     telemetryContext.AddContext(nameof(ioEngine), ioEngine);
                     telemetryContext.AddContext(nameof(disks), disks);
-                    telemetryContext.AddContext(nameof(disksToTest), disksToTest);
 
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
 
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disks, this.ProcessModel));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
@@ -384,48 +364,6 @@ namespace VirtualClient.Actions
                     this.CommandLine = null;
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates mount points for any disks that do not have them already.
-        /// </summary>
-        /// <param name="disks">This disks on which to create the mount points.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
-        {
-            bool mountPointsCreated = false;
-
-            // Don't mount any partition in OS drive.
-            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
-            {
-                // mount every volume that doesn't have an accessPath.
-                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
-                {
-                    string newMountPoint = volume.GetDefaultMountPoint();
-                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
-
-                    EventContext relatedContext = EventContext.Persisted().Clone()
-                        .AddContext(nameof(volume), volume)
-                        .AddContext("mountPoint", newMountPoint);
-
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
-                    {
-                        string newMountPoint = volume.GetDefaultMountPoint();
-                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
-                        {
-                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
-                        }
-
-                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        mountPointsCreated = true;
-
-                    }).ConfigureAwait(false);
-                }
-            }
-
-            return mountPointsCreated;
         }
 
         /// <summary>
