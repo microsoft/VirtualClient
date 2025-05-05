@@ -321,9 +321,12 @@ namespace VirtualClient.Actions
                     case "24.10":
                         this.hplPerfLibraryInfo = "arm-performance-libraries_24.10";
                         break;
+                    case "25.04.1":
+                        this.hplPerfLibraryInfo = "arm-performance-libraries_25.04.1"; 
+                        break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.10 on the following platform/architectures: " +
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10 and 25.04.1 on the following platform/architectures: " + 
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }
@@ -372,9 +375,13 @@ namespace VirtualClient.Actions
                         await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_24.10_gcc/lib/libarmpl.a", cancellationToken);
                         break;
+                    case "25.04.1":
+                        await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_25.04.1_gcc/lib/libarmpl.a", cancellationToken);
+                        break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1 and 24.10 on the following platform/architectures: " +
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10 and 25.04.1 on the following platform/architectures: " +
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }
