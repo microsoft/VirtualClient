@@ -1,0 +1,18 @@
+{
+    "Description": "Executes a command on the local system.",
+    "Parameters": {
+        "Command": null,
+        "Scenario": "ExecuteCommand",
+        "LogFolderName": null
+    },
+    "Actions": [
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "$.Parameters.Scenario",
+                "Command": "$.Parameters.Command",
+                "LogFolderName": "$.Parameters.LogFolderName"
+            }
+        }
+    ]
+}

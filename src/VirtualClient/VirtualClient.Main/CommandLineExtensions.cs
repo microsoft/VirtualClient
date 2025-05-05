@@ -7,11 +7,9 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
-    using System.CommandLine.Help;
     using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
     using System.Linq;
-    using System.Reflection;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using VirtualClient.Common.Extensions;
@@ -147,6 +145,32 @@ namespace VirtualClient
             }
 
             return containsVersionFlag;
+        }
+
+        private static void StandardizeForSingleQuoteSupport(List<string> args)
+        {
+            Regex singleQuoteExpression = new Regex(@"\s*'(.*?)'\s*", RegexOptions.IgnoreCase);
+            Regex doubleQuoteExpression = new Regex("\"");
+
+            List<string> standardizedArguments = new List<string>();
+
+            foreach (string arg in args)
+            {
+                Match singleQuotedArgument = singleQuoteExpression.Match(arg);
+                if (singleQuotedArgument.Success)
+                {
+                    string normalizedArgument = singleQuotedArgument.Groups[1].Value;
+                    
+                    // We have to address any internal double-quotes in the argument to
+                    // avoid parsing errors. We just escape them.
+                    //
+                    // e.g. 
+                    {
+                        
+                    }
+                    standardizedArguments.Add($"\"{singleQuotedArgument.Groups[1].Value}\"");
+                }
+            }
         }
 
         private static Task OutputVersionAsync(InvocationContext context, Func<InvocationContext, Task> nextTask)

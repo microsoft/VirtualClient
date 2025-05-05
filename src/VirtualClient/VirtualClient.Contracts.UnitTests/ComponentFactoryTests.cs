@@ -4,7 +4,6 @@
 namespace VirtualClient.Contracts
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -366,6 +365,35 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(subComponent.Extensions.TryGetValue("Contacts", out actualExtensions));
                     Assert.AreEqual(expectedExtensions.ToJson().RemoveWhitespace(), actualExtensions.ToJson().RemoveWhitespace());
                 }
+            }
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-EXTENSIONS-1-PARALLEL.json")]
+        public void ComponentFactoryHandlesComponentLevelExtensionAnomalies_1(string profileName)
+        {
+            // Scenario:
+            // A partner team is trying to pass in extensions objects to components within side
+            // of a parallel execution block. The information in the extensions objects for the first component
+            // in the parallel execution block seems to be overriding the ones that come afterwards.
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            ExecutionProfileElement parallelLoop = profile.Actions.First();
+            IEnumerable<ExecutionProfileElement> parallelLoopComponents = parallelLoop.Components;
+
+            Assert.IsTrue(parallelLoopComponents?.Count() == 2);
+
+            VirtualClientComponentCollection parallelExecution = ComponentFactory.CreateComponent(parallelLoop, this.mockFixture.Dependencies) as VirtualClientComponentCollection;
+
+            for (int i = 0; i < parallelLoopComponents.Count(); i++)
+            {
+                ExecutionProfileElement profileElement = parallelLoopComponents.ElementAt(i);
+                VirtualClientComponent runtimeComponent = parallelExecution.ElementAt(i);
+
+                Assert.IsTrue(profileElement.Extensions.TryGetValue("ActionCustomParameters", out JToken expectedExtensions));
+                Assert.IsTrue(runtimeComponent.Extensions.TryGetValue("ActionCustomParameters", out JToken actualExtensions));
+                Assert.AreEqual(expectedExtensions.ToJson().RemoveWhitespace(), actualExtensions.ToJson().RemoveWhitespace());
             }
         }
 

@@ -26,7 +26,7 @@ namespace VirtualClient
     /// Command converts the profile(s) specified from 1 format to another
     /// (e.g. JSON to YAML, YAML to JSON).
     /// </summary>
-    internal class ConvertCommand : RunProfileCommand
+    internal class ConvertProfileCommand : ExecuteProfileCommand
     {
         /// <summary>
         /// Serializer settings to use when serializing/deserializing profiles into readable
@@ -113,7 +113,7 @@ namespace VirtualClient
                 ExecutionProfileYamlShim.StandardizeParameterReferences(component.Parameters, yamlToJson: true);
             }
 
-            string profileJson = profile.ToJson(ConvertCommand.JsonSerializationSettings);
+            string profileJson = profile.ToJson(ConvertProfileCommand.JsonSerializationSettings);
             string profileFilePath = platformSpecifics.Combine(this.OutputPath, $"{Path.GetFileNameWithoutExtension(profileName)}.json");
 
             await fileSystem.File.WriteAllTextAsync(profileFilePath, profileJson);
