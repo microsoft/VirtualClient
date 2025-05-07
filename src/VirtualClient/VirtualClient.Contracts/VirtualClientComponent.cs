@@ -176,6 +176,17 @@ namespace VirtualClient.Contracts
         public ComponentType ComponentType { get; set; }
 
         /// <summary>
+        /// The Cool down period for Virtual Client Component.
+        /// </summary>
+        public TimeSpan CoolDownPeriod
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(this.CoolDownPeriod), TimeSpan.FromSeconds(0));
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
