@@ -681,6 +681,8 @@ namespace VirtualClient.Contracts
 
                             await this.ExecuteAsync(telemetryContext, cancellationToken);
                             succeeded = true;
+
+                            await this.WaitAsync(this.CoolDownPeriod, cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
