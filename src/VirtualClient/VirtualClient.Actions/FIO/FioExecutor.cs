@@ -76,7 +76,18 @@ namespace VirtualClient.Actions
                 this.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = value;
             }
         }
-        
+
+        /// <summary>
+        /// The Cool down period for Virtual Client Component.
+        /// </summary>
+        public TimeSpan CoolDownPeriod
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(this.CoolDownPeriod), TimeSpan.FromSeconds(0));
+            }
+        }
+
         /// <summary>
         /// Defines the job files specified in the profile.
         /// </summary>
@@ -377,6 +388,9 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
                         }
                     }
+
+                    // TO DO: Remove once we have Loop Executor.
+                    await this.WaitAsync(this.CoolDownPeriod, cancellationToken);
                 }
 
                 if (!string.IsNullOrEmpty(this.JobFiles))
