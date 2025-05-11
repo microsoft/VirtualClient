@@ -51,6 +51,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The Cool down period for Virtual Client Component.
+        /// </summary>
+        public TimeSpan CoolDownPeriod
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(this.CoolDownPeriod), TimeSpan.FromSeconds(0));
+            }
+        }
+        
+        /// <summary>
         /// The command line argument defined in the profile.
         /// </summary>
         public string CommandLine
@@ -84,6 +95,9 @@ namespace VirtualClient.Actions
                     }
                 }
             }
+
+            // TO DO: Remove once we have Loop Executor.
+            await this.WaitAsync(this.CoolDownPeriod, cancellationToken);
         }
 
         /// <summary>
