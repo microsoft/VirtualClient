@@ -63,14 +63,14 @@ namespace VirtualClient
         DiskFilterNotSupported = 301,
 
         /// <summary>
-        /// The workload failed during execution.
-        /// </summary>
-        WorkloadFailed = 315,
-
-        /// <summary>
         /// The workload results/results file was not found.
         /// </summary>
         WorkloadResultsNotFound = 314,
+
+        /// <summary>
+        /// The workload failed during execution.
+        /// </summary>
+        WorkloadFailed = 315,
 
         /// <summary>
         /// The workload failed during execution.
@@ -217,6 +217,11 @@ namespace VirtualClient
         /// Required license information is either missing or does not exist.
         /// </summary>
         InvalidOrMissingLicense = 512,
+
+        /// <summary>
+        /// Compilation of the workload failed.
+        /// </summary>
+        CompilationFailed = 513,
 
         /// <summary>
         /// Disk format operations failed.
