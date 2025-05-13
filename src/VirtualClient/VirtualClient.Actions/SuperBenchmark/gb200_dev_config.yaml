@@ -1,0 +1,384 @@
+version: v0.11
+superbench:
+  enable:
+  # microbenchmark - computation
+  - kernel-launch                         # 00:53
+  - gemm-flops                            # 12:10
+  - cudnn-function                        # 03:58
+  - cublaslt-gemm                         # 10:27
+  # - cublaslt-gemm:bmm                     # 01:09:21
+  - cublas-function                       # 02:42
+  - matmul                                # 00:14
+  - gpu-burn                              # 15:07
+  # microbenchmark - communication
+  - cpu-memory-bw-latency                 # 03:30
+  - mem-bw                                # 00:50
+  - gpu-copy-bw:perf                      # 01:21
+  - gpu-copy-bw:correctness               # 00:14
+  # - gpu-stream:perf
+  #- gpu-stream:correctness
+  # NCCL
+  - nccl-bw:nvlink                        # 01:03
+  - nccl-bw:nvlink-allgather              # 01:03
+  - nccl-bw:nvlink-broadcast              # 01:03
+  - nccl-bw:nvlink-reduce                 # 01:03
+  - nccl-bw:nvlink-reducescatter          # 01:03
+  - nccl-bw:nvlink-alltoall               # 01:03
+  # microbenchmark - comput-comm. overlap
+  - computation-communication-overlap     # 04:50
+  - sharding-matmul                       # 00:25
+  # microbenchmark - storage
+  # - disk-benchmark                       # 18:47
+  # model benchmark - inference
+  # - ort-inference                         # 02:24
+  # ##tensorrt-inference                    # 02:03:33
+  - dist-inference                        # 00:35
+  # model benchmark - training
+  - model-benchmarks:gpt                  # 10:37
+  - model-benchmarks:bert                 # 15:02
+  - model-benchmarks:lstm                 # 02:23
+  - model-benchmarks:resnet               # 25:40
+  - model-benchmarks:densenet             # 07:51
+  - model-benchmarks:vgg                  # 11:51
+  - model-benchmarks:llama2-7b            
+  - model-benchmarks:llama2-7b-fp32:
+  - model-benchmarks:stress               # 01:00:43
+  monitor:
+    enable: false
+    sample_duration: 1
+    sample_interval: 10
+  var:
+    default_timeout: &default_timeout 600
+    default_local_mode: &default_local_mode
+      modes:
+      - name: local
+        proc_num: 4
+        prefix: CUDA_VISIBLE_DEVICES={proc_rank}
+        parallel: yes
+    default_pytorch_mode: &default_pytorch_mode
+      modes:
+      - name: torch.distributed
+        proc_num: 4
+        node_num: 1
+        env:
+          NCCL_DEBUG: WARN
+          TORCH_NCCL_ASYNC_ERROR_HANDLING: '0'
+      frameworks: [pytorch]
+    model_ddp_parameter: &model_ddp_param
+      duration: 0
+      num_warmup: 128
+      num_steps: 512
+      sample_count: 8192
+      batch_size: 128
+      precision: [float32, float16]
+      model_action: [train]
+      pin_memory: yes
+      num_workers: 0
+    nccl_parameter: &nccl_param
+      minbytes: 1K
+      maxbytes: 16G
+      stepfactor: 2
+      check: 1
+      warmup_iters: 20
+      iters: 100
+  benchmarks:
+    # microbenchmark - computation
+    kernel-launch:
+      <<: *default_local_mode
+      timeout: *default_timeout
+    gemm-flops:
+      <<: *default_local_mode
+      timeout: 1500
+    cudnn-function:
+      <<: *default_local_mode
+      timeout: *default_timeout
+    cublaslt-gemm:
+      <<: *default_local_mode
+      timeout: 1200
+      parameters:
+        in_types: ['fp32', 'fp16', 'bf16', 'fp8e4m3', 'fp8e5m2']
+        shapes:
+        - 4096,4096,4096
+        - 8192,8192,8192
+        - 16384,16384,16384
+        - 16:2048,4608,12288
+        - 16:2048,12288,1536
+    cublaslt-gemm:bmm:
+      <<: *default_local_mode
+      timeout: 7200
+      parameters:
+        in_types: ['fp64', 'fp32', 'fp16', 'bf16']
+        batch: 96:12288
+        shapes:
+        - 1,1:2048,128
+        - 1,128,1:64
+        - 1,128,256:2048
+    cublas-function:
+      <<: *default_local_mode
+      timeout: *default_timeout
+    matmul:
+      <<: *default_local_mode
+      timeout: *default_timeout
+      frameworks: [pytorch]
+    gpu-burn:
+      timeout: 1800
+      modes:
+      - name: local
+        parallel: no
+      parameters:
+        time: 90
+        doubles: true
+        tensor_core: true
+    # microbenchmark - communication
+    cpu-memory-bw-latency:
+      timeout: *default_timeout
+      modes:
+      - name: local
+        parallel: no
+      parameters:
+        tests:
+        - bandwidth_matrix
+        - latency_matrix
+        - max_bandwidth
+    mem-bw:
+      timeout: *default_timeout
+      modes:
+      - name: local
+        proc_num: 4
+        prefix: CUDA_VISIBLE_DEVICES={proc_rank} numactl -N $(({proc_rank}/2))
+        parallel: no
+    gpu-copy-bw:perf:
+      timeout: *default_timeout
+      modes:
+      - name: local
+        parallel: no
+      parameters:
+        mem_type: [htod, dtoh, dtod]
+        copy_type: [sm, dma]
+    gpu-copy-bw:correctness:
+      timeout: *default_timeout
+      modes:
+      - name: local
+        parallel: no
+      parameters:
+        mem_type: [htod, dtoh, dtod]
+        copy_type: [sm, dma]
+        size: 4096
+        num_warm_up: 0
+        num_loops: 1
+        check_data: true
+    gpu-stream:perf:
+      timeout: 600
+      modes:
+      - name: local
+        parallel: false
+      parameters:
+        num_warm_up: 10
+        num_loops: 40
+        size: 4294967296
+    gpu-stream:correctness:
+      timeout: 600
+      modes:
+      - name: local
+        parallel: false
+      parameters:
+        num_warm_up: 0
+        num_loops: 1
+        size: 1048576
+        check_data: true
+    nccl-bw:nvlink:
+      timeout: *default_timeout
+      modes:
+      - name: mpi
+        proc_num: 4
+        node_num: 1
+      parameters:
+        <<: *nccl_param
+    nccl-bw:nvlink-allgather:
+      timeout: *default_timeout
+      modes:
+      - name: mpi
+        proc_num: 4
+        node_num: 1
+      parameters:
+        <<: *nccl_param
+        operation: allgather
+    nccl-bw:nvlink-broadcast:
+      timeout: *default_timeout
+      modes:
+      - name: mpi
+        proc_num: 4
+        node_num: 1
+      parameters:
+        <<: *nccl_param
+        operation: broadcast
+    nccl-bw:nvlink-reduce:
+      timeout: *default_timeout
+      modes:
+      - name: mpi
+        proc_num: 4
+        node_num: 1
+      parameters:
+        <<: *nccl_param
+        operation: reduce
+    nccl-bw:nvlink-reducescatter:
+      timeout: *default_timeout
+      modes:
+      - name: mpi
+        proc_num: 4
+        node_num: 1
+      parameters:
+        <<: *nccl_param
+        operation: reducescatter
+    nccl-bw:nvlink-alltoall:
+      timeout: *default_timeout
+      modes:
+      - name: mpi
+        proc_num: 4
+        node_num: 1
+      parameters:
+        <<: *nccl_param
+        operation: alltoall
+    # microbenchmark - comput-comm. overlap
+    computation-communication-overlap:
+      <<: *default_pytorch_mode
+      timeout: *default_timeout
+    sharding-matmul:
+      <<: *default_pytorch_mode
+      timeout: *default_timeout
+    # microbenchmark - storage
+    disk-benchmark:
+      timeout: 2400
+      modes:
+      - name: local
+        parallel: no
+      parameters:
+        block_devices:
+        - /dev/nvme0n1
+        - /dev/nvme1n1
+        - /dev/nvme2n1
+        - /dev/nvme3n1
+        - /dev/nvme4n1
+        - /dev/nvme5n1
+        - /dev/nvme6n1
+        - /dev/nvme7n1
+        seq_read_runtime: 60
+        rand_read_runtime: 60
+    # model benchmark - inference
+    ort-inference:
+      <<: *default_local_mode
+      timeout: *default_timeout
+    tensorrt-inference:
+      <<: *default_local_mode
+      timeout: 14400
+      parameters:
+        pytorch_models:
+        - resnet50
+        - resnet101
+        - resnet152
+        - densenet169
+        - densenet201
+        - bert-base
+        - bert-large
+        seq_length: 224
+        batch_size: 32
+        precision: fp16
+    dist-inference:
+      <<: *default_pytorch_mode
+      timeout: *default_timeout
+      parameters:
+        batch_size: 80
+        input_size: 128
+        hidden_size: 128
+        num_layers: 50
+        num_steps: 10000
+        precision: float16
+    # model benchmark - training
+    model-benchmarks:gpt:
+      <<: *default_pytorch_mode
+      timeout: 1200
+      models:
+      - gpt2-small
+      - gpt2-large
+      parameters:
+        <<: *model_ddp_param
+        precision: [float32, float16, fp8_hybrid]
+        batch_size: 32
+        seq_len: 224
+    model-benchmarks:bert:
+      <<: *default_pytorch_mode
+      timeout: 1800
+      models:
+      - bert-base
+      - bert-large
+      parameters:
+        <<: *model_ddp_param
+        precision: [float32, float16, fp8_hybrid]
+        seq_len: 224
+    model-benchmarks:lstm:
+      <<: *default_pytorch_mode
+      timeout: *default_timeout
+      models:
+      - lstm
+      parameters:
+        <<: *model_ddp_param
+        batch_size: 1024
+        input_size: 224
+        hidden_size: 1000
+        seq_len: 32
+    model-benchmarks:resnet:
+      <<: *default_pytorch_mode
+      timeout: 3000
+      models:
+      - resnet50
+      - resnet101
+      - resnet152
+      parameters:
+        <<: *model_ddp_param
+        batch_size: 384
+    model-benchmarks:densenet:
+      <<: *default_pytorch_mode
+      timeout: 1000
+      models:
+      - densenet169
+      - densenet201
+      parameters:
+        <<: *model_ddp_param
+    model-benchmarks:vgg:
+      <<: *default_pytorch_mode
+      timeout: 1500
+      models:
+      - vgg11
+      - vgg13
+      - vgg16
+      - vgg19
+      parameters:
+        <<: *model_ddp_param
+    model-benchmarks:stress:
+      <<: *default_pytorch_mode
+      timeout: 7200
+      models:
+      - gpt2-large
+      parameters:
+        <<: *model_ddp_param
+        batch_size: 32
+    model-benchmarks:llama2-7b:
+      <<: *default_pytorch_mode
+      timeout: 1500
+      models:
+      - llama2-7b
+      parameters:
+        <<: *model_ddp_param
+        batch_size: 72
+        seq_len: 256
+        precision: [float16, fp8_hybrid]
+    model-benchmarks:llama2-7b-fp32:
+      <<: *default_pytorch_mode
+      timeout: 1500
+      models:
+      - llama2-7b
+      parameters:
+        <<: *model_ddp_param
+        batch_size: 24
+        seq_len: 256
+        precision: [float32]
