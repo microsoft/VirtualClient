@@ -139,12 +139,14 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1")]
+        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", true)]
+        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", false)]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command)
+        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool runElevated)
         {
             this.SetupTest(platform);
-            this.fixture.Parameters["ScriptPath"] = command;
+            this.fixture.Parameters[nameof(PowershellExecutor.RunElevated)] = runElevated;
+            this.fixture.Parameters[nameof(PowershellExecutor.ScriptPath)] = command;
 
             string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}\\{command} parameter1 parameter2";
 
