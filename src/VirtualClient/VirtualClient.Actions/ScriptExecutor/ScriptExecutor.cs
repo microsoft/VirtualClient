@@ -90,6 +90,23 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True if VC should create elevated process
+        /// to execute the script. Default = false.
+        /// </summary>
+        public bool RunElevated
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.RunElevated), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.RunElevated)] = value;
+            }
+        }
+
+        /// <summary>
         /// The full path to the script executable.
         /// </summary>
         public string ExecutablePath { get; set; }
@@ -153,7 +170,7 @@ namespace VirtualClient.Actions
                     .AddContext(nameof(command), command)
                     .AddContext(nameof(commandArguments), commandArguments);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, this.RunElevated))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
