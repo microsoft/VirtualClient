@@ -139,22 +139,27 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", true, "python3")]
-        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", true, "python3")]
-        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", false, "python")]
-        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", false, "python")]
-        public async Task PythonExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool usePython3, string pythonVersion)
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", true, "python3", true)]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", true, "python3", false)]
+        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", true, "python3", true)]
+        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", true, "python3", false)]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", false, "python", true)]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", false, "python", false)]
+        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", false, "python", true)]
+        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", false, "python", false)]
+        public async Task PythonExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool usePython3, string pythonVersion, bool runElevated)
         {
             this.SetupTest(platform);
-            this.mockFixture.Parameters["ScriptPath"] = command;
-            this.mockFixture.Parameters["UsePython3"] = usePython3;
+            this.mockFixture.Parameters[nameof(PythonExecutor.RunElevated)] = runElevated;
+            this.mockFixture.Parameters[nameof(PythonExecutor.ScriptPath)] = command;
+            this.mockFixture.Parameters[nameof(PythonExecutor.UsePython3)] = usePython3;
 
             string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}{command} parameter1 parameter2";
 
             using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
             {
                 bool commandExecuted = false;
-                string expectedCommand = $"{pythonVersion} {fullCommand}";
+                string expectedCommand = $"{(PlatformID.Unix.Equals(platform) && runElevated ? "sudo" : string.Empty)} {pythonVersion} {fullCommand}".Trim();
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if (expectedCommand == $"{exe} {arguments}")
