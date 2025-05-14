@@ -90,12 +90,37 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
+        private string GetOpenSslVersion()
+        {   
+            // The OpenSSL version is not available in the workload output. We need to run a separate command to get the version.   
+            try
+            {
+                this.Logger.LogTraceMessage($"Executing process 'openssl version' at directory '{this.ExecutablePath}'.");
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, "version"))
+                {
+                    process.StartAndWaitAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    process.ThrowIfWorkloadFailed();
+
+                    return process.StandardOutput?.ToString() ?? "Unknown";
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersionFailed", LogLevel.Warning, EventContext.Persisted().AddError(ex));
+                return "Unknown";
+            }
+        }
+        
         private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
+                    // Retrieve OpenSSL version
+                    string opensslVersion = this.GetOpenSslVersion();
+                
+                    this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContractCategory.Dependencies);
                     this.MetadataContract.AddForScenario(
                        "OpenSSL Speed",
                        workloadProcess.FullCommand(),
