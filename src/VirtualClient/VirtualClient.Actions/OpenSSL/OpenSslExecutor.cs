@@ -140,7 +140,8 @@ namespace VirtualClient.Actions
                         null,
                         commandArguments,
                         this.Tags,
-                        telemetryContext);
+                        telemetryContext, 
+                        opensslVersion);
                 }
                 catch (SchemaException exc)
                 {
