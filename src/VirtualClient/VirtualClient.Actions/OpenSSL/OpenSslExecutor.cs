@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
                     this.MetadataContract.AddForScenario(
                        "OpenSSL Speed",
                        workloadProcess.FullCommand(),
-                       toolVersion: null);
+                       toolVersion: opensslVersion);
 
                     this.MetadataContract.Apply(telemetryContext);
 
@@ -141,7 +141,8 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.Tags,
                         telemetryContext, 
-                        opensslVersion);
+                        null,
+                        toolVersion: opensslVersion);
                 }
                 catch (SchemaException exc)
                 {
