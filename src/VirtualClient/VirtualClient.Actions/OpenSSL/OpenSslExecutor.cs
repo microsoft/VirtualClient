@@ -101,7 +101,7 @@ namespace VirtualClient.Actions
                     process.StartAndWaitAsync(CancellationToken.None).GetAwaiter().GetResult();
                     process.ThrowIfWorkloadFailed();
 
-                    return process.StandardOutput?.ToString() ?? "Unknown";
+                    return process.StandardOutput?.ToString().Trim() ?? "Unknown";
                 }
             }
             catch (Exception ex)
@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
                 return "Unknown";
             }
         }
-        
+
         private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
