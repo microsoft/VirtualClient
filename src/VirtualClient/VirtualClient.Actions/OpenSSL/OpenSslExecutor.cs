@@ -98,6 +98,7 @@ namespace VirtualClient.Actions
                 this.Logger.LogTraceMessage($"Executing process 'openssl version' at directory '{this.ExecutablePath}'.");
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, "version"))
                 {
+                    this.SetEnvironmentVariables(process);
                     process.StartAndWaitAsync(CancellationToken.None).GetAwaiter().GetResult();
                     process.ThrowIfWorkloadFailed();
 
