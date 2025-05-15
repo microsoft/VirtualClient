@@ -176,17 +176,21 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(@"genericScript.bat", true)]
-        [TestCase(@"..\..\..\subfolder1\genericScript.bat", true)]
-        [TestCase(@"..\..\..\subfolder1\genericScript.bat", false)]
+        [TestCase(@"genericScript.bat", true, true)]
+        [TestCase(@"genericScript.bat", true, false)]
+        [TestCase(@"..\..\..\subfolder1\genericScript.bat", true, true)]
+        [TestCase(@"..\..\..\subfolder1\genericScript.bat", true, false)]
+        [TestCase(@"..\..\..\subfolder1\genericScript.bat", false, true)]
+        [TestCase(@"..\..\..\subfolder1\genericScript.bat", false, false)]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task ScriptExecutorExecutesTheCorrectWorkloadCommandsInWindows(string command, bool packageAvailable)
+        public async Task ScriptExecutorExecutesTheCorrectWorkloadCommandsInWindows(string command, bool packageAvailable, bool runElevated)
         {
             this.SetupTest(PlatformID.Win32NT);
-            this.mockFixture.Parameters["ScriptPath"] = command;
+            this.mockFixture.Parameters[nameof(ScriptExecutor.RunElevated)] = runElevated;
+            this.mockFixture.Parameters[nameof(ScriptExecutor.ScriptPath)] = command;
 
             string platformSpecificPath = packageAvailable ? Path.Combine("win-x64") : string.Empty;
-            this.mockFixture.Parameters["PackageName"] = packageAvailable ? "workloadPackage" : string.Empty;
+            this.mockFixture.Parameters[nameof(ScriptExecutor.PackageName)] = packageAvailable ? "workloadPackage" : string.Empty;
             string workingDir = packageAvailable ? this.mockPackage.Path : this.mockFixture.PlatformSpecifics.CurrentDirectory;
 
             using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
@@ -225,16 +229,20 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(@"genericScript.sh", true)]
-        [TestCase(@"../../../subfolder1/genericScript.sh", true)]
-        [TestCase(@"../../../subfolder1/genericScript.sh", false)]
-        public async Task ScriptExecutorExecutesTheCorrectWorkloadCommandsInUnix(string command, bool packageAvailable)
+        [TestCase(@"genericScript.sh", true, true)]
+        [TestCase(@"genericScript.sh", true, false)]
+        [TestCase(@"../../../subfolder1/genericScript.sh", true, true)]
+        [TestCase(@"../../../subfolder1/genericScript.sh", true, false)]
+        [TestCase(@"../../../subfolder1/genericScript.sh", false, true)]
+        [TestCase(@"../../../subfolder1/genericScript.sh", false, false)]
+        public async Task ScriptExecutorExecutesTheCorrectWorkloadCommandsInUnix(string command, bool packageAvailable, bool runElevated)
         {
             this.SetupTest(PlatformID.Unix);
-            this.mockFixture.Parameters["ScriptPath"] = command;
+            this.mockFixture.Parameters[nameof(ScriptExecutor.RunElevated)] = runElevated;
+            this.mockFixture.Parameters[nameof(ScriptExecutor.ScriptPath)] = command;
 
             string platformSpecificPath = packageAvailable ? Path.Combine("linux-x64") : string.Empty;
-            this.mockFixture.Parameters["PackageName"] = packageAvailable ? "workloadPackage" : string.Empty;
+            this.mockFixture.Parameters[nameof(ScriptExecutor.PackageName)] = packageAvailable ? "workloadPackage" : string.Empty;
             string workingDir = packageAvailable ? this.mockPackage.Path : this.mockFixture.PlatformSpecifics.CurrentDirectory;
 
             using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
@@ -249,7 +257,7 @@ namespace VirtualClient.Actions
                     unixStylePath = unixStylePath.Substring(unixStylePath.IndexOf(':') + 1); // Remove drive letter
                 }
 
-                string expectedCommand = $"{unixStylePath} parameter1 parameter2";
+                string expectedCommand = $"{(runElevated ? "sudo" : string.Empty)} {unixStylePath} parameter1 parameter2".Trim();
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
