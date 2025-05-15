@@ -218,6 +218,45 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibraries25OnUbuntuArm64Platform(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["PerformanceLibrary"] = "ARM";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = "25.04.1";
+
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
+            {
+                List<string> expectedCommands = new List<string>()
+                {
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockPackage.Path, "ARM", "arm-performance-libraries_25.04.1.sh")}",
+                    $"sudo ./arm-performance-libraries_25.04.1.sh -a",
+                    $"sudo bash -c \"source make_generic\"",
+                    $"mv Make.UNKNOWN Make.Linux_GCC",
+                    $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
+                    $"make arch=Linux_GCC",
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                };
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove(expectedCommands[0]);
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    {
+                        this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
+                    }
+
+                    return this.mockFixture.Process;
+                };
+
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.AreEqual(expectedCommands.Count, 0);
+            }
+        }
+
         private class TestHPLExecutor : HPLinpackExecutor
         {
             public TestHPLExecutor(MockFixture fixture)
