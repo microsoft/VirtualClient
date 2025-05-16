@@ -116,6 +116,8 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.Tags,
                         telemetryContext);
+
+                    metrics.LogConsole(this.Scenario, "OpenSSL");
                 }
                 catch (SchemaException exc)
                 {
