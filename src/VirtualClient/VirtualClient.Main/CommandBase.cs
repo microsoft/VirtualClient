@@ -121,7 +121,7 @@ namespace VirtualClient
         /// <summary>
         /// Describes the target Key vault from where secrets and certificates shold be accessed.
         /// </summary>
-        public DependencyStore KeyVault { get; set; }
+        public string KeyVault { get; set; }
 
         /// <summary>
         /// An alternate directory to which write log files. Setting this overrides
@@ -575,7 +575,8 @@ namespace VirtualClient
 
                 if (this.KeyVault != null)
                 {
-                    keyVaultManager = DependencyFactory.CreateKeyVaultManager(this.KeyVault);
+                    DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(DependencyStore.KeyVault, endpoint: this.KeyVault, this.CertificateManager ?? new CertificateManager());
+                    keyVaultManager = DependencyFactory.CreateKeyVaultManager(keyVaultStore);
                 }
 
                 if (this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
