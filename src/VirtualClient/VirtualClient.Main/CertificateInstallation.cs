@@ -70,7 +70,7 @@ namespace VirtualClient
                 throw new DependencyException("Key Vault manager is not available.", ErrorReason.DependencyNotFound);
             }
 
-            X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.CertificateName, systemManagement, cancellationToken);
+            X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.CertificateName, cancellationToken);
 
             try
             {

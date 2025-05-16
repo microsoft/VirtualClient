@@ -16,14 +16,11 @@ namespace VirtualClient
     {
         /// <summary>
         /// Represents the store description/details.
-        /// A retry policy to apply to transient issues with accessing secrets in an Azure Key Vault.
         /// </summary>
         DependencyStore StoreDescription { get; }
-        IAsyncPolicy KeyVaultAccessRetryPolicy { get; set; }
 
         /// <summary>
         /// Retrieves a secret from the Azure Key Vault.
-        /// Represents the store description/details.
         /// </summary>
         /// <param name="descriptor"> Provides the details for the secret to retrieve (requires "SecretName" and "VaultUri"). </param>
         /// <param name="cancellationToken"> A token that can be used to cancel the operation. </param>
@@ -45,23 +42,28 @@ namespace VirtualClient
             KeyVaultDescriptor descriptor,
             CancellationToken cancellationToken,
             IAsyncPolicy retryPolicy = null);
-        DependencyStore StoreDescription { get; }
 
         /// <summary>
         /// Retrieves a certificate from the Azure Key Vault.
         /// </summary>
         /// <param name="descriptor"> Provides the details for the certificate to retrieve (requires "CertificateName" and "VaultUri"). </param>
-        /// <param name="certificateName">Certificate Name to download.</param>
-        /// <param name="systemManagement">Provides access to system and environment management features.</param>
         /// <param name="cancellationToken"> A token that can be used to cancel the operation. </param>
         /// <param name="retryPolicy"> A policy to use for handling retries when transient errors/failures happen. </param>
         /// <returns> A <see cref="KeyVaultDescriptor"/> containing the certificate metadata. </returns>
         Task<KeyVaultDescriptor> GetCertificateAsync(
             KeyVaultDescriptor descriptor,
+            CancellationToken cancellationToken,
+            IAsyncPolicy retryPolicy = null);
+
+        /// <summary>
+        /// Retrieves a certificate from the Azure Key Vault.
+        /// </summary>
+        /// <param name="certificateName">Certificate Name to download.</param>
+        /// <param name="cancellationToken"> A token that can be used to cancel the operation. </param>
+        /// <param name="retryPolicy"> A policy to use for handling retries when transient errors/failures happen. </param>
         /// <returns> A <see cref="X509Certificate2"/> containing the certificate metadata. </returns>
         Task<X509Certificate2> GetCertificateAsync(
             string certificateName,
-            ISystemManagement systemManagement,
             CancellationToken cancellationToken,
             IAsyncPolicy retryPolicy = null);
     }
