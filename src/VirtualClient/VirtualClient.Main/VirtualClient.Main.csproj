@@ -14,6 +14,8 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+		<!--//add to module prop-->
+        <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
         <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
         <PackageReference Include="System.ServiceProcess.ServiceController" Version="$(System_ServiceProcess_ServiceController_PackageVersion)" />
     </ItemGroup>
