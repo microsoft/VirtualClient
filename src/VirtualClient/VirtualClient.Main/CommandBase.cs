@@ -119,6 +119,11 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Describes the target Key vault from where secrets and certificates shold be accessed.
+        /// </summary>
+        public DependencyStore KeyVault { get; set; }
+
+        /// <summary>
         /// An alternate directory to which write log files. Setting this overrides
         /// the defaults and takes precedence over any 'VC_LOGS_DIR' environment variable values.
         /// </summary>
@@ -534,6 +539,8 @@ namespace VirtualClient
             IProfileManager profileManager = new ProfileManager();
             List <IBlobManager> blobStores = new List<IBlobManager>();
 
+            IKeyVaultManager keyVaultManager = new KeyVaultManager();
+
             ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
 
             // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
@@ -564,6 +571,11 @@ namespace VirtualClient
                 if (this.ContentStore != null)
                 {
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
+                }
+
+                if (this.KeyVault != null)
+                {
+                    keyVaultManager = DependencyFactory.CreateKeyVaultManager(this.KeyVault);
                 }
 
                 if (this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
@@ -605,6 +617,7 @@ namespace VirtualClient
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
             dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
             dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
+            dependencies.AddSingleton<IKeyVaultManager>(keyVaultManager);
             dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
             dependencies.AddSingleton<IProfileManager>(profileManager);
