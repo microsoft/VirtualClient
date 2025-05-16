@@ -421,6 +421,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines a keyvault for the Virtual Client to get certificates and secrets.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateKeyVaultOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--kv", "--keyvault", "--key-vault", "--keyVault", "--key-Vault" })
+            {
+                Name = "KeyVault",
+                Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
+                ArgumentHelpName = "connectionstring|sas",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the path to the environment layout file.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -844,6 +865,11 @@ namespace VirtualClient
                     result,
                     "EventHubStore",
                     "Invalid usage. An Event Hub option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
+
+                OptionFactory.ThrowIfOptionExists(
+                    result,
+                    "KeyVault",
+                    "Invalid usage. A Key Vault option cannot be supplied at the same time as a proxy API option. When using a proxy API, all secrets and certificates are resolved through the proxy.");
 
                 return string.Empty;
             });
