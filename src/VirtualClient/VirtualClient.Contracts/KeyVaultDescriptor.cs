@@ -41,6 +41,21 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultDescriptor"/> class.
+        /// </summary>
+        /// <param name="vaultUri">URI of Azure Key Vault.</param>
+        /// <param name="objectName">Name of the Secret, key or Certificate as applicable.</param>
+        public KeyVaultDescriptor(string vaultUri, string objectName)
+            : base()
+        {
+            vaultUri.ThrowIfNullOrWhiteSpace(nameof(vaultUri));
+            objectName.ThrowIfNullOrWhiteSpace(nameof(objectName));
+
+            this.VaultUri = vaultUri;
+            this.ObjectName = objectName;
+        }
+
+        /// <summary>
         /// Gets or sets the URI of the Azure Key Vault.
         /// </summary>
         public string VaultUri

@@ -5,8 +5,19 @@ namespace VirtualClient.Contracts
     /// </summary>
     public enum KeyVaultObjectType
     {
+        /// <summary>
+        /// Secret type KeyVault Object
+        /// </summary>
         Secret,
+
+        /// <summary>
+        /// Key type KeyVault Object
+        /// </summary>
         Key,
+
+        /// <summary>
+        /// Certificate type KeyVault Object
+        /// </summary>
         Certificate
     }
 }
