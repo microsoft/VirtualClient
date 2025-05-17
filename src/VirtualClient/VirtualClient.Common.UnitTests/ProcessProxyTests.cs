@@ -116,5 +116,34 @@ namespace VirtualClient.Common
             DateTime exitTime = process.ExitTime;
             Assert.IsTrue(exitTime != DateTime.MinValue);
         }
+
+        [Test]
+        public async Task ProcessProxyWaitForExitAsyncHandlesTimeoutExceptionAsExpected()
+        {
+            IProcessProxy process = null;
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "ping",
+                Arguments = "localhost -n 2", // This will run for about 2 seconds
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+            using (process = new ProcessProxy(new Process { StartInfo = startInfo }))
+            {
+                // Test Case 1: When timeout is null, no TimeoutException should be thrown
+                // The process will complete normally
+                await process.StartAndWaitAsync(CancellationToken.None);
+                Assert.IsTrue(process.HasExited);
+
+                // Test Case 2: When timeout is specified and process takes longer, TimeoutException should be caught
+                process = new ProcessProxy(new Process { StartInfo = startInfo });
+                await process.StartAndWaitAsync(CancellationToken.None, TimeSpan.FromMilliseconds(100));
+                // If we get here, the TimeoutException was caught as expected
+                Assert.IsTrue(true);
+            }
+        }
     }
 }
