@@ -70,14 +70,14 @@ namespace VirtualClient
         {
             this.ValidateKeyVaultStore();
             this.StoreDescription.ThrowIfNull(nameof(this.StoreDescription));
-            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.ObjectName));
+            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.Name));
 
             // Use descriptor.VaultUri if set, otherwise use the store's EndpointUri
             Uri vaultUri = !string.IsNullOrWhiteSpace(descriptor.VaultUri)
                 ? new Uri(descriptor.VaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
-            string secretName = descriptor.ObjectName;
+            string secretName = descriptor.Name;
 
             SecretClient client = new SecretClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
@@ -90,7 +90,7 @@ namespace VirtualClient
                     {
                         Value = secret.Value,
                         Version = secret.Properties.Version,
-                        ObjectName = secretName,
+                        Name = secretName,
                         VaultUri = vaultUri.ToString(),
                         ObjectId = secret.Id.ToString(),
                         ObjectType = KeyVaultObjectType.Secret
@@ -146,14 +146,14 @@ namespace VirtualClient
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
-            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.ObjectName));
+            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.Name));
 
             // Use descriptor.VaultUri if set, otherwise use the store's EndpointUri
             Uri vaultUri = !string.IsNullOrWhiteSpace(descriptor.VaultUri)
                 ? new Uri(descriptor.VaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
-            string keyName = descriptor.ObjectName;
+            string keyName = descriptor.Name;
 
             KeyClient client = new KeyClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
@@ -165,7 +165,7 @@ namespace VirtualClient
                     KeyVaultDescriptor result = new KeyVaultDescriptor(descriptor)
                     {
                         ObjectType = KeyVaultObjectType.Key,
-                        ObjectName = keyName,
+                        Name = keyName,
                         VaultUri = vaultUri.ToString(),
                         Version = key.Properties.Version,
                         ObjectId = key.Id.ToString()
@@ -221,14 +221,14 @@ namespace VirtualClient
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
-            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.ObjectName));
+            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.Name));
 
             // Use descriptor.VaultUri if set, otherwise use the store's EndpointUri
             Uri vaultUri = !string.IsNullOrWhiteSpace(descriptor.VaultUri)
                 ? new Uri(descriptor.VaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
-            string certName = descriptor.ObjectName;
+            string certName = descriptor.Name;
 
             CertificateClient client = new CertificateClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
@@ -240,7 +240,7 @@ namespace VirtualClient
                     KeyVaultDescriptor result = new KeyVaultDescriptor(descriptor)
                     {
                         ObjectType = KeyVaultObjectType.Certificate,
-                        ObjectName = certName,
+                        Name = certName,
                         VaultUri = vaultUri.ToString(),
                         Version = cert.Properties.Version,
                         ObjectId = cert.Id.ToString(),

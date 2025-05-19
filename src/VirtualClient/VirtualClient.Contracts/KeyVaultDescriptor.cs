@@ -45,32 +45,15 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="vaultUri">URI of Azure Key Vault.</param>
         /// <param name="objectName">Name of the Secret, key or Certificate as applicable.</param>
-        public KeyVaultDescriptor(string vaultUri, string objectName)
+        /// <param name="objectType">Type: Secret, key or Certificate as applicable.</param>
+        public KeyVaultDescriptor(KeyVaultObjectType objectType, string objectName, string? vaultUri = null)
             : base()
         {
-            vaultUri.ThrowIfNullOrWhiteSpace(nameof(vaultUri));
             objectName.ThrowIfNullOrWhiteSpace(nameof(objectName));
 
             this.VaultUri = vaultUri;
-            this.ObjectName = objectName;
-        }
-
-        /// <summary>
-        /// Gets or sets the URI of the Azure Key Vault.
-        /// </summary>
-        public string VaultUri
-        {
-            get => this.GetValue<string>(nameof(this.VaultUri));
-            set => this[nameof(this.VaultUri)] = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the name of the secret, key, or certificate.
-        /// </summary>
-        public string ObjectName
-        {
-            get => this.GetValue<string>(nameof(this.ObjectName));
-            set => this[nameof(this.ObjectName)] = value;
+            this.Name = objectName;
+            this.ObjectType = objectType;
         }
 
         /// <summary>
@@ -80,6 +63,19 @@ namespace VirtualClient.Contracts
         {
             get => this.GetValue<KeyVaultObjectType>(nameof(this.ObjectType));
             set => this[nameof(this.ObjectType)] = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the URI of the Azure Key Vault.
+        /// </summary>
+        public string VaultUri
+        {
+            get
+            {
+                this.TryGetValue(nameof(this.VaultUri), out IConvertible vaultUri);
+                return vaultUri?.ToString();
+            }
+            set => this[nameof(this.VaultUri)] = value;
         }
 
         /// <summary>
