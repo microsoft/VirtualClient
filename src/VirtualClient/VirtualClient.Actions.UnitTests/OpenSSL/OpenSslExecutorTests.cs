@@ -23,6 +23,7 @@ namespace VirtualClient.Actions.CpuPerformance
     {
         private DependencyFixture fixture;
         private DependencyPath mockPackage;
+        private string mockOpensslVersion = "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)\n";
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/bin/openssl")]
@@ -287,6 +288,31 @@ namespace VirtualClient.Actions.CpuPerformance
             }
         }
 
+        [Test]
+        public async Task OpenSslExecutorExecutesGetOpensslVersion()
+        {
+            this.SetupDefaultBehaviors();
+
+             using (TestOpenSslExecutor executor = new TestOpenSslExecutor(this.fixture))
+             {
+        
+                 await executor.ExecuteAsync(CancellationToken.None)
+                   .ConfigureAwait(false);
+        
+                var messages = this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.GetOpenSslVersion");
+                Assert.IsNotEmpty(messages);
+                foreach (var msg in messages)
+                {
+                    var eventContext = msg.Item3 as EventContext;
+                    if (eventContext != null && eventContext.Properties.ContainsKey("opensslVersion"))
+                    {
+                        Console.WriteLine(eventContext.Properties["opensslVersion"]);
+                    }
+                }
+                Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["opensslVersion"].ToString() == "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)"));
+            }
+        }
+
         private void SetupDefaultBehaviors(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             // Setup the default behaviors given all expected dependencies are in place such that the
@@ -327,6 +353,16 @@ namespace VirtualClient.Actions.CpuPerformance
                 if (process.IsMatch("openssl(.exe)* speed"))
                 {
                     process.StandardOutput.Append(TestResources.Results_OpenSSL_speed);
+                }
+            };
+            
+            this.fixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                // When we start the OpenSSL process we want to register a successful
+                // result.
+                if (process.IsMatch("openssl(.exe)* version"))
+                {
+                    process.StandardOutput.Append(mockOpensslVersion);
                 }
             };
         }

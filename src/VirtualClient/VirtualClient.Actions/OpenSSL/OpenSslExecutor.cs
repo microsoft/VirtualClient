@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using YamlDotNet.Serialization;
 
     /// <summary>
     /// Executes the OpenSSL workload.
@@ -90,43 +91,46 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
-        private string GetOpenSslVersion()
-        {   
+        /// <summary>
+        /// Gets openssl version by running openssl version command.
+        /// </summary>
+        private async Task GetOpenSslVersion(CancellationToken cancellationToken)
+        {
             // The OpenSSL version is not available in the workload output. We need to run a separate command to get the version.   
-            try
+            // The command 'openssl version' will return the version of OpenSSL installed on the system.
+            string opensslVersion = "Unknown";
+            if (!cancellationToken.IsCancellationRequested)
             {
                 this.Logger.LogTraceMessage($"Executing process 'openssl version' at directory '{this.ExecutablePath}'.");
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, "version"))
                 {
                     this.SetEnvironmentVariables(process);
-                    process.StartAndWaitAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                     process.ThrowIfWorkloadFailed();
 
-                    return process.StandardOutput?.ToString().Trim() ?? "Unknown";
+                    opensslVersion = process.StandardOutput?.ToString().Trim() ?? "Unknown";
+                    if (string.IsNullOrWhiteSpace(opensslVersion))
+                    {
+                        opensslVersion = "Unknown";
+                    }
+
+                    this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContractCategory.Dependencies);
+                    this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersion", LogLevel.Information, EventContext.Persisted().AddContext("opensslVersion", opensslVersion));
+
                 }
             }
-            catch (Exception ex)
-            {
-                this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersionFailed", LogLevel.Warning, EventContext.Persisted().AddError(ex));
-                return "Unknown";
-            }
+            
         }
 
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
                     // Retrieve OpenSSL version
-                    string opensslVersion = this.GetOpenSslVersion();
+                    this.GetOpenSslVersion(cancellationToken);
                 
-                    this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContractCategory.Dependencies);
-                    this.MetadataContract.AddForScenario(
-                       "OpenSSL Speed",
-                       workloadProcess.FullCommand(),
-                       toolVersion: opensslVersion);
-
                     this.MetadataContract.Apply(telemetryContext);
 
                     OpenSslMetricsParser resultsParser = new OpenSslMetricsParser(workloadProcess.StandardOutput.ToString(), commandArguments);
@@ -141,9 +145,7 @@ namespace VirtualClient.Actions
                         null,
                         commandArguments,
                         this.Tags,
-                        telemetryContext, 
-                        null,
-                        toolVersion: opensslVersion);
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {
@@ -161,7 +163,7 @@ namespace VirtualClient.Actions
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", commandArguments);
+                .AddContext("commandArguments", commandArguments);       
 
             return this.Logger.LogMessageAsync($"{nameof(OpenSslExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
@@ -181,7 +183,7 @@ namespace VirtualClient.Actions
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true);
 
                                 process.ThrowIfWorkloadFailed();
-                                this.CaptureMetrics(process, commandArguments, telemetryContext);
+                                this.CaptureMetrics(process, commandArguments, telemetryContext, cancellationToken);
                             }
                         }
                         finally
