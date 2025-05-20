@@ -62,6 +62,20 @@ namespace VirtualClient.Contracts
                 ? new Dictionary<string, IConvertible>(parameters, StringComparer.OrdinalIgnoreCase)
                 : new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
+            if (this.Actions?.Any() == true)
+            {
+                this.Actions.ForEach(action => action.ComponentType = ComponentType.Action);
+            }
+
+            if (this.Dependencies?.Any() == true)
+            {
+                this.Dependencies.ForEach(dependency => dependency.ComponentType = ComponentType.Dependency);
+            }
+
+            if (this.Monitors?.Any() == true)
+            {
+                this.Monitors.ForEach(monitor => monitor.ComponentType = ComponentType.Monitor);
+            }
         }
 
         /// <summary>

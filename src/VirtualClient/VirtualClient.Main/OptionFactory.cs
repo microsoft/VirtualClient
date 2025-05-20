@@ -154,6 +154,23 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line argument allows the user to define a command to execute in another 
+        /// runtime (e.g. PowerShell, Python).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Argument<string> CreateCommandArgument(bool required = false, object defaultValue = null)
+        {
+            // Single command execution is also supported. Behind the scenes this uses a
+            // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
+            // while additionally having the full set of other options available for profile execution.
+            Argument<string> commandArgument = new Argument<string>("Command");
+            commandArgument.SetDefaultValue(defaultValue);
+
+            return commandArgument;
+        }
+
+        /// <summary>
         /// Command line option defines a template for the virtual folder structure to use when uploading 
         /// files to a target storage account (e.g. /{experimentId}/{agentId}/{toolName}/{role}/{scenario}).
         /// </summary>
@@ -205,26 +222,6 @@ namespace VirtualClient
                 Description = "An endpoint URI or connection string to the Storage Account to which content logs/files can be uploaded.",
                 ArgumentHelpName = "connectionstring|sas",
                 AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines whether debug output should be emitted on the console/terminal.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateDebugFlag(bool required = true, object defaultValue = null)
-        {
-            Option<bool> option = new Option<bool>(new string[] { "--debug", "--verbose" })
-            {
-                Name = "Debug",
-                Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
-                ArgumentHelpName = "Flag",
-                AllowMultipleArgumentsPerToken = false,
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -991,6 +988,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines whether debug output should be emitted on the console/terminal.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateVerboseFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--verbose", "--debug" })
+            {
+                Name = "Verbose",
+                Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// An option to display the current build version of the application.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -1224,7 +1241,8 @@ namespace VirtualClient
             if (iterations <= 0)
             {
                 throw new ArgumentException(
-                    $"Invalid value provided for the iterations option. The iterations parameter must be greater than zero.");
+                    $"Invalid iteartion value '{iterations}' provided for the iterations option. " +
+                    $"The iterations parameter must be greater than zero.");
             }
 
             return new ProfileTiming(iterations);
@@ -1233,6 +1251,8 @@ namespace VirtualClient
         private static ProfileTiming ParseProfileTimeout(ArgumentResult parsedResult)
         {
             // Example Format:
+            // --timeout=-1
+            // --timeout=never
             // --timeout=1440
             // --timeout=1440,deterministic
             // --timeout=1440,deterministic*
@@ -1243,60 +1263,75 @@ namespace VirtualClient
 
             ProfileTiming timing = null;
             string argument = OptionFactory.GetValue(parsedResult);
-            string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
 
-            TimeSpan timeout = TimeSpan.Zero;
-            try
+            if (argument == "-1" || argument.Equals("never", StringComparison.OrdinalIgnoreCase))
             {
-                if (int.TryParse(parts[0], out int minutes))
-                {
-                    // The value is an integer representing minutes.
-                    timeout = TimeSpan.FromMinutes(minutes);
-                }
-                else
-                {
-                    // The value is a timespan format: 01.00:00:00.
-                    timeout = TimeSpan.Parse(parts[0]);
-                }
-            }
-            catch (FormatException)
-            {
-                throw new ArgumentException(
-                    $"Invalid timespan value provided for the timeout/duration option. The duration/timeout parameter must be " +
-                    $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
-            }
-
-            if (parts.Length == 1)
-            {
-                timing = new ProfileTiming(timeout);
-            }
-            else if (parts.Length == 2)
-            {
-                DeterminismScope levelOfDeterminism = DeterminismScope.Undefined;
-                string determinismScope = parts[1].ToLowerInvariant();
-                switch (determinismScope)
-                {
-                    case "deterministic":
-                        levelOfDeterminism = DeterminismScope.IndividualAction;
-                        break;
-
-                    case "deterministic*":
-                        levelOfDeterminism = DeterminismScope.AllActions;
-                        break;
-
-                    default:
-                        throw new ArgumentException(
-                            $"Invalid level of determinism value defined for the timeout/duration option. " +
-                            $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
-                }
-
-                timing = new ProfileTiming(timeout, levelOfDeterminism);
+                // Use -1 or never to indicate running forever
+                timing = ProfileTiming.Forever();
             }
             else
             {
-                throw new ArgumentException(
-                    $"Invalid level of determinism value defined for the timeout/duration option. " +
-                    $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                TimeSpan timeout = TimeSpan.Zero;
+                try
+                {
+                    if (int.TryParse(parts[0], out int minutes))
+                    {
+                        if (minutes <= 0)
+                        {
+                            throw new ArgumentException(
+                                $"Invalid timeout value '{argument}' provided for the timeout/duration option. " +
+                                $"The duration/timeout parameter must be greater than zero. Except using -1 to indicate run forever.");
+                        }
+                        // The value is an integer representing minutes.
+                        timeout = TimeSpan.FromMinutes(minutes);
+                    }
+                    else
+                    {
+                        // The value is a timespan format: 01.00:00:00.
+                        timeout = TimeSpan.Parse(parts[0]);
+                    }
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException(
+                        $"Invalid timespan value provided for the timeout/duration option. The duration/timeout parameter must be " +
+                        $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
+                }
+
+                if (parts.Length == 1)
+                {
+                    timing = new ProfileTiming(timeout);
+                }
+                else if (parts.Length == 2)
+                {
+                    DeterminismScope levelOfDeterminism = DeterminismScope.Undefined;
+                    string determinismScope = parts[1].ToLowerInvariant();
+                    switch (determinismScope)
+                    {
+                        case "deterministic":
+                            levelOfDeterminism = DeterminismScope.IndividualAction;
+                            break;
+
+                        case "deterministic*":
+                            levelOfDeterminism = DeterminismScope.AllActions;
+                            break;
+
+                        default:
+                            throw new ArgumentException(
+                                $"Invalid level of determinism value defined for the timeout/duration option. " +
+                                $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                    }
+
+                    timing = new ProfileTiming(timeout, levelOfDeterminism);
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Invalid level of determinism value defined for the timeout/duration option. " +
+                        $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                }
             }
 
             return timing;

@@ -8,11 +8,12 @@
     "Parameters": {
         "CommandLine": "",
         "ScriptPath": "relativePath\\script.sh",
-        "LogPaths":  "relativePath1\\file1;relativePath2\\subFolder1;*.txt",
-        "ToolName":  "",
-        "PackageName":  "exampleWorkload",
-        "WorkloadPackage":  "exampleworkload.1.1.0.zip",
-        "FailFast":  false
+        "LogPaths": "relativePath1\\file1;relativePath2\\subFolder1;*.txt",
+        "ToolName": "",
+        "PackageName": "exampleWorkload",
+        "WorkloadPackage": "exampleworkload.1.1.0.zip",
+        "FailFast": false,
+        "RunElevated": false
     },
     "Actions": [
         {
@@ -24,7 +25,8 @@
                 "LogPaths": "$.Parameters.LogPaths",
                 "ToolName": "$.Parameters.ToolName",
                 "PackageName": "$.Parameters.PackageName",
-                "FailFast":  "$.Parameters.FailFast",
+                "FailFast": "$.Parameters.FailFast",
+                "RunElevated": "$.Parameters.RunElevated",
                 "Tags": "Test,VC,Script"
             }
         }

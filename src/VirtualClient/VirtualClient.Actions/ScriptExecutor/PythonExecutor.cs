@@ -60,7 +60,7 @@ namespace VirtualClient.Actions
                    .AddContext(nameof(command), command)
                    .AddContext(nameof(commandArguments), commandArguments);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, this.RunElevated))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {

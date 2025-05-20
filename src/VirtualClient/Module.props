@@ -48,7 +48,7 @@
         <Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>4.7.0</Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>
         
         <!-- Microsoft.Diagnostics.Tracing.TraceEvent -->
-        <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>2.0.61</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
+        <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>3.1.5</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration -->
         <Microsoft_Extensions_Configuration_PackageVersion>9.0.3</Microsoft_Extensions_Configuration_PackageVersion>

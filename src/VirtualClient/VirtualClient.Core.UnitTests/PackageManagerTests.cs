@@ -651,8 +651,8 @@ namespace VirtualClient
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
             this.mockPackageDescriptor.Extract = false;
-            string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockPackageDescriptor.PackageName.ToLowerInvariant());
-            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.PackageName, this.mockPackageDescriptor.Name);
+            string expectedPackagePath = this.mockFixture.GetPackagePath(this.mockPackageDescriptor.Name.ToLowerInvariant());
+            string expectedInstallationPath = this.mockFixture.Combine(this.packageManager.PackagesDirectory, this.mockPackageDescriptor.Name);
 
             bool confirmed = false;
             this.packageManager.OnDownloadDependencyPackage = (description, installationPath, token) =>
@@ -805,6 +805,27 @@ namespace VirtualClient
 
             // Ensure the package definition is discovered
             this.packageManager.OnDiscoverPackages = (path) => new List<DependencyPath> { this.mockPackage };
+
+            await this.packageManager.InstallPackageAsync(
+                this.mockFixture.PackagesBlobManager.Object,
+                this.mockPackageDescriptor,
+                CancellationToken.None,
+                retryPolicy: Policy.NoOpAsync());
+
+            // When a package is registered
+            this.mockFixture.File.Verify(file => file.WriteAllTextAsync(
+                expectedRegistrationFile,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()));
+        }
+
+        [Test]
+        public async Task PackageManagerRegistersDependencyPackagesInstalledInTheDefaultPackagesDirectoryWithoutExtract()
+        {
+            string expectedRegistrationFile = this.mockFixture.GetPackagePath($"{this.mockPackage.Name.ToLowerInvariant()}.vcpkgreg");
+            this.SetupDependencyPackageInstallationDefaultMockBehaviors();
+            this.mockPackageDescriptor.Extract = false;
+            // Ensure the package definition is discovered
 
             await this.packageManager.InstallPackageAsync(
                 this.mockFixture.PackagesBlobManager.Object,

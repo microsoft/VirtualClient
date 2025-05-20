@@ -61,8 +61,8 @@ namespace VirtualClient
         {
             profileIterations.ThrowIfInvalid(
                 nameof(profileIterations),
-                iterations => iterations > 0,
-                $"Invalid profile iterations value. The value provided '{profileIterations}' must be greater than zero.");
+                iterations => iterations > 0 || iterations == -1,
+                $"Invalid profile iterations value. The value provided '{profileIterations}' must be greater than zero, or equals to -1.");
 
             this.ProfileIterations = profileIterations;
         }

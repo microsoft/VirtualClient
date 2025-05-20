@@ -107,12 +107,6 @@ call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CO
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-x64.nuspec && echo: || Goto :Error
 
 echo:
-echo [Create NuGet Package] VirtualClient.%PACKAGE_VERSION%
-echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.nuspec && echo: || Goto :Error
-
-echo:
 echo [Create NuGet Package] VirtualClient.Framework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
 call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^

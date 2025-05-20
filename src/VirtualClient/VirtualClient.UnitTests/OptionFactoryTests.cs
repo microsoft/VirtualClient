@@ -289,7 +289,7 @@ namespace VirtualClient
         [TestCase("--verbose")]
         public void DebugFlagSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateDebugFlag();
+            Option option = OptionFactory.CreateVerboseFlag();
             ParseResult result = option.Parse(alias);
             Assert.IsFalse(result.Errors.Any());
         }
@@ -933,6 +933,16 @@ namespace VirtualClient
         }
 
         [Test]
+        public void PackageStoreOptionDoesNotApplyDefaultWhenProxyIsUsed()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri" }, tokenSource);
+                ParseResult result = commandBuilder.Build().Parse("--proxy-api=http://anyuri");
+            }
+        }
+
+        [Test]
         public void ProxyApiOptionsCannotBeUsedAtTheSameTimeWithTheContentStoreOption()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
@@ -1062,6 +1072,9 @@ namespace VirtualClient
             Assert.DoesNotThrow(() => option.Parse("--timeout=01.00:30:00"));
             Assert.DoesNotThrow(() => option.Parse("--timeout=00:30:00"));
             Assert.DoesNotThrow(() => option.Parse("--timeout=1440"));
+            Assert.DoesNotThrow(() => option.Parse("--timeout=-1"));
+            Assert.Throws<ArgumentException>(() => option.Parse("--timeout=-2"));
+            Assert.DoesNotThrow(() => option.Parse("--timeout=NeVer"));
         }
 
         [Test]

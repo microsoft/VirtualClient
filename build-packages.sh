@@ -162,17 +162,6 @@ if [ $result -ne 0 ]; then
 fi
 
 echo ""
-echo "[Create NuGet Package] VirtualClient.$PACKAGE_VERSION"
-echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
--p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.nuspec"
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
-fi
-
-echo ""
 echo "[Create NuGet Package] VirtualClient.Framework.$PACKAGE_VERSION"
 echo "----------------------------------------------------------"
 dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \

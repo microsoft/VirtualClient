@@ -10,21 +10,17 @@ namespace VirtualClient
     using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.IO.Abstractions;
-    using System.Linq;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.ServiceProcess;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using VirtualClient.Common.Extensions;
+    using Org.BouncyCastle.Bcpg.OpenPgp;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Configuration;
     using VirtualClient.Logging;
 
     /// <summary>
@@ -177,15 +173,10 @@ namespace VirtualClient
         {
             RootCommand rootCommand = new RootCommand("Executes workload and monitoring profiles on the system.")
             {
-                // Required
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(),
-
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                // --agentId
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+                 // --profile
+                OptionFactory.CreateProfileOption(required: false),
 
                 // --api-port
                 OptionFactory.CreateApiPortOption(required: false),
@@ -193,14 +184,14 @@ namespace VirtualClient
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
                 // --content-store
                 OptionFactory.CreateContentStoreOption(required: false),
 
                 // --content-path-template
                 OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --debug
-                OptionFactory.CreateDebugFlag(required: false, false),
 
                 // --timeout
                 OptionFactory.CreateTimeoutOption(required: false),
@@ -266,11 +257,19 @@ namespace VirtualClient
                 OptionFactory.CreateStateDirectoryOption(required: false),
 
                 // --system
-                OptionFactory.CreateSystemOption(required: false)
+                OptionFactory.CreateSystemOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
-            rootCommand.TreatUnmatchedTokensAsErrors = true;
-            rootCommand.Handler = CommandHandler.Create<RunProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            // Single command execution is also supported. Behind the scenes this uses a
+            // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
+            // while additionally having the full set of other options available for profile execution.
+            rootCommand.AddArgument(OptionFactory.CreateCommandArgument(required: false, string.Empty));
+
+            rootCommand.TreatUnmatchedTokensAsErrors = false;
+            rootCommand.Handler = CommandHandler.Create<ExecuteCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             Command runApiCommand = new Command(
                 "runapi",
@@ -283,9 +282,6 @@ namespace VirtualClient
 
                  // --clean
                 OptionFactory.CreateCleanOption(required: false),
-
-                // --debug
-                OptionFactory.CreateDebugFlag(required: false, false),
 
                 // --ip-address
                 OptionFactory.CreateIPAddressOption(required: false),
@@ -307,6 +303,9 @@ namespace VirtualClient
 
                 // --state-dir
                 OptionFactory.CreateStateDirectoryOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
             runApiCommand.TreatUnmatchedTokensAsErrors = true;
@@ -323,19 +322,13 @@ namespace VirtualClient
                 // --package
                 OptionFactory.CreatePackageOption(required: true),
 
-                // --name
-                OptionFactory.CreateNameOption(required: true),
-
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                // --agent-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --clean
+                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
-                // --debug
-                OptionFactory.CreateDebugFlag(required: false, false),
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
 
                 // --event-hub
                 OptionFactory.CreateEventHubStoreOption(required: false),
@@ -346,8 +339,17 @@ namespace VirtualClient
                 // --experiment-id
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
+                // --iterations (for integration only. not used/always = 1)
+                OptionFactory.CreateIterationsOption(required: false),
+
+                // --layout-path (for integration only. not used.)
+                OptionFactory.CreateLayoutPathOption(required: false),
+
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
+
+                // --name
+                OptionFactory.CreateNameOption(required: false),
 
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
@@ -364,6 +366,9 @@ namespace VirtualClient
                 // --package-dir
                 OptionFactory.CreatePackageDirectoryOption(required: false),
 
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
                 // --package-store
                 OptionFactory.CreatePackageStoreOption(required: false),
 
@@ -375,11 +380,16 @@ namespace VirtualClient
 
                 // --state-dir
                 OptionFactory.CreateStateDirectoryOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
             runBootstrapCommand.TreatUnmatchedTokensAsErrors = true;
             runBootstrapCommand.AddAlias("Bootstrap");
-            runBootstrapCommand.Handler = CommandHandler.Create<RunBootstrapCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            runBootstrapCommand.AddAlias("Install");
+            runBootstrapCommand.AddAlias("install");
+            runBootstrapCommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             Command runResetCommand = new Command(
                 "reset",
@@ -397,14 +407,17 @@ namespace VirtualClient
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
                 // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false)
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
             runResetCommand.TreatUnmatchedTokensAsErrors = true;
             runResetCommand.AddAlias("Reset");
             runResetCommand.AddAlias("Clean");
             runResetCommand.AddAlias("clean");
-            runResetCommand.Handler = CommandHandler.Create<ResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            runResetCommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             Command convertCommand = new Command(
                 "convert",
@@ -419,8 +432,9 @@ namespace VirtualClient
                 OptionFactory.CreateOutputDirectoryOption(required: true)
             };
 
+            convertCommand.AddAlias("Convert");
             convertCommand.TreatUnmatchedTokensAsErrors = true;
-            convertCommand.Handler = CommandHandler.Create<ConvertCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            convertCommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             rootCommand.AddCommand(runApiCommand);
             rootCommand.AddCommand(runBootstrapCommand);
