@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using VirtualClient.Logging;
 
     /// <summary>
@@ -195,7 +197,7 @@ namespace VirtualClient.Actions
 
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
-
+                    this.CaptureVersion(telemetryContext, cancellationToken);
                     if (this.IsMultiRoleLayout())
                     {
                         using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -245,6 +247,54 @@ namespace VirtualClient.Actions
             }
 
             this.InitializeApiClients();
+        }
+
+        /// <summary>
+        /// Initializes the environment and dependencies for server of redis workload.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>redisVersion</returns>
+        protected string GetRedisVersion(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string command = "redis-cli INFO SERVER";
+            string versionPattern = @"redis_version:(\d+\.\d+\.\d+)";
+            Regex versionRegex = new Regex(versionPattern, RegexOptions.Compiled);
+            string redisVersion = null;
+            try
+            {
+                using (IProcessProxy process = this.ExecuteCommandAsync(
+                    command,
+                    commandArguments: null,
+                    workingDirectory: this.RedisPackagePath,
+                    telemetryContext: telemetryContext,
+                    cancellationToken: cancellationToken,
+                    runElevated: true).Result)
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        string output = process.StandardOutput.ToString();
+                        Match match = versionRegex.Match(output);
+                        if (match.Success)
+                        {
+                            redisVersion = match.Groups[1].Value;
+                            telemetryContext.AddContext("redisVersion", redisVersion);
+                            this.Logger.LogMessage($"{this.TypeName}.RedisVersionCaptured", LogLevel.Information, telemetryContext);
+                        }
+                        else
+                        {
+                            throw new WorkloadException("Failed to parse Redis version from output.", ErrorReason.CriticalWorkloadFailure);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogMessage($"{this.TypeName}.RedisVersionCaptureError", LogLevel.Error, telemetryContext.Clone().AddError(ex));
+                throw;
+            }
+
+            return redisVersion;
         }
 
         /// <summary>
@@ -441,6 +491,19 @@ namespace VirtualClient.Actions
                     throw;
                 }
             });
+        }
+
+        private void CaptureVersion(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string redisversion = this.GetRedisVersion(telemetryContext, cancellationToken);
+                this.MetadataContract.AddForScenario(
+                            "Redis-Benchmark",
+                            null,
+                            toolVersion: redisversion);
+                this.MetadataContract.Apply(telemetryContext);
+            }
         }
     }
 }
