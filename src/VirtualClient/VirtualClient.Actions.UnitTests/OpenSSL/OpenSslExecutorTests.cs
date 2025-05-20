@@ -301,14 +301,6 @@ namespace VirtualClient.Actions.CpuPerformance
         
                 var messages = this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.GetOpenSslVersion");
                 Assert.IsNotEmpty(messages);
-                foreach (var msg in messages)
-                {
-                    var eventContext = msg.Item3 as EventContext;
-                    if (eventContext != null && eventContext.Properties.ContainsKey("opensslVersion"))
-                    {
-                        Console.WriteLine(eventContext.Properties["opensslVersion"]);
-                    }
-                }
                 Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["opensslVersion"].ToString() == "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)"));
             }
         }
