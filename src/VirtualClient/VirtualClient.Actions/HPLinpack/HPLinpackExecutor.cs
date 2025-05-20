@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
         private int coreCount;
         private string makeFileName = "Make.Linux_GCC";
         private string commandArguments;
-        private string hplPerfLibraryInfo;
+        private string hplArmPerfLibraryInfo;
         private CpuInfo cpuInfo;
         private long totalMemoryKiloBytes;
 
@@ -272,7 +272,7 @@ namespace VirtualClient.Actions
             if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.CpuArchitecture != Architecture.X64 && this.PerformanceLibrary != null)
             {
                 throw new WorkloadException(
-                    $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +
+                    $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " + // ReVisit
                     $"'{PlatformSpecifics.LinuxArm64}'",
                     ErrorReason.PlatformNotSupported);
             }
@@ -311,21 +311,21 @@ namespace VirtualClient.Actions
         {
             if (this.CpuArchitecture == Architecture.Arm64 && this.PerformanceLibrary == "ARM")
             {
-                // Switch between perf lib versions here
+                // Switch between ARM perf lib versions
                 switch (this.PerformanceLibraryVersion)
                 {
                     case "23.04.1":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1";
+                        this.hplArmPerfLibraryInfo = "arm-performance-libraries_23.04.1";
                         break;
                     case "24.10":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.10";
+                        this.hplArmPerfLibraryInfo = "arm-performance-libraries_24.10";
                         break;
                     case "25.04.1":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_25.04.1"; 
+                        this.hplArmPerfLibraryInfo = "arm-performance-libraries_25.04.1"; 
                         break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10 and 25.04.1 on the following platform/architectures: " + 
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10 and 25.04.1 on the following platform/architectures: " +
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }
@@ -334,8 +334,8 @@ namespace VirtualClient.Actions
                                                                     .ConfigureAwait(false);
 
                 string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
-                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"{this.hplPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync($"./{this.hplPerfLibraryInfo}.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"{this.hplArmPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync($"./{this.hplArmPerfLibraryInfo}.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
             }
 
             if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "AMD")
@@ -343,11 +343,11 @@ namespace VirtualClient.Actions
                 DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
                                                                     .ConfigureAwait(false);
 
-                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD");
+                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, this.PerformanceLibraryVersion);
                 string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                 await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
-                await this.ExecuteCommandAsync("bash", "-c \"source amd-libs.cfg\"", $"{installPath}/4.2.0/gcc", telemetryContext, cancellationToken, runElevated: true);
+                await this.ExecuteCommandAsync("bash", "-c \"source amd-libs.cfg\"", $"{installPath}/{this.PerformanceLibraryVersion}/gcc", telemetryContext, cancellationToken, runElevated: true);
             }
         }
 
@@ -406,7 +406,7 @@ namespace VirtualClient.Actions
                   makeFilePath, @"LAdir *=", "LAdir = $(AOCL_ROOT)", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                 makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory)}/4.2.0/gcc/lib/libblis.a", cancellationToken);
+                 makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory)}/{this.PerformanceLibraryVersion}/gcc/lib/libblis.a", cancellationToken);
             }
             else if (this.PerformanceLibrary != null && this.CpuArchitecture != Architecture.Arm64)
             {
@@ -524,7 +524,7 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} {this.commandArguments} --perfLibrary={this.hplPerfLibraryInfo} ]",
+                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} {this.commandArguments} --perfLibrary={this.hplArmPerfLibraryInfo} ]",  //
                     this.Tags,
                     telemetryContext,
                     result.Relativity,
