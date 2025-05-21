@@ -95,13 +95,13 @@ namespace VirtualClient.Identity
             this.testCertificateManager = new TestCertificateManager(this.mockFixture);
 
             string expectedDirectory = CertificateManager.DefaultUnixCertificateDirectory;
-            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA");
+            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "545AF7DD6DA3A7A78BE6D5A7A316CAD52942F949");
             bool confirmedDir = false;
             bool confirmedFile = false;
 
             // Issuer: AME
             // Subject Name: virtualclient.test.corp.azure.com
-            // Thumbprint: C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA
+            // Thumbprint: 545AF7DD6DA3A7A78BE6D5A7A316CAD52942F949
             //
             // Note that this is an expired/invalid certificate so there are no security concerns. It is merely
             // used for testing purposes.
@@ -166,7 +166,7 @@ namespace VirtualClient.Identity
 
             // Issuer: AME
             // Subject Name: virtualclient.test.corp.azure.com
-            // Thumbprint: C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA
+            // Thumbprint: 545AF7DD6DA3A7A78BE6D5A7A316CAD52942F949
             //
             // Note that this is an expired/invalid certificate so there are no security concerns. It is merely
             // used for testing purposes.
