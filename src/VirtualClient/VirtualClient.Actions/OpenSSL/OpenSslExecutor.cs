@@ -131,6 +131,11 @@ namespace VirtualClient.Actions
                     // Retrieve OpenSSL version
                     this.GetOpenSslVersion(cancellationToken);
                 
+                    this.MetadataContract.AddForScenario(
+                       "OpenSSL Speed",
+                       workloadProcess.FullCommand(),
+                       toolVersion: null);
+
                     this.MetadataContract.Apply(telemetryContext);
 
                     OpenSslMetricsParser resultsParser = new OpenSslMetricsParser(workloadProcess.StandardOutput.ToString(), commandArguments);
