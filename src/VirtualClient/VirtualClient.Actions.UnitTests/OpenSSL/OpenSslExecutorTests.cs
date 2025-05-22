@@ -292,13 +292,14 @@ namespace VirtualClient.Actions.CpuPerformance
         public async Task OpenSslExecutorExecutesGetOpensslVersion()
         {
             this.SetupDefaultBehaviors();
+            this.SetupOpensslVersionBehavior();
 
              using (TestOpenSslExecutor executor = new TestOpenSslExecutor(this.fixture))
-             {
-        
-                 await executor.ExecuteAsync(CancellationToken.None)
-                   .ConfigureAwait(false);
-        
+            {
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                  .ConfigureAwait(false);
+
                 var messages = this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.GetOpenSslVersion");
                 Assert.IsNotEmpty(messages);
                 Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["opensslVersion"].ToString() == "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)"));
@@ -348,17 +349,19 @@ namespace VirtualClient.Actions.CpuPerformance
                 }
             };
             
+        }
+
+        private void SetupOpensslVersionBehavior()
+        {
             this.fixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                // When we start the OpenSSL process we want to register a successful
-                // result.
+                // mock openssl version command result
                 if (process.IsMatch("openssl(.exe)* version"))
                 {
-                    process.StandardOutput.Append(mockOpensslVersion);
+                    process.StandardOutput.Append(this.mockOpensslVersion);
                 }
             };
         }
-
         private class TestOpenSslExecutor : OpenSslExecutor
         {
             public TestOpenSslExecutor(DependencyFixture mockFixture)
