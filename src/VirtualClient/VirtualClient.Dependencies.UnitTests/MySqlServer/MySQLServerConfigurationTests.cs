@@ -273,7 +273,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/set-global-variables.py --variables MAX_PREPARED_STMT_COUNT=100000;MAX_CONNECTIONS=1024",
+                $"python3 {this.packagePath}/set-global-variables.py --variables \"MAX_PREPARED_STMT_COUNT=100000;MAX_CONNECTIONS=1024\"",
             };
 
             int commandNumber = 0;
