@@ -137,7 +137,6 @@ namespace VirtualClient.Logging
                     else if (eventId.Id == (int)LogType.Error)
                     {
                         message = SummaryFileLogger.CreateErrorMessage(eventId, eventContext);
-                        
                     }
                     else if (eventId.Id == (int)LogType.Trace)
                     {
