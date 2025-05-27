@@ -37,6 +37,7 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
+        skip-queries: true # this is causing PR to fail on Windows with single slashes on Windows, temporarily disabling since we have it in Linux PR
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
