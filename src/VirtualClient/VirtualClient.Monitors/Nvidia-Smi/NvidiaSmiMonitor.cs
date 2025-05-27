@@ -53,12 +53,12 @@ namespace VirtualClient.Monitors
                             {
                                 try
                                 {
+                                    iterations++;
                                     if (this.IsIterationComplete(iterations))
                                     {
                                         break;
                                     }
 
-                                    iterations++;
                                     await this.QueryC2CAsync(telemetryContext, cancellationToken);
                                     await this.QueryGpuAsync(telemetryContext, cancellationToken);
                                     await this.WaitAsync(this.MonitorFrequency, cancellationToken);
