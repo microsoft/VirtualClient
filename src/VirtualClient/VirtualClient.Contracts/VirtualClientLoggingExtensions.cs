@@ -1065,7 +1065,7 @@ namespace VirtualClient.Contracts
 
             metricsContext.Properties.AddRange(properties, withReplace: true);
 
-            VirtualClientLoggingExtensions.LogMessage(component.Logger, $"SucceededOrFailed", LogLevel.Information, LogType.Metric, metricsContext);
+            VirtualClientLoggingExtensions.LogMessage(component.Logger, $"{component.TypeName}.SucceededOrFailed", LogLevel.Information, LogType.Metric, metricsContext);
         }
     }
 }

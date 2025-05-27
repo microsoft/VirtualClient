@@ -117,7 +117,7 @@ namespace VirtualClient.Logging
                     string message = string.Empty;
                     if (eventId.Id == (int)LogType.Metric)
                     {
-                        if (eventId.Name.Equals("SucceededOrFailed", StringComparison.OrdinalIgnoreCase))
+                        if (eventId.Name.EndsWith("SucceededOrFailed", StringComparison.OrdinalIgnoreCase))
                         {
                             // these are the component "Succeeded or Failed"
                             message = this.CreateSucceededOrFailedMessage(eventContext);
