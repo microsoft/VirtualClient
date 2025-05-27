@@ -59,9 +59,9 @@ namespace VirtualClient.Monitors
                                         break;
                                     }
 
-                                    await this.WaitAsync(this.MonitorFrequency, cancellationToken);
                                     await this.QueryC2CAsync(telemetryContext, cancellationToken);
                                     await this.QueryGpuAsync(telemetryContext, cancellationToken);
+                                    await this.WaitAsync(this.MonitorFrequency, cancellationToken);
                                 }
                                 catch (Exception exc)
                                 {
