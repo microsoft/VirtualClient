@@ -86,12 +86,14 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="metrics">List of Metrics</param>
         /// <param name="scenario">Scenario</param>
+        /// <param name="toolname"></param>
         /// <param name="criticalOnly">Boolean to note if prints critical only metric</param>
-        public static void LogConsole(this IEnumerable<Metric> metrics, string scenario, bool criticalOnly = true)
+        public static void LogConsole(this IEnumerable<Metric> metrics, string scenario, string toolname, bool criticalOnly = true)
         {
             try
             {
                 Console.WriteLine();
+                Console.WriteLine($"*** {toolname} Metrics ***");
                 Dictionary<string, int> colWidths = new Dictionary<string, int>();
 
                 DataTable table = new DataTable();
@@ -127,7 +129,6 @@ namespace VirtualClient.Contracts
         /// <param name="dataTable">Input data table.</param>
         private static void LogConsole(DataTable dataTable)
         {
-            Console.WriteLine();
             Dictionary<string, int> colWidths = new Dictionary<string, int>();
 
             foreach (DataColumn col in dataTable.Columns)
@@ -164,6 +165,8 @@ namespace VirtualClient.Contracts
                 Console.Write("|");
                 Console.WriteLine();
             }
+
+            Console.WriteLine();
         }
 
         private class MetricFilterComparer : IEqualityComparer<string>
