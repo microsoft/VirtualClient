@@ -94,7 +94,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Gets openssl version by running openssl version command.
         /// </summary>
-        private async Task GetOpenSslVersionAsync(CancellationToken cancellationToken, string toolCommand)
+        private async Task GetOpenSslVersionAsync(string toolCommand, CancellationToken cancellationToken)
         {
             // The OpenSSL version is not available in the workload output. We need to run a separate command to get the version.   
             // The command 'openssl version' will return the version of OpenSSL installed on the system.
@@ -115,7 +115,7 @@ namespace VirtualClient.Actions
                     }
 
                     this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContractCategory.Dependencies);
-                    this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersionSync", LogLevel.Information, EventContext.Persisted().AddContext("opensslVersion", opensslVersion));
+                    this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersionAsync", LogLevel.Information, EventContext.Persisted().AddContext("opensslVersion", opensslVersion));
 
                     this.MetadataContract.AddForScenario(
                        "OpenSSL Speed",
@@ -133,7 +133,7 @@ namespace VirtualClient.Actions
                 try
                 {
                     // Retrieve OpenSSL version
-                    await this.GetOpenSslVersionAsync(cancellationToken, workloadProcess.FullCommand());
+                    await this.GetOpenSslVersionAsync(workloadProcess.FullCommand(), cancellationToken);
                 
                     this.MetadataContract.Apply(telemetryContext);
 
