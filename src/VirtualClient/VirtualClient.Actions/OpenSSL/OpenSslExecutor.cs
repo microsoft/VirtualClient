@@ -126,14 +126,14 @@ namespace VirtualClient.Actions
             
         }
 
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
                     // Retrieve OpenSSL version
-                    this.GetOpenSslVersion(cancellationToken, workloadProcess.FullCommand());
+                    await this.GetOpenSslVersion(cancellationToken, workloadProcess.FullCommand());
                 
                     this.MetadataContract.Apply(telemetryContext);
 
@@ -189,7 +189,7 @@ namespace VirtualClient.Actions
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true);
 
                                 process.ThrowIfWorkloadFailed();
-                                this.CaptureMetrics(process, commandArguments, telemetryContext, cancellationToken);
+                                await this.CaptureMetrics(process, commandArguments, telemetryContext, cancellationToken);
                             }
                         }
                         finally
