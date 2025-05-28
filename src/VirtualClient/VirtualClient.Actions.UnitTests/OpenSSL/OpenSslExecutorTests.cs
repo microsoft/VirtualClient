@@ -289,7 +289,7 @@ namespace VirtualClient.Actions.CpuPerformance
         }
 
         [Test]
-        public async Task OpenSslExecutorExecutesGetOpensslVersion()
+        public async Task OpenSslExecutorExecutesGetOpensslVersionAsync()
         {
             this.SetupDefaultBehaviors();
             this.SetupOpensslVersionBehavior();
@@ -300,7 +300,7 @@ namespace VirtualClient.Actions.CpuPerformance
                 await executor.ExecuteAsync(CancellationToken.None)
                   .ConfigureAwait(false);
 
-                var messages = this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.GetOpenSslVersion");
+                var messages = this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.GetOpenSslVersionAsync");
                 Assert.IsNotEmpty(messages);
                 Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["opensslVersion"].ToString() == "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)"));
             }
