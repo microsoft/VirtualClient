@@ -30,6 +30,7 @@ namespace VirtualClient.Logging
     /// </summary>
     public class SummaryFileLogger : ILogger, IFlushableChannel, IDisposable
     {
+        internal const string DefaultFileName = "summary.txt";
         internal const int MaxLineLength = 250;
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
         private static readonly string DashLine = new string('-', 100);
@@ -46,6 +47,7 @@ namespace VirtualClient.Logging
         private bool initialized;
         private SemaphoreSlim semaphore;
         private bool disposed;
+        private bool writeNew;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SummaryFileLogger"/> class.
@@ -56,13 +58,10 @@ namespace VirtualClient.Logging
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                ISystemInfo systemInfo = new SystemManagement();
-                string experimentId = systemInfo.ExperimentId;
-                string suffix = string.IsNullOrEmpty(experimentId) ? string.Empty : $"-{experimentId}";
-                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, $"summary{suffix}.txt");
+                filePath = SummaryFileLogger.GetDefaultSummaryFileLocation();
             }
 
+            this.writeNew = true;
             this.filePath = filePath;
             this.fileDirectory = Path.GetDirectoryName(filePath);
             this.fileSystem = new FileSystem();
@@ -75,6 +74,16 @@ namespace VirtualClient.Logging
                 // this.WriteFinalSummary();
                 this.Flush();
             }));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SummaryFileLogger"/> class.
+        /// </summary>
+        /// <param name="writeNew">True/false whether a brand new summary log file should be generated.</param>
+        public SummaryFileLogger(bool writeNew)
+            : this(SummaryFileLogger.GetDefaultSummaryFileLocation())
+        {
+            this.writeNew = writeNew;
         }
 
         /// <inheritdoc />
@@ -185,6 +194,12 @@ namespace VirtualClient.Logging
                     this.disposed = true;
                 }
             }
+        }
+
+        private static string GetDefaultSummaryFileLocation()
+        {
+            PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+            return tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, DefaultFileName);
         }
 
         private void WriteFinalSummary(string exitCode)
@@ -463,6 +478,11 @@ namespace VirtualClient.Logging
                     try
                     {
                         await this.semaphore.WaitAsync();
+
+                        if (this.writeNew && this.fileSystem.File.Exists(this.filePath))
+                        {
+                            await this.fileSystem.File.DeleteAsync(this.filePath);
+                        }
 
                         using (FileSystemStream fileStream = this.fileSystem.FileStream.New(this.filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                         {
