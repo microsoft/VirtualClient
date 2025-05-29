@@ -30,6 +30,7 @@ namespace VirtualClient.Logging
     /// </summary>
     public class SummaryFileLogger : ILogger, IFlushableChannel, IDisposable
     {
+        internal const string DefaultFileName = "summary.txt";
         internal const int MaxLineLength = 250;
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
         private static readonly string DashLine = new string('-', 100);
@@ -57,10 +58,7 @@ namespace VirtualClient.Logging
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                ISystemInfo systemInfo = new SystemManagement();
-                string experimentId = systemInfo.ExperimentId;
-                string suffix = string.IsNullOrEmpty(experimentId) ? string.Empty : $"-{experimentId}";
-                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, $"summary{suffix}.txt");
+                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, DefaultFileName);
             }
 
             this.filePath = filePath;
@@ -463,6 +461,11 @@ namespace VirtualClient.Logging
                     try
                     {
                         await this.semaphore.WaitAsync();
+
+                        if (this.fileSystem.File.Exists(this.filePath))
+                        {
+                            await this.fileSystem.File.DeleteAsync(this.filePath);
+                        }
 
                         using (FileSystemStream fileStream = this.fileSystem.FileStream.New(this.filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                         {

@@ -240,8 +240,7 @@ namespace VirtualClient.Monitors
         {
             try
             {
-                string suffix = string.IsNullOrEmpty(this.ExperimentId) ? string.Empty : $"-{this.ExperimentId}";
-                string summaryTxtFileLocation = Path.Combine(this.PlatformSpecifics.LogsDirectory, $"summary{suffix}.txt");
+                string summaryTxtFileLocation = Path.Combine(this.PlatformSpecifics.LogsDirectory, $"summary.txt");
                 bool summaryTxtFileExists = this.fileSystem.File.Exists(summaryTxtFileLocation);
                 telemetryContext
                     .AddContext(nameof(summaryTxtFileLocation), summaryTxtFileLocation)
