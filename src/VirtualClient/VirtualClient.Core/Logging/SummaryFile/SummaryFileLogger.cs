@@ -47,7 +47,6 @@ namespace VirtualClient.Logging
         private bool initialized;
         private SemaphoreSlim semaphore;
         private bool disposed;
-        private bool writeNew;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SummaryFileLogger"/> class.
@@ -58,10 +57,10 @@ namespace VirtualClient.Logging
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                filePath = SummaryFileLogger.GetDefaultSummaryFileLocation();
+                PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, DefaultFileName);
             }
 
-            this.writeNew = true;
             this.filePath = filePath;
             this.fileDirectory = Path.GetDirectoryName(filePath);
             this.fileSystem = new FileSystem();
@@ -74,16 +73,6 @@ namespace VirtualClient.Logging
                 // this.WriteFinalSummary();
                 this.Flush();
             }));
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SummaryFileLogger"/> class.
-        /// </summary>
-        /// <param name="writeNew">True/false whether a brand new summary log file should be generated.</param>
-        public SummaryFileLogger(bool writeNew)
-            : this(SummaryFileLogger.GetDefaultSummaryFileLocation())
-        {
-            this.writeNew = writeNew;
         }
 
         /// <inheritdoc />
@@ -194,12 +183,6 @@ namespace VirtualClient.Logging
                     this.disposed = true;
                 }
             }
-        }
-
-        private static string GetDefaultSummaryFileLocation()
-        {
-            PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-            return tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, DefaultFileName);
         }
 
         private void WriteFinalSummary(string exitCode)
@@ -479,7 +462,7 @@ namespace VirtualClient.Logging
                     {
                         await this.semaphore.WaitAsync();
 
-                        if (this.writeNew && this.fileSystem.File.Exists(this.filePath))
+                        if (this.fileSystem.File.Exists(this.filePath))
                         {
                             await this.fileSystem.File.DeleteAsync(this.filePath);
                         }
