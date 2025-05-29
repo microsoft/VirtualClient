@@ -57,7 +57,10 @@ namespace VirtualClient.Logging
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, "summary.txt");
+                ISystemInfo systemInfo = new SystemManagement();
+                string experimentId = systemInfo.ExperimentId;
+                string suffix = string.IsNullOrEmpty(experimentId) ? string.Empty : $"-{experimentId}";
+                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, $"summary{suffix}.txt");
             }
 
             this.filePath = filePath;
