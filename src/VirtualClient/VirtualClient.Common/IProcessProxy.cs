@@ -82,7 +82,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Standard error stream for the process.
         /// </summary>
-        ConcurrentBuffer StandardOutput { get; }
+        ConcurrentBuffer StandardOutput { get; set; }
 
         /// <summary>
         /// Standard input for the process.

@@ -151,7 +151,7 @@ namespace VirtualClient.Common
         public ConcurrentBuffer StandardError { get; }
 
         /// <inheritdoc />
-        public ConcurrentBuffer StandardOutput { get; }
+        public ConcurrentBuffer StandardOutput { get; set; }
 
         /// <inheritdoc />
         public StreamWriter StandardInput => this.UnderlyingProcess.StandardInput;

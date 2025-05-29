@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -90,6 +91,10 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (!string.IsNullOrWhiteSpace(arguments) && arguments.Contains("redis-cli INFO SERVER"))
+                {
+                    process.StandardOutput = new ConcurrentBuffer(new StringBuilder("redis_version:7.0.15"));
+                }
 
                 return process;
             };
