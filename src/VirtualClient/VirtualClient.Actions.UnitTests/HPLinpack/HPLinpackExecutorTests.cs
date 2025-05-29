@@ -297,6 +297,48 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibrariesOnUbuntuX64IntelPlatform(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["PerformanceLibrary"] = "INTEL";
+
+            // Setup CPU info with socket count for Intel execution path
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 2, 9, 11, 13, true));
+
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
+            {
+                List<string> expectedCommands = new List<string>()
+                {
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", "l_onemkl_p_2024.2.2.17_offline.sh")}",
+                    $"sudo ./l_onemkl_p_2024.2.2.17_offline.sh -a --silent --eula accept",
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", "l_HPCKit_p_2024.2.1.79_offline.sh")}",
+                    $"sudo ./l_HPCKit_p_2024.2.1.79_offline.sh -a --silent --eula accept",
+                    $"cp -r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL")}",
+                    $"make arch=Linux_GCC",
+                    $"sudo bash -c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && ./runme_intel64_dynamic\""
+                };
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove(expectedCommands[0]);
+                    if (arguments == $"-c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && ./runme_intel64_dynamic\"")
+                    {
+                        this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
+                    }
+
+                    return this.mockFixture.Process;
+                };
+
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.AreEqual(expectedCommands.Count, 0);
+            }
+        }
+
         private class TestHPLExecutor : HPLinpackExecutor
         {
             public TestHPLExecutor(MockFixture fixture)

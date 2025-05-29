@@ -180,8 +180,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.EvaluateParametersAsync(cancellationToken);
-            this.ThrowIfPlatformIsNotSupported();
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
+            // await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
             this.coreCount = this.cpuInfo.LogicalProcessorCount;
 
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
@@ -194,16 +193,16 @@ namespace VirtualClient.Actions
 
             DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
                     .ConfigureAwait(false);
-            string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL");
+
+            await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
 
             if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
             {
-                var process01 = await this.ExecuteCommandAsync("cp", $"-r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {armperfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
-                // this.Logger.LogMessage($"Rak: Output = {process01.StandardOutput.ToString()}, error = {process01.StandardError.ToString()},exitcode = {process01.ExitCode.ToString()}", telemetryContext);
+                this.armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL");
+                await this.ExecuteCommandAsync("cp", $"-r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {this.armperfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
             }
             else
             {
-                await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
                 await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
                 await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
                 await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
@@ -223,14 +222,22 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
-                this.SetParameters();
-                await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
+                {
+                    this.SetParameters(this.cpuInfo.SocketCount);
+                }
+                else
+                {
+                    this.SetParameters(this.NumberOfProcesses);
+                }
 
+                await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                 IProcessProxy process;
 
                 if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
                 {
-                    process = await this.ExecuteCommandAsync("bash", "-c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && ./runme_intel64_dynamic\"", this.PlatformSpecifics.Combine(this.armperfLibrariesPath, "mp_linpack"), telemetryContext, cancellationToken, runElevated: true);
+                    this.commandArguments = "./runme_intel64_dynamic";
+                    process = await this.ExecuteCommandAsync("bash", $"-c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && {this.commandArguments}\"", this.PlatformSpecifics.Combine(this.armperfLibrariesPath, "mp_linpack"), telemetryContext, cancellationToken, runElevated: true);
                 }
                 else
                 {
@@ -249,59 +256,39 @@ namespace VirtualClient.Actions
                     }
 
                     process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                }
 
-                    using (process)
+                using (process)
+                {
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true)
-                                .ConfigureAwait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true)
+                            .ConfigureAwait();
 
-                            this.Logger.LogMessage($"Rak: Output = {process.StandardOutput.ToString()}, error = {process.StandardError.ToString()},exitcode = {process.ExitCode.ToString()}", telemetryContext);
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                            // this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);  //
-
-                        }
                     }
                 }
             }
         }
 
-        private string GetLoggedInUserName()
+        private void SetParameters(int count)
         {
-            return this.systemManagement.GetLoggedInUserName();
-        }
-
-        private void SetParameters()
-        {
-            int numberOfSockets = this.cpuInfo.SocketCount;
-
             // gives you P*Q = Number of processes( Default: Environment.ProcessorCount, overwrite to value from command line to VC if supplied) and P <= Q and  Q-P to be the minimum possible value.
             this.ProcessRows = 1;
-            this.ProcessColumns = numberOfSockets;
-            for (int i = 2; i <= Math.Sqrt(numberOfSockets); i++)
+            this.ProcessColumns = count;
+            for (int i = 2; i <= Math.Sqrt(count); i++)
             {
-                if (numberOfSockets % i == 0)
+                if (count % i == 0)
                 {
-                    int j = numberOfSockets / i;
+                    int j = count / i;
                     if (j - i < this.ProcessColumns - this.ProcessRows)
                     {
                         this.ProcessRows = i;
                         this.ProcessColumns = j;
                     }
                 }
-            }
-        }
-
-        private void ThrowIfPlatformIsNotSupported()  //
-        {
-            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.CpuArchitecture != Architecture.X64 && this.PerformanceLibrary != null)
-            {
-                throw new WorkloadException(
-                    $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " + // ReVisit
-                    $"'{PlatformSpecifics.LinuxArm64}'",
-                    ErrorReason.PlatformNotSupported);
             }
         }
 
@@ -383,14 +370,10 @@ namespace VirtualClient.Actions
                                                                     .ConfigureAwait(false);
 
                 string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL");
-                // await this.ExecuteCommandAsync("wget", "\"https://registrationcenter-download.intel.com/akdlm/IRC_NAS/89a381f6-f85d-4dda-ae62-30d51470f53c/l_onemkl_p_2024.2.2.17_offline.sh\"", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"l_onemkl_p_2024.2.2.17_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                var process1 = await this.ExecuteCommandAsync("./l_onemkl_p_2024.2.2.17_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
-                this.Logger.LogMessage($"Rak: Output = {process1.StandardOutput.ToString()}, error = {process1.StandardError.ToString()},exitcode = {process1.ExitCode.ToString()}", telemetryContext);
-                // await this.ExecuteCommandAsync("wget", "\"https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d461a695-6481-426f-a22f-b5644cd1fa8b/l_HPCKit_p_2024.2.1.79_offline.sh\"", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                await this.ExecuteCommandAsync("./l_onemkl_p_2024.2.2.17_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"l_HPCKit_p_2024.2.1.79_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                var process2 = await this.ExecuteCommandAsync("./l_HPCKit_p_2024.2.1.79_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
-                this.Logger.LogMessage($"Rak: Output = {process2.StandardOutput.ToString()}, error = {process2.StandardError.ToString()}, exitcode = {process2.ExitCode.ToString()}", telemetryContext);
+                await this.ExecuteCommandAsync("./l_HPCKit_p_2024.2.1.79_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
             }
         }
 
@@ -451,13 +434,6 @@ namespace VirtualClient.Actions
                 await this.fileSystem.File.ReplaceInFileAsync(
                  makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory)}/{this.PerformanceLibraryVersion}/gcc/lib/libblis.a", cancellationToken);
             }
-            else if (this.PerformanceLibrary != null && this.CpuArchitecture != Architecture.Arm64)
-            {
-                throw new WorkloadException(
-                    $"The HPL workload is currently only supports with perf libraries on the following platform/architectures: " + //
-                    $"'{PlatformSpecifics.LinuxArm64}'.",
-                    ErrorReason.PlatformNotSupported);
-            }
             else
             {
                 string architecture;
@@ -484,8 +460,7 @@ namespace VirtualClient.Actions
         private async Task ConfigureDatFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string hplDatFile;
-            if (this.PerformanceLibrary == "Intel")
-            //this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL"
+            if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
             {
                 DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
                                                         .ConfigureAwait(false);
