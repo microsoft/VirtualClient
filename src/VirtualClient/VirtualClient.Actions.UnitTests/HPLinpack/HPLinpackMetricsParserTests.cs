@@ -20,22 +20,42 @@ namespace VirtualClient.Actions
         private string rawText;
         private HPLinpackMetricsParser testParser;
 
-        [SetUp]
-        public void Setup()
+        [Test]
+        public void HPLParserVerifyArmResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResults.txt");
-            this.rawText = File.ReadAllText(outputPath);
+            string armoutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsArm.txt");
+            this.rawText = File.ReadAllText(armoutputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
-        }
 
-        [Test]
-        public void HPLParserVerifyResults()
-        {
             IList<Metric> metrics = this.testParser.Parse();
             Assert.AreEqual(4, metrics.Count);
             Assert.IsTrue(metrics[0].Metadata.ContainsKey("N_WR01R2R4"));
             Assert.IsTrue(metrics[0].Metadata["N_WR01R2R4"].Equals("8029"));
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("NB_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["NB_WR01R2R4"].Equals("400"));
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("P_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["P_WR01R2R4"].Equals("1"));
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("Q_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["Q_WR01R2R4"].Equals("2"));
+            MetricAssert.Exists(metrics, "Time", 11.55);
+            MetricAssert.Exists(metrics, "GFlops", 29.874);
+            MetricAssert.Exists(metrics, "Time", 11.55);
+            MetricAssert.Exists(metrics, "GFlops", 29.874);
+        }
+
+        [Test]
+        public void HPLParserVerifyIntelResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string inteloutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsIntel.txt");
+            this.rawText = File.ReadAllText(inteloutputPath);
+            this.testParser = new HPLinpackMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+            Assert.AreEqual(4, metrics.Count);
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("N_WR01R2R4")); //
+            Assert.IsTrue(metrics[0].Metadata["N_WC01R2R4"].Equals("8029"));
             Assert.IsTrue(metrics[0].Metadata.ContainsKey("NB_WR01R2R4"));
             Assert.IsTrue(metrics[0].Metadata["NB_WR01R2R4"].Equals("400"));
             Assert.IsTrue(metrics[0].Metadata.ContainsKey("P_WR01R2R4"));

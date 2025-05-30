@@ -18,7 +18,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// To match metrics line of the result.
         /// </summary>
-        private const string GetMetricsLine = @"(?<=WR).*(?=\n)";
+        private const string GetMetricsLine = @"(?<=W).*(?=\n)";
 
         /// <summary>
         /// Split string at one or more spaces.
@@ -58,10 +58,10 @@ namespace VirtualClient.Actions
 
                     Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
                          {
-                             { $"N_WR{st[0]}", st[1] },
-                             { $"NB_WR{st[0]}", st[2] },
-                             { $"P_WR{st[0]}", st[3] },
-                             { $"Q_WR{st[0]}", st[4] },
+                             { $"N_W{st[0]}", st[1] },
+                             { $"NB_W{st[0]}", st[2] },
+                             { $"P_W{st[0]}", st[3] },
+                             { $"Q_W{st[0]}", st[4] },
                          };
 
                     this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", MetricRelativity.Undefined, metadata: metadata, verbosity: 2));

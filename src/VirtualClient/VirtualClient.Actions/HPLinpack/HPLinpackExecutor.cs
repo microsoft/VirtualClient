@@ -266,7 +266,7 @@ namespace VirtualClient.Actions
                             .ConfigureAwait();
 
                         process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                        this.CaptureMetrics(process.StandardOutput.ToString(), $"{this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
 
                     }
                 }
