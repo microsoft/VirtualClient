@@ -29,12 +29,13 @@ namespace VirtualClient
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Identity;
     using VirtualClient.Proxy;
-
+    
     /// <summary>
     /// Base class for Virtual Client commands.
     /// </summary>
     public abstract class CommandBase
     {
+        private const string defaultPackageStoreUri = "https://virtualclient.blob.core.windows.net/packages";
         private static List<ILogger> proxyApiDebugLoggers = new List<ILogger>();
         private List<string> loggerDefinitions = new List<string>();
 
@@ -43,6 +44,7 @@ namespace VirtualClient
         /// </summary>
         protected CommandBase()
         {
+            this.CertificateManager = new CertificateManager();
         }
 
         /// <summary>
@@ -71,12 +73,6 @@ namespace VirtualClient
         /// to target storage resources. When not defined the 'Default' structure is used.
         /// </summary>
         public string ContentPathTemplate { get; set; }
-
-        /// <summary>s
-        /// True to have debug/verbose output emitted to standard output on
-        /// the console/terminal.
-        /// </summary>
-        public bool Debug { get; set; }
 
         /// <summary>
         /// Describes the target Event Hub namespace to which telemetry should be sent.
@@ -137,7 +133,7 @@ namespace VirtualClient
         /// <summary>
         /// The logging level for the application (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).
         /// </summary>
-        public LogLevel LoggingLevel { get; set; } = LogLevel.Information;
+        public LogLevel? LoggingLevel { get; set; }
 
         /// <summary>
         /// The retention period to keep log files. If not defined, log files will be left on
@@ -179,6 +175,11 @@ namespace VirtualClient
         public DependencyStore PackageStore { get; set; }
 
         /// <summary>
+        /// The workload/monitoring profiles to execute (e.g. PERF-CPU-OPENSSL.json).
+        /// </summary>
+        public IEnumerable<DependencyProfileReference> Profiles { get; set; }
+
+        /// <summary>
         /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
         /// or downloaded from the proxy endpoint.
         /// </summary>
@@ -195,6 +196,12 @@ namespace VirtualClient
         /// 3) default /state folder location.
         /// </remarks>
         public string StateDirectory { get; set; }
+
+        /// <summary>s
+        /// True to have debug/verbose output emitted to standard output on
+        /// the console/terminal.
+        /// </summary>
+        public bool Verbose { get; set; }
 
         /// <summary>
         /// Certificate manager overwritable for unit testing.
@@ -310,6 +317,86 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates a logger instance based on the specified configuration and loggers.
+        /// </summary>
+        protected IList<ILoggerProvider> CreateLoggerProviders(IConfiguration configuration, PlatformSpecifics platformSpecifics, string source = null)
+        {
+            List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
+            this.loggerDefinitions = this.Loggers?.ToList() ?? new List<string>();
+
+            // Add default console and file logging
+            if (!this.loggerDefinitions.Any(l => l.Equals("console", StringComparison.OrdinalIgnoreCase) || l.StartsWith("console=", StringComparison.OrdinalIgnoreCase)))
+            {
+                this.loggerDefinitions.Add("console");
+            }
+
+            // Add default console and file logging
+            if (!this.loggerDefinitions.Any(l => l.Equals("file", StringComparison.OrdinalIgnoreCase) || l.StartsWith("file=", StringComparison.OrdinalIgnoreCase)))
+            {
+                this.loggerDefinitions.Add("file");
+            }
+
+            // backward compatibility for --eventhub
+            if (!string.IsNullOrEmpty(this.EventHubStore))
+            {
+                this.loggerDefinitions.Add($"eventhub={this.EventHubStore}");
+            }
+
+            if (!this.loggerDefinitions.Any(l => l.Equals("proxy", StringComparison.OrdinalIgnoreCase) || l.StartsWith("proxy=", StringComparison.OrdinalIgnoreCase))
+                && this.ProxyApiUri != null)
+            {
+                this.loggerDefinitions.Add($"proxy={this.ProxyApiUri.ToString()}");
+            }
+
+            LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
+       
+            foreach (string loggerDefinition in this.loggerDefinitions)
+            {
+                string loggerName = loggerDefinition;
+                string definitionValue = string.Empty;
+                if (loggerDefinition.Contains("="))
+                {
+                    loggerName = loggerDefinition.Substring(0, loggerDefinition.IndexOf("=", StringComparison.Ordinal)).Trim();
+                    definitionValue = loggerDefinition.Substring(loggerDefinition.IndexOf("=", StringComparison.Ordinal) + 1);
+                }
+
+                switch (loggerName.ToLowerInvariant())
+                {
+                    case "console":
+                        CommandBase.AddConsoleLogging(loggingProviders, loggingLevel);
+                        break;
+
+                    case "file":
+                        CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, loggingLevel);
+                        break;
+
+                    case "eventhub":
+                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: definitionValue, this.CertificateManager ?? new CertificateManager());
+                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel);
+                        break;
+
+                    case "proxy":
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(definitionValue), source);
+                        break;
+
+                    default:
+                        if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
+                        {
+                            throw new TypeLoadException(
+                                $"Specified logger '{loggerName}' is not supported. It may not be a valid ILoggerProvider implementation " +
+                                $"or is not defined in the extensions assemblies provided to the application.");
+                        }
+
+                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, definitionValue);
+                        loggingProviders.Add(customLoggerProvider);
+                        break;
+                }
+            }
+
+            return loggingProviders;
+        }
+
+        /// <summary>
         /// Checks to see if the user has overridden the default directory path locations
         /// (e.g. logs, packages, state) on the command line or via environment variables
         /// and sets the application to use them if so.
@@ -415,9 +502,13 @@ namespace VirtualClient
             // applications that want to have a shared resource + dependency directories.
             this.EvaluateDirectoryPathOverrides(platformSpecifics);
 
-            if (this.Debug)
+            if (this.Verbose)
             {
-                this.LoggingLevel = LogLevel.Trace;
+                this.LoggingLevel = LogLevel.Debug;
+            }
+            else if (this.LoggingLevel == null)
+            {
+                this.LoggingLevel = LogLevel.Information;
             }
 
             IConfiguration configuration = Program.LoadAppSettings();
@@ -494,6 +585,13 @@ namespace VirtualClient
                 else if (this.PackageStore != null)
                 {
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
+                }
+
+                // Use default public package store if none is defined.
+                if (this.PackageStore == null)
+                {
+                    blobStores.Add(DependencyFactory.CreateBlobManager(
+                        EndpointUtility.CreateBlobStoreReference(DependencyStore.Packages, CommandBase.defaultPackageStoreUri, this.CertificateManager)));
                 }
             }
 
@@ -628,87 +726,6 @@ namespace VirtualClient
 
                 loggingProviders.Add(new ProxyLoggerProvider(telemetryChannel, source));
             }
-        }
-
-        /// <summary>
-        /// Creates a logger instance based on the specified configuration and loggers.
-        /// </summary>
-        /// <param name="configuration"></param>
-        /// <param name="platformSpecifics"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        protected IList<ILoggerProvider> CreateLoggerProviders(IConfiguration configuration, PlatformSpecifics platformSpecifics, string source = null)
-        {
-            List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
-            this.loggerDefinitions = this.Loggers?.ToList() ?? new List<string>();
-
-            // Add default console and file logging
-            if (!this.loggerDefinitions.Any(l => l.Equals("console", StringComparison.OrdinalIgnoreCase) || l.StartsWith("console=", StringComparison.OrdinalIgnoreCase)))
-            {
-                this.loggerDefinitions.Add("console");
-            }
-
-            // Add default console and file logging
-            if (!this.loggerDefinitions.Any(l => l.Equals("file", StringComparison.OrdinalIgnoreCase) || l.StartsWith("file=", StringComparison.OrdinalIgnoreCase)))
-            {
-                this.loggerDefinitions.Add("file");
-            }
-
-            // backward compatibility for --eventhub
-            if (!string.IsNullOrEmpty(this.EventHubStore))
-            {
-                this.loggerDefinitions.Add($"eventhub={this.EventHubStore}");
-            }
-
-            if (!this.loggerDefinitions.Any(l => l.Equals("proxy", StringComparison.OrdinalIgnoreCase) || l.StartsWith("proxy=", StringComparison.OrdinalIgnoreCase))
-                && this.ProxyApiUri != null)
-            {
-                this.loggerDefinitions.Add($"proxy={this.ProxyApiUri.ToString()}");
-            }
-
-            foreach (string loggerDefinition in this.loggerDefinitions)
-            {
-                string loggerName = loggerDefinition;
-                string definitionValue = string.Empty;
-                if (loggerDefinition.Contains("="))
-                {
-                    loggerName = loggerDefinition.Substring(0, loggerDefinition.IndexOf("=", StringComparison.Ordinal)).Trim();
-                    definitionValue = loggerDefinition.Substring(loggerDefinition.IndexOf("=", StringComparison.Ordinal) + 1);
-                }
-
-                switch (loggerName.ToLowerInvariant())
-                {
-                    case "console":
-                        CommandBase.AddConsoleLogging(loggingProviders, this.LoggingLevel);
-                        break;
-
-                    case "file":
-                        CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, this.LoggingLevel);
-                        break;
-
-                    case "eventhub":
-                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: definitionValue, this.CertificateManager ?? new CertificateManager());
-                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, this.LoggingLevel);
-                        break;
-
-                    case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(definitionValue), source);
-                        break;
-
-                    default:
-                        if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
-                        {
-                            throw new TypeLoadException($"Specified logger '{loggerName}' is not supported, nor is it an ILoggerProvider in component type cache.");
-                        }
-
-                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, definitionValue);
-                        loggingProviders.Add(customLoggerProvider);
-                        break;
-                }
-            }
-
-            return loggingProviders;
         }
     }
 }

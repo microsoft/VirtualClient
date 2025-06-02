@@ -9,6 +9,7 @@ namespace VirtualClient.Logging
     using System.Linq;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
 
@@ -87,13 +88,19 @@ namespace VirtualClient.Logging
                 }
 
                 string message = null;
+                bool includeCallstack = this.MinimumLogLevel <= LogLevel.Trace;
+
                 if (logLevel >= LogLevel.Warning)
                 {
-                    if (ConsoleLogger.TryParseEventContextFromState(state, out EventContext telemetryContext))
+                    if (exception != null)
+                    {
+                        message = eventId.Name;
+                        ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, exception, this.DisableColors, this.IncludeTimestamps, includeCallstack);
+                    }
+                    else if (ConsoleLogger.TryParseEventContextFromState(state, out EventContext telemetryContext))
                     {
                         telemetryContext.Properties.TryGetValue("error", out object error);
-                        telemetryContext.Properties.TryGetValue("errorCallstack", out object errorCallstack);
-
+                        
                         if (error != null)
                         {
                             JArray errors = JArray.FromObject(error);
@@ -101,12 +108,18 @@ namespace VirtualClient.Logging
 
                             if (errorMessages?.Any() == true)
                             {
-                                string effectiveCallstack = errorCallstack?.ToString();
-                                if (!string.IsNullOrWhiteSpace(effectiveCallstack))
+                                if (includeCallstack)
                                 {
-                                    message =
-                                        $"{string.Join(' ', errorMessages)}" +
-                                        $"{Environment.NewLine}{Environment.NewLine}{effectiveCallstack}{Environment.NewLine}";
+                                    if (telemetryContext.Properties.TryGetValue("errorCallstack", out object errorCallstack))
+                                    {
+                                        string effectiveCallstack = errorCallstack?.ToString();
+                                        if (!string.IsNullOrWhiteSpace(effectiveCallstack))
+                                        {
+                                            message =
+                                                $"{string.Join(' ', errorMessages)}" +
+                                                $"{Environment.NewLine}{Environment.NewLine}{effectiveCallstack}{Environment.NewLine}";
+                                        }
+                                    }
                                 }
                                 else
                                 {
@@ -121,7 +134,7 @@ namespace VirtualClient.Logging
                     }
                     else if (ConsoleLogger.TryParseExceptionFromState(state, out Exception exc))
                     {
-                        message = exc.ToDisplayFriendlyString(withCallStack: true);
+                        message = exc.ToDisplayFriendlyString(withCallStack: includeCallstack);
                     }
 
                     if (!string.IsNullOrEmpty(message))
@@ -129,10 +142,29 @@ namespace VirtualClient.Logging
                         ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, null, this.DisableColors, this.IncludeTimestamps);
                     }
                 }
-                else if (exception != null)
+                else if (this.MinimumLogLevel <= LogLevel.Debug && ConsoleLogger.TryParseProcessDetailsFromState(state, out ProcessDetails processDetails))
                 {
-                    message = eventId.Name;
-                    ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, exception, this.DisableColors, this.IncludeTimestamps);
+                    // TODO:
+                    // To avoid the output of process standard output + error twice, we are making the assumption that
+                    // a component.LogProcessDetailsAsync() method call is followed by a process.ThrowIfErrored() method call.
+                    // This is often the case so the assumption holds true largely at the moment. However, this is NOT a good design
+                    // choice and we will need to figure out a better design in the future.
+                    if (processDetails.ExitCode == 0)
+                    {
+                        // Standard Output
+                        if (!string.IsNullOrWhiteSpace(processDetails.StandardOutput))
+                        {
+                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, string.Empty, null, this.DisableColors, false);
+                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, processDetails.StandardOutput, null, this.DisableColors, false);
+                        }
+
+                        // Standard Error
+                        if (!string.IsNullOrWhiteSpace(processDetails.StandardError))
+                        {
+                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, string.Empty, null, this.DisableColors, false);
+                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, processDetails.StandardError, null, this.DisableColors, false);
+                        }
+                    }
                 }
                 else
                 {
@@ -186,10 +218,11 @@ namespace VirtualClient.Logging
         /// <param name="exception">exception to be written</param>
         /// <param name="includeLogLevel">True to include the log level in output.</param>
         /// <param name="includeTimestamp">True to include timestamps in output.</param>
+        /// <param name="includeCallstack">Include error callstacks.</param>
         /// <returns>
         /// The message header for the log entry.
         /// </returns>
-        internal static string GetMessage(string message, LogLevel logLevel, int eventId, string logName, Exception exception, bool includeLogLevel = false, bool includeTimestamp = false)
+        internal static string GetMessage(string message, LogLevel logLevel, int eventId, string logName, Exception exception, bool includeLogLevel = false, bool includeTimestamp = false, bool includeCallstack = false)
         {
             string messageHeaderLogLevel = ConsoleLogger.GetMessageHeaderLogLevel(logLevel);
             string messageContent = message;
@@ -197,7 +230,7 @@ namespace VirtualClient.Logging
 
             if (exception != null)
             {
-                exceptionMessage = exception.ToDisplayFriendlyString(true); 
+                exceptionMessage = exception.ToDisplayFriendlyString(withCallStack: includeCallstack); 
             }
 
             if (includeLogLevel && includeTimestamp)
@@ -275,7 +308,34 @@ namespace VirtualClient.Logging
             return exc != null;
         }
 
-        private static void WriteMessage(LogLevel logLevel, string logName, int eventId, string message, Exception exception, bool disableColors = false, bool includeTimestamp = false)
+        private static bool TryParseProcessDetailsFromState<TState>(TState state, out ProcessDetails details)
+        {
+            details = null;
+            EventContext telemetryContext = state as EventContext;
+            if (telemetryContext != null)
+            {
+                if (telemetryContext.Properties.TryGetValue("process", out object processInfo))
+                {
+                    dynamic processObject = processInfo as dynamic;
+                    if (processObject != null)
+                    {
+                        details = new ProcessDetails
+                        {
+                            Id = processObject.id,
+                            ExitCode = processObject.exitCode,
+                            CommandLine = processObject.command,
+                            StandardOutput = processObject.standardOutput,
+                            StandardError = processObject.standardError,
+                            WorkingDirectory = processObject.workingDir,
+                        };
+                    }
+                }
+            }
+
+            return details != null;
+        }
+
+        private static void WriteMessage(LogLevel logLevel, string logName, int eventId, string message, Exception exception, bool disableColors = false, bool includeTimestamp = false, bool includeCallstack = false)
         {
             lock (ConsoleLogger.SyncRoot)
             {
@@ -301,7 +361,8 @@ namespace VirtualClient.Logging
                         eventId: eventId,
                         logName: logName,
                         exception: exception,
-                        includeTimestamp: includeTimestamp);
+                        includeTimestamp: includeTimestamp,
+                        includeCallstack: includeCallstack);
 
                     switch (logLevel)
                     {

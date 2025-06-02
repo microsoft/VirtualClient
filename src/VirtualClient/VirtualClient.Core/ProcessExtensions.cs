@@ -168,6 +168,37 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Throws an exception when an action, dependency installation or monitor process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="componentType">The type of component (Action, Dependency, Monitor).</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        public static void ThrowIfComponentOperationFailed(this IProcessProxy process, ComponentType componentType, string errorMessage = null)
+        {
+            process.ThrowIfNull(nameof(process));
+
+            switch (componentType)
+            {
+                case ComponentType.Action:
+                    process.ThrowIfWorkloadFailed(errorMessage);
+                    break;
+
+                case ComponentType.Dependency:
+                    process.ThrowIfDependencyInstallationFailed(errorMessage);
+                    break;
+
+                case ComponentType.Monitor:
+                    process.ThrowIfMonitorFailed(errorMessage);
+                    break;
+
+                default:
+                    process.ThrowIfErrored<ProcessException>(errorMessage);
+                    break;
+            }
+        }
+
+        /// <summary>
         /// Throws an exception when a dependency installation process has exited and the exit code does not match
         /// one of the default success exit codes.
         /// </summary>

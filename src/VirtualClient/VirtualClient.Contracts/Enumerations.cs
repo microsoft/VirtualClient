@@ -4,6 +4,32 @@
 namespace VirtualClient
 {
     /// <summary>
+    /// Enumeration defines the type of profile component.
+    /// </summary>
+    public enum ComponentType : int
+    {
+        /// <summary>
+        /// Undefined component type.
+        /// </summary>
+        Undefined = 0,
+
+        /// <summary>
+        /// Profile action.
+        /// </summary>
+        Action = 1,
+
+        /// <summary>
+        /// Profile dependency.
+        /// </summary>
+        Dependency = 2,
+
+        /// <summary>
+        /// Profile monitor.
+        /// </summary>
+        Monitor = 3
+    }
+
+    /// <summary>
     /// Enumeration describes error reasons. Note that error reasons with
     /// a value greater than or equal to 500 indicate failures for which will
     /// prevent the application from functioning correctly at any point.
@@ -597,7 +623,7 @@ namespace VirtualClient
         /// <summary>
         /// Collection of metrics.
         /// </summary>
-        MetricsCollection = 106,
+        MetricsCollection = 106
     }
 
     /// <summary>

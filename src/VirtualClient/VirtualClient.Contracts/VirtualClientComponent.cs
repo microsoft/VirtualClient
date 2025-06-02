@@ -171,6 +171,11 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The type of component (Action, Dependency, Monitor).
+        /// </summary>
+        public ComponentType ComponentType { get; set; }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -227,6 +232,24 @@ namespace VirtualClient.Contracts
             {
                 this.Dependencies.TryGetService<EnvironmentLayout>(out EnvironmentLayout layout);
                 return layout;
+            }
+        }
+
+        /// <summary>
+        /// The name of the directory/folder to which log files should be
+        /// written (e.g. geekbench -> ./logs/geekbench).
+        /// </summary>
+        public string LogFolderName
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.LogFolderName), out IConvertible logDirectoryName);
+                return logDirectoryName?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogFolderName)] = value;
             }
         }
 
@@ -676,18 +699,10 @@ namespace VirtualClient.Contracts
                         {
                             this.EndTime = DateTime.UtcNow;
 
-                            if (succeeded)
-                            {
-                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
-                            }
-                            else
-                            {
-                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
-                            }
+                            this.LogSuccessOrFailedMetric(succeeded, scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                         }
 
                         await this.CleanupAsync(telemetryContext, cancellationToken);
-
                     });
                 }
             }

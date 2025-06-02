@@ -53,6 +53,7 @@ namespace VirtualClient
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
             process.ProcessDetails.ToolName = toolName;
             process.ProcessDetails.GeneratedResults = results;
+
             return LogProcessDetailsAsync(component, process.ProcessDetails, telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars);
         }
 
@@ -81,6 +82,7 @@ namespace VirtualClient
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
             sshCommandProxy.ProcessDetails.ToolName = toolName;
             sshCommandProxy.ProcessDetails.GeneratedResults = results;
+
             return LogProcessDetailsAsync(component, sshCommandProxy.ProcessDetails, telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars);
         }
 
@@ -165,7 +167,8 @@ namespace VirtualClient
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        internal static void LogProcessDetails(this ILogger logger, ProcessDetails processDetails, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000)
+        /// <param name="logToConsole">When set to true will output the process standard output and error to the VC console.</param>
+        internal static void LogProcessDetails(this ILogger logger, ProcessDetails processDetails, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000, bool logToConsole = false)
         {
             logger.ThrowIfNull(nameof(logger));
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
@@ -199,8 +202,7 @@ namespace VirtualClient
                     logger.LogMessage(
                         $"{eventNamePrefix}.ProcessResults",
                         LogLevel.Information,
-                        telemetryContext.Clone().
-                        AddProcessResults(processDetails, maxChars: logToTelemetryMaxChars));
+                        telemetryContext.Clone().AddProcessResults(processDetails, maxChars: logToTelemetryMaxChars));
                 }
             }
             catch
@@ -337,9 +339,13 @@ namespace VirtualClient
                     outputBuilder.AppendLine($"Command           : {effectiveCommand}");
                     outputBuilder.AppendLine($"Working Directory : {processDetails?.WorkingDirectory}");
                     outputBuilder.AppendLine($"Exit Code         : {processDetails?.ExitCode}");
-                    outputBuilder.AppendLine();
-                    outputBuilder.AppendLine("##StandardOutput##"); // This is a simple delimiter that will NOT conflict with regular expressions possibly used in custom parsing.
-                    outputBuilder.AppendLine(processDetails.StandardOutput);
+
+                    if (!string.IsNullOrEmpty(processDetails.StandardOutput))
+                    {
+                        outputBuilder.AppendLine();
+                        outputBuilder.AppendLine("##StandardOutput##"); // This is a simple delimiter that will NOT conflict with regular expressions possibly used in custom parsing.
+                        outputBuilder.AppendLine(processDetails.StandardOutput);
+                    }
 
                     if (!string.IsNullOrEmpty(processDetails.StandardError))
                     {

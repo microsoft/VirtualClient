@@ -339,6 +339,17 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// The Cool down period for Virtual Client Component.
+        /// </summary>
+        public TimeSpan CoolDownPeriod
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(this.CoolDownPeriod), TimeSpan.FromSeconds(0));
+            }
+        }
+
+        /// <summary>
         /// Parameter defines the differentiator for which to convey the number of interrupts in the workload toolset tests.
         /// </summary>
         public string DevInterruptsDifferentiator
@@ -619,6 +630,10 @@ namespace VirtualClient.Actions.NetworkPerformance
             {
                 throw new NotSupportedException($"The role: {this.Role} is not supported.");
             }
+
+            // TO DO: Remove once we have Loop Executor.
+            await this.WaitAsync(this.CoolDownPeriod, cancellationToken);
+
         }
 
         /// <summary>

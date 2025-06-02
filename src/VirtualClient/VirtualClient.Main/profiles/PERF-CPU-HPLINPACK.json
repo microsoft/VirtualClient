@@ -5,14 +5,16 @@
     "SupportedPlatforms": "linux-x64,linux-arm64",
     "SupportedOperatingSystems": "Ubuntu22"
   },
-  "Parameters": {
-    "CompilerVersion": "",
-    "ProblemSizeN": null,
-    "BlockSizeNB": "256",
-    "NumberOfProcesses": "{LogicalCoreCount}",
-    "BindToCores": false,
-    "CCFLAGS": "-O3 -march=native"
-  },
+    "Parameters": {
+        "CompilerVersion": "",
+        "ProblemSizeN": null,
+        "BlockSizeNB": "256",
+        "NumberOfProcesses": "{LogicalCoreCount}",
+        "PerformanceLibrary": null,
+        "PerformanceLibraryVersion": "",
+        "BindToCores": false,
+        "CCFLAGS": "-O3 -march=native"
+    },
   "Actions": [
     {
       "Type": "HPLinpackExecutor",

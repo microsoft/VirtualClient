@@ -34,6 +34,7 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Initialize CodeQL
+      if: false # this is causing PR to fail on Windows with single slashes on Windows, temporarily disabling since we have it in Linux PR
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
@@ -51,6 +52,7 @@ jobs:
       run: ./build-test.cmd
 
     - name: Perform CodeQL Analysis
+      if: false # this is causing PR to fail on Windows with single slashes on Windows, temporarily disabling since we have it in Linux PR
       uses: github/codeql-action/analyze@v2
       with:
         category: "/language:${{matrix.language}}"

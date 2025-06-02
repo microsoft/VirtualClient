@@ -357,7 +357,6 @@ namespace VirtualClient.Actions
                     await this.ExecuteCommandAsync("./l_HPCKit_p_2024.2.1.79_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
                 }
             }
-            
         }
 
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)

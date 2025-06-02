@@ -18,7 +18,7 @@ VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{Bl
 ./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
 
 # Run the workload profile for a single iteration.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --iterations=1 --packages="{BlobStoreConnectionString|SAS URI}"
+./VirtualClient --profile=PERF-CPU-COREMARK.json --packages="{BlobStoreConnectionString|SAS URI}"
 ```
 
 ## Scenario: Running a Client Server Workload

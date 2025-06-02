@@ -35,5 +35,5 @@ solutions for the most common problems of numerical linear algebra.
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  VirtualClient.exe --profile=PERF-CPU-LAPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-LAPACK.json
   ```

@@ -15,7 +15,7 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Provides a cache for object types associated with Virtual Client.
     /// </summary>
-    public class ComponentTypeCache : List<ComponentType>
+    public class ComponentTypeCache : List<CachedComponentType>
     {
         /// <summary>
         /// Lock object used to ensure single-threaded access to the cache when
@@ -169,7 +169,7 @@ namespace VirtualClient.Contracts
                     {
                         if (!this.Any(type => type.Type == componentType))
                         {
-                            this.Add(new ComponentType(componentType));
+                            this.Add(new CachedComponentType(componentType));
                         }
                     }
                 }
@@ -180,12 +180,12 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Represents a cached component type.
     /// </summary>
-    public class ComponentType
+    public class CachedComponentType
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ComponentType"/> class.
+        /// Initializes a new instance of the <see cref="CachedComponentType"/> class.
         /// </summary>
-        public ComponentType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
+        public CachedComponentType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
         {
             type.ThrowIfNull(nameof(type));
             this.Type = type;

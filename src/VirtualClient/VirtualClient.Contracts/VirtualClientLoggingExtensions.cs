@@ -13,6 +13,7 @@ namespace VirtualClient.Contracts
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
+    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -380,69 +381,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Executes whenever an operation within the context of the component succeeds. This is used for example 
-        /// to write custom telemetry and metrics associated with individual operations within the component.
-        /// </summary>
-        public static void LogFailedMetric(
-            this VirtualClientComponent component,
-            string toolName = null,
-            string toolVersion = null,
-            string scenarioName = null,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            DateTime? scenarioStartTime = null,
-            DateTime? scenarioEndTime = null,
-            EventContext telemetryContext = null)
-        {
-            component.ThrowIfNull(nameof(component));
-            component.LogSuccessOrFailMetric(false, toolName, toolVersion, scenarioName, scenarioArguments, metricCategorization, scenarioStartTime, scenarioEndTime, telemetryContext);
-        }
-
-        /// <summary>
-        /// Logs a "Failed" metric to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
-        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
-        /// <param name="scenarioStartTime">The time at which the test began.</param>
-        /// <param name="scenarioEndTime">The time at which the test ended.</param>
-        /// <param name="tags">Tags associated with the test.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
-        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
-        /// <param name="toolVersion">The version of the tool/toolset.</param>
-        public static void LogFailedMetric(
-            this ILogger logger,
-            string toolName,
-            string scenarioName,
-            DateTime scenarioStartTime,
-            DateTime scenarioEndTime,
-            EventContext eventContext,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            string toolVersion = null,
-            IEnumerable<string> tags = null)
-        {
-            VirtualClientLoggingExtensions.LogMetric(
-                logger,
-                toolName,
-                scenarioName,
-                scenarioStartTime,
-                scenarioEndTime,
-                "Failed",
-                1,
-                null,
-                metricCategorization,
-                scenarioArguments,
-                tags,
-                eventContext,
-                MetricRelativity.LowerIsBetter,
-                verbosity: 0,
-                "Indicates the component or toolset execution failed for the scenario defined.",
-                toolVersion: toolVersion);
-        }
-
-        /// <summary>
         /// Extension logs the information and context.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
@@ -716,6 +654,9 @@ namespace VirtualClient.Contracts
                     toolVersion,
                     metric.Metadata);
             }
+
+            // A specific message to inform logger end of logging metrics so that it can write metrics in one batch.
+            VirtualClientLoggingExtensions.LogMessage(logger, $"{scenarioName}.LogMetricsEnd", LogLevel.Trace, LogType.MetricsCollection, eventContext);
         }
 
         /// <summary>
@@ -888,68 +829,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Logs a "Succeeded" metric to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
-        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
-        /// <param name="scenarioStartTime">The time at which the test began.</param>
-        /// <param name="scenarioEndTime">The time at which the test ended.</param>
-        /// <param name="tags">Tags associated with the test.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
-        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
-        /// <param name="toolVersion">The version of the tool/toolset.</param>
-        public static void LogSuccessMetric(
-            this ILogger logger,
-            string toolName,
-            string scenarioName,
-            DateTime scenarioStartTime,
-            DateTime scenarioEndTime,
-            EventContext eventContext,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            string toolVersion = null,
-            IEnumerable<string> tags = null)
-        {
-            logger.LogMetric(
-                toolName,
-                scenarioName,
-                scenarioStartTime,
-                scenarioEndTime,
-                "Succeeded",
-                1,
-                null,
-                metricCategorization,
-                scenarioArguments,
-                tags,
-                eventContext,
-                MetricRelativity.HigherIsBetter,
-                verbosity: 2,
-                "Indicates the component or toolset execution succeeded for the scenario defined.",
-                toolVersion: toolVersion);
-        }
-
-        /// <summary>
-        /// Executes whenever an operation within the context of the component succeeds. This is used for example 
-        /// to write custom telemetry and metrics associated with individual operations within the component.
-        /// </summary>
-        public static void LogSuccessMetric(
-            this VirtualClientComponent component,
-            string toolName = null,
-            string toolVersion = null,
-            string scenarioName = null,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            DateTime? scenarioStartTime = null,
-            DateTime? scenarioEndTime = null,
-            EventContext telemetryContext = null)
-        {
-            component.ThrowIfNull(nameof(component));
-            component.LogSuccessOrFailMetric(true, toolName, toolVersion, scenarioName, scenarioArguments, metricCategorization, scenarioStartTime, scenarioEndTime, telemetryContext);
-        }
-
-        /// <summary>
         /// Extension logs system/OS event data to the target telemetry data store(s).
         /// </summary>
         /// <param name="logger">The logger instance.</param>
@@ -1075,17 +954,32 @@ namespace VirtualClient.Contracts
             return obscuredParameters;
         }
 
-        private static void LogSuccessOrFailMetric(
-           this VirtualClientComponent component,
-           bool success,
-           string toolName = null,
-           string toolVersion = null,
-           string scenarioName = null,
-           string scenarioArguments = null,
-           string metricCategorization = null,
-           DateTime? scenarioStartTime = null,
-           DateTime? scenarioEndTime = null,
-           EventContext telemetryContext = null)
+        /// <summary>
+        /// Logs a "Succeeded" or "Failed" metric to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="component">VC component</param>
+        /// <param name="success">Whether component succeeded or failed</param>
+        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
+        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
+        /// <param name="scenarioStartTime">The time at which the test began.</param>
+        /// <param name="scenarioEndTime">The time at which the test ended.</param>
+        /// <param name="telemetryContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="tags">Tags associated with test</param>
+        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
+        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
+        /// <param name="toolVersion">The version of the tool/toolset.</param>
+        public static void LogSuccessOrFailedMetric(
+            this VirtualClientComponent component,
+            bool success,
+            string toolName = null,
+            string toolVersion = null,
+            string scenarioName = null,
+            string scenarioArguments = null,
+            string metricCategorization = null,
+            DateTime? scenarioStartTime = null,
+            DateTime? scenarioEndTime = null,
+            EventContext telemetryContext = null,
+            IEnumerable<string> tags = null)
         {
             component.ThrowIfNull(nameof(component));
 
@@ -1124,30 +1018,54 @@ namespace VirtualClient.Contracts
             effectiveScenarioName = !string.IsNullOrWhiteSpace(effectiveScenarioName) ? effectiveScenarioName : "Outcome";
             effectiveToolName = !string.IsNullOrEmpty(effectiveToolName) ? effectiveToolName : component.TypeName;
 
+            var properties = new Dictionary<string, object>();
+
+            EventContext metricsContext = telemetryContext.Clone();
+
             if (success)
             {
-                component.Logger.LogSuccessMetric(
-                    effectiveToolName,
-                    effectiveScenarioName,
-                    scenarioStartTime ?? DateTime.UtcNow,
-                    scenarioEndTime ?? DateTime.UtcNow,
-                    telemetryContext ?? EventContext.Persisted(),
-                    scenarioArguments,
-                    metricCategorization,
-                    toolVersion);
+                properties = new Dictionary<string, object>()
+                {
+                    { "scenarioName", effectiveScenarioName },
+                    { "scenarioStartTime", scenarioStartTime ?? DateTime.UtcNow },
+                    { "scenarioEndTime", scenarioEndTime ?? DateTime.UtcNow },
+                    { "scenarioArguments", scenarioArguments ?? string.Empty },
+                    { "metricName", "Succeeded" },
+                    { "metricValue", 1 },
+                    { "metricUnit", string.Empty },
+                    { "metricCategorization", metricCategorization ?? string.Empty },
+                    { "metricDescription", "Indicates the component or toolset execution succeeded for the scenario defined." },
+                    { "metricRelativity", MetricRelativity.HigherIsBetter },
+                    { "metricVerbosity", 2 },
+                    { "toolName", effectiveToolName },
+                    { "tags",  string.Empty },
+                    { "metadata_metrics", string.Empty }
+                };
             }
             else
             {
-                component.Logger.LogFailedMetric(
-                    effectiveToolName,
-                    effectiveScenarioName,
-                    scenarioStartTime ?? DateTime.UtcNow,
-                    scenarioEndTime ?? DateTime.UtcNow,
-                    telemetryContext ?? EventContext.Persisted(),
-                    scenarioArguments,
-                    metricCategorization,
-                    toolVersion);
+                properties = new Dictionary<string, object>()
+                {
+                    { "scenarioName", effectiveScenarioName },
+                    { "scenarioStartTime", scenarioStartTime ?? DateTime.UtcNow },
+                    { "scenarioEndTime", scenarioEndTime ?? DateTime.UtcNow },
+                    { "scenarioArguments", scenarioArguments ?? string.Empty },
+                    { "metricName", "Failed" },
+                    { "metricValue", 1 },
+                    { "metricUnit", string.Empty },
+                    { "metricCategorization", metricCategorization ?? string.Empty },
+                    { "metricDescription", "Indicates the component or toolset execution failed for the scenario defined." },
+                    { "metricRelativity", MetricRelativity.LowerIsBetter },
+                    { "metricVerbosity", 0 },
+                    { "toolName", effectiveToolName },
+                    { "tags",  string.Empty },
+                    { "metadata_metrics", string.Empty }
+                };
             }
+
+            metricsContext.Properties.AddRange(properties, withReplace: true);
+
+            VirtualClientLoggingExtensions.LogMessage(component.Logger, $"{component.TypeName}.SucceededOrFailed", LogLevel.Information, LogType.Metric, metricsContext);
         }
     }
 }
