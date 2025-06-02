@@ -240,7 +240,7 @@ namespace VirtualClient.Monitors
         {
             try
             {
-                string summaryTxtFileLocation = Path.Combine(this.PlatformSpecifics.LogsDirectory, $"summary.txt");
+                string summaryTxtFileLocation = Path.Combine(this.PlatformSpecifics.LogsDirectory, "summary.txt");
                 bool summaryTxtFileExists = this.fileSystem.File.Exists(summaryTxtFileLocation);
                 telemetryContext
                     .AddContext(nameof(summaryTxtFileLocation), summaryTxtFileLocation)
