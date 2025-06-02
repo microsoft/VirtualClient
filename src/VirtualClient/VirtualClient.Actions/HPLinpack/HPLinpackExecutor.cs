@@ -180,7 +180,6 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.EvaluateParametersAsync(cancellationToken);
-            // await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
             this.coreCount = this.cpuInfo.LogicalProcessorCount;
 
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
@@ -292,26 +291,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                LinuxDistributionInfo distroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait();
-
-                switch (distroInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                        break;
-                    default:
-                        throw new WorkloadException(
-                            $"The HPLinpack benchmark workload is not supported by Virtual Client on the current Linux distro " +
-                            $"'{distroInfo.LinuxDistribution}'.",
-                            ErrorReason.LinuxDistributionNotSupported);
-                }
-            }
-        }
-
         private void ValidateParameters()
         {
             if (this.cpuInfo.IsHyperthreadingEnabled && this.NumberOfProcesses > this.coreCount)
@@ -335,7 +314,7 @@ namespace VirtualClient.Actions
                         this.hplArmPerfLibraryInfo = "arm-performance-libraries_24.10";
                         break;
                     case "25.04.1":
-                        this.hplArmPerfLibraryInfo = "arm-performance-libraries_25.04.1"; 
+                        this.hplArmPerfLibraryInfo = "arm-performance-libraries_25.04.1";
                         break;
                     default:
                         throw new WorkloadException(
@@ -352,29 +331,33 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync($"./{this.hplArmPerfLibraryInfo}.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
             }
 
-            if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "AMD")
+            if (this.CpuArchitecture == Architecture.X64)
             {
-                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                    .ConfigureAwait(false);
+                if (this.PerformanceLibrary == "AMD")
+                {
+                    DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                        .ConfigureAwait(false);
 
-                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, this.PerformanceLibraryVersion);
-                string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
-                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
-                await this.ExecuteCommandAsync("bash", "-c \"source amd-libs.cfg\"", $"{installPath}/{this.PerformanceLibraryVersion}/gcc", telemetryContext, cancellationToken, runElevated: true);
+                    string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, this.PerformanceLibraryVersion);
+                    string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("bash", "-c \"source amd-libs.cfg\"", $"{installPath}/{this.PerformanceLibraryVersion}/gcc", telemetryContext, cancellationToken, runElevated: true);
+                }
+
+                if (this.PerformanceLibrary == "INTEL")
+                {
+                    DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                        .ConfigureAwait(false);
+
+                    string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL");
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"l_onemkl_p_2024.2.2.17_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("./l_onemkl_p_2024.2.2.17_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"l_HPCKit_p_2024.2.1.79_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("./l_HPCKit_p_2024.2.1.79_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                }
             }
-
-            if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
-            {
-                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                    .ConfigureAwait(false);
-
-                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL");
-                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"l_onemkl_p_2024.2.2.17_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync("./l_onemkl_p_2024.2.2.17_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
-                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"l_HPCKit_p_2024.2.1.79_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync("./l_HPCKit_p_2024.2.1.79_offline.sh", "-a --silent --eula accept", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
-            }
+            
         }
 
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)

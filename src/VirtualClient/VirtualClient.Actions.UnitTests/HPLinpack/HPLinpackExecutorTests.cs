@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
 
-            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(HPLinpackExecutorTests.ExamplesDirectory, "HPLResults.txt"));
+            this.exampleResults = File.ReadAllText(this.mockFixture.Combine(HPLinpackExecutorTests.ExamplesDirectory, "HPLResultsArm.txt"));
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
                 .Returns(this.exampleResults);
 

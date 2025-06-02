@@ -18,7 +18,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// To match metrics line of the result.
         /// </summary>
-        private const string GetMetricsLine = @"(?<=W).*(?=\n)";
+        private const string GetMetricsLine = @"(?<=W[RC]).*(?=\n)";
 
         /// <summary>
         /// Split string at one or more spaces.
