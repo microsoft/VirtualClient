@@ -328,7 +328,7 @@ namespace VirtualClient.Actions
                 DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
                                                                     .ConfigureAwait(false);
 
-                string armPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
+                this.armPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.armPerfLibrariesPath, $"{this.hplArmPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                 await this.ExecuteCommandAsync($"./{this.hplArmPerfLibraryInfo}.sh", $"-a", this.armPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
             }
@@ -340,7 +340,7 @@ namespace VirtualClient.Actions
                     DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
                                                                         .ConfigureAwait(false);
 
-                    string amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, this.PerformanceLibraryVersion);
+                    this.amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, this.PerformanceLibraryVersion);
                     string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
                     await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.amdPerfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                     await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", this.amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
