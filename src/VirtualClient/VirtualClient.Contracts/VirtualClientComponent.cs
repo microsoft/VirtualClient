@@ -31,6 +31,12 @@ namespace VirtualClient.Contracts
         public static readonly char[] CommonDelimiters = new char[] { ',', ';' };
 
         /// <summary>
+        /// Common delimiters for parameter set collections. The delimiters are defined in
+        /// priority order for parsing operations.
+        /// </summary>
+        public static readonly string[] CommonParameterDelimiters = new string[] { ",,,", ";", "," };
+
+        /// <summary>
         /// The assembly containing the component base class and types.
         /// </summary>
         public static readonly Assembly DllAssembly = Assembly.GetAssembly(typeof(VirtualClientComponent));

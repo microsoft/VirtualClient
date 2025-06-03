@@ -4,8 +4,8 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -51,6 +51,26 @@ namespace VirtualClient
         /// in the set of not.
         /// </summary>
         public static List<Action_> CleanupTasks { get; } = new List<Action_>();
+
+        /// <summary>
+        /// The command line arguments provided to the Virtual Client application.
+        /// </summary>
+        public static string[] CommandLineArguments { get; internal set; }
+
+        /// <summary>
+        /// The current experiment ID for the application.
+        /// </summary>
+        public static string ExperimentId { get; internal set; }
+
+        /// <summary>
+        /// The current platform-specifics for the application.
+        /// </summary>
+        public static PlatformSpecifics PlatformSpecifics { get; internal set; }
+
+        /// <summary>
+        /// The name of the Virtual Client application/module.
+        /// </summary>
+        public static string ExecutableName { get; internal set; } = Process.GetCurrentProcess().MainModule.FileName;
 
         /// <summary>
         /// A set of one or more tasks (exit) registered to execute before the application
