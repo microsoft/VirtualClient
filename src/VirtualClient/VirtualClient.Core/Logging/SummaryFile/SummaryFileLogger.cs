@@ -5,22 +5,19 @@ namespace VirtualClient.Logging
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Data;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -51,18 +48,16 @@ namespace VirtualClient.Logging
         /// <summary>
         /// Initializes a new instance of the <see cref="SummaryFileLogger"/> class.
         /// </summary>
-        /// <param name="filePath">The path to the CSV file to which the metrics should be written.</param>
-        /// <param name="retryPolicy"></param>
+        /// <param name="filePath">The path where the summary file should be written.</param>
+        /// <param name="retryPolicy">A retry policy to apply to transient errored attempts to access the summary file for write operations.</param>
         public SummaryFileLogger(string filePath, IAsyncPolicy retryPolicy = null)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                PlatformSpecifics tempPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-                filePath = tempPlatformSpecifics.Combine(tempPlatformSpecifics.LogsDirectory, DefaultFileName);
-            }
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
 
-            this.filePath = filePath;
-            this.fileDirectory = Path.GetDirectoryName(filePath);
+            string effectiveFilePath = Path.GetFullPath(filePath);
+
+            this.filePath = effectiveFilePath;
+            this.fileDirectory = Path.GetDirectoryName(effectiveFilePath);
             this.fileSystem = new FileSystem();
             this.buffer = new ConcurrentBuffer();
             this.fileAccessRetryPolicy = retryPolicy ?? Policy.Handle<IOException>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries));
@@ -282,7 +277,7 @@ namespace VirtualClient.Logging
             messageBuilder.AppendMessage($"Profile: {context.Properties["executionProfile"].ToString()}");
             messageBuilder.AppendMessage($"Execution Arguments: {context.Properties["executionArguments"].ToString()}");
             messageBuilder.AppendMessage($"Experiment Id: {context.Properties["experimentId"].ToString()}");
-            
+
             var dependencies = context.Properties["executionProfileDependencies"] as JArray;
 
             if (dependencies != null)
