@@ -223,15 +223,6 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
-                if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
-                {
-                    this.SetParameters(this.cpuInfo.SocketCount);
-                }
-                else
-                {
-                    this.SetParameters(this.NumberOfProcesses);
-                }
-
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                 IProcessProxy process;
 
@@ -304,6 +295,9 @@ namespace VirtualClient.Actions
 
         private async Task ConfigurePerformanceLibrary(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                    .ConfigureAwait(false);
+
             if (this.CpuArchitecture == Architecture.Arm64 && this.PerformanceLibrary == "ARM")
             {
                 // Switch between ARM perf lib versions
@@ -325,9 +319,6 @@ namespace VirtualClient.Actions
                             ErrorReason.PlatformNotSupported);
                 }
 
-                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                    .ConfigureAwait(false);
-
                 this.armPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.armPerfLibrariesPath, $"{this.hplArmPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                 await this.ExecuteCommandAsync($"./{this.hplArmPerfLibraryInfo}.sh", $"-a", this.armPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
@@ -337,9 +328,6 @@ namespace VirtualClient.Actions
             {
                 if (this.PerformanceLibrary == "AMD")
                 {
-                    DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                        .ConfigureAwait(false);
-
                     this.amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, this.PerformanceLibraryVersion);
                     string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
                     await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.amdPerfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
@@ -349,9 +337,6 @@ namespace VirtualClient.Actions
 
                 if (this.PerformanceLibrary == "INTEL")
                 {
-                    DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                        .ConfigureAwait(false);
-
                     await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, $"l_onemkl_p_2024.2.2.17_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                     await this.ExecuteCommandAsync("./l_onemkl_p_2024.2.2.17_offline.sh", "-a --silent --eula accept", this.intelPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
                     await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, $"l_HPCKit_p_2024.2.1.79_offline.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
@@ -445,9 +430,7 @@ namespace VirtualClient.Actions
             string hplDatFile;
             if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
             {
-                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                        .ConfigureAwait(false);
-
+                this.SetParameters(this.cpuInfo.SocketCount);
                 hplDatFile = this.PlatformSpecifics.Combine($"{this.intelPerfLibrariesPath}/mp_linpack", "HPL.dat");
 
                 string hplRunmeFile = this.PlatformSpecifics.Combine($"{this.intelPerfLibrariesPath}/mp_linpack", "runme_intel64_dynamic");
@@ -464,6 +447,7 @@ namespace VirtualClient.Actions
             else
             {
                 hplDatFile = this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC", "HPL.dat");
+                this.SetParameters(this.NumberOfProcesses);
             }
 
             await this.fileSystem.File.ReplaceInFileAsync(
