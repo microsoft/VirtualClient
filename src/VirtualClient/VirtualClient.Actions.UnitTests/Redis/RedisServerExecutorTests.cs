@@ -5,13 +5,16 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Actions.Memtier;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -21,13 +24,19 @@ namespace VirtualClient.Actions
     {
         private MockFixture fixture;
         private DependencyPath mockRedisPackage;
+        private InMemoryProcess memoryProcess;
 
         [SetUp]
         public void SetupTests()
         {
             this.fixture = new MockFixture();
             this.fixture.Setup(PlatformID.Unix);
-
+            this.memoryProcess = new InMemoryProcess
+            {
+                ExitCode = 0,
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
             this.mockRedisPackage = new DependencyPath("redis", this.fixture.GetPackagePath("redis"));
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
@@ -62,6 +71,17 @@ namespace VirtualClient.Actions
         {
             using (var component = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                    {
+                        this.memoryProcess.StandardOutput = new ConcurrentBuffer(
+                            new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")
+                        );
+                        return this.memoryProcess;
+                    }
+                    return this.memoryProcess;
+                };
                 await component.InitializeAsync(EventContext.None, CancellationToken.None);
                 this.fixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockRedisPackage.Name, It.IsAny<CancellationToken>()));
             }
@@ -83,6 +103,13 @@ namespace VirtualClient.Actions
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
+                    if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                    {
+                        this.memoryProcess.StandardOutput = new ConcurrentBuffer(
+                            new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")
+                        );
+                        return this.memoryProcess;
+                    }
                     expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
@@ -113,6 +140,13 @@ namespace VirtualClient.Actions
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
+                    if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                    {
+                        this.memoryProcess.StandardOutput = new ConcurrentBuffer(
+                            new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")
+                        );
+                        return this.memoryProcess;
+                    }
                     expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
@@ -140,12 +174,51 @@ namespace VirtualClient.Actions
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
+                    if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                    {
+                        this.memoryProcess.StandardOutput = new ConcurrentBuffer(
+                            new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")
+                        );
+                        return this.memoryProcess;
+                    }
                     expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
                 Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task RedisServerExecutorCapturesRedisVersionSuccessfully()
+        {
+            using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                    {
+                        this.memoryProcess.StandardOutput = new ConcurrentBuffer(
+                            new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")
+                        );
+                        return this.memoryProcess;
+                    }
+                    return this.memoryProcess;
+                };
+                // Act
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                // Assert
+                var messages = this.fixture.Logger.MessagesLogged($"{nameof(TestRedisServerExecutor)}.RedisVersionCaptured");
+                Assert.IsNotEmpty(messages, "Expected at least one log message indicating the Redis version was captured.");
+                bool versionCapturedCorrectly = messages.Any(msg =>
+                {
+                    var eventContext = msg.Item3 as EventContext;
+                    return eventContext != null &&
+                           eventContext.Properties.ContainsKey("redisVersion") &&
+                           eventContext.Properties["redisVersion"].ToString() == "7.0.15";
+                });
+                Assert.IsTrue(versionCapturedCorrectly, "The Redis version '7.0.15' was not captured correctly in the logs.");
             }
         }
 
