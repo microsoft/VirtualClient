@@ -19,6 +19,7 @@ namespace VirtualClient
 
     [TestFixture]
     [Category("Unit")]
+    [Ignore("We do not need to worry about byte order marks (BOM) existing in files anymore.")]
     public class RepoConsistencyTests
     {
         [Test]

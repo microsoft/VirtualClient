@@ -339,13 +339,13 @@ namespace VirtualClient
             // backward compatibility for --eventhub
             if (!string.IsNullOrEmpty(this.EventHubStore))
             {
-                this.loggerDefinitions.Add($"eventhub={this.EventHubStore}");
+                this.loggerDefinitions.Add($"eventhub;{this.EventHubStore}");
             }
 
             if (!this.loggerDefinitions.Any(l => l.Equals("proxy", StringComparison.OrdinalIgnoreCase) || l.StartsWith("proxy=", StringComparison.OrdinalIgnoreCase))
                 && this.ProxyApiUri != null)
             {
-                this.loggerDefinitions.Add($"proxy={this.ProxyApiUri.ToString()}");
+                this.loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
             }
 
             LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
@@ -353,12 +353,31 @@ namespace VirtualClient
             foreach (string loggerDefinition in this.loggerDefinitions)
             {
                 string loggerName = loggerDefinition;
-                string definitionValue = string.Empty;
-                if (loggerDefinition.Contains("="))
+                string loggerParameters = string.Empty;
+
+                // e.g.
+                // --logger=SummaryFileLoggerProvider;../logs/{experimentId}-summary.txt
+                int indexOfDelimiter = loggerDefinition.IndexOf(';');
+                if (indexOfDelimiter >= 0)
                 {
-                    loggerName = loggerDefinition.Substring(0, loggerDefinition.IndexOf("=", StringComparison.Ordinal)).Trim();
-                    definitionValue = loggerDefinition.Substring(loggerDefinition.IndexOf("=", StringComparison.Ordinal) + 1);
+                    loggerName = loggerName.Substring(0, indexOfDelimiter);
+                    loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1);
                 }
+
+                // Support placeholder replacements (e.g. {experimentId}, {agentId}).
+                IDictionary<string, IConvertible> replacements = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "experimentId", this.ExperimentId },
+                    { "agentId", this.ClientId },
+                    { "clientId", this.ClientId }
+                };
+
+                if (this.Metadata?.Any() == true)
+                {
+                    replacements.AddRange(this.Metadata);
+                }
+
+                loggerParameters = FileContext.ResolvePathTemplate(loggerParameters, replacements);
 
                 switch (loggerName.ToLowerInvariant())
                 {
@@ -371,12 +390,12 @@ namespace VirtualClient
                         break;
 
                     case "eventhub":
-                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: definitionValue, this.CertificateManager ?? new CertificateManager());
+                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: loggerParameters, this.CertificateManager ?? new CertificateManager());
                         CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel);
                         break;
 
                     case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(definitionValue), source);
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), source);
                         break;
 
                     default:
@@ -387,7 +406,7 @@ namespace VirtualClient
                                 $"or is not defined in the extensions assemblies provided to the application.");
                         }
 
-                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, definitionValue);
+                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, loggerParameters);
                         loggingProviders.Add(customLoggerProvider);
                         break;
                 }

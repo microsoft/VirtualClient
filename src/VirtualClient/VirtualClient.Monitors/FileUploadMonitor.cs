@@ -134,6 +134,9 @@ namespace VirtualClient.Monitors
                         // Upload the workload summary logs (e.g. metrics.csv) before exiting. We do this at the very end. Same as before, we do not
                         // honor the cancellation token until ALL files have been successfully processed.
                         await this.UploadCsvSummaryFilesAsync(blobManager, relatedContext);
+
+                        // Upload specific summary.txt at root level of logs directory.
+                        await this.UploadSummaryFileAsync(blobManager, relatedContext);
                     });
 
                     break;
@@ -231,6 +234,47 @@ namespace VirtualClient.Monitors
             }
 
             return filesFound;
+        }
+
+        private async Task UploadSummaryFileAsync(IBlobManager blobManager, EventContext telemetryContext)
+        {
+            try
+            {
+                string summaryTxtFileLocation = Path.Combine(this.PlatformSpecifics.LogsDirectory, "summary.txt");
+                bool summaryTxtFileExists = this.fileSystem.File.Exists(summaryTxtFileLocation);
+                telemetryContext
+                    .AddContext(nameof(summaryTxtFileLocation), summaryTxtFileLocation)
+                    .AddContext(nameof(summaryTxtFileExists), summaryTxtFileExists);
+
+                if (summaryTxtFileExists)
+                {
+                    try
+                    {
+                        FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
+                            new FileContext(
+                                this.fileSystem.FileInfo.New(summaryTxtFileLocation),
+                                "text/plain",
+                                Encoding.UTF8.WebName,
+                                this.ExperimentId,
+                                this.AgentId));
+
+                        await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                    }
+                    catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // It is common that there will be read/write access errors at certain times while
+                        // upload request files are being created at the same time as attempts to read. 
+                    }
+                    catch (Exception exc)
+                    {
+                        this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Error);
+            }
         }
 
         private async Task UploadCsvSummaryFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
