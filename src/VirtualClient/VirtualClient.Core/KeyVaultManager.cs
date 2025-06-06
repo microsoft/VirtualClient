@@ -349,22 +349,5 @@ namespace VirtualClient
                         ErrorReason.DependencyDescriptionInvalid);
             }
         }
-
-        /// <summary>
-        /// Validates that the required properties are present in the dependency descriptor.
-        /// </summary>
-        /// <exception cref="DependencyException">
-        /// Thrown if any required property is missing or empty.
-        /// </exception>
-        private void ValidateKeyVaultStore()
-        {
-            if (this.StoreDescription == null)
-            {
-                throw new DependencyException(
-                        $"Cannot Resolve Keyvault Objects as could not find any KeyVault references. " +
-                        $"Please provide the keyVault details using --keyVault parameter of Virtual Client",
-                        ErrorReason.DependencyDescriptionInvalid);
-            }
-        }
     }
 }
