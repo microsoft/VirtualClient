@@ -13,6 +13,7 @@ namespace VirtualClient
     using Azure.Security.KeyVault.Certificates;
     using Azure.Security.KeyVault.Keys;
     using Azure.Security.KeyVault.Secrets;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -329,6 +330,23 @@ namespace VirtualClient
                         $"The required property '{property}' is missing or empty in the dependency descriptor.",
                         ErrorReason.DependencyDescriptionInvalid);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Validates that the required properties are present in the dependency descriptor.
+        /// </summary>
+        /// <exception cref="DependencyException">
+        /// Thrown if any required property is missing or empty.
+        /// </exception>
+        private void ValidateKeyVaultStore()
+        {
+            if (this.StoreDescription == null)
+            {
+                throw new DependencyException(
+                        $"Cannot Resolve Keyvault Objects as could not find any KeyVault references. " +
+                        $"Please provide the keyVault details using --keyVault parameter of Virtual Client",
+                        ErrorReason.DependencyDescriptionInvalid);
             }
         }
 
