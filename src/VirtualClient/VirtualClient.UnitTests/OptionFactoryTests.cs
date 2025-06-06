@@ -431,6 +431,55 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--key-vault")]
+        [TestCase("--key-Vault")]
+        [TestCase("--keyvault")]
+        [TestCase("--keyVault")]
+        [TestCase("--kv")]
+        public void KeyVaultOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateKeyVaultOption();
+            ParseResult result = option.Parse($"{alias}=https://my-keyvault.vault.azure.net/?miid=307591a4-abb2-4559-af59-b47177d140cf");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityConnectionStrings), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
+        public void KeyVaultOptionSupportsConnectionStringsWithManagedIdentyReferences(string argument)
+        {
+            Option option = OptionFactory.CreateKeyVaultOption();
+            ParseResult result = option.Parse($"--key-vault={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleManagedIdentityUris), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
+        public void KeyVaultOptionSupportsUrisWithManagedIdentityReferences(string argument)
+        {
+            Option option = OptionFactory.CreateKeyVaultOption();
+            ParseResult result = option.Parse($"--key-vault={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdConnectionStrings), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
+        public void KeyVaultOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            Option option = OptionFactory.CreateKeyVaultOption();
+            ParseResult result = option.Parse($"--kv={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCaseSource(nameof(GetExampleMicrosoftEntraIdUris), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
+        public void KeyVaultOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
+        {
+            Option option = OptionFactory.CreateKeyVaultOption();
+            ParseResult result = option.Parse($"--kv={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCase("--layout-path")]
         [TestCase("--layoutPath")]
         [TestCase("--layoutpath")]
@@ -1228,6 +1277,14 @@ namespace VirtualClient
                     "EventHubNamespace=any.servicebus.windows.net/;ManagedIdentityId=11223344"
                 };
             }
+            else if (storeType == DependencyStore.StoreTypeAzureKeyVault)
+            {
+                examples = new List<string>
+                {
+                    "EndpointUrl=https://my-keyvault.vault.azure.net;ManagedIdentityId=11223344",
+                    "EndpointUrl=https://my-keyvault.vault.azure.net/;ManagedIdentityId=11223344"
+                };
+            }
 
             return examples;
         }
@@ -1251,6 +1308,14 @@ namespace VirtualClient
                 {
                     "sb://any.servicebus.windows.net?miid=11223344",
                     "sb://any.servicebus.windows.net/?miid=11223344"
+                };
+            }
+            else if (storeType == DependencyStore.StoreTypeAzureKeyVault)
+            {
+                examples = new List<string>
+                {
+                    "https://my-keyvault.vault.azure.net?miid=11223344",
+                    "https://my-keyvault.vault.azure.net/?miid=11223344"
                 };
             }
 
@@ -1293,6 +1358,19 @@ namespace VirtualClient
                     "EventHubNamespace=any.servicebus.windows.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
                 };
             }
+            else if (storeType == DependencyStore.StoreTypeAzureKeyVault)
+            {
+                examples = new List<string>
+                {
+                    // Microsoft Entra IDs with certificates thumbprint references
+                    "EndpointUrl=https://my-keyvault.vault.azure.net/;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+                    "EndpointUrl=https://my-keyvault.vault.azure.net/;ClientId=11223344;TenantId=55667788;CertificateThumbprint=123456789",
+
+                    // Microsoft Entra IDs with certificates issuer and subject name references.
+                    "EndpointUrl=https://my-keyvault.vault.azure.net;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com",
+                    "EndpointUrl=https://my-keyvault.vault.azure.net/;ClientId=11223344;TenantId=55667788;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
+                };
+            }
 
             return examples;
         }
@@ -1333,6 +1411,21 @@ namespace VirtualClient
                     "sb://any.servicebus.windows.net/?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
                     "\"sb://any.servicebus.windows.net?cid=12345&tid=55667788&crti=ABC CA 01&crts=CN=any.domain.com\"",
                     "\"sb://any.servicebus.windows.net/?cid=12345&tid=55667788&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com\""
+                };
+            }
+            else if (storeType == DependencyStore.StoreTypeAzureKeyVault)
+            {
+                examples = new List<string>
+                {
+                    // Microsoft Entra IDs with certificates thumbprint references
+                    "https://my-keyvault.vault.azure.net?cid=11223344&tid=55667788&crtt=123456789",
+                    "https://my-keyvault.vault.azure.net/?cid=11223344&tid=55667788&crtt=123456789",
+
+                    // Microsoft Entra IDs with certificates issuer and subject name references.
+                    "https://my-keyvault.vault.azure.net?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
+                    "https://my-keyvault.vault.azure.net/?cid=12345&tid=55667788&crti=ABC&crts=any.domain.com",
+                    "\"https://my-keyvault.vault.azure.net?cid=12345&tid=55667788&crti=ABC CA 01&crts=CN=any.domain.com\"",
+                    "\"https://my-keyvault.vault.azure.net/?cid=12345&tid=55667788&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com\""
                 };
             }
 
