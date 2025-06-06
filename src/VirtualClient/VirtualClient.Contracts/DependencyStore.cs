@@ -17,6 +17,11 @@ namespace VirtualClient
         public const string Content = nameof(DependencyStore.Content);
 
         /// <summary>
+        /// KeyVault store name.
+        /// </summary>
+        public const string KeyVault = nameof(DependencyStore.KeyVault);
+
+        /// <summary>
         /// Packages store name.
         /// </summary>
         public const string Packages = nameof(DependencyStore.Packages);
@@ -40,6 +45,11 @@ namespace VirtualClient
         /// Store Type = FileSystem
         /// </summary>
         public const string StoreTypeFileSystem = "FileSystem";
+
+        /// <summary>
+        /// Store Type = AzureKeyVault
+        /// </summary>
+        public const string StoreTypeAzureKeyVault = "AzureKeyVault";
 
         /// <summary>
         /// Store Type = ProxyApi

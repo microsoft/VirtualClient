@@ -11,6 +11,9 @@
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Azure.Identity" Version="$(Azure_Identity_PackageVersion)" />
+        <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="$(Azure_Security_KeyVault_Certificates_PackageVersion)" />
+        <PackageReference Include="Azure.Security.KeyVault.Keys" Version="$(Azure_Security_KeyVault_Keys_PackageVersion)" />
+        <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="$(Azure_Security_KeyVault_Secrets_PackageVersion)" />
         <!-- PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(Microsoft_Extensions_FileSystemGlobbing_PackageVersion)" /-->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion)" />
         <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="$(System_Diagnostics_PerformanceCounter_PackageVersion)" />
