@@ -5,14 +5,13 @@ namespace VirtualClient
 {
     using System;
     using System.Net;
-    using System.Runtime.ConstrainedExecution;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Azure.Core;
     using Azure.Security.KeyVault.Certificates;
     using Azure.Security.KeyVault.Keys;
     using Azure.Security.KeyVault.Secrets;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -79,7 +78,7 @@ namespace VirtualClient
 
             string secretName = descriptor.Name;
 
-            SecretClient client = new SecretClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
+            SecretClient client = this.CreateSecretClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
             try
             {
@@ -92,7 +91,7 @@ namespace VirtualClient
                         Version = secret.Properties.Version,
                         Name = secretName,
                         VaultUri = vaultUri.ToString(),
-                        ObjectId = secret.Id.ToString(),
+                        ObjectId = secret.Id?.ToString(),
                         ObjectType = KeyVaultObjectType.Secret
                     };
                     return result;
@@ -154,8 +153,7 @@ namespace VirtualClient
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
             string keyName = descriptor.Name;
-
-            KeyClient client = new KeyClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
+            KeyClient client = this.CreateKeyClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
             try
             {
@@ -229,8 +227,7 @@ namespace VirtualClient
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
             string certName = descriptor.Name;
-
-            CertificateClient client = new CertificateClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
+            CertificateClient client = this.CreateCertificateClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
             try
             {
@@ -277,6 +274,39 @@ namespace VirtualClient
                     ex,
                     ErrorReason.HttpNonSuccessResponse);
             }
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="SecretClient"/> class.
+        /// </summary>
+        /// <param name="vaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="credential">The credentials used to authenticate with the Azure Key Vault.</param>
+        /// <returns>A <see cref="SecretClient"/> instance.</returns>
+        protected virtual SecretClient CreateSecretClient(Uri vaultUri, TokenCredential credential)
+        {
+            return new SecretClient(vaultUri, credential);
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="KeyClient"/> class.
+        /// </summary>
+        /// <param name="vaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="credential">The credentials used to authenticate with the Azure Key Vault.</param>
+        /// <returns>A <see cref="KeyClient"/> instance.</returns>
+        protected virtual KeyClient CreateKeyClient(Uri vaultUri, TokenCredential credential)
+        {
+            return new KeyClient(vaultUri, credential);
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CertificateClient"/> class.
+        /// </summary>
+        /// <param name="vaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="credential">The credentials used to authenticate with the Azure Key Vault.</param>
+        /// <returns>A <see cref="CertificateClient"/> instance.</returns>
+        protected virtual CertificateClient CreateCertificateClient(Uri vaultUri, TokenCredential credential)
+        {
+            return new CertificateClient(vaultUri, credential);
         }
 
         /// <summary>
