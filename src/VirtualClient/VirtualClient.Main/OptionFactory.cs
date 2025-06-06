@@ -866,11 +866,6 @@ namespace VirtualClient
                     "EventHubStore",
                     "Invalid usage. An Event Hub option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
 
-                OptionFactory.ThrowIfOptionExists(
-                    result,
-                    "KeyVault",
-                    "Invalid usage. A Key Vault option cannot be supplied at the same time as a proxy API option. When using a proxy API, all secrets and certificates are resolved through the proxy.");
-
                 return string.Empty;
             });
 

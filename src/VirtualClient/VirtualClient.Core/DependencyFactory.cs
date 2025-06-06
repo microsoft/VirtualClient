@@ -82,6 +82,11 @@ namespace VirtualClient
         /// <param name="dependencyStore">Describes the type of dependency store.</param>
         public static IKeyVaultManager CreateKeyVaultManager(DependencyStore dependencyStore)
         {
+            if (dependencyStore == null)
+            {
+                throw new DependencyException("Dependency store cannot be null while creating the KeyVault reference.", ErrorReason.DependencyDescriptionInvalid);
+            }
+
             IKeyVaultManager keyVaultManager = null;
             DependencyKeyVaultStore keyVaultStore = dependencyStore as DependencyKeyVaultStore;
             if (keyVaultStore != null)
