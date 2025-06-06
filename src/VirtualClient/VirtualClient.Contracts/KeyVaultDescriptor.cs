@@ -71,7 +71,7 @@ namespace VirtualClient.Contracts
         public string VaultUri
         {
             get
-            {
+        {
                 this.TryGetValue(nameof(this.VaultUri), out IConvertible vaultUri);
                 return vaultUri?.ToString();
             }
