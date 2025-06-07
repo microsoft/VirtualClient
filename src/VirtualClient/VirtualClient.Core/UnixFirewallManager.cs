@@ -11,6 +11,7 @@ namespace VirtualClient
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides methods for managing Unix/Linux system/OS firewall operations.
@@ -45,6 +46,13 @@ namespace VirtualClient
         public async override Task EnableInboundConnectionAsync(FirewallEntry firewallEntry, CancellationToken cancellationToken)
         {
             firewallEntry.ThrowIfNull(nameof(firewallEntry));
+
+            if (PlatformSpecifics.IsRunningInContainer())
+            {
+                // Can't set iptables from within a container.
+                return;
+            }
+
             if (!cancellationToken.IsCancellationRequested)
             {
                 string ports = null;
