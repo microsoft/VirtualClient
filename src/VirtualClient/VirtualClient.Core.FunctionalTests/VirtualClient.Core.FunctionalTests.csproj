@@ -35,7 +35,7 @@
     Extensions Packages in Default Location
     -->
     <Target Name="CopyExtensionsPackagesToDefaultLocation" AfterTargets="Build">
-        <Copy
+        <Copy 
             SourceFiles="$(OutputPath)VirtualClient.Core.FunctionalTests.dll"
             DestinationFiles="$(OutputPath)packages\extensions_package_1\$(PlatformArchitectureName)\Example.VirtualClient.Extensions_1.dll"
             ContinueOnError="false"
@@ -66,7 +66,7 @@
             />
 
     </Target>
-
+    
     <!--
     Extensions Packages in User-Defined/Non-Default Location (e.g. VC_PACKAGES_PATH).
     -->
