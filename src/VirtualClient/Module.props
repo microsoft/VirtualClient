@@ -117,7 +117,7 @@
         <System_Diagnostics_PerformanceCounter_PackageVersion>9.0.3</System_Diagnostics_PerformanceCounter_PackageVersion>
 
         <!-- System.IO.Abstractions -->
-        <System_IO_Abstractions_PackageVersion>21.0.29</System_IO_Abstractions_PackageVersion>
+        <System_IO_Abstractions_PackageVersion>22.0.14</System_IO_Abstractions_PackageVersion>
 
         <!-- System.IO.FileSystem.AccessControl -->
         <System_IO_FileSystem_AccessControl_PackageVersion>5.0.0</System_IO_FileSystem_AccessControl_PackageVersion>
