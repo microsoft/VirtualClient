@@ -157,9 +157,6 @@
         
         <!-- YamlDotNet -->
         <YamlDotNet_PackageVersion>15.1.1</YamlDotNet_PackageVersion>
-
-    
-  
   
   </PropertyGroup>
 

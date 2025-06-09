@@ -32,7 +32,7 @@ Virtual Client can retrieve secrets and certificates from Azure Key Vault for us
 
 ## Authentication Preliminaries
 
-### Referencing Certificates on Linux
+### Installing Certificates on Linux
 
 Virtual Client is a .NET application. Certificates used on a Linux system must be X.509 certificates containing a private key (e.g., PKCS#12, *.pfx). Certificates must be installed in the expected location for the user running Virtual Client:
 
@@ -43,7 +43,7 @@ Ensure the user has read/write access to this directory and the certificate file
 
 sudo chmod -R 700 /home/{user}/.dotnet/corefx/cryptography/x509stores/my/
 
-### Referencing Certificates on Windows
+### Installing Certificates on Windows
 
 Virtual Client will look for certificates in these stores:
 
