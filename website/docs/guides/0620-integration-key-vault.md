@@ -41,7 +41,7 @@ Virtual Client is a .NET application. Certificates used on a Linux system must b
 
 Ensure the user has read/write access to this directory and the certificate files. Set permissions as follows:
 
-sudo chmod -R 700 /home/{user}/.dotnet/corefx/cryptography/x509stores/my/
+`sudo chmod -R 700 /home/{user}/.dotnet/corefx/cryptography/x509stores/my/`
 
 ### Installing Certificates on Windows
 
