@@ -3,8 +3,15 @@
 
 namespace VirtualClient
 {
+    using Azure.Storage.Blobs;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
+    using Polly;
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
@@ -15,12 +22,6 @@ namespace VirtualClient
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -382,7 +383,7 @@ namespace VirtualClient
             ExecutionProfile profile = await this.ReadExecutionProfileAsync(profiles.First(), dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
-            this.InitializeProfile(profile);
+            await this.InitializeProfileAsync(profile, dependencies);
 
             if (profiles.Count() > 1)
             {
@@ -391,7 +392,7 @@ namespace VirtualClient
                     ExecutionProfile otherProfile = await this.ReadExecutionProfileAsync(additionalProfile, dependencies, cancellationToken)
                         .ConfigureAwait(false);
 
-                    this.InitializeProfile(otherProfile);
+                    await this.InitializeProfileAsync(otherProfile, dependencies);
                     profile = profile.MergeWith(otherProfile);
                 }
             }
@@ -405,7 +406,7 @@ namespace VirtualClient
                 ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
                     .ConfigureAwait(false);
 
-                this.InitializeProfile(fileUploadMonitorProfile);
+                await this.InitializeProfileAsync(fileUploadMonitorProfile, dependencies);
                 profile = profile.MergeWith(fileUploadMonitorProfile);
             }
 
@@ -808,7 +809,7 @@ namespace VirtualClient
             }
         }
 
-        private void InitializeProfile(ExecutionProfile profile)
+        private async Task InitializeProfileAsync(ExecutionProfile profile, IServiceCollection dependencies)
         {
             if (this.Metadata?.Any() == true)
             {
@@ -825,7 +826,111 @@ namespace VirtualClient
 
             ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
             result.ThrowIfInvalid();
+
+            // Process conditional parameters (ParametersOn feature)
+            await this.ProcessParametersOnAsync(profile, dependencies);
+
             profile.Inline();
+        }
+
+        /// <summary>
+        /// Processes conditional parameter sets in the profile's ParametersOn property.
+        /// </summary>
+        /// <param name="profile">The execution profile to process.</param>
+        /// <param name="dependencies">The service dependencies.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        private async Task ProcessParametersOnAsync(ExecutionProfile profile, IServiceCollection dependencies)
+        {
+            try
+            {
+                if (profile.ParametersOn?.Any() == true && dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
+                {
+                    ILogger logger = dependencies.GetService<ILogger>();
+                    EventContext telemetryContext = EventContext.Persisted();
+
+                    // Add telemetry context for debugging
+                    telemetryContext.AddContext("profileDescription", profile.Description);
+                    telemetryContext.AddContext("parametersOnCount", profile.ParametersOn.Count);
+
+                    logger?.LogMessage($"{nameof(ExecuteProfileCommand)}.ProcessParametersOn.Starting", telemetryContext);
+
+                    // Store all condition keys for cleanup later
+                    List<string> conditionKeys = new List<string>();
+
+                    // Iterate through each conditional parameter set
+                    for (int i = 0; i < profile.ParametersOn.Count; i++)
+                    {
+                        var parametersOn = profile.ParametersOn[i];
+
+                        // Extract the condition and add it to profile.Parameters with a unique key
+                        if (parametersOn.TryGetValue("Condition", out IConvertible condition))
+                        {
+                            string conditionKey = $"Condition_{i}";
+                            profile.Parameters[conditionKey] = condition;
+                            conditionKeys.Add(conditionKey);
+
+                            telemetryContext.AddContext($"condition_{i}", condition.ToString());
+                        }
+                    }
+
+                    // Evaluate all parameters including the conditions
+                    await evaluator.EvaluateAsync(dependencies, profile.Parameters);
+
+                    // Fill back the condition values from profile.Par
+
+                    // Track which condition matched (if any)
+                    bool matchFound = false;
+
+                    // Check which condition is true and apply its parameters
+                    for (int i = 0; i < profile.ParametersOn.Count && !matchFound; i++)
+                    {
+                        string conditionKey = $"Condition_{i}";
+                        if (profile.Parameters.TryGetValue(conditionKey, out IConvertible evaluatedCondition) &&
+                            bool.TryParse(evaluatedCondition.ToString(), out bool conditionResult) &&
+                            conditionResult)
+                        {
+                            var parametersOn = profile.ParametersOn[i];
+
+                            // Apply the parameters from the matching conditional set
+                            // Skip the "Condition" key itself
+                            foreach (var parameter in parametersOn.Where(p => !string.Equals(p.Key, "Condition", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                if(profile.Parameters.ContainsKey(parameter.Key))
+                                {
+                                    profile.Parameters[parameter.Key] = parameter.Value;
+                                    telemetryContext.AddContext($"applied_{parameter.Key}", parameter.Value?.ToString());
+                                }
+                            }
+
+                            // We found a match, no need to check other conditions
+                            matchFound = true;
+                        }
+                    }
+
+                    // Clean up all temporary condition keys
+                    foreach (string conditionKey in conditionKeys)
+                    {
+                        // Fill the Condition value to the respective parameter set based on the index
+                        if (profile.ParametersOn.Count > 0 && profile.ParametersOn.Count > conditionKeys.IndexOf(conditionKey))
+                        {
+                            profile.ParametersOn[conditionKeys.IndexOf(conditionKey)]["Condition"] = profile.Parameters[conditionKey];
+                        }
+
+                        profile.Parameters.Remove(conditionKey);
+
+                    }
+
+                    logger?.LogMessage(
+                        $"{nameof(ExecuteProfileCommand)}.ProcessParametersOn.{(matchFound ? "MatchFound" : "NoMatchFound")}",
+                        telemetryContext);
+                }
+            }
+            catch (Exception exc)
+            {
+                throw new NotSupportedException(
+                    $"Error processing ParametersOn conditional parameters: {exc.Message}",
+                    exc);
+            }
         }
 
         private Task LoadExtensionsBinariesAsync(PlatformExtensions extensions, CancellationToken cancellationToken)

@@ -1,0 +1,50 @@
+{
+  "Description": "Default profile scenario containing a workload to run but no explicit monitors.",
+  "Metadata": {
+  },
+  "Parameters": {
+    "ProfilingEnabled": false,
+    "BaseValue": "base1",
+    "OsName": "Nothing",
+    "Architecture": "Nothing"
+  },
+  "ParametersOn": [
+    {
+      "Condition": "{calculate({calculate(\"{BaseValue}\" == \"base1\")} ? \"true\" : \"false\")}",
+      "OsName": "Linux",
+      "Architecture": "x64",
+      "Platform": "Ubuntu",
+      "CustomValue": "linux-value"
+    },
+    {
+      "Condition": "{calculate({calculate(\"{BaseValue}\" == \"base2\")} ? \"true\" : \"false\")}",
+      "OsName": "Windows",
+      "Architecture": "x86",
+      "Platform": "Windows",
+      "CustomValue": "windows-value"
+    }
+  ],
+  "Actions": [
+    {
+      "Type": "TestExecutor",
+      "Parameters": {
+        "Scenario": "Workload1",
+        "NewFlag": "$.Parameters.OsName"
+      }
+    },
+    {
+      "Type": "TestExecutor",
+      "Parameters": {
+        "Scenario": "Workload2"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "TestDependency",
+      "Parameters": {
+        "Scenario": "Dependency1"
+      }
+    }
+  ]
+}
