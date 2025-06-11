@@ -5,17 +5,18 @@ namespace VirtualClient
 {
     using System;
     using System.Net;
-    using System.Runtime.ConstrainedExecution;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
-    using Azure.Security.KeyVault.Certificates;
-    using Azure.Security.KeyVault.Keys;
+    using Azure.Core;
     using Azure.Security.KeyVault.Secrets;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.CodeAnalysis;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using YamlDotNet.Core.Tokens;
+    using YamlDotNet.Serialization;
 
     /// <summary>
     /// Provides methods for retrieving secrets, keys, and certificates from an Azure Key Vault.
@@ -265,6 +266,12 @@ namespace VirtualClient
                     ex,
                     ErrorReason.HttpNonSuccessResponse);
             }
+        }
+
+        /// inheritdoc
+        public Task<X509Certificate2> GetCertificateAsync(string certificateName, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

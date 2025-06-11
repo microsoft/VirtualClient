@@ -27,6 +27,12 @@
         <ScriptFiles Include="refreshenv\*.*" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Azure.Security.KeyVault.Secrets">
+        <HintPath>..\..\..\..\..\..\..\..\cxcache\azure.security.keyvault.secrets\4.7.0\lib\netstandard2.0\Azure.Security.KeyVault.Secrets.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
     <Target Name="CopyScriptsToOutput" AfterTargets="Build">
         <Message Importance="high" Text="Publish scripts/content..." />
 
