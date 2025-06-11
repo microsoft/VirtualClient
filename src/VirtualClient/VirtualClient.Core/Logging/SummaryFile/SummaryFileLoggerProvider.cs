@@ -4,14 +4,14 @@
 namespace VirtualClient.Logging
 {
     using System;
+    using System.Runtime.InteropServices;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
     /// Provides methods for creating <see cref="ILogger"/> instances that can be used
-    /// to write summary file.
+    /// to write summary log files.
     /// </summary>
     public sealed class SummaryFileLoggerProvider : ILoggerProvider
     {
@@ -27,17 +27,32 @@ namespace VirtualClient.Logging
         }
 
         /// <summary>
-        /// Creates an <see cref="ILogger"/> instance that can be used to log events/messages
-        /// to an Application Insights endpoint.
+        /// Creates an <see cref="ILogger"/> instance that can be used write events to a 
+        /// summary log.
         /// </summary>
         /// <param name="categoryName">The logger events category.</param>
-        /// <returns>
-        /// An <see cref="ILogger"/> instance that can log events/messages to an Application
-        /// Insights endpoint.
-        /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            SummaryFileLogger logger = new SummaryFileLogger(this.filePath);
+            string effectiveFilePath = this.filePath;
+
+            if (string.IsNullOrWhiteSpace(effectiveFilePath))
+            {
+                PlatformSpecifics platformSpecifics = VirtualClientRuntime.PlatformSpecifics
+                   ?? new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+
+                string experimentId = VirtualClientRuntime.ExperimentId;
+                string logsPath = platformSpecifics.GetLogsPath();
+                string summaryFileName = "summary.txt";
+
+                if (!string.IsNullOrWhiteSpace(experimentId))
+                {
+                    summaryFileName = $"{experimentId}-summary.txt";
+                }
+
+                effectiveFilePath = platformSpecifics.Combine(logsPath, summaryFileName);
+            }
+
+            SummaryFileLogger logger = new SummaryFileLogger(effectiveFilePath);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
             {
                 logger.Flush();

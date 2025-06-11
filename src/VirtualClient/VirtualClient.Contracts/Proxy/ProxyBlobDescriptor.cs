@@ -12,30 +12,24 @@ namespace VirtualClient.Contracts.Proxy
     public class ProxyBlobDescriptor
     {
         /// <summary>
-        /// The default source to use when interfacing with a proxy API service.
-        /// </summary>
-        public const string DefaultSource = "VirtualClient";
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ProxyBlobDescriptor"/> class.
         /// </summary>
-        /// <param name="source">The source of the blob upload/download request (e.g. VirtualClient).</param>
         /// <param name="storeType">The type of blob/content store (e.g. Content, Packages).</param>
         /// <param name="blobName">The name of the blob including its path (e.g. anyblob.zip, /any/path/to/the/blob/anyblob.zip).</param>
         /// <param name="containerName">The name of the blob container.</param>
         /// <param name="contentType">The MIME type of content (e.g. application/json).</param>
         /// <param name="contentEncoding">The web encoding for the content (e.g. UTF-8 -> Encoding.UTF8.WebName).</param>
         /// <param name="blobPath">An optional path/virtual path to where the blob should be stored. This is equivalent to a directory path.</param>
-        public ProxyBlobDescriptor(string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath = null)
+        /// <param name="source">The source of the blob upload/download request (e.g. VirtualClient).</param>
+        public ProxyBlobDescriptor(string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath = null, string source = null)
         {
-            source.ThrowIfNullOrWhiteSpace(nameof(source));
             storeType.ThrowIfNullOrWhiteSpace(nameof(storeType));
             blobName.ThrowIfNullOrWhiteSpace(nameof(blobName));
             containerName.ThrowIfNullOrWhiteSpace(nameof(containerName));
             contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
             contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
 
-            this.Source = source.Trim();
+            this.Source = source?.Trim();
             this.StoreType = storeType.Trim();
             this.BlobName = blobName.Trim();
             this.BlobPath = blobPath?.Trim()?.TrimEnd('/');
