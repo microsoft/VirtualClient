@@ -5,9 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using VirtualClient.Logging;
 
     /// <summary>
@@ -142,6 +145,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected IAsyncPolicy ServerRetryPolicy { get; set; }
 
+        private string RedisVersion { get; set; }
+
         /// <summary>
         /// Disposes of resources used by the executor including shutting down any
         /// instances of Redis server running.
@@ -195,7 +200,6 @@ namespace VirtualClient.Actions
 
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
-
                     if (this.IsMultiRoleLayout())
                     {
                         using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -237,13 +241,13 @@ namespace VirtualClient.Actions
             this.RedisExecutablePath = this.Combine(this.RedisPackagePath, "src", "redis-server");
 
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
-
+            await this.CaptureRedisVersionAsync(telemetryContext, cancellationToken);
             if (this.IsTLSEnabled)
             {
                 DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
                 this.RedisResourcesPath = redisResourcesPath.Path;
             }
-
+            
             this.InitializeApiClients();
         }
 
@@ -261,6 +265,51 @@ namespace VirtualClient.Actions
                     $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system " +
                     $"when binding each of the servers to a logical core/vCPU. Set parameter '{nameof(this.BindToCores)}' = false to allow for additional server instances.",
                     ErrorReason.InvalidProfileDefinition);
+            }
+        }
+
+        private async Task CaptureRedisVersionAsync(EventContext telemetryContext, CancellationToken token)
+        {
+            this.EnsureRedisServerInRootPackagePath(telemetryContext);
+            string redisVersionPath = this.Combine(this.RedisPackagePath, "redis-server");
+            string command = $"{redisVersionPath} --version";
+            IProcessProxy process = await this.ExecuteCommandAsync(command, null, this.RedisPackagePath, telemetryContext, token, runElevated: true);
+            string output = process.StandardOutput.ToString();
+            Match match = Regex.Match(output, @"v=(\d+\.\d+\.\d+)");
+            if (match.Success)
+            {
+                this.RedisVersion = match.Groups[1].Value;
+                telemetryContext.AddContext("RedisVersion", this.RedisVersion);
+                this.Logger.LogMessage($"{this.TypeName}.RedisVersionCaptured", LogLevel.Information, telemetryContext);
+                this.MetadataContract.AddForScenario(
+                    "Redis-Benchmark",
+                    null,
+                    toolVersion: this.RedisVersion);
+                this.MetadataContract.Apply(telemetryContext);
+            }
+            else
+            {
+                throw new WorkloadException("Failed to parse Redis version from output.", ErrorReason.CriticalWorkloadFailure);
+            }
+        }
+
+        private void EnsureRedisServerInRootPackagePath(EventContext telemetryContext)
+        {
+            string packagePath = this.RedisPackagePath;
+            string srcDir = Path.Combine(packagePath, "src");
+            string redisServerSrc = Path.Combine(srcDir, "redis-server");
+            string redisServerDst = Path.Combine(packagePath, "redis-server");
+            try
+            {
+                if (File.Exists(redisServerSrc) && !File.Exists(redisServerDst))
+                {
+                    File.Copy(redisServerSrc, redisServerDst, overwrite: true);
+                    this.Logger.LogMessage($"{this.TypeName}.RedisServerBinaryCopied", LogLevel.Debug, telemetryContext.Clone().AddContext("copiedFrom", redisServerSrc).AddContext("copiedTo", redisServerDst));
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogMessage($"{this.TypeName}.RedisBinaryCopyError", LogLevel.Warning, telemetryContext.Clone().AddError(ex).AddContext("source", redisServerSrc));
             }
         }
 
