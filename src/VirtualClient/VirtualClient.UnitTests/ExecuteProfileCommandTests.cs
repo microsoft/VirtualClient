@@ -411,6 +411,169 @@ namespace VirtualClient
                 profile.Monitors.Select(a => a.Parameters["Scenario"].ToString()));
         }
 
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario1()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string profile1 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            // Act: Load and initialize the profile
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            // Assert: Verify that the ParametersOn list was correctly deserialized
+            Assert.IsNotNull(profile.ParametersOn);
+            Assert.AreEqual(2, profile.ParametersOn.Count);
+            
+            // Verify first ParametersOn entry
+            var firstParams = profile.ParametersOn[0];
+            Assert.AreEqual("true", firstParams["Condition"].ToString());
+            Assert.AreEqual("Linux", firstParams["OsName"].ToString());
+            Assert.AreEqual("x64", firstParams["Architecture"].ToString());
+            Assert.AreEqual("Ubuntu", firstParams["Platform"].ToString());
+            Assert.AreEqual("linux-value", firstParams["CustomValue"].ToString());
+
+            // Verify second ParametersOn entry
+            var secondParams = profile.ParametersOn[1];
+            Assert.AreEqual("false", secondParams["Condition"].ToString());
+            Assert.AreEqual("Windows", secondParams["OsName"].ToString());
+            Assert.AreEqual("x86", secondParams["Architecture"].ToString());
+            Assert.AreEqual("Windows", secondParams["Platform"].ToString());
+            Assert.AreEqual("windows-value", secondParams["CustomValue"].ToString());
+
+            // Also verify that the regular parameters are correctly loaded
+            // Here Condition is true for linux and false for windows
+            Assert.AreEqual(4, profile.Parameters.Count);
+            Assert.IsFalse((bool)profile.Parameters["ProfilingEnabled"]);
+            Assert.AreEqual("base1", profile.Parameters["BaseValue"].ToString());
+            Assert.AreEqual("Linux", profile.Parameters["OsName"].ToString());
+            Assert.AreEqual("x64", profile.Parameters["Architecture"].ToString());
+        }
+
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario2()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string profile1 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+
+            // User providing a parameter through command line to override the profile value
+            this.command.Parameters.Add("BaseValue", "base2");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            // Act: Load and initialize the profile
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            // Assert: Verify that the ParametersOn list was correctly deserialized
+            Assert.IsNotNull(profile.ParametersOn);
+            Assert.AreEqual(2, profile.ParametersOn.Count);
+
+            // Verify first ParametersOn entry
+            var firstParams = profile.ParametersOn[0];
+            Assert.AreEqual("false", firstParams["Condition"].ToString());
+            Assert.AreEqual("Linux", firstParams["OsName"].ToString());
+            Assert.AreEqual("x64", firstParams["Architecture"].ToString());
+            Assert.AreEqual("Ubuntu", firstParams["Platform"].ToString());
+            Assert.AreEqual("linux-value", firstParams["CustomValue"].ToString());
+
+            // Verify second ParametersOn entry
+            var secondParams = profile.ParametersOn[1];
+            Assert.AreEqual("true", secondParams["Condition"].ToString());
+            Assert.AreEqual("Windows", secondParams["OsName"].ToString());
+            Assert.AreEqual("x86", secondParams["Architecture"].ToString());
+            Assert.AreEqual("Windows", secondParams["Platform"].ToString());
+            Assert.AreEqual("windows-value", secondParams["CustomValue"].ToString());
+
+            // Also verify that the regular parameters are correctly loaded 
+            // Here Condition is false for Linux and true for Windows
+            Assert.AreEqual(4, profile.Parameters.Count);
+            Assert.IsFalse((bool)profile.Parameters["ProfilingEnabled"]);
+            Assert.AreEqual("base2", profile.Parameters["BaseValue"].ToString());
+            Assert.AreEqual("Windows", profile.Parameters["OsName"].ToString());
+            Assert.AreEqual("x86", profile.Parameters["Architecture"].ToString());
+        }
+
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario3()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string profile1 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+
+            // User providing a parameter through command line to override the profile value
+            this.command.Parameters.Add("BaseValue", "base3");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            // Act: Load and initialize the profile
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            // Assert: Verify that the ParametersOn list was correctly deserialized
+            Assert.IsNotNull(profile.ParametersOn);
+            Assert.AreEqual(2, profile.ParametersOn.Count);
+
+            // Verify first ParametersOn entry
+            var firstParams = profile.ParametersOn[0];
+            Assert.AreEqual("false", firstParams["Condition"].ToString());
+            Assert.AreEqual("Linux", firstParams["OsName"].ToString());
+            Assert.AreEqual("x64", firstParams["Architecture"].ToString());
+            Assert.AreEqual("Ubuntu", firstParams["Platform"].ToString());
+            Assert.AreEqual("linux-value", firstParams["CustomValue"].ToString());
+
+            // Verify second ParametersOn entry
+            var secondParams = profile.ParametersOn[1];
+            Assert.AreEqual("false", secondParams["Condition"].ToString());
+            Assert.AreEqual("Windows", secondParams["OsName"].ToString());
+            Assert.AreEqual("x86", secondParams["Architecture"].ToString());
+            Assert.AreEqual("Windows", secondParams["Platform"].ToString());
+            Assert.AreEqual("windows-value", secondParams["CustomValue"].ToString());
+
+            // Also verify that the regular parameters are correctly loaded
+            // Here no condition is true, so the profile defaults to the base values
+            Assert.AreEqual(4, profile.Parameters.Count);
+            Assert.IsFalse((bool)profile.Parameters["ProfilingEnabled"]);
+            Assert.AreEqual("base3", profile.Parameters["BaseValue"].ToString());
+            Assert.AreEqual("Nothing", profile.Parameters["OsName"].ToString());
+            Assert.AreEqual("Nothing", profile.Parameters["Architecture"].ToString());
+        }
+
         private class TestRunProfileCommand : ExecuteProfileCommand
         {
             public new PlatformExtensions Extensions
