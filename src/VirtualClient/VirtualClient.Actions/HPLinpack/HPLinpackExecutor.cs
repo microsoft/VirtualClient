@@ -201,23 +201,25 @@ namespace VirtualClient.Actions
 
             if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
             {
+                // Use PlatformSpecifics.Combine for paths instead of string concatenation
                 if (this.PerformanceLibraryVersion == "2024.2.2.17")
                 {
-                    await this.ExecuteCommandAsync("cp", $"-r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
+                    string intelMklPath = "/opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack";
+                    await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
                 }
                 else if (this.PerformanceLibraryVersion == "2025.1.0.803")
                 {
-                    await this.ExecuteCommandAsync("cp", $"-r ~/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
-
+                    string intelMklPath = "~/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack";
+                    await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
                 }
             }
             else
             {
                 await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
                 await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
-                await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
+                await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, "setup"), telemetryContext, cancellationToken, runElevated: true);
                 await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
             }
         }
 
@@ -338,7 +340,6 @@ namespace VirtualClient.Actions
                     string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
                     await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.amdPerfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                     await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", this.amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
-                    // await this.ExecuteCommandAsync("bash", "-c \"source amd-libs.cfg\"", $"{installPath}/{this.PerformanceLibraryVersion}/gcc", telemetryContext, cancellationToken, runElevated: true);
                 }
 
                 if (this.PerformanceLibrary == "INTEL")
@@ -419,10 +420,10 @@ namespace VirtualClient.Actions
             else if (this.PerformanceLibrary == "AMD" && this.CpuArchitecture == Architecture.X64)
             {
                 await this.fileSystem.File.ReplaceInFileAsync(
-                  makeFilePath, @"LAdir *=", "LAdir = $(AOCL_ROOT)", cancellationToken);
+                  makeFilePath, @"LAdir *=", $"LAdir = {this.PlatformSpecifics.Combine(this.HPLDirectory, this.PerformanceLibraryVersion, "gcc")}", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                 makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory)}/{this.PerformanceLibraryVersion}/gcc/lib/libblis.a", cancellationToken);
+                 makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory, this.PerformanceLibraryVersion, "gcc", "lib", "libblis.a")}", cancellationToken);
             }
             else
             {
@@ -453,9 +454,9 @@ namespace VirtualClient.Actions
             if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
             {
                 this.SetParameters(this.cpuInfo.SocketCount);
-                hplDatFile = this.PlatformSpecifics.Combine($"{this.intelPerfLibrariesPath}/mp_linpack", "HPL.dat");
+                hplDatFile = this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack", "HPL.dat");
 
-                string hplRunmeFile = this.PlatformSpecifics.Combine($"{this.intelPerfLibrariesPath}/mp_linpack", "runme_intel64_dynamic");
+                string hplRunmeFile = this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack", "runme_intel64_dynamic");
                 await this.fileSystem.File.ReplaceInFileAsync(
                     hplRunmeFile, @"export MPI_PROC_NUM *= *[^\n]*", $"export MPI_PROC_NUM={this.cpuInfo.SocketCount}", cancellationToken);
 
@@ -464,7 +465,6 @@ namespace VirtualClient.Actions
 
                 await this.fileSystem.File.ReplaceInFileAsync(
                    hplRunmeFile, @"export NUMA_PER_MPI *= *[^\n]*", $"export NUMA_PER_MPI={this.cpuInfo.SocketCount}", cancellationToken);
-
             }
             else
             {
