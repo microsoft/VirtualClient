@@ -263,7 +263,7 @@ namespace VirtualClient.Actions
         {
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "AMD";
-            //this.fixture.Parameters["PerformanceLibraryVersion"] = "23.04.1";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = "5.0.0";
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {

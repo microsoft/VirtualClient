@@ -25,6 +25,11 @@ namespace VirtualClient.Actions
         /// </summary>
         private const string SplitAtSpace = @"\s{1,}";
 
+        /// <summary>
+        /// To match HPLinpack version from the output.
+        /// </summary>
+        private const string HPLinpackVersionRegex = @"HPLinpack\s+(\d+\.\d+)";
+
         private List<Metric> metrics;
 
         /// <summary>
@@ -41,9 +46,21 @@ namespace VirtualClient.Actions
         /// </summary>
         public DataTable LinpackResult { get; set; }
 
+        /// <summary>
+        /// The HPLinpack version extracted from results.
+        /// </summary>
+        public string Version { get; private set; }
+
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
+            // Extract HPLinpack version
+            Match versionMatch = Regex.Match(this.RawText, HPLinpackVersionRegex);
+            if (versionMatch.Success && versionMatch.Groups.Count > 1)
+            {
+                this.Version = versionMatch.Groups[1].Value;
+            }
+
             var matches = Regex.Matches(this.RawText, GetMetricsLine);
             if (matches.Count == 0)
             {

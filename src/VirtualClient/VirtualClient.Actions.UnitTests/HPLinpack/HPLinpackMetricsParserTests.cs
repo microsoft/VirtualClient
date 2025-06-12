@@ -76,5 +76,25 @@ namespace VirtualClient.Actions
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
             StringAssert.Contains("The HPLinpack output file has incorrect format for parsing", exception.Message);
         }
+
+        [Test]
+        public void HPLParserExtractsVersionCorrectly()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string armoutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsArm.txt");
+            this.rawText = File.ReadAllText(armoutputPath);
+            this.testParser = new HPLinpackMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+            Assert.AreEqual("2.3", this.testParser.Version);
+            
+            // Test Intel output version extraction
+            string inteloutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsIntel.txt");
+            this.rawText = File.ReadAllText(inteloutputPath);
+            this.testParser = new HPLinpackMetricsParser(this.rawText);
+            
+            metrics = this.testParser.Parse();
+            Assert.AreEqual("2.3", this.testParser.Version);
+        }
     }
 }
