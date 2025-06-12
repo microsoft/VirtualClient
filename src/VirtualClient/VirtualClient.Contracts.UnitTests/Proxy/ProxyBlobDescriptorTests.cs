@@ -15,13 +15,23 @@ namespace VirtualClient.Contracts.Proxy
         public void ProxyBlobDescriptorObjectsAreJsonSerializable()
         {
             ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(
-                "VirtualClient",
                 "Packages",
                 "any.package.1.2.3.zip",
                 "anycontainer",
                 "application/octet-stream",
                 "utf8",
-                "/any/path/to/blob");
+                blobPath: "/any/path/to/blob");
+
+            SerializationAssert.IsJsonSerializable<ProxyBlobDescriptor>(descriptor);
+
+            descriptor = new ProxyBlobDescriptor(
+                "Packages",
+                "any.package.1.2.3.zip",
+                "anycontainer",
+                "application/octet-stream",
+                "utf8",
+                blobPath: "/any/path/to/blob",
+                source: "VirtualClient");
 
             SerializationAssert.IsJsonSerializable<ProxyBlobDescriptor>(descriptor);
         }
