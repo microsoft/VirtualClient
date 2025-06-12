@@ -11,6 +11,8 @@ using NUnit.Framework;
 using Polly;
 using System;
 using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using VirtualClient.Contracts;
@@ -58,18 +60,24 @@ namespace VirtualClient
                 .ReturnsAsync(Response.FromValue(key, Mock.Of<Response>()));
 
             // Mock the certificates
+
             this.certificateClientMock = new Mock<CertificateClient>(MockBehavior.Strict, new Uri("https://myvault.vault.azure.net/"), new MockTokenCredential());
-            var certificate = CertificateModelFactory.KeyVaultCertificateWithPolicy(
+            var publicKeyCertificate = CertificateModelFactory.KeyVaultCertificateWithPolicy(
                 properties: CertificateModelFactory.CertificateProperties(
                     id: new Uri($"https://myvault.vault.azure.net/certificates/mycert/v3"),
                     name: "mycert",
                     version: "v3",
                     vaultUri: new Uri("https://myvault.vault.azure.net/")),
-                policy: CertificateModelFactory.CertificatePolicy(subject: "CN=mycert"));
+                policy: CertificateModelFactory.CertificatePolicy(subject: "CN=mycert"),
+                cer: this.GenerateTestCertificateBytes());
             
             this.certificateClientMock
                 .Setup(c => c.GetCertificateAsync("mycert", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Response.FromValue(certificate, Mock.Of<Response>()));
+                .ReturnsAsync(Response.FromValue(publicKeyCertificate, Mock.Of<Response>()));
+
+            this.certificateClientMock
+                .Setup(c => c.DownloadCertificateAsync("mycert", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(this.GenerateTestCertificateWithPrivateKey(), Mock.Of<Response>()));
 
             // Initialize the KeyVaultManager with the mocked clients
             this.keyVaultManager = new TestKeyVaultManager(
@@ -89,36 +97,38 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task KeyVaultManagerReturnsExpectedSecretDescriptor()
+        public async Task KeyVaultManagerReturnsExpectedSecretValue()
         {
             var result = await this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync());
             Assert.IsNotNull(result);
-            Assert.AreEqual("mysecret", result.Name);
-            Assert.AreEqual("secret-value", result.Value);
-            Assert.AreEqual("v1", result.Version);
-            Assert.AreEqual(KeyVaultObjectType.Secret, result.ObjectType);
+            Assert.AreEqual("secret-value", result);
         }
 
         [Test]
-        public async Task KeyVaultManagerReturnsExpectedKeyDescriptor()
+        public async Task KeyVaultManagerReturnsExpectedKey()
         {
             this.mockDescriptor.Name = "mykey";
             var result = await this.keyVaultManager.GetKeyAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync());
             Assert.IsNotNull(result);
             Assert.AreEqual("mykey", result.Name);
-            Assert.AreEqual("v2", result.Version);
-            Assert.AreEqual(KeyVaultObjectType.Key, result.ObjectType);
         }
 
         [Test]
-        public async Task KeyVaultManagerReturnsExpectedCertificateDescriptor()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task KeyVaultManagerReturnsExpectedCertificate(bool retrieveWithPrivateKey)
         {
             this.mockDescriptor.Name = "mycert";
-            var result = await this.keyVaultManager.GetCertificateAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync());
+            var result = await this.keyVaultManager.GetCertificateAsync(this.mockDescriptor, CancellationToken.None, retrieveWithPrivateKey);
             Assert.IsNotNull(result);
-            Assert.AreEqual("mycert", result.Name);
-            Assert.AreEqual("v3", result.Version);
-            Assert.AreEqual(KeyVaultObjectType.Certificate, result.ObjectType);
+            if (retrieveWithPrivateKey)
+            {
+                Assert.IsTrue(result.HasPrivateKey);
+            }
+            else
+            {
+                Assert.IsFalse(result.HasPrivateKey);
+            }
         }
 
         [Test]
@@ -184,6 +194,42 @@ namespace VirtualClient
             Assert.ThrowsAsync<DependencyException>(() =>
                 this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, retryPolicy));
             Assert.AreEqual(3, attempts);
+        }
+
+        // Create a dummy, self-signed certificate for testing
+        private byte[] GenerateTestCertificateBytes()
+        {
+            var distinguishedName = new X500DistinguishedName("CN=TestCert");
+
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            var certificate = request.CreateSelfSigned(
+                DateTimeOffset.UtcNow.AddDays(-1),
+                DateTimeOffset.UtcNow.AddYears(1));
+
+            // Export to DER format (byte[]) – matches cert.Cer in Azure Key Vault
+            return certificate.Export(X509ContentType.Cert);
+        }
+
+        private X509Certificate2 GenerateTestCertificateWithPrivateKey()
+        {
+            var distinguishedName = new X500DistinguishedName("CN=TestWithPrivateKey");
+
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            var certificate = request.CreateSelfSigned(
+                DateTimeOffset.UtcNow.AddDays(-1),
+                DateTimeOffset.UtcNow.AddYears(1));
+
+            // Export and import to ensure HasPrivateKey is true in unit tests
+            var bytes = certificate.Export(X509ContentType.Pfx, "");
+#pragma warning disable SYSLIB0057
+            // using this obsolete method just for Unit Testing
+            var cert = new X509Certificate2(bytes, "", X509KeyStorageFlags.Exportable);
+#pragma warning restore SYSLIB0057
+            return cert;
         }
 
         private class TestKeyVaultManager : KeyVaultManager

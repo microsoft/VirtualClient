@@ -5,7 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Net;
-    using System.Runtime.ConstrainedExecution;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
@@ -13,7 +13,6 @@ namespace VirtualClient
     using Azure.Security.KeyVault.Certificates;
     using Azure.Security.KeyVault.Keys;
     using Azure.Security.KeyVault.Secrets;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -59,12 +58,12 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
-        /// A <see cref="KeyVaultDescriptor"/> containing the secret value and metadata.
+        /// A <see cref="string"/> containing the secret value.
         /// </returns>
         /// <exception cref="DependencyException">
         /// Thrown if the secret is not found, access is denied, or another error occurs.
         /// </exception>
-        public async Task<KeyVaultDescriptor> GetSecretAsync(
+        public async Task<string> GetSecretAsync(
             KeyVaultDescriptor descriptor,
             CancellationToken cancellationToken,
             IAsyncPolicy retryPolicy = null)
@@ -87,16 +86,7 @@ namespace VirtualClient
                 return await (retryPolicy ?? KeyVaultManager.DefaultRetryPolicy).ExecuteAsync(async () =>
                 {
                     KeyVaultSecret secret = await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
-                    KeyVaultDescriptor result = new KeyVaultDescriptor(descriptor)
-                    {
-                        Value = secret.Value,
-                        Version = secret.Properties.Version,
-                        Name = secretName,
-                        VaultUri = vaultUri.ToString(),
-                        ObjectId = secret.Id?.ToString(),
-                        ObjectType = KeyVaultObjectType.Secret
-                    };
-                    return result;
+                    return secret.Value;
                 }).ConfigureAwait(false);
             }
             catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Forbidden)
@@ -136,12 +126,12 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
-        /// A <see cref="KeyVaultDescriptor"/> containing the key metadata.
+        /// A <see cref="KeyVaultKey"/> containing the key.
         /// </returns>
         /// <exception cref="DependencyException">
         /// Thrown if the key is not found, access is denied, or another error occurs.
         /// </exception>
-        public async Task<KeyVaultDescriptor> GetKeyAsync(
+        public async Task<KeyVaultKey> GetKeyAsync(
             KeyVaultDescriptor descriptor,
             CancellationToken cancellationToken,
             IAsyncPolicy retryPolicy = null)
@@ -162,15 +152,7 @@ namespace VirtualClient
                 return await (retryPolicy ?? KeyVaultManager.DefaultRetryPolicy).ExecuteAsync(async () =>
                 {
                     KeyVaultKey key = await client.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-                    KeyVaultDescriptor result = new KeyVaultDescriptor(descriptor)
-                    {
-                        ObjectType = KeyVaultObjectType.Key,
-                        Name = keyName,
-                        VaultUri = vaultUri.ToString(),
-                        Version = key.Properties.Version,
-                        ObjectId = key.Id.ToString()
-                    };
-                    return result;
+                    return key;
                 }).ConfigureAwait(false);
             }
             catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Forbidden)
@@ -208,16 +190,18 @@ namespace VirtualClient
         /// </summary>
         /// <param name="descriptor">Provides the details for the certificate to retrieve (requires "CertificateName" and "VaultUri").</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
-        /// A <see cref="KeyVaultDescriptor"/> containing the certificate metadata.
+        /// A <see cref="X509Certificate2"/> containing the certificate 
         /// </returns>
         /// <exception cref="DependencyException">
         /// Thrown if the certificate is not found, access is denied, or another error occurs.
         /// </exception>
-        public async Task<KeyVaultDescriptor> GetCertificateAsync(
+        public async Task<X509Certificate2> GetCertificateAsync(
             KeyVaultDescriptor descriptor,
             CancellationToken cancellationToken,
+            bool retrieveWithPrivateKey = false,
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
@@ -235,17 +219,26 @@ namespace VirtualClient
             {
                 return await (retryPolicy ?? KeyVaultManager.DefaultRetryPolicy).ExecuteAsync(async () =>
                 {
-                    KeyVaultCertificateWithPolicy cert = await client.GetCertificateAsync(certName, cancellationToken: cancellationToken);
-                    KeyVaultDescriptor result = new KeyVaultDescriptor(descriptor)
+                    // Get the full certificate with private key (PFX) if requested
+                    if (retrieveWithPrivateKey)
                     {
-                        ObjectType = KeyVaultObjectType.Certificate,
-                        Name = certName,
-                        VaultUri = vaultUri.ToString(),
-                        Version = cert.Properties.Version,
-                        ObjectId = cert.Id.ToString(),
-                        Policy = cert.Policy?.ToString()
-                    };
-                    return result;
+                        X509Certificate2 privateKeyCert = await client
+                            .DownloadCertificateAsync(certName, cancellationToken: cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (privateKeyCert is null || !privateKeyCert.HasPrivateKey)
+                        {
+                            throw new DependencyException("Failed to retrieve certificate content with private key.");
+                        }
+
+                        return privateKeyCert;
+                    }
+                    else
+                    {
+                        // If private key not needed, load cert from PublicBytes
+                        KeyVaultCertificateWithPolicy cert = await client.GetCertificateAsync(certName, cancellationToken: cancellationToken);
+                        return X509CertificateLoader.LoadCertificate(cert.Cer);
+                    }
                 }).ConfigureAwait(false);
             }
             catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Forbidden)
