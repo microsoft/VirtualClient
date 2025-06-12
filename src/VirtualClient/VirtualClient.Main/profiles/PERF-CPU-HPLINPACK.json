@@ -61,7 +61,7 @@
       "Parameters": {
         "Scenario": "DownloadHPLPerformanceLibrariesPackage",
         "BlobContainer": "packages",
-        "BlobName": "hplperformancelibraries.1.1.2.zip",
+        "BlobName": "hplperformancelibraries.2.0.0.zip",
         "PackageName": "hplperformancelibraries",
         "Extract": true
       }
