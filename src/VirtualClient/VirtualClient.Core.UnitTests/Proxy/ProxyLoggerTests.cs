@@ -48,7 +48,7 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
-        public void ProxyLoggerHandlesCasesWhenAnExplicitSourceIsNotProvided()
+        public void ProxyLoggerDefaultsToVirtualClientWhenAnExplicitSourceIsNotProvided()
         {
             using (ProxyTelemetryChannel channel = new ProxyTelemetryChannel(this.mockProxyApiClient.Object))
             {
@@ -57,7 +57,7 @@ namespace VirtualClient.Proxy
                 ProxyTelemetryMessage messageLogged = channel.FirstOrDefault();
 
                 Assert.IsNotNull(messageLogged);
-                Assert.IsNull(messageLogged.Source);
+                Assert.AreEqual("VirtualClient", messageLogged.Source);
             }
         }
     }
