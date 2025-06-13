@@ -363,6 +363,32 @@ namespace VirtualClient
         }
 
         [Test]
+        public void ProfileExecutorSupportsUsingSpecifiedExclusionsForSpecificChildComponents()
+        {
+            List<string> includedScenarios = new List<string>()
+            {
+                "-Scenario4"
+            };
+
+            this.mockProfile.Actions.Last().Parameters.Remove("Scenario");
+
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, includedScenarios))
+            {
+                executor.Initialize();
+
+                Assert.IsNotEmpty(executor.ProfileActions);
+                Assert.IsTrue(executor.ProfileActions.Count() == 3);
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(3, collectionComponent.Count);
+
+                Assert.IsTrue(collectionComponent.All(component => component.Parameters["Scenario"].ToString() != "Scenario4"));
+            }
+        }
+
+        [Test]
         public void ProfileExecutorSupportsUserSpecifiedScenarioExclusionForDependencies()
         {
             List<string> excludedScenarios = new List<string>()
