@@ -10,7 +10,7 @@ namespace VirtualClient
     using AutoFixture;
     using Azure.Identity;
     using Moq;
-    using NUnit.Framework;    
+    using NUnit.Framework;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
     using VirtualClient.TestExtensions;
