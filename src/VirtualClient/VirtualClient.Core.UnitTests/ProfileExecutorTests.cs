@@ -64,7 +64,10 @@ namespace VirtualClient
                                 new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario2" }),
                             new ExecutionProfileElement(
                                 "VirtualClient.TestExecutor",
-                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario3" })
+                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario3" }),
+                            new ExecutionProfileElement(
+                                "VirtualClient.TestExecutor",
+                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario4" })
                         })
                 },
                 dependencies: new List<ExecutionProfileElement>
@@ -256,7 +259,7 @@ namespace VirtualClient
                 // Assert child components honor the scenario values.
                 VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
                 Assert.IsNotNull(collectionComponent);
-                Assert.AreEqual(3, collectionComponent.Count);
+                Assert.AreEqual(4, collectionComponent.Count);
                 Assert.IsTrue(collectionComponent.All(component => targetScenarios.Contains(component.Parameters["Scenario"])));
             }
         }
@@ -322,9 +325,40 @@ namespace VirtualClient
                 // Assert child components honor the scenario values.
                 VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
                 Assert.IsNotNull(collectionComponent);
-                Assert.AreEqual(1, collectionComponent.Count);
+                Assert.AreEqual(2, collectionComponent.Count);
 
                 Assert.IsTrue(collectionComponent.First().Parameters["Scenario"].ToString() == "Scenario3");
+                Assert.IsTrue(collectionComponent.Last().Parameters["Scenario"].ToString() == "Scenario4");
+            }
+        }
+
+        [Test]
+        public void ProfileExecutorSupportsUsingSpecifiedInclusionsForSpecificChildComponents()
+        {
+            List<string> includedScenarios = new List<string>()
+            {
+                "Scenario3",
+                "Scenario4"
+            };
+
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, includedScenarios))
+            {
+                executor.Initialize();
+
+                Assert.IsNotEmpty(executor.ProfileActions);
+                Assert.IsTrue(executor.ProfileActions.Count() == 1);
+
+                CollectionAssert.AreEquivalent(
+                    this.mockProfile.Actions.Skip(2).Take(1).Select(a => a.Parameters["Scenario"]),
+                    executor.ProfileActions.Select(a => a.Parameters["Scenario"]));
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(2, collectionComponent.Count);
+
+                Assert.IsTrue(collectionComponent.First().Parameters["Scenario"].ToString() == "Scenario3");
+                Assert.IsTrue(collectionComponent.Last().Parameters["Scenario"].ToString() == "Scenario4");
             }
         }
 
