@@ -128,9 +128,10 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
+                string command = this.CpuArchitecture == Architecture.Arm64 ? "sudo" : "sb";
                 string commandArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sb", commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -156,13 +157,18 @@ namespace VirtualClient.Actions
 
             if (!state.SuperBenchmarkInitialized)
             {
-                // This is to grant directory folders for 
                 await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
 
-                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
-                if (!this.fileSystem.Directory.Exists(cloneDir))
+                if (!this.fileSystem.Directory.Exists(this.SuperBenchmarkDirectory))
                 {
-                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
+                    if (this.CpuArchitecture == Architecture.Arm64)
+                    {
+                        this.fileSystem.Directory.CreateDirectory(this.SuperBenchmarkDirectory);
+                    }
+                    else
+                    {
+                        await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
+                    }
                 }
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
@@ -173,12 +179,20 @@ namespace VirtualClient.Actions
                         true);
                 }
 
-                await this.ExecuteSbCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
-                await this.ExecuteSbCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
+                if (this.CpuArchitecture == Architecture.Arm64)
+                {
+                    await this.ExecuteSbCommandAsync("sudo", $"docker pull {this.ContainerVersion}", this.PlatformSpecifics.CurrentDirectory, telemetryContext, cancellationToken, true);
+                    await this.ExecuteSbCommandAsync("sudo", $"docker run -itd --name=sb-dev --privileged --net=host --ipc=host --gpus=all -w /root -v {this.SuperBenchmarkDirectory}:/mnt {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
+                }
+                else
+                {
+                    await this.ExecuteSbCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
+                    await this.ExecuteSbCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
+                }
 
                 state.SuperBenchmarkInitialized = true;
             }
-
+            
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
         }
 
@@ -232,7 +246,14 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            return @$"run --host-list localhost -c {this.ConfigurationFile}";
+            switch (this.CpuArchitecture)
+            {
+                case Architecture.Arm64:
+                    return @$"docker exec sb-dev sb run --no-docker -l localhost -c /mnt/{this.ConfigurationFile} --output-dir outputs/";
+
+                default:
+                    return @$"run --host-list localhost -c {this.ConfigurationFile}";
+            }
         }
 
         internal class SuperBenchmarkState : State
