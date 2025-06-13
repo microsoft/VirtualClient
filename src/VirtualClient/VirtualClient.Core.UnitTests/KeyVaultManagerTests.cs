@@ -23,7 +23,7 @@ namespace VirtualClient
     [Category("Unit")]
     public class KeyVaultManagerTests
     {
-        private KeyVaultDescriptor mockDescriptor;
+
         private Mock<SecretClient> secretClientMock;
         private Mock<KeyClient> keyClientMock;
         private Mock<CertificateClient> certificateClientMock;
@@ -32,12 +32,6 @@ namespace VirtualClient
         [SetUp]
         public void SetupDefaultBehaviors()
         {
-            this.mockDescriptor = new KeyVaultDescriptor
-            {
-                Name = "mysecret",
-                VaultUri = "https://myvault.vault.azure.net/"
-            };
-
             // Mock the secret
             this.secretClientMock = new Mock<SecretClient>(MockBehavior.Strict, new Uri("https://myvault.vault.azure.net/"), new MockTokenCredential());
             var secret = SecretModelFactory.KeyVaultSecret(properties: SecretModelFactory.SecretProperties(
@@ -99,7 +93,15 @@ namespace VirtualClient
         [Test]
         public async Task KeyVaultManagerReturnsExpectedSecretValue()
         {
-            var result = await this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync());
+            var result = await this.keyVaultManager.GetSecretAsync("mysecret", CancellationToken.None, "https://myvault.vault.azure.net/", Policy.NoOpAsync());
+            Assert.IsNotNull(result);
+            Assert.AreEqual("secret-value", result);
+        }
+
+        [Test]
+        public async Task KeyVaultManagerReturnsExpectedSecretValue_NoVaultUriInMethod()
+        {
+            var result = await this.keyVaultManager.GetSecretAsync("mysecret", CancellationToken.None, retryPolicy: Policy.NoOpAsync());
             Assert.IsNotNull(result);
             Assert.AreEqual("secret-value", result);
         }
@@ -107,8 +109,7 @@ namespace VirtualClient
         [Test]
         public async Task KeyVaultManagerReturnsExpectedKey()
         {
-            this.mockDescriptor.Name = "mykey";
-            var result = await this.keyVaultManager.GetKeyAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync());
+            var result = await this.keyVaultManager.GetKeyAsync("mykey", CancellationToken.None, "https://myvault.vault.azure.net/", Policy.NoOpAsync());
             Assert.IsNotNull(result);
             Assert.AreEqual("mykey", result.Name);
         }
@@ -118,8 +119,7 @@ namespace VirtualClient
         [TestCase(false)]
         public async Task KeyVaultManagerReturnsExpectedCertificate(bool retrieveWithPrivateKey)
         {
-            this.mockDescriptor.Name = "mycert";
-            var result = await this.keyVaultManager.GetCertificateAsync(this.mockDescriptor, CancellationToken.None, retrieveWithPrivateKey);
+            var result = await this.keyVaultManager.GetCertificateAsync("mycert", CancellationToken.None, "https://myvault.vault.azure.net/", retrieveWithPrivateKey);
             Assert.IsNotNull(result);
             if (retrieveWithPrivateKey)
             {
@@ -134,9 +134,8 @@ namespace VirtualClient
         [Test]
         public void KeyVaultManagerThrowsIfDescriptorNameIsMissing()
         {
-            this.mockDescriptor.Name = null;
-            Assert.ThrowsAsync<DependencyException>(() =>
-                this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync()));
+            Assert.ThrowsAsync<ArgumentException>(() =>
+                this.keyVaultManager.GetSecretAsync(null, CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
         }
 
         [Test]
@@ -148,7 +147,7 @@ namespace VirtualClient
                 .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden"));
 
             var ex = Assert.ThrowsAsync<DependencyException>(() =>
-                this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync()));
+                this.keyVaultManager.GetSecretAsync("mysecret", CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
             Assert.AreEqual(ErrorReason.Http403ForbiddenResponse, ex.Reason);
         }
 
@@ -161,7 +160,7 @@ namespace VirtualClient
                 .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found"));
 
             var ex = Assert.ThrowsAsync<DependencyException>(() =>
-                this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync()));
+                this.keyVaultManager.GetSecretAsync("mysecret", CancellationToken.None, "https://myvault.vault.azure.net/", Policy.NoOpAsync()));
             Assert.AreEqual(ErrorReason.Http404NotFoundResponse, ex.Reason);
         }
 
@@ -174,7 +173,7 @@ namespace VirtualClient
                 .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.BadRequest, "Bad Request"));
 
             var ex = Assert.ThrowsAsync<DependencyException>(() =>
-                this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, Policy.NoOpAsync()));
+                this.keyVaultManager.GetSecretAsync("mysecret", CancellationToken.None, "https://myvault.vault.azure.net/", Policy.NoOpAsync()));
             Assert.AreEqual(ErrorReason.HttpNonSuccessResponse, ex.Reason);
         }
 
@@ -192,7 +191,7 @@ namespace VirtualClient
             var retryPolicy = Policy.Handle<RequestFailedException>().RetryAsync(2);
 
             Assert.ThrowsAsync<DependencyException>(() =>
-                this.keyVaultManager.GetSecretAsync(this.mockDescriptor, CancellationToken.None, retryPolicy));
+                this.keyVaultManager.GetSecretAsync("mysecret", CancellationToken.None, "https://myvault.vault.azure.net/", retryPolicy));
             Assert.AreEqual(3, attempts);
         }
 

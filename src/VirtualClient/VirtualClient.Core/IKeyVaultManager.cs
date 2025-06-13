@@ -23,38 +23,59 @@ namespace VirtualClient
         /// <summary>
         /// Retrieves a secret from the Azure Key Vault.
         /// </summary>
-        /// <param name="descriptor"> Provides the details for the secret to retrieve (requires "SecretName" and "VaultUri"). </param>
-        /// <param name="cancellationToken"> A token that can be used to cancel the operation. </param>
-        /// <param name="retryPolicy"> A policy to use for handling retries when transient errors/failures happen. </param>
-        /// <returns> A <see cref="string"/> containing the secret value. </returns>
+        /// <param name="secretName">The name of the secret to be retrieved</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
+        /// <returns>
+        /// A <see cref="string"/> containing the secret value.
+        /// </returns>
+        /// <exception cref="DependencyException">
+        /// Thrown if the secret is not found, access is denied, or another error occurs.
+        /// </exception>
         Task<string> GetSecretAsync(
-            KeyVaultDescriptor descriptor,
+            string secretName,
             CancellationToken cancellationToken,
+            string keyVaultUri = null,
             IAsyncPolicy retryPolicy = null);
 
         /// <summary>
         /// Retrieves a key from the Azure Key Vault.
         /// </summary>
-        /// <param name="descriptor"> Provides the details for the key to retrieve (requires "KeyName" and "VaultUri"). </param>
-        /// <param name="cancellationToken"> A token that can be used to cancel the operation. </param>
-        /// <param name="retryPolicy"> A policy to use for handling retries when transient errors/failures happen. </param>
-        /// <returns> A <see cref="KeyVaultKey"/> containing the key properties. </returns>
+        /// <param name="keyName">The name of the key to be retrieved</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
+        /// <returns>
+        /// A <see cref="KeyVaultKey"/> containing the key.
+        /// </returns>
+        /// <exception cref="DependencyException">
+        /// Thrown if the key is not found, access is denied, or another error occurs.
+        /// </exception>
         Task<KeyVaultKey> GetKeyAsync(
-            KeyVaultDescriptor descriptor,
+            string keyName,
             CancellationToken cancellationToken,
+            string keyVaultUri = null,
             IAsyncPolicy retryPolicy = null);
 
         /// <summary>
         /// Retrieves a certificate from the Azure Key Vault.
         /// </summary>
-        /// <param name="descriptor"> Provides the details for the certificate to retrieve (requires "CertificateName" and "VaultUri"). </param>
-        /// <param name="cancellationToken"> A token that can be used to cancel the operation. </param>
-        /// <param name="retrieveWithPrivateKey"> Indicates whether the private key should be retrieved along with the certificate. Default is false </param>
-        /// <param name="retryPolicy"> A policy to use for handling retries when transient errors/failures happen. </param>
-        /// <returns> A <see cref="X509Certificate2"/> containing the requested certificate. </returns>
+        /// <param name="certName">The name of the certificate to be retrieved</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
+        /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
+        /// <returns>
+        /// A <see cref="X509Certificate2"/> containing the certificate.
+        /// </returns>
+        /// <exception cref="DependencyException">
+        /// Thrown if the certificate is not found, access is denied, or another error occurs.
+        /// </exception>
         Task<X509Certificate2> GetCertificateAsync(
-            KeyVaultDescriptor descriptor,
+            string certName,
             CancellationToken cancellationToken,
+            string keyVaultUri = null,
             bool retrieveWithPrivateKey = false,
             IAsyncPolicy retryPolicy = null);
     }

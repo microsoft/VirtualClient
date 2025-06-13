@@ -54,8 +54,9 @@ namespace VirtualClient
         /// <summary>
         /// Retrieves a secret from the Azure Key Vault.
         /// </summary>
-        /// <param name="descriptor">Provides the details for the secret to retrieve (requires "SecretName" and "VaultUri").</param>
+        /// <param name="secretName">The name of the secret to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
         /// A <see cref="string"/> containing the secret value.
@@ -64,20 +65,19 @@ namespace VirtualClient
         /// Thrown if the secret is not found, access is denied, or another error occurs.
         /// </exception>
         public async Task<string> GetSecretAsync(
-            KeyVaultDescriptor descriptor,
+            string secretName,
             CancellationToken cancellationToken,
+            string keyVaultUri = null,
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
             this.StoreDescription.ThrowIfNull(nameof(this.StoreDescription));
-            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.Name));
+            secretName.ThrowIfNullOrWhiteSpace(nameof(secretName), "The secret name cannot be null or empty.");
 
-            // Use descriptor.VaultUri if set, otherwise use the store's EndpointUri
-            Uri vaultUri = !string.IsNullOrWhiteSpace(descriptor.VaultUri)
-                ? new Uri(descriptor.VaultUri)
+            // Use the keyVaultUri if provided as a parameter, otherwise use the store's EndpointUri
+            Uri vaultUri = !string.IsNullOrWhiteSpace(keyVaultUri)
+                ? new Uri(keyVaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
-
-            string secretName = descriptor.Name;
 
             SecretClient client = this.CreateSecretClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
@@ -122,8 +122,9 @@ namespace VirtualClient
         /// <summary>
         /// Retrieves a key from the Azure Key Vault.
         /// </summary>
-        /// <param name="descriptor">Provides the details for the key to retrieve (requires "KeyName" and "VaultUri").</param>
+        /// <param name="keyName">The name of the key to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
         /// A <see cref="KeyVaultKey"/> containing the key.
@@ -132,19 +133,20 @@ namespace VirtualClient
         /// Thrown if the key is not found, access is denied, or another error occurs.
         /// </exception>
         public async Task<KeyVaultKey> GetKeyAsync(
-            KeyVaultDescriptor descriptor,
+            string keyName,
             CancellationToken cancellationToken,
+            string keyVaultUri = null,
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
-            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.Name));
+            this.StoreDescription.ThrowIfNull(nameof(this.StoreDescription));
+            keyName.ThrowIfNullOrWhiteSpace(nameof(keyName), "The key name cannot be null or empty.");
 
-            // Use descriptor.VaultUri if set, otherwise use the store's EndpointUri
-            Uri vaultUri = !string.IsNullOrWhiteSpace(descriptor.VaultUri)
-                ? new Uri(descriptor.VaultUri)
+            // Use the keyVaultUri if provided as a parameter, otherwise use the store's EndpointUri
+            Uri vaultUri = !string.IsNullOrWhiteSpace(keyVaultUri)
+                ? new Uri(keyVaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
-            string keyName = descriptor.Name;
             KeyClient client = this.CreateKeyClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
             try
@@ -188,8 +190,9 @@ namespace VirtualClient
         /// <summary>
         /// Retrieves a certificate from the Azure Key Vault.
         /// </summary>
-        /// <param name="descriptor">Provides the details for the certificate to retrieve (requires "CertificateName" and "VaultUri").</param>
+        /// <param name="certName">The name of the certificate to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
         /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
@@ -199,20 +202,21 @@ namespace VirtualClient
         /// Thrown if the certificate is not found, access is denied, or another error occurs.
         /// </exception>
         public async Task<X509Certificate2> GetCertificateAsync(
-            KeyVaultDescriptor descriptor,
+            string certName,
             CancellationToken cancellationToken,
+            string keyVaultUri = null,
             bool retrieveWithPrivateKey = false,
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
-            KeyVaultManager.ValidateDescriptor(descriptor, nameof(descriptor.Name));
+            this.StoreDescription.ThrowIfNull(nameof(this.StoreDescription));
+            certName.ThrowIfNullOrWhiteSpace(nameof(certName), "The certificate name cannot be null or empty.");
 
-            // Use descriptor.VaultUri if set, otherwise use the store's EndpointUri
-            Uri vaultUri = !string.IsNullOrWhiteSpace(descriptor.VaultUri)
-                ? new Uri(descriptor.VaultUri)
+            // Use the keyVaultUri if provided as a parameter, otherwise use the store's EndpointUri
+            Uri vaultUri = !string.IsNullOrWhiteSpace(keyVaultUri)
+                ? new Uri(keyVaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
-            string certName = descriptor.Name;
             CertificateClient client = this.CreateCertificateClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
 
             try
@@ -302,28 +306,6 @@ namespace VirtualClient
         protected virtual CertificateClient CreateCertificateClient(Uri vaultUri, TokenCredential credential)
         {
             return new CertificateClient(vaultUri, credential);
-        }
-
-        /// <summary>
-        /// Validates that the required properties are present in the dependency descriptor.
-        /// </summary>
-        /// <param name="descriptor">The dependency descriptor to validate.</param>
-        /// <param name="requiredProperties">The required property names.</param>
-        /// <exception cref="DependencyException">
-        /// Thrown if any required property is missing or empty.
-        /// </exception>
-        private static void ValidateDescriptor(DependencyDescriptor descriptor, params string[] requiredProperties)
-        {
-            descriptor.ThrowIfNull(nameof(descriptor));
-            foreach (string property in requiredProperties)
-            {
-                if (!descriptor.ContainsKey(property) || string.IsNullOrWhiteSpace(descriptor[property]?.ToString()))
-                {
-                    throw new DependencyException(
-                        $"The required property '{property}' is missing or empty in the dependency descriptor.",
-                        ErrorReason.DependencyDescriptionInvalid);
-                }
-            }
         }
 
         /// <summary>
