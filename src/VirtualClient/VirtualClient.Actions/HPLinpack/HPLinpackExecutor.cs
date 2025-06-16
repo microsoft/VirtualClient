@@ -240,7 +240,7 @@ namespace VirtualClient.Actions
                 if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
                 {
                     this.commandArguments = "./runme_intel64_dynamic";
-                    process = await this.ExecuteCommandAsync("bash", $"-c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && {this.commandArguments}\"", this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack"), telemetryContext, cancellationToken, runElevated: true);
+                    process = await this.ExecuteCommandAsync("bash", $"-c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && {this.commandArguments}\"", this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack"), telemetryContext, cancellationToken, runElevated: true);
                 }
                 else
                 {
