@@ -712,7 +712,9 @@ namespace VirtualClient
                             this.Dependencies,
                             this.RandomizationSeed,
                             this.FailFast,
-                            this.LogToFile);
+                            this.LogToFile,
+                            includeScenarios,
+                            excludeScenarios);
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))
                         {
