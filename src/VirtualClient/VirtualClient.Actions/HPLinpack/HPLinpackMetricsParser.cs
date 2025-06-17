@@ -18,12 +18,17 @@ namespace VirtualClient.Actions
         /// <summary>
         /// To match metrics line of the result.
         /// </summary>
-        private const string GetMetricsLine = @"(?<=WR).*(?=\n)";
+        private const string GetMetricsLine = @"(?<=W[RC]).*(?=\n)";
 
         /// <summary>
         /// Split string at one or more spaces.
         /// </summary>
         private const string SplitAtSpace = @"\s{1,}";
+
+        /// <summary>
+        /// To match HPLinpack version from the output.
+        /// </summary>
+        private const string HPLinpackVersionRegex = @"HPLinpack\s+(\d+\.\d+)";
 
         private List<Metric> metrics;
 
@@ -41,9 +46,21 @@ namespace VirtualClient.Actions
         /// </summary>
         public DataTable LinpackResult { get; set; }
 
+        /// <summary>
+        /// The HPLinpack version extracted from results.
+        /// </summary>
+        public string Version { get; private set; }
+
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
+            // Extract HPLinpack version
+            Match versionMatch = Regex.Match(this.RawText, HPLinpackVersionRegex);
+            if (versionMatch.Success && versionMatch.Groups.Count > 1)
+            {
+                this.Version = versionMatch.Groups[1].Value;
+            }
+
             var matches = Regex.Matches(this.RawText, GetMetricsLine);
             if (matches.Count == 0)
             {
@@ -58,10 +75,10 @@ namespace VirtualClient.Actions
 
                     Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
                          {
-                             { $"N_WR{st[0]}", st[1] },
-                             { $"NB_WR{st[0]}", st[2] },
-                             { $"P_WR{st[0]}", st[3] },
-                             { $"Q_WR{st[0]}", st[4] },
+                             { $"N_W{st[0]}", st[1] },
+                             { $"NB_W{st[0]}", st[2] },
+                             { $"P_W{st[0]}", st[3] },
+                             { $"Q_W{st[0]}", st[4] },
                          };
 
                     this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", MetricRelativity.Undefined, metadata: metadata, verbosity: 2));

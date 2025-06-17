@@ -37,7 +37,9 @@ namespace VirtualClient.Proxy
             channel.ThrowIfNull(nameof(channel));
 
             this.Channel = channel;
-            this.Source = source;
+            this.Source = !string.IsNullOrWhiteSpace(source)
+                ? source
+                : "VirtualClient";
         }
 
         /// <summary>
