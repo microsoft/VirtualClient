@@ -147,7 +147,7 @@ namespace VirtualClient.Actions
             get
             {
                 this.Parameters.TryGetValue(nameof(this.PerformanceLibrary), out IConvertible performanceLibrary);
-                return performanceLibrary?.ToString();
+                return performanceLibrary?.ToString()?.ToUpperInvariant();
             }
         }
 
@@ -211,6 +211,10 @@ namespace VirtualClient.Actions
                 {
                     string intelMklPath = "~/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack";
                     await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
+                }
+                else
+                {
+                    throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library");
                 }
             }
             else
@@ -336,7 +340,17 @@ namespace VirtualClient.Actions
             {
                 if (this.PerformanceLibrary == "AMD")
                 {
-                    this.amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD", this.PerformanceLibraryVersion);
+                    switch (this.PerformanceLibraryVersion)
+                    {
+                        case "4.2.0":
+                        case "5.0.0":
+                        case "5.1.0":
+                            this.amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD", this.PerformanceLibraryVersion);
+                            break;
+                        default:
+                            throw new WorkloadException($"The HPL workload currently only supports 4.2.0, 5.0.0 and 5.1.0 versions of AMD performance libraries");
+                    }
+
                     string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
                     await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.amdPerfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
                     await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", this.amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);

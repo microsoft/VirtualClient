@@ -258,20 +258,21 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibrariesOnUbuntuX64AMDPlatform(PlatformID platform, Architecture architecture)
+        [TestCase(PlatformID.Unix, Architecture.X64, "4.2.0")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "5.0.0")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "5.1.0")]
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibrariesOnUbuntuX64AMDPlatform(PlatformID platform, Architecture architecture, string performanceLibraryVersion)
         {
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "AMD";
-            this.mockFixture.Parameters["PerformanceLibraryVersion"] = "5.0.0";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = $"{performanceLibraryVersion}";
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockPackage.Path, "AMD", "install.sh")}",
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "AMD", performanceLibraryVersion, "install.sh")}",
                     $"sudo ./install.sh -t {executor.GetHPLDirectory} -i lp64",
-                    $"bash -c source amd-libs.cfg",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
@@ -294,6 +295,26 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 Assert.AreEqual(expectedCommands.Count, 0);
+            }
+        }
+
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "1.0.0")]
+        public void HPLinpackExecutorThrowsExceptionForUnsupportedAMDPerformanceLibraryVersions(PlatformID platform, Architecture architecture, string performanceLibraryVersion)
+        {
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["PerformanceLibrary"] = "AMD";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = performanceLibraryVersion;
+
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
+                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
+
+                Assert.AreEqual(
+                    $"The HPL workload currently only supports 4.2.0, 5.0.0 and 5.1.0 versions of AMD performance libraries",
+                    exception.Message);
             }
         }
 
@@ -380,6 +401,25 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 Assert.AreEqual(expectedCommands.Count, 0);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "1.0.0")]
+        public void HPLinpackExecutorThrowsExceptionForUnsupportedIntelPerformanceLibraryVersions(PlatformID platform, Architecture architecture, string performanceLibraryVersion)
+        {
+            this.SetupTest(platform, architecture);
+            this.mockFixture.Parameters["PerformanceLibrary"] = "INTEL";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = performanceLibraryVersion;
+
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
+                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
+
+                Assert.AreEqual(
+                    $"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library",
+                    exception.Message);
             }
         }
 
