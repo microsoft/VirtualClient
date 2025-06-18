@@ -84,7 +84,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("postgres"));
                 return Convert.ToBase64String(hashBytes);
             }
         }
