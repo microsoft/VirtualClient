@@ -12,6 +12,7 @@ namespace VirtualClient
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
     using VirtualClient.TestExtensions;
 
     [TestFixture]
@@ -794,6 +795,64 @@ namespace VirtualClient
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateProfileReference(
                 invalidEndpoint,
                 this.mockFixture.CertificateManager.Object));
+        }
+
+        [Test]
+        [TestCase(
+            "https://my-keyvault.vault.azure.net/?cid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&tid=307591a4-abb2-4559-af59-b47177d140cf&crtt=1234567",
+            "https://my-keyvault.vault.azure.net/")]
+        [TestCase(
+            "Endpoint=https://my-keyvault.vault.azure.net/;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4",
+            "https://my-keyvault.vault.azure.net/")]
+        public void EndpointUtility_CreateKeyVaultStoreReference_Entra(string connectionString, string expectedUri)
+        {
+            // Setup: A matching certificate is found in the local store.
+            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("1234567", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+
+            var store = EndpointUtility.CreateKeyVaultStoreReference(
+                DependencyStore.KeyVault,
+                connectionString,
+                this.mockFixture.CertificateManager.Object);
+
+            Assert.IsNotNull(store);
+            Assert.AreEqual(DependencyStore.KeyVault, store.StoreName);
+            Assert.AreEqual(DependencyStore.StoreTypeAzureKeyVault, store.StoreType);
+            Assert.AreEqual(new Uri(expectedUri).ToString(), store.EndpointUri.ToString());
+            Assert.IsNotNull(store.Credentials);
+            Assert.IsInstanceOf<ClientCertificateCredential>(store.Credentials);
+        }
+
+        [Test]
+        [TestCase(
+            "Endpoint=https://my-keyvault.vault.azure.net/;ManagedIdentityId=307591a4-abb2-4559-af59-b47177d140cf",
+            "https://my-keyvault.vault.azure.net/")]
+        [TestCase(
+            "https://my-keyvault.vault.azure.net/?miid=307591a4-abb2-4559-af59-b47177d140cf",
+            "https://my-keyvault.vault.azure.net/")]
+        public void EndpointUtility_CreateKeyVaultStoreReference_Miid(string connectionString, string expectedUri)
+        {
+            var store = EndpointUtility.CreateKeyVaultStoreReference(
+                DependencyStore.KeyVault,
+                connectionString,
+                this.mockFixture.CertificateManager.Object);
+
+            Assert.IsNotNull(store);
+            Assert.AreEqual(DependencyStore.KeyVault, store.StoreName);
+            Assert.AreEqual(DependencyStore.StoreTypeAzureKeyVault, store.StoreType);
+            Assert.AreEqual(new Uri(expectedUri).ToString(), store.EndpointUri.ToString());
+            Assert.IsNotNull(store.Credentials);
+            Assert.IsInstanceOf<ManagedIdentityCredential>(store.Credentials);
+        }
+
+        [Test]
+        public void CreateKeyVaultStoreReference_ConnectionString_ThrowsOnInvalid()
+        {
+            Assert.Throws<SchemaException>(() =>
+                EndpointUtility.CreateKeyVaultStoreReference(
+                    DependencyStore.KeyVault,
+                    "InvalidConnectionString",
+                    this.mockFixture.CertificateManager.Object));
         }
     }
 }
