@@ -8,13 +8,14 @@ The following profiles run customer-representative or benchmarking scenarios usi
 :::
 
 ## PERF-GPU-SUPERBENCH.json
-Runs the SuperBenchmark benchmark workload to test GPU performance. <mark>This workload is <b>supported ONLY for systems that contain nVidia GPU
+Runs the SuperBenchmark benchmark workload to test GPU performance. <mark>This workload is <b>supported ONLY for systems that contain Nvidia GPU
 hardware components</b>. Work is underway with partner teams in Azure to support additional GPU manufacturers.</mark>
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-SUPERBENCH.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
+  * linux-arm64 
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
