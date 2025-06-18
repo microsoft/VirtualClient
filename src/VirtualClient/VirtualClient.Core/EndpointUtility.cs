@@ -175,6 +175,54 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates a <see cref="DependencyKeyVaultStore"/> definition from the connection string provided.
+        /// </summary>
+        /// <param name="storeName">The name of the dependency store (e.g. KeyVault, Packages).</param>
+        /// <param name="endpoint">A connection string or URI describing the target Key Vault endpoint and any identity/authentication information.</param>
+        /// <param name="certificateManager"></param>
+        public static DependencyKeyVaultStore CreateKeyVaultStoreReference(string storeName, string endpoint, ICertificateManager certificateManager)
+        {
+            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
+            endpoint.ThrowIfNullOrWhiteSpace(nameof(endpoint));
+            certificateManager.ThrowIfNull(nameof(certificateManager));
+
+            DependencyKeyVaultStore store = null;
+            string argumentValue = endpoint.Trim(new char[] { '\'', '\"', ' ' });
+
+            if (EndpointUtility.IsCustomConnectionString(argumentValue))
+            {
+                // e.g.
+                // Endpoint=https://my-keyvault.vault.azure.net/;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4
+                IDictionary<string, string> connectionParameters = TextParsingExtensions.ParseDelimitedValues(argumentValue)?.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value?.ToString(),
+                    StringComparer.OrdinalIgnoreCase);
+
+                store = EndpointUtility.CreateKeyVaultStoreReference(storeName, connectionParameters, certificateManager);
+            }
+            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri) && EndpointUtility.IsCustomUri(endpointUri))
+            {
+                // e.g.
+                // https://my-keyvault.vault.azure.net/?cid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&tid=307591a4-abb2-4559-af59-b47177d140cf&crtt=123456789
+
+                store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpointUri, certificateManager);
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Key Vault namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        /// <summary>
         /// Creates a <see cref="DependencyProfileReference"/> definition from the endpoint URI provided. 
         /// <list>
         /// <item>The following type of URIs are supported:</item>
@@ -646,6 +694,122 @@ namespace VirtualClient
                     $"See the following documentation for additional details and examples:{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static DependencyKeyVaultStore CreateKeyVaultStoreReference(string storeName, Uri endpointUri, ICertificateManager certificateManager)
+        {
+            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
+            endpointUri.ThrowIfNull(nameof(endpointUri));
+            certificateManager.ThrowIfNull(nameof(certificateManager));
+
+            DependencyKeyVaultStore store = null;
+
+            if (EndpointUtility.IsCustomUri(endpointUri))
+            {
+                // URI for Microsoft Entra or Managed Identity
+                // e.g. https://my-keyvault.vault.azure.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crti=ABC&crts=any.service.com)
+
+                // We unescape any URI-encoded characters (e.g. spaces -> %20).
+                string queryString = Uri.UnescapeDataString(endpointUri.Query).Trim('?').Replace("&", ",,,");
+
+                IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value?.ToString(),
+                    StringComparer.OrdinalIgnoreCase);
+
+                TokenCredential credential = null;
+                if (EndpointUtility.TryGetManagedIdentityReferenceForUri(queryParameters, out string managedIdentityId))
+                {
+                    credential = new ManagedIdentityCredential(managedIdentityId);
+                }
+                else if (EndpointUtility.TryGetMicrosoftEntraReferenceForUri(queryParameters, out string clientId, out string tenantId))
+                {
+                    if (EndpointUtility.TryGetCertificateReferenceForUri(queryParameters, out string certificateThumbprint))
+                    {
+                        credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateThumbprint)
+                            .GetAwaiter().GetResult();
+                    }
+                    else if (EndpointUtility.TryGetCertificateReferenceForUri(queryParameters, out string certificateIssuer, out string certificateSubject))
+                    {
+                        credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateIssuer, certificateSubject)
+                            .GetAwaiter().GetResult();
+                    }
+                }
+
+                if (credential != null)
+                {
+                    // e.g.
+                    // https://my-keyvault.vault.azure.net/?miid=307591a4-abb2-4559-af59-b47177d140cf -> https://my-keyvault.vault.azure.net/
+
+                    Uri baseUri = new Uri(endpointUri.OriginalString.Substring(0, endpointUri.OriginalString.IndexOf("?")));
+                    store = new DependencyKeyVaultStore(storeName, baseUri, credential);
+                }
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Key Vault access policy/connection string{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static DependencyKeyVaultStore CreateKeyVaultStoreReference(string storeName, IDictionary<string, string> connectionParameters, ICertificateManager certificateManager)
+        {
+            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
+            connectionParameters.ThrowIfNullOrEmpty(nameof(connectionParameters));
+            certificateManager.ThrowIfNull(nameof(certificateManager));
+
+            DependencyKeyVaultStore store = null;
+
+            if (EndpointUtility.TryGetEndpointForConnection(connectionParameters, out string endpoint))
+            {
+                if (Uri.TryCreate(endpoint, UriKind.Absolute, out Uri endpointUri))
+                {
+                    TokenCredential credential = null;
+                    if (EndpointUtility.TryGetManagedIdentityReferenceForConnection(connectionParameters, out string managedIdentityId))
+                    {
+                        credential = new ManagedIdentityCredential(managedIdentityId);
+                    }
+                    else if (EndpointUtility.TryGetMicrosoftEntraReferenceForConnection(connectionParameters, out string clientId, out string tenantId))
+                    {
+                        if (EndpointUtility.TryGetCertificateReferenceForConnection(connectionParameters, out string certificateThumbprint))
+                        {
+                            credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateThumbprint)
+                                .GetAwaiter().GetResult();
+                        }
+                        else if (EndpointUtility.TryGetCertificateReferenceForConnection(connectionParameters, out string certificateIssuer, out string certificateSubject))
+                        {
+                            credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateIssuer, certificateSubject)
+                                .GetAwaiter().GetResult();
+                        }
+                    }
+
+                    if (credential != null)
+                    {
+                        store = new DependencyKeyVaultStore(storeName, endpointUri, credential);
+                    }
+                }
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Key Vault namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A connection string or URI with Microsoft Entra ID/App information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A connection string or URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
             }
 
             return store;

@@ -23,6 +23,7 @@ namespace VirtualClient.Actions.CpuPerformance
     {
         private DependencyFixture fixture;
         private DependencyPath mockPackage;
+        private string mockOpensslVersion = "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)\n";
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/bin/openssl")]
@@ -287,6 +288,24 @@ namespace VirtualClient.Actions.CpuPerformance
             }
         }
 
+        [Test]
+        public async Task OpenSslExecutorExecutesGetOpensslVersionAsync()
+        {
+            this.SetupDefaultBehaviors();
+            this.SetupOpensslVersionBehavior();
+
+             using (TestOpenSslExecutor executor = new TestOpenSslExecutor(this.fixture))
+            {
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                  .ConfigureAwait(false);
+
+                var messages = this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.GetOpenSslVersionAsync");
+                Assert.IsNotEmpty(messages);
+                Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["opensslVersion"].ToString() == "OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)"));
+            }
+        }
+
         private void SetupDefaultBehaviors(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             // Setup the default behaviors given all expected dependencies are in place such that the
@@ -329,8 +348,20 @@ namespace VirtualClient.Actions.CpuPerformance
                     process.StandardOutput.Append(TestResources.Results_OpenSSL_speed);
                 }
             };
+            
         }
 
+        private void SetupOpensslVersionBehavior()
+        {
+            this.fixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                // mock openssl version command result
+                if (process.IsMatch("openssl(.exe)* version"))
+                {
+                    process.StandardOutput.Append(this.mockOpensslVersion);
+                }
+            };
+        }
         private class TestOpenSslExecutor : OpenSslExecutor
         {
             public TestOpenSslExecutor(DependencyFixture mockFixture)

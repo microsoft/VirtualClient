@@ -39,7 +39,7 @@ namespace VirtualClient.Proxy
             this.Channel = channel;
             this.Source = !string.IsNullOrWhiteSpace(source)
                 ? source
-                : ProxyBlobDescriptor.DefaultSource;
+                : "VirtualClient";
         }
 
         /// <summary>

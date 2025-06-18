@@ -30,12 +30,22 @@ namespace VirtualClient.Contracts
         /// (vs. terminal).
         /// </param>
         /// <param name="logToFile">True to instruct the application to log output to files on the file system.</param>
+        /// <param name="includedScenarios">
+        /// When evaluating child components evaluate whether or not the child component should be 
+        /// included dictated by the scenarios provided on the command line. These scenarios must be included.
+        /// </param>
+        /// <param name="excludedScenarios">
+        /// When evaluating child components evaluate whether or not the child component should be 
+        /// included dictated by the scenarios provided on the command line. These scenarios must be excluded.
+        /// </param>
         public static VirtualClientComponent CreateComponent(
             ExecutionProfileElement componentDescription, 
             IServiceCollection dependencies,
             int? randomizationSeed = null,
             bool? failFast = null,
-            bool? logToFile = null)
+            bool? logToFile = null,
+            IEnumerable<string> includedScenarios = null,
+            IEnumerable<string> excludedScenarios = null)
         {
             componentDescription.ThrowIfNull(nameof(componentDescription));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -55,7 +65,9 @@ namespace VirtualClient.Contracts
                     new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase),
                     randomizationSeed,
                     failFast,
-                    logToFile);
+                    logToFile,
+                    includedScenarios,
+                    excludedScenarios);
 
                 return component;
             }
@@ -99,7 +111,9 @@ namespace VirtualClient.Contracts
             IDictionary<string, JToken> extensions,
             int? randomizationSeed = null,
             bool? failFast = null,
-            bool? logToFile = null)
+            bool? logToFile = null,
+            IEnumerable<string> includeScenarios = null,
+            IEnumerable<string> excludeScenarios = null)
         {
             VirtualClientComponent component = component = (VirtualClientComponent)Activator.CreateInstance(type, dependencies, componentDescription.Parameters);
             component.ComponentType = componentDescription.ComponentType;
@@ -155,6 +169,22 @@ namespace VirtualClient.Contracts
                     if (!ComponentTypeCache.Instance.TryGetComponentType(subComponent.Type, out Type subcomponentType))
                     {
                         throw new TypeLoadException($"Type '{subComponent.Type}' does not exist.");
+                    }
+
+                    bool scenarioIncluded = includeScenarios?.Any() == true;
+                    if (includeScenarios?.Any() == true)
+                    {
+                        scenarioIncluded = subComponent.IsTargetedScenario(includeScenarios);
+                        if (!scenarioIncluded)
+                        {
+                            continue;
+                        }
+                    }
+
+                    // Included scenarios take precedence over excluded (e.g. Scenario1,-Scenario1 -> Scenario1 will be included).
+                    if (!scenarioIncluded && excludeScenarios?.Any() == true && subComponent.IsExcludedScenario(excludeScenarios))
+                    {
+                        continue;
                     }
 
                     VirtualClientComponent childComponent = ComponentFactory.CreateComponent(

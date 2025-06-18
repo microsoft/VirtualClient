@@ -214,6 +214,9 @@ namespace VirtualClient
                 // --iterations
                 OptionFactory.CreateIterationsOption(required: false),
 
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: false),
+
                 // --layout-path
                 OptionFactory.CreateLayoutPathOption(required: false),
 
@@ -341,6 +344,9 @@ namespace VirtualClient
 
                 // --iterations (for integration only. not used/always = 1)
                 OptionFactory.CreateIterationsOption(required: false),
+
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: false),
 
                 // --layout-path (for integration only. not used.)
                 OptionFactory.CreateLayoutPathOption(required: false),

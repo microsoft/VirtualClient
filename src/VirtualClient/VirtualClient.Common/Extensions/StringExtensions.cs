@@ -6,6 +6,7 @@ namespace VirtualClient.Common.Extensions
     using System;
     using System.Collections;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Security;
     using System.Text.RegularExpressions;

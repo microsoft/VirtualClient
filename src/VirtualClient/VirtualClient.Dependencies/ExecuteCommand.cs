@@ -21,6 +21,7 @@ namespace VirtualClient.Dependencies
     /// Executes a command on the system with the working directory set to a 
     /// package installed.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ExecuteCommand : VirtualClientComponent
     {
         /// <summary>
@@ -137,7 +138,7 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            telemetryContext.AddContext("command", this.Command);
+            telemetryContext.AddContext("command", SensitiveData.ObscureSecrets(this.Command));
             telemetryContext.AddContext("workingDirectory", this.WorkingDirectory);
             telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 

@@ -103,11 +103,16 @@ namespace VirtualClient.Contracts.Proxy
             // With API key
             // /api/blobs/anyfile.log?api-key=1234&source=VirtualClient&storeType=Content&containerName=A57214DC-41BA-4211-956D-07095275D73D&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob
 
-            string fullQueryString = $"source={descriptor.Source}" +
-                $"&storeType={descriptor.StoreType}" +
+            string fullQueryString =
+                $"storeType={descriptor.StoreType}" +
                 $"&containerName={descriptor.ContainerName}" +
                 $"&contentType={descriptor.ContentType}" +
                 $"&contentEncoding={descriptor.ContentEncoding}";
+
+            if (!string.IsNullOrWhiteSpace(descriptor.Source))
+            {
+                fullQueryString = $"source={descriptor.Source}&{fullQueryString}";
+            }
 
             if (!string.IsNullOrWhiteSpace(descriptor.BlobPath))
             {
