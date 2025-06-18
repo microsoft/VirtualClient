@@ -59,6 +59,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // await Task.Delay(TimeSpan.FromSeconds(30));
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
 
             DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
@@ -146,6 +147,8 @@ namespace VirtualClient.Actions
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
             var apiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
 
+            await this.WaitForApiServerReadyAsync(apiClient, cancellationToken);
+
             HttpResponseMessage response = await apiClient.GetStateAsync(nameof(this.NpbBuildState), cancellationToken)
                .ConfigureAwait(false);
 
@@ -170,6 +173,31 @@ namespace VirtualClient.Actions
 
                 response.ThrowOnError<WorkloadException>();
             }
+        }
+
+        private async Task WaitForApiServerReadyAsync(IApiClient apiClient, CancellationToken cancellationToken, int timeoutSeconds = 30)
+        {
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            var start = DateTime.UtcNow;
+
+            while (DateTime.UtcNow - start < timeout)
+            {
+                try
+                {
+                    var response = await apiClient.GetHeartbeatAsync(cancellationToken);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return;
+                    }
+                }
+                catch
+                {
+                }
+
+                await Task.Delay(1000, cancellationToken);
+            }
+
+            throw new Exception("API server did not become ready in time.");
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
