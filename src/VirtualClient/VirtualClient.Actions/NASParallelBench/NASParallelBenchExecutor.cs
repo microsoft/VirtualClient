@@ -59,7 +59,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // await Task.Delay(TimeSpan.FromSeconds(30));
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
 
             DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
