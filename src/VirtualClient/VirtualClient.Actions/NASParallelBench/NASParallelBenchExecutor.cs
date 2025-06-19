@@ -7,15 +7,12 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Http;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -146,7 +143,7 @@ namespace VirtualClient.Actions
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
             var apiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
 
-            await this.WaitForApiServerReadyAsync(apiClient, cancellationToken);
+            await apiClient.PollForHeartbeatAsync(TimeSpan.FromSeconds(30), cancellationToken);
 
             HttpResponseMessage response = await apiClient.GetStateAsync(nameof(this.NpbBuildState), cancellationToken)
                .ConfigureAwait(false);
@@ -172,31 +169,6 @@ namespace VirtualClient.Actions
 
                 response.ThrowOnError<WorkloadException>();
             }
-        }
-
-        private async Task WaitForApiServerReadyAsync(IApiClient apiClient, CancellationToken cancellationToken, int timeoutSeconds = 30)
-        {
-            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            var start = DateTime.UtcNow;
-
-            while (DateTime.UtcNow - start < timeout)
-            {
-                try
-                {
-                    var response = await apiClient.GetHeartbeatAsync(cancellationToken);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return;
-                    }
-                }
-                catch
-                {
-                }
-
-                await Task.Delay(1000, cancellationToken);
-            }
-
-            throw new Exception("API server did not become ready in time.");
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
