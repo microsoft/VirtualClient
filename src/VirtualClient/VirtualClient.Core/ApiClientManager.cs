@@ -8,7 +8,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
 

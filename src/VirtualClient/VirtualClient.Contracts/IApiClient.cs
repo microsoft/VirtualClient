@@ -10,7 +10,6 @@ namespace VirtualClient
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>

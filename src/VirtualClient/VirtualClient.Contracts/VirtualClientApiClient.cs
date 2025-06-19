@@ -16,7 +16,6 @@ namespace VirtualClient
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
