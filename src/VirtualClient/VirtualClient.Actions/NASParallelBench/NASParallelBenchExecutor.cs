@@ -143,7 +143,7 @@ namespace VirtualClient.Actions
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
             var apiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
 
-            await apiClient.PollForHeartbeatAsync(TimeSpan.FromSeconds(30), cancellationToken);
+            await apiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(40), cancellationToken);
 
             HttpResponseMessage response = await apiClient.GetStateAsync(nameof(this.NpbBuildState), cancellationToken)
                .ConfigureAwait(false);
