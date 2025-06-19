@@ -1254,9 +1254,59 @@ namespace VirtualClient.Contracts
         [TestCase("\\", "")]
         [TestCase("\\", "")]
         [TestCase("local", "local")]
-        [TestCase("C:\\local", "local")] // remove the drive letter.
         [TestCase("local\\filename.txt", "local/filename.txt")] // system does not remove the file name if provided.
         public void FileUploadDescriptorFactoryCreatesExpectedBlobPathsWhenVirtualDirectoryIsDifferentFormats(string virtualDirectory, string expectedVirtualDirectory)
+        {
+            //  Default Template:
+            //  {experimentId}/{agentId}/{toolName}/{role}/{scenario}
+            this.SetupDefaults();
+
+            string expectedExperimentId = Guid.NewGuid().ToString();
+            string expectedAgentId = "Agent01";
+            string expectedToolName = "Toolkit";
+            string expectedRole = "Client";
+            string expectedScenario = "Cycle-VegaServer";
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedContentEncoding = Encoding.UTF8.WebName;
+            string expectedFilePath = this.mockFile.Object.FullName;
+            string expectedFileName = this.mockFile.Object.Name;
+            string expectedBlobPath = string.Join('/', (new string[]
+            {
+                expectedAgentId,
+                expectedToolName,
+                expectedRole,
+                expectedScenario
+            })
+            .Where(i => i != null))
+            .ToLowerInvariant();
+
+            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
+            expectedBlobPath = $"/{expectedBlobPath}/{expectedVirtualDirectory}/{expectedFileName}".Replace("//", "/");
+
+            FileContext context = new FileContext(
+                this.mockFile.Object,
+                expectedContentType,
+                expectedContentEncoding,
+                expectedExperimentId,
+                expectedAgentId,
+                expectedToolName,
+                expectedScenario,
+                role: expectedRole);
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: false, virtualDirectory: virtualDirectory);
+
+            Assert.AreEqual(expectedExperimentId, descriptor.ContainerName);
+            Assert.AreEqual(expectedFileName, descriptor.BlobName);
+            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
+        }
+
+        [Test]
+        [TestCase("C:\\local", "local")] // remove the drive letter.
+        [Platform(Include = "windows")]
+        public void FileUploadDescriptorFactoryCreatesExpectedBlobPathsWhenVirtualDirectoryHasWindowsRootedPath(string virtualDirectory, string expectedVirtualDirectory)
         {
             //  Default Template:
             //  {experimentId}/{agentId}/{toolName}/{role}/{scenario}
