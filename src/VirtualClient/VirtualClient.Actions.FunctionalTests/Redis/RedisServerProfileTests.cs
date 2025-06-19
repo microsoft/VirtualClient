@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -44,6 +45,24 @@ namespace VirtualClient.Actions
         [TestCase("PERF-REDIS.json")]
         public async Task RedisMemtierWorkloadProfileInstallsTheExpectedDependenciesOfServerOnUnixPlatform(string profile)
         {
+            using var memoryProcess = new InMemoryProcess
+            {
+                StandardOutput = new ConcurrentBuffer(
+                       new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")),
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                {
+                    return memoryProcess;
+                }
+
+                return process;
+            };
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
@@ -86,10 +105,21 @@ namespace VirtualClient.Actions
             });
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);
+            using var memoryProcess = new InMemoryProcess
+            {
+                StandardOutput = new ConcurrentBuffer(
+                        new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")),
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
+                {
+                    return memoryProcess;
+                }
 
                 return process;
             };

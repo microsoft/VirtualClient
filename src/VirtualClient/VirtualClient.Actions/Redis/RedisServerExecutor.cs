@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using VirtualClient.Logging;
 
     /// <summary>
@@ -142,6 +144,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected IAsyncPolicy ServerRetryPolicy { get; set; }
 
+        private string RedisVersion { get; set; }
+
         /// <summary>
         /// Disposes of resources used by the executor including shutting down any
         /// instances of Redis server running.
@@ -195,7 +199,6 @@ namespace VirtualClient.Actions
 
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
-
                     if (this.IsMultiRoleLayout())
                     {
                         using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -237,13 +240,13 @@ namespace VirtualClient.Actions
             this.RedisExecutablePath = this.Combine(this.RedisPackagePath, "src", "redis-server");
 
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
-
+            await this.CaptureRedisVersionAsync(telemetryContext, cancellationToken);
             if (this.IsTLSEnabled)
             {
                 DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
                 this.RedisResourcesPath = redisResourcesPath.Path;
             }
-
+            
             this.InitializeApiClients();
         }
 
@@ -261,6 +264,32 @@ namespace VirtualClient.Actions
                     $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system " +
                     $"when binding each of the servers to a logical core/vCPU. Set parameter '{nameof(this.BindToCores)}' = false to allow for additional server instances.",
                     ErrorReason.InvalidProfileDefinition);
+            }
+        }
+
+        private async Task CaptureRedisVersionAsync(EventContext telemetryContext, CancellationToken token)
+        {
+            try
+            {
+                string command = $"{this.RedisExecutablePath} --version";
+                IProcessProxy process = await this.ExecuteCommandAsync(command, null, this.RedisPackagePath, telemetryContext, token, runElevated: true);
+                string output = process.StandardOutput.ToString();
+                Match match = Regex.Match(output, @"v=(\d+\.\d+\.\d+)");
+                this.RedisVersion = match.Success ? match.Groups[1].Value : null;
+                if (!string.IsNullOrEmpty(this.RedisVersion))
+                {
+                    telemetryContext.AddContext("RedisVersion", this.RedisVersion);
+                    this.Logger.LogMessage($"{this.TypeName}.RedisVersionCaptured", LogLevel.Information, telemetryContext);
+                    this.MetadataContract.AddForScenario(
+                        "Redis-Benchmark",
+                        null,
+                        toolVersion: this.RedisVersion);
+                    this.MetadataContract.Apply(telemetryContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogErrorMessage(ex, telemetryContext);
             }
         }
 
