@@ -1305,7 +1305,7 @@ namespace VirtualClient.Contracts
 
         [Test]
         [TestCase("C:\\local", "local")] // remove the drive letter.
-        [Platform(Include = "windows")]
+        [Platform(Include = "win")]
         public void FileUploadDescriptorFactoryCreatesExpectedBlobPathsWhenVirtualDirectoryHasWindowsRootedPath(string virtualDirectory, string expectedVirtualDirectory)
         {
             //  Default Template:
