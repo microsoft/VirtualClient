@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         /// Parses key metrics from the JSON based output log.
         /// </summary>
         public override IList<Metric> Parse()
-        {   
+        {
             List<Metric> metrics = new List<Metric>();
 
             try
@@ -66,8 +66,8 @@ namespace VirtualClient.Actions
                 }
                 else if (token.Type == JTokenType.Array)
                 {
-                    /* Format 2: {
-                        "metrics": [
+                    /* Format 2:
+                        [
                             {
                                 "metricName": "metric1",
                                 "metricValue": "value1",
@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
                                 }
                             }
                         ]
-                    }*/
+                    */
                     foreach (var metricObj in token.Children<JObject>())
                     {
                         string metricName = metricObj.Value<string>("metricName");
@@ -129,7 +129,7 @@ namespace VirtualClient.Actions
             {
                 throw new WorkloadResultsException(
                     $"Invalid JSON metrics content formatting. The metrics content must be in a valid JSON key/value pair format " +
-                    $"(e.g. {{ \"metric1\": 1234, \"metric2\": 987.65, \"metric3\": 32.0023481 }} ) or an array of metric objects.",
+                    $"(e.g. {{ \"metric1\": 1234, \"metric2\": 987.65, \"metric3\": 32.0023481 }} ) or an array of Json objects.",
                     exc,
                     ErrorReason.InvalidResults);
             }
