@@ -261,7 +261,7 @@ namespace VirtualClient.Actions
                 {
                     foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
                     {
-                        this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
+                        this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken, sourceRoot: fullLogPath);
                     }
                 }
 
@@ -301,9 +301,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Move the log files to central logs directory and Upload to Content Store
+        /// Move the log files to central logs directory (retaining source directory structure) and Upload to Content Store.
         /// </summary>
-        protected async Task RequestUploadAndMoveToLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
+        private async Task RequestUploadAndMoveToLogsDirectory(
+            string sourcePath,
+            string destinitionDirectory,
+            CancellationToken cancellationToken,
+            string sourceRoot = null)
         {
             if (string.Equals(sourcePath, this.ExecutablePath))
             {
@@ -317,13 +321,27 @@ namespace VirtualClient.Actions
 
             await (this.FileOperationsRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(() =>
             {
-                // e.g.
-                // /logs/anytool/executecustomscript1/2023-06-27T21-13-12-51001Z-CustomScript.sh
-                // /logs/anytool/executecustomscript1/2023-06-27T21-15-36-12018Z-CustomScript.sh
                 string fileName = Path.GetFileName(sourcePath);
-                string destinitionPath = this.Combine(destinitionDirectory, BlobDescriptor.SanitizeBlobPath($"{DateTime.UtcNow.ToString("o").Replace('.', '-')}-{fileName}"));
-                this.fileSystem.File.Move(sourcePath, destinitionPath, true);
+                string destPath;
 
+                if (!string.IsNullOrEmpty(sourceRoot))
+                {
+                    // Compute relative path from sourceRoot to sourcePath
+                    string relativePath = this.fileSystem.Path.GetRelativePath(sourceRoot, sourcePath);
+                    string destDir = this.fileSystem.Path.Combine(destinitionDirectory, this.fileSystem.Path.GetDirectoryName(relativePath));
+                    if (!this.fileSystem.Directory.Exists(destDir))
+                    {
+                        this.fileSystem.Directory.CreateDirectory(destDir);
+                    }
+
+                    destPath = this.fileSystem.Path.Combine(destDir, BlobDescriptor.SanitizeBlobPath($"{DateTime.UtcNow:O}".Replace('.', '-') + "-" + fileName));
+                }
+                else
+                {
+                    destPath = this.Combine(destinitionDirectory, BlobDescriptor.SanitizeBlobPath($"{DateTime.UtcNow:O}".Replace('.', '-') + "-" + fileName));
+                }
+
+                this.fileSystem.File.Move(sourcePath, destPath, true);
                 return Task.CompletedTask;
             });
         }
