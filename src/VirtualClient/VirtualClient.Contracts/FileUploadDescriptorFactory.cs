@@ -43,6 +43,10 @@ namespace VirtualClient.Contracts
         /// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/client/cps_t16/2022-03-18T10-00-05-13813Z-cps_t16.manifest.json
         /// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/server/cps_t16/2022-03-18T10-00-06-13813Z-cps_t16.log
         /// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/server/cps_t16/2022-03-18T10-00-06-13813Z-cps_t16.manifest.json
+        /// <br/><br/>
+        /// Examples (w/ 'Virtual Directory' of /local/folder):
+        /// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/fio/fio_randwrite_496gb_12k_d32_th16/local/folder/2022-03-18T10-00-05-12765Z-fio_randwrite_496gb_12k_d32_th16.log
+        /// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/fio/fio_randwrite_496gb_12k_d32_th16/local/folder/2022-03-18T10-00-05-12765Z-fio_randwrite_496gb_12k_d32_th16.manifest.json
         /// </para>
         /// </summary>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
@@ -53,7 +57,11 @@ namespace VirtualClient.Contracts
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
         /// <param name="pathTemplate">Content path template to use when uploading content to target storage resources.</param>
-        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null)
+        /// <param name="virtualDirectory">
+        /// The virtual directory to store the blob under. This virtual directory is appended to the end of the qualified blob path. This allows the system to replicate
+        /// the local folder structure in remote storage.
+        /// </param>
+        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null, string virtualDirectory = null)
         {
             fileContext.ThrowIfNull(nameof(fileContext));
 
@@ -114,13 +122,34 @@ namespace VirtualClient.Contracts
                 throw new SchemaException($"The container name in the content path template '{effectivePathTemplate}' cannot be empty string.");
             }
 
+            string effectiveVirtualDirectory = virtualDirectory;
+            if (!string.IsNullOrWhiteSpace(virtualDirectory))
+            {
+                if (Path.IsPathRooted(virtualDirectory))
+                {
+                    effectiveVirtualDirectory = virtualDirectory.Substring(Path.GetPathRoot(virtualDirectory).Length);
+                }
+
+                effectiveVirtualDirectory = effectiveVirtualDirectory.Replace('\\', '/').Trim('/');
+            }
+
             string blobPath = null;
             if (resolvedTemplateParts.Count() > 1)
             {
-                blobPath = $"{BlobDescriptor.SanitizeBlobPath($"/{string.Join('/', resolvedTemplateParts.Skip(1))}").ToLowerInvariant()}/{blobName}";
+                blobPath = $"{BlobDescriptor.SanitizeBlobPath($"/{string.Join('/', resolvedTemplateParts.Skip(1))}").ToLowerInvariant()}";
+                if (!string.IsNullOrWhiteSpace(effectiveVirtualDirectory))
+                {
+                    blobPath = $"{blobPath}/{effectiveVirtualDirectory}";
+                }
+
+                blobPath = $"{blobPath}/{blobName}";
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(effectiveVirtualDirectory))
             {
+                blobPath = $"/{effectiveVirtualDirectory}/{blobName}";
+            } 
+            else
+            { 
                 blobPath = $"/{blobName}";
             }
 
