@@ -79,39 +79,48 @@ namespace VirtualClient.Actions
                             }
                         ]
                     */
-                    foreach (var metricObj in token.Children<JObject>())
+                    var metricList = JsonConvert.DeserializeObject<List<CustomMetric>>(this.RawText);
+
+                    foreach (var customMetric in metricList)
                     {
-                        string metricName = metricObj.Value<string>("metricName");
-                        JToken metricValueToken = metricObj["metricValue"];
-                        if (string.IsNullOrWhiteSpace(metricName))
+                        if (string.IsNullOrWhiteSpace(customMetric.Name))
                         {
                             throw new WorkloadResultsException(
                                 $"Invalid JSON metrics content formatting. 'metricName' is a required property.",
                                 ErrorReason.InvalidResults);
                         }
 
-                        if (metricValueToken == null || !double.TryParse(metricValueToken.ToString(), out double metricValue))
+                        if (customMetric.Value == null || !double.TryParse(customMetric.Value.ToString(), out double metricValue))
                         {
                             throw new WorkloadResultsException(
-                                $"Invalid JSON metrics content formatting. 'metricValue' for '{metricName}' is not a valid numeric data type. Provided metric value is '{metricValueToken}'",
+                                $"Invalid JSON metrics content formatting. 'metricValue' for '{customMetric.Name}' is not a valid numeric data type. Provided metric value is '{customMetric.Value}'",
                                 ErrorReason.InvalidResults);
                         }
 
-                        string metricUnit = metricObj.Value<string>("metricUnit");
+                        // Robustly handle metricMetadata
                         IDictionary<string, IConvertible> metricMetadata = null;
-                        if (metricObj.TryGetValue("metricMetadata", out JToken metadataToken) && metadataToken.Type == JTokenType.Object)
+                        if (customMetric.MetadataRaw != null && customMetric.MetadataRaw.Type != JTokenType.Null)
                         {
-                            metricMetadata = metadataToken
-                                .Children<JProperty>()
-                                .ToDictionary(
-                                    prop => prop.Name,
-                                    prop => (IConvertible)Convert.ChangeType(prop.Value.ToString(), typeof(string)));
+                            if (customMetric.MetadataRaw.Type == JTokenType.Object)
+                            {
+                                metricMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+                                foreach (var prop in customMetric.MetadataRaw.Children<JProperty>())
+                                {
+                                    metricMetadata[prop.Name] = prop.Value.ToString();
+                                }
+                            }
+                            else
+                            {
+                                throw new WorkloadResultsException(
+                                    $"Invalid JSON metrics content formatting. 'metricMetadata' for '{customMetric.Name}' must be a JSON object.",
+                                    ErrorReason.InvalidResults);
+                            }
                         }
 
                         metrics.Add(
-                            metricUnit != null
-                                ? new Metric(metricName, metricValue, metricUnit, MetricRelativity.Undefined, tags: null, description: null, metadata: metricMetadata)
-                                : new Metric(metricName, metricValue, MetricRelativity.Undefined, tags: null, description: null, metadata: metricMetadata));
+                            customMetric.Unit != null
+                                ? new Metric(customMetric.Name, metricValue, customMetric.Unit, MetricRelativity.Undefined, tags: null, description: null, metadata: metricMetadata)
+                                : new Metric(customMetric.Name, metricValue, MetricRelativity.Undefined, tags: null, description: null, metadata: metricMetadata));
                     }
                 }
                 else
@@ -135,6 +144,22 @@ namespace VirtualClient.Actions
             }
 
             return metrics;
+        }
+
+        internal class CustomMetric
+        {
+            [JsonProperty("metricName")]
+            public string Name { get; set; }
+
+            [JsonProperty("metricValue")]
+            public object Value { get; set; }
+
+            [JsonProperty("metricUnit")]
+            public string Unit { get; set; }
+
+            // Use JToken to allow robust handling
+            [JsonProperty("metricMetadata")]
+            public JToken MetadataRaw { get; set; }
         }
     }
 }
