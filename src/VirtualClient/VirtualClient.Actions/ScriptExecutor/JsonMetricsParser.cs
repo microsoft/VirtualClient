@@ -69,58 +69,31 @@ namespace VirtualClient.Actions
                     /* Format 2:
                         [
                             {
-                                "metricName": "metric1",
-                                "metricValue": "value1",
-                                "metricUnit": "unit1",
-                                "metricMetadata": {
+                                "Nmae": "metric1",
+                                "Value": 0,
+                                "Unit": "unit1",
+                                "MetaData": {
                                     "metadata1": "m1",
                                     "metadata2": "m2"
                                 }
                             }
                         ]
                     */
-                    var metricList = JsonConvert.DeserializeObject<List<CustomMetric>>(this.RawText);
-
-                    foreach (var customMetric in metricList)
+                    try
                     {
-                        if (string.IsNullOrWhiteSpace(customMetric.Name))
-                        {
-                            throw new WorkloadResultsException(
-                                $"Invalid JSON metrics content formatting. 'metricName' is a required property.",
-                                ErrorReason.InvalidResults);
-                        }
+                        metrics = JsonConvert.DeserializeObject<List<Metric>>(this.RawText);
+                    }
+                    catch (Exception exc)
+                    {
+                        throw new WorkloadResultsException(
+                            "Invalid JSON metrics content formatting. Failed to deserialze the Array JSON Contents into Metrics format.", exc, ErrorReason.InvalidResults);
+                    }
 
-                        if (customMetric.Value == null || !double.TryParse(customMetric.Value.ToString(), out double metricValue))
-                        {
-                            throw new WorkloadResultsException(
-                                $"Invalid JSON metrics content formatting. 'metricValue' for '{customMetric.Name}' is not a valid numeric data type. Provided metric value is '{customMetric.Value}'",
-                                ErrorReason.InvalidResults);
-                        }
-
-                        // Robustly handle metricMetadata
-                        IDictionary<string, IConvertible> metricMetadata = null;
-                        if (customMetric.MetadataRaw != null && customMetric.MetadataRaw.Type != JTokenType.Null)
-                        {
-                            if (customMetric.MetadataRaw.Type == JTokenType.Object)
-                            {
-                                metricMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-                                foreach (var prop in customMetric.MetadataRaw.Children<JProperty>())
-                                {
-                                    metricMetadata[prop.Name] = prop.Value.ToString();
-                                }
-                            }
-                            else
-                            {
-                                throw new WorkloadResultsException(
-                                    $"Invalid JSON metrics content formatting. 'metricMetadata' for '{customMetric.Name}' must be a JSON object.",
-                                    ErrorReason.InvalidResults);
-                            }
-                        }
-
-                        metrics.Add(
-                            customMetric.Unit != null
-                                ? new Metric(customMetric.Name, metricValue, customMetric.Unit, MetricRelativity.Undefined, tags: null, description: null, metadata: metricMetadata)
-                                : new Metric(customMetric.Name, metricValue, MetricRelativity.Undefined, tags: null, description: null, metadata: metricMetadata));
+                    if (metrics.Any(m => string.IsNullOrWhiteSpace(m.Name)))
+                    {
+                        throw new WorkloadResultsException(
+                            "Invalid JSON metrics content formatting. 'Name' is a required property for each metric, it can't be null or whitespace.",
+                            ErrorReason.InvalidResults);
                     }
                 }
                 else
@@ -144,22 +117,6 @@ namespace VirtualClient.Actions
             }
 
             return metrics;
-        }
-
-        internal class CustomMetric
-        {
-            [JsonProperty("metricName")]
-            public string Name { get; set; }
-
-            [JsonProperty("metricValue")]
-            public object Value { get; set; }
-
-            [JsonProperty("metricUnit")]
-            public string Unit { get; set; }
-
-            // Use JToken to allow robust handling
-            [JsonProperty("metricMetadata")]
-            public JToken MetadataRaw { get; set; }
         }
     }
 }

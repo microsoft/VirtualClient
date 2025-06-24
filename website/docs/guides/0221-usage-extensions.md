@@ -502,48 +502,48 @@ and requirements.
 
       [
           {
-              "metricName": "metric1",
-              "metricValue": 0,
-              "metricUnit": "unit1",
-              "metricMetadata": {
+              "Name": "metric1",
+              "Value": 0,
+              "Unit": "unit1",
+              "MetaData": {
                   "metadata1": "m1",
                   "metadata2": "m2"
               }
           },
           {
-              "metricName": "metric2",
-              "metricValue": -1,
-              "metricUnit": "unit2",
-              "metricMetadata": {
+              "Name": "metric2",
+              "Value": -1,
+              "Unit": "unit2",
+              "MetaData": {
                   "metadata1": "m3",
                   "metadata2": "m4"
               }
           },
           {
-              "metricName": "metric3",
-              "metricValue": 1.2,
-              "metricUnit": "unit3",
-              "metricMetadata": {
+              "Name": "metric3",
+              "Value": 1.2,
+              "Unit": "unit3",
+              "MetaData": {
                   "metadata1": "m5",
                   "metadata2": "m6"
               }
           },
           {
-              "metricName": "metric4",
-              "metricValue": 1.0,
-              "metricMetadata": {
+              "Name": "metric4",
+              "Value": 1.0,
+              "MetaData": {
                   "metadata1": "m7",
                   "metadata2": "m8"
               }
           },
           {
-              "metricName": "metric5",
-              "metricValue": "1.24",
-              "metricUnit": "unit5"
+              "Name": "metric5",
+              "Value": "1.24",
+              "Unit": "unit5"
           },
           {
-              "metricName": "metric6",
-              "metricValue": "-5.8"
+              "Name": "metric6",
+              "Value": "-5.8"
           }
       ]
       ```

@@ -8,6 +8,8 @@ namespace VirtualClient.Contracts
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using Newtonsoft.Json;
+    using VirtualClient.Common.Contracts;
 
     /// <summary>
     /// Represents the result of a single metric
@@ -18,6 +20,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
+        [JsonConstructor]
         public Metric(string name, double value)
         {
             this.Name = name;
@@ -133,6 +136,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Telemetry context for metric.
         /// </summary>
+        [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
         public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
