@@ -249,7 +249,7 @@ namespace VirtualClient.Actions
             switch (this.CpuArchitecture)
             {
                 case Architecture.Arm64:
-                    return @$"docker exec sb-dev sb run --no-docker -l localhost -c /mnt/{this.ConfigurationFile} --output-dir outputs/";
+                    return @$"docker exec sb-dev sb run --no-docker -l localhost -c /mnt/{this.ConfigurationFile} --output-dir /mnt/outputs/"; ///////////////////////////////////////////////////// Check the output dir here
 
                 default:
                     return @$"run --host-list localhost -c {this.ConfigurationFile}";
