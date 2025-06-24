@@ -237,9 +237,14 @@ namespace VirtualClient.Actions
                 // . spack/share/spack/setup-env.sh
                 string spackSetupCommand = $". {this.spackDirectory}/share/spack/setup-env.sh";
 
+                // Giving permissions to the required files
+                string createSpackDbDirCmd = $"mkdir -p {this.spackDirectory}/opt/spack/.spack-db";
+                string chownSpackDirCmd = $"sudo chown -R $(whoami):$(whoami) {this.spackDirectory}";
+                string chmodSpackDirCmd = $"chmod -R u+rwx {this.spackDirectory}";
+
                 // If gcc>= 9, use zen2. if <=8, use zen.
-                // spack install -n -y hpcg %gcc@10.3.0 +openmp target=zen2 ^openmpi@4.1.1
-                string installCommand = $"spack install --reuse -n -y hpcg@{this.HpcgVersion} %gcc +openmp ^openmpi@{this.OpenMpiVersion}";
+                // spack install -n -y hpcg %gcc@10.3.0 target=zen2 ^openmpi@4.1.1
+                string installCommand = $"spack install --reuse -n -y hpcg@{this.HpcgVersion} %gcc ^openmpi@{this.OpenMpiVersion}";
 
                 // spack load hpcg %gcc@10.3.0
                 string loadCommand = $"spack load hpcg@{this.HpcgVersion} %gcc ^openmpi@{this.OpenMpiVersion}";
@@ -249,7 +254,7 @@ namespace VirtualClient.Actions
                 int coreCount = cpuInfo.PhysicalCoreCount;
                 string mpirunCommand = $"mpirun --np {coreCount} --use-hwthread-cpus --allow-run-as-root xhpcg";
 
-                this.runShellText = string.Join(Environment.NewLine, spackSetupCommand, installCommand, loadCommand, mpirunCommand);
+                this.runShellText = string.Join(Environment.NewLine, spackSetupCommand, createSpackDbDirCmd, chownSpackDirCmd, chmodSpackDirCmd, installCommand, loadCommand, mpirunCommand);
 
                 await this.systemManagement.FileSystem.File.WriteAllTextAsync(this.hpcgRunShellPath, this.runShellText, cancellationToken).ConfigureAwait(false);
             }
