@@ -119,7 +119,7 @@ namespace VirtualClient.Actions
                 // Choose default file for compression and decompression if files/dirs are not provided.
                 if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
                 {
-                    await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.Compressor7zipDirectory, cancellationToken);
+                    await this.ExecuteCommandAsync("wget", $"--no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.Compressor7zipDirectory, cancellationToken);
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.Compressor7zipDirectory, cancellationToken);
                 }
 
