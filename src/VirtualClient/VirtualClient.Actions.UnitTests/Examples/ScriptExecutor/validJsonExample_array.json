@@ -1,0 +1,46 @@
+[
+	{
+		"Name": "metric1",
+		"Value": 0,
+		"Unit": "unit1",
+		"MetaData": {
+			"metadata1": 0.1,
+			"metadata2": "m2"
+		}
+	},
+	{
+		"Name": "metric2",
+		"Value": -1,
+		"Unit": "unit2",
+		"MetaData": {
+			"metadata1": "m3",
+			"metadata2": true
+		}
+	},
+	{
+		"Name": "metric3",
+		"Value": 1.2,
+		"Unit": "unit3",
+		"MetaData": {
+			"metadata1": "m5",
+			"metadata2": -2
+		}
+	},
+	{
+		"Name": "metric4",
+		"Value": 1.0,
+		"MetaData": {
+			"metadata1": "m7",
+			"metadata2": "m8"
+		}
+	},
+	{
+		"Name": "metric5",
+		"Value": "1.24",
+		"Unit": "unit5"
+	},
+	{
+		"Name": "metric6",
+		"Value": "-5.8"
+	}
+]
