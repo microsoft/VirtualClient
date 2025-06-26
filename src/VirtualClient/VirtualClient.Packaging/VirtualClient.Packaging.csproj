@@ -58,6 +58,9 @@
         <!-- Framework Package = Microsoft.Extensions.Http.Polly -->
         <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Http_Polly_Version=$(Microsoft_Extensions_Http_Polly_PackageVersion)</NuspecProperties>
 
+		<!-- Framework Package = MimeMapping -->
+		<NuspecProperties>$(NuspecProperties);MimeMapping=$(MimeMapping_PackageVersion)</NuspecProperties>
+
         <!-- Framework Package = Newtonsoft.Json -->
         <NuspecProperties>$(NuspecProperties);Newtonsoft_Json_Version=$(Newtonsoft_Json_PackageVersion)</NuspecProperties>
 

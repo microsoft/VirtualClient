@@ -83,6 +83,9 @@
         <!-- Microsoft.Windows.Compatibility -->
         <Microsoft_Windows_Compatibility_PackageVersion>9.0.3</Microsoft_Windows_Compatibility_PackageVersion>
 
+		<!-- MimeMapping -->
+		<MimeMapping_PackageVersion>3.1.0</MimeMapping_PackageVersion>
+
         <!-- Moq -->
         <Moq_PackageVersion>4.18.2</Moq_PackageVersion>
 

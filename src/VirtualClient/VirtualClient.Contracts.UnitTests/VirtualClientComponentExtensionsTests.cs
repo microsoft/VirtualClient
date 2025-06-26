@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
@@ -13,6 +14,7 @@ namespace VirtualClient.Contracts
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -246,6 +248,200 @@ namespace VirtualClient.Contracts
             using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
             {
                 Assert.AreEqual("/any/path/with/sub/directories", component.Combine("/any/path", "with", "sub", "directories"));
+            }
+        }
+
+        [Test]
+        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_1()
+        {
+            this.fixture.Setup(PlatformID.Unix);
+
+            string directory = "/home/user/Logs";
+            string[] expectedFiles = new string[]
+            {
+                $"{directory}/log1.txt",
+                $"{directory}/log2.txt"
+            };
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns<string>(file => directory);
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories))
+                .Returns(expectedFiles);
+
+            using (var component = new TestVirtualClientComponent(this.fixture))
+            {
+                IEnumerable<FileUploadDescriptor> descriptors = component.CreateFileUploadDescriptors(directory, timestamped: false);
+
+                Assert.IsNotNull(descriptors);
+                Assert.IsTrue(descriptors.Count() == 2);
+
+                FileUploadDescriptor descriptor1 = descriptors.ElementAt(0);
+                Assert.AreEqual(expectedFiles[0], descriptor1.FilePath);
+                Assert.IsTrue(descriptor1.BlobName.EndsWith("log1.txt"));
+                Assert.IsTrue(descriptor1.BlobPath.EndsWith("/log1.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor1.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor1.ContentEncoding);
+                Assert.IsNotNull(descriptor1.ContentType);
+
+                FileUploadDescriptor descriptor2 = descriptors.ElementAt(1);
+                Assert.AreEqual(expectedFiles[1], descriptor2.FilePath);
+                Assert.IsTrue(descriptor2.BlobName.EndsWith("log2.txt"));
+                Assert.IsTrue(descriptor2.BlobPath.EndsWith("/log2.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor2.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor2.ContentEncoding);
+                Assert.IsNotNull(descriptor2.ContentType);
+            }
+        }
+
+        [Test]
+        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_2()
+        {
+            this.fixture.Setup(PlatformID.Unix);
+
+            string directory = "/home/user/Logs";
+            string[] expectedFiles = new string[]
+            {
+                $"{directory}/log1.txt",
+                $"{directory}/directory2/log2.txt",
+                $"{directory}/directory2/directory3/log3.txt"
+            };
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns<string>(file => file.Replace(Path.GetFileName(file), string.Empty));
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories))
+                .Returns(expectedFiles);
+
+            using (var component = new TestVirtualClientComponent(this.fixture))
+            {
+                IEnumerable<FileUploadDescriptor> descriptors = component.CreateFileUploadDescriptors(directory, timestamped: false);
+
+                Assert.IsNotNull(descriptors);
+                Assert.IsTrue(descriptors.Count() == 3);
+
+                FileUploadDescriptor descriptor1 = descriptors.ElementAt(0);
+                Assert.AreEqual(expectedFiles[0], descriptor1.FilePath);
+                Assert.IsTrue(descriptor1.BlobName.EndsWith("log1.txt"));
+                Assert.IsTrue(descriptor1.BlobPath.EndsWith("/log1.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor1.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor1.ContentEncoding);
+                Assert.IsNotNull(descriptor1.ContentType);
+
+                FileUploadDescriptor descriptor2 = descriptors.ElementAt(1);
+                Assert.AreEqual(expectedFiles[1], descriptor2.FilePath);
+                Assert.IsTrue(descriptor2.BlobName.EndsWith("log2.txt"));
+                Assert.IsTrue(descriptor2.BlobPath.EndsWith("/directory2/log2.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor2.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor2.ContentEncoding);
+                Assert.IsNotNull(descriptor2.ContentType);
+
+                FileUploadDescriptor descriptor3 = descriptors.ElementAt(2);
+                Assert.AreEqual(expectedFiles[2], descriptor3.FilePath);
+                Assert.IsTrue(descriptor3.BlobName.EndsWith("log3.txt"));
+                Assert.IsTrue(descriptor3.BlobPath.EndsWith("/directory2/directory3/log3.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor3.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor3.ContentEncoding);
+                Assert.IsNotNull(descriptor3.ContentType);
+            }
+        }
+
+        [Test]
+        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_1()
+        {
+            string directory = "C:\\Users\\User\\Logs";
+            string[] expectedFiles = new string[]
+            {
+                $"{directory}\\log1.txt",
+                $"{directory}\\log2.txt"
+            };
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns<string>(file => directory);
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories))
+                .Returns(expectedFiles);
+
+            using (var component = new TestVirtualClientComponent(this.fixture))
+            {
+                IEnumerable<FileUploadDescriptor> descriptors = component.CreateFileUploadDescriptors(directory, timestamped: false);
+
+                Assert.IsNotNull(descriptors);
+                Assert.IsTrue(descriptors.Count() == 2);
+
+                FileUploadDescriptor descriptor1 = descriptors.ElementAt(0);
+                Assert.AreEqual(expectedFiles[0], descriptor1.FilePath);
+                Assert.IsTrue(descriptor1.BlobName.EndsWith("log1.txt"));
+                Assert.IsTrue(descriptor1.BlobPath.EndsWith("/log1.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor1.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor1.ContentEncoding);
+                Assert.IsNotNull(descriptor1.ContentType);
+
+                FileUploadDescriptor descriptor2 = descriptors.ElementAt(1);
+                Assert.AreEqual(expectedFiles[1], descriptor2.FilePath);
+                Assert.IsTrue(descriptor2.BlobName.EndsWith("log2.txt"));
+                Assert.IsTrue(descriptor2.BlobPath.EndsWith("/log2.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor2.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor2.ContentEncoding);
+                Assert.IsNotNull(descriptor2.ContentType);
+            }
+        }
+
+        [Test]
+        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_2()
+        {
+            string directory = "C:\\Users\\User\\Logs";
+            string[] expectedFiles = new string[]
+            {
+                $"{directory}\\log1.txt",
+                $"{directory}\\directory2\\log2.txt",
+                $"{directory}\\directory2\\directory3\\log3.txt"
+            };
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns<string>(file => file.Replace(Path.GetFileName(file), string.Empty));
+
+            this.fixture.FileSystem
+                .Setup(fs => fs.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories))
+                .Returns(expectedFiles);
+
+            using (var component = new TestVirtualClientComponent(this.fixture))
+            {
+                IEnumerable<FileUploadDescriptor> descriptors = component.CreateFileUploadDescriptors(directory, timestamped: false);
+
+                Assert.IsNotNull(descriptors);
+                Assert.IsTrue(descriptors.Count() == 3);
+
+                FileUploadDescriptor descriptor1 = descriptors.ElementAt(0);
+                Assert.AreEqual(expectedFiles[0], descriptor1.FilePath);
+                Assert.IsTrue(descriptor1.BlobName.EndsWith("log1.txt"));
+                Assert.IsTrue(descriptor1.BlobPath.EndsWith("/log1.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor1.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor1.ContentEncoding);
+                Assert.IsNotNull(descriptor1.ContentType);
+
+                FileUploadDescriptor descriptor2 = descriptors.ElementAt(1);
+                Assert.AreEqual(expectedFiles[1], descriptor2.FilePath);
+                Assert.IsTrue(descriptor2.BlobName.EndsWith("log2.txt"));
+                Assert.IsTrue(descriptor2.BlobPath.EndsWith("/directory2/log2.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor2.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor2.ContentEncoding);
+                Assert.IsNotNull(descriptor2.ContentType);
+
+                FileUploadDescriptor descriptor3 = descriptors.ElementAt(2);
+                Assert.AreEqual(expectedFiles[2], descriptor3.FilePath);
+                Assert.IsTrue(descriptor3.BlobName.EndsWith("log3.txt"));
+                Assert.IsTrue(descriptor3.BlobPath.EndsWith("/directory2/directory3/log3.txt"));
+                Assert.AreEqual(component.ExperimentId, descriptor3.ContainerName);
+                Assert.AreEqual(Encoding.UTF8.WebName, descriptor3.ContentEncoding);
+                Assert.IsNotNull(descriptor3.ContentType);
             }
         }
 

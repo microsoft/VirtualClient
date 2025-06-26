@@ -9,9 +9,11 @@ namespace VirtualClient.Contracts
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -126,6 +128,59 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent.ContentPathTemplate);
 
             return descriptor;
+        }
+
+        /// <summary>
+        /// Creates a descriptor that can be used to publish a request
+        /// </summary>
+        /// <param name="component">The component requesting the file upload descriptor.</param>
+        /// <param name="targetDirectory">A directory with files to upload.</param>
+        /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        /// <param name="timestamped">
+        /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
+        /// file name is not desirable. Default = true (timestamped file names).
+        /// </param>
+        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
+        {
+            component.ThrowIfNull(nameof(component));
+            targetDirectory.ThrowIfNullOrWhiteSpace(nameof(targetDirectory));
+
+            IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
+            IEnumerable<string> filesToUpload = fileSystem.Directory.GetFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
+            List<FileUploadDescriptor> descriptors = new List<FileUploadDescriptor>();
+
+            if (filesToUpload?.Any() == true)
+            {
+                foreach (string file in filesToUpload)
+                {
+                    string contentType = MimeMapping.MimeUtility.GetMimeMapping(file);
+                    string subDirectory = fileSystem.Path.GetDirectoryName(file).Substring(targetDirectory.Length)?.Trim('\\')?.Trim('/');
+                    string uploadDirectory = null;
+
+                    if (!string.IsNullOrWhiteSpace(subDirectory))
+                    {
+                        uploadDirectory = subDirectory.Trim('\\').Trim('/');
+                    }
+
+                    FileUploadDescriptor descriptor = VirtualClientComponentExtensions.CreateFileUploadDescriptor(
+                        component,
+                        new FileContext(
+                            fileSystem.FileInfo.New(file),
+                            contentType,
+                            Encoding.UTF8.WebName,
+                            component.ExperimentId,
+                            component.AgentId,
+                            null,
+                            uploadDirectory),
+                        parameters: parameters,
+                        timestamped: timestamped);
+
+                    descriptors.Add(descriptor);
+                }
+            }
+
+            return descriptors;
         }
 
         /// <summary>
