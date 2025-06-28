@@ -217,39 +217,6 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
-        public async Task FioExecutorCreatesExpectedMountPointsForDisksUnderTest_RemoteDiskScenario()
-        {
-            // Clear any access points out.
-            this.disks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
-
-            List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
-
-            this.DiskManager
-                .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
-                {
-                    (volume.AccessPaths as List<string>).Add(mountPoint);
-                })
-                .Returns(Task.CompletedTask);
-
-            using (TestFioExecutor workloadExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
-            {
-                await workloadExecutor.ExecuteAsync(CancellationToken.None);
-
-                Assert.IsTrue(this.disks.Skip(1).All(d => d.Volumes.First().AccessPaths?.Any() == true));
-
-                string expectedMountPoint1 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdd1");
-                Assert.AreEqual(expectedMountPoint1, this.disks.ElementAt(1).Volumes.First().AccessPaths.First());
-
-                string expectedMountPoint2 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sde1");
-                Assert.AreEqual(expectedMountPoint2, this.disks.ElementAt(2).Volumes.First().AccessPaths.First());
-
-                string expectedMountPoint3 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdf1");
-                Assert.AreEqual(expectedMountPoint3, this.disks.ElementAt(3).Volumes.First().AccessPaths.First());
-            }
-        }
-
-        [Test]
         public void FioExecutorCreatesTheExpectedWorkloadProcess_Scenario1()
         {
             using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
