@@ -440,26 +440,22 @@ namespace VirtualClient
             // Verify first ParametersOn entry
             var firstParams = profile.ParametersOn[0];
             Assert.AreEqual("true", firstParams["Condition"].ToString());
-            Assert.AreEqual("Linux", firstParams["OsName"].ToString());
-            Assert.AreEqual("x64", firstParams["Architecture"].ToString());
-            Assert.AreEqual("Ubuntu", firstParams["Platform"].ToString());
-            Assert.AreEqual("linux-value", firstParams["CustomValue"].ToString());
+            Assert.AreEqual("conditional3", firstParams["Parameter3"].ToString());
+            Assert.AreEqual("conditional4", firstParams["Parameter4"].ToString());
 
             // Verify second ParametersOn entry
             var secondParams = profile.ParametersOn[1];
             Assert.AreEqual("false", secondParams["Condition"].ToString());
-            Assert.AreEqual("Windows", secondParams["OsName"].ToString());
-            Assert.AreEqual("x86", secondParams["Architecture"].ToString());
-            Assert.AreEqual("Windows", secondParams["Platform"].ToString());
-            Assert.AreEqual("windows-value", secondParams["CustomValue"].ToString());
+            Assert.AreEqual("conditional5", secondParams["Parameter3"].ToString());
+            Assert.AreEqual("conditional6", secondParams["Parameter4"].ToString());
 
             // Also verify that the regular parameters are correctly loaded
-            // Here Condition is true for linux and false for windows
+            // Since Parameter2 defaults to "base2", first condition is true
             Assert.AreEqual(4, profile.Parameters.Count);
-            Assert.IsFalse((bool)profile.Parameters["ProfilingEnabled"]);
-            Assert.AreEqual("base1", profile.Parameters["BaseValue"].ToString());
-            Assert.AreEqual("Linux", profile.Parameters["OsName"].ToString());
-            Assert.AreEqual("x64", profile.Parameters["Architecture"].ToString());
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base2", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional3", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditional4", profile.Parameters["Parameter4"].ToString());
         }
 
         [Test]
@@ -472,7 +468,7 @@ namespace VirtualClient
             this.command.Parameters = new Dictionary<string, IConvertible>();
 
             // User providing a parameter through command line to override the profile value
-            this.command.Parameters.Add("BaseValue", "base2");
+            this.command.Parameters.Add("Parameter2", "base3");
 
             // Setup:
             // Read the actual profile content from the local file system.
@@ -496,26 +492,22 @@ namespace VirtualClient
             // Verify first ParametersOn entry
             var firstParams = profile.ParametersOn[0];
             Assert.AreEqual("false", firstParams["Condition"].ToString());
-            Assert.AreEqual("Linux", firstParams["OsName"].ToString());
-            Assert.AreEqual("x64", firstParams["Architecture"].ToString());
-            Assert.AreEqual("Ubuntu", firstParams["Platform"].ToString());
-            Assert.AreEqual("linux-value", firstParams["CustomValue"].ToString());
+            Assert.AreEqual("conditional3", firstParams["Parameter3"].ToString());
+            Assert.AreEqual("conditional4", firstParams["Parameter4"].ToString());
 
             // Verify second ParametersOn entry
             var secondParams = profile.ParametersOn[1];
             Assert.AreEqual("true", secondParams["Condition"].ToString());
-            Assert.AreEqual("Windows", secondParams["OsName"].ToString());
-            Assert.AreEqual("x86", secondParams["Architecture"].ToString());
-            Assert.AreEqual("Windows", secondParams["Platform"].ToString());
-            Assert.AreEqual("windows-value", secondParams["CustomValue"].ToString());
+            Assert.AreEqual("conditional5", secondParams["Parameter3"].ToString());
+            Assert.AreEqual("conditional6", secondParams["Parameter4"].ToString());
 
             // Also verify that the regular parameters are correctly loaded 
-            // Here Condition is false for Linux and true for Windows
+            // Since Parameter2 is now "base3", second condition is true
             Assert.AreEqual(4, profile.Parameters.Count);
-            Assert.IsFalse((bool)profile.Parameters["ProfilingEnabled"]);
-            Assert.AreEqual("base2", profile.Parameters["BaseValue"].ToString());
-            Assert.AreEqual("Windows", profile.Parameters["OsName"].ToString());
-            Assert.AreEqual("x86", profile.Parameters["Architecture"].ToString());
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base3", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional5", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditional6", profile.Parameters["Parameter4"].ToString());
         }
 
         [Test]
@@ -528,7 +520,7 @@ namespace VirtualClient
             this.command.Parameters = new Dictionary<string, IConvertible>();
 
             // User providing a parameter through command line to override the profile value
-            this.command.Parameters.Add("BaseValue", "base3");
+            this.command.Parameters.Add("Parameter2", "base99");
 
             // Setup:
             // Read the actual profile content from the local file system.
@@ -552,26 +544,22 @@ namespace VirtualClient
             // Verify first ParametersOn entry
             var firstParams = profile.ParametersOn[0];
             Assert.AreEqual("false", firstParams["Condition"].ToString());
-            Assert.AreEqual("Linux", firstParams["OsName"].ToString());
-            Assert.AreEqual("x64", firstParams["Architecture"].ToString());
-            Assert.AreEqual("Ubuntu", firstParams["Platform"].ToString());
-            Assert.AreEqual("linux-value", firstParams["CustomValue"].ToString());
+            Assert.AreEqual("conditional3", firstParams["Parameter3"].ToString());
+            Assert.AreEqual("conditional4", firstParams["Parameter4"].ToString());
 
             // Verify second ParametersOn entry
             var secondParams = profile.ParametersOn[1];
             Assert.AreEqual("false", secondParams["Condition"].ToString());
-            Assert.AreEqual("Windows", secondParams["OsName"].ToString());
-            Assert.AreEqual("x86", secondParams["Architecture"].ToString());
-            Assert.AreEqual("Windows", secondParams["Platform"].ToString());
-            Assert.AreEqual("windows-value", secondParams["CustomValue"].ToString());
+            Assert.AreEqual("conditional5", secondParams["Parameter3"].ToString());
+            Assert.AreEqual("conditional6", secondParams["Parameter4"].ToString());
 
             // Also verify that the regular parameters are correctly loaded
-            // Here no condition is true, so the profile defaults to the base values
+            // Since Parameter2 is "base99", no condition matches, so base values remain
             Assert.AreEqual(4, profile.Parameters.Count);
-            Assert.IsFalse((bool)profile.Parameters["ProfilingEnabled"]);
-            Assert.AreEqual("base3", profile.Parameters["BaseValue"].ToString());
-            Assert.AreEqual("Nothing", profile.Parameters["OsName"].ToString());
-            Assert.AreEqual("Nothing", profile.Parameters["Architecture"].ToString());
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base99", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("base3", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("base4", profile.Parameters["Parameter4"].ToString());
         }
 
         private class TestRunProfileCommand : ExecuteProfileCommand

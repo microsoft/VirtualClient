@@ -3,25 +3,21 @@
   "Metadata": {
   },
   "Parameters": {
-    "ProfilingEnabled": false,
-    "BaseValue": "base1",
-    "OsName": "Nothing",
-    "Architecture": "Nothing"
+    "Parameter1": false,
+    "Parameter2": "base2",
+    "Parameter3": "base3",
+    "Parameter4": "base4"
   },
   "ParametersOn": [
     {
-      "Condition": "{calculate({calculate(\"{BaseValue}\" == \"base1\")} ? \"true\" : \"false\")}",
-      "OsName": "Linux",
-      "Architecture": "x64",
-      "Platform": "Ubuntu",
-      "CustomValue": "linux-value"
+      "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base2\")} ? \"true\" : \"false\")}",
+      "Parameter3": "conditional3",
+      "Parameter4": "conditional4"
     },
     {
-      "Condition": "{calculate({calculate(\"{BaseValue}\" == \"base2\")} ? \"true\" : \"false\")}",
-      "OsName": "Windows",
-      "Architecture": "x86",
-      "Platform": "Windows",
-      "CustomValue": "windows-value"
+      "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base3\")} ? \"true\" : \"false\")}",
+      "Parameter3": "conditional5",
+      "Parameter4": "conditional6"
     }
   ],
   "Actions": [
@@ -29,7 +25,7 @@
       "Type": "TestExecutor",
       "Parameters": {
         "Scenario": "Workload1",
-        "NewFlag": "$.Parameters.OsName"
+        "NewFlag": "$.Parameters.Parameter3"
       }
     },
     {
