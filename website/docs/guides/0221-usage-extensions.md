@@ -471,8 +471,9 @@ and requirements.
     * [Geekbench Workload Metrics](https://microsoft.github.io/VirtualClient/docs/workloads/geekbench/)
     
     Virtual Client provides a facility for script-based automation to emit metrics for capture as well. To enable metrics capture, scripts emit the metrics to a single/central file on the file
-    system. The file should be named ```test-metrics.json``` and should exist in the same directory as the script that generated it. The file contents should be a simple JSON-formatted structure 
-    as illustrated below. Virtual Client will read this file and upload the metrics defined within alongside any out-of-box metrics already captured.
+    system. The file should be named ```test-metrics.json``` and should exist in the same directory as the script that generated it. There are two acceptable formats for test-metrics.json. 
+  
+    * The file contents are a simple JSON-formatted structure as illustrated below. Virtual Client will read this file and upload the metrics defined within, alongside any out-of-box metrics already captured.
 
       ``` json
       # Example contents of the 'test-metrics.json' file. Simple key/value pairs. This file should
@@ -487,6 +488,64 @@ and requirements.
           "metric2": "1.45",
           "metric3": "1279854282929.09"
       }
+      ```
+
+    * The file contents are formatted as a JSON array as illustrated below. Virtual Client will read this file and upload the metrics defined within, alongside any out-of-box metrics already captured.
+
+      ``` json
+      # Example contents of the 'test-metrics.json' file. JSON Array based structure. This file should
+      # be written to the same directory where the script that generated it exists. Here, 'metricName' and 'metricValue' are mandatory fields, while 'metricUnit' and 'metricMetadata' are optional. The field 'metricMetadata' can be used to provide additional information about the metric, such as the source of the metric or any other relevant context. It is a key-value pair structure.
+      #
+      # e.g.
+      # Given a script /any.script.extensions.1.0.0/linux-x64/install.py, the file should be
+      # written to /any.script.extensions.1.0.0/linux-x64/test-metrics.json
+
+      [
+          {
+              "Name": "metric1",
+              "Value": 0,
+              "Unit": "unit1",
+              "MetaData": {
+                  "metadata1": "m1",
+                  "metadata2": "m2"
+              }
+          },
+          {
+              "Name": "metric2",
+              "Value": -1,
+              "Unit": "unit2",
+              "MetaData": {
+                  "metadata1": "m3",
+                  "metadata2": "m4"
+              }
+          },
+          {
+              "Name": "metric3",
+              "Value": 1.2,
+              "Unit": "unit3",
+              "MetaData": {
+                  "metadata1": "m5",
+                  "metadata2": "m6"
+              }
+          },
+          {
+              "Name": "metric4",
+              "Value": 1.0,
+              "MetaData": {
+                  "metadata1": "m7",
+                  "metadata2": "m8"
+              }
+          },
+          {
+              "Name": "metric5",
+              "Value": "1.24",
+              "Unit": "unit5"
+          },
+          {
+              "Name": "metric6",
+              "Value": "-5.8"
+          }
+      ]
       ```
 
 ### Out-of-Box Components for Execution of Script-Based Automation

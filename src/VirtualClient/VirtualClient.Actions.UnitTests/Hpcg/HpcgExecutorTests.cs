@@ -3,22 +3,26 @@
 
 namespace VirtualClient.Actions
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
     using Moq;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using VirtualClient.Contracts;
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Runtime.Intrinsics.X86;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Common.Contracts;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -176,8 +180,12 @@ namespace VirtualClient.Actions
                 .Returns(false)
                 .Returns(true);
 
+
             string expectedFile = $". {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit/share/spack/setup-env.sh" + Environment.NewLine
-                    + "spack install --reuse -n -y hpcg@9.8 %gcc +openmp ^openmpi@6.66.666" + Environment.NewLine
+                    + $"mkdir -p {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit/opt/spack/.spack-db" + Environment.NewLine
+                    + $"sudo chown -R $(whoami):$(whoami) {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit" + Environment.NewLine
+                    + $"chmod -R u+rwx {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit" + Environment.NewLine
+                    + "spack install --reuse -n -y hpcg@9.8 %gcc ^openmpi@6.66.666" + Environment.NewLine
                     + $"spack load hpcg@9.8 %gcc ^openmpi@6.66.666" + Environment.NewLine
                     + $"mpirun --np 7 --use-hwthread-cpus --allow-run-as-root xhpcg";
 

@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
                 { nameof(Compression7zipExecutor.PackageName), "7zip" },
                 { nameof(Compression7zipExecutor.Scenario), "mockScenario" }
             };
-            string expectedCommand = $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
+            string expectedCommand = $"wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
             bool commandExecuted = false;
             this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -172,7 +172,7 @@ namespace VirtualClient.Actions
             string mockPackagePath = this.mockPackage.Path;
             List<string> expectedCommands = new List<string>
             {
-                $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                $"wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"unzip silesia.zip -d silesia",
                 $"7z testOption1 testOption2 {this.PlatformSpecifics.Combine(mockPackagePath, "silesia/*")}"
             };
