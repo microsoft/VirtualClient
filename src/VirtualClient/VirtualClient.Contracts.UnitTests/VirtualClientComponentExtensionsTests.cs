@@ -352,6 +352,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [SupportedOSPlatform("windows")]
         public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_1()
         {
             string directory = "C:\\Users\\User\\Logs";
@@ -395,6 +396,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [SupportedOSPlatform("windows")]
         public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_2()
         {
             string directory = "C:\\Users\\User\\Logs";
