@@ -252,7 +252,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_1()
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_1()
         {
             this.fixture.Setup(PlatformID.Unix);
 
@@ -297,7 +297,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_2()
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_2()
         {
             this.fixture.Setup(PlatformID.Unix);
 
@@ -351,7 +351,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_1()
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_1()
         {
             string directory = "C:\\Users\\User\\Logs";
             string[] expectedFiles = new string[]
@@ -394,7 +394,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_2()
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_2()
         {
             string directory = "C:\\Users\\User\\Logs";
             string[] expectedFiles = new string[]
