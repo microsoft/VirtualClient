@@ -568,6 +568,7 @@ This component can be used to execute generic scripts using facilities common to
     |  PackageName | Name of the workload package built for running the script. If the workload package is being downloaded from blob package store, this needs to match with the package name defined in DependencyPackageInstallation. | String |
     |  FailFast    | Flag indicates that the application should exit immediately on first/any errors regardless of their severity. | Boolean  |
     |  UsePython3  | (Only valid for PythonExecutor) A true value indicates use of "python3" as environment variable to execute python, a false value will use "python" as the environment variable. | Boolean (Default is true) |
+    |  UsePwsh     | (Only valid for PowershellExecutor) A true value indicates use of "pwsh", a false value will use "powershell" as the command executor. | Boolean (Default is false) |
 
     ``` json
     Example:

@@ -3,19 +3,20 @@
 
 namespace VirtualClient.Contracts
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Moq;
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Runtime.Versioning;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
-    using Moq;
-    using NUnit.Framework;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -252,7 +253,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_1()
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_1()
         {
             this.fixture.Setup(PlatformID.Unix);
 
@@ -297,7 +298,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_2()
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnUnixSystems_2()
         {
             this.fixture.Setup(PlatformID.Unix);
 
@@ -351,7 +352,8 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_1()
+        [Platform(Include = "Win")]
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_1()
         {
             string directory = "C:\\Users\\User\\Logs";
             string[] expectedFiles = new string[]
@@ -394,7 +396,8 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void CreateCreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_2()
+        [Platform(Include = "Win")]
+        public void CreateFileUploadDescriptorsExtensionCreatesTheExpectedDescriptorsOnWindowsSystems_2()
         {
             string directory = "C:\\Users\\User\\Logs";
             string[] expectedFiles = new string[]
@@ -406,7 +409,7 @@ namespace VirtualClient.Contracts
 
             this.fixture.FileSystem
                 .Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
-                .Returns<string>(file => file.Replace(Path.GetFileName(file), string.Empty));
+                .Returns<string>(file => Path.GetDirectoryName(file));
 
             this.fixture.FileSystem
                 .Setup(fs => fs.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories))
