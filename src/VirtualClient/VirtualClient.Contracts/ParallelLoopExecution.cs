@@ -88,7 +88,7 @@ namespace VirtualClient.Contracts
             {
                 try
                 {
-                    if (this.timeoutTask.IsCompleted)
+                    if (this.timeoutTask.IsCompleted && iterationCount >= this.MinimumIteration)
                     {
                         this.Logger.LogMessage($"Stopping {nameof(ParallelLoopExecution)} after Timeout of '{this.Duration}'", LogLevel.Information, telemetryContext);
                         break;
