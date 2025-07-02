@@ -57,7 +57,7 @@ namespace VirtualClient.Contracts
 
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
-                await Task.Delay(600, token); // Simulate long-running task
+                await Task.Delay(600, token); // Simulate a small task
             });
 
             var collection = new TestParallelLoopExecution(this.fixture);
@@ -72,7 +72,7 @@ namespace VirtualClient.Contracts
                 catch { /* ignore */ }
             }
 
-            // Assert: Should run at exactly 2 times, as each iteration takes 600ms,
+            // Assert: Should run exactly 2 times, as each iteration takes 600ms,
             // Timeout is 1 second and Cancellation Token comes at 2 seconds
             Assert.AreEqual(component.ExecutionCount, 2, "Did not execute the minimum number of iterations.");
         }
