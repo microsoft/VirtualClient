@@ -132,21 +132,25 @@ namespace VirtualClient.Actions
                 { nameof(PowershellExecutor.CommandLine), "parameter1 parameter2" },
                 { nameof(PowershellExecutor.ScriptPath), "genericScript.ps1" },
                 { nameof(PowershellExecutor.LogPaths), "*.log;*.txt;*.json" },
-                { nameof(PowershellExecutor.ToolName), "GenericTool" }
+                { nameof(PowershellExecutor.ToolName), "GenericTool" },
+                { nameof(PowershellExecutor.UsePwsh), false }
             };
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", true)]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", false)]
+        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", true, false, "powershell")]
+        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", false, false, "powershell")]
+        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", true, true, "pwsh")]
+        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", false, true, "pwsh")]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool runElevated)
+        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool runElevated, bool usePwsh, string executorType)
         {
             this.SetupTest(platform);
             this.fixture.Parameters[nameof(PowershellExecutor.RunElevated)] = runElevated;
             this.fixture.Parameters[nameof(PowershellExecutor.ScriptPath)] = command;
+            this.fixture.Parameters[nameof(PowershellExecutor.UsePwsh)] = usePwsh;
 
             string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}\\{command} parameter1 parameter2";
 
@@ -159,7 +163,7 @@ namespace VirtualClient.Actions
 
                 string workingDirectory = executor.ExecutableDirectory;
 
-                string expectedCommand = $"powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
+                string expectedCommand = $"{executorType} -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if(expectedCommand == $"{exe} {arguments}")
