@@ -207,6 +207,41 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("TEST-PROFILE-1-LOOP.json")]
+        public void ComponentFactoryCreatesExpectedLoopExecutionComponentsFromAnExecutionProfile(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            bool confirmed = false;
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                    Assert.IsNotNull(component);
+                    Assert.IsNotEmpty(component.Dependencies);
+                    Assert.IsNotNull(component.Parameters);
+
+                    LoopExecution loopExecutionComponent = component as LoopExecution;
+                    if (loopExecutionComponent != null)
+                    {
+                        Assert.IsNotEmpty(loopExecutionComponent);
+                        Assert.IsTrue(loopExecutionComponent.Count() == 2);
+                        Assert.IsTrue(loopExecutionComponent.ElementAt(0) is TestExecutor);
+                        Assert.IsTrue(loopExecutionComponent.ElementAt(1) is TestExecutor);
+                        Assert.IsTrue(loopExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "ScenarioA");
+                        Assert.IsTrue(loopExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "ScenarioB");
+                        Assert.AreEqual(2, loopExecutionComponent.LoopCount);
+                        confirmed = true;
+                    }
+                });
+            }
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
         public void ComponentFactoryAddsExpectedComponentLevelMetadataToSubComponents_Deep_Nesting()
         {
             // Setup:
