@@ -18,7 +18,7 @@ namespace VirtualClient.Monitors
     /// <summary>
     /// The Performance Counter Monitor for Virtual Client
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64")]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-x64")]
     public class NvidiaSmiMonitor : VirtualClientIntervalBasedMonitor
     {
         /// <summary>
