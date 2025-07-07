@@ -39,34 +39,31 @@ namespace VirtualClient.Monitors
             {
                 try
                 {
-                    if (this.Platform == PlatformID.Unix)
+                    // Check that nvidia-smi is installed. If not, we exit the monitor.
+                    bool toolsetInstalled = await this.VerifyToolsetInstalledAsync(telemetryContext, cancellationToken);
+
+                    if (toolsetInstalled)
                     {
-                        // Check that nvidia-smi is installed. If not, we exit the monitor.
-                        bool toolsetInstalled = await this.VerifyToolsetInstalledAsync(telemetryContext, cancellationToken);
+                        await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
 
-                        if (toolsetInstalled)
+                        int iterations = 0;
+                        while (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
-
-                            int iterations = 0;
-                            while (!cancellationToken.IsCancellationRequested)
+                            try
                             {
-                                try
+                                iterations++;
+                                if (this.IsIterationComplete(iterations))
                                 {
-                                    iterations++;
-                                    if (this.IsIterationComplete(iterations))
-                                    {
-                                        break;
-                                    }
+                                    break;
+                                }
 
-                                    await this.QueryC2CAsync(telemetryContext, cancellationToken);
-                                    await this.QueryGpuAsync(telemetryContext, cancellationToken);
-                                    await this.WaitAsync(this.MonitorFrequency, cancellationToken);
-                                }
-                                catch (Exception exc)
-                                {
-                                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                                }
+                                await this.QueryC2CAsync(telemetryContext, cancellationToken);
+                                await this.QueryGpuAsync(telemetryContext, cancellationToken);
+                                await this.WaitAsync(this.MonitorFrequency, cancellationToken);
+                            }
+                            catch (Exception exc)
+                            {
+                                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
                             }
                         }
                     }
@@ -140,7 +137,7 @@ namespace VirtualClient.Monitors
                 this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
             }
         }
-       
+
         private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // This is the Nvidia smi query gpu command
@@ -161,7 +158,7 @@ namespace VirtualClient.Monitors
                 "ecc.errors.corrected.volatile.total,ecc.errors.corrected.aggregate.device_memory,ecc.errors.corrected.aggregate.dram,ecc.errors.corrected.aggregate.sram," +
                 "ecc.errors.corrected.aggregate.total,ecc.errors.uncorrected.volatile.device_memory,ecc.errors.uncorrected.volatile.dram,ecc.errors.uncorrected.volatile.sram," +
                 "ecc.errors.uncorrected.volatile.total,ecc.errors.uncorrected.aggregate.device_memory,ecc.errors.uncorrected.aggregate.dram,ecc.errors.uncorrected.aggregate.sram," +
-                "ecc.errors.uncorrected.aggregate.total " + 
+                "ecc.errors.uncorrected.aggregate.total " +
                 "--format=csv,nounits";
 
             DateTime nextIteration = DateTime.UtcNow;
