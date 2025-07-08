@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -37,6 +38,13 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {calculate(False ? "Yes" : {calculate(True ? "Yes2" : "No")})}
+        // {calculate(False ? {calculate(True ? "Yes2" : "No")} : "No")}
+        private static readonly Regex CalculateNestedTernaryExpression = new Regex(
+            @"\{calculate\(((?:[^?{}]|\{(?:[^{}]|\{[^{}]*\})*\})+)\s*\?\s*((?:[^:{}]|\{(?:[^{}]|\{[^{}]*\})*\})+)\s*:\s*((?:[^){}]|\{(?:[^{}]|\{[^{}]*\})*\})+)\)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {calculate({IsTLSEnabled} ? "Yes" : "No")}
         // (([^?]+)\s*\?\s*([^:]+)\s*:\s*([^)]+))
         private static readonly Regex CalculateTernaryExpression = new Regex(
@@ -48,7 +56,15 @@ namespace VirtualClient
         // Expression: {calculate(512 > 2)}
         // Expression: {calculate(512 != {LogicalCoreCount})}
         private static readonly Regex CalculateComparisionExpression = new Regex(
-            @"\{calculate\((\d+\s*(?:==|!=|<|>|<=|>=|&&|\|\|)\s*\d+)\)\}",
+            @"\{calculate\(((?:\d+|""[^""]*""|\{[^}]+\})\s*(?:==|!=|<|>|<=|>=|&&|\|\|)\s*(?:\d+|""[^""]*""|\{[^}]+\}))\)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // Expression: {calculate({IsServer} && {IsEnabled})}
+        // Expression: {calculate({IsServer} && ({CoreCount} > 4))}
+        // Expression: {calculate(({CoreCount} > 4) && ({MemoryGB} > 8))}
+        private static readonly Regex CalculateLogicalExpression = new Regex(
+            @"\{calculate\(((?:[^&\|\(\){}]|\([^\)]*\)|\{[^}]+\})+\s*(?:&&|\|\|)\s*(?:[^&\|\(\){}]|\([^\)]*\)|\{[^}]+\})+)\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -79,6 +95,12 @@ namespace VirtualClient
         // {Platform}
         private static readonly Regex PlatformExpression = new Regex(
             @"\{Platform\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {Architecture}
+        private static readonly Regex ArchitectureExpression = new Regex(
+            @"\{Architecture\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -179,6 +201,35 @@ namespace VirtualClient
                             evaluatedExpression,
                             match.Value,
                             platformSpecifics.PlatformArchitectureName);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {Architecture}
+            // Resolves to the current CPU architecture (e.g. Arm64, X64)
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ArchitectureExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    Architecture architecture = systemManagement.CpuArchitecture;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(
+                            evaluatedExpression,
+                            match.Value,
+                            architecture.ToString().ToLower());
                     }
                 }
 
@@ -572,6 +623,99 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
+            // Expression: {calculate({IsServer} && {IsEnabled})}
+            // Expression: {calculate({IsServer} && ({CoreCount} > 4))}
+            // **IMPORTANT**
+            // This expression evaluation must come before the comparison expression evaluator.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.CalculateLogicalExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    foreach (Match match in matches)
+                    {
+                        string function = match.Groups[1].Value;
+                        // Preprocess the function to handle variable references
+                        function = PreprocessComparisonExpression(function);
+            
+                        // Evaluate the logical expression
+                        bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                    }
+                }
+
+                return new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                };
+            }),
+            // Expression: {calculate(False ? "Yes" : {calculate(True ? "Yes2" : "No")})}
+            // Expression: {calculate(False ? {calculate(True ? "Yes2" : "No")} : "No")}
+            // **IMPORTANT**
+            // This expression evaluation MUST come after the standard ternary expression evaluator.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.CalculateNestedTernaryExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    foreach (Match match in matches)
+                    {
+                        string function = match.Groups[1].Value;
+                        string trueExpression = match.Groups[2].Value;
+                        string falseExpression = match.Groups[3].Value;
+
+                        // First, we need to pre-evaluate any nested calculate expressions inside the condition,
+                        // true branch, or false branch
+                        EvaluationResult conditionEvaluation = await EvaluateExpressionAsync(dependencies, parameters, function, CancellationToken.None);
+                        function = conditionEvaluation.Outcome;
+
+                        EvaluationResult trueEvaluation = await EvaluateExpressionAsync(dependencies, parameters, trueExpression, CancellationToken.None);
+                        trueExpression = trueEvaluation.Outcome;
+
+                        EvaluationResult falseEvaluation = await EvaluateExpressionAsync(dependencies, parameters, falseExpression, CancellationToken.None);
+                        falseExpression = falseEvaluation.Outcome;
+
+                        // Now construct the full ternary expression with evaluated parts
+                        // Make sure strings are properly quoted for C# script evaluation
+                        string ternaryExpression = string.Empty;
+
+                        // Check if the expressions already contain quotes
+                        bool trueIsQuoted = trueExpression.Trim().StartsWith("\"") && trueExpression.Trim().EndsWith("\"");
+                        bool falseIsQuoted = falseExpression.Trim().StartsWith("\"") && falseExpression.Trim().EndsWith("\"");
+
+                        // Add quotes if they don't already exist
+                        string quotedTrueExpression = trueIsQuoted ? trueExpression : $"\"{trueExpression.Trim()}\"";
+                        string quotedFalseExpression = falseIsQuoted ? falseExpression : $"\"{falseExpression.Trim()}\"";
+
+                        ternaryExpression = $"{function} ? {quotedTrueExpression} : {quotedFalseExpression}";
+
+                        // Convert "True" and "False" to lowercase for C# script evaluation
+                        ternaryExpression = Regex.Replace(ternaryExpression, @"(?<=\b)(True|False)(?=\s*\?)", m =>
+                        {
+                            return m.Value.ToLower();
+                        });
+
+                        // Evaluate the ternary expression
+                        string result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<string>(ternaryExpression);
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                    }
+                }
+
+                return new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                };
+            }),
             // Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
             // Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
             // **IMPORTANT**
@@ -823,6 +967,33 @@ namespace VirtualClient
             }
 
             return expressionsFound;
+        }
+
+        private static string PreprocessComparisonExpression(string function)
+        {
+            // Find variables in braces and replace with their proper string representation
+            var variablePattern = new Regex(@"\{([^}]+)\}");
+
+            // For each variable found, determine if it should be treated as a string or a boolean value
+            return variablePattern.Replace(function, match =>
+            {
+                string value = match.Value;
+                bool isBooleanContext = false;
+
+                // Check if this variable is used in a boolean context (directly next to && or ||)
+                if (value.Contains("true", StringComparison.OrdinalIgnoreCase) ||
+                    value.Contains("false", StringComparison.OrdinalIgnoreCase) ||
+                    function.Contains($"{value} &&") ||
+                    function.Contains($"&& {value}") ||
+                    function.Contains($"{value} ||") ||
+                    function.Contains($"|| {value}"))
+                {
+                    isBooleanContext = true;
+                }
+
+                // If in boolean context, don't add quotes
+                return isBooleanContext ? value : $"\"{value}\"";
+            });
         }
 
         private class EvaluationResult
