@@ -26,7 +26,7 @@ namespace VirtualClient.Contracts
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { "Duration", "00:00:01" }, // Default duration for tests
-                { "MinimumIteration", 0 } // Default minimum iterations
+                { "MinimumIterations", 0 } // Default minimum iterations
             };
         }
 
@@ -50,9 +50,9 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task ParallelLoopExecution_RespectsMinimumIterationParameterAndTimeout()
+        public async Task ParallelLoopExecution_RespectsMinimumIterationsParameterAndTimeout()
         {
-            this.fixture.Parameters["MinimumIteration"] = 2;
+            this.fixture.Parameters["MinimumIterations"] = 2;
             this.fixture.Parameters["Duration"] = "00:00:01";
 
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
@@ -78,9 +78,9 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task ParallelLoopExecution_RespectsMinimumIterationParameter()
+        public async Task ParallelLoopExecution_RespectsMinimumIterationsParameter()
         {
-            this.fixture.Parameters["MinimumIteration"] = 7;
+            this.fixture.Parameters["MinimumIterations"] = 7;
 
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, token =>
             {
@@ -99,7 +99,7 @@ namespace VirtualClient.Contracts
                 catch { /* ignore */ }
             }
 
-            // Assert: Should run at least MinimumIteration times
+            // Assert: Should run at least MinimumIterations times
             Assert.GreaterOrEqual(component.ExecutionCount, 7, "Did not execute the minimum number of iterations.");
         }
 

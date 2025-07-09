@@ -45,11 +45,11 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The minimum number of times each child component should run. Default set to 0.
         /// </summary>
-        public int MinimumIteration
+        public int MinimumIterations
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MinimumIteration), 0);
+                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 0);
             }
         }
 
@@ -88,7 +88,7 @@ namespace VirtualClient.Contracts
             {
                 try
                 {
-                    if (this.timeoutTask.IsCompleted && iterationCount >= this.MinimumIteration)
+                    if (this.timeoutTask.IsCompleted && iterationCount >= this.MinimumIterations)
                     {
                         this.Logger.LogMessage($"Stopping {nameof(ParallelLoopExecution)} after Timeout of '{this.Duration}'", LogLevel.Information, telemetryContext);
                         break;
@@ -105,7 +105,7 @@ namespace VirtualClient.Contracts
 
                     Task completedTask = await Task.WhenAny(componentExecutionTask, this.timeoutTask);
 
-                    if (completedTask == this.timeoutTask && iterationCount >= this.MinimumIteration)
+                    if (completedTask == this.timeoutTask && iterationCount >= this.MinimumIterations)
                     {
                         break;
                     }
