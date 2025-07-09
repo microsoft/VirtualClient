@@ -43,6 +43,17 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The minimum number of times each child component should run. Default set to 0.
+        /// </summary>
+        public int MinimumIterations
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 0);
+            }
+        }
+
+        /// <summary>
         /// Executes all of the child components continuously in parallel, respecting the specified timeout.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
@@ -72,10 +83,17 @@ namespace VirtualClient.Contracts
         /// </summary>
         private async Task ExecuteComponentLoopAsync(VirtualClientComponent component, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            int iterationCount = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+                    if (this.timeoutTask.IsCompleted && iterationCount >= this.MinimumIterations)
+                    {
+                        this.Logger.LogMessage($"Stopping {nameof(ParallelLoopExecution)} after Timeout of '{this.Duration}'", LogLevel.Information, telemetryContext);
+                        break;
+                    }
+
                     string scenarioMessage = string.IsNullOrWhiteSpace(component.Scenario)
                     ? $"{nameof(ParallelLoopExecution)} Component = {component.TypeName}"
                     : $"{nameof(ParallelLoopExecution)} Component = {component.TypeName} (scenario={component.Scenario})";
@@ -84,14 +102,19 @@ namespace VirtualClient.Contracts
 
                     // Execute the component task with timeout handling.
                     Task componentExecutionTask = component.ExecuteAsync(cancellationToken);
+
                     Task completedTask = await Task.WhenAny(componentExecutionTask, this.timeoutTask);
 
-                    if (completedTask == this.timeoutTask)
+                    if (completedTask == this.timeoutTask && iterationCount >= this.MinimumIterations)
                     {
                         break;
                     }
 
                     await componentExecutionTask;
+                    
+                    iterationCount++;
+
+                    this.Logger.LogMessage($"Iteration {iterationCount} completed for component {component.TypeName}", LogLevel.Information, telemetryContext);
                 }
                 catch (Exception ex)
                 {
