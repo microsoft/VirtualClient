@@ -14,7 +14,7 @@ namespace VirtualClient.Contracts
 
     [TestFixture]
     [Category("Unit")]
-    public class LoopExecutionTests
+    public class SequentialExecutionTests
     {
         private MockFixture fixture;
 
@@ -29,7 +29,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LoopExecution_ExecutesComponentsTheSpecifiedNumberOfTimes()
+        public async Task SequentialExecution_ExecutesComponentsTheSpecifiedNumberOfTimes()
         {
             int loopCount = 5;
             this.fixture.Parameters["LoopCount"] = loopCount;
@@ -44,7 +44,7 @@ namespace VirtualClient.Contracts
                 return Task.CompletedTask;
             });
 
-            var collection = new TestLoopExecution(this.fixture);
+            var collection = new TestSequentialExecution(this.fixture);
             collection.Add(component1);
             collection.Add(component2);
 
@@ -55,7 +55,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LoopExecution_RespectsCancellationToken()
+        public async Task SequentialExecution_RespectsCancellationToken()
         {
             int loopCount = 100;
             this.fixture.Parameters["LoopCount"] = loopCount;
@@ -65,7 +65,7 @@ namespace VirtualClient.Contracts
                 await Task.Delay(100, token);
             });
 
-            var collection = new TestLoopExecution(this.fixture);
+            var collection = new TestSequentialExecution(this.fixture);
             collection.Add(component);
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(250)))
@@ -81,7 +81,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LoopExecution_ThrowsWorkloadException_WhenComponentThrows()
+        public void SequentialExecution_ThrowsWorkloadException_WhenComponentThrows()
         {
             this.fixture.Parameters["LoopCount"] = 2;
 
@@ -90,7 +90,7 @@ namespace VirtualClient.Contracts
                 throw new InvalidOperationException("Test exception");
             });
 
-            var collection = new TestLoopExecution(this.fixture);
+            var collection = new TestSequentialExecution(this.fixture);
             collection.Add(component);
 
             var ex = Assert.ThrowsAsync<WorkloadException>(
@@ -100,7 +100,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LoopExecution_SkipsUnsupportedComponents()
+        public async Task SequentialExecution_SkipsUnsupportedComponents()
         {
             int loopCount = 3;
             this.fixture.Parameters["LoopCount"] = loopCount;
@@ -108,7 +108,7 @@ namespace VirtualClient.Contracts
             var supportedComponent = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, token => Task.CompletedTask, isSupported: true);
             var unsupportedComponent = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, token => Task.CompletedTask, isSupported: false);
 
-            var collection = new TestLoopExecution(this.fixture);
+            var collection = new TestSequentialExecution(this.fixture);
             collection.Add(supportedComponent);
             collection.Add(unsupportedComponent);
 
@@ -144,9 +144,9 @@ namespace VirtualClient.Contracts
             }
         }
 
-        private class TestLoopExecution : LoopExecution
+        private class TestSequentialExecution : SequentialExecution
         {
-            public TestLoopExecution(MockFixture fixture)
+            public TestSequentialExecution(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)
             {
             }

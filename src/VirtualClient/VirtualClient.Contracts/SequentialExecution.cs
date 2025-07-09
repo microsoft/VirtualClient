@@ -15,14 +15,14 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// A component that executes a set of child components sequentially in a loop for a specified number of iterations.
     /// </summary>
-    public class LoopExecution : VirtualClientComponentCollection
+    public class SequentialExecution : VirtualClientComponentCollection
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="LoopExecution"/> class.
+        /// Initializes a new instance of the <see cref="SequentialExecution"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters"> Parameters defined in the execution profile or supplied to the Virtual Client on the command line. </param>
-        public LoopExecution(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public SequentialExecution(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
         }
@@ -48,7 +48,7 @@ namespace VirtualClient.Contracts
             for (int i = 0; i < this.LoopCount && !cancellationToken.IsCancellationRequested; i++)
             {
                 this.Logger.LogMessage(
-                    $"{nameof(LoopExecution)} Iteration '{i + 1}' of '{this.LoopCount}'",
+                    $"{nameof(SequentialExecution)} Iteration '{i + 1}' of '{this.LoopCount}'",
                     LogLevel.Information,
                     telemetryContext);
 
@@ -57,7 +57,7 @@ namespace VirtualClient.Contracts
                     if (!VirtualClientComponent.IsSupported(component))
                     {
                         this.Logger.LogMessage(
-                            $"{nameof(LoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}",
+                            $"{nameof(SequentialExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}",
                             LogLevel.Information,
                             telemetryContext);
                         continue;

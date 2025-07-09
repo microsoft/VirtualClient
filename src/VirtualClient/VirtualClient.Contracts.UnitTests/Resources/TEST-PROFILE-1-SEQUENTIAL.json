@@ -1,5 +1,5 @@
 {
-    "Description": "Test Parallel Loop Profile",
+    "Description": "Test Sequential Execution Profile",
     "MinimumExecutionInterval": "00:01:00",
     "Parameters": {
         "Parameter1": "AnyValue",
@@ -16,7 +16,7 @@
             }
         },
         {
-            "Type": "LoopExecution",
+            "Type": "SequentialExecution",
             "Parameters": {
                 "LoopCount": 2
             },

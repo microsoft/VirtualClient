@@ -207,8 +207,8 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        [TestCase("TEST-PROFILE-1-LOOP.json")]
-        public void ComponentFactoryCreatesExpectedLoopExecutionComponentsFromAnExecutionProfile(string profileName)
+        [TestCase("TEST-PROFILE-1-SEQUENTIAL.json")]
+        public void ComponentFactoryCreatesExpectedSequentialExecutionComponentsFromAnExecutionProfile(string profileName)
         {
             ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
                 .FromJson<ExecutionProfile>();
@@ -223,16 +223,16 @@ namespace VirtualClient.Contracts
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);
 
-                    LoopExecution loopExecutionComponent = component as LoopExecution;
-                    if (loopExecutionComponent != null)
+                    SequentialExecution sequentialExecutionComponent = component as SequentialExecution;
+                    if (sequentialExecutionComponent != null)
                     {
-                        Assert.IsNotEmpty(loopExecutionComponent);
-                        Assert.IsTrue(loopExecutionComponent.Count() == 2);
-                        Assert.IsTrue(loopExecutionComponent.ElementAt(0) is TestExecutor);
-                        Assert.IsTrue(loopExecutionComponent.ElementAt(1) is TestExecutor);
-                        Assert.IsTrue(loopExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "ScenarioA");
-                        Assert.IsTrue(loopExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "ScenarioB");
-                        Assert.AreEqual(2, loopExecutionComponent.LoopCount);
+                        Assert.IsNotEmpty(sequentialExecutionComponent);
+                        Assert.IsTrue(sequentialExecutionComponent.Count() == 2);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(0) is TestExecutor);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(1) is TestExecutor);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "ScenarioA");
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "ScenarioB");
+                        Assert.AreEqual(2, sequentialExecutionComponent.LoopCount);
                         confirmed = true;
                     }
                 });

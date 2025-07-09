@@ -84,10 +84,10 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void ExecutionProfileElementIsJsonSerializableWithLoopExecutionDefinitions()
+        public void ExecutionProfileElementIsJsonSerializableWithSequentialExecutionDefinitions()
         {
             // Add 2 child/subcomponents to the parent elements.
-            ExecutionProfileElement element = new ExecutionProfileElement(typeof(LoopExecution).Name, null, null, new List<ExecutionProfileElement>
+            ExecutionProfileElement element = new ExecutionProfileElement(typeof(SequentialExecution).Name, null, null, new List<ExecutionProfileElement>
             {
                 this.fixture.Create<ExecutionProfileElement>(),
                 this.fixture.Create<ExecutionProfileElement>()
