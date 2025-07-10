@@ -77,6 +77,7 @@ namespace VirtualClient.Actions
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+            // throw new NotImplementedException();
         }
 
         /// <summary>
@@ -154,7 +155,7 @@ namespace VirtualClient.Actions
                 if (this.Platform == PlatformID.Unix)
                 {
                     this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "bin", "openssl");
-
+                    
                     this.fileSystem.File.ThrowIfFileDoesNotExist(
                         this.ExecutablePath,
                         $"OpenSSL executable not found at path '{this.ExecutablePath}'");

@@ -246,9 +246,9 @@
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", commandArguments);
             // ex: command
-            // openssl s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384
-            // insert IP address before port at index 23
-            string fullCommand = commandArguments.Insert(23, serverIPAddress.ToString());
+            // s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384
+            // insert IP address before port at index 16
+            string fullCommand = commandArguments.Insert(16, serverIPAddress.ToString());
 
             return this.Logger.LogMessageAsync($"{nameof(OpenSslClientExecutor)}.ExecuteOpenSSL_Client_Workload", relatedContext.Clone(), async () =>
             {
