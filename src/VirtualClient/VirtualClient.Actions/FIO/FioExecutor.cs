@@ -489,6 +489,12 @@ namespace VirtualClient.Actions
                     // SingleProcess,BiggestSize,16
                     processes.Add(this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcess},{this.DiskFilter},{disks.Count()}", disks.ToArray()));
                 }
+                else if (string.Equals(processModel, WorkloadProcessModel.SingleProcess, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Example Metric Categorization
+                    // SingleProcess,BiggestSize,16
+                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcess},{this.DiskFilter},{disks.Count()}", disks.ToArray()));
+                }
                 else if (string.Equals(processModel, WorkloadProcessModel.SingleProcessPerDisk, StringComparison.OrdinalIgnoreCase))
                 {
                     // Example Metric Categorization
