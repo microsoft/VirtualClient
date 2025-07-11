@@ -151,6 +151,7 @@ namespace VirtualClient.Actions
                     {
                         Console.WriteLine("calling PollForHearbeatAsync...");
                         await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
+                        await this.SaveStateAsync(telemetryContext, cancellationToken);
                         this.SetServerOnline(true);
 
                         if (this.IsMultiRoleLayout())
@@ -165,6 +166,7 @@ namespace VirtualClient.Actions
                     finally
                     {
                         this.SetServerOnline(false);
+                        await this.KillServerInstancesAsync(cancellationToken);
                     }
                 }
             });

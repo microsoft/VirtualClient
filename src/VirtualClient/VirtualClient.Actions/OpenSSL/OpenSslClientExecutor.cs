@@ -7,6 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient;
     using VirtualClient.Common;
@@ -167,7 +168,7 @@
                                 // 4) Execute the client workload.
                                 // ===========================================================================
                                 ipAddress = IPAddress.Parse(server.IPAddress);
-                                
+
                                 await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
                             }
                         }));
@@ -268,7 +269,7 @@
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSLClient", logToFile: true);
 
                                 process.ThrowIfWorkloadFailed();
-                                // await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
+                                this.CaptureMetrics(process, commandArguments, telemetryContext, cancellationToken);
                             }
                         }
                         finally
@@ -279,7 +280,7 @@
                             }
                         }
                     }
-                    
+
                 }
             });
         }
@@ -293,12 +294,48 @@
             if (state == null)
             {
                 throw new WorkloadException(
-                    $"Expected server state information missing. The server did not return state indicating the details for the Memcached server(s) running.",
+                    $"Expected server state information missing. The openssl tls server did not return state indicating the details for the server(s) running.",
                     ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
             return state.Definition;
         }
 
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (workloadProcess.ExitCode == 0)
+            {
+                try
+                {
+                    // Retrieve OpenSSL version
+                    // await this.GetOpenSslVersionAsync(workloadProcess.FullCommand(), cancellationToken);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
+                    OpenSslTlsMetricsParser resultsParser = new OpenSslTlsMetricsParser(workloadProcess.StandardOutput.ToString(), commandArguments);
+                    IList<Metric> metrics = resultsParser.Parse();
+
+                    this.Logger.LogMetrics(
+                        "OpenSSL_tls_client",
+                        this.MetricScenario ?? this.Scenario,
+                        workloadProcess.StartTime,
+                        workloadProcess.ExitTime,
+                        metrics,
+                        null,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
+
+                    metrics.LogConsole(this.Scenario, "OpenSSL_tls_client");
+                }
+                catch (SchemaException exc)
+                {
+                    EventContext relatedContext = telemetryContext.Clone()
+                        .AddError(exc);
+
+                    this.Logger.LogMessage($"{nameof(OpenSslClientExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                }
+            }
+        }
     }
 }
