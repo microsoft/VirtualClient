@@ -556,6 +556,7 @@ namespace VirtualClient
 
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IProfileManager profileManager = new ProfileManager();
+            ISshClientFactory sshClientFactory = new SshClientFactory();
             List <IBlobManager> blobStores = new List<IBlobManager>();
 
             IKeyVaultManager keyVaultManager = new KeyVaultManager();
@@ -641,6 +642,7 @@ namespace VirtualClient
             dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
             dependencies.AddSingleton<IProfileManager>(profileManager);
+            dependencies.AddSingleton<ISshClientFactory>(sshClientFactory);
             dependencies.AddSingleton<IStateManager>(systemManagement.StateManager);
             dependencies.AddSingleton<ISystemInfo>(systemManagement);
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
