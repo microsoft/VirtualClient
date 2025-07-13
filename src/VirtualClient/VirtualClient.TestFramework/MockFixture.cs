@@ -230,9 +230,9 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
-        /// Mock SSH client manager.
+        /// Mock SSH client factory.
         /// </summary>
-        public Mock<ISshClientManager> SshClientManager { get; set; }
+        public Mock<ISshClientFactory> SshClientFactory { get; set; }
 
         /// <summary>
         /// The mock process that will be created by the process manager.
@@ -446,7 +446,7 @@ namespace VirtualClient
             this.PackageManager.SetupGet(pm => pm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.ContentBlobManager = new Mock<IBlobManager>(mockBehavior);
             this.PackagesBlobManager = new Mock<IBlobManager>(mockBehavior);
-            this.SshClientManager = new Mock<ISshClientManager>(mockBehavior);
+            this.SshClientFactory = new Mock<ISshClientFactory>(mockBehavior);
             this.StateManager = new Mock<IStateManager>(mockBehavior);
             this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
             this.Parameters = new Dictionary<string, IConvertible>();
@@ -514,7 +514,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(() => this.PackageManager.Object);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(() => this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(() => this.ProcessManager);
-            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(() => this.SshClientManager.Object);
+            this.SystemManagement.SetupGet(sm => sm.SshClientFactory).Returns(() => this.SshClientFactory.Object);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(() => this.StateManager.Object);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -572,7 +572,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
-            this.Dependencies.AddSingleton<ISshClientManager>((p) => this.SshClientManager.Object);
+            this.Dependencies.AddSingleton<ISshClientFactory>((p) => this.SshClientFactory.Object);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<IPackageManager>((p) => this.PackageManager.Object);

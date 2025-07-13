@@ -62,35 +62,6 @@ namespace VirtualClient
         /// telemetry and log files on the system.
         /// </summary>
         /// <param name="component">The component requesting the logging.</param>
-        /// <param name="sshCommandProxy">The process whose details will be captured.</param>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolName">The name of the toolset running in the process.</param>
-        /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
-        /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>
-        /// <param name="logToFile">True to log the results to a log file on the file system. Default = false.</param>
-        /// <param name="logToTelemetryMaxChars">
-        /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
-        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
-        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
-        /// there are about 3000 characters in an average single-spaced page of text.
-        /// </param>
-        public static Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, ISshCommandProxy sshCommandProxy, EventContext telemetryContext, string toolName = null, List<string> results = null, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000)
-        {
-            component.ThrowIfNull(nameof(component));
-            sshCommandProxy.ThrowIfNull(nameof(sshCommandProxy));
-            telemetryContext.ThrowIfNull(nameof(telemetryContext));
-            sshCommandProxy.ProcessDetails.ToolName = toolName;
-            sshCommandProxy.ProcessDetails.GeneratedResults = results;
-
-            return LogProcessDetailsAsync(component, sshCommandProxy.ProcessDetails, telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars);
-        }
-
-        /// <summary>
-        /// Captures the details of the process including standard output, standard error and exit codes to 
-        /// telemetry and log files on the system.
-        /// </summary>
-        /// <param name="component">The component requesting the logging.</param>
         /// <param name="processDetails">The process details that will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>

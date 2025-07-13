@@ -615,7 +615,7 @@ namespace VirtualClient
             IFileSystem fileSystem = new FileSystem();
             IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
             IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
-            ISshClientManager sshClientManager = new SshClientManager();
+            ISshClientFactory sshClientManager = new SshClientFactory();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
 
             return new SystemManagement
@@ -628,7 +628,7 @@ namespace VirtualClient
                 PackageManager = packageManager,
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
-                SshClientManager = sshClientManager,
+                SshClientFactory = sshClientManager,
                 StateManager = stateManager
             };
         }
