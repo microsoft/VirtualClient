@@ -365,6 +365,10 @@ namespace VirtualClient.Common
             {
                 // Expected whenever the CancellationToken receives a cancellation request.
             }
+            catch (TimeoutException) when (timeout != null)
+            {
+                // Expected timeout when timeout was specified.
+            }
             finally
             {
                 this.exitTime = DateTime.UtcNow;
