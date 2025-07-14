@@ -5,13 +5,11 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Security.Principal;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -101,7 +99,7 @@ namespace VirtualClient
         public bool RunningInContainer { get; internal set; } = PlatformSpecifics.RunningInContainer;
 
         /// <inheritdoc />
-        public ISshClientManager SshClientManager { get; internal set; }
+        public ISshClientFactory SshClientFactory { get; internal set; }
 
         /// <summary>
         /// Provides features for managing/preserving state on the system.
