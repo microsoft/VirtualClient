@@ -65,7 +65,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-IO-FIO-DISCOVERY.json")]
         public async Task FioDiscoveryWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile)
         {
-            IEnumerable<string> expectedCommands = FioDiscoveryProfileTests.GetFioStressProfileExpectedCommands(PlatformID.Unix);
+            IEnumerable<string> expectedCommands = FioDiscoveryProfileTests.GetFioProfileExpectedCommands(PlatformID.Unix);
 
             // Setup the expectations for the workload
             // - Disks are formatted and ready
@@ -95,11 +95,11 @@ namespace VirtualClient.Actions
             }
         }
 
-        private static IEnumerable<string> GetFioStressProfileExpectedCommands(PlatformID platform)
+        private static IEnumerable<string> GetFioProfileExpectedCommands(PlatformID platform)
         {
             return new List<string>
             {
-                "fio --direct=1 --overwrite=1 --output-format=json --rw=write --bs=256K --numjobs=1 --iodepth=64 --fallocate=none --refill_buffers=1 --name=DiskFill --size=134G --ioengine=libaio",
+                "fio --name=disk_fill --size=134G --rw=write --bs=256K --numjobs=1 --iodepth=64 --ioengine=libaio --fallocate=none --refill_buffers=1 --direct=1 --overwrite=1 --output-format=json",
                 "fio --name=fio_discovery_randread_134G_4k_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randread --bs=4k --direct=1 --ramp_time=15 --runtime=180 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
                 "fio --name=fio_discovery_randread_134G_4k_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randread --bs=4k --direct=1 --ramp_time=15 --runtime=180 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
                 "fio --name=fio_discovery_randread_134G_4k_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randread --bs=4k --direct=1 --ramp_time=15 --runtime=180 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",

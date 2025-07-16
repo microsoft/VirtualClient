@@ -32,13 +32,13 @@ namespace VirtualClient.Actions
         public void SetupTests()
         {
             this.mockFixture = new MockFixture();
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
         }
 
         [Test]
         public void MLPerfExecutorThrowsOnUnsupportedLinuxDistro()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -73,7 +73,7 @@ namespace VirtualClient.Actions
         public async Task MLPerfCreatesScratchSpaceIfMLPerfScratchSpaceIsNotEmpty()
         {
             bool disksFetched = false;
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
             this.mockFixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
@@ -100,7 +100,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MLPerfCreateScratchSpaceThrowsOnAbsenceOfDisks()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MLPerfCreateScratchSpaceThrowsOnAbsenceOfFilteredDisks()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -146,38 +146,43 @@ namespace VirtualClient.Actions
                 { nameof(MLPerfExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },
             };
+
+            string expectedScratchPath = this.mockFixture.Combine(
+                this.disks.First(d => d.DevicePath == "/dev/sdc").GetPreferredAccessPath(PlatformID.Unix),
+                "scratch");
+
             List<string> expectedCommands = new List<string>
             {
-                "sudo usermod -aG docker anyuser",
-                "sudo systemctl restart docker",
-                "sudo systemctl start nvidia-fabricmanager",
-                "sudo -u anyuser bash -c \"make prebuild MLPERF_SCRATCH_PATH=/dev/sdd1/scratch\"",
-                "sudo docker ps",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make clean\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make link_dirs\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_data BENCHMARKS=bert\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_model BENCHMARKS=bert\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make preprocess_data BENCHMARKS=bert\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_data BENCHMARKS=3d-unet\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_model BENCHMARKS=3d-unet\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make preprocess_data BENCHMARKS=3d-unet\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make build\"",
+                $"sudo usermod -aG docker anyuser",
+                $"sudo systemctl restart docker",
+                $"sudo systemctl start nvidia-fabricmanager",
+                $"sudo -u anyuser bash -c \"make prebuild MLPERF_SCRATCH_PATH={expectedScratchPath}\"",
+                $"sudo docker ps",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make clean\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make link_dirs\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_data BENCHMARKS=bert\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_model BENCHMARKS=bert\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make preprocess_data BENCHMARKS=bert\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_data BENCHMARKS=3d-unet\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_model BENCHMARKS=3d-unet\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make preprocess_data BENCHMARKS=3d-unet\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make build\""
             };
 
             IEnumerable<string> expectedDirectories = new List<string>
             {
-                "/dev/sdd1/scratch/data",
-                "/dev/sdd1/scratch/models",
-                "/dev/sdd1/scratch/preprocessed_data"
+                $"{expectedScratchPath}/data",
+                $"{expectedScratchPath}/models",
+                $"{expectedScratchPath}/preprocessed_data"
             };
 
             this.mockFixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
@@ -226,19 +231,23 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MLPerfExecutorExecutesAsExpected()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             string makeFileString = "mock Makefile";
 
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(makeFileString);
 
+            string expectedScratchPath = this.mockFixture.Combine(
+                this.disks.First(d => d.DevicePath == "/dev/sdc").GetPreferredAccessPath(PlatformID.Unix), 
+                "scratch");
+
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
             IEnumerable<string> expectedDirectories = new List<string>
             {
-                "/dev/sdd1/scratch/data",
-                "/dev/sdd1/scratch/models",
-                "/dev/sdd1/scratch/preprocessed_data"
+                $"{expectedScratchPath}/data",
+                $"{expectedScratchPath}/models",
+                $"{expectedScratchPath}/preprocessed_data"
             };
 
             this.mockFixture.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Callback<string>((directory) =>
@@ -260,10 +269,10 @@ namespace VirtualClient.Actions
                 await mlperfExecutor.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
             }
 
-            CollectionAssert.AreEqual(expectedCommands.ToArray(), commandsExecuted);
+            CollectionAssert.AreEqual(expectedCommands.ToArray(), commandsExecuted.ToArray());
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platformID)
+        private void SetupTest(PlatformID platformID)
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platformID);
@@ -274,6 +283,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
+
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
@@ -293,36 +303,39 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetExpectedCommands()
         {
+            string expectedScratchPath = this.mockFixture.Combine(this.disks.First(disk => disk.DevicePath == "/dev/sdc")
+                .GetPreferredAccessPath(PlatformID.Unix), "scratch");
+
             List<string> commands = null;
             commands = new List<string>
             {
-                "sudo usermod -aG docker anyuser",
-                "sudo systemctl restart docker",
-                "sudo systemctl start nvidia-fabricmanager",
-                "sudo -u anyuser bash -c \"make prebuild MLPERF_SCRATCH_PATH=/dev/sdd1/scratch\"",
-                "sudo docker ps",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make clean\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make link_dirs\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_data BENCHMARKS=bert\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_model BENCHMARKS=bert\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make preprocess_data BENCHMARKS=bert\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_data BENCHMARKS=3d-unet\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make download_model BENCHMARKS=3d-unet\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make preprocess_data BENCHMARKS=3d-unet\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
-                "\"export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make build\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c \"" +
-                "export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast'\"",
-                "sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c \"" +
-                "export MLPERF_SCRATCH_PATH=/dev/sdd1/scratch && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast'\""
+                $"sudo usermod -aG docker anyuser",
+                $"sudo systemctl restart docker",
+                $"sudo systemctl start nvidia-fabricmanager",
+                $"sudo -u anyuser bash -c \"make prebuild MLPERF_SCRATCH_PATH={expectedScratchPath}\"",
+                $"sudo docker ps",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make clean\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make link_dirs\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_data BENCHMARKS=bert\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_model BENCHMARKS=bert\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make preprocess_data BENCHMARKS=bert\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_data BENCHMARKS=3d-unet\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make download_model BENCHMARKS=3d-unet\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make preprocess_data BENCHMARKS=3d-unet\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c " +
+                $"\"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make build\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c \"" +
+                $"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast'\"",
+                $"sudo docker exec -u anyuser mlperf-inference-anyuser-x86_64 sudo bash -c \"" +
+                $"export MLPERF_SCRATCH_PATH={expectedScratchPath} && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast'\""
             };
 
             return commands;

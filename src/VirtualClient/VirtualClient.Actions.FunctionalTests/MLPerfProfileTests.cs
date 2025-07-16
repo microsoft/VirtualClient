@@ -54,7 +54,7 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
+            this.mockFixture.SetupDisks(withRemoteDisks: true);
             this.mockFixture.SetupPackage("mlperf");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>

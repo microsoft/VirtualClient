@@ -278,6 +278,15 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default temp path.
+        /// </summary>
+        public static string GetTempPath(this VirtualClientComponent component, params string[] pathSegments)
+        {
+            component.ThrowIfNull(nameof(component));
+            return component.PlatformSpecifics.GetTempPath(pathSegments);
+        }
+
+        /// <summary>
         /// Returns true/false whether an environment layout was supplied and it
         /// defines more than 1 role for the client instances within.
         /// </summary>

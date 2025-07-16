@@ -307,9 +307,10 @@ namespace VirtualClient.Contracts
         public const string SingleProcess = "SingleProcess";
 
         /// <summary>
-        /// A single process per disk under test by the workload.
+        /// A single process running against multiple disks with
+        /// aggregated results across those disks.
         /// </summary>
-        public const string SingleProcessAggregated = "SingleProcessAggregated";
+        public const string SingleProcessAggregated = nameof(SingleProcessAggregated);
 
         /// <summary>
         /// A single process per disk under test by the workload.

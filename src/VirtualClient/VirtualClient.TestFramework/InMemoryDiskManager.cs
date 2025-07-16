@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Metrics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -76,10 +77,15 @@ namespace VirtualClient
             {
                 foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
                 {
+                    int counter = 0;
+
                     // mount every volume that doesn't have an accessPath.
                     foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
                     {
-                        string newMountPoint = volume.GetDefaultMountPoint();
+                        counter++;
+                        string newMountPoint = systemManager.PlatformSpecifics.Combine(
+                            systemManager.PlatformSpecifics.CurrentDirectory,
+                            $"{volume.GetDefaultMountPointName()}_{counter}");
 
                         this.CreateMountPointAsync(volume, newMountPoint, cancellationToken);
 

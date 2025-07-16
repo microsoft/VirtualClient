@@ -375,6 +375,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid default temp path.
+        /// </summary>
+        public string GetTempPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetTempPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid default tools path.
         /// </summary>
         public string GetToolsPath(params string[] pathSegments)

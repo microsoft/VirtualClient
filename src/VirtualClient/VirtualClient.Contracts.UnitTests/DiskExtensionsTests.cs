@@ -112,5 +112,82 @@ namespace VirtualClient.Contracts
             volume.Properties["Info"] = "SomethingElse";
             Assert.IsFalse(volume.IsOperatingSystem());
         }
+
+        [Test]
+        public void GetDefaultMountPointNameExtensionReturnsTheExpectedNameOnWindowsSystems()
+        {
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
+
+            foreach (DiskVolume volume in this.disks.SelectMany(disk => disk.Volumes))
+            {
+                string expectedMountPointName = $"mnt_{volume.DevicePath.Replace(":", string.Empty).Replace("\\", string.Empty)}".ToLowerInvariant();
+                string actualMountPointName = volume.GetDefaultMountPointName();
+
+                Assert.AreEqual(expectedMountPointName, actualMountPointName);
+            }
+        }
+
+        [Test]
+        public void GetDefaultMountPointNameExtensionReturnsTheExpectedNameOnWindowsSystemsHavingDisksWithMultipleVolumes()
+        {
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
+
+            foreach (Disk disk in this.disks)
+            {
+                foreach (DiskVolume volume in disk.Volumes)
+                {
+                    string expectedMountPointName = $"mnt_{volume.DevicePath.Replace(":", string.Empty).Replace("\\", string.Empty)}".ToLowerInvariant();
+                    string actualMountPointName = volume.GetDefaultMountPointName();
+
+                    Assert.AreEqual(expectedMountPointName, actualMountPointName);
+                }
+            }
+        }
+
+        [Test]
+        public void GetDefaultMountPointNameExtensionReturnsTheExpectedNameOnUnixSystems()
+        {
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+
+            foreach (DiskVolume volume in this.disks.SelectMany(disk => disk.Volumes))
+            {
+                string expectedMountPointName = $"mnt_{volume.DevicePath.Substring(1).Replace("/", "_")}".ToLowerInvariant();
+                string actualMountPointName = volume.GetDefaultMountPointName();
+
+                Assert.AreEqual(expectedMountPointName, actualMountPointName);
+            }
+        }
+
+        [Test]
+        public void GetDefaultMountPointNameExtensionReturnsTheExpectedNameOnUnixSystemsHavingDisksWithMultipleVolumes()
+        {
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+
+            foreach (Disk disk in this.disks.Skip(1))
+            {
+                foreach (DiskVolume volume in disk.Volumes)
+                {
+                    string expectedMountPointName = $"mnt_{volume.DevicePath.Substring(1).Replace("/", "_")}".ToLowerInvariant();
+                    string actualMountPointName = volume.GetDefaultMountPointName();
+
+                    Assert.AreEqual(expectedMountPointName, actualMountPointName);
+                }
+            }
+        }
+
+        [Test]
+        public void GetDefaultMountPointNameExtensionUsesASpecificPrefixWhenProvided()
+        {
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+
+            string expectedPrefix = "mnt_vc";
+            foreach (DiskVolume volume in this.disks.SelectMany(disk => disk.Volumes))
+            {
+                string expectedMountPointName = $"{expectedPrefix}_{volume.DevicePath.Substring(1).Replace("/", "_")}".ToLowerInvariant();
+                string actualMountPointName = volume.GetDefaultMountPointName(prefix: expectedPrefix);
+
+                Assert.AreEqual(expectedMountPointName, actualMountPointName);
+            }
+        }
     }
 }
