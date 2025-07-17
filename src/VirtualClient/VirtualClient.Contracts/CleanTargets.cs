@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,16 +33,23 @@ namespace VirtualClient.Contracts
         public const string State = "state";
 
         /// <summary>
+        /// Target = temp
+        /// </summary>
+        public const string Temp = "temp";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CleanTargets"/> class.
         /// </summary>
         /// <param name="cleanLogs">True if the "logs" directory should be cleaned.</param>
         /// <param name="cleanPackages">True if the "packages" directory should be cleaned (minus built-in packages).</param>
         /// <param name="cleanState">True if the "state" directory should be cleaned.</param>
-        public CleanTargets(bool cleanLogs, bool cleanPackages, bool cleanState)
+        /// <param name="cleanTemp">True if the "temp" directory should be cleaned.</param>
+        public CleanTargets(bool cleanLogs, bool cleanPackages, bool cleanState, bool cleanTemp)
         {
             this.CleanLogs = cleanLogs;
             this.CleanPackages = cleanPackages;
             this.CleanState = cleanState;
+            this.CleanTemp = cleanTemp;
         }
 
         /// <summary>
@@ -62,12 +68,17 @@ namespace VirtualClient.Contracts
         public bool CleanState { get; }
 
         /// <summary>
+        /// True if the "temp" directory should be cleaned.
+        /// </summary>
+        public bool CleanTemp { get; }
+
+        /// <summary>
         /// Creates a <see cref="CleanTargets"/> instance for the cleanup
         /// of all targets.
         /// </summary>
         public static CleanTargets Create()
         {
-            return new CleanTargets(cleanLogs: true, cleanPackages: true, cleanState: true);
+            return new CleanTargets(cleanLogs: true, cleanPackages: true, cleanState: true, cleanTemp: true);
         }
 
         /// <summary>
@@ -81,6 +92,7 @@ namespace VirtualClient.Contracts
             bool cleanLogs = false;
             bool cleanPackages = false;
             bool cleanState = false;
+            bool cleanTemp = false;
 
             if (targets?.Any() == true)
             {
@@ -89,18 +101,20 @@ namespace VirtualClient.Contracts
                     cleanLogs = true;
                     cleanPackages = true;
                     cleanState = true;
+                    cleanTemp = true;
                 }
                 else
                 {
                     cleanLogs = targets.Contains(CleanTargets.Logs, StringComparer.OrdinalIgnoreCase);
                     cleanPackages = targets.Contains(CleanTargets.Packages, StringComparer.OrdinalIgnoreCase);
                     cleanState = targets.Contains(CleanTargets.State, StringComparer.OrdinalIgnoreCase);
+                    cleanTemp = targets.Contains(CleanTargets.Temp, StringComparer.OrdinalIgnoreCase);
                 }
             }
 
-            if (cleanLogs || cleanPackages || cleanState)
+            if (cleanLogs || cleanPackages || cleanState || cleanTemp)
             {
-                cleanTargets = new CleanTargets(cleanLogs, cleanPackages, cleanState);
+                cleanTargets = new CleanTargets(cleanLogs, cleanPackages, cleanState, cleanTemp);
             }
 
             return cleanTargets;

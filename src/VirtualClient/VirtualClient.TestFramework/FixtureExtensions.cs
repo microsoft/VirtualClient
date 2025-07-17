@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using AutoFixture;
@@ -33,19 +34,275 @@ namespace VirtualClient
         private static Random randomGen = new Random();
 
         /// <summary>
-        /// Creates a mock <see cref="Disk"/> instance.
+        /// Creates a mock disk object.
+        /// </summary>
+        /// <param name="fixture">The mock fixture.</param>
+        /// <param name="diskIndex">The disk index.</param>
+        /// <param name="platform">The platform to use for representation of disk paths.</param>
+        /// <param name="os">Optional. True if the disk should represent the operating system/boot disk.</param>
+        /// <param name="devicePaths">
+        /// Optional. Defines the device paths for both the disk as well as the volumes/partitions. The first path defined should be a disk/device path. 
+        /// Each path thereafter should define a device/mount path for a volume/partition (e.g. \\.\PHYSICALDISK1, D:\, E:\ or /dev/sdc, /dev/sdc1, /dev/sdc2).
+        /// </param>
+        public static Disk CreateDisk(this IFixture fixture, int diskIndex, PlatformID platform = PlatformID.Unix, bool os = false, params string[] devicePaths)
+        {
+            string[] effectiveDevicePaths = devicePaths;
+            if (devicePaths?.Any() != true)
+            {
+                switch (platform)
+                {
+                    case PlatformID.Win32NT:
+                        if (os)
+                        {
+                            effectiveDevicePaths = new string[] { @"\\.\PHYSICALDISK0" };
+                        }
+                        else
+                        {
+                            effectiveDevicePaths = new string[] { @"\\.\PHYSICALDISK1" };
+                        }
+
+                        break;
+
+                    case PlatformID.Unix:
+                        if (os)
+                        {
+                            effectiveDevicePaths = new string[] { @"/dev/sda" };
+                        }
+                        else
+                        {
+                            effectiveDevicePaths = new string[] { @"/dev/sdc" };
+                        }
+
+                        break;
+                }
+            }
+
+            string diskPath = effectiveDevicePaths.First();
+            List<DiskVolume> volumes = new List<DiskVolume>();
+            IEnumerable<string> volumeDevicePaths = effectiveDevicePaths.Skip(1);
+
+            if (volumeDevicePaths?.Any() == true)
+            {
+                int lun = 0;
+                foreach (string devicePath in volumeDevicePaths)
+                {
+                    volumes.Add(fixture.CreateDiskVolume(diskIndex, devicePath, platform, os, lun));
+                    lun++;
+                }
+            }
+
+            Dictionary<string, IConvertible> diskProperties = new Dictionary<string, IConvertible>();
+            switch (platform)
+            {
+                case PlatformID.Win32NT:
+                    diskProperties = new Dictionary<string, IConvertible>
+                    {
+                        { "Type", "SAS" },
+                        { "Model", "Microsoft Virtual Disk" },
+                        { "Index", diskIndex },
+                        { "Disk ID", $"{{{Guid.NewGuid()}}}" },
+                        { "Status", "Online" },
+                        { "Path", diskIndex },
+                        { "Target", diskIndex },
+                        { "Location Path", $"ACPI(_SB_)#ACPI(VMOD)#ACPI(VMBS)#VMBUS({{{Guid.NewGuid()}}}#{{{Guid.NewGuid}}})#SAS(P00T00L00)" },
+                        { "Current Read-Only State", "No" },
+                        { "Read-Only", "No" },
+                        { "Boot Disk", "No" },
+                        { "Pagefile Disk", "No" },
+                        { "Hibernation File Disk", "No" },
+                        { "Crashdump Disk", "No" },
+                        { "Clustered Disk", "No" }
+                    };
+
+                    if (os)
+                    {
+                        diskProperties["Boot Disk"] = "Yes";
+                        diskProperties["Crashdump Disk"] = "Yes";
+                    }
+
+                    break;
+
+                case PlatformID.Unix:
+                    Guid handle = Guid.NewGuid();
+                    diskProperties = new Dictionary<string, IConvertible>
+                    {
+                        { "id", "disk" },
+                        { "claimed", "true" },
+                        { "class", "disk" },
+                        { "handle", $"GUID:{handle}" },
+                        { "product", "Virtual Disk" },
+                        { "vendor", "Linux" },
+                        { "physid", $"0.0.{diskIndex}" },
+                        { "businfo", $"scsi@0.0.0.{diskIndex}" },
+                        { "logicalname", diskPath },
+                        { "dev", "8:0" },
+                        { "version", "1.0" },
+                        { "size", "1234567890123" },
+                        { "ansiversion", "5" },
+                        { "guid", $"{handle}" },
+                        { "logicalsectorsize", "512" },
+                        { "sectorsize", "4096" },
+                        { "gpt-1.00", "GUID Partition Table version 1.00" },
+                        { "partitioned", "Partitioned disk" },
+                        { "partitioned:gpt", "GUID partition table" }
+                    };
+
+                    if (os)
+                    {
+                        // Making the OS disk smaller for unit testing purpose.
+                        diskProperties["size"] = "1234567890";
+                    }
+
+                    break;
+            }
+
+            return new Disk(diskIndex, diskPath, volumes, properties: diskProperties);
+        }
+
+        /// <summary>
+        /// Creates a mock set of <see cref="Disk"/> instances.
         /// </summary>
         public static IEnumerable<Disk> CreateDisks(this IFixture fixture, PlatformID platform, bool withVolume = false)
         {
             fixture.ThrowIfNull(nameof(fixture));
+            List<Disk> disks = new List<Disk>();
 
-            return new List<Disk>
+            if (platform == PlatformID.Unix)
             {
-                FixtureExtensions.CreateDisk(0, platform, withVolume, os: true),
-                FixtureExtensions.CreateDisk(1, platform, withVolume, os: false),
-                FixtureExtensions.CreateDisk(2, platform, withVolume, os: false),
-                FixtureExtensions.CreateDisk(3, platform, withVolume, os: false)
-            };
+                List<string[]> devicePaths = new List<string[]>
+                {
+                    withVolume ? new string[] { @"/dev/sda", @"/dev/sda1" } : new string[] { @"/dev/sda" },
+                    withVolume ? new string[] { @"/dev/sdc", @"/dev/sdc1" } : new string[] { @"/dev/sdc" },
+                    withVolume ? new string[] { @"/dev/sdd", @"/dev/sdd1" } : new string[] { @"/dev/sdd" },
+                    withVolume ? new string[] { @"/dev/sde", @"/dev/sde1" } : new string[] { @"/dev/sde" },
+                };
+
+                return new List<Disk>
+                {
+                    fixture.CreateDisk(0, platform, os: true, devicePaths[0]),
+                    fixture.CreateDisk(1, platform, os: false, devicePaths[1]),
+                    fixture.CreateDisk(2, platform, os: false, devicePaths[2]),
+                    fixture.CreateDisk(3, platform, os: false, devicePaths[3])
+                };
+            }
+            else
+            {
+                List<string[]> devicePaths = new List<string[]>
+                {
+                    withVolume ? new string[] { @"\\.\PHYSICALDISK0", @"C:\" } : new string[] { @"\\.\PHYSICALDISK0" },
+                    withVolume ? new string[] { @"\\.\PHYSICALDISK1", @"D:\" } : new string[] { @"\\.\PHYSICALDISK1" },
+                    withVolume ? new string[] { @"\\.\PHYSICALDISK2", @"E:\" } : new string[] { @"\\.\PHYSICALDISK2" },
+                    withVolume ? new string[] { @"\\.\PHYSICALDISK3", @"F:\" } : new string[] { @"\\.\PHYSICALDISK3" },
+                };
+
+                return new List<Disk>
+                {
+                    fixture.CreateDisk(0, platform, os: true, devicePaths[0]),
+                    fixture.CreateDisk(1, platform, os: false, devicePaths[1]),
+                    fixture.CreateDisk(2, platform, os: false, devicePaths[2]),
+                    fixture.CreateDisk(3, platform, os: false, devicePaths[3])
+                };
+            }
+        }
+
+        /// <summary>
+        /// Creates a mock disk volume/partition object.
+        /// </summary>
+        /// <param name="fixture">The mock fixture.</param>
+        /// <param name="diskIndex">The disk index.</param>
+        /// <param name="devicePath">The disk volume/partition device path (e.g. D:\, E:\, /dev/sdc1, /dev/sdd1).</param>
+        /// <param name="platform">The platform to use for representation of disk paths.</param>
+        /// <param name="os">Optional. True if the disk should represent the operating system/boot disk.</param>
+        /// <param name="lun">Optional. The logical unit for the disk volume/partition on the disk.</param>
+        public static DiskVolume CreateDiskVolume(this IFixture fixture, int diskIndex, string devicePath, PlatformID platform = PlatformID.Unix, bool os = false, int lun = 0)
+        {
+            Dictionary<string, IConvertible> diskVolumeProperties = new Dictionary<string, IConvertible>();
+            List<string> accessPaths = new List<string>();
+
+            switch (platform)
+            {
+                case PlatformID.Win32NT:
+                    diskVolumeProperties = new Dictionary<string, IConvertible>
+                    {
+                        { "PartitionIndex", $"{lun}" },
+                        { "Type", "Partition" },
+                        { "Hidden", "No" },
+                        { "Required", "No" },
+                        { "Attrib", "0000000000000000" },
+                        { "Offset in Bytes", "633202540544" },
+                        { "Index", $"{lun}" },
+                        { "Ltr", devicePath.Substring(0, 1) },
+                        { "Label", os ? "System" : "Data" },
+                        { "Fs", "NTFS" },
+                        { "Size", "1234 GB" },
+                        { "Status", "Healthy" },
+                        { "Info", null }
+                    };
+
+                    // Volume/access path for Windows (e.g. C:\, D:\).
+                    accessPaths.Add(devicePath);
+
+                    if (os)
+                    {
+                        diskVolumeProperties["Info"] = "Boot";
+                        diskVolumeProperties["Boot Disk"] = "Yes";
+                        diskVolumeProperties["Size"] = "123 GB";
+                    }
+
+                    break;
+
+                case PlatformID.Unix:
+                    diskVolumeProperties = new Dictionary<string, IConvertible>
+                    {
+                        { "id", "volume" },
+                        { "claimed", "true" },
+                        { "class", "volume" },
+                        { "handle", $"GUID:{Guid.NewGuid()}" },
+                        { "description", "EXT4 volume" },
+                        { "vendor", "Linux" },
+                        { "physid", $"{lun}" },
+                        { "businfo", $"scsi@0:0.0.{diskIndex},{lun}" },
+                        { "logicalname", devicePath },
+                        { "dev", "8:49" },
+                        { "version", "1.0" },
+                        { "serial", $"{Guid.NewGuid()}" },
+                        { "size", "1234567890123" },
+                        { "capacity", null },
+                        { "created", "2021-05-05 19:29:17" },
+                        { "filesystem", "ext4" },
+                        { "modified", "2021-05-11 22:48:47" },
+                        { "mounted", "2021-05-05 19:29:29" },
+                        { "name", "primary" },
+                        { "state", "clean" },
+                        { "journaled", string.Empty },
+                        { "extended_attributes", "Extended Attributes" },
+                        { "large_files", "4GB+ files" },
+                        { "huge_files", "16TB+ files" },
+                        { "dir_nlink", "directories with 65000+ subdirs" },
+                        { "64bit", "64bit filesystem" },
+                        { "extents", "extent-based allocation" },
+                        { "ext4", string.Empty },
+                        { "ext2", "EXT2/EXT3" },
+                        { "initialized", "initialized volume" }
+                    };
+
+                    if (os)
+                    {
+                        // Making the OS disk smaller for unit testing purpose.
+                        diskVolumeProperties["size"] = "1234567890";
+
+                        // Default access path for Linux (e.g. /root, /home/user).
+                        accessPaths.Add("/");
+                    }
+                    else
+                    {
+                        accessPaths.Add($"/home/user/mnt{devicePath.Replace('/', '_')}".ToLowerInvariant());
+                    }
+
+                    break;
+            }
+
+            return new DiskVolume(lun, devicePath, accessPaths, properties: diskVolumeProperties);
         }
 
         /// <summary>
@@ -111,123 +368,6 @@ namespace VirtualClient
             fixture.Register(() => FixtureExtensions.CreateExecutionProfileElement(randomization));
 
             return fixture;
-        }
-
-        public static Disk CreateDisk(int index, PlatformID platform = PlatformID.Unix, bool withVolume = false, string deviceName = null, bool os = false)
-        {
-            string diskPath = platform == PlatformID.Win32NT
-                ? @$"\\.\PHYSICALDISK{index}"
-                : $"/dev/sd{(char)('c' + (char)index)}";
-
-            string devicePath = platform == PlatformID.Win32NT
-                ? $"{(char)('C' + (char)index)}:\\"
-                : $"{diskPath}1";
-
-            List<string> accessPaths = new List<string>();
-            if (platform == PlatformID.Win32NT)
-            {
-                accessPaths.Add(diskPath);
-            }
-
-            List<DiskVolume> volumes = new List<DiskVolume>();
-
-            if (withVolume || os)
-            {
-                volumes = new List<DiskVolume>() { FixtureExtensions.CreateDiskVolume(devicePath, platform, os) };
-            }
-
-            return new Disk(index, deviceName ?? diskPath, volumes, properties: FixtureExtensions.CreateDiskProperties(index, platform, os));
-        }
-
-        public static DiskVolume CreateDiskVolume(string devicePath, PlatformID platform = PlatformID.Unix, bool os = false)
-        {
-            List<string> accessPaths = new List<string>();
-            accessPaths.Add(devicePath);
-            if (os)
-            {
-                accessPaths.Add("/");
-            }
-
-            return new DiskVolume(0, devicePath, accessPaths, properties: FixtureExtensions.CreateDiskProperties(1, platform, os));
-        }
-
-        private static Dictionary<string, IConvertible> CreateDiskProperties(int lun = 0, PlatformID platform = PlatformID.Unix, bool os = false)
-        {
-            Dictionary<string, IConvertible> properties = new Dictionary<string, IConvertible>();
-            switch (platform)
-            {
-                case PlatformID.Win32NT:
-                    properties = new Dictionary<string, IConvertible>
-                    {
-                        { "PartitionIndex", $"{lun}" },
-                        { "Type", "Partition" },
-                        { "Hidden", "No" },
-                        { "Required", "No" },
-                        { "Attrib", "0000000000000000" },
-                        { "Offset in Bytes", "633202540544" },
-                        { "Index", $"{lun}" },
-                        { "Ltr", "S" },
-                        { "Label", "Data" },
-                        { "Fs", "NTFS" },
-                        { "Size", "1234 GB" },
-                        { "Status", "Healthy" },
-                        { "Info", null }
-                    };
-
-                    if (os)
-                    {
-                        properties["Info"] = "Boot";
-                        properties["Boot Disk"] = "Yes";
-                        properties["Size"] = "123 GB";
-                    }
-
-                    break;
-
-                case PlatformID.Unix:
-                    properties = new Dictionary<string, IConvertible>
-                    {
-                        { "id", "volume" },
-                        { "claimed", "true" },
-                        { "class", "volume" },
-                        { "handle", $"GUID:{Guid.NewGuid()}" },
-                        { "description", "EXT4 volume" },
-                        { "vendor", "Linux" },
-                        { "physid", $"{lun}" },
-                        { "businfo", $"scsi@1:0.0.1,{lun}" },
-                        { "logicalname", "/dev/sdd1" },
-                        { "dev", "8:49" },
-                        { "version", "1.0" },
-                        { "serial", $"{Guid.NewGuid()}" },
-                        { "size", "1234567890123" },
-                        { "capacity", null },
-                        { "created", "2021-05-05 19:29:17" },
-                        { "filesystem", "ext4" },
-                        { "modified", "2021-05-11 22:48:47" },
-                        { "mounted", "2021-05-05 19:29:29" },
-                        { "name", "primary" },
-                        { "state", "clean" },
-                        { "journaled", string.Empty },
-                        { "extended_attributes", "Extended Attributes" },
-                        { "large_files", "4GB+ files" },
-                        { "huge_files", "16TB+ files" },
-                        { "dir_nlink", "directories with 65000+ subdirs" },
-                        { "64bit", "64bit filesystem" },
-                        { "extents", "extent-based allocation" },
-                        { "ext4", string.Empty },
-                        { "ext2", "EXT2/EXT3" },
-                        { "initialized", "initialized volume" }
-                    };
-
-                    if (os)
-                    {
-                        // Making the OS disk smaller for unit testing purpose.
-                        properties["size"] = "1234567890";
-                    }
-
-                    break;
-            }
-
-            return properties;
         }
 
         private static ExecutionProfile CreateExecutionProfile(bool randomization)

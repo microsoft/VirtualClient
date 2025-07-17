@@ -94,6 +94,26 @@ namespace VirtualClient.Cleanup
             }
         }
 
+        /// <summary>
+        /// Cleans the default "temp" directory provided deleting any files and folders.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task CleanTempDirectoryAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken)
+        {
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            string tempDirectory = systemManagement.PlatformSpecifics.GetTempPath();
+
+            if (fileSystem.Directory.Exists(tempDirectory))
+            {
+                IEnumerable<string> tempFiles = fileSystem.Directory.EnumerateFiles(tempDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteFilesAsync(fileSystem, tempFiles, null, cancellationToken);
+
+                IEnumerable<string> tempDirectories = fileSystem.Directory.EnumerateDirectories(tempDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, tempDirectories, null, cancellationToken);
+            }
+        }
+
         private static async Task DeleteDirectoriesAsync(IFileSystem fileSystem, IEnumerable<string> directories, DateTime? retentionDate, CancellationToken cancellationToken)
         {
             if (directories?.Any() == true)

@@ -12,7 +12,6 @@ namespace VirtualClient.Actions
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -22,7 +21,6 @@ namespace VirtualClient.Actions
     [SupportedPlatforms("linux-arm64,linux-x64")]
     public class FioDiscoveryExecutor : FioExecutor
     {
-        private static readonly object VariationLock = new object();
         private static int variationNumber = 0;
         private static IAsyncPolicy fioDiscoveryRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(3, _ => RetryWaitTime);
 
@@ -49,23 +47,6 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.BlockSize)).Split(VirtualClientComponent.CommonDelimiters).ToList();
-            }
-        }
-
-        /// <summary>
-        /// The size of the test file that should use in workload tests (e.g. 496GB).
-        /// </summary>
-        public string FileSize
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.FileSize), out IConvertible fileSize);
-                return fileSize?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(DiskWorkloadExecutor.FileSize)] = value;
             }
         }
 
@@ -158,10 +139,7 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string ioEngine = FioExecutor.GetIOEngine(this.Platform);
-
-            IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
+            IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken);
 
             if (disks?.Any() != true)
             {
@@ -193,7 +171,6 @@ namespace VirtualClient.Actions
             disksToTest.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
 
             telemetryContext.AddContext("executable", this.ExecutablePath);
-            telemetryContext.AddContext(nameof(ioEngine), ioEngine);
             telemetryContext.AddContext(nameof(disks), disks);
             telemetryContext.AddContext(nameof(disksToTest), disksToTest);
 
@@ -204,14 +181,13 @@ namespace VirtualClient.Actions
             {
                 Interlocked.Exchange(ref variationNumber, 0);
 
-                if (await this.IsDiskFillCompleteAsync(cancellationToken).ConfigureAwait(false) == false)
+                if (await this.IsDiskFillCompleteAsync(cancellationToken) == false)
                 {
                     string commandLine = this.ApplyParameter(this.CommandLine, nameof(this.Scenario), this.Scenario);
                     commandLine = this.ApplyParameter(commandLine, nameof(this.DiskFillSize), this.DiskFillSize);
-                    commandLine = commandLine + $" --ioengine={ioEngine}";
 
                     this.Logger.LogTraceMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel, telemetryContext));
 
                     foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                     {
@@ -220,13 +196,12 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                        await Task.WhenAll(fioProcessTasks);
                     }
 
                     this.Logger.LogTraceMessage($"{this.Scenario}.ExecutionEnded", telemetryContext);
 
-                    await this.RegisterDiskFillCompleteAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                    await this.RegisterDiskFillCompleteAsync(cancellationToken);
                 }
             }
             else
@@ -269,7 +244,7 @@ namespace VirtualClient.Actions
 
                                             int direct = this.DirectIO;
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
-                                            commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --ioengine={ioEngine} " + commandLine;
+                                            commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} {commandLine}";
 
                                             string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
 
@@ -296,7 +271,7 @@ namespace VirtualClient.Actions
                                                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                                                 {
                                                     this.WorkloadProcesses.Clear();
-                                                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
+                                                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel, telemetryContext));
 
                                                     foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                                                     {
@@ -305,15 +280,14 @@ namespace VirtualClient.Actions
 
                                                     if (!cancellationToken.IsCancellationRequested)
                                                     {
-                                                        await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                                                        await Task.WhenAll(fioProcessTasks);
                                                     }
                                                 }
-                                            }).ConfigureAwait(false);
+                                            });
 
-                                        }).ConfigureAwait(false);
+                                        });
 
-                                        await this.CleanUpWorkloadTestFilesAsync()
-                                            .ConfigureAwait(false);
+                                        await this.CleanUpWorkloadTestFilesAsync();
                                     }
                                     catch (VirtualClientException exc)
                                     {
@@ -321,8 +295,7 @@ namespace VirtualClient.Actions
                                     }
                                     finally
                                     {
-                                        await this.CleanUpWorkloadTestFilesAsync()
-                                            .ConfigureAwait(false);
+                                        await this.CleanUpWorkloadTestFilesAsync();
                                     }
                                 }
                             }
@@ -345,22 +318,12 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Creates a process to run FIO targeting the disks specified.
+        /// Returns the target device/file test path. Note that this may be either a file
+        /// or a direct path to the physical device (e.g. /dev/sda, /mnt_dev_sda1/fio-test.dat).
         /// </summary>
-        /// <param name="executable">The full path to the FIO executable.</param>
-        /// <param name="commandArguments">
-        /// The command line arguments to supply to the FIO executable (e.g. --name=fio_randread_4GB_4k_d1_th1_direct --ioengine=libaio).
-        /// </param>
-        /// <param name="testedInstance">The disk instance under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
-        /// <param name="disksToTest">The disks under test.</param>
-        protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+        protected override string GetTestDevicePath(Disk disk)
         {
-            string[] testFiles = disksToTest.Select(disk => disk.DevicePath).ToArray();
-            string fioArguments = $"{commandArguments} {string.Join(" ", testFiles.Select(file => $"--filename={file}"))}".Trim();
-
-            IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
-
-            return new DiskWorkloadProcess(process, testedInstance, testFiles);
+            return disk.DevicePath;
         }
 
         /// <inheritdoc/>
@@ -373,13 +336,11 @@ namespace VirtualClient.Actions
         {
             foreach (DiskWorkloadProcess workload in this.WorkloadProcesses)
             {
-                await this.DeleteTestVerificationFilesAsync(workload.TestFiles)
-                    .ConfigureAwait(false);
+                await this.DeleteTestVerificationFilesAsync(workload.TestFiles);
 
                 if (this.DeleteTestFilesOnFinish)
                 {
-                    await this.DeleteTestFilesAsync(workload.TestFiles)
-                        .ConfigureAwait(false);
+                    await this.DeleteTestFilesAsync(workload.TestFiles);
                 }
             }
         }

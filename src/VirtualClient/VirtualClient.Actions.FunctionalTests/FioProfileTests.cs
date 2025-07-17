@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-IO-FIO.json")]
         public async Task FioWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile)
         {
-            IEnumerable<string> expectedCommands = FioProfileTests.GetFioStressProfileExpectedCommands(PlatformID.Win32NT);
+            IEnumerable<string> expectedCommands = FioProfileTests.GetFioProfileExpectedCommands(PlatformID.Win32NT);
 
             // Setup the expectations for the workload
             // - Disks are formatted and ready
@@ -122,7 +122,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-IO-FIO.json")]
         public async Task FioWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile)
         {
-            IEnumerable<string> expectedCommands = FioProfileTests.GetFioStressProfileExpectedCommands(PlatformID.Unix);
+            IEnumerable<string> expectedCommands = FioProfileTests.GetFioProfileExpectedCommands(PlatformID.Unix);
 
             // Setup the expectations for the workload
             // - Disks are formatted and ready
@@ -152,51 +152,51 @@ namespace VirtualClient.Actions
             }
         }
 
-        private static IEnumerable<string> GetFioStressProfileExpectedCommands(PlatformID platform)
+        private static IEnumerable<string> GetFioProfileExpectedCommands(PlatformID platform)
         {
             string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";
             return new List<string>
             {
                 // Given the test setup created 2 remote disks, we will perform a disk fill on both individually
-                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --direct=1 --overwrite=1 --thread --ioengine={expectedIoEngine}",
-                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --direct=1 --overwrite=1 --thread --ioengine={expectedIoEngine}",
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread ",
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread",
 
                 // After the disk fill, we execute the FIO commands.
                 // Random Write tests
-                $"--name=fio_randwrite_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=4k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randwrite_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=8k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randwrite_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=12k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randwrite_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=16k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randwrite_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=1024k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
+                $"--name=fio_randwrite_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randwrite_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randwrite_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randwrite_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randwrite_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
 
                 // Sequential Write tests
-                $"--name=fio_write_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=4k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=8k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=12k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=16k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=1024k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
+                $"--name=fio_write_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_write_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_write_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_write_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_write_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
 
                 // Random Read tests
-                $"--name=fio_randread_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=4k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randread_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=8k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randread_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=12k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randread_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=16k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randread_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=1024k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
+                $"--name=fio_randread_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randread_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randread_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randread_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randread_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
 
                 // Sequential Read tests
-                $"--name=fio_read_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=4k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_read_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=8k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_read_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=12k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_read_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=16k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_read_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=1024k --iodepth=[0-9]+ --direct=1 --ramp_time=30 --runtime=300 --time_based .+ --ioengine={expectedIoEngine}",
+                $"--name=fio_read_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_read_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_read_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_read_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_read_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
 
                 // Disk Integrity Verification tests (random writes + sequential writes)
-                $"--name=fio_randwrite_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=4k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randwrite_4G_16k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=16k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_randwrite_4G_1024k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=1024k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=4k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_4G_16k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=16k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 .+ --ioengine={expectedIoEngine}",
-                $"--name=fio_write_4G_1024k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=1024k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 .+ --ioengine={expectedIoEngine}"
+                $"--name=fio_randwrite_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=4k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
+                $"--name=fio_randwrite_4G_16k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=16k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
+                $"--name=fio_randwrite_4G_1024k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=1024k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
+                $"--name=fio_write_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=4k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
+                $"--name=fio_write_4G_16k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=16k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
+                $"--name=fio_write_4G_1024k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=1024k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1"
             };
         }
     }

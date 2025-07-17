@@ -8,7 +8,6 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net.NetworkInformation;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Win32;
