@@ -3,6 +3,7 @@
 
 namespace VirtualClient
 {
+    using System;
     using System.Collections.Generic;
     using Renci.SshNet;
 
@@ -24,10 +25,15 @@ namespace VirtualClient
         /// </summary>
         public IEnumerable<ISshClientProxy> SshClients { get; }
 
+        /// <summary>
+        /// Delegate defines logic to execute when the 'CreateClient' method is called.
+        /// </summary>
+        public Func<ConnectionInfo, ISshClientProxy> OnCreateClient { get; set; }
+
         /// <inheritdoc />
         public ISshClientProxy CreateClient(ConnectionInfo connection)
         {
-            ISshClientProxy sshClient = new InMemorySshClient(connection);
+            ISshClientProxy sshClient = this.OnCreateClient?.Invoke(connection) ?? new InMemorySshClient(connection);
             (this.SshClients as List<ISshClientProxy>).Add(sshClient);
 
             return sshClient;
