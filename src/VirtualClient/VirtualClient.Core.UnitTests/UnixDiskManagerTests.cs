@@ -286,7 +286,7 @@ namespace VirtualClient
                 throw new ProcessException();
             };
 
-            Disk disk = FixtureExtensions.CreateDisk(0);
+            Disk disk = new Disk(0, "/dev/sda");
 
             this.diskManager.RetryPolicy = Policy.Handle<ProcessException>()
                 .WaitAndRetryAsync(3, (retries) => TimeSpan.Zero);

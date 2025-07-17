@@ -110,6 +110,7 @@
     -->
     <Target Name="CreatePackagesAndToolsOutputDirectory" AfterTargets="Build">
         <MakeDir Directories="$(OutputPath)packages" />
+		<MakeDir Directories="$(OutputPath)temp" />
         <MakeDir Directories="$(OutputPath)tools" />
     </Target>
 

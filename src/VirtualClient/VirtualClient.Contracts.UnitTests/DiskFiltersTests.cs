@@ -264,7 +264,7 @@ namespace VirtualClient.Contracts
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
             // The disks are sdc, sdd, sde, sdf
-            string filterString = "DiskPath:/dev/sdd,/dev/sdf/";
+            string filterString = "DiskPath:/dev/sdc,/dev/sde";
             IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
             Assert.AreEqual(2, result.Count());
             Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(0)));

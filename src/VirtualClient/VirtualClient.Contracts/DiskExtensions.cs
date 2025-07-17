@@ -66,31 +66,28 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Extension returns the default mount point/path for the disk.
+        /// Extension returns the default mount point name/directory name for the disk volume
+        /// (e.g. mnt_dev_sda1, mnt_c).
         /// </summary>
         /// <param name="volume">The disk.</param>
-        /// <param name="prefix">Prefix name.</param>
+        /// <param name="prefix">A prefix to use for the mount point (e.g. mnt_vc). Default = "mnt".</param>
         /// <returns>
         /// A mount point/path that can be created and used to access the disk.
         /// </returns>
-        public static string GetDefaultMountPoint(this DiskVolume volume, string prefix = null)
+        public static string GetDefaultMountPointName(this DiskVolume volume, string prefix = null)
         {
             // Example:
-            // /home/azureuser/VirtualClient.1.0.1585.119/linux-x64/vcmnt_dev_sda
+            // mnt_dev_sda
+            // mnt_dev_sdb
             //
-            // C:\Users\azureuser\VirtualClient.1.0.1585.119\win-x64\vcmt_c
-            // C:\Users\azureuser\VirtualClient.1.0.1585.119\win-x64\vcmt_d
+            // mnt_c
+            // mnt_d
 
-            prefix = string.IsNullOrEmpty(prefix) ? $"vcmnt_{prefix}" : $"vcmnt";
-            string relativePath = $"{prefix}_{volume.DevicePath.ToLowerInvariant().Replace("/", "_").Replace(":", string.Empty).Replace("\\", string.Empty)}";
+            prefix = prefix ?? "mnt";
+            string mountPointName = $"{prefix}_{volume.DevicePath.ToLowerInvariant().Replace("/", "_").Replace(":", string.Empty).Replace("\\", string.Empty)}";
+            mountPointName = Regex.Replace(mountPointName, @"_+", "_");
 
-            relativePath = Regex.Replace(relativePath, @"_+", "_");
-
-            string path = Path.Combine(
-                Path.GetDirectoryName(DiskExtensions.DllAssembly.Location),
-                relativePath);
-
-            return path;
+            return mountPointName;
         }
 
         /// <summary>

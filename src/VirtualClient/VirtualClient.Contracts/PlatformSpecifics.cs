@@ -80,6 +80,7 @@ namespace VirtualClient.Contracts
             this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
             this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
             this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
+            this.TempDirectory = this.Combine(standardizedCurrentDirectory, "temp");
             this.ToolsDirectory = this.Combine(standardizedCurrentDirectory, "tools");
         }
 
@@ -138,6 +139,11 @@ namespace VirtualClient.Contracts
         /// The directory where state objects are stored.
         /// </summary>
         public string StateDirectory { get; set; }
+
+        /// <summary>
+        /// The directory where scripts related to workloads exist.
+        /// </summary>
+        public string TempDirectory { get; }
 
         /// <summary>
         /// The directory where built-in tools/toolsets are stored.
@@ -434,6 +440,16 @@ namespace VirtualClient.Contracts
             return additionalPathSegments?.Any() != true
                 ? this.ScriptsDirectory
                 : this.Combine(this.ScriptsDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Combines the path segments provided with path where temp files are stored.
+        /// </summary>
+        public string GetTempPath(params string[] additionalPathSegments)
+        {
+            return additionalPathSegments?.Any() != true
+                ? this.TempDirectory
+                : this.Combine(this.TempDirectory, this.Combine(additionalPathSegments));
         }
 
         /// <summary>
