@@ -36,8 +36,7 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "InitializeDisks",
-                "DiskFilter": "$.Parameters.DiskFilter"
+                "Scenario": "InitializeDisks"
             }
         },
         {

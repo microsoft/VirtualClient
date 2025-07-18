@@ -171,7 +171,7 @@ namespace VirtualClient
             {
                 List<string[]> devicePaths = new List<string[]>
                 {
-                    withVolume ? new string[] { @"/dev/sda", @"/dev/sda1" } : new string[] { @"/dev/sda" },
+                    new string[] { @"/dev/sda", @"/dev/sda1" },
                     withVolume ? new string[] { @"/dev/sdc", @"/dev/sdc1" } : new string[] { @"/dev/sdc" },
                     withVolume ? new string[] { @"/dev/sdd", @"/dev/sdd1" } : new string[] { @"/dev/sdd" },
                     withVolume ? new string[] { @"/dev/sde", @"/dev/sde1" } : new string[] { @"/dev/sde" },
@@ -189,7 +189,7 @@ namespace VirtualClient
             {
                 List<string[]> devicePaths = new List<string[]>
                 {
-                    withVolume ? new string[] { @"\\.\PHYSICALDISK0", @"C:\" } : new string[] { @"\\.\PHYSICALDISK0" },
+                    new string[] { @"\\.\PHYSICALDISK0", @"C:\" },
                     withVolume ? new string[] { @"\\.\PHYSICALDISK1", @"D:\" } : new string[] { @"\\.\PHYSICALDISK1" },
                     withVolume ? new string[] { @"\\.\PHYSICALDISK2", @"E:\" } : new string[] { @"\\.\PHYSICALDISK2" },
                     withVolume ? new string[] { @"\\.\PHYSICALDISK3", @"F:\" } : new string[] { @"\\.\PHYSICALDISK3" },
