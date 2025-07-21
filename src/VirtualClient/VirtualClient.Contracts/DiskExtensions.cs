@@ -77,8 +77,8 @@ namespace VirtualClient.Contracts
         public static string GetDefaultMountPointName(this DiskVolume volume, string prefix = null)
         {
             // Example:
-            // mnt_dev_sda
-            // mnt_dev_sdb
+            // mnt_dev_sda1
+            // mnt_dev_sdb1
             //
             // mnt_c
             // mnt_d

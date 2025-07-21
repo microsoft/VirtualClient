@@ -8,12 +8,7 @@ namespace VirtualClient.Contracts
     using System.IO;
     using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
-    using AutoFixture;
-    using VirtualClient.Common;
-    using Microsoft.Extensions.Azure;
     using NUnit.Framework;
-    using VirtualClient.Contracts.Parser;
 
     [TestFixture]
     [Category("Unit")]
@@ -112,6 +107,22 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void DiskFiltersCanFilterOnBiggestDisksOnLinuxForDisksWithoutVolumePartititions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, false);
+            this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["size"] = 1 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["size"] = 2 * 1024 * 1024;
+
+            string filterString = "biggestsize";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.ElementAt(1)));
+        }
+
+        [Test]
         public void DiskFiltersCanFilterOnBiggestDisksOnWindows()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
@@ -127,9 +138,42 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Ignore("We can support this in the future if we add a 'Size' property to the Disk object for Windows (e.g. DiskPart -> list disks).")]
+        public void DiskFiltersCanFilterOnBiggestDisksOnWindowsForDisksWithoutVolumePartititions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, false);
+            this.disks.ElementAt(0).Properties["Size"] = 3 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["Size"] = 1 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["Size"] = 3 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["Size"] = 2 * 1024 * 1024;
+
+            string filterString = "biggestsize";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.ElementAt(1)));
+        }
+
+        [Test]
         public void DiskFiltersCanFilterOnSmallestDisksOnLinux()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["size"] = 1 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["size"] = 1 * 1024 * 1024;
+
+            string filterString = "smallestSize";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(1)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnSmallestDisksOnLinuxForDisksWithoutVolumePartitions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, false);
             this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = 1 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = 3 * 1024 * 1024;
@@ -158,7 +202,23 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersCanFilterOnOsDisk()
+        [Ignore("We can support this in the future if we add a 'Size' property to the Disk object for Windows (e.g. DiskPart -> list disks).")]
+        public void DiskFiltersCanFilterOnSmallestDisksOnWindowsForDisksWithoutVolumePartitions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, false);
+            this.disks.ElementAt(0).Properties["Size"] = "6 GB";
+            this.disks.ElementAt(1).Properties["Size"] = "4 TB";
+            this.disks.ElementAt(2).Properties["Size"] = "5TB";
+            this.disks.ElementAt(3).Properties["Size"] = "7 mb";
+
+            string filterString = "smallestSize";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(0)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnOsDiskOnLinux()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
@@ -174,6 +234,75 @@ namespace VirtualClient.Contracts
 
             string filterString3 = "osdisk:false";
             IEnumerable<Disk> result3 = DiskFilters.FilterDisks(this.disks, filterString3, PlatformID.Unix);
+            Assert.AreEqual(3, result3.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result3.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result3.ElementAt(1)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result3.ElementAt(2)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnOsDiskOnLinuxForDisksWithoutVolumePartitions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, false);
+
+            string filterString = "osdisk";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+
+            string filterString2 = "osdisk:true";
+            IEnumerable<Disk> result2 = DiskFilters.FilterDisks(this.disks, filterString2, PlatformID.Unix);
+            Assert.AreEqual(1, result2.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result2.ElementAt(0)));
+
+            string filterString3 = "osdisk:false";
+            IEnumerable<Disk> result3 = DiskFilters.FilterDisks(this.disks, filterString3, PlatformID.Unix);
+            Assert.AreEqual(3, result3.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result3.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result3.ElementAt(1)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result3.ElementAt(2)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnOsDiskOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+
+            string filterString = "osdisk";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+
+            string filterString2 = "osdisk:true";
+            IEnumerable<Disk> result2 = DiskFilters.FilterDisks(this.disks, filterString2, PlatformID.Win32NT);
+            Assert.AreEqual(1, result2.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result2.ElementAt(0)));
+
+            string filterString3 = "osdisk:false";
+            IEnumerable<Disk> result3 = DiskFilters.FilterDisks(this.disks, filterString3, PlatformID.Win32NT);
+            Assert.AreEqual(3, result3.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result3.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result3.ElementAt(1)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result3.ElementAt(2)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnOsDiskOnWindowsForDisksWithoutVolumePartitions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, false);
+
+            string filterString = "osdisk";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+
+            string filterString2 = "osdisk:true";
+            IEnumerable<Disk> result2 = DiskFilters.FilterDisks(this.disks, filterString2, PlatformID.Win32NT);
+            Assert.AreEqual(1, result2.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result2.ElementAt(0)));
+
+            string filterString3 = "osdisk:false";
+            IEnumerable<Disk> result3 = DiskFilters.FilterDisks(this.disks, filterString3, PlatformID.Win32NT);
             Assert.AreEqual(3, result3.Count());
             Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result3.ElementAt(0)));
             Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result3.ElementAt(1)));
@@ -197,7 +326,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersCanFilterOnSizeBiggerThan()
+        public void DiskFiltersCanFilterOnSizeBiggerThanOnLinux()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
@@ -213,13 +342,47 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersCanFilterOnSizeLessThan()
+        [Ignore("We can support this in the future if we add a 'Size' property to the Disk object for Windows (e.g. DiskPart -> list disks) and consider that in the filtering.")]
+        public void DiskFiltersCanFilterOnSizeBiggerThanOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(0).Properties["Size"] = (long)5 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["Size"] = (long)2 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["Size"] = (long)3 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["Size"] = (long)7 * 1024 * 1024 * 1024;
+
+            string filterString = "SizeGreaterThan:4gb";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(1)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnSizeLessThanOnLinux()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
             this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
             this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
             this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
             this.disks.ElementAt(3).Properties["size"] = (long)7 * 1024 * 1024 * 1024;
+
+            string filterString = "SizeLessThan:4000 Mb";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.ElementAt(1)));
+        }
+
+        [Test]
+        [Ignore("We can support this in the future if we add a 'Size' property to the Disk object for Windows (e.g. DiskPart -> list disks) and consider that in the filtering.")]
+        public void DiskFiltersCanFilterOnSizeLessThanOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks.ElementAt(0).Properties["Size"] = (long)5 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["Size"] = (long)3 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["Size"] = (long)2 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["Size"] = (long)7 * 1024 * 1024 * 1024;
 
             string filterString = "SizeLessThan:4000 Mb";
             IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
@@ -272,6 +435,19 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void DiskFiltersCanFilterOnDiskPathInLinuxWhenDisksHaveNoVolumePartitions()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, false);
+
+            // The disks are sdc, sdd, sde, sdf
+            string filterString = "DiskPath:/dev/sdc,/dev/sde";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(1)));
+        }
+
+        [Test]
         public void DiskFiltersCanFilterOnDiskPathInWindows()
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
@@ -279,6 +455,20 @@ namespace VirtualClient.Contracts
 
             // The disks C, D, E, F
             string filterString = "DiskPath:C:/,E:";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.ElementAt(1)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnDiskPathInWindowsWhenDisksHaveNoVolumePartitions()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, false);
+
+            // The disks \\.\PHYSICALDISK0,\\.\PHYSICALDISK2
+            string filterString = @"DiskPath:\\.\PHYSICALDISK0,\\.\PHYSICALDISK2";
             IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
             Assert.AreEqual(2, result.Count());
             Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
