@@ -7,10 +7,9 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Castle.Components.DictionaryAdapter.Xml;
+    using Microsoft.CodeAnalysis.Scripting;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Extensions;
@@ -725,6 +724,68 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorCSharpScriptingLibraryCalculationExpectationConfirmations()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, object> expressions = new Dictionary<string, object>
+            {
+                // bool return values
+                { "\"This\" != \"That\"", true },
+                { "\"This\" == \"That\"", false },
+
+                // byte return values
+                { "(byte)(128 - 8)", 120 },
+
+                // sbyte return values
+                { "(sbyte)(128 - 8)", 120 },
+
+                // char return values
+                { "'A' + 2", 67 },
+
+                // decimal return values
+                { "(decimal)322.5/5", 64.50 },
+
+                // double return values
+                { "(double)322.5/5", 64.50 },
+
+                // float return values
+                { "(float)322.5/5", 64.50 },
+
+                // int return values
+                { "512/8", 64 },
+
+                // uint return values
+                { "(uint)512/8", 64 },
+
+                // long return values
+                { "(long)2147483647 * 10", 21474836470 },
+
+                // ulong return values
+                { "(ulong)2147483647 * 10", 21474836470 },
+
+                // short return values
+                { "(short)512/8", 64 },
+
+                // ushort return values
+                { "(ushort)512/8", 64 },
+
+                // string return values
+                { "\"Any string value\"", "Any string value" },
+
+                // Terniary statements
+                { "\"win-x64\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\"", "windowsaio" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                object expectedExpression = entry.Value;
+                object actualExpression = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<object>(entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);
@@ -737,7 +798,106 @@ namespace VirtualClient
                 { "{calculate(512 / 2)}", "256" },
                 { "{calculate(512 / ( 2 * 2))}", "128" },
                 { "{calculate(512 / (( 2 + 2) - 2))}", "256" },
-                { "-c496G -b4K -r4K -t{calculate(512 / 2)} -o{calculate(512 / (16 / 2))} -w100", $"-c496G -b4K -r4K -t256 -o64 -w100" }
+                { "-c496G -b4K -r4K -t{calculate(512 / 2)} -o{calculate(512 / (16 / 2))} -w100", $"-c496G -b4K -r4K -t256 -o64 -w100" },
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsFunctionReferences_With_Different_Return_Data_Types()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                // string return values
+                { "{calculate(\"Any string value\")}", "Any string value" },
+
+                 // bool return values
+                { "{calculate(true)}", "true" },
+
+                // byte return values
+                { "{calculate((byte)(128 - 8))}", "120" },
+
+                // int return values
+                { "{calculate(512/8)}", "64" },
+
+                // long return values
+                { "{calculate((long)2147483647 * 10)}", "21474836470" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsFunctionReferences_With_Different_Operators()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{calculate(\"This\" != \"That\")}", "true" },
+                { "{calculate(\"This\" == \"This\")}", "true" },
+                { "{calculate(10 < 5)}", "false" },
+                { "{calculate(10 <= 10)}", "true" },
+                { "{calculate(10 > 5)}", "true" },
+                { "{calculate(10 >= 10)}", "true" },
+                { "{calculate(10 % 6)}", "4" },
+                { "{calculate(10 + 6)}", "16" },
+                { "{calculate(10 - 6)}", "4" },
+                { "{calculate(10 * 6)}", "60" },
+                { "{calculate(10 / 2)}", "5" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsFunctionReferences_With_TimeSpan_Math_Expressions()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                // TimeSpan math statements
+                { "{calculate(System.TimeSpan.Parse(\"10:00:00\") + System.TimeSpan.Parse(\"02:00:00\"))}", "12:00:00" },
+                { "{calculate(System.TimeSpan.Parse(\"12:00:00\") - System.TimeSpan.Parse(\"02:00:00\"))}", "10:00:00" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsFunctionReferences_With_Terniary_Expressions()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                // Terniary statements
+                { "{calculate(\"win-x64\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}", "windowsaio" },
+                { "{calculate(\"This\" != \"That\" ? 100 : 200)}", "100" }
             };
 
             foreach (var entry in expressions)
@@ -787,7 +947,7 @@ namespace VirtualClient
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
 
             Assert.AreEqual(
-                $"--int=1234 --double=8.15 --decimal=10.55 --byte=128 --char=a --bool=True --dateTime={now.ToString()}",
+                $"--int=1234 --double=8.15 --decimal=10.55 --byte=128 --char=a --bool=true --dateTime={now.ToString()}",
                 parameters["CommandLine"].ToString());
         }
 

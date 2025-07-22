@@ -139,6 +139,26 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void GetTempPathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/temp", platformSpecifics.GetTempPath());
+            Assert.AreEqual("/home/anyuser/virtualclient/temp/any-jobfile.fio", platformSpecifics.GetTempPath("any-jobfile.fio"));
+            Assert.AreEqual("/home/anyuser/virtualclient/temp/jobfiles/any-jobfile.fio", platformSpecifics.GetTempPath("jobfiles", "any-jobfile.fio"));
+        }
+
+        [Test]
+        public void GetTempPathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\temp", platformSpecifics.GetTempPath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\temp\any-jobfile.fio", platformSpecifics.GetTempPath("any-jobfile.fio"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\temp\jobfiles\any-jobfile.fio", platformSpecifics.GetTempPath("jobfiles", "any-jobfile.fio"));
+        }
+
+        [Test]
         public void GetToolsPathReturnsTheExpectedPathOnUnixSystems()
         {
             PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");

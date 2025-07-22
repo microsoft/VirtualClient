@@ -12,6 +12,7 @@
         "ProcessModel": "SingleProcess",
         "MaxThreads": "8",
         "QueueDepths": "1,4,16,64,256,1024",
+        "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
         "DirectIO": true,
         "InitializeDisksInParallel": true
     },
@@ -20,7 +21,8 @@
             "Type": "FioDiscoveryExecutor",
             "Parameters": {
                 "Scenario": "DiskFill",
-                "CommandLine": "--direct=1 --overwrite=1 --output-format=json --rw=write --bs=256K --numjobs=1 --iodepth=64 --fallocate=none --refill_buffers=1 --name={Scenario} --size={DiskFillSize}",
+                "CommandLine": "--name=disk_fill --size={DiskFillSize} --rw=write --bs=256K --numjobs=1 --iodepth=64 --ioengine={Engine} --fallocate=none --refill_buffers=1 --direct=1 --overwrite=1 --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "PackageName": "fio",
                 "ProcessModel": "SingleProcessPerDisk",
                 "DiskFillSize": "$.Parameters.DiskFillSize",
@@ -34,7 +36,8 @@
             "Parameters": {
                 "Scenario": "RandomRead_4k_BlockSize",
                 "BlockSize": "4k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randread",
@@ -53,7 +56,8 @@
             "Parameters": {
                 "Scenario": "RandomRead_8k_BlockSize",
                 "BlockSize": "8k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randread",
@@ -72,7 +76,8 @@
             "Parameters": {
                 "Scenario": "RandomRead_16k_BlockSize",
                 "BlockSize": "16k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randread",
@@ -91,7 +96,8 @@
             "Parameters": {
                 "Scenario": "RandomRead_64k_BlockSize",
                 "BlockSize": "64k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randread",
@@ -110,7 +116,8 @@
             "Parameters": {
                 "Scenario": "RandomRead_256k_BlockSize",
                 "BlockSize": "256k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randread",
@@ -129,7 +136,8 @@
             "Parameters": {
                 "Scenario": "RandomRead_1024k_BlockSize",
                 "BlockSize": "1024k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randread",
@@ -148,7 +156,8 @@
             "Parameters": {
                 "Scenario": "RandomWrite_4k_BlockSize",
                 "BlockSize": "4k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randwrite",
@@ -167,7 +176,8 @@
             "Parameters": {
                 "Scenario": "RandomWrite_8k_BlockSize",
                 "BlockSize": "8k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randwrite",
@@ -186,7 +196,8 @@
             "Parameters": {
                 "Scenario": "RandomWrite_16k_BlockSize",
                 "BlockSize": "16k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randwrite",
@@ -205,7 +216,8 @@
             "Parameters": {
                 "Scenario": "RandomWrite_64k_BlockSize",
                 "BlockSize": "64k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randwrite",
@@ -224,7 +236,8 @@
             "Parameters": {
                 "Scenario": "RandomWrite_256k_BlockSize",
                 "BlockSize": "256k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randwrite",
@@ -243,7 +256,8 @@
             "Parameters": {
                 "Scenario": "RandomWrite_1024k_BlockSize",
                 "BlockSize": "1024k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "randwrite",
@@ -262,7 +276,8 @@
             "Parameters": {
                 "Scenario": "SequentialRead_4k_BlockSize",
                 "BlockSize": "4k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "read",
@@ -281,7 +296,8 @@
             "Parameters": {
                 "Scenario": "SequentialRead_8k_BlockSize",
                 "BlockSize": "8k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "read",
@@ -301,7 +317,8 @@
             "Parameters": {
                 "Scenario": "SequentialRead_16k_BlockSize",
                 "BlockSize": "16k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "read",
@@ -320,7 +337,8 @@
             "Parameters": {
                 "Scenario": "SequentialRead_64k_BlockSize",
                 "BlockSize": "64k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "read",
@@ -339,7 +357,8 @@
             "Parameters": {
                 "Scenario": "SequentialRead_256k_BlockSize",
                 "BlockSize": "256k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "read",
@@ -358,7 +377,8 @@
             "Parameters": {
                 "Scenario": "SequentialRead_1024k_BlockSize",
                 "BlockSize": "1024k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "read",
@@ -377,7 +397,8 @@
             "Parameters": {
                 "Scenario": "SequentialWrite_4k_BlockSize",
                 "BlockSize": "4k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "write",
@@ -396,7 +417,8 @@
             "Parameters": {
                 "Scenario": "SequentialWrite_8k_BlockSize",
                 "BlockSize": "8k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "write",
@@ -415,7 +437,8 @@
             "Parameters": {
                 "Scenario": "SequentialWrite_16k_BlockSize",
                 "BlockSize": "16k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "write",
@@ -434,7 +457,8 @@
             "Parameters": {
                 "Scenario": "SequentialWrite_64k_BlockSize",
                 "BlockSize": "64k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "write",
@@ -453,7 +477,8 @@
             "Parameters": {
                 "Scenario": "SequentialWrite_256k_BlockSize",
                 "BlockSize": "256k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "write",
@@ -472,7 +497,8 @@
             "Parameters": {
                 "Scenario": "SequentialWrite_1024k_BlockSize",
                 "BlockSize": "1024k",
-                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--ioengine={Engine} --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=15 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
                 "FileSize": "$.Parameters.FileSize",
                 "DurationSec": "180",
                 "IOType": "write",
@@ -489,6 +515,19 @@
     ],
     "Dependencies": [
         {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
@@ -496,13 +535,6 @@
                 "Packages-Dnf": "fio,libaio-devel,lshw,parted",
                 "Packages-Yum": "fio,libaio-devel",
                 "Packages-Zypper": "fio,libaio-dev"
-            }
-        },
-        {
-            "Type": "FormatDisks",
-            "Parameters": {
-                "Scenario": "InitializeDisks",
-                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

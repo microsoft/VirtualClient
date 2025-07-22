@@ -295,4 +295,26 @@ namespace VirtualClient.Contracts
         /// </summary>
         public const string TenantId = "tid";
     }
+
+    /// <summary>
+    /// Constants that define workload process models/strategies.
+    /// </summary>
+    public static class WorkloadProcessModel
+    {
+        /// <summary>
+        /// A single process to run the workload.
+        /// </summary>
+        public const string SingleProcess = "SingleProcess";
+
+        /// <summary>
+        /// A single process running against multiple disks with
+        /// aggregated results across those disks.
+        /// </summary>
+        public const string SingleProcessAggregated = nameof(SingleProcessAggregated);
+
+        /// <summary>
+        /// A single process per disk under test by the workload.
+        /// </summary>
+        public const string SingleProcessPerDisk = "SingleProcessPerDisk";
+    }
 }

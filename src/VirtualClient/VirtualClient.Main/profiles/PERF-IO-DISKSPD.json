@@ -23,7 +23,6 @@
                 "PackageName": "diskspd",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "CommandLine": "-c{DiskFillSize} -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
-                "FileName": "diskspd-test.dat",
                 "DiskFill": true,
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "ProcessModel": "SingleProcessPerDisk",
@@ -42,7 +41,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randwrite"
@@ -60,7 +58,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randwrite"
@@ -78,7 +75,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randwrite"
@@ -96,7 +92,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randwrite"
@@ -114,7 +109,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randwrite"
@@ -132,7 +126,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,write"
@@ -150,7 +143,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,write"
@@ -168,7 +160,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,write"
@@ -186,7 +177,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,write"
@@ -204,7 +194,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,write"
@@ -222,7 +211,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randread"
@@ -240,7 +228,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randread"
@@ -258,7 +245,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randread"
@@ -276,7 +262,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randread"
@@ -294,7 +279,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,randread"
@@ -312,7 +296,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,read"
@@ -330,7 +313,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,read"
@@ -348,7 +330,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,read"
@@ -366,7 +347,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,read"
@@ -384,7 +364,6 @@
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
-                "FileName": "diskspd-test.dat",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,DiskSpd,read"

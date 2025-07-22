@@ -14,7 +14,8 @@
         "SequentialDiskCount": "1",
         "SequentialIOFileSize": "20G",
         "TargetIOPS": "5000",
-        "TargetPercents": "10,40,90,98,100,102,110"
+        "TargetPercents": "10,40,90,98,100,102,110",
+        "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}"
     },
     "Actions": [
         {
@@ -24,6 +25,7 @@
                 "DirectIO": true,
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "DiskFill": true,
+                "Engine": "$.Parameters.Engine",
                 "GroupReporting": "0",
                 "PackageName": "fio",
                 "ProcessModel": "SingleProcessPerDisk",
@@ -43,6 +45,7 @@
                 "DirectIO": "$.Parameters.DirectIO",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "DurationSec": "180",
+                "Engine": "$.Parameters.Engine",
                 "GroupReporting": "0",
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "RandomReadBlockSize": "8K",
@@ -72,6 +75,19 @@
     ],
     "Dependencies": [
         {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
@@ -79,13 +95,6 @@
                 "Packages-Dnf": "fio,libaio-devel,lshw,parted",
                 "Packages-Yum": "fio,libaio-devel",
                 "Packages-Zypper": "fio,libaio-dev"
-            }
-        },
-        {
-            "Type": "FormatDisks",
-            "Parameters": {
-                "Scenario": "InitializeDisks",
-                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

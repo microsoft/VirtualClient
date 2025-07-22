@@ -300,6 +300,14 @@ namespace VirtualClient
                         await systemManagement.CleanStateDirectoryAsync(cancellationToken);
                     });
                 }
+
+                if (targets.CleanTemp)
+                {
+                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanTemp", LogLevel.Trace, telemetryContext, async () =>
+                    {
+                        await systemManagement.CleanTempDirectoryAsync(cancellationToken);
+                    });
+                }
             }
             else if (logRetentionDate != null)
             {
