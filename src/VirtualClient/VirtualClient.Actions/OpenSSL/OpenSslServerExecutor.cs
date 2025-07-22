@@ -6,10 +6,12 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -326,6 +328,13 @@ namespace VirtualClient.Actions
             Console.WriteLine("Starting OpenSSL Server Workload...");
 
             string commandArguments = this.Parameters.GetValue<string>(nameof(this.CommandArguments));
+            // prefix path to cert and key files
+            // "s_server -accept {ServerPort} -cert server.crt -key server.key -tls1_3 -WWW"
+
+            string certPath = this.Package.Path + "/../../../tls-resources/";
+
+            commandArguments = Regex.Replace(commandArguments, @"-cert\s+(\S+)", $"-cert {certPath}$1");
+            commandArguments = Regex.Replace(commandArguments, @"-key\s+(\S+)", $"-key {certPath}$1");
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
