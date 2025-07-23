@@ -9,19 +9,13 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
-    using Polly;
-    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -59,7 +53,7 @@ namespace VirtualClient
         /// A seed that can be used to guarantee identical randomization bases for workloads that
         /// require it.
         /// </summary>
-        public int RandomizationSeed { get; set; }
+        public int? RandomizationSeed { get; set; }
 
         /// <summary>
         /// Defines a set of scenarios (as defined in a workload profile) to execute
@@ -107,11 +101,6 @@ namespace VirtualClient
                 if (this.Timeout == null && this.Iterations == null)
                 {
                     this.Timeout = ProfileTiming.OneIteration();
-                }
-
-                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
-                {
-                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
                 }
 
                 this.SetGlobalTelemetryProperties(args);
@@ -691,14 +680,20 @@ namespace VirtualClient
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
 
+            ComponentSettings componentSettings = new ComponentSettings
+            {
+                ContentPathTemplate = this.ContentPathTemplate,
+                ExitWait = this.ExitWait,
+                FailFast = this.FailFast,
+                LogToFile = this.LogToFile,
+                Seed = this.RandomizationSeed
+            };
+
             // Only dependencies defined in the profile will be considered.
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
             {
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
-                profileExecutor.ExitWait = this.ExitWait;
-                profileExecutor.FailFast = this.FailFast;
-                profileExecutor.LogToFile = this.LogToFile;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
@@ -789,13 +784,17 @@ namespace VirtualClient
             
             this.Validate(dependencies, profile);
 
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
+            ComponentSettings componentSettings = new ComponentSettings
             {
-                profileExecutor.RandomizationSeed = this.RandomizationSeed;
-                profileExecutor.ExitWait = this.ExitWait;
-                profileExecutor.FailFast = this.FailFast;
-                profileExecutor.LogToFile = this.LogToFile;
+                ContentPathTemplate = this.ContentPathTemplate,
+                ExitWait = this.ExitWait,
+                FailFast = this.FailFast,
+                LogToFile = this.LogToFile,
+                Seed = this.RandomizationSeed
+            };
 
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
+            {
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
                     this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);

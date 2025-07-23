@@ -27,28 +27,41 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("anycommand", "anycommand", null, false)]
-        [TestCase("anycommand  ", "anycommand", null, false)]
-        [TestCase("./anycommand", "./anycommand", null, false)]
-        [TestCase("./anycommand --argument=value", "./anycommand", "--argument=value", false)]
-        [TestCase("./anycommand --argument=value --argument2 value2", "./anycommand", "--argument=value --argument2 value2", false)]
-        [TestCase("./anycommand --argument=value --argument2 value2 --flag", "./anycommand", "--argument=value --argument2 value2 --flag", false)]
-        [TestCase("./anycommand --argument=value --argument2 value2 --flag   ", "./anycommand", "--argument=value --argument2 value2 --flag", false)]
-        [TestCase("../../anycommand --argument=value --argument2 value2 --flag   ", "../../anycommand", "--argument=value --argument2 value2 --flag", false)]
-        [TestCase("/home/user/anycommand", "/home/user/anycommand", null, false)]
-        [TestCase("/home/user/anycommand --argument=value --argument2 value2", "/home/user/anycommand", "--argument=value --argument2 value2", false)]
-        [TestCase("\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "\"/home/user/dir with space/anycommand\"", "--argument=value --argument2 value2", false)]
-        [TestCase("sudo anycommand", "anycommand", null, true)]
-        [TestCase("sudo ./anycommand", "./anycommand", null, true)]
-        [TestCase("sudo /home/user/anycommand", "/home/user/anycommand", null, true)]
-        [TestCase("sudo /home/user/anycommand --argument=value --argument2 value2", "/home/user/anycommand", "--argument=value --argument2 value2", true)]
-        [TestCase("sudo \"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "\"/home/user/dir with space/anycommand\"", "--argument=value --argument2 value2", true)]
-        public void ExecuteCommandCorrectlyIdentifiesThePartsOfTheCommandOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments, bool expectedRunElevated)
+        [TestCase("anycommand", "anycommand", null)]
+        [TestCase("anycommand  ", "anycommand", null)]
+        [TestCase("./anycommand", "./anycommand", null)]
+        [TestCase("./anycommand --argument=value", "./anycommand", "--argument=value")]
+        [TestCase("./anycommand --argument=value --argument2 value2", "./anycommand", "--argument=value --argument2 value2")]
+        [TestCase("./anycommand --argument=value --argument2 value2 --flag", "./anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("./anycommand --argument=value --argument2 value2 --flag   ", "./anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("../../anycommand --argument=value --argument2 value2 --flag   ", "../../anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("/home/user/anycommand", "/home/user/anycommand", null)]
+        [TestCase("/home/user/anycommand --argument=value --argument2 value2", "/home/user/anycommand", "--argument=value --argument2 value2")]
+        [TestCase("\"/home/user/anycommand\"", "\"/home/user/anycommand\"", null)]
+        [TestCase("\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "\"/home/user/dir with space/anycommand\"", "--argument=value --argument2 value2")]
+        [TestCase("sudo anycommand", "sudo", "anycommand")]
+        [TestCase("sudo ./anycommand", "sudo", "./anycommand")]
+        [TestCase("sudo /home/user/anycommand", "sudo", "/home/user/anycommand")]
+        [TestCase("sudo /home/user/anycommand --argument=value --argument2 value2", "sudo", "/home/user/anycommand --argument=value --argument2 value2")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\"", "sudo", "\"/home/user/dir with space/anycommand\"")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "sudo",  "\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2")]
+        public void ExecuteCommandCorrectlyIdentifiesThePartsOfTheCommandOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
         {
-            Assert.IsTrue(TestExecuteCommand.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments, out bool actualRunElevated));
+            Assert.IsTrue(TestExecuteCommand.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
             Assert.AreEqual(expectedCommand, actualCommand);
             Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
-            Assert.AreEqual(expectedRunElevated, actualRunElevated);
+        }
+
+        [Test]
+        [TestCase("bash -c \"/home/user/anyscript.sh\"", "bash", "-c \"/home/user/anyscript.sh\"")]
+        [TestCase("bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"", "bash", "-c \"/home/user/anyscript.sh --argument=value --argument2 value2\"")]
+        [TestCase("bash -c \"/home/dir with space/anyscript.sh\"", "bash", "-c \"/home/dir with space/anyscript.sh\"")]
+        [TestCase("sudo bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"", "sudo", "bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"")]
+        public void ExecuteCommandCorrectlyIdentifiesThePartsOfBashCommandsOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(TestExecuteCommand.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
         }
 
         [Test]
@@ -65,10 +78,9 @@ namespace VirtualClient.Dependencies
         [TestCase("\"C:\\Users\\User\\Dir With Space\\anycommand.exe\"--argument=value --argument2 value2", "\"C:\\Users\\User\\Dir With Space\\anycommand.exe\"", "--argument=value --argument2 value2")]
         public void ExecuteCommandCorrectlyIdentifiesThePartsOfTheCommandOnWindowsSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
         {
-            Assert.IsTrue(TestExecuteCommand.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments, out bool actualRunElevated));
+            Assert.IsTrue(TestExecuteCommand.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
             Assert.AreEqual(expectedCommand, actualCommand);
             Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
-            Assert.IsFalse(actualRunElevated); // No "sudo" concept on Windows.
         }
 
         [Test]
@@ -87,6 +99,7 @@ namespace VirtualClient.Dependencies
         [TestCase("sudo ./anycommand", "sudo", "./anycommand")]
         [TestCase("sudo /home/user/anycommand", "sudo", "/home/user/anycommand")]
         [TestCase("sudo /home/user/anycommand --argument=value --argument2 value2", "sudo", "/home/user/anycommand --argument=value --argument2 value2")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\"", "sudo", "\"/home/user/dir with space/anycommand\"")]
         [TestCase("sudo \"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "sudo", "\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2")]
         public async Task ExecuteCommandExecutesTheExpectedCommandOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
         {
@@ -561,9 +574,9 @@ namespace VirtualClient.Dependencies
                 return base.InitializeAsync(telemetryContext, cancellationToken);
             }
 
-            public static new bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments, out bool runElevated)
+            public static new bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments)
             {
-                return ExecuteCommand.TryGetCommandParts(fullCommand, out command, out commandArguments, out runElevated);
+                return ExecuteCommand.TryGetCommandParts(fullCommand, out command, out commandArguments);
             }
         }
     }

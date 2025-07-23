@@ -102,30 +102,49 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="component">The component requesting the file upload descriptor.</param>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
-        /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
-        /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        /// <param name="additionalParameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="additionalMetadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
-        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
+        /// <param name="subPath">A relative directory path to preserve when creating the blob path (e.g. \ipmiutil\sel, /ipmiutil/sel).</param>
+        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> additionalParameters = null, IDictionary<string, IConvertible> additionalMetadata = null, bool timestamped = true, string subPath = null)
         {
             component.ThrowIfNull(nameof(component));
             fileContext.ThrowIfNull(nameof(fileContext));
 
-            IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
-            
-            if (metadata?.Any() == true)
+            IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            if (component.Metadata?.Any() == true)
             {
-                effectiveMetadata.AddRange(metadata, true);
+                effectiveMetadata.AddRange(component.Metadata);
+            }
+
+            if (additionalMetadata?.Any() == true)
+            {
+                effectiveMetadata.AddRange(additionalMetadata, true);
+            }
+
+            IDictionary<string, IConvertible> effectiveParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            if (component.Parameters?.Any() == true)
+            {
+                effectiveParameters.AddRange(component.Parameters);
+            }
+
+            if (additionalParameters?.Any() == true)
+            {
+                effectiveParameters.AddRange(additionalParameters, true);
             }
 
             FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(
                 fileContext,
-                parameters,
+                effectiveParameters,
                 effectiveMetadata,
                 timestamped,
-                VirtualClientComponent.ContentPathTemplate);
+                component.ContentPathTemplate,
+                subPath);
 
             return descriptor;
         }
@@ -135,13 +154,18 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="component">The component requesting the file upload descriptor.</param>
         /// <param name="targetDirectory">A directory with files to upload.</param>
+        /// <param name="toolName">The name of the toolset for which the files are associated.</param>
         /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
         /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
-        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
+        /// <param name="flatten">
+        /// True to use a flattened blob virtual path structure for file uploads (e.g. no subdirectories). False to preserve the 
+        /// relative subpaths for directories on the file system in the blob virtual paths. Default = true.
+        /// </param>
+        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, string toolName = null, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, bool flatten = true)
         {
             component.ThrowIfNull(nameof(component));
             targetDirectory.ThrowIfNullOrWhiteSpace(nameof(targetDirectory));
@@ -155,12 +179,23 @@ namespace VirtualClient.Contracts
                 foreach (string file in filesToUpload)
                 {
                     string contentType = MimeMapping.MimeUtility.GetMimeMapping(file);
-                    string subDirectory = fileSystem.Path.GetDirectoryName(file).Substring(targetDirectory.Length)?.Trim('\\')?.Trim('/');
-                    string uploadDirectory = null;
+                    string relativeSubPath = null;
 
-                    if (!string.IsNullOrWhiteSpace(subDirectory))
+                    if (!flatten)
                     {
-                        uploadDirectory = subDirectory.Trim('\\').Trim('/');
+                        // Preserve the directory structure in the blob virtual path.
+                        string subDirectory = fileSystem.Path.GetDirectoryName(file).Substring(targetDirectory.Length)?.Trim('\\')?.Trim('/');
+
+                        if (!string.IsNullOrWhiteSpace(subDirectory))
+                        {
+                            // A relative path within the full file directory path to preserve in the file upload
+                            // descriptor.
+                            // 
+                            // e.g.
+                            // /home/user/virtualclient/logs/directory1/any.log -> /directory1
+                            // /home/user/virtualclient/logs/directory1/directory2/any.log -> /directory1/directory2
+                            relativeSubPath = subDirectory.Trim('\\').Trim('/');
+                        }
                     }
 
                     FileUploadDescriptor descriptor = VirtualClientComponentExtensions.CreateFileUploadDescriptor(
@@ -171,10 +206,12 @@ namespace VirtualClient.Contracts
                             Encoding.UTF8.WebName,
                             component.ExperimentId,
                             component.AgentId,
-                            null,
-                            uploadDirectory),
-                        parameters: parameters,
-                        timestamped: timestamped);
+                            toolName,
+                            component.Scenario,
+                            component.Roles?.FirstOrDefault()),
+                        additionalParameters: parameters,
+                        timestamped: timestamped,
+                        subPath: relativeSubPath);
 
                     descriptors.Add(descriptor);
                 }

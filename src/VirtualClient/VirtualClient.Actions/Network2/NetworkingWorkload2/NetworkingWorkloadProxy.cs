@@ -132,7 +132,8 @@ namespace VirtualClient.Actions
                             // Create WorkloadServerExecutor
                             VirtualClientComponent serverComponent = ComponentFactory.CreateComponent(
                                 element,
-                                this.Dependencies);
+                                this.Dependencies,
+                                new ComponentSettings(element.Parameters));
 
                             serverComponent.ClientRequestId = workloadInstructions.ClientRequestId;
 

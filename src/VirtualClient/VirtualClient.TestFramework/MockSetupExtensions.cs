@@ -389,7 +389,7 @@ namespace VirtualClient
             ConcurrentBuffer standardErr = new ConcurrentBuffer();
             if (!string.IsNullOrWhiteSpace(standardError))
             {
-                standardOut.Append(standardError);
+                standardErr.Append(standardError);
             }
 
             int effectiveProcessId = processId ?? MockSetupExtensions.randomGen.Next(100, 10000000);
@@ -403,16 +403,6 @@ namespace VirtualClient
             mockProcess.SetupGet(p => p.StandardOutput).Returns(standardOut);
             mockProcess.SetupGet(p => p.StandardInput).Returns(new StreamWriter(new MemoryStream()));
             mockProcess.Setup(p => p.Start()).Returns(true);
-            mockProcess.SetupGet(p => p.ProcessDetails).Returns(new ProcessDetails
-            {
-                Id = effectiveProcessId,
-                CommandLine = $"{command} {commandArguments}",
-                ExitCode = exitCode ?? 0,
-                StandardError = standardError,
-                StandardOutput = standardOutput,
-                ToolName = Path.GetFileNameWithoutExtension(command),
-                WorkingDirectory = workingDirectory
-            });
 
             return mockProcess;
         }

@@ -8,8 +8,10 @@ namespace VirtualClient.Dependencies
     using System.CommandLine.Builder;
     using System.CommandLine.Parsing;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
@@ -33,7 +35,7 @@ namespace VirtualClient.Dependencies
             : base(dependencies, parameters)
         {
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
-                this.MaxRetries, 
+                this.MaxRetries,
                 (retries) => TimeSpan.FromSeconds(retries + 1));
         }
 
@@ -86,47 +88,45 @@ namespace VirtualClient.Dependencies
         /// <param name="fullCommand">The full comamnd and arguments (e.g. sudo lshw -c disk).</param>
         /// <param name="command">The command to execute.</param>
         /// <param name="commandArguments">The arguments to pass to the command.</param>
-        /// <param name="runElevated">True to signal that the command should be ran in elevated mode.</param>
-        protected static bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments, out bool runElevated)
+        protected static bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments)
         {
             fullCommand.ThrowIfNullOrWhiteSpace(nameof(fullCommand));
 
             command = null;
             commandArguments = null;
-            runElevated = false;
 
-            ParseResult result = new CommandLineBuilder().UseEnvironmentVariableDirective().Build().Parse(fullCommand);
-            if (result.Tokens?.Any() == true)
+            string effectiveFullCommand = fullCommand.Trim();
+            Match commandMatch = null;
+
+            // Note:
+            // \x22 = quotation mark
+            if (effectiveFullCommand.StartsWith('"'))
             {
-                if (result.Tokens.Count == 2 && result.Tokens.First().Value == "sudo")
-                {
-                    // e.g.
-                    // sudo ./configure
-                    runElevated = true;
-                    command = result.Tokens.ElementAt(1).Value;
-                }
-                else if (result.Tokens.Count > 2 && result.Tokens.First().Value == "sudo")
-                {
-                    // e.g.
-                    // sudo ./command1 --argument=value
-                    runElevated = true;
-                    command = result.Tokens.ElementAt(1).Value;
-                    commandArguments = string.Join(' ', result.Tokens.Skip(2).Select(t => t.Value));
-                }
-                else if (result.Tokens.Count == 1)
-                {
-                    command = result.Tokens.First().Value;
-                }
-                else
-                {
-                    command = result.Tokens.First().Value;
-                    commandArguments = string.Join(' ', result.Tokens.Skip(1).Select(t => t.Value));
-                }
+                // e.g.
+                // "/home/user/dir/anycommand"
+                // "/home/user/dir with space/anycommand"
+                //
+                // ...directories having spaces in the name
+                // "/home/user/dir/anycommand" --argument=value --argument2=value2
+                // "/home/user/dir with space/anycommand" --argument=value --argument2=value2
+                commandMatch = Regex.Match(effectiveFullCommand, @"^(\x22[\x20\x21\x23-\x7E]+\x22)", RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                // e.g.
+                // /home/user/dir/anycommand
+                // /home/user/dir/anycommand --argument=value --argument2=value2
+                commandMatch = Regex.Match(effectiveFullCommand, @"^([\x21\x23-\x7E]+)", RegexOptions.IgnoreCase);
+            }
 
-                // Normalize for white space in the command path.
-                if (command.Contains(' ', StringComparison.OrdinalIgnoreCase))
+            if (commandMatch.Success)
+            {
+                command = commandMatch.Groups[1].Value?.Trim();
+                commandArguments = fullCommand.Substring(commandMatch.Groups[1].Value.Trim().Length)?.Trim();
+
+                if (string.IsNullOrWhiteSpace(commandArguments))
                 {
-                    command = $"\"{command}\"";
+                    commandArguments = null;
                 }
             }
 
@@ -150,12 +150,11 @@ namespace VirtualClient.Dependencies
                 {
                     foreach (string fullCommand in commandsToExecute)
                     {
-                        if (!cancellationToken.IsCancellationRequested
-                            && ExecuteCommand.TryGetCommandParts(fullCommand, out string command, out string commandArguments, out bool runElevated))
+                        if (!cancellationToken.IsCancellationRequested && ExecuteCommand.TryGetCommandParts(fullCommand, out string command, out string commandArguments))
                         {
                             await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                             {
-                                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkingDirectory, telemetryContext, cancellationToken, runElevated))
+                                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkingDirectory, telemetryContext, cancellationToken))
                                 {
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
@@ -218,5 +217,47 @@ namespace VirtualClient.Dependencies
 
             return commandsToExecute;
         }
+
+        ////private class CommandLineParser
+        ////{
+        ////    public string Executable { get; private set; }
+        ////    public List<string> Arguments { get; private set; }
+
+        ////    public CommandLineParser(string input)
+        ////    {
+        ////        Executable = string.Empty;
+        ////        Arguments = new List<string>();
+        ////        Parse(input);
+        ////    }
+
+        ////    private void Parse(string input)
+        ////    {
+        ////        // Match quoted strings or whitespace-separated tokens
+        ////        var pattern = @"(?<token>(""(?:\\.|[^""])*""|'(?:\\.|[^'])*'|\S+))";
+        ////        var matches = Regex.Matches(input, pattern);
+
+        ////        var tokens = new List<string>();
+
+        ////        foreach (Match match in matches)
+        ////        {
+        ////            string token = match.Groups["token"].Value;
+
+        ////            // Remove surrounding quotes
+        ////            if ((token.StartsWith("\"") && token.EndsWith("\"")) ||
+        ////                (token.StartsWith("'") && token.EndsWith("'")))
+        ////            {
+        ////                token = token.Substring(1, token.Length - 2);
+        ////            }
+
+        ////            tokens.Add(token);
+        ////        }
+
+        ////        if (tokens.Count > 0)
+        ////        {
+        ////            Executable = tokens[0];
+        ////            Arguments.AddRange(tokens.GetRange(1, tokens.Count - 1));
+        ////        }
+        ////    }
+        ////}
     }
 }

@@ -6,14 +6,11 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Diagnostics.Tracing;
     using System.Linq;
     using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
-    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -43,38 +40,6 @@ namespace VirtualClient.Contracts
         /// and exit code to the telemetry context.
         /// </summary>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="process">The process whose details will be captured.</param>
-        /// <param name="name">The property name to use for the process telemetry.</param>
-        /// <param name="results">Results produced by the process execution to log.</param>
-        /// <param name="maxChars">
-        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
-        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
-        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
-        /// there are about 3000 characters in an average single-spaced page of text.
-        /// </param>
-        public static EventContext AddProcessContext(this EventContext telemetryContext, IProcessProxy process, string name = null, string results = null, int maxChars = 125000)
-        {
-            process.ThrowIfNull(nameof(process));
-            telemetryContext.ThrowIfNull(nameof(telemetryContext));
-
-            if (string.IsNullOrWhiteSpace(results))
-            {
-                AddProcessContext(telemetryContext, process.ProcessDetails, name, maxChars);
-            }
-            else
-            {
-                process.ProcessDetails.GeneratedResults = process.ProcessDetails.GeneratedResults.Concat(new[] { results });
-                AddProcessResults(telemetryContext, process.ProcessDetails, name, maxChars);
-            }
-
-            return telemetryContext;
-        }
-
-        /// <summary>
-        /// Adds the details of the process including standard output, standard error
-        /// and exit code to the telemetry context.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="processDetails">The process whose details will be captured.</param>
         /// <param name="name">The property name to use for the process telemetry.</param>
         /// <param name="maxChars">
@@ -83,7 +48,7 @@ namespace VirtualClient.Contracts
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        public static EventContext AddProcessContext(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
+        public static EventContext AddProcessDetails(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
         {
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -199,6 +164,101 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Adds the details of the process including standard output, standard error
+        /// and exit code to the telemetry context.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="processDetails">The process whose details will be captured.</param>
+        /// <param name="name">The property name to use for the process telemetry.</param>
+        /// <param name="maxChars">
+        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
+        {
+            processDetails.ThrowIfNull(nameof(processDetails));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            maxChars.ThrowIfInvalid(
+                nameof(maxChars),
+                (count) => count >= 0,
+                $"Invalid max character count. The value provided must be greater than or equal to zero.");
+
+            try
+            {
+                int? finalId = null;
+                int? finalExitCode = null;
+                string finalResults = null;
+
+                try
+                {
+                    finalId = processDetails.Id;
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    finalExitCode = processDetails.ExitCode;
+                }
+                catch
+                {
+                }
+
+                string fullCommand = $"{processDetails.CommandLine}".Trim();
+                if (!string.IsNullOrWhiteSpace(fullCommand))
+                {
+                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
+                }
+
+                if (processDetails.Results?.Any() == true)
+                {
+                    finalResults = string.Join($"{Environment.NewLine}{Environment.NewLine}", processDetails.Results);
+                }
+
+                // Note that 'totalOutputChars' represents the total # of characters in both the
+                // standard output and error.
+                if (finalResults != null && finalResults.Length > maxChars)
+                {
+                    // e.g.
+                    // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
+                    // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
+                    // 
+                    // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
+                    // The total will be 125,000 chars, right at the max.
+                    int substringLength = finalResults.Length - (finalResults.Length - maxChars);
+                    if (substringLength > 0)
+                    {
+                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                        finalResults = finalResults.Substring(0, finalResults.Length - (finalResults.Length - maxChars));
+                    }
+                    else
+                    {
+                        finalResults = string.Empty;
+                    }
+                }
+
+                telemetryContext.Properties[name ?? "process"] = new
+                {
+                    id = finalId,
+                    command = fullCommand ?? string.Empty,
+                    workingDir = processDetails.WorkingDirectory ?? string.Empty,
+                    exitCode = finalExitCode,
+                    results = finalResults
+                };
+            }
+            catch
+            {
+                // Best effort.
+            }
+
+            return telemetryContext;
+        }
+
+        /// <summary>
         /// Extension adds HTTP action response information to the telemetry context.
         /// </summary>
         /// <param name="telemetryContext">The telemetry context object.</param>
@@ -229,87 +289,6 @@ namespace VirtualClient.Contracts
                 requestUri = $"{response?.RequestMessage?.RequestUri}",
                 content = responseContent
             });
-
-            return telemetryContext;
-        }
-
-        /// <summary>
-        /// Adds the generated results of the process to telemetry
-        /// and exit code to the telemetry context.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="processDetails">The process whose details will be captured.</param>
-        /// <param name="name">The property name to use for the process telemetry.</param>
-        /// <param name="maxChars">
-        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
-        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
-        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
-        /// there are about 3000 characters in an average single-spaced page of text.
-        /// </param>
-        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
-        {
-            processDetails.ThrowIfNull(nameof(processDetails));
-            telemetryContext.ThrowIfNull(nameof(telemetryContext));
-
-            maxChars.ThrowIfInvalid(
-                nameof(maxChars),
-                (count) => count >= 0,
-                $"Invalid max character count. The value provided must be greater than or equal to zero.");
-
-            try
-            {
-                int? finalId = null;
-                int? finalExitCode = null;
-                string finalResults = string.Empty;
-
-                try
-                {
-                    finalId = processDetails.Id;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalExitCode = processDetails.ExitCode;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalResults = string.Join('\n', processDetails?.GeneratedResults);
-                }
-                catch
-                {
-                }
-
-                if (finalResults != null && finalResults.Length > maxChars)
-                {
-                    finalResults = finalResults.Substring(0, maxChars);
-                }
-
-                string fullCommand = processDetails.CommandLine.Trim();
-                if (!string.IsNullOrWhiteSpace(fullCommand))
-                {
-                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
-                }
-
-                telemetryContext.Properties[name ?? "processResults"] = new
-                {
-                    id = finalId,
-                    command = fullCommand ?? string.Empty,
-                    workingDir = processDetails.WorkingDirectory ?? string.Empty,
-                    exitCode = finalExitCode,
-                    results = finalResults ?? string.Empty,
-                };
-            }
-            catch
-            {
-                // Best effort.
-            }
 
             return telemetryContext;
         }

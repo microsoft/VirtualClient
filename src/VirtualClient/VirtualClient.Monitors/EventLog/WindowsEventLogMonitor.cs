@@ -418,7 +418,7 @@ namespace VirtualClient.Monitors
                                 new ProcessDetails
                                 {
                                     CommandLine = $"LogName = {channelGroup.Key}, Query = {query}",
-                                    GeneratedResults = logOutputResults,
+                                    Results = logOutputResults,
                                     ToolName = $"EventLog_{channelGroup.Key}",
                                 },
                                 telemetryContext,
