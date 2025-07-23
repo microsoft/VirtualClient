@@ -4,6 +4,7 @@
 namespace VirtualClient.Common.Rest
 {
     using System;
+    using System.Security.Cryptography.X509Certificates;
 
     /// <summary>
     /// Interface for generic rest client builder.
@@ -29,6 +30,13 @@ namespace VirtualClient.Common.Rest
         /// </summary>
         /// <returns>The builder itself</returns>
         IRestClientBuilder AddAcceptedMediaType(MediaType mediaType);
+
+        /// <summary>
+        /// Add client certificate.
+        /// </summary>
+        /// <param name="certificate">The certificate to add.</param>
+        /// <returns>Builder itself.</returns>
+        IRestClientBuilder AddCertificate(X509Certificate2 certificate);
 
         /// <summary>
         /// Always trust the server certificate.

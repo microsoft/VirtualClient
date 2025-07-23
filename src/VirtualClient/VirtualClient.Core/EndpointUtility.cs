@@ -26,6 +26,20 @@ namespace VirtualClient
         private const string AllowedPackageUri = "https://packages.virtualclient.microsoft.com";
 
         /// <summary>
+        /// Parses the subject name and issuer from the provided uri. If the uri does not contain the correctly formatted certificate subject name
+        /// and issuer information the method will return false, and keep the two out parameters as null.
+        /// </summary>
+        /// <param name="uri">The uri to attempt to parse the values from.</param>
+        /// <param name="issuer">The issuer of the certificate.</param>
+        /// <param name="subject">The subject of the certificate.</param>
+        /// <returns>True/False if the method was able to successfully parse both the subject name and the issuer of the certificate.</returns>
+        public static bool TryParseCertificateReference(Uri uri, out string issuer, out string subject)
+        {
+            Dictionary<string, IConvertible> values = TextParsingExtensions.ParseDelimitedValues()
+            return true;
+        }
+
+        /// <summary>
         /// Creates a <see cref="DependencyBlobStore"/> definition from the connection properties provided.
         /// <list>
         /// <item>The following type of connection strings are supported:</item>
