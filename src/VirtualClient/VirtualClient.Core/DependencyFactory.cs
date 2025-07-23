@@ -9,6 +9,7 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading.Tasks;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
@@ -412,11 +413,12 @@ namespace VirtualClient
         /// <param name="storeDescription">Describes the type of blob store (e.g. Content, Packages).</param>
         /// <param name="source">An explicit source to use for blob uploads/downloads through the proxy API.</param>
         /// <param name="logger">A logger to use for capturing information related to blob upload/download operations.</param>
-        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null, Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="certificate"></param>
+        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null, Microsoft.Extensions.Logging.ILogger logger = null, X509Certificate2 certificate = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
 
-            VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(storeDescription.ProxyApiUri, TimeSpan.FromHours(6));
+            VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(storeDescription.ProxyApiUri, TimeSpan.FromHours(6), certificate);
             ProxyBlobManager blobManager = new ProxyBlobManager(storeDescription, proxyApiClient, source);
 
             if (logger != null)
@@ -675,16 +677,21 @@ namespace VirtualClient
         /// </summary>
         /// <param name="proxyApiUri">The URI for the proxy API/service including its port (e.g. http://any.uri:5000).</param>
         /// <param name="timeout">A timeout to use for the underlying HTTP client.</param>
-        public static VirtualClientProxyApiClient CreateVirtualClientProxyApiClient(Uri proxyApiUri, TimeSpan? timeout = null)
+        /// <param name="certificate"></param>
+        public static VirtualClientProxyApiClient CreateVirtualClientProxyApiClient(Uri proxyApiUri, TimeSpan? timeout = null, X509Certificate2 certificate = null)
         {
             proxyApiUri.ThrowIfNull(nameof(proxyApiUri));
 
-            IRestClient restClient = new RestClientBuilder(timeout)
+            IRestClientBuilder builder = new RestClientBuilder(timeout)
                 .AlwaysTrustServerCertificate()
-                .AddAcceptedMediaType(MediaType.Json)
-                .Build();
+                .AddAcceptedMediaType(MediaType.Json);
 
-            return new VirtualClientProxyApiClient(restClient, proxyApiUri);
+            if (certificate != null)
+            {
+                builder.AddCertificate(certificate);
+            }
+
+            return new VirtualClientProxyApiClient(builder.Build(), proxyApiUri);
         }
 
         /// <summary>

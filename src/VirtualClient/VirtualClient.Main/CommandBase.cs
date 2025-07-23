@@ -362,7 +362,7 @@ namespace VirtualClient
             }
 
             LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
-       
+
             foreach (string loggerDefinition in this.loggerDefinitions)
             {
                 string loggerName = loggerDefinition;
@@ -408,7 +408,7 @@ namespace VirtualClient
                         break;
 
                     case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), source);
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), this.CertificateManager, source);
                         break;
 
                     default:
@@ -578,6 +578,12 @@ namespace VirtualClient
             // on the same local network that has that access (e.g. hardware manufacturing facility scenarios).
             if (this.ProxyApiUri != null)
             {
+                X509Certificate2 certificate = null;
+                if (EndpointUtility.TryParseCertificateReference(this.ProxyApiUri, out string issuer, out string subject))
+                {
+                    certificate = this.CertificateManager.GetCertificateFromStoreAsync(issuer, subject).GetAwaiter().GetResult();
+                }
+
                 IConvertible contentSource = null;
                 IConvertible packageSource = null;
                 this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
@@ -588,11 +594,11 @@ namespace VirtualClient
 
                 CommandBase.proxyApiDebugLoggers.Add(debugLogger);
 
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString(), debugLogger));
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString(), debugLogger));
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString(), debugLogger, certificate));
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString(), debugLogger, certificate));
 
                 // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
-                apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), this.ProxyApiUri);
+                apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), this.ProxyApiUri, certificate);
             }
             else
             {
@@ -755,7 +761,7 @@ namespace VirtualClient
             }
         }
 
-        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, Uri proxyApiUri, string source = null)
+        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, Uri proxyApiUri, ICertificateManager certificateManager, string source = null)
         {
             if (proxyApiUri != null)
             {
@@ -764,7 +770,13 @@ namespace VirtualClient
 
                 CommandBase.proxyApiDebugLoggers.Add(debugLogger);
 
-                VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(proxyApiUri);
+                X509Certificate2 certificate = null;
+                if (EndpointUtility.TryParseCertificateReference(proxyApiUri, out string issuer, out string subject))
+                {
+                    certificate = certificateManager.GetCertificateFromStoreAsync(issuer, subject).GetAwaiter().GetResult();
+                }
+
+                VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(proxyApiUri, certificate: certificate);
                 ProxyTelemetryChannel telemetryChannel = DependencyFactory.CreateProxyTelemetryChannel(proxyApiClient, debugLogger);
 
                 loggingProviders.Add(new ProxyLoggerProvider(telemetryChannel, source));
