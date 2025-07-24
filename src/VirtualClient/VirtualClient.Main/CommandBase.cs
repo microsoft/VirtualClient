@@ -29,7 +29,7 @@ namespace VirtualClient
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Identity;
     using VirtualClient.Proxy;
-    
+
     /// <summary>
     /// Base class for Virtual Client commands.
     /// </summary>
@@ -362,7 +362,6 @@ namespace VirtualClient
             }
 
             LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
-
             foreach (string loggerDefinition in this.loggerDefinitions)
             {
                 string loggerName = loggerDefinition;
