@@ -245,7 +245,7 @@ namespace VirtualClient
         /// </summary>
         /// <param name="id">The ID of the proxy API client to use for lookups.</param>
         /// <param name="uri">The URI of the target Virtual Client API service including the port (e.g. http://any.server.uri:4500).</param>
-        /// <param name="certificate"></param>
+        /// <param name="certificate">The certificate to authenticate to the proxy API</param>
         /// <returns>
         /// An <see cref="IProxyApiClient"/> that can be used to interface with a target
         /// Virtual Client API service.

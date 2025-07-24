@@ -40,7 +40,7 @@ namespace VirtualClient.Common.Rest
 
         /// <summary>
         /// Always trust the server certificate.
-        /// Note that this method override the underlying httpclient and previous builder methods, so this builder methods should be used first.
+        /// Note that this method override the underlying httpclient and previous builder methods, so this builder method should be used first.
         /// </summary>
         /// <returns>Builder itself.</returns>
         IRestClientBuilder AlwaysTrustServerCertificate();

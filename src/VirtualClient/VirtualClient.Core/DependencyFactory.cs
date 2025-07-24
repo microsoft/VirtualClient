@@ -413,7 +413,7 @@ namespace VirtualClient
         /// <param name="storeDescription">Describes the type of blob store (e.g. Content, Packages).</param>
         /// <param name="source">An explicit source to use for blob uploads/downloads through the proxy API.</param>
         /// <param name="logger">A logger to use for capturing information related to blob upload/download operations.</param>
-        /// <param name="certificate"></param>
+        /// <param name="certificate">The certificate to authenticate to the proxy API</param>
         public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null, Microsoft.Extensions.Logging.ILogger logger = null, X509Certificate2 certificate = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
@@ -677,11 +677,12 @@ namespace VirtualClient
         /// </summary>
         /// <param name="proxyApiUri">The URI for the proxy API/service including its port (e.g. http://any.uri:5000).</param>
         /// <param name="timeout">A timeout to use for the underlying HTTP client.</param>
-        /// <param name="certificate"></param>
+        /// <param name="certificate">The certificate to authenticate to the proxy API</param>
         public static VirtualClientProxyApiClient CreateVirtualClientProxyApiClient(Uri proxyApiUri, TimeSpan? timeout = null, X509Certificate2 certificate = null)
         {
             proxyApiUri.ThrowIfNull(nameof(proxyApiUri));
 
+            // Check and see if AlwaysTrustServerCertificate was there
             IRestClientBuilder builder = new RestClientBuilder(timeout)
                 .AlwaysTrustServerCertificate()
                 .AddAcceptedMediaType(MediaType.Json);
