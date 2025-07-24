@@ -61,6 +61,7 @@ namespace VirtualClient.Contracts
         private static readonly Regex CommaDelimitedExpression = new Regex(",", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SemiColonDelimitedExpression = new Regex(";", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex TripleCommaDelimitedExpression = new Regex(",,,", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex AmpersandDelimitedExpression = new Regex("&", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Remove rows that matches the regex.
@@ -120,6 +121,7 @@ namespace VirtualClient.Contracts
             // 1) Triple-Comma Delimited (e.g. key1=value1,,,key2=value2)
             // 2) Semi-Colon Delimited   (e.g. key1=value1;key2=value2)
             // 3) Comma Delimited        (e.g. key1=value1,key2=value2)
+            // 4) Ampersand Delmited     (e.g. key1=value1&key2=value2)
 
             string[] delimitedKeyValuePairs = null;
             string normalizedText = text.Trim(new char[] { '\'', '"' });
@@ -138,6 +140,11 @@ namespace VirtualClient.Contracts
             {
                 // Comma delimiting
                 delimitedKeyValuePairs = TextParsingExtensions.CommaDelimitedExpression.Split(normalizedText);
+            }
+            else if (TextParsingExtensions.AmpersandDelimitedExpression.IsMatch(normalizedText))
+            {
+                // Ampersand delimiting
+                delimitedKeyValuePairs = TextParsingExtensions.AmpersandDelimitedExpression.Split(normalizedText);
             }
             else
             {
