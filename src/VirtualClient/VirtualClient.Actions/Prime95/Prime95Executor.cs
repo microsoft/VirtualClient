@@ -291,6 +291,7 @@ namespace VirtualClient.Actions
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
                             process.SafeKill();
+                            await process.WaitForExitAsync(cancellationToken);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
