@@ -13,18 +13,19 @@ namespace VirtualClient.Monitors
     using System.Threading.Tasks;
     using global::VirtualClient.Common.Contracts;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using MimeMapping;
     using Newtonsoft.Json;
-    using Polly;
+    using VirtualClient.Common;
 
     /// <summary>
     /// This monitor processes content/file uploads requested by Virtual Client
     /// workload, monitoring and dependency components.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class FileUploadMonitor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -66,7 +67,7 @@ namespace VirtualClient.Monitors
                 if (this.TryGetContentStoreManager(out IBlobManager blobManager))
                 {
                     await this.ProcessFileUploadsAsync(blobManager, telemetryContext, cancellationToken);
-                    await this.ProcessSummaryFileUploadsAsync(blobManager, telemetryContext);
+                    await this.ProcessStandardLogFileUploadsAsync(blobManager, telemetryContext);
                 }
             });
         }
@@ -121,7 +122,7 @@ namespace VirtualClient.Monitors
             }
         }
 
-        private async Task ProcessSummaryFileUploadsAsync(IBlobManager blobManager, EventContext telemetryContext)
+        private async Task ProcessStandardLogFileUploadsAsync(IBlobManager blobManager, EventContext telemetryContext)
         {
             EventContext relatedContext = telemetryContext.Clone().AddContext("directoryPath", this.PlatformSpecifics.LogsDirectory);
 
@@ -129,14 +130,11 @@ namespace VirtualClient.Monitors
             {
                 try
                 {
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessSummaryFileUploads", relatedContext, async () =>
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessStandardLogFileUploads", relatedContext, async () =>
                     {
-                        // Upload the workload summary logs (e.g. metrics.csv) before exiting. We do this at the very end. Same as before, we do not
-                        // honor the cancellation token until ALL files have been successfully processed.
-                        await this.UploadCsvSummaryFilesAsync(blobManager, relatedContext);
-
-                        // Upload specific summary.txt at root level of logs directory.
-                        await this.UploadSummaryFileAsync(blobManager, relatedContext);
+                        // Upload the default logs (e.g. vc.metrics, vc.events, metrics.csv, summary.txt) before exiting. We do this at the very end.
+                        // Same as before, we do not honor the cancellation token until ALL files have been successfully processed.
+                        await this.UploadStandardLogFilesAsync(blobManager, relatedContext);
                     });
 
                     break;
@@ -236,64 +234,23 @@ namespace VirtualClient.Monitors
             return filesFound;
         }
 
-        private async Task UploadSummaryFileAsync(IBlobManager blobManager, EventContext telemetryContext)
-        {
-            try
-            {
-                string summaryTxtFileLocation = Path.Combine(this.PlatformSpecifics.LogsDirectory, "summary.txt");
-                bool summaryTxtFileExists = this.fileSystem.File.Exists(summaryTxtFileLocation);
-                telemetryContext
-                    .AddContext(nameof(summaryTxtFileLocation), summaryTxtFileLocation)
-                    .AddContext(nameof(summaryTxtFileExists), summaryTxtFileExists);
-
-                if (summaryTxtFileExists)
-                {
-                    try
-                    {
-                        FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
-                            new FileContext(
-                                this.fileSystem.FileInfo.New(summaryTxtFileLocation),
-                                "text/plain",
-                                Encoding.UTF8.WebName,
-                                this.ExperimentId,
-                                this.AgentId));
-
-                        await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
-                    }
-                    catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // It is common that there will be read/write access errors at certain times while
-                        // upload request files are being created at the same time as attempts to read. 
-                    }
-                    catch (Exception exc)
-                    {
-                        this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                    }
-                }
-            }
-            catch (Exception exc)
-            {
-                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Error);
-            }
-        }
-
-        private async Task UploadCsvSummaryFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
+        private async Task UploadStandardLogFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
         {
             try
             {
                 if (this.fileSystem.Directory.Exists(this.PlatformSpecifics.LogsDirectory))
                 {
-                    IEnumerable<string> csvFiles = this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.LogsDirectory, "*.csv", SearchOption.TopDirectoryOnly);
-                    if (csvFiles?.Any() == true)
+                    IEnumerable<string> logFiles = this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.LogsDirectory, "*.*", SearchOption.TopDirectoryOnly);
+                    if (logFiles?.Any() == true)
                     {
-                        foreach (var filePath in csvFiles)
+                        foreach (var filePath in logFiles)
                         {
                             try
                             {
                                 FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
                                     new FileContext(
                                         this.fileSystem.FileInfo.New(filePath),
-                                        "text/csv",
+                                        MimeUtility.GetMimeMapping(filePath),
                                         Encoding.UTF8.WebName,
                                         this.ExperimentId,
                                         this.AgentId));
