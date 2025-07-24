@@ -179,7 +179,7 @@ namespace VirtualClient.Contracts
         /// The content path template to use when uploading content
         /// to target storage resources. When not defined the default template will be used.
         /// </summary>
-        public string ContentPathTemplate { get; internal set; }
+        public string ContentPathTemplate { get; set; }
 
         /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
