@@ -25,16 +25,18 @@ namespace VirtualClient
     {
         private const string AllowedPackageUri = "https://packages.virtualclient.microsoft.com";
 
+#pragma warning disable CS1570 // XML comment has badly formed XML - the URI is not XML
         /// <summary>
         /// Parses the subject name and issuer from the provided uri. If the uri does not contain the correctly formatted certificate subject name
         /// and issuer information the method will return false, and keep the two out parameters as null.
-        /// Ex. https://vegaprod01proxyapi.azurewebsites.net?crti={issuer}&crts={cert subject}
+        /// Ex. https://vegaprod01proxyapi.azurewebsites.net?crti=issuerName&crts=certSubject
         /// </summary>
         /// <param name="uri">The uri to attempt to parse the values from.</param>
         /// <param name="issuer">The issuer of the certificate.</param>
         /// <param name="subject">The subject of the certificate.</param>
         /// <returns>True/False if the method was able to successfully parse both the subject name and the issuer of the certificate.</returns>
         public static bool TryParseCertificateReference(Uri uri, out string issuer, out string subject)
+#pragma warning restore CS1570 // XML comment has badly formed XML
         {
             IDictionary<string, IConvertible> values = TextParsingExtensions.ParseDelimitedValues(uri.Query);
 

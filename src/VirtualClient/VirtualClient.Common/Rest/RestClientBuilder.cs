@@ -15,11 +15,13 @@ namespace VirtualClient.Common.Rest
     /// </summary>
     public class RestClientBuilder : IRestClientBuilder
     {
-        // disable this for now.
-        private RestClient restClient;
         private TimeSpan? httpTimeout;
         private bool disposed = false;
+
+#pragma warning disable CA2213 // We will reuse these single objects for the lifetime of virtual client execution
+        private RestClient restClient;
         private HttpClientHandler handler;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
         /// <summary>
         /// Constructor for the rest client builder
