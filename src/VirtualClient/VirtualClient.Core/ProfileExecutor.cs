@@ -32,13 +32,10 @@ namespace VirtualClient
         /// </summary>
         /// <param name="profile">The profile to execute.</param>
         /// <param name="dependencies">Shared platform dependencies to pass along to individual components in the profile.</param>
+        /// <param name="settings">Settings to apply to each individual component and the flow of the profile execution.</param>
         /// <param name="scenarios">A specific set of profile scenarios to execute or to exclude.</param>
         /// <param name="logger">A logger to use for capturing telemetry.</param>
-        public ProfileExecutor(
-            ExecutionProfile profile, 
-            IServiceCollection dependencies, 
-            IEnumerable<string> scenarios = null, 
-            ILogger logger = null)
+        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, ComponentSettings settings = null, IEnumerable<string> scenarios = null, ILogger logger = null)
         {
             profile.ThrowIfNull(nameof(profile));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -46,12 +43,13 @@ namespace VirtualClient
             this.Profile = profile;
             this.Dependencies = dependencies;
             this.Scenarios = scenarios;
+            this.Settings = settings ?? new ComponentSettings();
             this.ExecuteActions = true;
             this.ExecuteMonitors = true;
             this.ExecuteDependencies = true;
-            this.ExitWait = TimeSpan.FromSeconds(10);
-            this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
+            this.ExitWait = this.Settings.ExitWait ?? TimeSpan.FromMinutes(10);
+            this.FailFast = this.Settings.FailFast ?? false;
 
             this.metadataContract = new MetadataContract();
             this.ExecutionMinimumInterval = profile.MinimumExecutionInterval;
@@ -132,13 +130,13 @@ namespace VirtualClient
         /// Defines an explicit time for which the application will wait before exiting. This is correlated with
         /// the exit/flush wait supplied by the user on the command line.
         /// </summary>
-        public TimeSpan ExitWait { get; set; }
+        public TimeSpan ExitWait { get; }
 
         /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of 
         /// their severity. Default = false.
         /// </summary>
-        public bool? FailFast { get; set; }
+        public bool FailFast { get; }
 
         /// <summary>
         /// Logs things to various sources
@@ -146,25 +144,20 @@ namespace VirtualClient
         public ILogger Logger { get; }
 
         /// <summary>
-        /// True if VC should log output to file.
-        /// </summary>
-        public bool? LogToFile { get; set; }
-
-        /// <summary>
         /// The profile to execute.
         /// </summary>
         public ExecutionProfile Profile { get; }
-
-        /// <summary>
-        /// A seed to use with profile actions to ensure consistency.
-        /// </summary>
-        public int RandomizationSeed { get; set; }
 
         /// <summary>
         /// A set of scenarios to execute from the workload profile (vs. the entire
         /// profile).
         /// </summary>
         public IEnumerable<string> Scenarios { get; }
+
+        /// <summary>
+        /// Settings to apply to individual component operations.
+        /// </summary>
+        public ComponentSettings Settings { get; }
 
         /// <summary>
         /// The set of actions to execute as defined in the profile.
@@ -443,7 +436,7 @@ namespace VirtualClient
                                                 this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                             }
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast.Value || action?.FailFast == true)
+                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || action?.FailFast == true)
                                         {
                                             // Error reasons have numeric/integer values that indicate their severity. Error reasons
                                             // with a value >= 500 are terminal situations where the workload cannot run successfully
@@ -669,8 +662,7 @@ namespace VirtualClient
             }
         }
 
-        private List<VirtualClientComponent> CreateComponents(
-            IEnumerable<ExecutionProfileElement> profileComponents, IEnumerable<string> includeScenarios = null, IEnumerable<string> excludeScenarios = null)
+        private List<VirtualClientComponent> CreateComponents(IEnumerable<ExecutionProfileElement> profileComponents, IEnumerable<string> includeScenarios = null, IEnumerable<string> excludeScenarios = null)
         {
             List<VirtualClientComponent> components = new List<VirtualClientComponent>();
 
@@ -706,22 +698,14 @@ namespace VirtualClient
 
                     if (ComponentTypeCache.Instance.TryGetComponentType(component.Type, out Type componentType))
                     {
-                        bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(
                             component,
                             this.Dependencies,
-                            this.RandomizationSeed,
-                            this.FailFast,
-                            this.LogToFile,
+                            this.Settings,
                             includeScenarios,
                             excludeScenarios);
 
-                        if (!VirtualClientComponent.IsSupported(runtimeComponent))
-                        {
-                            executeComponent = false;
-                        }
-
-                        if (executeComponent)
+                        if (VirtualClientComponent.IsSupported(runtimeComponent))
                         {
                             components.Add(runtimeComponent);
                             this.ComponentCreated?.Invoke(this, new ComponentEventArgs(runtimeComponent));

@@ -136,7 +136,7 @@ namespace VirtualClient
                                 }
                                 finally
                                 {
-                                    context.AddProcessContext(process, "diskpartProcess");
+                                    context.AddProcessDetails(process.ToProcessDetails("diskpart"), "diskpartProcess");
                                 }
                             }
                         }
@@ -291,7 +291,7 @@ namespace VirtualClient
                                 {
                                     process.WriteInput($"exit");
                                     await Task.Delay(this.WaitTime).ConfigureAwait(false);
-                                    context.AddProcessContext(process, "diskpartProcess");
+                                    context.AddProcessDetails(process.ToProcessDetails("diskpart"), "diskpartProcess");
                                 }
                             }
                         }

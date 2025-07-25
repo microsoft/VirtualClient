@@ -23,13 +23,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="componentDescription">The component type description.</param>
         /// <param name="dependencies">A collection of dependencies that can be used for dependency injection.</param>
-        /// <param name="randomizationSeed">A randomization seed to use to ensure consistency across workloads running on different systems.</param>
-        /// <param name="failFast">
-        /// True if the application should fail/crash immediately upon experiencing any errors in actions, monitors or dependencies. It is the default
-        /// behavior for the application to attempt to "stay alive" when experiencing certain types of errors because they could be transient in nature
-        /// (vs. terminal).
-        /// </param>
-        /// <param name="logToFile">True to instruct the application to log output to files on the file system.</param>
+        /// <param name="componentSettings">Settings to apply to the behavior of the </param>
         /// <param name="includedScenarios">
         /// When evaluating child components evaluate whether or not the child component should be 
         /// included dictated by the scenarios provided on the command line. These scenarios must be included.
@@ -39,11 +33,9 @@ namespace VirtualClient.Contracts
         /// included dictated by the scenarios provided on the command line. These scenarios must be excluded.
         /// </param>
         public static VirtualClientComponent CreateComponent(
-            ExecutionProfileElement componentDescription, 
+            ExecutionProfileElement componentDescription,
             IServiceCollection dependencies,
-            int? randomizationSeed = null,
-            bool? failFast = null,
-            bool? logToFile = null,
+            ComponentSettings componentSettings = null,
             IEnumerable<string> includedScenarios = null,
             IEnumerable<string> excludedScenarios = null)
         {
@@ -52,20 +44,20 @@ namespace VirtualClient.Contracts
 
             try
             {
-                if (!ComponentTypeCache.Instance.TryGetComponentType(componentDescription.Type, out Type type))
+                if (!ComponentTypeCache.Instance.TryGetComponentType(componentDescription.Type, out Type componentType))
                 {
                     throw new TypeLoadException($"Type '{componentDescription.Type}' does not exist.");
                 }
 
+                ComponentSettings effectiveSettings = componentSettings ?? new ComponentSettings();
+
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
+                    componentType,
                     componentDescription,
-                    type,
+                    effectiveSettings,
                     dependencies,
                     new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
                     new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase),
-                    randomizationSeed,
-                    failFast,
-                    logToFile,
                     includedScenarios,
                     excludedScenarios);
 
@@ -104,20 +96,44 @@ namespace VirtualClient.Contracts
         }
 
         private static VirtualClientComponent CreateComponent(
-            ExecutionProfileElement componentDescription, 
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type componentType,
+            ExecutionProfileElement componentDescription,
+            ComponentSettings componentSettings,
             IServiceCollection dependencies,
             IDictionary<string, IConvertible> metadata,
             IDictionary<string, JToken> extensions,
-            int? randomizationSeed = null,
-            bool? failFast = null,
-            bool? logToFile = null,
             IEnumerable<string> includeScenarios = null,
             IEnumerable<string> excludeScenarios = null)
         {
-            VirtualClientComponent component = component = (VirtualClientComponent)Activator.CreateInstance(type, dependencies, componentDescription.Parameters);
+            if (!dependencies.TryGetService<ComponentSettings>(out ComponentSettings settings))
+            {
+                settings = new ComponentSettings();
+            }
+
+            IDictionary<string, IConvertible> effectiveParameters = new OrderedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            if (componentDescription.Parameters?.Any() == true)
+            {
+                effectiveParameters.AddRange(componentDescription.Parameters);
+            }
+
+            if (componentSettings.FailFast != null)
+            {
+                effectiveParameters[nameof(VirtualClientComponent.FailFast)] = componentSettings.FailFast.Value;
+            }
+
+            if (componentSettings.LogToFile != null)
+            {
+                effectiveParameters[nameof(VirtualClientComponent.LogToFile)] = componentSettings.LogToFile.Value;
+            }
+
+            if (componentSettings.Seed != null)
+            {
+                effectiveParameters[nameof(VirtualClientComponent.Seed)] = componentSettings.Seed.Value;
+            }
+
+            VirtualClientComponent component = (VirtualClientComponent)Activator.CreateInstance(componentType, dependencies, effectiveParameters);
             component.ComponentType = componentDescription.ComponentType;
-            component.ExecutionSeed = randomizationSeed;
+            component.ContentPathTemplate = componentSettings.ContentPathTemplate;
 
             // Metadata is merged at each level down the hierarchy. Metadata at higher levels
             // takes priority overriding metadata at lower levels (i.e. withReplace: false).
@@ -133,16 +149,6 @@ namespace VirtualClient.Contracts
             if (componentDescription.Extensions?.Any() == true)
             {
                 component.Extensions.AddRange(componentDescription.Extensions, withReplace: false);
-            }
-
-            if (failFast != null)
-            {
-                component.FailFast = failFast.Value;
-            }
-
-            if (logToFile != null)
-            {
-                component.LogToFile = logToFile.Value;
             }
 
             if (metadata?.Any() == true)
@@ -188,14 +194,12 @@ namespace VirtualClient.Contracts
                     }
 
                     VirtualClientComponent childComponent = ComponentFactory.CreateComponent(
-                        subComponent, 
-                        subcomponentType, 
-                        dependencies, 
+                        subcomponentType,
+                        subComponent,
+                        componentSettings,
+                        dependencies,
                         new Dictionary<string, IConvertible>(metadata, StringComparer.OrdinalIgnoreCase),
-                        component.Extensions, // Extensions for the parent component to include.
-                        randomizationSeed,
-                        failFast,
-                        logToFile);
+                        component.Extensions); // Extensions for the parent component to include.
 
                     childComponent.ComponentType = componentDescription.ComponentType;
                     componentCollection.Add(childComponent);

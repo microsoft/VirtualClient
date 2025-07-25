@@ -5,8 +5,6 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.CommandLine.Builder;
-    using System.CommandLine.Parsing;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -28,13 +26,6 @@ namespace VirtualClient.Dependencies
     public class ExecuteCommandMonitor : VirtualClientIntervalBasedMonitor
     {
         private const int MaxOutputLength = 125000;
-
-        // e.g.
-        // .\relative\path
-        // ..\..\relative\path
-        // ./relative/path
-        // ../../relative/path
-        private static readonly Regex RelativePathExpression = new Regex(@"\.{1,}[\\\/]{1,2}", RegexOptions.Compiled);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteCommandMonitor"/> class.
@@ -115,30 +106,6 @@ namespace VirtualClient.Dependencies
         public IAsyncPolicy RetryPolicy { get; set; }
 
         /// <summary>
-        /// Returns true if the command parts can be determined and outputs the parts.
-        /// </summary>
-        /// <param name="fullCommand">The full comamnd and arguments (e.g. sudo lshw -c disk).</param>
-        /// <param name="command">The command to execute.</param>
-        /// <param name="commandArguments">The arguments to pass to the command.</param>
-        protected static bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments)
-        {
-            fullCommand.ThrowIfNullOrWhiteSpace(nameof(fullCommand));
-
-            command = null;
-            commandArguments = null;
-
-            string[] commandParts = fullCommand.Split(' ');
-            command = commandParts[0].Trim();
-
-            if (commandParts.Length > 1)
-            {
-                commandArguments = string.Join(' ', commandParts.Skip(1)).Trim();
-            }
-
-            return command != null;
-        }
-
-        /// <summary>
         /// Execute the monitor to run the command on intervals.
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -197,58 +164,67 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected async Task ExecuteCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            IEnumerable<string> commandsToExecute = this.GetCommandsToExecute();
+
+            if (commandsToExecute?.Any() == true)
             {
-                if (ExecuteCommandMonitor.TryGetCommandParts(this.Command, out string command, out string commandArguments))
+                foreach (string originalCommand in commandsToExecute)
                 {
-                    await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+                    if (!cancellationToken.IsCancellationRequested)
                     {
+                        string command = originalCommand;
+                        bool commandHasRelativePaths = PlatformSpecifics.RelativePathExpression.IsMatch(command);
                         string effectiveWorkingDirectory = this.WorkingDirectory;
-                        if (string.IsNullOrWhiteSpace(this.WorkingDirectory) && ExecuteCommandMonitor.RelativePathExpression.IsMatch(this.Command))
-                        {
-                            // If relative path references are used in the command, set the working directory
-                            // to the current application/.exe base directory.
-                            effectiveWorkingDirectory = this.PlatformSpecifics.CurrentDirectory;
-                        }
 
                         if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
                         {
-                            effectiveWorkingDirectory = effectiveWorkingDirectory.TrimEnd(new char[] { '\\', '/' });
-                            if (ExecuteCommandMonitor.RelativePathExpression.IsMatch(effectiveWorkingDirectory))
-                            {
-                                // Ensure that relative working directory paths are fully expanded.
-                                effectiveWorkingDirectory = Path.GetFullPath(effectiveWorkingDirectory);
-                            }
-
-                            // There appears to be some kind of bug or unfortunate implementation choice
-                            // in .NET causing a Win32Exception like the following despite a correct command
-                            // name and working directory being defined for the process object. This is a workaround
-                            // to the issue.
-                            //
-                            // System.ComponentModel.Win32Exception:
-                            // 'An error occurred trying to start process 'execute_ipconfig.cmd'
-                            // with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU'.
-                            // The system cannot find the file specified.
-                            if (string.Equals(command, "sudo", StringComparison.OrdinalIgnoreCase) && ExecuteCommandMonitor.RelativePathExpression.IsMatch(commandArguments))
-                            {
-                                commandArguments = Path.Combine(effectiveWorkingDirectory, commandArguments);
-                            }
-                            else if (!Path.IsPathRooted(command))
-                            {
-                                command = Path.Combine(effectiveWorkingDirectory, command);
-                            }
+                            effectiveWorkingDirectory = PlatformSpecifics.ResolveRelativePaths(effectiveWorkingDirectory)
+                                ?.TrimEnd(new char[] { '\\', '/' });
                         }
 
-                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, effectiveWorkingDirectory, telemetryContext, cancellationToken))
+                        if (commandHasRelativePaths)
                         {
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, this.LogFolderName);
-                                process.ThrowIfMonitorFailed();
-                                this.CaptureEventInformation(process, telemetryContext);
-                            }
+                            command = PlatformSpecifics.ResolveRelativePaths(command);
                         }
-                    });
+
+                        if (PlatformSpecifics.TryGetCommandParts(command, out string effectiveCommand, out string effectiveCommandArguments))
+                        {
+                            if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+                            {
+                                // There appears to be some kind of bug or unfortunate implementation choice
+                                // in .NET causing a Win32Exception like the following despite a correct command
+                                // name and working directory being defined for the process object. This is a workaround
+                                // to the issue.
+                                //
+                                // System.ComponentModel.Win32Exception:
+                                // 'An error occurred trying to start process 'execute_ipconfig.cmd'
+                                // with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU'.
+                                // The system cannot find the file specified.
+                                Match commandMatch = Regex.Match(effectiveCommand, @"\x22*([\x20\x21\x23-\x7E]+)\x22*", RegexOptions.IgnoreCase);
+                                if (commandMatch.Success && !string.Equals(commandMatch.Value, "sudo", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string commandText = commandMatch.Groups[1].Value;
+                                    if (!Path.IsPathRooted(commandText))
+                                    {
+                                        effectiveCommand = command.Replace(commandText, this.Combine(effectiveWorkingDirectory, commandText));
+                                    }
+                                }
+                            }
+
+                            await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+                            {
+                                using (IProcessProxy process = await this.ExecuteCommandAsync(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory, telemetryContext, cancellationToken))
+                                {
+                                    if (!cancellationToken.IsCancellationRequested)
+                                    {
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, this.LogFolderName);
+                                        process.ThrowIfMonitorFailed();
+                                        this.CaptureEventInformation(process, telemetryContext);
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -309,6 +285,28 @@ namespace VirtualClient.Dependencies
                     { "standardOutput", standardOutput },
                     { "standardError", standardError }
                 });
+        }
+
+        private IEnumerable<string> GetCommandsToExecute()
+        {
+            List<string> commandsToExecute = new List<string>();
+            bool sudo = this.Command.StartsWith("sudo", StringComparison.OrdinalIgnoreCase);
+
+            IEnumerable<string> commands = this.Command.Split("&&", StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
+
+            foreach (string fullCommand in commands)
+            {
+                if (sudo && !fullCommand.Contains("sudo", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandsToExecute.Add($"sudo {fullCommand}");
+                }
+                else
+                {
+                    commandsToExecute.Add(fullCommand);
+                }
+            }
+
+            return commandsToExecute;
         }
     }
 }
