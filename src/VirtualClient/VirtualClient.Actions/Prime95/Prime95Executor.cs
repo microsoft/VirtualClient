@@ -291,7 +291,8 @@ namespace VirtualClient.Actions
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
                             process.SafeKill();
-                            await process.WaitForExitAsync(cancellationToken);
+                            // await process.WaitForExitAsync(cancellationToken);
+                            await Task.Delay(5000); // Wait up to 5 seconds for the process to clean up
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
@@ -303,7 +304,7 @@ namespace VirtualClient.Actions
                                     {
                                         results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
                                     }
-                                    
+
                                     if (string.IsNullOrWhiteSpace(results))
                                     {
                                         throw new WorkloadResultsException(
