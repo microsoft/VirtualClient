@@ -3,6 +3,7 @@
 
 namespace VirtualClient
 {
+
     using System;
     using System.Collections.Generic;
     using System.Data;
@@ -564,7 +565,7 @@ namespace VirtualClient
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IProfileManager profileManager = new ProfileManager();
             ISshClientFactory sshClientFactory = new SshClientFactory();
-            List <IBlobManager> blobStores = new List<IBlobManager>();
+            List<IBlobManager> blobStores = new List<IBlobManager>();
 
             IKeyVaultManager keyVaultManager = new KeyVaultManager();
 
@@ -622,6 +623,12 @@ namespace VirtualClient
                         .CreateLogger("Proxy");
 
                     CommandBase.proxyApiDebugLoggers.Add(debugLogger);
+
+                    X509Certificate2 certificate = null;
+                    if (EndpointUtility.TryParseCertificateReference(this.ProxyApiUri, out string issuer, out string subject))
+                    {
+                        certificate = this.CertificateManager.GetCertificateFromStoreAsync(issuer, subject).GetAwaiter().GetResult();
+                    }
 
                     blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
 
