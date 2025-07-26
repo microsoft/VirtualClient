@@ -388,10 +388,12 @@ namespace VirtualClient
         /// <returns>True/False if the method was able to successfully parse both the subject name and the issuer of the certificate.</returns>
         public static bool TryParseCertificateReference(Uri uri, out string issuer, out string subject)
         {
-            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(uri.Query)?.ToDictionary(
-                    entry => entry.Key,
-                    entry => entry.Value?.ToString(),
-                    StringComparer.OrdinalIgnoreCase);
+            string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
+
+            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value?.ToString(),
+                StringComparer.OrdinalIgnoreCase);
 
             return TryGetCertificateReferenceForUri(queryParameters, out issuer, out subject);
         }
