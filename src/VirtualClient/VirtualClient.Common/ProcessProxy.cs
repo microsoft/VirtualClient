@@ -8,6 +8,8 @@ namespace VirtualClient.Common
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common.Extensions;
@@ -40,7 +42,7 @@ namespace VirtualClient.Common
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
             this.processDetails = new ProcessDetails();
-            this.processDetails.GeneratedResults = new List<string>();
+            this.processDetails.Results = new List<string>();
         }
 
         /// <inheritdoc />
@@ -128,22 +130,6 @@ namespace VirtualClient.Common
             set
             {
                 this.StartInfo.RedirectStandardOutput = value;
-            }
-        }
-
-        /// <inheritdoc />
-        public ProcessDetails ProcessDetails
-        {
-            get
-            {
-                this.processDetails.Id = this.Id;
-                this.processDetails.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
-                this.processDetails.ExitCode = this.ExitCode;
-                this.processDetails.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
-                this.processDetails.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
-                this.processDetails.WorkingDirectory = this.StartInfo?.WorkingDirectory;
-
-                return this.processDetails;
             }
         }
 

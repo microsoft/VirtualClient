@@ -167,11 +167,11 @@ namespace VirtualClient.Actions
                     this.AddMeasurement(metrics, job, $"read.short_ios", "read_ios_short", null, MetricRelativity.LowerIsBetter, verbosity: 2);
                     this.AddMeasurement(metrics, job, $"read.drop_ios", "read_ios_dropped", null, MetricRelativity.LowerIsBetter, verbosity: 2);
 
-                    this.AddMeasurement(metrics, job, $"read.bw", "read_bandwidth", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.bw_min", "read_bandwidth_min", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.bw_max", "read_bandwidth_max", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"read.bw_mean", "read_bandwidth_mean", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0);
-                    this.AddMeasurement(metrics, job, $"read.bw_dev", "read_bandwidth_stdev", MetricUnit.KilobytesPerSecond, MetricRelativity.LowerIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"read.bw", "read_bandwidth", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter);
+                    this.AddMeasurement(metrics, job, $"read.bw_min", "read_bandwidth_min", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter);
+                    this.AddMeasurement(metrics, job, $"read.bw_max", "read_bandwidth_max", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter);
+                    this.AddMeasurement(metrics, job, $"read.bw_mean", "read_bandwidth_mean", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0);
+                    this.AddMeasurement(metrics, job, $"read.bw_dev", "read_bandwidth_stdev", MetricUnit.KibibytesPerSecond, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"read.iops", "read_iops", null, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"read.iops_min", "read_iops_min", null, MetricRelativity.HigherIsBetter);
@@ -222,11 +222,11 @@ namespace VirtualClient.Actions
                     this.AddMeasurement(metrics, job, $"write.short_ios", "write_ios_short", null, MetricRelativity.LowerIsBetter, verbosity: 2);
                     this.AddMeasurement(metrics, job, $"write.drop_ios", "write_ios_dropped", null, MetricRelativity.LowerIsBetter, verbosity: 2);
 
-                    this.AddMeasurement(metrics, job, $"write.bw", "write_bandwidth", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.bw_min", "write_bandwidth_min", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.bw_max", "write_bandwidth_max", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter);
-                    this.AddMeasurement(metrics, job, $"write.bw_mean", "write_bandwidth_mean", MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0);
-                    this.AddMeasurement(metrics, job, $"write.bw_dev", "write_bandwidth_stdev", MetricUnit.KilobytesPerSecond, MetricRelativity.LowerIsBetter, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"write.bw", "write_bandwidth", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter);
+                    this.AddMeasurement(metrics, job, $"write.bw_min", "write_bandwidth_min", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter);
+                    this.AddMeasurement(metrics, job, $"write.bw_max", "write_bandwidth_max", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter);
+                    this.AddMeasurement(metrics, job, $"write.bw_mean", "write_bandwidth_mean", MetricUnit.KibibytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0);
+                    this.AddMeasurement(metrics, job, $"write.bw_dev", "write_bandwidth_stdev", MetricUnit.KibibytesPerSecond, MetricRelativity.LowerIsBetter, verbosity: 2);
 
                     this.AddMeasurement(metrics, job, $"write.iops", "write_iops", null, MetricRelativity.HigherIsBetter);
                     this.AddMeasurement(metrics, job, $"write.iops_min", "write_iops_min", null, MetricRelativity.HigherIsBetter);

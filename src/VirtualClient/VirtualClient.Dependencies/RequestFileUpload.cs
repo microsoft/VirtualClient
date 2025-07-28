@@ -5,15 +5,12 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Microsoft.VisualBasic;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -71,6 +68,18 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// The name of the tool in which to associate the file content.
+        /// </summary>
+        public string ToolName
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.ToolName), out IConvertible toolName);
+                return toolName?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Executes the logic to process the files in the logs directory.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -82,8 +91,10 @@ namespace VirtualClient.Dependencies
             }
 
             IEnumerable<FileUploadDescriptor> uploadDescriptors = this.CreateFileUploadDescriptors(
-                this.TargetDirectory, 
-                this.Parameters, 
+                this.TargetDirectory,
+                this.ToolName,
+                this.Parameters,
+                this.Metadata,
                 timestamped: this.Timestamped);
 
             if (uploadDescriptors?.Any() != true)
