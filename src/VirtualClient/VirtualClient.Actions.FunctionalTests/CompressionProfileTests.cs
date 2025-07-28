@@ -140,11 +140,11 @@ namespace VirtualClient.Actions
             {
                 commands = new List<string>
                 {
-                    $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                    $"sudo wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                     $"sudo unzip silesia.zip -d silesia",
                     $"sudo bash -c \"pbzip2 -fv /home/user/tools/VirtualClient/packages/pbzip2/silesia/*\"",
                     $"sudo bash -c \"pbzip2 -fvd /home/user/tools/VirtualClient/packages/pbzip2/silesia/*\"",
-                    $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                    $"sudo wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                     $"sudo unzip silesia.zip -d silesia",
                     $"sudo bash -c \"gzip -rvf /home/user/tools/VirtualClient/packages/gzip/silesia\"",
                     $"sudo bash -c \"gzip -rvfd /home/user/tools/VirtualClient/packages/gzip/silesia\""
@@ -154,7 +154,7 @@ namespace VirtualClient.Actions
             {
                 commands = new List<string>
                 {
-                    $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                    $"wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                     $"unzip silesia.zip -d silesia",
                     $"7z a -bt -mx1 -mmt -mm=LZMA -r 7zLZMAFastestMode.7z C:\\users\\any\\tools\\VirtualClient\\packages\\7zip\\silesia\\*",
                     $"7z a -bt -mx7 -mmt -mm=LZMA -r 7zLZMAMaximumMode.7z C:\\users\\any\\tools\\VirtualClient\\packages\\7zip\\silesia\\*",

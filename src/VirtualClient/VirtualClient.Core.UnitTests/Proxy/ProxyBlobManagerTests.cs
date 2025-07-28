@@ -93,7 +93,7 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
-        public Task ProxyBlobManagerDownloadsUseTheExpectedSourceWhenAnExplicitSourceIsNotSupplied()
+        public Task ProxyBlobManagerDownloadsHandlesCasesWhenAnExplicitSourceIsNotSupplied()
         {
             using (MemoryStream stream = new MemoryStream())
             {
@@ -115,7 +115,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
@@ -145,7 +145,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual("VirtualClient", blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                     Assert.AreEqual(this.mockPackagesStore.StoreName, blobDescriptor.StoreType);
                     Assert.AreEqual("anypackage.1.0.0.zip", blobDescriptor.BlobName);
                     Assert.AreEqual("packages", blobDescriptor.ContainerName);
@@ -182,7 +182,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual("VirtualClient", blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                     Assert.AreEqual(this.mockPackagesStore.StoreName, blobDescriptor.StoreType);
                     Assert.AreEqual("anypackage.1.0.0.zip", blobDescriptor.BlobName);
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
@@ -253,7 +253,7 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
-        public Task ProxyBlobManagerUploadsUseTheExpectedSourceWhenAnExplicitSourceIsNotSupplied()
+        public Task ProxyBlobManagerUploadsHandlesCasesWhenAnExplicitSourceIsNotSupplied()
         {
             using (MemoryStream stream = new MemoryStream())
             {
@@ -275,7 +275,7 @@ namespace VirtualClient.Proxy
                     .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                     {
                         Assert.IsNotNull(blobDescriptor);
-                        Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
+                        Assert.IsNull(blobDescriptor.Source);
                     })
                     .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
@@ -305,7 +305,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual("VirtualClient", blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                     Assert.AreEqual(this.mockContentStore.StoreName, blobDescriptor.StoreType);
                     Assert.AreEqual("anyfile.log", blobDescriptor.BlobName);
                     Assert.AreEqual("logs", blobDescriptor.ContainerName);
@@ -340,7 +340,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual("VirtualClient", blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                     Assert.AreEqual(this.mockContentStore.StoreName, blobDescriptor.StoreType);
                     Assert.AreEqual("anyfile.log", blobDescriptor.BlobName);
                     Assert.AreEqual("/any/path/to/blob", blobDescriptor.BlobPath);
@@ -378,7 +378,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual("VirtualClient", blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                     Assert.AreEqual(this.mockContentStore.StoreName, blobDescriptor.StoreType);
                     Assert.AreEqual("anyfile.log", blobDescriptor.BlobName);
                     Assert.AreEqual("logs", blobDescriptor.ContainerName);
@@ -401,8 +401,10 @@ namespace VirtualClient.Proxy
                     ["Name"] = "/any/path/to/blob/anyfile.log",
                     ["ContainerName"] = "logs",
                     ["ContentType"] = "application/octet-stream",
-                    ["ContentEncoding"] = Encoding.ASCII.WebName
+                    ["ContentEncoding"] = Encoding.ASCII.WebName,
+                    ["Source"] = "VirtualClient"
                 });
+
 
                 ProxyBlobManager blobManager = new ProxyBlobManager(this.mockContentStore, this.mockProxyApiClient.Object);
 
@@ -415,7 +417,7 @@ namespace VirtualClient.Proxy
                 .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(blobDescriptor);
-                    Assert.AreEqual("VirtualClient", blobDescriptor.Source);
+                    Assert.IsNull(blobDescriptor.Source);
                     Assert.AreEqual(this.mockContentStore.StoreName, blobDescriptor.StoreType);
                     Assert.AreEqual("anyfile.log", blobDescriptor.BlobName);
                     Assert.AreEqual("/any/path/to/blob", blobDescriptor.BlobPath);

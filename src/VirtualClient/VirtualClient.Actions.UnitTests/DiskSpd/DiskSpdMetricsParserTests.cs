@@ -206,7 +206,7 @@ namespace VirtualClient.Actions
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w100 -d900 -Suw -W30 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
-            metrics.LogConsole("test");
+            metrics.LogConsole("test", "testtool");
 
             // cpu metrics
             MetricAssert.Exists(metrics, "cpu usage 0", 92.79, "percentage");

@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(FioDiscoveryExecutor.Scenario), "AnyScenario_ReadOrWrite_AnyBlockSize" },
-                { nameof(FioDiscoveryExecutor.CommandLine), "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
+                { nameof(FioDiscoveryExecutor.CommandLine), "--ioengine=libaio --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
                 { nameof(FioDiscoveryExecutor.BlockSize), "4K" },
                 { nameof(FioDiscoveryExecutor.DiskFillSize), "140G" },
                 { nameof(FioDiscoveryExecutor.FileSize), "134G" },
@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
         public async Task FioDiscoveryExecutorInitializeAsExpected()
         {
             this.Parameters.Add(nameof(FioDiscoveryExecutor.DiskFill), "True");
-            this.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = $"--runtime=300 --rw=write";
+            this.Parameters[nameof(FioDiscoveryExecutor.CommandLine)] = $"--runtime=300 --rw=write --ioengine=libaio";
             using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
             {
                 this.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
@@ -283,42 +283,16 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommandLines = new List<string>
             {
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
+                $"sudo chmod",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde"
             };
 
             using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
             {
                 executor.Metadata.Remove("GroupId".CamelCased());
-
-                await executor.ExecuteAsync(CancellationToken.None)
-                     .ConfigureAwait(false);
-
-                Assert.AreEqual(4, this.ProcessManager.Commands.Count());
-                Assert.IsTrue(this.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
-            }
-        }
-
-        [Test]
-        public async Task FioDiscoveryExecutorExecutesAsExpectedIfGroupIDHasBadCasing()
-        {
-            this.Parameters[nameof(FioDiscoveryExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcess;
-
-            List<string> expectedCommandLines = new List<string>
-            {
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
-            };
-
-            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
-            {
-                executor.Metadata.Remove("GroupId".CamelCased());
-                executor.Metadata.Add("grouPId", string.Empty);
-
-                await executor.ExecuteAsync(CancellationToken.None)
-                     .ConfigureAwait(false);
+                await executor.ExecuteAsync(CancellationToken.None);
 
                 Assert.AreEqual(4, this.ProcessManager.Commands.Count());
                 Assert.IsTrue(this.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));

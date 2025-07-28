@@ -11,7 +11,7 @@ namespace VirtualClient.Common
 
     [TestFixture]
     [Category("Unit")]
-    internal class ProcessExecutionExtensionsTests
+    internal class ProcessExtensionsTests
     {
         private InMemoryProcess mockProcess;
         private MemoryStream standardInput;

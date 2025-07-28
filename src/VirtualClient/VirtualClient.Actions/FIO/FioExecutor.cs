@@ -5,9 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -44,41 +46,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines a specific configuration to apply to the workload.
-        /// </summary>
-        public string Configuration
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.Configuration), out IConvertible configuration);
-                return configuration?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(DiskWorkloadExecutor.Configuration)] = value;
-            }
-        }
-
-        /// <summary>
         /// Defines the command line specified in the profile.
         /// </summary>
         public string CommandLine
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.CommandLine), out IConvertible commandLine);
+                this.Parameters.TryGetValue(nameof(this.CommandLine), out IConvertible commandLine);
                 return commandLine?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = value;
+                this.Parameters[nameof(this.CommandLine)] = value;
             }
         }
 
         /// <summary>
-        /// The Cool down period for Virtual Client Component.
+        /// The cool down period for Virtual Client Component.
         /// </summary>
         public TimeSpan CoolDownPeriod
         {
@@ -101,17 +86,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Template for Job file.
-        /// </summary>
-        public string TemplateJobFile
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.TemplateJobFile));
-            }
-        }
-
-        /// <summary>
         /// True/false whether the test files that FIO uses in benchmark tests should be deleted at the end
         /// of each individual round of test execution.
         /// </summary>
@@ -119,12 +93,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(DiskWorkloadExecutor.DeleteTestFilesOnFinish), true);
+                return this.Parameters.GetValue<bool>(nameof(this.DeleteTestFilesOnFinish), true);
             }
 
             set
             {
-                this.Parameters[nameof(DiskWorkloadExecutor.DeleteTestFilesOnFinish)] = value;
+                this.Parameters[nameof(this.DeleteTestFilesOnFinish)] = value;
             }
         }
 
@@ -136,12 +110,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(DiskWorkloadExecutor.DiskFill), false);
+                return this.Parameters.GetValue<bool>(nameof(this.DiskFill), false);
             }
 
             set
             {
-                this.Parameters[nameof(DiskWorkloadExecutor.DiskFill)] = value;
+                this.Parameters[nameof(this.DiskFill)] = value;
             }
         }
 
@@ -153,64 +127,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.DiskFillSize), out IConvertible diskFillSize);
+                this.Parameters.TryGetValue(nameof(this.DiskFillSize), out IConvertible diskFillSize);
                 return diskFillSize?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskWorkloadExecutor.DiskFillSize)] = value;
-            }
-        }
-
-        /// <summary>
-        /// The name of the test file that should use in workload tests.
-        /// </summary>
-        public string FileName
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.FileName), out IConvertible fileName);
-                return fileName?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(DiskWorkloadExecutor.FileName)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Defines the model/strategy for how the disks will be tested.
-        /// (e.g. SingleProcess = 1 for the entire system, SingleProcessPerDrive = 1 for each drive on the system).
-        /// </summary>
-        public string ProcessModel
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(DiskWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess);
-            }
-
-            set
-            {
-                this.Parameters[nameof(DiskWorkloadExecutor.ProcessModel)] = value;
-            }
-        }
-
-        /// <summary>
-        /// The specific focus of the test if applicable (e.g. DataIntegrity).
-        /// </summary>
-        public string TestFocus
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.TestFocus), out IConvertible testFocus);
-                return testFocus?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(DiskWorkloadExecutor.TestFocus)] = value;
+                this.Parameters[nameof(this.DiskFillSize)] = value;
             }
         }
 
@@ -221,12 +144,97 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DiskWorkloadExecutor.DiskFilter), "BiggestSize");
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "BiggestSize");
             }
 
             set
             {
-                this.Parameters[nameof(DiskWorkloadExecutor.DiskFilter)] = value;
+                this.Parameters[nameof(this.DiskFilter)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The name of the I/O engine to use (e.g. libaio, posixaio, windowsaio).
+        /// </summary>
+        public string Engine
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(FioExecutor.Engine), out IConvertible engine);
+                return engine?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The name of the test file that should use in workload tests.
+        /// </summary>
+        public string FileName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.FileName), "fio-test.dat");
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.FileName)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The size of the test file that should use in workload tests (e.g. 496GB).
+        /// </summary>
+        public string FileSize
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.FileSize), out IConvertible fileSize);
+                return fileSize?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.FileSize)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Defines the model/strategy for how the disks will be tested.
+        /// <br/><br/>
+        /// <b>Supported Values:</b><br/>
+        /// <list type="bullet">
+        /// <item>SingleProcess = 1 process targeting all matching disks using a single job.</item>
+        /// <item>SingleProcessAggregated = 1 process targeting all matching disks but running a separate job per disk.</item>
+        /// <item>SingleProcessPerDisk = 1 process per disk running a single job per process.</item>
+        /// </list>
+        /// </summary>
+        public string ProcessModel
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.ProcessModel), WorkloadProcessModel.SingleProcess);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ProcessModel)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The specific focus of the test if applicable (e.g. DataIntegrity).
+        /// </summary>
+        public string TestFocus
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.TestFocus), out IConvertible testFocus);
+                return testFocus?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.TestFocus)] = value;
             }
         }
 
@@ -263,29 +271,37 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns the IO engine to use with FIO on the platform specified (e.g. windowsaio, libaio).
+        /// Creates the file content for a job file that distributes the FIO workload across the disks
+        /// provided using 1 job per disk.
         /// </summary>
-        /// <param name="platform">The OS/system platform.</param>
-        public static string GetIOEngine(PlatformID platform)
+        /// <param name="platformSpecifics">Provides platform-specific functionality for cross-platform/architecture operation.</param>
+        /// <param name="targetDisks">The target disks on which to run the FIO workload (1 job per disk).</param>
+        /// <param name="jobNamePrefix">A prefix to use for the name of each job in the job file.</param>
+        /// <param name="testFileName">The name of the test file to use to conduct I/O operations on each disk.</param>
+        /// <returns>Content that can be written to an FIO job file.</returns>
+        protected static string CreateJobFileContent(PlatformSpecifics platformSpecifics, IEnumerable<Disk> targetDisks, string jobNamePrefix, string testFileName)
         {
-            string ioEngine = null;
-            switch (platform)
+            StringBuilder jobFileContent = new StringBuilder();
+            jobFileContent.AppendLine("# Dynamically created job file.");
+            jobFileContent.AppendLine("#");
+            jobFileContent.AppendLine("# Description:");
+            jobFileContent.AppendLine("# Distributes the command line definition across each of the target disks");
+            jobFileContent.AppendLine("# running 1 job per disk. This is intended to produce results that are aggregated");
+            jobFileContent.AppendLine("# across all disks.");
+
+            int jobNumber = 0;
+            foreach (Disk disk in targetDisks)
             {
-                case PlatformID.Unix:
-                    ioEngine = "libaio";
-                    break;
+                jobNumber++;
+                string jobName = $"{jobNamePrefix}_{jobNumber}";
+                jobFileContent.AppendLine();
+                jobFileContent.AppendLine($"[{jobName}]");
 
-                case PlatformID.Win32NT:
-                    ioEngine = "windowsaio";
-                    break;
-
-                default:
-                    throw new WorkloadException(
-                        $"The platform '{platform.ToString()}' is not supported.",
-                        ErrorReason.PlatformNotSupported);
+                string fileName = platformSpecifics.Combine(disk.GetPreferredAccessPath(platformSpecifics.Platform), testFileName);
+                jobFileContent.AppendLine($"filename={fileName}");
             }
 
-            return ioEngine;
+            return jobFileContent.ToString();
         }
 
         /// <summary>
@@ -312,10 +328,7 @@ namespace VirtualClient.Actions
                     // Apply parameters to the FIO command line options.
                     await this.EvaluateParametersAsync(telemetryContext);
 
-                    string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
-
-                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken);
 
                     if (disks?.Any() != true)
                     {
@@ -335,26 +348,21 @@ namespace VirtualClient.Actions
                             ErrorReason.DependencyNotFound);
                     }
 
-                    if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
-                    {
-                        // Refresh the disks to pickup the mount point changes.
-                        await Task.Delay(1000).ConfigureAwait(false);
-                        IEnumerable<Disk> updatedDisks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        disksToTest = this.GetDisksToTest(updatedDisks);
-                    }
-
                     telemetryContext.AddContext(nameof(this.DiskFilter), this.DiskFilter);
                     telemetryContext.AddContext("executable", this.ExecutablePath);
-                    telemetryContext.AddContext(nameof(ioEngine), ioEngine);
+                    telemetryContext.AddContext("ioEngine", this.Engine);
                     telemetryContext.AddContext(nameof(disks), disks);
                     telemetryContext.AddContext(nameof(disksToTest), disksToTest);
 
                     this.WorkloadProcesses.Clear();
                     List<Task> fioProcessTasks = new List<Task>();
 
-                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
+                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(
+                        this.ExecutablePath, 
+                        this.CommandLine, 
+                        disksToTest, 
+                        this.ProcessModel, 
+                        telemetryContext));
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
@@ -365,7 +373,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                            await Task.WhenAll(fioProcessTasks);
                         }
                     }
                 }
@@ -373,131 +381,71 @@ namespace VirtualClient.Actions
                 {
                     if (this.DiskFill)
                     {
-                        await this.RegisterDiskFillCompleteAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.RegisterDiskFillCompleteAsync(cancellationToken);
                     }
 
                     foreach (DiskWorkloadProcess workload in this.WorkloadProcesses)
                     {
-                        await this.DeleteTestVerificationFilesAsync(workload.TestFiles)
-                            .ConfigureAwait(false);
+                        await this.DeleteTestVerificationFilesAsync(workload.TestFiles);
 
                         if (this.DeleteTestFilesOnFinish)
                         {
-                            await this.DeleteTestFilesAsync(workload.TestFiles)
-                                .ConfigureAwait(false);
+                            await this.DeleteTestFilesAsync(workload.TestFiles);
                         }
                     }
 
                     // TO DO: Remove once we have Loop Executor.
                     await this.WaitAsync(this.CoolDownPeriod, cancellationToken);
                 }
-
-                if (!string.IsNullOrEmpty(this.JobFiles))
-                {
-                    this.CommandLine = null;
-                }
             }
         }
 
         /// <summary>
-        /// Creates mount points for any disks that do not have them already.
-        /// </summary>
-        /// <param name="disks">This disks on which to create the mount points.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
-        {
-            bool mountPointsCreated = false;
-
-            // Don't mount any partition in OS drive.
-            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
-            {
-                // mount every volume that doesn't have an accessPath.
-                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
-                {
-                    string newMountPoint = volume.GetDefaultMountPoint();
-                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
-
-                    EventContext relatedContext = EventContext.Persisted().Clone()
-                        .AddContext(nameof(volume), volume)
-                        .AddContext("mountPoint", newMountPoint);
-
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
-                    {
-                        string newMountPoint = volume.GetDefaultMountPoint();
-                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
-                        {
-                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
-                        }
-
-                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        mountPointsCreated = true;
-
-                    }).ConfigureAwait(false);
-                }
-            }
-
-            return mountPointsCreated;
-        }
-
-        /// <summary>
-        /// Creates a process to run FIO targeting the disks specified.
-        /// </summary>
-        /// <param name="executable">The full path to the FIO executable.</param>
-        /// <param name="commandArguments">
-        /// The command line arguments to supply to the FIO executable (e.g. --name=fio_randread_4GB_4k_d1_th1_direct --ioengine=libaio).
-        /// </param>
-         /// <param name="testedInstance">The disk instance under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
-        /// <param name="disksToTest">The disks under test.</param>
-        protected virtual DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
-        {
-            string ioEngine = FioExecutor.GetIOEngine(this.Platform);
-            string[] testFiles = disksToTest.Select(disk => this.GetTestFile(disk.GetPreferredAccessPath(this.Platform))).ToArray();
-            string fioArguments = $"{commandArguments} --ioengine={ioEngine} {string.Join(" ", testFiles.Select(file => $"--filename={this.SanitizeFilePath(file)}"))}".Trim();
-
-            IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
-
-            return new DiskWorkloadProcess(process, testedInstance, testFiles);
-        }
-
-        /// <summary>
-        /// Create a set of <see cref="DiskWorkloadProcess"/>.
+        /// Create the FIO workload processes to execute against one or more disks.
         /// </summary>
         /// <param name="executable">The fully qualified path to the disk spd executable.</param>
         /// <param name="commandArguments">A templatized command to give to the disk spd executable.</param>
-        /// <param name="disks">The formatted disks.</param>
+        /// <param name="disks">The formatted disks on which the FIO workload will be executed.</param>
         /// <param name="processModel">
-        /// The process model/strategy to use for I/O operations against the disks. Valid values include: SingleProcess, SingleProcessPerDisk.
+        /// The process model/strategy to use for I/O operations against the disks. Valid values include: SingleProcess, SingleProcessPerDisk, MultipleJobsAggregated
         /// </param>
-        protected virtual IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel)
+        /// <param name="telemetryContext">Provides context to telemetry events.</param>
+        protected virtual IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel, EventContext telemetryContext)
         {
             executable.ThrowIfNullOrWhiteSpace(nameof(executable));
             commandArguments.ThrowIfNullOrWhiteSpace(nameof(commandArguments));
             processModel.ThrowIfNullOrWhiteSpace(nameof(processModel));
             disks.ThrowIfNullOrEmpty(nameof(disks));
 
-            EventContext telemetryContext = EventContext.Persisted();
-            return this.Logger.LogMessage($"{this.GetType().Name}.CreateProcesses", telemetryContext, () =>
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("executable", executable)
+                .AddContext("commandArguments", commandArguments)
+                .AddContext("processModel", processModel);
+
+            return this.Logger.LogMessage($"{this.GetType().Name}.CreateProcesses", relatedContext, () =>
             {
-                List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
+                IEnumerable<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
 
                 if (string.Equals(processModel, WorkloadProcessModel.SingleProcess, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Example Metric Categorization
-                    // SingleProcess,BiggestSize,16
-                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcess},{this.DiskFilter},{disks.Count()}", disks.ToArray()));
+                    processes = this.CreateSingleProcessWorkloadProcesses(executable, commandArguments, disks);
+                }
+                else if (string.Equals(processModel, WorkloadProcessModel.SingleProcessAggregated, StringComparison.OrdinalIgnoreCase))
+                {
+                    string jobFilePath = this.GetTempPath($"{this.ExperimentId}.fio".ToLowerInvariant());
+                    this.CreateSingleProcessAggregatedJobFile(commandArguments, jobFilePath, disks);
+
+                    // The --name (job name) parameter must be removed or it will override the job specifics
+                    // in the job file causing FIO to run the workload different than expected.
+                    string effectiveCommandArguments = this.RemoveOption(commandArguments, "--name");
+                    processes = this.CreateSingleProcessAggregatedWorkloadProcesses(executable, effectiveCommandArguments, jobFilePath, disks);
                 }
                 else if (string.Equals(processModel, WorkloadProcessModel.SingleProcessPerDisk, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Example Metric Categorization
-                    // SingleProcessPerDisk,BiggestSize,16
-                    processes.AddRange(new List<DiskWorkloadProcess>(disks.Select(disk =>
-                    {
-                        return this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcessPerDisk},{this.DiskFilter},1", disk);
-                    })));
+                    processes = this.CreateSingleProcessPerDiskWorkloadProcesses(executable, commandArguments, disks);
                 }
+
+                relatedContext.AddContext("commands", processes.Select(proc => proc.Process.FullCommand()));
 
                 return processes;
             });
@@ -526,7 +474,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task CleanupAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await base.CleanupAsync(telemetryContext, cancellationToken);
 
             if (this.WorkloadProcesses?.Any() == true)
             {
@@ -534,11 +482,11 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        await this.KillProcessAsync(process).ConfigureAwait(false);
+                        await this.KillProcessAsync(process);
 
                         if (this.DeleteTestFilesOnFinish)
                         {
-                            await this.DeleteTestFilesAsync(process.TestFiles).ConfigureAwait(false);
+                            await this.DeleteTestFilesAsync(process.TestFiles);
                         }
                     }
                     catch
@@ -579,9 +527,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken, throwIfNotfound: false);
 
             if (workloadPackage == null)
             {
@@ -590,15 +536,11 @@ namespace VirtualClient.Actions
             }
             else
             {
-                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
-
                 this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Platform == PlatformID.Win32NT ? "fio.exe" : "fio");
-
                 this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(this.ExecutablePath);
 
                 // Ensure the binary can execute (e.g. chmod +x)
-                await this.SystemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.SystemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
             }
         }
 
@@ -608,23 +550,9 @@ namespace VirtualClient.Actions
         protected async Task<bool> IsDiskFillCompleteAsync(CancellationToken cancellationToken)
         {
             string stateId = $"{this.GetType().Name}.DiskFill";
-            WorkloadState state = await this.SystemManagement.StateManager.GetStateAsync<WorkloadState>(stateId, cancellationToken)
-                .ConfigureAwait(false);
+            WorkloadState state = await this.SystemManagement.StateManager.GetStateAsync<WorkloadState>(stateId, cancellationToken);
 
             return state != null;
-        }
-
-        /// <summary>
-        /// Returns the name of the test file given a mount point.
-        /// </summary>
-        /// <param name="mountPoint">A mount point to the disk under test.</param>
-        /// <returns>
-        /// The full path to the test file.
-        /// </returns>
-        protected virtual string GetTestFile(string mountPoint)
-        {
-            mountPoint.ThrowIfNullOrWhiteSpace(nameof(mountPoint));
-            return this.PlatformSpecifics.Combine(mountPoint, this.FileName ?? Path.GetRandomFileName());
         }
 
         /// <summary>
@@ -648,7 +576,7 @@ namespace VirtualClient.Actions
 
             if (testFileNames.Count() <= 1)
             {
-                return this.GetTestFile(mountPoint);
+                return this.Combine(mountPoint, this.FileName);
             }
 
             List<string> testFiles = new List<string>();
@@ -724,8 +652,7 @@ namespace VirtualClient.Actions
                                 if (this.SystemManagement.FileSystem.File.Exists(file))
                                 {
                                     this.Logger.LogTraceMessage($"Delete test file '{file}'");
-                                    await this.SystemManagement.FileSystem.File.DeleteAsync(file, retryPolicy)
-                                        .ConfigureAwait(false);
+                                    await this.SystemManagement.FileSystem.File.DeleteAsync(file, retryPolicy);
                                 }
                             }
                             catch (Exception exc)
@@ -734,7 +661,7 @@ namespace VirtualClient.Actions
                             }
                         }
                     }
-                }).ConfigureAwait(false);
+                });
             }
         }
 
@@ -790,6 +717,16 @@ namespace VirtualClient.Actions
                     parseReadMetrics = true;
                     break;
             }
+        }
+
+        /// <summary>
+        /// Returns the target device/file test path. Note that this may be either a file
+        /// or a direct path to the physical device (e.g. /dev/sda, /mnt_dev_sda1/fio-test.dat).
+        /// </summary>
+        protected virtual string GetTestDevicePath(Disk disk)
+        {
+            string devicePath = this.Combine(disk.GetPreferredAccessPath(this.Platform), this.FileName);
+            return this.SanitizeFilePath(devicePath);
         }
 
         /// <summary>
@@ -959,21 +896,153 @@ namespace VirtualClient.Actions
             }
         }
 
-        private string SanitizeFilePath(string filePath)
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:Parameter should follow comma", Justification = "Not applicable for this case.")]
+        private IEnumerable<DiskWorkloadProcess> CreateSingleProcessWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks)
         {
-            string sanitizedFilePath = filePath;
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            // Process Model: SingleProcess
+            // The default scenario is to run 1 FIO process with 1 job targeting each of the disks
+            // that match the 'DiskFilter'.
+
+            List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
+
+            string[] testFiles = disks.Select(disk => this.GetTestDevicePath(disk)).ToArray();
+            string fioArguments = $"{commandArguments} {string.Join(" ", testFiles.Select(file => $"--filename={file}"))}".Trim();
+
+            IProcessProxy fioProcess = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
+
+            processes.Add(new DiskWorkloadProcess(
+                fioProcess,
+
+                // e.g.
+                // SingleProcess,BiggestSize,16
+                $"{WorkloadProcessModel.SingleProcess},{this.DiskFilter},{disks.Count()}",
+                testFiles));
+
+            return processes;
+        }
+
+        private void CreateSingleProcessAggregatedJobFile(string commandArguments, string jobFilePath, IEnumerable<Disk> disks)
+        {
+            /* Example of Job File:
+                # Dynamically created job file.
+                #
+                # Description:
+                # Distributes the command line definition across each of the target disks
+                # running 1 job per disk. This is intended to produce results that are aggregated
+                # across all disks.
+
+                [fio_randwrite_496GB_4k_d32_th16_1]
+                filename=/home/user/mnt_dev_sdc1/fio-test.dat
+
+                [fio_randwrite_496GB_4k_d32_th16_2]
+                filename=/home/user/mnt_dev_sdd1/fio-test.dat
+
+                [fio_randwrite_496GB_4k_d32_th16_3]
+                filename=/home/user/mnt_dev_sde1/fio-test.dat
+             */
+
+            string jobNamePrefix = "job";
+            Match jobNameMatch = Regex.Match(commandArguments, @"--name=([\x21-\x7E]+)\s*", RegexOptions.IgnoreCase);
+            if (jobNameMatch.Success)
             {
-                // Note:
-                // FIO expects file paths to be in a very specific format. On Linux there is no issue because paths do not have
-                // a drive root or colon in them. For Windows, we have to sanitize them a bit.
-                //
-                // Examples:
-                // C:\anyfiotest.dat -> C\:\anyfiotest.dat
-                sanitizedFilePath = sanitizedFilePath.Replace(":", "\\:");
+                jobNamePrefix = jobNameMatch.Groups[1].Value.Trim();
             }
 
-            return sanitizedFilePath;
+            string jobFileContent = FioExecutor.CreateJobFileContent(this.PlatformSpecifics, disks, jobNamePrefix, this.FileName);
+            string tempDirectory = this.PlatformSpecifics.GetTempPath();
+
+            if (!this.FileSystem.Directory.Exists(tempDirectory))
+            {
+                this.FileSystem.Directory.CreateDirectory(tempDirectory);
+            }
+
+            RetryPolicies.FileOperations.ExecuteAsync(async () =>
+            {
+                await this.FileSystem.File.WriteAllTextAsync(jobFilePath, jobFileContent, CancellationToken.None);
+            }).GetAwaiter().GetResult();
+        }
+
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:Parameter should follow comma", Justification = "Not applicable for this case.")]
+        private IEnumerable<DiskWorkloadProcess> CreateSingleProcessAggregatedWorkloadProcesses(string executable, string commandArguments, string jobFilePath, IEnumerable<Disk> disks)
+        {
+            // Process Model: SingleProcessAggregated
+            // The default scenario is to run 1 FIO process with a separate job targeting each of the disks
+            // that match the 'DiskFilter'. We use a dynamically generated job file to accomplish this.
+            // This causes the results to be aggregated as a sum of all disk I/O performance metrics across the
+            // disks (vs. separate metrics for each disk).
+
+            List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
+
+            string[] testFiles = disks.Select(disk => this.GetTestDevicePath(disk)).ToArray();
+
+            // e.g.
+            // The command line defines the specifics of each indvidual job. The job file defines each job-per-disk.
+            //
+            // --size={FileSize} --numjobs=16 --rw=randwrite --bs=4k --iodepth=32 --ioengine=libaio --direct=1 --ramp_time=30 --runtime=600 --time_based 
+            // --overwrite=1 --thread --group_reporting --output-format=json /home/user/virtualclient.1.0.0/content/linux-arm64/temp/2d2218cd-4862-458e-bc91-c332a6d6aae9.fio
+            string fioArguments = $"{commandArguments} {jobFilePath}";
+
+            IProcessProxy fioProcess = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
+
+            processes.Add(new DiskWorkloadProcess(
+                fioProcess,
+
+                // e.g.
+                // SingleProcessAggregated,BiggestSize,16
+                $"{WorkloadProcessModel.SingleProcessAggregated},{this.DiskFilter},{disks.Count()}",
+                testFiles));
+
+            return processes;
+        }
+
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1115:Parameter should follow comma", Justification = "Not applicable for this case.")]
+        private IEnumerable<DiskWorkloadProcess> CreateSingleProcessPerDiskWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks)
+        {
+            // Process Model: SingleProcessPerDisk
+            // The default scenario is to run 1 FIO process with a separate job targeting each of the disks
+            // that match the 'DiskFilter'. This causes the results to be aggregated as a sum of all disk I/O
+            // performance metrics across the disks (vs. separate metrics for each disk).
+
+            List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>(disks.Select(disk =>
+            {
+                string testFile = this.GetTestDevicePath(disk);
+                string fioArguments = $"{commandArguments} --filename={testFile}".Trim();
+
+                IProcessProxy fioProcess = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
+
+                return new DiskWorkloadProcess(
+                    fioProcess,
+
+                    // e.g.
+                    // SingleProcessPerDisk,BiggestSize,16
+                    $"{WorkloadProcessModel.SingleProcessAggregated},{this.DiskFilter},{disks.Count()}",
+                    testFile);
+            }));
+
+            return processes;
+        }
+
+        private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
+        {
+            string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
+
+            foreach (string key in this.Parameters.Keys)
+            {
+                string value = this.Parameters.GetValue<string>(key);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", value);
+                }
+            }
+
+            this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
+        }
+
+        private string FilterWarnings(string fioOutput)
+        {
+            string modifiedOutput = Regex.Replace(fioOutput, @"^fio:.*$", string.Empty, RegexOptions.Multiline).Trim();
+
+            return modifiedOutput;
         }
 
         private string GetCommandForJobFilesAsync(CancellationToken cancellationToken)
@@ -1004,27 +1073,26 @@ namespace VirtualClient.Actions
             return command;
         }
 
-        private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
+        private string RemoveOption(string commandLine, string option)
         {
-            string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
-
-            foreach (string key in this.Parameters.Keys)
-            {
-                string value = this.Parameters.GetValue<string>(key);
-                if (!string.IsNullOrEmpty(value))
-                {
-                    text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", value);
-                }
-            }
-
-            this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
+            return Regex.Replace(commandLine, $@"{option}=[\x21-\x7E]+\s", string.Empty, RegexOptions.IgnoreCase);
         }
 
-        private string FilterWarnings(string fioOutput)
+        private string SanitizeFilePath(string filePath)
         {
-            string modifiedOutput = Regex.Replace(fioOutput, @"^fio:.*$", string.Empty, RegexOptions.Multiline).Trim();
+            string sanitizedFilePath = filePath;
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                // Note:
+                // FIO expects file paths to be in a very specific format. On Linux there is no issue because paths do not have
+                // a drive root or colon in them. For Windows, we have to sanitize them a bit.
+                //
+                // Examples:
+                // C:\anyfiotest.dat -> C\:\anyfiotest.dat
+                sanitizedFilePath = sanitizedFilePath.Replace(":", "\\:");
+            }
 
-            return modifiedOutput;
+            return sanitizedFilePath;
         }
 
         private class WorkloadState

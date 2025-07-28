@@ -19,7 +19,7 @@ namespace VirtualClient.Contracts
         private MockFixture mockFixture;
         private Mock<IFileInfo> mockFile;
 
-        public void SetupDefaults()
+        public void Setup()
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
@@ -40,7 +40,7 @@ namespace VirtualClient.Contracts
         [TestCase("Agent01", "ToolA", "Scenario01", "Client")]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptor_When_Not_Timestamped(string expectedAgentId, string expectedToolName, string expectedScenario, string expectedRole)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedContentType = HttpContentType.PlainText;
@@ -87,7 +87,7 @@ namespace VirtualClient.Contracts
         [TestCase("Agent01", "ToolA", "Scenario01", "Client")]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptor_When_Timestamped(string expectedAgentId, string expectedToolName, string expectedScenario, string expectedRole)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedContentType = HttpContentType.PlainText;
@@ -130,7 +130,7 @@ namespace VirtualClient.Contracts
         {
             //  Default Template:
             //  {experimentId}/{agentId}/{toolName}/{scenario}
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedAgentId = "Agent01";
@@ -176,7 +176,7 @@ namespace VirtualClient.Contracts
         {
             //  Default Template:
             //  {experimentId}/{agentId}/{toolName}/{role}/{scenario}
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedAgentId = "Agent01";
@@ -259,7 +259,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplates(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentName = "Test_Experiment";
             string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
@@ -326,7 +326,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentName = "Test_Experiment";
             string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
@@ -380,7 +380,7 @@ namespace VirtualClient.Contracts
         [TestCase("contentPathTemplate")]
         public void FileUploadDescriptorFactoryIsNotCaseSensitiveOnContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplateParameterName)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContentPathTemplate = "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}";
             string expectedExperimentName = "Test_Experiment";
@@ -450,7 +450,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplatesDefinedInComponentParameters(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentName = "Test_Experiment";
             string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
@@ -512,7 +512,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesBlobPathsWithTheExpectedCasing(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
@@ -548,7 +548,7 @@ namespace VirtualClient.Contracts
         [TestCase("{ThisDoesNotExist}")]
         public void FileUploadDescriptorFactoryValidatesTheContentPath(string invalidContentPathTemplate)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             FileContext context = new FileContext(
                 this.mockFile.Object,
@@ -567,7 +567,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void FileUploadDescriptorFactorySupportsEitherOrPathTemplateDefinitions_1()
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContainerName = "customcontainer";
             string expectedExperimentName = "Test_Experiment";
@@ -624,7 +624,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void FileUploadDescriptorFactorySupportsEitherOrPathTemplateDefinitions_2()
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContainerName = "customcontainer";
             string expectedExperimentName = "Test_Experiment";
@@ -678,7 +678,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void FileUploadDescriptorFactoryHandlesCasesWhereTheTemplateReferencesAParameterThatDoesNotExist()
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContainerName = "customcontainer";
             string expectedExperimentName = "Test_Experiment";

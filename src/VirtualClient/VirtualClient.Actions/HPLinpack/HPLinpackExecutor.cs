@@ -31,7 +31,12 @@ namespace VirtualClient.Actions
         private int coreCount;
         private string makeFileName = "Make.Linux_GCC";
         private string commandArguments;
-        private string hplPerfLibraryInfo;
+        private string hplArmPerfLibrary;
+        private string hplIntelMKL;
+        private string hplIntelHpcToolkit;
+        private string armPerfLibrariesPath;
+        private string amdPerfLibrariesPath;
+        private string intelPerfLibrariesPath;
         private CpuInfo cpuInfo;
         private long totalMemoryKiloBytes;
 
@@ -142,7 +147,7 @@ namespace VirtualClient.Actions
             get
             {
                 this.Parameters.TryGetValue(nameof(this.PerformanceLibrary), out IConvertible performanceLibrary);
-                return performanceLibrary?.ToString();
+                return performanceLibrary?.ToString()?.ToUpperInvariant();
             }
         }
 
@@ -179,8 +184,6 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.EvaluateParametersAsync(cancellationToken);
-            this.ThrowIfPlatformIsNotSupported();
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
             this.coreCount = this.cpuInfo.LogicalProcessorCount;
 
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
@@ -189,17 +192,39 @@ namespace VirtualClient.Actions
             this.ValidateParameters();
 
             DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-
             this.HPLDirectory = workloadPackage.Path;
 
+            DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                    .ConfigureAwait(false);
+
             await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
 
-            await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
-            await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
-
+            if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
+            {
+                // Use PlatformSpecifics.Combine for paths instead of string concatenation
+                if (this.PerformanceLibraryVersion == "2024.2.2.17")
+                {
+                    string intelMklPath = "/opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack";
+                    await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
+                }
+                else if (this.PerformanceLibraryVersion == "2025.1.0.803")
+                {
+                    string intelMklPath = "~/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack";
+                    await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
+                }
+                else
+                {
+                    throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library");
+                }
+            }
+            else
+            {
+                await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
+                await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
+                await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, "setup"), telemetryContext, cancellationToken, runElevated: true);
+                await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>
@@ -224,24 +249,32 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                IProcessProxy process;
 
-                if (this.cpuInfo.IsHyperthreadingEnabled)
+                if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
                 {
-                    this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses} --allow-run-as-root";
+                    this.commandArguments = "./runme_intel64_dynamic";
+                    process = await this.ExecuteCommandAsync("bash", $"-c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && {this.commandArguments}\"", this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack"), telemetryContext, cancellationToken, runElevated: true);
                 }
                 else
                 {
-                    this.commandArguments = $"-np {this.NumberOfProcesses} --allow-run-as-root";
-                }
+                    if (this.cpuInfo.IsHyperthreadingEnabled)
+                    {
+                        this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses} --allow-run-as-root";
+                    }
+                    else
+                    {
+                        this.commandArguments = $"-np {this.NumberOfProcesses} --allow-run-as-root";
+                    }
 
-                if (this.BindToCores)
-                {
-                    this.commandArguments += $" --bind-to core";
-                }
+                    if (this.BindToCores)
+                    {
+                        this.commandArguments += $" --bind-to core";
+                    }
 
-                process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                    process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                }
 
                 using (process)
                 {
@@ -251,59 +284,28 @@ namespace VirtualClient.Actions
                             .ConfigureAwait();
 
                         process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                        this.CaptureMetrics(process.StandardOutput.ToString(), $"{this.commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
 
                     }
                 }
             }
         }
 
-        private void SetParameters()
+        private void SetParameters(int count)
         {
             // gives you P*Q = Number of processes( Default: Environment.ProcessorCount, overwrite to value from command line to VC if supplied) and P <= Q and  Q-P to be the minimum possible value.
             this.ProcessRows = 1;
-            this.ProcessColumns = this.NumberOfProcesses;
-            for (int i = 2; i <= Math.Sqrt(this.NumberOfProcesses); i++)
+            this.ProcessColumns = count;
+            for (int i = 2; i <= Math.Sqrt(count); i++)
             {
-                if (this.NumberOfProcesses % i == 0)
+                if (count % i == 0)
                 {
-                    int j = this.NumberOfProcesses / i;
+                    int j = count / i;
                     if (j - i < this.ProcessColumns - this.ProcessRows)
                     {
                         this.ProcessRows = i;
                         this.ProcessColumns = j;
                     }
-                }
-            }
-        }
-
-        private void ThrowIfPlatformIsNotSupported()
-        {
-            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.PerformanceLibrary != null)
-            {
-                throw new WorkloadException(
-                    $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +
-                    $"'{PlatformSpecifics.LinuxArm64}'",
-                    ErrorReason.PlatformNotSupported);
-            }
-        }
-
-        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                LinuxDistributionInfo distroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait();
-
-                switch (distroInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                        break;
-                    default:
-                        throw new WorkloadException(
-                            $"The HPLinpack benchmark workload is not supported by Virtual Client on the current Linux distro " +
-                            $"'{distroInfo.LinuxDistribution}'.",
-                            ErrorReason.LinuxDistributionNotSupported);
                 }
             }
         }
@@ -319,33 +321,75 @@ namespace VirtualClient.Actions
 
         private async Task ConfigurePerformanceLibrary(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                    .ConfigureAwait(false);
+
             if (this.CpuArchitecture == Architecture.Arm64 && this.PerformanceLibrary == "ARM")
             {
-                // Switch between perf lib versions here
+                // Switch between ARM perf lib versions
                 switch (this.PerformanceLibraryVersion)
                 {
                     case "23.04.1":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1";
+                        this.hplArmPerfLibrary = "arm-performance-libraries_23.04.1.sh";
                         break;
                     case "24.10":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_24.10";
+                        this.hplArmPerfLibrary = "arm-performance-libraries_24.10.sh";
                         break;
                     case "25.04.1":
-                        this.hplPerfLibraryInfo = "arm-performance-libraries_25.04.1"; 
+                        this.hplArmPerfLibrary = "arm-performance-libraries_25.04.1.sh";
                         break;
                     default:
-                        throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10 and 25.04.1 on the following platform/architectures: " + 
-                            $"'{PlatformSpecifics.LinuxArm64}'.",
-                            ErrorReason.PlatformNotSupported);
+                        throw new WorkloadException($"The HPL workload currently only supports versions 23.04.1, 24.10 and 25.04.1 of the ARM performance libraries");
                 }
 
-                DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
-                                                                    .ConfigureAwait(false);
+                this.armPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
+                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.armPerfLibrariesPath, $"{this.hplArmPerfLibrary}"), this.Platform, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync($"./{this.hplArmPerfLibrary}", $"-a", this.armPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+            }
 
-                string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
-                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, $"{this.hplPerfLibraryInfo}.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync($"./{this.hplPerfLibraryInfo}.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+            if (this.CpuArchitecture == Architecture.X64)
+            {
+                if (this.PerformanceLibrary == "AMD")
+                {
+                    switch (this.PerformanceLibraryVersion)
+                    {
+                        case "4.2.0":
+                        case "5.0.0":
+                        case "5.1.0":
+                            this.amdPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "AMD", this.PerformanceLibraryVersion);
+                            break;
+                        default:
+                            throw new WorkloadException($"The HPL workload currently only supports 4.2.0, 5.0.0 and 5.1.0 versions of AMD performance libraries");
+                    }
+
+                    string installPath = this.PlatformSpecifics.Combine(this.HPLDirectory);
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.amdPerfLibrariesPath, "install.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync($"./install.sh", $"-t {installPath} -i lp64", this.amdPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
+                }
+
+                if (this.PerformanceLibrary == "INTEL")
+                {
+                    // Switch between different versions of INTEL Math Kernel Library 
+                    switch (this.PerformanceLibraryVersion)
+                    {
+                        case "2024.2.2.17":
+                            this.hplIntelMKL = "l_onemkl_p_2024.2.2.17_offline.sh";
+                            this.hplIntelHpcToolkit = "l_HPCKit_p_2024.2.1.79_offline.sh";
+                            break;
+                        case "2025.1.0.803":
+                            this.hplIntelMKL = "intel-onemkl-2025.1.0.803_offline.sh";
+                            this.hplIntelHpcToolkit = "intel-oneapi-hpc-toolkit-2025.1.3.10_offline.sh";
+                            break;
+                        default:
+                            throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library");
+                    }
+
+                    this.intelPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL", this.PerformanceLibraryVersion);
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, $"{this.hplIntelHpcToolkit}"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync($"./{this.hplIntelHpcToolkit}", "-a --silent --eula accept", this.intelPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, $"{this.hplIntelMKL}"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync($"./{this.hplIntelMKL}", "-a --silent --eula accept", this.intelPerfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                }
             }
         }
 
@@ -398,12 +442,13 @@ namespace VirtualClient.Actions
                 await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
             }
-            else if (this.PerformanceLibrary != null && this.CpuArchitecture != Architecture.Arm64)
+            else if (this.PerformanceLibrary == "AMD" && this.CpuArchitecture == Architecture.X64)
             {
-                throw new WorkloadException(
-                    $"The HPL workload is currently only supports with perf libraries on the following platform/architectures: " +
-                    $"'{PlatformSpecifics.LinuxArm64}'.",
-                    ErrorReason.PlatformNotSupported);
+                await this.fileSystem.File.ReplaceInFileAsync(
+                  makeFilePath, @"LAdir *=", $"LAdir = {this.PlatformSpecifics.Combine(this.HPLDirectory, this.PerformanceLibraryVersion, "gcc")}", cancellationToken);
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                 makeFilePath, @"LAlib *= *[^\n]*", $"LAlib = {this.PlatformSpecifics.Combine(this.HPLDirectory, this.PerformanceLibraryVersion, "gcc", "lib", "libblis.a")}", cancellationToken);
             }
             else
             {
@@ -430,7 +475,28 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureDatFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string hplDatFile = this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC", "HPL.dat");
+            string hplDatFile;
+            if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
+            {
+                this.SetParameters(this.cpuInfo.SocketCount);
+                hplDatFile = this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack", "HPL.dat");
+
+                string hplRunmeFile = this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack", "runme_intel64_dynamic");
+                await this.fileSystem.File.ReplaceInFileAsync(
+                    hplRunmeFile, @"export MPI_PROC_NUM *= *[^\n]*", $"export MPI_PROC_NUM={this.cpuInfo.SocketCount}", cancellationToken);
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                   hplRunmeFile, @"export MPI_PER_NODE *= *[^\n]*", $"export MPI_PER_NODE={this.cpuInfo.SocketCount}", cancellationToken);
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                   hplRunmeFile, @"export NUMA_PER_MPI *= *[^\n]*", $"export NUMA_PER_MPI={this.cpuInfo.SocketCount}", cancellationToken);
+            }
+            else
+            {
+                hplDatFile = this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC", "HPL.dat");
+                this.SetParameters(this.NumberOfProcesses);
+            }
+
             await this.fileSystem.File.ReplaceInFileAsync(
                     hplDatFile, @"([0-9]+\s+)+# of problems sizes", $"1   # of problems sizes", cancellationToken);
 
@@ -475,7 +541,6 @@ namespace VirtualClient.Actions
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     hplDatFile, @"([0-9]+\s+)+RFACTs", $"2   RFACTs", cancellationToken);
-
         }
 
         private async Task DeleteFileAsync(string filePath)
@@ -489,23 +554,45 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
+            IList<Metric> metrics = parser.Parse();
+            
             var additionalMetadata = new Dictionary<string, object>();
             additionalMetadata[$"{nameof(this.PerformanceLibrary)}"] = this.PerformanceLibrary;
             additionalMetadata[$"{nameof(this.PerformanceLibraryVersion)}"] = this.PerformanceLibraryVersion;
+
+            // Add GCC version to metadata
+            string gccVersion = this.GetGccVersion();
+            additionalMetadata["GccVersion"] = gccVersion;
+            
+            if (this.PerformanceLibrary == "ARM")
+            {
+                additionalMetadata["Origin"] = "Netlib HPL configured with Arm Performance Libraries";
+            }
+            else if (this.PerformanceLibrary == "AMD" && this.CpuArchitecture == Architecture.X64)
+            {
+                additionalMetadata["Origin"] = "Netlib HPL configured with Amd Performance Libraries";
+            }
+            else if (this.PerformanceLibrary == "INTEL" && this.CpuArchitecture == Architecture.X64)
+            {
+                additionalMetadata["Origin"] = "Intel's Distro for HPL based on Netlib HPLinpack 2.3";
+            }
+            else
+            {
+                additionalMetadata["Origin"] = "Netlib HPL with no Performance Libraries";
+            }
+
             this.MetadataContract.AddForScenario(
                 "HPLinpack",
                 commandArguments,
-                toolVersion: null,
+                toolVersion: parser.Version,
                 additionalMetadata: additionalMetadata);
 
             this.MetadataContract.Apply(telemetryContext);
 
-            HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
-            IList<Metric> metrics = parser.Parse();
-
             foreach (Metric result in metrics)
             {
-                this.Logger.LogMetric(
+                this.Logger.LogMetric(  
                     "HPLinpack",
                     $"{this.Scenario}_{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     startTime,
@@ -514,12 +601,32 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} {this.commandArguments} --perfLibrary={this.hplPerfLibraryInfo} ]",
+                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} --perfLibrary={this.PerformanceLibrary} --perfLibraryVersion={this.PerformanceLibraryVersion} ]",
                     this.Tags,
                     telemetryContext,
                     result.Relativity,
                     metricMetadata: result.Metadata);
             }
+        }
+
+        private string GetGccVersion()
+        {
+            string version = string.Empty;
+            try
+            {
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("gcc", "-dumpversion"))
+                {
+                    process.StartAndWaitAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    version = process.StandardOutput.ToString().Trim();
+                }
+            }
+            catch
+            {
+                // If GCC is not installed or there's an error, return empty string
+                version = string.Empty;
+            }
+
+            return version;
         }
 
         internal class HPLinpackState : State

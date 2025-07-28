@@ -43,10 +43,7 @@ namespace VirtualClient.Proxy
 
             this.ApiClient = apiClient;
             this.StoreDescription = storeDescription;
-
-            this.Source = !string.IsNullOrWhiteSpace(source)
-                ? source
-                : ProxyBlobDescriptor.DefaultSource;
+            this.Source = source;
         }
 
         /// <summary>
@@ -100,13 +97,13 @@ namespace VirtualClient.Proxy
             }
 
             ProxyBlobDescriptor info = new ProxyBlobDescriptor(
-                this.Source,
                 this.StoreDescription.StoreName,
                 blobName,
                 blobDescriptor.ContainerName,
                 blobDescriptor.ContentType ?? "application/octet-stream",
                 blobDescriptor.ContentEncoding.WebName,
-                blobPath);
+                blobPath: blobPath,
+                source: this.Source);
 
             this.BlobDownload?.Invoke(this, new ProxyBlobEventArgs(info));
             HttpResponseMessage response = await this.ApiClient.DownloadBlobAsync(info, downloadStream, cancellationToken)
@@ -142,13 +139,13 @@ namespace VirtualClient.Proxy
             }
 
             ProxyBlobDescriptor info = new ProxyBlobDescriptor(
-                this.Source,
                 this.StoreDescription.StoreName,
                 blobName,
                 blobDescriptor.ContainerName,
                 blobDescriptor.ContentType ?? "application/octet-stream",
                 blobDescriptor.ContentEncoding.WebName,
-                blobPath);
+                blobPath: blobPath,
+                source: this.Source);
 
             this.BlobUpload?.Invoke(this, new ProxyBlobEventArgs(info));
             HttpResponseMessage response = await this.ApiClient.UploadBlobAsync(info, uploadStream, cancellationToken)

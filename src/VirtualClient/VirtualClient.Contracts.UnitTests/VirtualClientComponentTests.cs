@@ -77,9 +77,9 @@ namespace VirtualClient.Contracts
             // The following information should be copied from the original component to the new component:
             //
             // Properties
-            originalComponent.ExecutionSeed = 7777;
-            originalComponent.FailFast = true;
-            originalComponent.LogToFile = true;
+            originalComponent.Parameters[nameof(VirtualClientComponent.Seed)] = 7777;
+            originalComponent.Parameters[nameof(VirtualClientComponent.FailFast)] = true;
+            originalComponent.Parameters[nameof(VirtualClientComponent.LogToFile)] = true;
             originalComponent.SupportedRoles = new List<string> { "Client", "Server" };
 
             // Parameters
@@ -99,7 +99,7 @@ namespace VirtualClient.Contracts
 
             Assert.IsTrue(object.ReferenceEquals(originalComponent.Dependencies, component.Dependencies));
             Assert.AreEqual(originalComponent.ClientRequestId, component.ClientRequestId);
-            Assert.AreEqual(originalComponent.ExecutionSeed, component.ExecutionSeed);
+            Assert.AreEqual(originalComponent.Seed, component.Seed);
             Assert.AreEqual(originalComponent.FailFast, component.FailFast);
             Assert.AreEqual(originalComponent.LogToFile, component.LogToFile);
             CollectionAssert.AreEquivalent(originalComponent.SupportedPlatforms, component.SupportedPlatforms);
@@ -453,7 +453,7 @@ namespace VirtualClient.Contracts
             component.Parameters.Clear();
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -484,7 +484,7 @@ namespace VirtualClient.Contracts
             component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -517,8 +517,8 @@ namespace VirtualClient.Contracts
 
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
-            Assert.IsTrue(messageLogged.Count() == 1);
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
+            Assert.AreEqual(1, messageLogged.Count());
 
             EventContext context = messageLogged.First().Item3 as EventContext;
 
@@ -558,7 +558,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -599,8 +599,8 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
-            Assert.IsTrue(messageLogged.Count() == 1);
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
+            Assert.AreEqual(1, messageLogged.Count());
 
             EventContext context = messageLogged.First().Item3 as EventContext;
 
@@ -641,7 +641,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;

@@ -91,6 +91,27 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        [TestCase("Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", null,
+           "/api/blobs/anyfile.log?storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8")]
+        //
+        [TestCase("Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob",
+           "/api/blobs/anyfile.log?storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
+        //
+        [TestCase("Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "any/path/to/blob/",
+           "/api/blobs/anyfile.log?storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=any/path/to/blob")]
+        //
+        [TestCase("Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob/",
+           "/api/blobs/anyfile.log?storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor(string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
+        {
+            string encoding = Encoding.UTF8.WebName;
+            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(storeType, blobName, containerName, contentType, contentEncoding, blobPath);
+
+            string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor);
+            Assert.AreEqual(expectedRoute, actualRoute);
+        }
+
+        [Test]
         [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", null,
             "/api/blobs/anyfile.log?source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8")]
         //
@@ -105,9 +126,26 @@ namespace VirtualClient.Contracts.Proxy
         public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor(string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
         {
             string encoding = Encoding.UTF8.WebName;
-            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(source, storeType, blobName, containerName, contentType, contentEncoding, blobPath);
+            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(storeType, blobName, containerName, contentType, contentEncoding, blobPath, source);
 
             string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor);
+            Assert.AreEqual(expectedRoute, actualRoute);
+        }
+
+        [Test]
+        [TestCase("Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", null,
+            "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8")]
+        //
+        [TestCase("Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob",
+            "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor_WhenQueryStringParametersAreProvidedOnTheBaseUri_1(
+            string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
+        {
+            string encoding = Encoding.UTF8.WebName;
+            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(storeType, blobName, containerName, contentType, contentEncoding, blobPath);
+
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=10000");
+            string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor, baseUri.Query);
             Assert.AreEqual(expectedRoute, actualRoute);
         }
 
@@ -117,11 +155,11 @@ namespace VirtualClient.Contracts.Proxy
         //
         [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob",
             "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
-        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor_WhenQueryStringParametersAreProvidedOnTheBaseUri(
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor_WhenQueryStringParametersAreProvidedOnTheBaseUri_2(
             string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
         {
             string encoding = Encoding.UTF8.WebName;
-            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(source, storeType, blobName, containerName, contentType, contentEncoding, blobPath);
+            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(storeType, blobName, containerName, contentType, contentEncoding, blobPath, source);
 
             Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=10000");
             string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor, baseUri.Query);
@@ -748,16 +786,16 @@ namespace VirtualClient.Contracts.Proxy
             };
         }
 
-        private static ProxyBlobDescriptor GetBlobDescriptor(bool withPath = false)
+        private static ProxyBlobDescriptor GetBlobDescriptor(bool withPath = false, string withSource = null)
         {
             return new ProxyBlobDescriptor(
-                "VirtualClient",
                 "Packages",
                 "blobname.1.0.0.zip",
                 "packages",
                 "application/octet-stream",
                 Encoding.UTF8.WebName,
-                withPath ? "/path/to/blob" : null);
+                withPath ? "/path/to/blob" : null,
+                !string.IsNullOrWhiteSpace(withSource) ? withSource : null);
         }
 
         private static string GetExpectedBlobPathAndQuery(ProxyBlobDescriptor descriptor, string queryString = null)
@@ -771,12 +809,16 @@ namespace VirtualClient.Contracts.Proxy
             string expectedBlobPath = descriptor.BlobPath;
 
             string fullQueryString =
-                $"source={expectedSource}" +
-                $"&storeType={expectedStoreType}" +
+                $"storeType={expectedStoreType}" +
                 $"&containerName={expectedContainerName}" +
                 $"&contentType={expectedContentType}" +
                 $"&contentEncoding={expectedContentEncoding}" +
                 $"{(!string.IsNullOrEmpty(expectedBlobPath) ? $"&blobPath={expectedBlobPath}" : string.Empty)}";
+
+            if (!string.IsNullOrWhiteSpace(expectedSource))
+            {
+                fullQueryString = $"source={expectedSource}&{fullQueryString}";
+            }
 
             if (!string.IsNullOrWhiteSpace(queryString))
             {

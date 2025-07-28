@@ -6,12 +6,10 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Diagnostics.Tracing;
     using System.Linq;
     using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -42,38 +40,6 @@ namespace VirtualClient.Contracts
         /// and exit code to the telemetry context.
         /// </summary>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="process">The process whose details will be captured.</param>
-        /// <param name="name">The property name to use for the process telemetry.</param>
-        /// <param name="results">Results produced by the process execution to log.</param>
-        /// <param name="maxChars">
-        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
-        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
-        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
-        /// there are about 3000 characters in an average single-spaced page of text.
-        /// </param>
-        public static EventContext AddProcessContext(this EventContext telemetryContext, IProcessProxy process, string name = null, string results = null, int maxChars = 125000)
-        {
-            process.ThrowIfNull(nameof(process));
-            telemetryContext.ThrowIfNull(nameof(telemetryContext));
-
-            if (string.IsNullOrWhiteSpace(results))
-            {
-                AddProcessContext(telemetryContext, process.ProcessDetails, name, maxChars);
-            }
-            else
-            {
-                process.ProcessDetails.GeneratedResults = process.ProcessDetails.GeneratedResults.Concat(new[] { results });
-                AddProcessResults(telemetryContext, process.ProcessDetails, name, maxChars);
-            }
-
-            return telemetryContext;
-        }
-
-        /// <summary>
-        /// Adds the details of the process including standard output, standard error
-        /// and exit code to the telemetry context.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="processDetails">The process whose details will be captured.</param>
         /// <param name="name">The property name to use for the process telemetry.</param>
         /// <param name="maxChars">
@@ -82,7 +48,7 @@ namespace VirtualClient.Contracts
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        public static EventContext AddProcessContext(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
+        public static EventContext AddProcessDetails(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
         {
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -198,6 +164,101 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Adds the details of the process including standard output, standard error
+        /// and exit code to the telemetry context.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="processDetails">The process whose details will be captured.</param>
+        /// <param name="name">The property name to use for the process telemetry.</param>
+        /// <param name="maxChars">
+        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
+        {
+            processDetails.ThrowIfNull(nameof(processDetails));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            maxChars.ThrowIfInvalid(
+                nameof(maxChars),
+                (count) => count >= 0,
+                $"Invalid max character count. The value provided must be greater than or equal to zero.");
+
+            try
+            {
+                int? finalId = null;
+                int? finalExitCode = null;
+                string finalResults = null;
+
+                try
+                {
+                    finalId = processDetails.Id;
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    finalExitCode = processDetails.ExitCode;
+                }
+                catch
+                {
+                }
+
+                string fullCommand = $"{processDetails.CommandLine}".Trim();
+                if (!string.IsNullOrWhiteSpace(fullCommand))
+                {
+                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
+                }
+
+                if (processDetails.Results?.Any() == true)
+                {
+                    finalResults = string.Join($"{Environment.NewLine}{Environment.NewLine}", processDetails.Results);
+                }
+
+                // Note that 'totalOutputChars' represents the total # of characters in both the
+                // standard output and error.
+                if (finalResults != null && finalResults.Length > maxChars)
+                {
+                    // e.g.
+                    // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
+                    // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
+                    // 
+                    // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
+                    // The total will be 125,000 chars, right at the max.
+                    int substringLength = finalResults.Length - (finalResults.Length - maxChars);
+                    if (substringLength > 0)
+                    {
+                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                        finalResults = finalResults.Substring(0, finalResults.Length - (finalResults.Length - maxChars));
+                    }
+                    else
+                    {
+                        finalResults = string.Empty;
+                    }
+                }
+
+                telemetryContext.Properties[name ?? "process"] = new
+                {
+                    id = finalId,
+                    command = fullCommand ?? string.Empty,
+                    workingDir = processDetails.WorkingDirectory ?? string.Empty,
+                    exitCode = finalExitCode,
+                    results = finalResults
+                };
+            }
+            catch
+            {
+                // Best effort.
+            }
+
+            return telemetryContext;
+        }
+
+        /// <summary>
         /// Extension adds HTTP action response information to the telemetry context.
         /// </summary>
         /// <param name="telemetryContext">The telemetry context object.</param>
@@ -228,87 +289,6 @@ namespace VirtualClient.Contracts
                 requestUri = $"{response?.RequestMessage?.RequestUri}",
                 content = responseContent
             });
-
-            return telemetryContext;
-        }
-
-        /// <summary>
-        /// Adds the generated results of the process to telemetry
-        /// and exit code to the telemetry context.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="processDetails">The process whose details will be captured.</param>
-        /// <param name="name">The property name to use for the process telemetry.</param>
-        /// <param name="maxChars">
-        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
-        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
-        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
-        /// there are about 3000 characters in an average single-spaced page of text.
-        /// </param>
-        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
-        {
-            processDetails.ThrowIfNull(nameof(processDetails));
-            telemetryContext.ThrowIfNull(nameof(telemetryContext));
-
-            maxChars.ThrowIfInvalid(
-                nameof(maxChars),
-                (count) => count >= 0,
-                $"Invalid max character count. The value provided must be greater than or equal to zero.");
-
-            try
-            {
-                int? finalId = null;
-                int? finalExitCode = null;
-                string finalResults = string.Empty;
-
-                try
-                {
-                    finalId = processDetails.Id;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalExitCode = processDetails.ExitCode;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalResults = string.Join('\n', processDetails?.GeneratedResults);
-                }
-                catch
-                {
-                }
-
-                if (finalResults != null && finalResults.Length > maxChars)
-                {
-                    finalResults = finalResults.Substring(0, maxChars);
-                }
-
-                string fullCommand = processDetails.CommandLine.Trim();
-                if (!string.IsNullOrWhiteSpace(fullCommand))
-                {
-                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
-                }
-
-                telemetryContext.Properties[name ?? "processResults"] = new
-                {
-                    id = finalId,
-                    command = fullCommand ?? string.Empty,
-                    workingDir = processDetails.WorkingDirectory ?? string.Empty,
-                    exitCode = finalExitCode,
-                    results = finalResults ?? string.Empty,
-                };
-            }
-            catch
-            {
-                // Best effort.
-            }
 
             return telemetryContext;
         }
@@ -377,69 +357,6 @@ namespace VirtualClient.Contracts
                 errorContext.AddError(error, withCallStack: true, maxCallStackLength: 6000);
                 VirtualClientLoggingExtensions.LogMessage(logger, errorMessage, level, LogType.Error, errorContext);
             }
-        }
-
-        /// <summary>
-        /// Executes whenever an operation within the context of the component succeeds. This is used for example 
-        /// to write custom telemetry and metrics associated with individual operations within the component.
-        /// </summary>
-        public static void LogFailedMetric(
-            this VirtualClientComponent component,
-            string toolName = null,
-            string toolVersion = null,
-            string scenarioName = null,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            DateTime? scenarioStartTime = null,
-            DateTime? scenarioEndTime = null,
-            EventContext telemetryContext = null)
-        {
-            component.ThrowIfNull(nameof(component));
-            component.LogSuccessOrFailMetric(false, toolName, toolVersion, scenarioName, scenarioArguments, metricCategorization, scenarioStartTime, scenarioEndTime, telemetryContext);
-        }
-
-        /// <summary>
-        /// Logs a "Failed" metric to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
-        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
-        /// <param name="scenarioStartTime">The time at which the test began.</param>
-        /// <param name="scenarioEndTime">The time at which the test ended.</param>
-        /// <param name="tags">Tags associated with the test.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
-        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
-        /// <param name="toolVersion">The version of the tool/toolset.</param>
-        public static void LogFailedMetric(
-            this ILogger logger,
-            string toolName,
-            string scenarioName,
-            DateTime scenarioStartTime,
-            DateTime scenarioEndTime,
-            EventContext eventContext,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            string toolVersion = null,
-            IEnumerable<string> tags = null)
-        {
-            VirtualClientLoggingExtensions.LogMetric(
-                logger,
-                toolName,
-                scenarioName,
-                scenarioStartTime,
-                scenarioEndTime,
-                "Failed",
-                1,
-                null,
-                metricCategorization,
-                scenarioArguments,
-                tags,
-                eventContext,
-                MetricRelativity.LowerIsBetter,
-                verbosity: 0,
-                "Indicates the component or toolset execution failed for the scenario defined.",
-                toolVersion: toolVersion);
         }
 
         /// <summary>
@@ -716,6 +633,9 @@ namespace VirtualClient.Contracts
                     toolVersion,
                     metric.Metadata);
             }
+
+            // A specific message to inform logger end of logging metrics so that it can write metrics in one batch.
+            VirtualClientLoggingExtensions.LogMessage(logger, $"{scenarioName}.LogMetricsEnd", LogLevel.Trace, LogType.MetricsCollection, eventContext);
         }
 
         /// <summary>
@@ -888,68 +808,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Logs a "Succeeded" metric to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
-        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
-        /// <param name="scenarioStartTime">The time at which the test began.</param>
-        /// <param name="scenarioEndTime">The time at which the test ended.</param>
-        /// <param name="tags">Tags associated with the test.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
-        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
-        /// <param name="toolVersion">The version of the tool/toolset.</param>
-        public static void LogSuccessMetric(
-            this ILogger logger,
-            string toolName,
-            string scenarioName,
-            DateTime scenarioStartTime,
-            DateTime scenarioEndTime,
-            EventContext eventContext,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            string toolVersion = null,
-            IEnumerable<string> tags = null)
-        {
-            logger.LogMetric(
-                toolName,
-                scenarioName,
-                scenarioStartTime,
-                scenarioEndTime,
-                "Succeeded",
-                1,
-                null,
-                metricCategorization,
-                scenarioArguments,
-                tags,
-                eventContext,
-                MetricRelativity.HigherIsBetter,
-                verbosity: 2,
-                "Indicates the component or toolset execution succeeded for the scenario defined.",
-                toolVersion: toolVersion);
-        }
-
-        /// <summary>
-        /// Executes whenever an operation within the context of the component succeeds. This is used for example 
-        /// to write custom telemetry and metrics associated with individual operations within the component.
-        /// </summary>
-        public static void LogSuccessMetric(
-            this VirtualClientComponent component,
-            string toolName = null,
-            string toolVersion = null,
-            string scenarioName = null,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            DateTime? scenarioStartTime = null,
-            DateTime? scenarioEndTime = null,
-            EventContext telemetryContext = null)
-        {
-            component.ThrowIfNull(nameof(component));
-            component.LogSuccessOrFailMetric(true, toolName, toolVersion, scenarioName, scenarioArguments, metricCategorization, scenarioStartTime, scenarioEndTime, telemetryContext);
-        }
-
-        /// <summary>
         /// Extension logs system/OS event data to the target telemetry data store(s).
         /// </summary>
         /// <param name="logger">The logger instance.</param>
@@ -1075,17 +933,32 @@ namespace VirtualClient.Contracts
             return obscuredParameters;
         }
 
-        private static void LogSuccessOrFailMetric(
-           this VirtualClientComponent component,
-           bool success,
-           string toolName = null,
-           string toolVersion = null,
-           string scenarioName = null,
-           string scenarioArguments = null,
-           string metricCategorization = null,
-           DateTime? scenarioStartTime = null,
-           DateTime? scenarioEndTime = null,
-           EventContext telemetryContext = null)
+        /// <summary>
+        /// Logs a "Succeeded" or "Failed" metric to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="component">VC component</param>
+        /// <param name="success">Whether component succeeded or failed</param>
+        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
+        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
+        /// <param name="scenarioStartTime">The time at which the test began.</param>
+        /// <param name="scenarioEndTime">The time at which the test ended.</param>
+        /// <param name="telemetryContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="tags">Tags associated with test</param>
+        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
+        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
+        /// <param name="toolVersion">The version of the tool/toolset.</param>
+        public static void LogSuccessOrFailedMetric(
+            this VirtualClientComponent component,
+            bool success,
+            string toolName = null,
+            string toolVersion = null,
+            string scenarioName = null,
+            string scenarioArguments = null,
+            string metricCategorization = null,
+            DateTime? scenarioStartTime = null,
+            DateTime? scenarioEndTime = null,
+            EventContext telemetryContext = null,
+            IEnumerable<string> tags = null)
         {
             component.ThrowIfNull(nameof(component));
 
@@ -1124,30 +997,54 @@ namespace VirtualClient.Contracts
             effectiveScenarioName = !string.IsNullOrWhiteSpace(effectiveScenarioName) ? effectiveScenarioName : "Outcome";
             effectiveToolName = !string.IsNullOrEmpty(effectiveToolName) ? effectiveToolName : component.TypeName;
 
+            var properties = new Dictionary<string, object>();
+
+            EventContext metricsContext = telemetryContext.Clone();
+
             if (success)
             {
-                component.Logger.LogSuccessMetric(
-                    effectiveToolName,
-                    effectiveScenarioName,
-                    scenarioStartTime ?? DateTime.UtcNow,
-                    scenarioEndTime ?? DateTime.UtcNow,
-                    telemetryContext ?? EventContext.Persisted(),
-                    scenarioArguments,
-                    metricCategorization,
-                    toolVersion);
+                properties = new Dictionary<string, object>()
+                {
+                    { "scenarioName", effectiveScenarioName },
+                    { "scenarioStartTime", scenarioStartTime ?? DateTime.UtcNow },
+                    { "scenarioEndTime", scenarioEndTime ?? DateTime.UtcNow },
+                    { "scenarioArguments", scenarioArguments ?? string.Empty },
+                    { "metricName", "Succeeded" },
+                    { "metricValue", 1 },
+                    { "metricUnit", string.Empty },
+                    { "metricCategorization", metricCategorization ?? string.Empty },
+                    { "metricDescription", "Indicates the component or toolset execution succeeded for the scenario defined." },
+                    { "metricRelativity", MetricRelativity.HigherIsBetter },
+                    { "metricVerbosity", 2 },
+                    { "toolName", effectiveToolName },
+                    { "tags",  string.Empty },
+                    { "metadata_metrics", string.Empty }
+                };
             }
             else
             {
-                component.Logger.LogFailedMetric(
-                    effectiveToolName,
-                    effectiveScenarioName,
-                    scenarioStartTime ?? DateTime.UtcNow,
-                    scenarioEndTime ?? DateTime.UtcNow,
-                    telemetryContext ?? EventContext.Persisted(),
-                    scenarioArguments,
-                    metricCategorization,
-                    toolVersion);
+                properties = new Dictionary<string, object>()
+                {
+                    { "scenarioName", effectiveScenarioName },
+                    { "scenarioStartTime", scenarioStartTime ?? DateTime.UtcNow },
+                    { "scenarioEndTime", scenarioEndTime ?? DateTime.UtcNow },
+                    { "scenarioArguments", scenarioArguments ?? string.Empty },
+                    { "metricName", "Failed" },
+                    { "metricValue", 1 },
+                    { "metricUnit", string.Empty },
+                    { "metricCategorization", metricCategorization ?? string.Empty },
+                    { "metricDescription", "Indicates the component or toolset execution failed for the scenario defined." },
+                    { "metricRelativity", MetricRelativity.LowerIsBetter },
+                    { "metricVerbosity", 0 },
+                    { "toolName", effectiveToolName },
+                    { "tags",  string.Empty },
+                    { "metadata_metrics", string.Empty }
+                };
             }
+
+            metricsContext.Properties.AddRange(properties, withReplace: true);
+
+            VirtualClientLoggingExtensions.LogMessage(component.Logger, $"{component.TypeName}.SucceededOrFailed", LogLevel.Information, LogType.Metric, metricsContext);
         }
     }
 }

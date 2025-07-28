@@ -59,8 +59,7 @@ This profile is designed to identify general/broad regressions when compared aga
   * [Resources for above input parameters(ProblemSizeN,BlockSizeNB) configuration setting](https://netlib.org/utk/people/JackDongarra/faq-linpack.html#_For_HPL_What_problem%20size%20N%20should)
 
   * [Inputs Tuning](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/profiling-and-tuning-linpack-step-step-guide)
-
-
+  
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
@@ -79,6 +78,16 @@ This profile is designed to identify general/broad regressions when compared aga
   sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=PerformanceLibrary=ARM,,,PerformanceLibraryVersion=23.04.1
 
   ```
+
+* 
+  * **Performance Library Parameter set**  
+  The following parameter sets are supported.
+
+  | Platform                 | PerformanceLibrary          |        PerformanceLibraryVersion              |  CompilerName   |  CompilerVersion  |  Commandline Usage  |
+  |--------------------------|-----------------------------|-----------------------------------------------|-----------------|-------------------|---------------------|
+  |   arm64 | ARM    | 23.04.1, 24.10 and 25.04.1 | gcc | 11 |  --parameters=PerformanceLibrary=ARM,,,PerformanceLibraryVersion=23.04.10,,,CompilerName=gcc,,,CompilerVersion=11 |
+  |   x64   | AMD    | 4.2.0, 5.0.0, 5.1.0        | gcc | 11 |   --parameters=PerformanceLibrary=AMD,,,PerformanceLibraryVersion=4.2.0,,,CompilerName=gcc,,,CompilerVersion=11 |
+  |   x64   | INTEL  | 2024.2.2.17, 2025.1.0.803  | gcc | 13 |   --parameters=PerformanceLibrary=INTEL,,,PerformanceLibraryVersion=2024.2.2.17,,,CompilerVersion=13 |
 
 * **Resources**
 

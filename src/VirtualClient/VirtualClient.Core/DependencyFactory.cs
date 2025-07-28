@@ -77,6 +77,35 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates an <see cref="IKeyVaultManager"/> instance that can be used to access secrets and certificates from Key vault
+        /// </summary>
+        /// <param name="dependencyStore">Describes the type of dependency store.</param>
+        public static IKeyVaultManager CreateKeyVaultManager(DependencyStore dependencyStore)
+        {
+            if (dependencyStore == null)
+            {
+                throw new DependencyException("Dependency store cannot be null while creating the KeyVault reference.", ErrorReason.DependencyDescriptionInvalid);
+            }
+
+            IKeyVaultManager keyVaultManager = null;
+            DependencyKeyVaultStore keyVaultStore = dependencyStore as DependencyKeyVaultStore;
+            if (keyVaultStore != null)
+            {
+                keyVaultManager = new KeyVaultManager(keyVaultStore);
+            }
+
+            if (keyVaultManager == null)
+            {
+                throw new DependencyException(
+                    $"Required Key Vault information not provided. A dependency store of type '{dependencyStore.StoreType}' is missing " +
+                    $"required information or was provided in an unsupported format.",
+                    ErrorReason.DependencyDescriptionInvalid);
+            }
+
+            return keyVaultManager;
+        }
+
+        /// <summary>
         /// Creates a disk manager for the OS/system platform (e.g. Windows, Linux).
         /// </summary>
         /// <param name="platform">The OS/system platform.</param>
@@ -586,7 +615,7 @@ namespace VirtualClient
             IFileSystem fileSystem = new FileSystem();
             IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
             IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
-            ISshClientManager sshClientManager = new SshClientManager();
+            ISshClientFactory sshClientManager = new SshClientFactory();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
 
             return new SystemManagement
@@ -599,7 +628,7 @@ namespace VirtualClient
                 PackageManager = packageManager,
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
-                SshClientManager = sshClientManager,
+                SshClientFactory = sshClientManager,
                 StateManager = stateManager
             };
         }

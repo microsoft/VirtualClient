@@ -185,7 +185,7 @@ namespace VirtualClient.Dependencies
 
             if (platform == PlatformID.Unix)
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName hammerdbtest --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\" --password [A-Za-z0-9+/=]+";
+                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName hammerdbtest --directories \"/home/user/mnt_dev_sdc1;/home/user/mnt_dev_sdd1;/home/user/mnt_dev_sde1;\" --password [A-Za-z0-9+/=]+";
             }
             else
             {

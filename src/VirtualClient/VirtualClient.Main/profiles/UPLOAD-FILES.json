@@ -1,0 +1,30 @@
+{
+    "Description": "Uploads files from a directory to a content store location.",
+    "Parameters": {
+        "TargetDirectory": null,
+        "Timestamped": false,
+        "ToolName": null,
+        "DeleteOnUpload": false
+    },
+    "Actions": [
+        {
+            "Type": "WaitExecutor",
+            "Parameters": {
+                "Scenario": "Initialize",
+                "Duration": "00:00:01"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "RequestFileUpload",
+            "Parameters": {
+                "Scenario": "UploadFiles",
+                "TargetDirectory": "$.Parameters.TargetDirectory",
+                "Timestamped": "$.Parameters.Timestamped",
+                "ToolName": "$.Parameters.ToolName",
+                "DeleteOnUpload": "$.Parameters.DeleteOnUpload"
+            }
+        }
+    ]
+}

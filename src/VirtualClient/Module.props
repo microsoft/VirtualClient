@@ -31,6 +31,15 @@
 
         <!-- Azure.Messaging.EventHubs -->
         <Azure_Messaging_EventHubs_PackageVersion>5.11.5</Azure_Messaging_EventHubs_PackageVersion>
+      
+        <!-- Azure.Security.KeyVault.Certificates -->
+        <Azure_Security_KeyVault_Certificates_PackageVersion>4.7.0</Azure_Security_KeyVault_Certificates_PackageVersion>
+      
+        <!-- Azure.Security.KeyVault.Keys -->
+        <Azure_Security_KeyVault_Keys_PackageVersion>4.7.0</Azure_Security_KeyVault_Keys_PackageVersion>
+      
+        <!-- Azure.Security.KeyVault.Secrets -->
+        <Azure_Security_KeyVault_Secrets_PackageVersion>4.7.0</Azure_Security_KeyVault_Secrets_PackageVersion>
 
         <!-- Azure.Storage.Blobs -->
         <Azure_Storage_Blobs_PackageVersion>12.18.0</Azure_Storage_Blobs_PackageVersion>
@@ -73,6 +82,9 @@
 
         <!-- Microsoft.Windows.Compatibility -->
         <Microsoft_Windows_Compatibility_PackageVersion>9.0.3</Microsoft_Windows_Compatibility_PackageVersion>
+
+		<!-- MimeMapping -->
+		<MimeMapping_PackageVersion>3.1.0</MimeMapping_PackageVersion>
 
         <!-- Moq -->
         <Moq_PackageVersion>4.18.2</Moq_PackageVersion>
@@ -117,7 +129,7 @@
         <System_Diagnostics_PerformanceCounter_PackageVersion>9.0.3</System_Diagnostics_PerformanceCounter_PackageVersion>
 
         <!-- System.IO.Abstractions -->
-        <System_IO_Abstractions_PackageVersion>21.0.29</System_IO_Abstractions_PackageVersion>
+        <System_IO_Abstractions_PackageVersion>22.0.14</System_IO_Abstractions_PackageVersion>
 
         <!-- System.IO.FileSystem.AccessControl -->
         <System_IO_FileSystem_AccessControl_PackageVersion>5.0.0</System_IO_FileSystem_AccessControl_PackageVersion>
@@ -145,7 +157,7 @@
 
         <!-- System.ServiceProcess.ServiceController -->
         <System_ServiceProcess_ServiceController_PackageVersion>9.0.3</System_ServiceProcess_ServiceController_PackageVersion>
-        
+
         <!-- YamlDotNet -->
         <YamlDotNet_PackageVersion>15.1.1</YamlDotNet_PackageVersion>
 

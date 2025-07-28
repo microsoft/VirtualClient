@@ -10,6 +10,7 @@
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="$(Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion)" />
+        <PackageReference Include="System.CommandLine" Version="[$(System_CommandLine_PackageVersion)]" />
         <PackageReference Include="System.Diagnostics.EventLog" Version="$(System_Diagnostics_EventLog_PackageVersion)" />
         <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
     </ItemGroup>

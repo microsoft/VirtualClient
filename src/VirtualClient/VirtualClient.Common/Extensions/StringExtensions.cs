@@ -4,7 +4,6 @@
 namespace VirtualClient.Common.Extensions
 {
     using System;
-    using System.Collections;
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
     using System.Security;

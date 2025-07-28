@@ -1,12 +1,13 @@
 {
     "Description": "Default Monitors for Nvidia GPU systems.",
     "Metadata": {
-        "SupportedPlatforms": "linux-arm64,linux-x64",
+        "SupportedPlatforms": "linux-arm64,linux-x64,win-x64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
         "MonitorFrequency": "00:01:00",
-        "MonitorWarmupPeriod": "00:01:00"
+        "MonitorWarmupPeriod": "00:01:00",
+        "MonitorIterations": -1
     },
     "Monitors": [
         {
@@ -14,7 +15,8 @@
             "Parameters": {
                 "Scenario": "CaptureNvidiaSmiCounters",
                 "MonitorFrequency": "$.Parameters.MonitorFrequency",
-                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
+                "MonitorIterations": "$.Parameters.MonitorIterations"
             }
         }
     ]

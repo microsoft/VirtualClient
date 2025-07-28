@@ -628,7 +628,7 @@ namespace VirtualClient
         /// <summary>
         /// Collection of metrics.
         /// </summary>
-        MetricsCollection = 106,
+        MetricsCollection = 106
     }
 
     /// <summary>

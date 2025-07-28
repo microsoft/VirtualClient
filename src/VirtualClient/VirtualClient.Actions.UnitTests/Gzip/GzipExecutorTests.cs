@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
                 { nameof(GzipExecutor.PackageName), "gzip" },
                 { nameof(GzipExecutor.Scenario), "mockScenario" }
             };
-            string expectedCommand = $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
+            string expectedCommand = $"sudo wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
             string mockPackagePath = this.mockPackage.Path;
             List<string> expectedCommands = new List<string>
             {
-                $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                $"sudo wget --no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"sudo unzip silesia.zip -d silesia",
                 $"sudo bash -c \"gzip testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
             };

@@ -207,6 +207,41 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("TEST-PROFILE-1-SEQUENTIAL.json")]
+        public void ComponentFactoryCreatesExpectedSequentialExecutionComponentsFromAnExecutionProfile(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            bool confirmed = false;
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                    Assert.IsNotNull(component);
+                    Assert.IsNotEmpty(component.Dependencies);
+                    Assert.IsNotNull(component.Parameters);
+
+                    SequentialExecution sequentialExecutionComponent = component as SequentialExecution;
+                    if (sequentialExecutionComponent != null)
+                    {
+                        Assert.IsNotEmpty(sequentialExecutionComponent);
+                        Assert.IsTrue(sequentialExecutionComponent.Count() == 2);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(0) is TestExecutor);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(1) is TestExecutor);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "ScenarioA");
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "ScenarioB");
+                        Assert.AreEqual(2, sequentialExecutionComponent.LoopCount);
+                        confirmed = true;
+                    }
+                });
+            }
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
         public void ComponentFactoryAddsExpectedComponentLevelMetadataToSubComponents_Deep_Nesting()
         {
             // Setup:
@@ -549,12 +584,15 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
                     action,
                     this.mockFixture.Dependencies,
-                    randomizationSeed: 123,
-                    failFast: true,
-                    logToFile: true);
+                    new ComponentSettings
+                    {
+                        FailFast = true,
+                        LogToFile = true,
+                        Seed = 123
+                    });
 
                 Assert.IsNotNull(component);
-                Assert.AreEqual(123, component.ExecutionSeed);
+                Assert.AreEqual(123, component.Seed);
                 Assert.IsTrue(component.FailFast);
                 Assert.IsTrue(component.LogToFile);
             }
@@ -572,18 +610,21 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
                     action,
                     this.mockFixture.Dependencies,
-                    randomizationSeed: 123,
-                    failFast: true,
-                    logToFile: true);
+                    new ComponentSettings
+                    {
+                        FailFast = true,
+                        LogToFile = true,
+                        Seed = 123
+                    });
 
                 Assert.IsNotNull(component);
-                Assert.AreEqual(123, component.ExecutionSeed);
+                Assert.AreEqual(123, component.Seed);
                 Assert.IsTrue(component.FailFast);
                 Assert.IsTrue(component.LogToFile);
 
                 foreach (VirtualClientComponent subComponent in component as VirtualClientComponentCollection)
                 {
-                    Assert.AreEqual(123, subComponent.ExecutionSeed);
+                    Assert.AreEqual(123, subComponent.Seed);
                     Assert.IsTrue(subComponent.FailFast);
                     Assert.IsTrue(subComponent.LogToFile);
                 }

@@ -52,8 +52,23 @@ namespace VirtualClient
                         "VirtualClient.TestExecutor",
                         new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario2" }),
                     new ExecutionProfileElement(
-                        "VirtualClient.TestExecutor",
-                        new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario3" })
+                        "VirtualClient.TestCollectionExecutor",
+                        new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario3" },
+                        components: new List<ExecutionProfileElement>()
+                        {
+                            new ExecutionProfileElement(
+                                "VirtualClient.TestExecutor",
+                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario1" }),
+                            new ExecutionProfileElement(
+                                "VirtualClient.TestExecutor",
+                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario2" }),
+                            new ExecutionProfileElement(
+                                "VirtualClient.TestExecutor",
+                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario3" }),
+                            new ExecutionProfileElement(
+                                "VirtualClient.TestExecutor",
+                                new Dictionary<string, IConvertible> { ["Scenario"] = "Scenario4" })
+                        })
                 },
                 dependencies: new List<ExecutionProfileElement>
                 {
@@ -94,7 +109,8 @@ namespace VirtualClient
 
                 Assert.IsNotEmpty(executor.ProfileActions);
                 Assert.IsTrue(executor.ProfileActions.Count() == 3);
-                Assert.IsTrue(executor.ProfileActions.All(action => action.GetType() == typeof(TestExecutor)));
+                Assert.IsTrue(executor.ProfileActions.Where(action => action.GetType() == typeof(TestExecutor)).Count() == 2);
+                Assert.IsTrue(executor.ProfileActions.Where(action => action.GetType() == typeof(TestCollectionExecutor)).Count() == 1);
                 Assert.AreEqual("Scenario1", executor.ProfileActions.ElementAt(0).Parameters["Scenario"]);
                 Assert.AreEqual("Scenario2", executor.ProfileActions.ElementAt(1).Parameters["Scenario"]);
                 Assert.AreEqual("Scenario3", executor.ProfileActions.ElementAt(2).Parameters["Scenario"]);
@@ -198,7 +214,7 @@ namespace VirtualClient
                 "Scenario3"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: targetScenarios))
             {
                 executor.Initialize();
 
@@ -208,6 +224,12 @@ namespace VirtualClient
                 CollectionAssert.AreEquivalent(
                     this.mockProfile.Actions.Skip(1).Select(a => a.Parameters["Scenario"]),
                     executor.ProfileActions.Select(a => a.Parameters["Scenario"]));
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(2, collectionComponent.Count);
+                Assert.IsTrue(collectionComponent.All(component => targetScenarios.Contains(component.Parameters["Scenario"])));
             }
         }
 
@@ -220,18 +242,25 @@ namespace VirtualClient
             };
 
             // Ensure we have components that share the same scenario name.
-            this.mockProfile.Actions.Take(2).ToList().ForEach(a => a.Parameters["Scenario"] = "Scenario1");
+            this.mockProfile.Actions.Take(3).ToList().ForEach(a => a.Parameters["Scenario"] = "Scenario1");
+            this.mockProfile.Actions.Last().Components.ToList().ForEach(a => a.Parameters["Scenario"] = "Scenario1");
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: targetScenarios))
             {
                 executor.Initialize();
 
                 Assert.IsNotEmpty(executor.ProfileActions);
-                Assert.IsTrue(executor.ProfileActions.Count() == 2);
+                Assert.IsTrue(executor.ProfileActions.Count() == 3);
 
                 CollectionAssert.AreEquivalent(
-                    this.mockProfile.Actions.Take(2).Select(a => a.Parameters["Scenario"]),
+                    this.mockProfile.Actions.Take(3).Select(a => a.Parameters["Scenario"]),
                     executor.ProfileActions.Select(a => a.Parameters["Scenario"]));
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(4, collectionComponent.Count);
+                Assert.IsTrue(collectionComponent.All(component => targetScenarios.Contains(component.Parameters["Scenario"])));
             }
         }
 
@@ -243,7 +272,7 @@ namespace VirtualClient
                 "ScenarioDoesNotExist"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: targetScenarios))
             {
                 executor.Initialize();
 
@@ -260,7 +289,7 @@ namespace VirtualClient
                 "-Scenario3"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -274,6 +303,92 @@ namespace VirtualClient
         }
 
         [Test]
+        public void ProfileExecutorSupportsUserSpecifiedScenarioExclusionForActionsAndChildComponents()
+        {
+            List<string> excludedScenarios = new List<string>()
+            {
+                "-Scenario1",
+                "-Scenario2"
+            };
+
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
+            {
+                executor.Initialize();
+
+                Assert.IsNotEmpty(executor.ProfileActions);
+                Assert.IsTrue(executor.ProfileActions.Count() == 1);
+
+                CollectionAssert.AreEquivalent(
+                    this.mockProfile.Actions.Skip(2).Take(1).Select(a => a.Parameters["Scenario"]),
+                    executor.ProfileActions.Select(a => a.Parameters["Scenario"]));
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(2, collectionComponent.Count);
+
+                Assert.IsTrue(collectionComponent.First().Parameters["Scenario"].ToString() == "Scenario3");
+                Assert.IsTrue(collectionComponent.Last().Parameters["Scenario"].ToString() == "Scenario4");
+            }
+        }
+
+        [Test]
+        public void ProfileExecutorSupportsUsingSpecifiedInclusionsForSpecificChildComponents()
+        {
+            List<string> includedScenarios = new List<string>()
+            {
+                "Scenario3",
+                "Scenario4"
+            };
+
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: includedScenarios))
+            {
+                executor.Initialize();
+
+                Assert.IsNotEmpty(executor.ProfileActions);
+                Assert.IsTrue(executor.ProfileActions.Count() == 1);
+
+                CollectionAssert.AreEquivalent(
+                    this.mockProfile.Actions.Skip(2).Take(1).Select(a => a.Parameters["Scenario"]),
+                    executor.ProfileActions.Select(a => a.Parameters["Scenario"]));
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(2, collectionComponent.Count);
+
+                Assert.IsTrue(collectionComponent.First().Parameters["Scenario"].ToString() == "Scenario3");
+                Assert.IsTrue(collectionComponent.Last().Parameters["Scenario"].ToString() == "Scenario4");
+            }
+        }
+
+        [Test]
+        public void ProfileExecutorSupportsUsingSpecifiedExclusionsForSpecificChildComponents()
+        {
+            List<string> includedScenarios = new List<string>()
+            {
+                "-Scenario4"
+            };
+
+            this.mockProfile.Actions.Last().Parameters.Remove("Scenario");
+
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: includedScenarios))
+            {
+                executor.Initialize();
+
+                Assert.IsNotEmpty(executor.ProfileActions);
+                Assert.IsTrue(executor.ProfileActions.Count() == 3);
+
+                // Assert child components honor the scenario values.
+                VirtualClientComponentCollection collectionComponent = executor.ProfileActions.First(action => action.GetType() == typeof(TestCollectionExecutor)) as VirtualClientComponentCollection;
+                Assert.IsNotNull(collectionComponent);
+                Assert.AreEqual(3, collectionComponent.Count);
+
+                Assert.IsTrue(collectionComponent.All(component => component.Parameters["Scenario"].ToString() != "Scenario4"));
+            }
+        }
+
+        [Test]
         public void ProfileExecutorSupportsUserSpecifiedScenarioExclusionForDependencies()
         {
             List<string> excludedScenarios = new List<string>()
@@ -281,7 +396,7 @@ namespace VirtualClient
                 "-DependencyScenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -314,7 +429,7 @@ namespace VirtualClient
                 "-MonitorScenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -349,7 +464,7 @@ namespace VirtualClient
                 "-Scenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: scenarios))
             {
                 executor.Initialize();
 
@@ -554,11 +669,17 @@ namespace VirtualClient
                 Assert.IsNotEmpty(iterations);
                 Assert.IsTrue(iterations.Count() == 2);
 
-                var actions = this.mockFixture.Logger.Where(log => log.Item2.Name == "TestExecutor.ExecuteStart").Select(a => a.Item3 as EventContext);
-                Assert.IsNotNull(actions);
-                Assert.IsNotEmpty(actions);
-                Assert.IsTrue(actions.Count() == 6);
+                var singleActions = this.mockFixture.Logger.Where(log => log.Item2.Name == "TestExecutor.ExecuteStart").Select(a => a.Item3 as EventContext);
+                Assert.IsNotNull(singleActions);
+                Assert.IsNotEmpty(singleActions);
+                Assert.AreEqual(4, singleActions.Count());
 
+                var collectionActions = this.mockFixture.Logger.Where(log => log.Item2.Name == "TestCollectionExecutor.ExecuteStart").Select(a => a.Item3 as EventContext);
+                Assert.IsNotNull(collectionActions);
+                Assert.IsNotEmpty(collectionActions);
+                Assert.AreEqual(2, collectionActions.Count());
+
+                var actions = singleActions.Union(collectionActions);
                 // First round of actions should have the same parent ID but each action should have its
                 // own unique activity ID.
                 var iteration1Actions = actions.Where(a => a.ParentActivityId == iterations.ElementAt(0).ActivityId);
@@ -692,11 +813,9 @@ namespace VirtualClient
         public async Task ProfileExecutorHandlesNonTerminalExceptionsIfTheFailFastOptionIsNotRequested(ErrorReason errorReason)
         {
             int iterationsExecuted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, new ComponentSettings { FailFast = false }))
             {
                 executor.ExecuteActions = true;
-                executor.FailFast = false;
-
                 executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to be handled", errorReason);
                 executor.IterationEnd += (sender, args) => iterationsExecuted++;
 
@@ -721,11 +840,9 @@ namespace VirtualClient
         public async Task ProfileExecutorExitsImmediatelyOnAnyErrorWheneverTheFailFastOptionIsRequested(ErrorReason errorReason)
         {
             int iterationsExecuted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, new ComponentSettings { FailFast = true }))
             {
                 executor.ExecuteActions = true;
-                executor.FailFast = true;
-
                 executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to fail on first error", errorReason); 
                 executor.IterationEnd += (sender, args) => iterationsExecuted++;
 
@@ -746,8 +863,8 @@ namespace VirtualClient
 
         private class TestProfileExecutor : ProfileExecutor
         {
-            public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, ILogger logger = null)
-                : base(profile, dependencies, scenarios, logger)
+            public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, ComponentSettings settings = null, IEnumerable<string> scenarios = null, ILogger logger = null)
+                : base(profile, dependencies, settings, scenarios, logger)
             {
             }
 
