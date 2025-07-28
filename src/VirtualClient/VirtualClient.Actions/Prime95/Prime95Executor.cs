@@ -290,9 +290,7 @@ namespace VirtualClient.Actions
                         if (process.Start())
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
-                            process.SafeKill();
-                            // await process.WaitForExitAsync(cancellationToken);
-                            await Task.Delay(5000); // Wait up to 5 seconds for the process to clean up
+                            process.Kill(entireProcessTree: true);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
@@ -312,7 +310,6 @@ namespace VirtualClient.Actions
                                             ErrorReason.WorkloadResultsNotFound);
                                     }
 
-                                    // The exit code on SafeKill is -1 which is not a part of the default success codes.
                                     process.ThrowIfWorkloadFailed(this.successExitCodes);
                                     this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
                                 }
