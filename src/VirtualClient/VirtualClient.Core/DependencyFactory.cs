@@ -682,7 +682,7 @@ namespace VirtualClient
         {
             proxyApiUri.ThrowIfNull(nameof(proxyApiUri));
 
-            if (proxyApiUri.Query != null)
+            if (!string.IsNullOrWhiteSpace(proxyApiUri.Query))
             {
                 // e.g.
                 // https://any.service.azure.com/?miid=307591a4-abb2-4559-af59-b47177d140cf -> https://any.service.azure.com/
