@@ -18,8 +18,10 @@ namespace VirtualClient.Common.Rest
         private TimeSpan? httpTimeout;
         private bool disposed = false;
 
+        private List<MediaTypeWithQualityHeaderValue> acceptedMediaTypes;
+        private AuthenticationHeaderValue authenticationHeader;
+
 #pragma warning disable CA2213 // We will reuse these single objects for the lifetime of virtual client execution
-        private RestClient restClient;
         private HttpClientHandler handler;
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
@@ -29,15 +31,15 @@ namespace VirtualClient.Common.Rest
         /// <param name="timeout">The HTTP timeout to apply.</param>
         public RestClientBuilder(TimeSpan? timeout = null)
         {
-            this.restClient = new RestClient();
             this.httpTimeout = timeout;
             this.handler = new HttpClientHandler();
+            this.acceptedMediaTypes = new List<MediaTypeWithQualityHeaderValue>();
         }
 
         /// <inheritdoc/>
         public IRestClientBuilder AddAuthorizationHeader(string authToken, string headerName = "Bearer")
         {
-            this.restClient.SetAuthorizationHeader(new AuthenticationHeaderValue(headerName, authToken));
+            this.authenticationHeader = new AuthenticationHeaderValue(authToken, headerName);
             return this;
         }
 
@@ -45,7 +47,7 @@ namespace VirtualClient.Common.Rest
         public IRestClientBuilder AddAcceptedMediaType(MediaType mediaType)
         {
             mediaType.ThrowIfNull(nameof(mediaType));
-            this.restClient.AddAcceptedMediaTypeHeader(new MediaTypeWithQualityHeaderValue(mediaType.FieldName));
+            this.acceptedMediaTypes.Add(new MediaTypeWithQualityHeaderValue(mediaType.FieldName));
             return this;
         }
 
@@ -74,13 +76,27 @@ namespace VirtualClient.Common.Rest
         public IRestClient Build()
         {
             HttpClient client = new HttpClient(this.handler);
-            this.restClient = new RestClient(client);
-            if (this.httpTimeout != null)
+            RestClient restClient = new RestClient(client);
+
+            if (this.authenticationHeader != null)
             {
-                this.restClient.Client.Timeout = this.httpTimeout.Value;
+                restClient.SetAuthorizationHeader(this.authenticationHeader);
             }
 
-            return this.restClient;
+            if (this.acceptedMediaTypes.Count > 0)
+            {
+                foreach (var mediaType in this.acceptedMediaTypes)
+                {
+                    restClient.AddAcceptedMediaTypeHeader(mediaType);
+                }
+            }
+
+            if (this.httpTimeout != null)
+            {
+                restClient.Client.Timeout = this.httpTimeout.Value;
+            }
+
+            return restClient;
         }
 
         /// <inheritdoc/>
