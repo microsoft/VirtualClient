@@ -624,12 +624,6 @@ namespace VirtualClient
 
                     CommandBase.proxyApiDebugLoggers.Add(debugLogger);
 
-                    X509Certificate2 certificate = null;
-                    if (EndpointUtility.TryParseCertificateReference(this.ProxyApiUri, out string issuer, out string subject))
-                    {
-                        certificate = this.CertificateManager.GetCertificateFromStoreAsync(issuer, subject).GetAwaiter().GetResult();
-                    }
-
                     blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
 
                     // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
