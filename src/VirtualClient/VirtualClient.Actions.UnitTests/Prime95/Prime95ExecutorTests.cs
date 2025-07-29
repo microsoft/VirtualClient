@@ -198,11 +198,6 @@ namespace VirtualClient.Actions
                 return base.InitializeAsync(telemetryContext, cancellationToken);
             }
 
-            private Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken)
-            {
-                return Task.CompletedTask;
-            }
-
             public new void Validate()
             {
                 base.Validate();
