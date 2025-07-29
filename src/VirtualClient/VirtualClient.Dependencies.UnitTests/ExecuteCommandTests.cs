@@ -452,6 +452,7 @@ namespace VirtualClient.Dependencies
             {
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
+                    Console.WriteLine(process.FullCommand());
                     expectedCommands.Remove(process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
                     confirmed = true;
