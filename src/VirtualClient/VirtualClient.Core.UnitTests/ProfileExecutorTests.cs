@@ -214,7 +214,7 @@ namespace VirtualClient
                 "Scenario3"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: targetScenarios))
             {
                 executor.Initialize();
 
@@ -245,7 +245,7 @@ namespace VirtualClient
             this.mockProfile.Actions.Take(3).ToList().ForEach(a => a.Parameters["Scenario"] = "Scenario1");
             this.mockProfile.Actions.Last().Components.ToList().ForEach(a => a.Parameters["Scenario"] = "Scenario1");
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: targetScenarios))
             {
                 executor.Initialize();
 
@@ -272,7 +272,7 @@ namespace VirtualClient
                 "ScenarioDoesNotExist"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, targetScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: targetScenarios))
             {
                 executor.Initialize();
 
@@ -289,7 +289,7 @@ namespace VirtualClient
                 "-Scenario3"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -311,7 +311,7 @@ namespace VirtualClient
                 "-Scenario2"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -341,7 +341,7 @@ namespace VirtualClient
                 "Scenario4"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, includedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: includedScenarios))
             {
                 executor.Initialize();
 
@@ -372,7 +372,7 @@ namespace VirtualClient
 
             this.mockProfile.Actions.Last().Parameters.Remove("Scenario");
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, includedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: includedScenarios))
             {
                 executor.Initialize();
 
@@ -396,7 +396,7 @@ namespace VirtualClient
                 "-DependencyScenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -429,7 +429,7 @@ namespace VirtualClient
                 "-MonitorScenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, excludedScenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: excludedScenarios))
             {
                 executor.Initialize();
 
@@ -464,7 +464,7 @@ namespace VirtualClient
                 "-Scenario1"
             };
 
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, scenarios: scenarios))
             {
                 executor.Initialize();
 
@@ -813,11 +813,9 @@ namespace VirtualClient
         public async Task ProfileExecutorHandlesNonTerminalExceptionsIfTheFailFastOptionIsNotRequested(ErrorReason errorReason)
         {
             int iterationsExecuted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, new ComponentSettings { FailFast = false }))
             {
                 executor.ExecuteActions = true;
-                executor.FailFast = false;
-
                 executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to be handled", errorReason);
                 executor.IterationEnd += (sender, args) => iterationsExecuted++;
 
@@ -842,11 +840,9 @@ namespace VirtualClient
         public async Task ProfileExecutorExitsImmediatelyOnAnyErrorWheneverTheFailFastOptionIsRequested(ErrorReason errorReason)
         {
             int iterationsExecuted = 0;
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, new ComponentSettings { FailFast = true }))
             {
                 executor.ExecuteActions = true;
-                executor.FailFast = true;
-
                 executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to fail on first error", errorReason); 
                 executor.IterationEnd += (sender, args) => iterationsExecuted++;
 
@@ -867,8 +863,8 @@ namespace VirtualClient
 
         private class TestProfileExecutor : ProfileExecutor
         {
-            public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, ILogger logger = null)
-                : base(profile, dependencies, scenarios, logger)
+            public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, ComponentSettings settings = null, IEnumerable<string> scenarios = null, ILogger logger = null)
+                : base(profile, dependencies, settings, scenarios, logger)
             {
             }
 

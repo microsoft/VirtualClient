@@ -4,6 +4,8 @@
 namespace VirtualClient.Contracts
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -244,6 +246,124 @@ namespace VirtualClient.Contracts
             {
                 Assert.Throws<NotSupportedException>(() => PlatformSpecifics.ThrowIfNotSupported(architecture));
             }
+        }
+
+        [Test]
+        [Platform(Include ="Win")]
+        public void CanResolveRelativePathsCorrectly()
+        {
+            IDictionary<string, string> paths = new Dictionary<string, string>
+            {
+                { @"script.exe", @"script.exe" },
+                { @"S:\Path\Contains\None", @"S:\Path\Contains\None" },
+                { @".\packages", Path.GetFullPath(@".\packages") },
+                { @"..\packages", Path.GetFullPath(@"..\packages") },
+                { @"..\..\directory\..\packages", Path.GetFullPath(@"..\..\directory\..\packages") },
+                { @".\scripts\script.exe", Path.GetFullPath(@".\scripts\script.exe") },
+                { @".\scripts\script.exe --any=option --flag", $"{Path.GetFullPath(@".\scripts\script.exe")} --any=option --flag" },
+                { @""".\scripts\script.exe --any=option --flag""", $"\"{Path.GetFullPath(@".\scripts\script.exe")} --any=option --flag\"" },
+                { @""".\scripts\script.exe"" --any=option --flag", $"\"{Path.GetFullPath(@".\scripts\script.exe")}\" --any=option --flag" }
+            };
+
+            foreach (var entry in paths)
+            {
+                string relativePath = entry.Key;
+                string expectedPath = entry.Value;
+                string actualPath = PlatformSpecifics.ResolveRelativePaths(relativePath);
+
+                Assert.AreEqual(expectedPath, actualPath, $"Relative path did not resolve correctly: '{relativePath}'");
+            }
+        }
+
+        [Test]
+        [Platform(Include = "Win")]
+        public void CanResolveRelativePathsCorrectly_More_Advanced_Cases()
+        {
+            IDictionary<string, string> paths = new Dictionary<string, string>
+            {
+                { 
+                    $@"cmd -c "".\scripts\script.exe --any=option --flag""", 
+                    $@"cmd -c ""{Path.GetFullPath(@".\scripts\script.exe")} --any=option --flag""" 
+                },
+                {
+                    $@"cmd -c ""'.\scripts\script.exe' --any=option --flag""",
+                    $@"cmd -c ""'{Path.GetFullPath(@".\scripts\script.exe")}' --any=option --flag"""
+                },
+                {
+                    $@"..\..\any\path\anycommand.exe --this=true --that=123 --log-path=.\another\path.log ..\and\one\other.thing .\", 
+                    $@"{Path.GetFullPath(@"..\..\any\path\anycommand.exe")} --this=true --that=123 --log-path={Path.GetFullPath(@".\another\path.log")} {Path.GetFullPath(@"..\and\one\other.thing")} {Path.GetFullPath(@".\")}" 
+                },
+                {
+                    $@"..\..\any\path\anycommand.exe --who=..\..\Any\Path\AnyCommand.exe",
+                    $@"{Path.GetFullPath(@"..\..\any\path\anycommand.exe")} --who={Path.GetFullPath(@"..\..\Any\Path\AnyCommand.exe")}"
+                }
+            };
+
+            foreach (var entry in paths)
+            {
+                string relativePath = entry.Key;
+                string expectedPath = entry.Value;
+                string actualPath = PlatformSpecifics.ResolveRelativePaths(relativePath);
+
+                Assert.AreEqual(expectedPath, actualPath, $"Relative path did not resolve correctly: '{relativePath}'");
+            }
+        }
+
+        [Test]
+        [TestCase("anycommand", "anycommand", null)]
+        [TestCase("anycommand  ", "anycommand", null)]
+        [TestCase("./anycommand", "./anycommand", null)]
+        [TestCase("./anycommand --argument=value", "./anycommand", "--argument=value")]
+        [TestCase("./anycommand --argument=value --argument2 value2", "./anycommand", "--argument=value --argument2 value2")]
+        [TestCase("./anycommand --argument=value --argument2 value2 --flag", "./anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("./anycommand --argument=value --argument2 value2 --flag   ", "./anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("../../anycommand --argument=value --argument2 value2 --flag   ", "../../anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("/home/user/anycommand", "/home/user/anycommand", null)]
+        [TestCase("/home/user/anycommand --argument=value --argument2 value2", "/home/user/anycommand", "--argument=value --argument2 value2")]
+        [TestCase("\"/home/user/anycommand\"", "\"/home/user/anycommand\"", null)]
+        [TestCase("\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "\"/home/user/dir with space/anycommand\"", "--argument=value --argument2 value2")]
+        [TestCase("sudo anycommand", "sudo", "anycommand")]
+        [TestCase("sudo ./anycommand", "sudo", "./anycommand")]
+        [TestCase("sudo /home/user/anycommand", "sudo", "/home/user/anycommand")]
+        [TestCase("sudo /home/user/anycommand --argument=value --argument2 value2", "sudo", "/home/user/anycommand --argument=value --argument2 value2")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\"", "sudo", "\"/home/user/dir with space/anycommand\"")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "sudo", "\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2")]
+        public void CorrectlyIdentifiesThePartsOfTheCommandOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
+        }
+
+        [Test]
+        [TestCase("bash -c \"/home/user/anyscript.sh\"", "bash", "-c \"/home/user/anyscript.sh\"")]
+        [TestCase("bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"", "bash", "-c \"/home/user/anyscript.sh --argument=value --argument2 value2\"")]
+        [TestCase("bash -c \"/home/dir with space/anyscript.sh\"", "bash", "-c \"/home/dir with space/anyscript.sh\"")]
+        [TestCase("sudo bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"", "sudo", "bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"")]
+        public void CorrectlyIdentifiesThePartsOfBashCommandsOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
+        }
+
+        [Test]
+        [TestCase("anycommand.exe", "anycommand.exe", null)]
+        [TestCase("anycommand.exe  ", "anycommand.exe", null)]
+        [TestCase(".\\anycommand.exe", ".\\anycommand.exe", null)]
+        [TestCase(".\\anycommand.exe --argument=value --argument2 value2", ".\\anycommand.exe", "--argument=value --argument2 value2")]
+        [TestCase(".\\anycommand.exe --argument=value --argument2 value2 --flag", ".\\anycommand.exe", "--argument=value --argument2 value2 --flag")]
+        [TestCase(".\\anycommand.exe --argument=value --argument2 value2 --flag   ", ".\\anycommand.exe", "--argument=value --argument2 value2 --flag")]
+        [TestCase(".\\anycommand.exe --argument=value", ".\\anycommand.exe", "--argument=value")]
+        [TestCase("..\\..\\anycommand.exe --argument=value", "..\\..\\anycommand.exe", "--argument=value")]
+        [TestCase("C:\\Users\\User\\anycommand.exe", "C:\\Users\\User\\anycommand.exe", null)]
+        [TestCase("C:\\Users\\User\\anycommand.exe --argument=value --argument2 value2", "C:\\Users\\User\\anycommand.exe", "--argument=value --argument2 value2")]
+        [TestCase("\"C:\\Users\\User\\Dir With Space\\anycommand.exe\"--argument=value --argument2 value2", "\"C:\\Users\\User\\Dir With Space\\anycommand.exe\"", "--argument=value --argument2 value2")]
+        public void CorrectlyIdentifiesThePartsOfTheCommandOnWindowsSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
         }
 
         [Test]

@@ -38,6 +38,11 @@ namespace VirtualClient.Contracts
         public static readonly string WinArm64 = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64);
 
         /// <summary>
+        /// Regular expression for identifying text containing relative paths within.
+        /// </summary>
+        public static readonly Regex RelativePathExpression = new Regex(@"\.{1,}[\\\/]{1,2}[\x21\x23-\x7E]*", RegexOptions.Compiled);
+
+        /// <summary>
         /// Initializes a new version of the <see cref="PlatformSpecifics"/> class.
         /// </summary>
         /// <param name="platform">The OS platform (e.g. Windows, Unix).</param>
@@ -162,32 +167,6 @@ namespace VirtualClient.Contracts
         internal static bool RunningInContainer { get; set; } = PlatformSpecifics.IsRunningInContainer();
 
         /// <summary>
-        /// Get the logged in user/username. On Windows systems, the user is discoverable even when running as Administrator.
-        /// On Linux systems, the user can be discovered using certain environment variables when running under sudo/root.
-        /// </summary>
-        public string GetLoggedInUser()
-        {
-            string loggedInUserName = Environment.UserName;
-            if (string.Equals(loggedInUserName, "root"))
-            {
-                loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
-                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
-                {
-                    loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
-                    if (string.IsNullOrEmpty(loggedInUserName))
-                    {
-                        throw new EnvironmentSetupException(
-                            $"Unable to determine logged in username. The expected environment variables '{EnvironmentVariable.SUDO_USER}' and " +
-                            $"'{EnvironmentVariable.VC_SUDO_USER}' do not exist or are set to 'root' (i.e. potentially when running as sudo/root).",
-                            ErrorReason.EnvironmentIsInsufficent);
-                    }
-                }
-            }
-
-            return loggedInUserName;
-        }
-
-        /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
         /// common supported platform and architecture (e.g. win-x64, win-arm64, linux-x64, linux-arm64);
         /// </summary>
@@ -283,6 +262,31 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Resolves any relative paths in the text as full paths 
+        /// (e.g. "../path/to/script.sh --log-dir=../path/to/logs" -> "/home/user/path/to/script.sh --log-dir=/home/user/path/to/logs").
+        /// </summary>
+        public static string ResolveRelativePaths(string text)
+        {
+            string resolved = text;
+            if (!string.IsNullOrWhiteSpace(resolved))
+            {
+                MatchCollection relativePathMatches = PlatformSpecifics.RelativePathExpression.Matches(resolved);
+                if (relativePathMatches?.Any() == true)
+                {
+                    foreach (Match match in relativePathMatches)
+                    {
+                        // Ensure that relative working directory paths are fully expanded. Preserve case-sensitivity
+                        // to avoid anomalies on Linux.
+                        string relativeDirectory = match.Value;
+                        resolved = resolved.Replace(relativeDirectory, Path.GetFullPath(relativeDirectory), StringComparison.Ordinal);
+                    }
+                }
+            }
+
+            return resolved;
+        }
+
+        /// <summary>
         /// Standardizes/normalizes the path based upon the platform/OS ensuring
         /// a valid path is 
         /// </summary>
@@ -358,6 +362,57 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Returns true if the command parts can be determined and outputs the parts.
+        /// </summary>
+        /// <param name="fullCommand">The full comamnd and arguments (e.g. sudo lshw -c disk).</param>
+        /// <param name="command">The command to execute.</param>
+        /// <param name="commandArguments">The arguments to pass to the command.</param>
+        public static bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments)
+        {
+            fullCommand.ThrowIfNullOrWhiteSpace(nameof(fullCommand));
+
+            command = null;
+            commandArguments = null;
+
+            string effectiveFullCommand = fullCommand.Trim();
+            Match commandMatch = null;
+
+            // Note:
+            // \x22 = quotation mark
+            if (effectiveFullCommand.StartsWith('"'))
+            {
+                // e.g.
+                // "/home/user/dir/anycommand"
+                // "/home/user/dir with space/anycommand"
+                //
+                // ...directories having spaces in the name
+                // "/home/user/dir/anycommand" --argument=value --argument2=value2
+                // "/home/user/dir with space/anycommand" --argument=value --argument2=value2
+                commandMatch = Regex.Match(effectiveFullCommand, @"^(\x22[\x20\x21\x23-\x7E]+\x22)", RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                // e.g.
+                // /home/user/dir/anycommand
+                // /home/user/dir/anycommand --argument=value --argument2=value2
+                commandMatch = Regex.Match(effectiveFullCommand, @"^([\x21\x23-\x7E]+)", RegexOptions.IgnoreCase);
+            }
+
+            if (commandMatch.Success)
+            {
+                command = commandMatch.Groups[1].Value?.Trim();
+                commandArguments = fullCommand.Substring(commandMatch.Groups[1].Value.Trim().Length)?.Trim();
+
+                if (string.IsNullOrWhiteSpace(commandArguments))
+                {
+                    commandArguments = null;
+                }
+            }
+
+            return command != null;
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid path for the platform/OS.
         /// </summary>
         /// <param name="pathSegments">Individual segments of a full path.</param>
@@ -389,6 +444,31 @@ namespace VirtualClient.Contracts
         public virtual string GetEnvironmentVariable(string variableName, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
         {
             return Environment.GetEnvironmentVariable(variableName, target);
+        }
+
+        /// <summary>
+        /// Get the logged in user/username. On Windows systems, the user is discoverable even when running as Administrator.
+        /// On Linux systems, the user can be discovered using certain environment variables when running under sudo/root.
+        /// </summary>
+        public string GetLoggedInUser()
+        {
+            string loggedInUserName = Environment.UserName;
+            if (string.Equals(loggedInUserName, "root"))
+            {
+                loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+                if (string.IsNullOrWhiteSpace(loggedInUserName))
+                {
+                    loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
+                    if (string.IsNullOrEmpty(loggedInUserName))
+                    {
+                        // When the user is "root" and running a command with "sudo", there will be
+                        // no "SUDO_USER" environment variable.
+                        return "root";
+                    }
+                }
+            }
+
+            return loggedInUserName;
         }
 
         /// <summary>

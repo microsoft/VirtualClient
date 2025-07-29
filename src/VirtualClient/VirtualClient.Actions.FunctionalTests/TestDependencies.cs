@@ -46,12 +46,16 @@ namespace VirtualClient.Actions
 
             workloadProfile.Inline();
 
-            ProfileExecutor profileExecutor = new ProfileExecutor(workloadProfile, dependencies)
+            ComponentSettings settings = new ComponentSettings
+            {
+                ExitWait = TimeSpan.Zero
+            };
+
+            ProfileExecutor profileExecutor = new ProfileExecutor(workloadProfile, dependencies, settings)
             {
                 ExecuteActions = !dependenciesOnly,
                 ExecuteDependencies = true,
                 ExecuteMonitors = !dependenciesOnly,
-                ExitWait = TimeSpan.Zero
             };
 
             return profileExecutor;

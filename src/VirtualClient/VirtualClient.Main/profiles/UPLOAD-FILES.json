@@ -3,7 +3,8 @@
     "Parameters": {
         "TargetDirectory": null,
         "Timestamped": false,
-        "LogFolderName": null
+        "ToolName": null,
+        "DeleteOnUpload": false
     },
     "Actions": [
         {
@@ -18,8 +19,11 @@
         {
             "Type": "RequestFileUpload",
             "Parameters": {
+                "Scenario": "UploadFiles",
                 "TargetDirectory": "$.Parameters.TargetDirectory",
-                "Timestamped": "$.Parameters.Timestamped"
+                "Timestamped": "$.Parameters.Timestamped",
+                "ToolName": "$.Parameters.ToolName",
+                "DeleteOnUpload": "$.Parameters.DeleteOnUpload"
             }
         }
     ]

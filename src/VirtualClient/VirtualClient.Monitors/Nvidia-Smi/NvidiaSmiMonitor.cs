@@ -229,7 +229,7 @@ namespace VirtualClient.Monitors
                     this.Logger.LogMessage(
                         "The Nvidia SMI toolset (nvidia-smi) is not installed. This monitor will not execute.",
                         LogLevel.Warning,
-                        telemetryContext.Clone().AddProcessContext(process));
+                        telemetryContext.Clone().AddProcessDetails(process.ToProcessDetails("nvidia-smi")));
                 }
             }
 

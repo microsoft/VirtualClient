@@ -584,12 +584,15 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
                     action,
                     this.mockFixture.Dependencies,
-                    randomizationSeed: 123,
-                    failFast: true,
-                    logToFile: true);
+                    new ComponentSettings
+                    {
+                        FailFast = true,
+                        LogToFile = true,
+                        Seed = 123
+                    });
 
                 Assert.IsNotNull(component);
-                Assert.AreEqual(123, component.ExecutionSeed);
+                Assert.AreEqual(123, component.Seed);
                 Assert.IsTrue(component.FailFast);
                 Assert.IsTrue(component.LogToFile);
             }
@@ -607,18 +610,21 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
                     action,
                     this.mockFixture.Dependencies,
-                    randomizationSeed: 123,
-                    failFast: true,
-                    logToFile: true);
+                    new ComponentSettings
+                    {
+                        FailFast = true,
+                        LogToFile = true,
+                        Seed = 123
+                    });
 
                 Assert.IsNotNull(component);
-                Assert.AreEqual(123, component.ExecutionSeed);
+                Assert.AreEqual(123, component.Seed);
                 Assert.IsTrue(component.FailFast);
                 Assert.IsTrue(component.LogToFile);
 
                 foreach (VirtualClientComponent subComponent in component as VirtualClientComponentCollection)
                 {
-                    Assert.AreEqual(123, subComponent.ExecutionSeed);
+                    Assert.AreEqual(123, subComponent.Seed);
                     Assert.IsTrue(subComponent.FailFast);
                     Assert.IsTrue(subComponent.LogToFile);
                 }
