@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
 
@@ -211,7 +212,7 @@ namespace VirtualClient
         /// <summary>
         /// Not implemented.
         /// </summary>
-        public IProxyApiClient GetOrCreateProxyApiClient(string id, Uri uri)
+        public IProxyApiClient GetOrCreateProxyApiClient(string id, Uri uri, X509Certificate2 certificate)
         {
             throw new NotImplementedException();
         }

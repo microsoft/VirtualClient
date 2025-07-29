@@ -378,6 +378,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Parses the subject name and issuer from the provided uri. If the uri does not contain the correctly formatted certificate subject name
+        /// and issuer information the method will return false, and keep the two out parameters as null.
+        /// Ex. https://vegaprod01proxyapi.azurewebsites.net?crti=issuerName&amp;crts=certSubject
+        /// </summary>
+        /// <param name="uri">The uri to attempt to parse the values from.</param>
+        /// <param name="issuer">The issuer of the certificate.</param>
+        /// <param name="subject">The subject of the certificate.</param>
+        /// <returns>True/False if the method was able to successfully parse both the subject name and the issuer of the certificate.</returns>
+        public static bool TryParseCertificateReference(Uri uri, out string issuer, out string subject)
+        {
+            string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
+
+            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value?.ToString(),
+                StringComparer.OrdinalIgnoreCase);
+
+            return TryGetCertificateReferenceForUri(queryParameters, out issuer, out subject);
+        }
+
+        /// <summary>
         /// Returns the endpoint by verifying package uri checks.
         /// if the endpoint is a package uri without http or https protocols then append the protocol else return the endpoint value.
         /// </summary>
@@ -430,7 +451,7 @@ namespace VirtualClient
                 // Basic URI without any query parameters
                 // 1) If the given endpoint uri is a package uri (e.g. https://packages.virtualclient.microsoft.com ) then the package is retrieved from storage via CDN
                 // 2) If the given endpoint uri is a blob storage (e.g https://any.blob.core.windows.net) then the packages is retrieved from blob storage 
-                store = IsPackageUri(endpointUri, storeName) 
+                store = IsPackageUri(endpointUri, storeName)
                     ? new DependencyBlobStore(storeName, endpointUri, DependencyStore.StoreTypeAzureCDN)
                     : new DependencyBlobStore(storeName, endpointUri);
             }
@@ -947,9 +968,9 @@ namespace VirtualClient
             else
             {
                 certificate = await certificateManager.GetCertificateFromStoreAsync(
-                    certificateIssuer, 
-                    certificateSubject, 
-                    storeLocations, 
+                    certificateIssuer,
+                    certificateSubject,
+                    storeLocations,
                     storeName);
             }
 
