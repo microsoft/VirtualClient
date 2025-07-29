@@ -467,7 +467,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task ExecuteCommandTheResolvedPackagePathExpressionsWhenExecutingCommandsOnUnixSystems()
         {
-            this.SetupDefaults(PlatformID.Win32NT);
+            this.SetupDefaults(PlatformID.Unix);
             string packagePath = this.mockFixture.GetPackagePath("anypackage");
 
             // The package MUST exist on the system.
