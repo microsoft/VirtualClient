@@ -428,6 +428,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [Platform("Win")]
         public async Task ExecuteCommandTheResolvedPackagePathExpressionsWhenExecutingCommandsOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
@@ -452,12 +453,8 @@ namespace VirtualClient.Dependencies
             {
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    // Console.WriteLine(process.FullCommand());
                     expectedCommands.Remove(process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
-                    // Console.WriteLine(process.StartInfo.WorkingDirectory);
-                    // Console.WriteLine(process.StartInfo.FileName);
-                    // Console.WriteLine(process.StartInfo.Arguments);
                     confirmed = true;
                 };
 
