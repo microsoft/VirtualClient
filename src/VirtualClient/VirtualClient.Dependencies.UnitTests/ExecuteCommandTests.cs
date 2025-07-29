@@ -455,6 +455,7 @@ namespace VirtualClient.Dependencies
                     Console.WriteLine(process.FullCommand());
                     expectedCommands.Remove(process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
+                    Console.WriteLine(process.StartInfo.WorkingDirectory);
                     confirmed = true;
                 };
 
