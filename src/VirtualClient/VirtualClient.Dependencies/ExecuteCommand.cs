@@ -212,6 +212,7 @@ namespace VirtualClient.Dependencies
                 }
                 else
                 {
+                    Console.WriteLine($"Command: {fullCommand}");
                     commandsToExecute.Add(fullCommand);
                 }
             }
