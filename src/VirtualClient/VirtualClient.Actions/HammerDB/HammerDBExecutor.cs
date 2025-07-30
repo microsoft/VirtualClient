@@ -161,6 +161,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The action to perform.
+        /// </summary>
+        public string Action
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Action), out IConvertible action);
+                return action?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
@@ -294,8 +306,11 @@ namespace VirtualClient.Actions
 
             await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
         }
-
-        private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        
+        /// <summary>
+        /// Prepares the SQL database by executing the createDB TCL script.
+        /// </summary>
+        protected async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "python3";
 
@@ -353,7 +368,16 @@ namespace VirtualClient.Actions
 
         private async Task CheckDistroSupportAsync(CancellationToken cancellationToken)
         {
-            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
+            // Check architecture support based on executor type and role
+            // HammerDBServerExecutor in Server role: Supports both X64 and ARM64 (PostgreSQL server can run on both)
+            // All other scenarios: Supports only X64 (HammerDB client operations don't support ARM64)
+            bool isServerExecutorInServerRole = this.IsInRole(ClientRole.Server) && this.GetType() == typeof(HammerDBServerExecutor);
+            bool isX64 = this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64;
+            bool isArm64 = this.CpuArchitecture == System.Runtime.InteropServices.Architecture.Arm64;
+            
+            bool isArchitectureSupported = isX64 || (isServerExecutorInServerRole && isArm64);
+
+            if (isArchitectureSupported)
             {
                 if (this.Platform == PlatformID.Unix)
                 {

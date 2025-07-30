@@ -171,22 +171,29 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string command = "python3";
-                    string script = $"{this.HammerDBPackagePath}/run-workload.py";
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        command, 
-                        script + " " + this.hammerDBExecutionArguments, 
-                        this.HammerDBPackagePath, 
-                        telemetryContext, 
-                        cancellationToken))
+                    if (string.Equals(this.Action, "PopulateDatabase", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDB", logToFile: true);
-                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+                        await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
+                    }
+                    else
+                    {
+                        string command = "python3";
+                        string script = $"{this.HammerDBPackagePath}/run-workload.py";
 
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                            command, 
+                            script + " " + this.hammerDBExecutionArguments, 
+                            this.HammerDBPackagePath, 
+                            telemetryContext, 
+                            cancellationToken))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDB", logToFile: true);
+                                process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                                this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                            }
                         }
                     }
                 }
