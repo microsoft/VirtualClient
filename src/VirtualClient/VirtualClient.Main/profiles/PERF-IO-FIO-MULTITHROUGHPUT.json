@@ -79,7 +79,7 @@
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "fio",
-                "Packages-Dnf": "fio,fio-engine-libaio,lshw,parted",
+                "Packages-Dnf": "fio,lshw,parted",
                 "Packages-Yum": "fio",
                 "Packages-Zypper": "fio"
             }
