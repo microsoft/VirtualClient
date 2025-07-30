@@ -492,6 +492,16 @@
     ],
     "Dependencies": [
         {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "fio",
+                "Packages-Dnf": "fio,lshw,parted",
+                "Packages-Yum": "fio",
+                "Packages-Zypper": "fio"
+            }
+        },
+        {
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "InitializeDisks"
@@ -502,16 +512,6 @@
             "Parameters": {
                 "Scenario": "CreateMountPoints",
                 "DiskFilter": "$.Parameters.DiskFilter"
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "fio,libaio-dev",
-                "Packages-Dnf": "fio,libaio-devel,lshw,parted",
-                "Packages-Yum": "fio,libaio-devel",
-                "Packages-Zypper": "fio,libaio-dev"
             }
         },
         {
