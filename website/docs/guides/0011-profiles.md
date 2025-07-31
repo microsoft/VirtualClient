@@ -334,6 +334,7 @@ e.g.
 {calculate(100 / {TotalThreads})}
 {calculate({LogicalCoreCount} - 2)}
 {calculate(({LogicalCoreCount} - 2) / 512)}
+{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}
 ```
 
 ``` json
