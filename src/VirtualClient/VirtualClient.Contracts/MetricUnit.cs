@@ -148,5 +148,10 @@ namespace VirtualClient.Contracts
         /// Watts
         /// </summary>
         public const string Watts = "watts";
+
+        /// <summary>
+        /// Bytes per connection
+        /// </summary>
+        public const string BytesPerConnection = "bytes/connection";
     }
 }
