@@ -41,7 +41,6 @@ The following list describes the measurements captured by the workload running a
 
 * Number of Tests passed.
 * Number of Tests failed.
-* Time-to-Compute the Tests (in seconds).
 
 ## Workload Metrics
 The following metrics are examples of those captured by the Virtual Client when running the Prime95 workload.
@@ -55,4 +54,3 @@ for which the system was stressed with torture test. A higher the test time with
 |--------------|---------------------|---------------------|---------------------|------|
 | failTestCount | 0.0 | 0.0 | 0.0 |  |
 | passTestCount | 32.0 | 192.0 | 115.45833333333333 |  |
-| testTime | 3600.0031989 | 3601.679443 | 3600.23347608125 | seconds |
