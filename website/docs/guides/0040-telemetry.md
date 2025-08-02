@@ -654,7 +654,7 @@ scale data analysis scenarios (see the sections at the bottom of this document).
 into the same cloud data pipeline (e.g. log files generated from a Python script).
 
 **Example Data:**  
-![Example OpenSSL Metrics](https://github.com/microsoft/VirtualClient/blob/main/website/img/openssl_metrics_example.png)
+![Example OpenSSL Metrics](../../img/openssl_metrics_example.png)
 
 **Basic Requirements**
 * Metrics log files must have the file extension ```*.metrics``` (e.g. custom_telemetry.metrics).
@@ -929,7 +929,7 @@ scale data analysis scenarios (see the sections at the bottom of this document).
 into the same cloud data pipeline (e.g. log files generated from a Python script).
 
 **Example Data:**  
-![Example System Events](https://github.com/microsoft/VirtualClient/blob/main/website/img/eventlog_events_example.png)
+![Example System Events](../../img/eventlog_events_example.png)
 
 **Basic Requirements**
 * Events log files must have the file extension ```*.events``` (e.g. custom_telemetry.events).
