@@ -197,16 +197,27 @@ namespace VirtualClient.Dependencies
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
             
-            string innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
-
             string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer}";
 
-            if (innoDbDirs != null)
+            string innoDbDirs = string.Empty;
+            if (this.Parameters.ContainsKey(nameof(this.DiskFilter)) || !string.IsNullOrEmpty(this.StripeDiskMountPoint))
             {
-                if (innoDbDirs.Split(';', StringSplitOptions.RemoveEmptyEntries).Length == 1)
+                innoDbDirs = this.Parameters.ContainsKey(nameof(this.DiskFilter)) ? await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken) : string.Empty;
+                innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : innoDbDirs;
+
+                if (!string.IsNullOrEmpty(innoDbDirs))
                 {
-                    string cleanDirectory = innoDbDirs.TrimEnd(';');
-                    arguments += $" --innodbDirectory {cleanDirectory}";
+                    if (innoDbDirs.Split(';', StringSplitOptions.RemoveEmptyEntries).Length == 1)
+                    {
+                        string cleanDirectory = innoDbDirs.TrimEnd(';');
+                        arguments += $" --innodbDirectory {cleanDirectory}";
+                    }
+                    else
+                    {
+                        throw new WorkloadException(
+                            "Multiple InnoDB directories detected. Please specify a single directory for PostgreSQL configuration when using the DiskFilter parameter explicitly for PostgreSQLServerConfiguration.",
+                            ErrorReason.InvalidProfileDefinition);
+                    }
                 }
             }
 
