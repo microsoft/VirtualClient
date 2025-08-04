@@ -229,21 +229,25 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             await HammerDBExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManager.FirewallManager, cancellationToken);
-
-            DependencyPath hammerDBPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-            this.HammerDBPackagePath = hammerDBPackage.Path;
-
-            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
-
+            
             this.InitializeApiClients(cancellationToken);
 
-            await this.Logger.LogMessageAsync($"{this.TypeName}.ConfigureHammerDBFile", telemetryContext.Clone(), async () =>
+            // Only load HammerDB package for x64 executors.
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
             {
-                if (!cancellationToken.IsCancellationRequested)
+                DependencyPath hammerDBPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+                this.HammerDBPackagePath = hammerDBPackage.Path;
+
+                await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ConfigureHammerDBFile", telemetryContext.Clone(), async () =>
                 {
-                    await this.ConfigureCreateHammerDBFile(telemetryContext, cancellationToken);
-                }
-            });
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.ConfigureCreateHammerDBFile(telemetryContext, cancellationToken);
+                    }
+                });
+            }
 
             if (this.IsMultiRoleLayout())
             {
@@ -252,7 +256,7 @@ namespace VirtualClient.Actions
 
                 this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
-            }
+            }          
         }
 
         /// <summary>
