@@ -8,7 +8,7 @@ namespace VirtualClient.Common
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Tests compatibility with specific platform/platforms
+    /// Defines the compatibility with specific platform/platforms (e.g. linux-arm64,linux-x64).
     /// </summary>
     [AttributeUsage(validOn: AttributeTargets.Class)]
     public class SupportedPlatformsAttribute : Attribute

@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
@@ -244,11 +245,12 @@ namespace VirtualClient
         /// </summary>
         /// <param name="id">The ID of the proxy API client to use for lookups.</param>
         /// <param name="uri">The URI of the target Virtual Client API service including the port (e.g. http://any.server.uri:4500).</param>
+        /// <param name="certificate">The certificate to authenticate to the proxy API</param>
         /// <returns>
         /// An <see cref="IProxyApiClient"/> that can be used to interface with a target
         /// Virtual Client API service.
         /// </returns>
-        public IProxyApiClient GetOrCreateProxyApiClient(string id, Uri uri)
+        public IProxyApiClient GetOrCreateProxyApiClient(string id, Uri uri, X509Certificate2 certificate = null)
         {
             IProxyApiClient apiClient = null;
 
@@ -257,7 +259,7 @@ namespace VirtualClient
                 apiClient = this.GetProxyApiClient(id);
                 if (apiClient == null)
                 {
-                    apiClient = DependencyFactory.CreateVirtualClientProxyApiClient(uri);
+                    apiClient = DependencyFactory.CreateVirtualClientProxyApiClient(uri, certificate: certificate);
                     this.proxyApiClients[id] = apiClient;
                 }
             }

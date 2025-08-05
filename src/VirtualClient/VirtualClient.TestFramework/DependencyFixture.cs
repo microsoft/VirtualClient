@@ -42,7 +42,6 @@ namespace VirtualClient
 
         static DependencyFixture()
         {
-            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>

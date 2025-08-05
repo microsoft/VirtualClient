@@ -63,7 +63,6 @@ namespace VirtualClient
 
         static MockFixture()
         {
-            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>
