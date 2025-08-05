@@ -20,11 +20,15 @@
         private const string NoOfConnections = "NumberOfConnections";
         private const string Duration = "Duration";
         private const string BytesperConnection = "BytesReadPerConnection";
+        private const string NewConnThroughput = "NewConnectionThroughput";
+        private const string NewConnPersec = "NewConnectionsPerSec";
 
         private const string ReuseTotalBytesRead = "ReuseTotalBytesRead";
         private const string ReuseNoOfConnections = "ReuseNumberOfConnections";
         private const string ReuseDuration = "ReuseDuration";
         private const string ReuseBytesperConnection = "ReuseBytesReadPerConnection";
+        private const string ReuseConnThroughput = "ReuseConnectionThroughput";
+        private const string ReuseConnPerSec = "ReuseConnectionsPerSec";
 
         /// <summary>
         /// parse output of openssl s_time
@@ -49,19 +53,28 @@
         {
             List<Metric> metrics = new List<Metric>();
             var parsedMetrics = this.ParseSTimeOutput();
+            double newConnThroughput = parsedMetrics[TotalBytesRead] / parsedMetrics[Duration];
+            double reuseConnThroughput = parsedMetrics[ReuseTotalBytesRead] / parsedMetrics[ReuseDuration];
+            double newConnPerSec = parsedMetrics[NoOfConnections] / parsedMetrics[Duration];
+            double reuseConnPerSec = parsedMetrics[ReuseNoOfConnections] / parsedMetrics[ReuseDuration];
+
             // add metrics to the list -
-            
+
             // set 1 - new connection metrics
             metrics.Add(new Metric(TotalBytesRead, parsedMetrics[TotalBytesRead], MetricUnit.Bytes, MetricRelativity.HigherIsBetter, verbosity: 0));
             metrics.Add(new Metric(NoOfConnections, parsedMetrics[NoOfConnections], MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 0));
             metrics.Add(new Metric(Duration, parsedMetrics[Duration], MetricUnit.Seconds));
             metrics.Add(new Metric(BytesperConnection, parsedMetrics[BytesperConnection], MetricUnit.BytesPerConnection, MetricRelativity.HigherIsBetter, verbosity: 0));
+            metrics.Add(new Metric(NewConnThroughput, newConnThroughput, MetricUnit.BytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
+            metrics.Add(new Metric(NewConnPersec, newConnPerSec, MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 0));
 
             // set 2 - reuse connection metrics
             metrics.Add(new Metric(ReuseTotalBytesRead, parsedMetrics[ReuseTotalBytesRead], MetricUnit.Bytes, MetricRelativity.HigherIsBetter, verbosity: 0));
             metrics.Add(new Metric(ReuseNoOfConnections, parsedMetrics[ReuseNoOfConnections], MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 0));
             metrics.Add(new Metric(ReuseDuration, parsedMetrics[ReuseDuration], MetricUnit.Seconds));
             metrics.Add(new Metric(ReuseBytesperConnection, parsedMetrics[ReuseBytesperConnection], MetricUnit.BytesPerConnection, MetricRelativity.HigherIsBetter, verbosity: 0));
+            metrics.Add(new Metric(ReuseConnThroughput, reuseConnThroughput, MetricUnit.BytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 0));
+            metrics.Add(new Metric(ReuseConnPerSec, reuseConnPerSec, MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 0));
 
             return metrics;
         }

@@ -161,7 +161,6 @@ namespace VirtualClient.Actions
                             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                             {
                                 await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
-                                // await this.WaitAsync(cancellationToken);
                             }
                         }
                     }
@@ -172,58 +171,6 @@ namespace VirtualClient.Actions
                     }
                 }
             });
-            /*return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteServer", telemetryContext, async () =>
-             {
-                 try
-                 {
-                     if (this.serverRunning)
-                     {
-                         this.Logger.LogTraceMessage($"{this.TypeName}.ServerAlreadyRunning", telemetryContext);
-                         return;
-                     }
-                     else
-                     {
-                         this.SetServerOnline(false);
-
-                         Console.WriteLine("calling PollForHearbeatAsync...");
-                         await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
-
-                         if (this.ResetServer(telemetryContext))
-                         {
-                             await this.DeleteStateAsync(telemetryContext, cancellationToken);
-                             await this.KillServerInstancesAsync(cancellationToken);
-                             Console.WriteLine("calling StartServerInstances...");
-                             await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
-                         }
-
-                         Console.WriteLine("calling savestateSync...");
-                         await this.SaveStateAsync(telemetryContext, cancellationToken);
-                         this.SetServerOnline(true);
-                         if (this.IsMultiRoleLayout())
-                         {
-                             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
-                             {
-                                 await Task.WhenAny(this.serverProcesses);
-
-                                 // A cancellation is request, then we allow each of the server instances
-                                 // to gracefully exit. If a cancellation was not requested, it means that one 
-                                 // or more of the server instances exited and we will want to allow the component
-                                 // to start over restarting the servers.
-                                 if (cancellationToken.IsCancellationRequested)
-                                 {
-                                     await Task.WhenAll(this.serverProcesses);
-                                 }
-                             }
-                         }
-                     }
-                 }
-                 catch
-                 {
-                     this.SetServerOnline(false);
-                     await this.KillServerInstancesAsync(cancellationToken);
-                     throw;
-                 }
-             }); */
         }
 
         private Task DeleteStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
