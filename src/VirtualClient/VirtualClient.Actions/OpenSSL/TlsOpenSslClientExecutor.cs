@@ -272,7 +272,7 @@ namespace VirtualClient.Actions
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSLClient", logToFile: true);
 
                                 process.ThrowIfWorkloadFailed();
-                                this.CaptureMetrics(process, commandArguments, telemetryContext, cancellationToken);
+                                this.CaptureMetrics(process, fullCommand, telemetryContext, cancellationToken);
                             }
                         }
                         finally

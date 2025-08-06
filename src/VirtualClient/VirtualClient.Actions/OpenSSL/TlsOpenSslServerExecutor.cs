@@ -31,6 +31,7 @@ namespace VirtualClient.Actions
         private List<Task> serverProcesses;
         private bool disposed;
         private ISystemManagement systemManagement;
+        private IFileSystem fileSystem;
 
         /// <summary>
         /// Constructor for the OpenSSL server executor.
@@ -44,6 +45,7 @@ namespace VirtualClient.Actions
             this.systemManagement = dependencies.GetService<ISystemManagement>();
             this.serverProcesses = new List<Task>();
             this.disposed = false;
+            this.fileSystem = dependencies.GetService<IFileSystem>();
         }
 
         /// <summary>
@@ -283,6 +285,24 @@ namespace VirtualClient.Actions
             commandArguments = Regex.Replace(commandArguments, @"-cert\s+(\S+)", $"-cert {certPath}$1");
             commandArguments = Regex.Replace(commandArguments, @"-key\s+(\S+)", $"-key {certPath}$1");
 
+            // copy resource files to openssl package directory
+            string sourceDir = Path.Combine(this.Package.Path, "../../../tls-resources");
+            string destDir = Path.Combine(this.Package.Path, "bin");
+
+            if (this.fileSystem.Directory.Exists(sourceDir))
+            {
+                var htmlFiles = this.fileSystem.Directory.GetFiles(sourceDir, "*.html");
+                foreach (var file in htmlFiles)
+                {
+                    string destFile = this.fileSystem.Path.Combine(destDir, this.fileSystem.Path.GetFileName(file));
+                    this.fileSystem.File.Copy(file, destFile, overwrite: true);
+                }
+            } 
+            else
+            {
+                throw new FileNotFoundException($"The source directory '{sourceDir}' does not exist. Cannot copy TLS resource files.");
+            }
+
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", commandArguments);
@@ -305,7 +325,6 @@ namespace VirtualClient.Actions
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true);
 
                                 process.ThrowIfWorkloadFailed(successCodes: new int[] { 0, 137 });
-                                // await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
                             }
                         }
                         finally
