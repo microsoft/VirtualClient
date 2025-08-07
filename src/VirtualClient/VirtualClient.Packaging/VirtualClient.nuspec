@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>VirtualClient</id>
+        <version>$Version$</version>
+        <title>VirtualClient</title>
+        <description>Runtime platform for executing a wide-range of benchmark and customer-representative workloads on a system.</description>
+        <authors>crc_vc_fte@microsoft.com</authors>
+    </metadata>
+
+    <files>
+        <!--
+        We are moving towards a new model where Virtual Client can install packages. This new model expects packages
+        to exist in a 'packages' directory. If they don't exist there, the package will be downloaded from either a NuGet feed
+        or Blob store as defined in the profile (see the PERF-CPU-GEEKBENCH.json profile).
+        -->
+        
+        <!-- ***** IMPORTANT *****
+        *********************************************************************************************************************************
+        If you update the files in this .nuspec below, please update the sections in the related .nuspec files noted below. These are used
+        for local debugging purposes and must be kept in sync with this main .nuspec.
+        
+        For linux-arm64 :  VirtualClient-linux-arm64.nuspec
+        For linux-x64   :  VirtualClient-linux-x64.nuspec
+        For win-arm64   :  VirtualClient-win-arm64.nuspec
+        For win-x64     :  VirtualClient-win-x64.nuspec
+        -->
+        
+        <!-- 
+        win-x64
+        =============================================================================================
+        -->
+        <!-- Binaries, Scripts, Profiles etc... -->
+        <file 
+            src="$BinConfigDir$\x64\VirtualClient.Packaging\net9.0\win-x64\**"
+            exclude="**\*.pdb;**\profiles_labs\**;**\VirtualClient.Packaging.*;**\CRC.VirtualClient.Labs.*;**\Microsoft.Azure.CRC.*"
+            target="content\win-x64"
+            />
+        
+        <!-- 
+        win-arm64
+        =============================================================================================
+        -->
+        <!-- Binaries, Scripts, Profiles etc... -->
+        <file 
+            src="$BinConfigDir$\ARM64\VirtualClient.Packaging\net9.0\win-arm64\**"
+            exclude="**\*.pdb;**\profiles_labs\**;**\VirtualClient.Packaging.*;**\CRC.VirtualClient.Labs.*;**\Microsoft.Azure.CRC.*"
+            target="content\win-arm64"
+            />
+
+        <!-- 
+        linux-x64
+        =============================================================================================
+        -->
+        <!-- Binaries, Scripts, Profiles etc... -->
+        <file
+            src="$BinConfigDir$\x64\VirtualClient.Packaging\net9.0\linux-x64\**"
+            exclude="**\*.pdb;**\profiles_labs\**;**\VirtualClient.Packaging.*;**\CRC.VirtualClient.Labs.*;**\Microsoft.Azure.CRC.*"
+            target="content\linux-x64"
+            />
+
+        <!-- 
+        linux-arm64
+        =============================================================================================
+        -->
+        <!-- Binaries, Scripts, Profiles etc... -->
+        <file
+            src="$BinConfigDir$\ARM64\VirtualClient.Packaging\net9.0\linux-arm64\**"
+            exclude="**\*.pdb;**\profiles_labs\**;**\VirtualClient.Packaging.*;**\CRC.VirtualClient.Labs.*;**\Microsoft.Azure.CRC.*"
+            target="content\linux-arm64"
+            />
+    </files>
+</package>
