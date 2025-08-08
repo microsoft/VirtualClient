@@ -1,0 +1,102 @@
+{
+    "Description": "OpenSSL 3.5.0 Benchmark with TLS",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "01:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Ubuntu",
+        "logToFile":  true
+
+    },
+    "Parameters": {
+        "ServerIP": "10.1.0.92",
+        "ServerPort": "5000",
+        "ServerThreadCount": 4,
+        "ServerInstances": "{LogicalCoreCount}",
+        "ClientInstances": 1,
+        "EmitAggregateMetrics": false,
+        "EmitRawMetrics": true,
+        "Duration": "00:00:05"
+    },
+    "Actions": [
+        {
+          "Type": "TlsOpenSslServerExecutor",
+          "Parameters": {
+            "Scenario": "OpenSSL_TLS_Server",
+            "MetricScenario": "tls_server",
+            "CommandArguments": "s_server -accept {ServerPort} -cert server.crt -key server.key -tls1_3 -WWW",
+            "PackageName": "openssl",
+            "ServerPort": "$.Parameters.ServerPort",
+            "Tags": "CPU,OpenSSL,Cryptography",
+            "Role": "Server"
+          }
+        },
+      {
+        "Type": "TlsOpenSslClientExecutor",
+        "Parameters": {
+          "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_1k",
+          "MetricScenario": "tls_client_aes-128-gcm-sha256-1k",
+          "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+          "Duration": "$.Parameters.Duration",
+          "ServerPort": "$.Parameters.ServerPort",
+          "PackageName": "openssl",
+          "Tags": "CPU,OpenSSL,Cryptography",
+          "Role": "Client"
+        }
+      },
+      {
+        "Type": "TlsOpenSslClientExecutor",
+        "Parameters": {
+          "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_1k",
+          "MetricScenario": "tls_client_aes-256-gcm-sha384-1k",
+          "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+          "Duration": "$.Parameters.Duration",
+          "ServerPort": "$.Parameters.ServerPort",
+          "PackageName": "openssl",
+          "Tags": "CPU,OpenSSL,Cryptography",
+          "Role": "Client"
+        }
+      },
+      {
+        "Type": "TlsOpenSslClientExecutor",
+        "Parameters": {
+          "Scenario": "OpenSSL_TLS_Client_TLS_CHACHA20_POLY1305_SHA256_1k",
+          "MetricScenario": "tls_client_chacha20-poly1305-sha256-1k",
+          "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+          "Duration": "$.Parameters.Duration",
+          "ServerPort": "$.Parameters.ServerPort",
+          "PackageName": "openssl",
+          "Tags": "CPU,OpenSSL,Cryptography",
+          "Role": "Client"
+        }
+      }
+    ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallOpenSSLPackage",
+        "BlobContainer": "packages",
+        "BlobName": "openssl.3.5.0.zip",
+        "PackageName": "openssl",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "CopyKeysAndResourcesForOpenSslTLS",
+        "BlobContainer": "packages",
+        "BlobName": "OpensSslTlsResources.zip",
+        "PackageName": "OpensSslTlsResources",
+        "Extract": true,
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer"
+      }
+    }
+  ]
+}
