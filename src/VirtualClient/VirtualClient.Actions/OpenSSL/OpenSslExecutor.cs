@@ -77,7 +77,6 @@ namespace VirtualClient.Actions
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
-            // throw new NotImplementedException();
         }
 
         /// <summary>

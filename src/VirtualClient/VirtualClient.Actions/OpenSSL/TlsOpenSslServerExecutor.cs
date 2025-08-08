@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Executes the OpenSSL TLS server workload. Inherits from OpenSslExecutor.
     /// </summary>
-    public class OpenSslServerExecutor : OpenSslExecutor
+    public class TlsOpenSslServerExecutor : OpenSslExecutor
     {
         private List<Task> serverProcesses;
         private bool disposed;
@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public OpenSslServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public TlsOpenSslServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.ApiClientManager = dependencies.GetService<IApiClientManager>();
@@ -139,6 +139,24 @@ namespace VirtualClient.Actions
                 this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
             }
+            
+            // copy resource files to openssl package directory
+            string sourceDir = Path.Combine(this.Package.Path, "../../../tls-resources");
+            string destDir = Path.Combine(this.Package.Path, "bin");
+
+            if (this.fileSystem.Directory.Exists(sourceDir))
+            {
+                var htmlFiles = this.fileSystem.Directory.GetFiles(sourceDir, "*.html");
+                foreach (var file in htmlFiles)
+                {
+                    string destFile = this.fileSystem.Path.Combine(destDir, this.fileSystem.Path.GetFileName(file));
+                    this.fileSystem.File.Copy(file, destFile, overwrite: true);
+                }
+            }
+            else
+            {
+                throw new FileNotFoundException($"The source directory '{sourceDir}' does not exist. Cannot copy TLS resource files.");
+            }
 
         }
 
@@ -147,14 +165,19 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            return this.Logger.LogMessageAsync($"{nameof(OpenSslServerExecutor)}.ExecuteServer", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(TlsOpenSslServerExecutor)}.ExecuteServer", telemetryContext, async () =>
             {
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
                     try
                     {
-                        Console.WriteLine("calling PollForHearbeatAsync...");
                         await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
+                        if (this.ResetServer(telemetryContext))
+                        {
+                            await this.DeleteStateAsync(telemetryContext, cancellationToken);
+                            await this.KillServerInstancesAsync(cancellationToken);
+                        }
+
                         await this.SaveStateAsync(telemetryContext, cancellationToken);
                         this.SetServerOnline(true);
 
@@ -259,7 +282,6 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone();
             return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
             {
-                // TODO : Add logic to save state for the server instance.
                 var state = new Item<State>(nameof(State), new State());
 
                 using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(State), state, cancellationToken))
@@ -274,8 +296,6 @@ namespace VirtualClient.Actions
         {
             this.serverProcesses.Clear();
 
-            Console.WriteLine("Starting OpenSSL Server Workload...");
-
             string commandArguments = this.Parameters.GetValue<string>(nameof(this.CommandArguments));
             // prefix path to cert and key files
             // "s_server -accept {ServerPort} -cert server.crt -key server.key -tls1_3 -WWW"
@@ -285,29 +305,11 @@ namespace VirtualClient.Actions
             commandArguments = Regex.Replace(commandArguments, @"-cert\s+(\S+)", $"-cert {certPath}$1");
             commandArguments = Regex.Replace(commandArguments, @"-key\s+(\S+)", $"-key {certPath}$1");
 
-            // copy resource files to openssl package directory
-            string sourceDir = Path.Combine(this.Package.Path, "../../../tls-resources");
-            string destDir = Path.Combine(this.Package.Path, "bin");
-
-            if (this.fileSystem.Directory.Exists(sourceDir))
-            {
-                var htmlFiles = this.fileSystem.Directory.GetFiles(sourceDir, "*.html");
-                foreach (var file in htmlFiles)
-                {
-                    string destFile = this.fileSystem.Path.Combine(destDir, this.fileSystem.Path.GetFileName(file));
-                    this.fileSystem.File.Copy(file, destFile, overwrite: true);
-                }
-            } 
-            else
-            {
-                throw new FileNotFoundException($"The source directory '{sourceDir}' does not exist. Cannot copy TLS resource files.");
-            }
-
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", commandArguments);
 
-            return this.Logger.LogMessageAsync($"{nameof(OpenSslServerExecutor)}.ExecuteWorkload", relatedContext, async () =>
+            return this.Logger.LogMessageAsync($"{nameof(TlsOpenSslServerExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -337,51 +339,6 @@ namespace VirtualClient.Actions
                     }
                 }
             });
-
-            /* EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", commandArguments);
-
-            Console.WriteLine($"exePath: {this.ExecutablePath}");
-            Console.WriteLine($"cmdArgs: {this.CommandArguments}");
-            return this.Logger.LogMessageAsync($"{nameof(OpenSslServerExecutor)}.ExecuteOpenSSL_Server_Workload", relatedContext, async () =>
-            {
-                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
-                 {
-                     try
-                     {
-                         using (IProcessProxy process = await this.ExecuteCommandAsync("openssl", commandArguments, this.ExecutablePath, telemetryContext, cancellationToken, runElevated: true))
-                         {
-                             this.SetEnvironmentVariables(process);
-                             Console.WriteLine("openssl server threw error");
-                             if (!cancellationToken.IsCancellationRequested)
-                             {
-                                 ConsoleLogger.Default.LogMessage($"openssl  s_server process exited ", telemetryContext);
-                                 await this.LogProcessDetailsAsync(process, telemetryContext, "openssl s_server");
-
-                                 process.ThrowIfWorkloadFailed(successCodes: new int[] { 0, 137 });
-                             }
-
-                             // await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
-                         }
-                     }
-                     catch (OperationCanceledException)
-                     {
-                         // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                     }
-                     catch (Exception exc)
-                     {
-                         this.Logger.LogMessage(
-                             $"{this.TypeName}.StartServerInstanceError",
-                             LogLevel.Error,
-                             telemetryContext.Clone().AddError(exc));
-
-                         throw;
-                     }
-
-                 }
-             }); 
-            */
         }
     }
 }

@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Executes the OpenSSL TLS client workload. Inherits from OpenSslExecutor.
     /// </summary>
-    public class OpenSslClientExecutor : OpenSslExecutor
+    public class TlsOpenSslClientExecutor : OpenSslExecutor
     {
         private readonly object lockObject = new object();
         private ISystemManagement systemManagement;
@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public OpenSslClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public TlsOpenSslClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
             this.ClientFlowRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
@@ -48,7 +48,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the number of Memtier benchmark instances to execute against
+        /// Parameter defines the number of client instances to execute against
         /// each server instance. Default = # of logical cores/vCPUs on system.
         /// </summary>
         public int ClientInstances
@@ -100,7 +100,7 @@ namespace VirtualClient.Actions
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
 
         /// <summary>
-        /// The retry policy to apply to each Memtier workload instance when trying to startup
+        /// The retry policy to apply to each client workload instance when trying to startup
         /// against a target server.
         /// </summary>
         protected IAsyncPolicy ClientRetryPolicy { get; set; }
@@ -172,7 +172,7 @@ namespace VirtualClient.Actions
                                 // ===========================================================================
                                 ipAddress = IPAddress.Parse(server.IPAddress);
 
-                                await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
+                                await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken);
                             }
                         }));
                     }
@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             State serverState = await this.GetServerStateAsync(this.ServerApiClient, cancellationToken);
-                            await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
+                            await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken);
                         }
                     }));
                 }
@@ -243,7 +243,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task ExecuteWorkloadsAsync(IPAddress serverIPAddress, State serverState, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteWorkloadsAsync(IPAddress serverIPAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string commandArguments = this.Parameters.GetValue<string>(nameof(this.CommandArguments));
             EventContext relatedContext = telemetryContext.Clone()
@@ -254,7 +254,7 @@ namespace VirtualClient.Actions
             // insert IP address before port at index 16
             string fullCommand = commandArguments.Insert(16, serverIPAddress.ToString());
 
-            return this.Logger.LogMessageAsync($"{nameof(OpenSslClientExecutor)}.ExecuteOpenSSL_Client_Workload", relatedContext.Clone(), async () =>
+            return this.Logger.LogMessageAsync($"{nameof(TlsOpenSslClientExecutor)}.ExecuteOpenSSL_Client_Workload", relatedContext.Clone(), async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -336,7 +336,7 @@ namespace VirtualClient.Actions
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
 
-                    this.Logger.LogMessage($"{nameof(OpenSslClientExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    this.Logger.LogMessage($"{nameof(TlsOpenSslClientExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
                 }
             }
         }
