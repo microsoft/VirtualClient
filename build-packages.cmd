@@ -82,13 +82,6 @@ REM The packages project itself is not meant to produce a binary/.dll and thus i
 REM the requisite NuGet package assets file exist in the local 'obj' folder, we need to perform a restore.
 call dotnet restore %PACKAGES_PROJECT% --force
 
-
-echo:
-echo [VirtualClient.%VCBuildVersion%.nupkg]
-echo --------------------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
--p:Version=%VCBuildVersion% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.nuspec && echo: || Goto :Error
-
 echo:
 echo [Create NuGet Package] VirtualClient.linux-arm64.%PACKAGE_VERSION%
 echo ----------------------------------------------------------

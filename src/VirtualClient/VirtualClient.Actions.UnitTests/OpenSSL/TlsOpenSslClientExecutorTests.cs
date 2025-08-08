@@ -65,7 +65,6 @@ namespace VirtualClient.Actions
         }
 
 
-        // TODO: fix this. throws this error 
         [Test]
         public void CaptureMetrics_LogsMetricsOnSuccess()
         {
@@ -74,7 +73,6 @@ namespace VirtualClient.Actions
             Assert.IsNotNull(executor);
             var process = this.fixture.CreateProcess("openssl", "s_time ...", "/tmp");
             process.ExitCode = 0;
-            // Console.WriteLine(VirtualClient.Actions.Properties.TestResources.Results_FIO_Verification_Error_2);
             process.StandardOutput.Append(TestResources.Results_OpenSSL_stime);
 
             var method = typeof(TlsOpenSslClientExecutor).GetMethod("CaptureMetrics", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
