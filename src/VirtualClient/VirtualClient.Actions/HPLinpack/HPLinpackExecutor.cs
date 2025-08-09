@@ -234,9 +234,20 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
+                IProcessProxy process;
+
                 DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                using (process = await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken).ConfigureAwait(false))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        if (process.IsErrored())
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true);
+                            process.ThrowIfWorkloadFailed(errorReason: ErrorReason.CompilationFailed);
+                        }
+                    }
+                }
 
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                 IProcessProxy process;
