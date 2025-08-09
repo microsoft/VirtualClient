@@ -165,14 +165,13 @@ namespace VirtualClient.Dependencies.MySqlServer
                             await this.DistributeMySQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
+                        case ConfigurationAction.SetGlobalVariables:
+                            await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+                            break;
                     }
 
                     await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
-                }
-                else if (this.Action == ConfigurationAction.SetGlobalVariables)
-                {
-                    await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
                 }
             }
         }
