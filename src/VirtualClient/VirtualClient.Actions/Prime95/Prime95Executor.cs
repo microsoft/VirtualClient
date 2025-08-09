@@ -290,7 +290,7 @@ namespace VirtualClient.Actions
                         if (process.Start())
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
-                            process.SafeKill();
+                            process.Kill(entireProcessTree: true);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
@@ -302,7 +302,7 @@ namespace VirtualClient.Actions
                                     {
                                         results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
                                     }
-                                    
+
                                     if (string.IsNullOrWhiteSpace(results))
                                     {
                                         throw new WorkloadResultsException(
@@ -310,7 +310,6 @@ namespace VirtualClient.Actions
                                             ErrorReason.WorkloadResultsNotFound);
                                     }
 
-                                    // The exit code on SafeKill is -1 which is not a part of the default success codes.
                                     process.ThrowIfWorkloadFailed(this.successExitCodes);
                                     this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
                                 }
