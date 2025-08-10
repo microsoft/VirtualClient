@@ -254,8 +254,6 @@ namespace VirtualClient.Actions
                                                 [nameof(this.DurationSec).CamelCased()] = this.DurationSec,
                                                 [nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration,
                                                 [nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime,
-                                                [nameof(this.BlockSize).CamelCased()] = blockSize,
-                                                [nameof(this.IOType).CamelCased()] = ioType,
                                                 [nameof(blockSizeKiB).CamelCased()] = blockSizeKiB,
                                                 [nameof(queueDepth).CamelCased()] = queueDepth,
                                                 [nameof(ioType).CamelCased()] = ioType,
