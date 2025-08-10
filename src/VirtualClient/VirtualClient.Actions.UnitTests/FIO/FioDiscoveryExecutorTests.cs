@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(FioDiscoveryExecutor.Scenario), "AnyScenario_ReadOrWrite_AnyBlockSize" },
-                { nameof(FioDiscoveryExecutor.CommandLine), "--ioengine=libaio --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
+                { nameof(FioDiscoveryExecutor.CommandLine), "--ioengine=libaio --size={FileSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
                 { nameof(FioDiscoveryExecutor.BlockSize), "4K" },
                 { nameof(FioDiscoveryExecutor.DiskFillSize), "140G" },
                 { nameof(FioDiscoveryExecutor.FileSize), "134G" },
@@ -51,7 +51,6 @@ namespace VirtualClient.Actions
                 { nameof(FioDiscoveryExecutor.PackageName), "fio" },
                 { nameof(FioDiscoveryExecutor.DiskFilter), "BiggestSize" }
             };
-
             
             this.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.defaultOutput.Clear();
@@ -173,9 +172,9 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommandLines = new List<string>
             {
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
             };
 
             using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
@@ -195,15 +194,15 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommandLines = new List<string>
             {
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
             };
 
             using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
@@ -284,9 +283,9 @@ namespace VirtualClient.Actions
             List<string> expectedCommandLines = new List<string>
             {
                 $"sudo chmod",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde",
-                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde"
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sdc --filename=/dev/sdd --filename=/dev/sde"
             };
 
             using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
@@ -295,6 +294,63 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 Assert.AreEqual(4, this.ProcessManager.Commands.Count());
+                Assert.IsTrue(this.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
+            }
+        }
+
+        [Test]
+        public async Task FioDiscoveryExecutorExecutesAsExpectedWithMultipleBlockSizeIOTypes()
+        {
+            this.Parameters[nameof(FioDiscoveryExecutor.BlockSize)] = "1K,4K";
+            this.Parameters[nameof(FioDiscoveryExecutor.IOType)] = "randwrite,randread";
+            this.Parameters[nameof(FioDiscoveryExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcessPerDisk;
+
+            List<string> expectedCommandLines = new List<string>
+            {
+                $"--name=fio_discovery_randwrite_134G_1K_d1_th1 --numjobs=1 --iodepth=1 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d1_th1 --numjobs=1 --iodepth=1 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d1_th1 --numjobs=1 --iodepth=1 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d1_th4 --numjobs=4 --iodepth=1 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d1_th4 --numjobs=4 --iodepth=1 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d1_th4 --numjobs=4 --iodepth=1 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d2_th8 --numjobs=8 --iodepth=2 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d2_th8 --numjobs=8 --iodepth=2 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_1K_d2_th8 --numjobs=8 --iodepth=2 --bs=1K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d1_th1 --numjobs=1 --iodepth=1 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d1_th1 --numjobs=1 --iodepth=1 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d1_th1 --numjobs=1 --iodepth=1 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d1_th4 --numjobs=4 --iodepth=1 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d1_th4 --numjobs=4 --iodepth=1 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d1_th4 --numjobs=4 --iodepth=1 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d2_th8 --numjobs=8 --iodepth=2 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d2_th8 --numjobs=8 --iodepth=2 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_1K_d2_th8 --numjobs=8 --iodepth=2 --bs=1K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randwrite --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randread_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --bs=4K --rw=randread --ioengine=libaio --size=134G --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
+            };
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.Dependencies, this.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                      .ConfigureAwait(false);
+
+                Assert.AreEqual(1 + expectedCommandLines.Count, this.ProcessManager.Commands.Count());
                 Assert.IsTrue(this.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
             }
         }

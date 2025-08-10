@@ -244,7 +244,7 @@ namespace VirtualClient.Actions
 
                                             int direct = this.DirectIO;
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
-                                            commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} {commandLine}";
+                                            commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --bs={blockSize} --rw={ioType} {commandLine}";
 
                                             string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
 
@@ -254,6 +254,8 @@ namespace VirtualClient.Actions
                                                 [nameof(this.DurationSec).CamelCased()] = this.DurationSec,
                                                 [nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration,
                                                 [nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime,
+                                                [nameof(this.BlockSize).CamelCased()] = blockSize,
+                                                [nameof(this.IOType).CamelCased()] = ioType,
                                                 [nameof(blockSizeKiB).CamelCased()] = blockSizeKiB,
                                                 [nameof(queueDepth).CamelCased()] = queueDepth,
                                                 [nameof(ioType).CamelCased()] = ioType,
