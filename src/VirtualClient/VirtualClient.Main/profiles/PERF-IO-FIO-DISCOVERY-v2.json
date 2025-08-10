@@ -12,8 +12,8 @@
         "ProcessModel": "SingleProcess",
         "MaxThreads": "8",
         "QueueDepths": "1,4,16,64,256,1024",
-        "BlockSize": "1k,4k,8k",
-        "IOType": "randread,randwrite",
+        "BlockSize": "1k,4k,8k,16k,64k,256k,1024k",
+        "IOType": "randread,randwrite,read,write",
         "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
         "DirectIO": true,
         "InitializeDisksInParallel": true
