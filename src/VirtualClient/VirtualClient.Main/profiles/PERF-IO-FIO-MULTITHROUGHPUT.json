@@ -9,7 +9,6 @@
     "Parameters": {
         "DirectIO": true,
         "DiskFilter": "BiggestSize",
-        "InitializeDisksInParallel": true,
         "RandomIOFileSize": "124G",
         "SequentialDiskCount": "1",
         "SequentialIOFileSize": "20G",

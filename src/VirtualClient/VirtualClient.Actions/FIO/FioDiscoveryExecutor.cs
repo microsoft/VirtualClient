@@ -42,11 +42,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The Blocksizes list for discovery parameters.
         /// </summary>
-        public List<string> BlockSize
+        public string BlockSize
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.BlockSize)).Split(VirtualClientComponent.CommonDelimiters).ToList();
+                return this.Parameters.GetValue<string>(nameof(this.BlockSize));
             }
         }
 
@@ -67,13 +67,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The IO types list whether it is randomRead,randomWrite,sequentialRead,sequentialWrite.
+        /// The IO type whether it is randomRead,randomWrite, read (sequential read), write (sequential write).
         /// </summary>
-        public List<string> IOType
+        public string IOType
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.IOType)).Split(VirtualClientComponent.CommonDelimiters).ToList();
+                return this.Parameters.GetValue<string>(nameof(this.IOType));
             }
         }
 
@@ -209,95 +209,89 @@ namespace VirtualClient.Actions
                 List<VirtualClientException> exceptions = new List<VirtualClientException>();
                 foreach (int maxThreads in this.MaxThreads)
                 {
-                    foreach (string ioType in this.IOType)
+                    foreach (int queueDepth in this.QueueDepths)
                     {
-                        foreach (string blockSize in this.BlockSize)
+                        int variation = Interlocked.Increment(ref variationNumber);
+                        if (!cancellationToken.IsCancellationRequested)
                         {
-                            foreach (int queueDepth in this.QueueDepths)
+                            int numJobs = (queueDepth < maxThreads) ? queueDepth : maxThreads;
+                            int queueDepthPerThread = (queueDepth + numJobs - 1) / numJobs;
+
+                            // e.g. fio_discovery_randread_134G_4K_d8_th8
+                            string testName = $"fio_discovery_{ioType.ToLowerInvariant()}_{this.FileSize}_{blockSize}_d{queueDepthPerThread}_th{numJobs}";
+
+                            EventContext variationContext = telemetryContext.Clone().AddContext(nameof(testName), testName);
+
+                            try
                             {
-                                int variation = Interlocked.Increment(ref variationNumber);
-                                if (!cancellationToken.IsCancellationRequested)
+                                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteVariation", variationContext, async () =>
                                 {
-                                    int numJobs = (queueDepth < maxThreads) ? queueDepth : maxThreads;
-                                    int queueDepthPerThread = (queueDepth + numJobs - 1) / numJobs;
+                                    // Converting Byte to Gigabytes
+                                    double fileSizeGiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.FileSize, MetricUnit.Gigabytes));
 
-                                    // e.g. fio_discovery_randread_134G_4K_d8_th8
-                                    string testName = $"fio_discovery_{ioType.ToLowerInvariant()}_{this.FileSize}_{blockSize}_d{queueDepthPerThread}_th{numJobs}";
+                                    // Converting Bytes to Kilobytes
+                                    double blockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(blockSize, MetricUnit.Kilobytes));
 
-                                    EventContext variationContext = telemetryContext.Clone().AddContext(nameof(testName), testName);
+                                    string commandLine = this.ApplyParameter(this.CommandLine, nameof(this.FileSize), this.FileSize);
 
-                                    try
+                                    commandLine = this.ApplyParameter(commandLine, nameof(this.IOType), ioType);
+                                    commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), blockSize);
+                                    commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
+
+                                    int direct = this.DirectIO;
+                                    commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
+                                    commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --bs={blockSize} --rw={ioType} {commandLine}";
+
+                                    string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
+
+                                    Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>
                                     {
-                                        await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteVariation", variationContext, async () =>
+                                        [nameof(this.GroupId).CamelCased()] = this.GroupId,
+                                        [nameof(this.DurationSec).CamelCased()] = this.DurationSec,
+                                        [nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration,
+                                        [nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime,
+                                        [nameof(blockSizeKiB).CamelCased()] = blockSizeKiB,
+                                        [nameof(queueDepth).CamelCased()] = queueDepth,
+                                        [nameof(ioType).CamelCased()] = ioType,
+                                        [nameof(testName).CamelCased()] = testName,
+                                        [nameof(commandLine).CamelCased()] = commandLine,
+                                        [nameof(variation).CamelCased()] = variation,
+                                        [nameof(maxThreads).CamelCased()] = maxThreads,
+                                        [nameof(numJobs).CamelCased()] = numJobs,
+                                        [nameof(fileSizeGiB).CamelCased()] = fileSizeGiB,
+                                        [nameof(filePath).CamelCased()] = filePath
+                                    };
+
+                                    await fioDiscoveryRetryPolicy.ExecuteAsync(async () =>
+                                    {
+                                        using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                                         {
-                                            // Converting Byte to Gigabytes
-                                            double fileSizeGiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.FileSize, MetricUnit.Gigabytes));
+                                            this.WorkloadProcesses.Clear();
+                                            this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel, telemetryContext));
 
-                                            // Converting Bytes to Kilobytes
-                                            double blockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(blockSize, MetricUnit.Kilobytes));
-
-                                            string commandLine = this.ApplyParameter(this.CommandLine, nameof(this.FileSize), this.FileSize);
-
-                                            commandLine = this.ApplyParameter(commandLine, nameof(this.IOType), ioType);
-                                            commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), blockSize);
-                                            commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
-
-                                            int direct = this.DirectIO;
-                                            commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
-                                            commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --bs={blockSize} --rw={ioType} {commandLine}";
-
-                                            string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
-
-                                            Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>
+                                            foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                                             {
-                                                [nameof(this.GroupId).CamelCased()] = this.GroupId,
-                                                [nameof(this.DurationSec).CamelCased()] = this.DurationSec,
-                                                [nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration,
-                                                [nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime,
-                                                [nameof(blockSizeKiB).CamelCased()] = blockSizeKiB,
-                                                [nameof(queueDepth).CamelCased()] = queueDepth,
-                                                [nameof(ioType).CamelCased()] = ioType,
-                                                [nameof(testName).CamelCased()] = testName,
-                                                [nameof(commandLine).CamelCased()] = commandLine,
-                                                [nameof(variation).CamelCased()] = variation,
-                                                [nameof(maxThreads).CamelCased()] = maxThreads,
-                                                [nameof(numJobs).CamelCased()] = numJobs,
-                                                [nameof(fileSizeGiB).CamelCased()] = fileSizeGiB,
-                                                [nameof(filePath).CamelCased()] = filePath
-                                            };
+                                                fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, testName, variationContext, cancellationToken, metricsMetadata));
+                                            }
 
-                                            await fioDiscoveryRetryPolicy.ExecuteAsync(async () =>
+                                            if (!cancellationToken.IsCancellationRequested)
                                             {
-                                                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
-                                                {
-                                                    this.WorkloadProcesses.Clear();
-                                                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel, telemetryContext));
+                                                await Task.WhenAll(fioProcessTasks);
+                                            }
+                                        }
+                                    });
 
-                                                    foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
-                                                    {
-                                                        fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, testName, variationContext, cancellationToken, metricsMetadata));
-                                                    }
+                                });
 
-                                                    if (!cancellationToken.IsCancellationRequested)
-                                                    {
-                                                        await Task.WhenAll(fioProcessTasks);
-                                                    }
-                                                }
-                                            });
-
-                                        });
-
-                                        await this.CleanUpWorkloadTestFilesAsync();
-                                    }
-                                    catch (VirtualClientException exc)
-                                    {
-                                        exceptions.Add(exc);
-                                    }
-                                    finally
-                                    {
-                                        await this.CleanUpWorkloadTestFilesAsync();
-                                    }
-                                }
+                                await this.CleanUpWorkloadTestFilesAsync();
+                            }
+                            catch (VirtualClientException exc)
+                            {
+                                exceptions.Add(exc);
+                            }
+                            finally
+                            {
+                                await this.CleanUpWorkloadTestFilesAsync();
                             }
                         }
                     }
