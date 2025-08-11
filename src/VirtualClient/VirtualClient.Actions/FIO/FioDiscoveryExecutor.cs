@@ -100,17 +100,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Duration in Seconds.
-        /// </summary>
-        public int DurationSec
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.DurationSec));
-            }
-        }
-
-        /// <summary>
         /// Group Id.
         /// </summary>
         public string GroupId
@@ -234,7 +223,7 @@ namespace VirtualClient.Actions
 
                                 commandLine = this.ApplyParameter(commandLine, nameof(this.IOType), this.IOType);
                                 commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), this.BlockSize);
-                                commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
+                                // commandLine = this.ApplyParameter(commandLine, nameof(this.Duration), this.Duration);
 
                                 int direct = this.DirectIO;
                                 commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
@@ -245,7 +234,7 @@ namespace VirtualClient.Actions
                                 Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>
                                 {
                                     [nameof(this.GroupId).CamelCased()] = this.GroupId,
-                                    [nameof(this.DurationSec).CamelCased()] = this.DurationSec,
+                                    // [nameof(this.Duration).CamelCased()] = this.Duration,
                                     [nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration,
                                     [nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime,
                                     [nameof(this.IOType).CamelCased()] = this.IOType,
