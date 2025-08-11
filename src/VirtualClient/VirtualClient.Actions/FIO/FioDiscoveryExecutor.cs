@@ -240,7 +240,7 @@ namespace VirtualClient.Actions
 
                                     int direct = this.DirectIO;
                                     commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
-                                    commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --bs={this.BlockSize} --rw={this.IOType} {commandLine}";
+                                    commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} {commandLine}";
 
                                     string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
 
