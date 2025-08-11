@@ -218,7 +218,7 @@ namespace VirtualClient.Actions
                             int queueDepthPerThread = (queueDepth + numJobs - 1) / numJobs;
 
                             // e.g. fio_discovery_randread_134G_4K_d8_th8
-                            string testName = $"fio_discovery_{ioType.ToLowerInvariant()}_{this.FileSize}_{blockSize}_d{queueDepthPerThread}_th{numJobs}";
+                            string testName = $"fio_discovery_{this.IOType.ToLowerInvariant()}_{this.FileSize}_{this.BlockSize}_d{queueDepthPerThread}_th{numJobs}";
 
                             EventContext variationContext = telemetryContext.Clone().AddContext(nameof(testName), testName);
 
@@ -230,17 +230,17 @@ namespace VirtualClient.Actions
                                     double fileSizeGiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.FileSize, MetricUnit.Gigabytes));
 
                                     // Converting Bytes to Kilobytes
-                                    double blockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(blockSize, MetricUnit.Kilobytes));
+                                    double blockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.BlockSize, MetricUnit.Kilobytes));
 
                                     string commandLine = this.ApplyParameter(this.CommandLine, nameof(this.FileSize), this.FileSize);
 
-                                    commandLine = this.ApplyParameter(commandLine, nameof(this.IOType), ioType);
-                                    commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), blockSize);
+                                    commandLine = this.ApplyParameter(commandLine, nameof(this.IOType), this.IOType);
+                                    commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), this.BlockSize);
                                     commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
 
                                     int direct = this.DirectIO;
                                     commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
-                                    commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --bs={blockSize} --rw={ioType} {commandLine}";
+                                    commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --bs={this.BlockSize} --rw={this.IOType} {commandLine}";
 
                                     string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
 
@@ -252,7 +252,7 @@ namespace VirtualClient.Actions
                                         [nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime,
                                         [nameof(blockSizeKiB).CamelCased()] = blockSizeKiB,
                                         [nameof(queueDepth).CamelCased()] = queueDepth,
-                                        [nameof(ioType).CamelCased()] = ioType,
+                                        [nameof(this.IOType).CamelCased()] = this.IOType,
                                         [nameof(testName).CamelCased()] = testName,
                                         [nameof(commandLine).CamelCased()] = commandLine,
                                         [nameof(variation).CamelCased()] = variation,
