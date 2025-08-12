@@ -104,6 +104,36 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [TestCase(
+            "sudo dmesg && sudo lsblk && sudo mount && sudo df -h && sudo find /sys -name scheduler -print",
+            "sudo dmesg;sudo lsblk;sudo mount;sudo df -h;sudo find /sys -name scheduler -print")]
+        public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems_Bug_1(string fullCommand, string expectedCommandExecuted)
+        {
+            // Bug Scenario:
+            // Spaces (whitespace) in the commands due to the chaining SHOULD NOT cause
+            // parsing issues.
+            //
+            // e.g.
+            // "sudo dmesg && sudo lsblk " resulting in the command being identified as "sudo o lsblk"
+
+            this.SetupDefaults(PlatformID.Unix);
+
+            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            {
+                command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
+                List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
+
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    expectedCommands.Remove(process.FullCommand());
+                };
+
+                await command.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
         [TestCase("C:\\\\Users\\User\\anycommand&&C:\\\\home\\user\\anyothercommand", "C:\\\\Users\\User\\anycommand;C:\\\\home\\user\\anyothercommand")]
         [TestCase("C:\\\\Users\\User\\anycommand --argument=1&&C:\\\\home\\user\\anyothercommand --argument=2", "C:\\\\Users\\User\\anycommand --argument=1;C:\\\\home\\user\\anyothercommand --argument=2")]
         public async Task ExecuteCommandSupportsCommandChainingOnWindowsSystems(string fullCommand, string expectedCommandExecuted)
