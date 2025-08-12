@@ -727,7 +727,6 @@ namespace VirtualClient.Contracts
                         finally
                         {
                             this.EndTime = DateTime.UtcNow;
-
                             this.LogSuccessOrFailedMetric(succeeded, scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                         }
 
