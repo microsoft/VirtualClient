@@ -21,7 +21,7 @@ bs=${randomreadblocksize}
 iodepth=${randomreadiodepth}
 numjobs=${randomreadnumjobs}
 rate_iops=${randomreadiops}
-runtime=${durationsec}
+runtime=${duration}
 rw=randread
 
 # Represents writing of data in sql/OLTP database.
@@ -31,7 +31,7 @@ bs=${randomwriteblocksize}
 iodepth=${randomwriteiodepth}
 numjobs=${randomwritenumjobs}
 rate_iops=${randomwriteiops}
-runtime=${durationsec}
+runtime=${duration}
 rw=randwrite
 
 # Represents log readers of sql/OLTP database.
@@ -42,7 +42,7 @@ filename=${sequentialiofilepath}
 iodepth=${sequentialreadiodepth}
 numjobs=${sequentialreadnumjobs}
 rate_iops=${sequentialreadiops}
-runtime=${durationsec}
+runtime=${duration}
 rw=read
 size=${sequentialiofilesize}
 
@@ -54,7 +54,7 @@ filename=${sequentialiofilepath}
 iodepth=${sequentialwriteiodepth}
 numjobs=${sequentialwritenumjobs}
 rate_iops=${sequentialwriteiops}
-runtime=${durationsec}
+runtime=${duration}
 rw=write
 size=${sequentialiofilesize}
 

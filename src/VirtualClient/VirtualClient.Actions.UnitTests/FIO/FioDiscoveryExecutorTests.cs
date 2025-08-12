@@ -37,11 +37,10 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(FioDiscoveryExecutor.Scenario), "AnyScenario_ReadOrWrite_AnyBlockSize" },
-                { nameof(FioDiscoveryExecutor.CommandLine), "--ioengine=libaio --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
+                { nameof(FioDiscoveryExecutor.CommandLine), "--ioengine=libaio --size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
                 { nameof(FioDiscoveryExecutor.BlockSize), "4K" },
                 { nameof(FioDiscoveryExecutor.DiskFillSize), "140G" },
                 { nameof(FioDiscoveryExecutor.FileSize), "134G" },
-                { nameof(FioDiscoveryExecutor.DurationSec), 300 },
                 { nameof(FioDiscoveryExecutor.QueueDepths), "1,4,16" },
                 { nameof(FioDiscoveryExecutor.MaxThreads), 8 },
                 { nameof(FioDiscoveryExecutor.IOType), "randwrite" },
@@ -164,7 +163,6 @@ namespace VirtualClient.Actions
                 Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
             }
         }
-
 
         [Test]
         public async Task FioDiscoveryExecutorExecutesAsExpectedInSingleProcessModel()
