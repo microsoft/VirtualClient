@@ -325,7 +325,7 @@ namespace VirtualClient.UnitTests
 
             public IList<ILoggerProvider> CreateLogger(IConfiguration configuration, PlatformSpecifics platformSpecifics)
             {
-                return base.CreateLoggerProviders(configuration, platformSpecifics, null);
+                return base.InitializeLoggerProviders(configuration, platformSpecifics, null);
             }
 
             public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)

@@ -79,11 +79,10 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.DeleteResultsFile(telemetryContext);
-            string commandLineArguments = this.GetCommandLineArguments();
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                await this.ExecuteWorkloadAsync(this.ExecutablePath, commandLineArguments, telemetryContext, cancellationToken);
+                await this.ExecuteWorkloadAsync(this.ExecutablePath, this.CommandLine, telemetryContext, cancellationToken);
             }
         }
 
@@ -190,7 +189,7 @@ namespace VirtualClient.Actions
                     // GeekBench runs a secondary process on both Windows and Linux systems. When we
                     // kill the parent process, it does not kill the processes the parent spun off. This
                     // ensures that all of the process are stopped/killed.
-                    this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
+                    this.processManager.Kill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             }
         }
@@ -295,14 +294,9 @@ namespace VirtualClient.Actions
                     // GeekBench runs a secondary process on both Windows and Linux systems. When we
                     // kill the parent process, it does not kill the processes the parent spun off. This
                     // ensures that all of the process are stopped/killed.
-                    this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
+                    this.processManager.Kill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             });
-        }
-
-        private string GetCommandLineArguments()
-        {
-            return $"{this.CommandLine}";
         }
     }
 }

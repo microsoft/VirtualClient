@@ -20,21 +20,22 @@ namespace VirtualClient.Dependencies
     /// Reads files in a given directory and requests a file upload.
     /// </summary>
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
-    public class RequestFileUpload : VirtualClientComponent
+    public class UploadFiles : VirtualClientComponent
     {
         private IFileSystem fileSystem;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RequestFileUpload"/> class.
+        /// Initializes a new instance of the <see cref="UploadFiles"/> class.
         /// </summary>
-        public RequestFileUpload(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public UploadFiles(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.fileSystem = this.Dependencies.GetService<IFileSystem>();
         }
 
         /// <summary>
-        /// Set to true to request the files be deleted
+        /// Set to true to request the files be deleted after they are
+        /// uploaded (i.e. self-cleaning).
         /// </summary>
         public bool DeleteOnUpload
         {
@@ -70,11 +71,11 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// The name of the tool in which to associate the file content.
         /// </summary>
-        public string ToolName
+        public string Toolname
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.ToolName), out IConvertible toolName);
+                this.Parameters.TryGetValue(nameof(this.Toolname), out IConvertible toolName);
                 return toolName?.ToString();
             }
         }
@@ -86,13 +87,19 @@ namespace VirtualClient.Dependencies
         {
             if (!this.fileSystem.Directory.Exists(this.TargetDirectory))
             {
-                this.Logger.LogWarning($"Target directory '{this.TargetDirectory}' does not exist", telemetryContext);
+                this.Logger.LogMessage($"Target directory '{this.TargetDirectory}' does not exist.", LogLevel.Warning, telemetryContext);
+                return;
+            }
+
+            if (!this.TryGetContentStoreManager(out IBlobManager contentStore))
+            {
+                this.Logger.LogMessage($"Target content store not supplied.", LogLevel.Warning, telemetryContext);
                 return;
             }
 
             IEnumerable<FileUploadDescriptor> uploadDescriptors = this.CreateFileUploadDescriptors(
                 this.TargetDirectory,
-                this.ToolName,
+                this.Toolname,
                 this.Parameters,
                 this.Metadata,
                 timestamped: this.Timestamped);

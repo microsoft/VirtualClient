@@ -671,7 +671,7 @@ namespace VirtualClient.Contracts
                     {
                         this.MetadataContract.Add(
                             this.Metadata.Keys.ToDictionary(key => key, entry => this.Metadata[entry] as object).ObscureSecrets(),
-                            MetadataContractCategory.Default,
+                            MetadataContract.DefaultCategory,
                             replace: true);
                     }
 
@@ -679,7 +679,7 @@ namespace VirtualClient.Contracts
                     {
                         this.MetadataContract.Add(
                             this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
-                            MetadataContractCategory.Scenario,
+                            MetadataContract.ScenarioCategory,
                             replace: true);
                     }
 
@@ -692,7 +692,7 @@ namespace VirtualClient.Contracts
                         {
                             this.MetadataContract.Add(
                                 this.Extensions.Keys.ToDictionary(key => key, entry => this.Extensions[entry] as object),
-                                MetadataContractCategory.ScenarioExtensions,
+                                MetadataContract.ScenarioExtensionsCategory,
                                 replace: true);
                         }
                     }
@@ -727,7 +727,6 @@ namespace VirtualClient.Contracts
                         finally
                         {
                             this.EndTime = DateTime.UtcNow;
-
                             this.LogSuccessOrFailedMetric(succeeded, scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                         }
 

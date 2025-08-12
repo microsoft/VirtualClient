@@ -6,6 +6,7 @@ namespace VirtualClient
 
     using System;
     using System.Collections.Generic;
+    using System.Configuration;
     using System.Data;
     using System.Diagnostics;
     using System.IO;
@@ -14,8 +15,10 @@ namespace VirtualClient
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography.X509Certificates;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -38,7 +41,8 @@ namespace VirtualClient
     {
         private const string defaultPackageStoreUri = "https://virtualclient.blob.core.windows.net/packages";
         private static List<ILogger> proxyApiDebugLoggers = new List<ILogger>();
-        private List<string> loggerDefinitions = new List<string>();
+        private string experimentId;
+        private string clientId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandBase"/> class.
@@ -62,7 +66,18 @@ namespace VirtualClient
         /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
         /// and to include in telemetry output.
         /// </summary>
-        public string ClientId { get; set; }
+        public string ClientId
+        {
+            get
+            {
+                return this.clientId;
+            }
+
+            set
+            {
+                this.clientId = value?.ToLowerInvariant();
+            }
+        }
 
         /// <summary>
         /// Describes the target store to which content files/logs should be uploaded.
@@ -105,7 +120,18 @@ namespace VirtualClient
         /// <summary>
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
-        public string ExperimentId { get; set; }
+        public string ExperimentId
+        {
+            get
+            {
+                return this.experimentId;
+            }
+
+            set
+            {
+                this.experimentId = value?.ToLowerInvariant();
+            }
+        }
 
         /// <summary>
         /// True if a request to perform clean operations was requested on the
@@ -331,104 +357,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Creates a logger instance based on the specified configuration and loggers.
-        /// </summary>
-        protected IList<ILoggerProvider> CreateLoggerProviders(IConfiguration configuration, PlatformSpecifics platformSpecifics, string source = null)
-        {
-            List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
-            this.loggerDefinitions = this.Loggers?.ToList() ?? new List<string>();
-
-            // Add default console and file logging
-            if (!this.loggerDefinitions.Any(l => l.Equals("console", StringComparison.OrdinalIgnoreCase) || l.StartsWith("console=", StringComparison.OrdinalIgnoreCase)))
-            {
-                this.loggerDefinitions.Add("console");
-            }
-
-            // Add default console and file logging
-            if (!this.loggerDefinitions.Any(l => l.Equals("file", StringComparison.OrdinalIgnoreCase) || l.StartsWith("file=", StringComparison.OrdinalIgnoreCase)))
-            {
-                this.loggerDefinitions.Add("file");
-            }
-
-            // backward compatibility for --eventhub
-            if (!string.IsNullOrEmpty(this.EventHubStore))
-            {
-                this.loggerDefinitions.Add($"eventhub;{this.EventHubStore}");
-            }
-
-            if (!this.loggerDefinitions.Any(l => l.Equals("proxy", StringComparison.OrdinalIgnoreCase) || l.StartsWith("proxy=", StringComparison.OrdinalIgnoreCase))
-                && this.ProxyApiUri != null)
-            {
-                this.loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
-            }
-
-            LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
-            foreach (string loggerDefinition in this.loggerDefinitions)
-            {
-                string loggerName = loggerDefinition;
-                string loggerParameters = string.Empty;
-
-                // e.g.
-                // --logger=SummaryFileLoggerProvider;../logs/{experimentId}-summary.txt
-                int indexOfDelimiter = loggerDefinition.IndexOf(';');
-                if (indexOfDelimiter >= 0)
-                {
-                    loggerName = loggerName.Substring(0, indexOfDelimiter);
-                    loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1);
-                }
-
-                // Support placeholder replacements (e.g. {experimentId}, {agentId}).
-                IDictionary<string, IConvertible> replacements = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-                {
-                    { "experimentId", this.ExperimentId },
-                    { "agentId", this.ClientId },
-                    { "clientId", this.ClientId }
-                };
-
-                if (this.Metadata?.Any() == true)
-                {
-                    replacements.AddRange(this.Metadata);
-                }
-
-                loggerParameters = FileContext.ResolvePathTemplate(loggerParameters, replacements);
-
-                switch (loggerName.ToLowerInvariant())
-                {
-                    case "console":
-                        CommandBase.AddConsoleLogging(loggingProviders, loggingLevel);
-                        break;
-
-                    case "file":
-                        CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, loggingLevel);
-                        break;
-
-                    case "eventhub":
-                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: loggerParameters, this.CertificateManager ?? new CertificateManager());
-                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel);
-                        break;
-
-                    case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), this.CertificateManager, source);
-                        break;
-
-                    default:
-                        if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
-                        {
-                            throw new TypeLoadException(
-                                $"Specified logger '{loggerName}' is not supported. It may not be a valid ILoggerProvider implementation " +
-                                $"or is not defined in the extensions assemblies provided to the application.");
-                        }
-
-                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, loggerParameters);
-                        loggingProviders.Add(customLoggerProvider);
-                        break;
-                }
-            }
-
-            return loggingProviders;
-        }
-
-        /// <summary>
         /// Checks to see if the user has overridden the default directory path locations
         /// (e.g. logs, packages, state) on the command line or via environment variables
         /// and sets the application to use them if so.
@@ -499,6 +427,45 @@ namespace VirtualClient
             }
         }
 
+
+        /// <summary>
+        /// Returns the full set of logger definitions to use when constructing the application
+        /// logging facilities.
+        /// </summary>
+        protected virtual IEnumerable<string> GetLoggerDefinitions()
+        {
+            List<string> loggerDefinitions = this.Loggers?.Select(logger => logger.Trim())?.ToList() ?? new List<string>();
+
+            // Add default console logging
+            // e.g. (--logger=console)
+            if (loggerDefinitions?.Any(l => Regex.IsMatch(l, "^console$", RegexOptions.IgnoreCase)) != true)
+            {
+                loggerDefinitions.Add("console");
+            }
+
+            // Add default file logging
+            // e.g. (--logger=file)
+            if (loggerDefinitions?.Any(l => Regex.IsMatch(l, "^file", RegexOptions.IgnoreCase)) != true)
+            {
+                loggerDefinitions.Add("file");
+            }
+
+            // backward compatibility for --eventhub
+            if (!string.IsNullOrEmpty(this.EventHubStore))
+            {
+                loggerDefinitions.Add($"eventhub;{this.EventHubStore}");
+            }
+
+            // Proxy API client
+            // e.g. (--logger=proxy;http://192.168.1.25:9812)
+            if (!loggerDefinitions.Any(l => Regex.IsMatch(l, "^proxy;", RegexOptions.IgnoreCase)) && this.ProxyApiUri != null)
+            {
+                loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
+            }
+
+            return loggerDefinitions;
+        }
+
         /// <summary>
         /// Returns assembly version information for the application.
         /// </summary>
@@ -549,7 +516,7 @@ namespace VirtualClient
 
             ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
-            IList<ILoggerProvider> loggerProviders = this.CreateLoggerProviders(
+            IList<ILoggerProvider> loggerProviders = this.InitializeLoggerProviders(
                 configuration,
                 platformSpecifics,
                 telemetrySource?.ToString());
@@ -566,9 +533,7 @@ namespace VirtualClient
             IProfileManager profileManager = new ProfileManager();
             ISshClientFactory sshClientFactory = new SshClientFactory();
             List<IBlobManager> blobStores = new List<IBlobManager>();
-
             IKeyVaultManager keyVaultManager = new KeyVaultManager();
-
             ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
 
             // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
@@ -666,6 +631,81 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates a logger instance based on the specified configuration and loggers.
+        /// </summary>
+        protected virtual IList<ILoggerProvider> InitializeLoggerProviders(IConfiguration configuration, PlatformSpecifics platformSpecifics, string source = null)
+        {
+            List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
+            IEnumerable<string> loggerDefinitions = this.GetLoggerDefinitions();
+
+            LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
+            foreach (string loggerDefinition in loggerDefinitions)
+            {
+                string loggerName = loggerDefinition;
+                string loggerParameters = string.Empty;
+
+                // e.g.
+                // --logger=eventhub;sb://anynamespace.servicebus.net?cid=4F93d5a6-7833-4434-8a93-27b0d2ae624c&tid=77ab...
+                // --logger=SummaryFileLoggerProvider;../logs/{experimentId}-summary.txt
+                int indexOfDelimiter = loggerDefinition.IndexOf(';');
+                if (indexOfDelimiter >= 0)
+                {
+                    loggerName = loggerName.Substring(0, indexOfDelimiter).Trim();
+                    loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1).Trim();
+                }
+
+                // Support placeholder replacements (e.g. {experimentId}, {agentId}).
+                IDictionary<string, IConvertible> replacements = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "experimentId", this.ExperimentId },
+                    { "agentId", this.ClientId },
+                    { "clientId", this.ClientId }
+                };
+
+                if (this.Metadata?.Any() == true)
+                {
+                    replacements.AddRange(this.Metadata);
+                }
+
+                loggerParameters = FileContext.ResolvePathTemplate(loggerParameters, replacements);
+
+                switch (loggerName.ToLowerInvariant())
+                {
+                    case "console":
+                        CommandBase.AddConsoleLogging(loggingProviders, loggingLevel);
+                        break;
+
+                    case "file":
+                        CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, loggingLevel);
+                        break;
+
+                    case "eventhub":
+                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: loggerParameters, this.CertificateManager ?? new CertificateManager());
+                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel);
+                        break;
+
+                    case "proxy":
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), this.CertificateManager, source);
+                        break;
+
+                    default:
+                        if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
+                        {
+                            throw new TypeLoadException(
+                                $"Specified logger '{loggerName}' is not supported. It may not be a valid ILoggerProvider implementation " +
+                                $"or is not defined in the extensions assemblies provided to the application.");
+                        }
+
+                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, loggerParameters);
+                        loggingProviders.Add(customLoggerProvider);
+                        break;
+                }
+            }
+
+            return loggingProviders;
+        }
+
+        /// <summary>
         /// Initializes and registers existing dependency packages and toolset packages on the system.
         /// </summary>
         /// <param name="packageManager">Provides package management facilities required to discover and register packages.</param>
@@ -694,19 +734,19 @@ namespace VirtualClient
 
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["clientId"] = this.ClientId.ToLowerInvariant(),
-                ["clientInstance"] = Guid.NewGuid().ToString(),
-                ["appVersion"] = extensionsVersion ?? platformVersion,
-                ["appPlatformVersion"] = platformVersion,
-                ["executionArguments"] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
-                ["executionSystem"] = this.ExecutionSystem,
-                ["operatingSystemPlatform"] = Environment.OSVersion.Platform.ToString(),
-                ["platformArchitecture"] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
+                [MetadataContract.ExperimentId] = this.ExperimentId,
+                [MetadataContract.ClientId] = this.ClientId,
+                [MetadataContract.ClientInstance] = Guid.NewGuid().ToString().ToLowerInvariant(),
+                [MetadataContract.AppVersion] = extensionsVersion ?? platformVersion,
+                [MetadataContract.AppPlatformVersion] = platformVersion,
+                [MetadataContract.ExecutionArguments] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
+                [MetadataContract.ExecutionSystem] = this.ExecutionSystem,
+                [MetadataContract.OperatingSystemPlatform] = Environment.OSVersion.Platform.ToString(),
+                [MetadataContract.PlatformArchitecture] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
             });
 
             IDictionary<string, IConvertible> parameters = this.Parameters?.ObscureSecrets();
-            EventContext.PersistentProperties["executionProfileParameters"] = parameters;
-            EventContext.PersistentProperties["parameters"] = parameters;
+            EventContext.PersistentProperties[MetadataContract.Parameters] = parameters;
 
             IDictionary<string, object> metadata = new Dictionary<string, object>();
 
@@ -718,11 +758,11 @@ namespace VirtualClient
                 });
             }
 
-            EventContext.PersistentProperties["metadata"] = metadata;
+            EventContext.PersistentProperties[MetadataContract.DefaultCategory] = metadata;
 
             MetadataContract.Persist(
                 metadata?.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                MetadataContractCategory.Default);
+                MetadataContract.DefaultCategory);
         }
 
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)

@@ -196,7 +196,7 @@ namespace VirtualClient.Actions
                         opensslVersion = "Unknown";
                     }
 
-                    this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContractCategory.Dependencies);
+                    this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContract.DependenciesCategory);
                     this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersionAsync", LogLevel.Information, EventContext.Persisted().AddContext("opensslVersion", opensslVersion));
 
                     this.MetadataContract.AddForScenario(
