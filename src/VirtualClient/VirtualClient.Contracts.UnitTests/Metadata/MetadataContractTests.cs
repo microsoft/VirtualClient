@@ -91,15 +91,15 @@ namespace VirtualClient.Metadata
 
         [Test]
         [Order(5)]
-        [TestCase(MetadataContractCategory.Default, MetadataContract.CategoryDefault)]
-        [TestCase(MetadataContractCategory.Dependencies, MetadataContract.CategoryDependencies)]
-        [TestCase(MetadataContractCategory.Host, MetadataContract.CategoryHost)]
-        [TestCase(MetadataContractCategory.Runtime, MetadataContract.CategoryRuntime)]
-        [TestCase(MetadataContractCategory.Scenario, MetadataContract.CategoryScenario)]
-        [TestCase(MetadataContractCategory.ScenarioExtensions, MetadataContract.CategoryScenarioExtensions)]
-        public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_1(MetadataContractCategory category, string expectedCategoryName)
+        [TestCase(MetadataContract.DefaultCategory)]
+        [TestCase(MetadataContract.DependenciesCategory)]
+        [TestCase(MetadataContract.HostCategory)]
+        [TestCase(MetadataContract.RuntimeCategory)]
+        [TestCase(MetadataContract.ScenarioCategory)]
+        [TestCase(MetadataContract.ScenarioExtensionsCategory)]
+        public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_1(string expectedCategoryName)
         {
-            MetadataContract.Persist("AnyProperty", "AnyValue", category);
+            MetadataContract.Persist("AnyProperty", "AnyValue", expectedCategoryName);
             IDictionary<string, object> metadata = MetadataContract.GetPersisted(expectedCategoryName);
 
             Assert.IsNotNull(metadata);
@@ -108,55 +108,18 @@ namespace VirtualClient.Metadata
         }
 
         [Test]
-        [Order(6)]
-        [TestCase(MetadataContractCategory.Default)]
-        [TestCase(MetadataContractCategory.Dependencies)]
-        [TestCase(MetadataContractCategory.Host)]
-        [TestCase(MetadataContractCategory.Runtime)]
-        [TestCase(MetadataContractCategory.Scenario)]
-        [TestCase(MetadataContractCategory.ScenarioExtensions)]
-        public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_2(MetadataContractCategory category)
-        {
-            MetadataContract.Persist("AnyProperty", "AnyValue", category);
-            IDictionary<string, object> metadata = MetadataContract.GetPersisted(category);
-
-            Assert.IsNotNull(metadata);
-            Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
-            Assert.AreEqual("AnyValue", value);
-        }
-
-        [Test]
         [Order(7)]
-        [TestCase(MetadataContractCategory.Default, MetadataContract.CategoryDefault)]
-        [TestCase(MetadataContractCategory.Dependencies, MetadataContract.CategoryDependencies)]
-        [TestCase(MetadataContractCategory.Host, MetadataContract.CategoryHost)]
-        [TestCase(MetadataContractCategory.Runtime, MetadataContract.CategoryRuntime)]
-        [TestCase(MetadataContractCategory.Scenario, MetadataContract.CategoryScenario)]
-        [TestCase(MetadataContractCategory.ScenarioExtensions, MetadataContract.CategoryScenarioExtensions)]
-        public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_1(MetadataContractCategory category, string expectedCategoryName)
+        [TestCase(MetadataContract.DefaultCategory)]
+        [TestCase(MetadataContract.DependenciesCategory)]
+        [TestCase(MetadataContract.HostCategory)]
+        [TestCase(MetadataContract.RuntimeCategory)]
+        [TestCase(MetadataContract.ScenarioCategory)]
+        [TestCase(MetadataContract.ScenarioExtensionsCategory)]
+        public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_1(string expectedCategoryName)
         {
             MetadataContract contract = new MetadataContract();
-            contract.Add("AnyProperty", "AnyValue", category);
+            contract.Add("AnyProperty", "AnyValue", expectedCategoryName);
             IDictionary<string, object> metadata = contract.Get(expectedCategoryName);
-
-            Assert.IsNotNull(metadata);
-            Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
-            Assert.AreEqual("AnyValue", value);
-        }
-
-        [Test]
-        [Order(8)]
-        [TestCase(MetadataContractCategory.Default)]
-        [TestCase(MetadataContractCategory.Dependencies)]
-        [TestCase(MetadataContractCategory.Host)]
-        [TestCase(MetadataContractCategory.Runtime)]
-        [TestCase(MetadataContractCategory.Scenario)]
-        [TestCase(MetadataContractCategory.ScenarioExtensions)]
-        public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_2(MetadataContractCategory category)
-        {
-            MetadataContract contract = new MetadataContract();
-            contract.Add("AnyProperty", "AnyValue", category);
-            IDictionary<string, object> metadata = contract.Get(category);
 
             Assert.IsNotNull(metadata);
             Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
@@ -169,12 +132,12 @@ namespace VirtualClient.Metadata
         {
             MetadataContract contract = new MetadataContract();
             EventContext telemetryContext = new EventContext(Guid.NewGuid());
-            MetadataContract.Persist("Default", "Prop01", MetadataContractCategory.Default);
-            MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
-            MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
-            MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
-            MetadataContract.Persist("ScenarioExtension", JObject.Parse("{'any':'extensions'}"), MetadataContractCategory.ScenarioExtensions);
-            MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
+            MetadataContract.Persist("Default", "Prop01", MetadataContract.DefaultCategory);
+            MetadataContract.Persist("Dependency", "Dependency01", MetadataContract.DependenciesCategory);
+            MetadataContract.Persist("Host", "Host01", MetadataContract.HostCategory);
+            MetadataContract.Persist("Scenario", "Scenario01", MetadataContract.ScenarioCategory);
+            MetadataContract.Persist("ScenarioExtension", JObject.Parse("{'any':'extensions'}"), MetadataContract.ScenarioExtensionsCategory);
+            MetadataContract.Persist("Runtime", "Version1", MetadataContract.RuntimeCategory);
             contract.Apply(telemetryContext);
 
             // Example Format
@@ -222,12 +185,12 @@ namespace VirtualClient.Metadata
         {
             MetadataContract contract = new MetadataContract();
             EventContext telemetryContext = new EventContext(Guid.NewGuid());
-            contract.Add("Default", "Prop01", MetadataContractCategory.Default);
-            contract.Add("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
-            contract.Add("Host", "Host01", MetadataContractCategory.Host);
-            contract.Add("Scenario", "Scenario01", MetadataContractCategory.Scenario);
-            contract.Add("ScenarioExtension", JObject.Parse("{'any':'extensions'}"), MetadataContractCategory.ScenarioExtensions);
-            contract.Add("Runtime", "Version1", MetadataContractCategory.Runtime);
+            contract.Add("Default", "Prop01", MetadataContract.DefaultCategory);
+            contract.Add("Dependency", "Dependency01", MetadataContract.DependenciesCategory);
+            contract.Add("Host", "Host01", MetadataContract.HostCategory);
+            contract.Add("Scenario", "Scenario01", MetadataContract.ScenarioCategory);
+            contract.Add("ScenarioExtension", JObject.Parse("{'any':'extensions'}"), MetadataContract.ScenarioExtensionsCategory);
+            contract.Add("Runtime", "Version1", MetadataContract.RuntimeCategory);
             contract.Apply(telemetryContext);
 
             // Example Format
@@ -276,17 +239,17 @@ namespace VirtualClient.Metadata
             MetadataContract contract = new MetadataContract();
             EventContext telemetryContext = new EventContext(Guid.NewGuid());
 
-            MetadataContract.Persist("Default1", "Prop01", MetadataContractCategory.Default);
-            MetadataContract.Persist("Dependency1", "Dependency01", MetadataContractCategory.Dependencies);
-            MetadataContract.Persist("Host1", "Host01", MetadataContractCategory.Host);
-            MetadataContract.Persist("Scenario1", "Scenario01", MetadataContractCategory.Scenario);
-            MetadataContract.Persist("Runtime1", "Version1", MetadataContractCategory.Runtime);
+            MetadataContract.Persist("Default1", "Prop01", MetadataContract.DefaultCategory);
+            MetadataContract.Persist("Dependency1", "Dependency01", MetadataContract.DependenciesCategory);
+            MetadataContract.Persist("Host1", "Host01", MetadataContract.HostCategory);
+            MetadataContract.Persist("Scenario1", "Scenario01", MetadataContract.ScenarioCategory);
+            MetadataContract.Persist("Runtime1", "Version1", MetadataContract.RuntimeCategory);
 
-            contract.Add("Default2", "Prop02", MetadataContractCategory.Default);
-            contract.Add("Dependency2", "Dependency02", MetadataContractCategory.Dependencies);
-            contract.Add("Host2", "Host02", MetadataContractCategory.Host);
-            contract.Add("Scenario2", "Scenario02", MetadataContractCategory.Scenario);
-            contract.Add("Runtime2", "Version2", MetadataContractCategory.Runtime);
+            contract.Add("Default2", "Prop02", MetadataContract.DefaultCategory);
+            contract.Add("Dependency2", "Dependency02", MetadataContract.DependenciesCategory);
+            contract.Add("Host2", "Host02", MetadataContract.HostCategory);
+            contract.Add("Scenario2", "Scenario02", MetadataContract.ScenarioCategory);
+            contract.Add("Runtime2", "Version2", MetadataContract.RuntimeCategory);
             contract.Apply(telemetryContext);
 
             // Example Format
@@ -336,14 +299,14 @@ namespace VirtualClient.Metadata
             MetadataContract contract = new MetadataContract();
             EventContext telemetryContext = new EventContext(Guid.NewGuid());
 
-            MetadataContract.Persist("Default", "Prop01", MetadataContractCategory.Default);
-            MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
-            MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
-            MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
-            MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
+            MetadataContract.Persist("Default", "Prop01", MetadataContract.DefaultCategory);
+            MetadataContract.Persist("Dependency", "Dependency01", MetadataContract.DependenciesCategory);
+            MetadataContract.Persist("Host", "Host01", MetadataContract.HostCategory);
+            MetadataContract.Persist("Scenario", "Scenario01", MetadataContract.ScenarioCategory);
+            MetadataContract.Persist("Runtime", "Version1", MetadataContract.RuntimeCategory);
 
-            contract.Add("Default", "Prop02", MetadataContractCategory.Default);
-            contract.Add("Dependency", "Dependency02", MetadataContractCategory.Dependencies);
+            contract.Add("Default", "Prop02", MetadataContract.DefaultCategory);
+            contract.Add("Dependency", "Dependency02", MetadataContract.DependenciesCategory);
             contract.Apply(telemetryContext);
 
             // Example Format
@@ -388,17 +351,17 @@ namespace VirtualClient.Metadata
             MetadataContract contract = new MetadataContract();
             EventContext telemetryContext = new EventContext(Guid.NewGuid());
 
-            MetadataContract.Persist("Default", "Prop01", MetadataContractCategory.Default);
-            MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
-            MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
-            MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
-            MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
+            MetadataContract.Persist("Default", "Prop01", MetadataContract.DefaultCategory);
+            MetadataContract.Persist("Dependency", "Dependency01", MetadataContract.DependenciesCategory);
+            MetadataContract.Persist("Host", "Host01", MetadataContract.HostCategory);
+            MetadataContract.Persist("Scenario", "Scenario01", MetadataContract.ScenarioCategory);
+            MetadataContract.Persist("Runtime", "Version1", MetadataContract.RuntimeCategory);
 
-            contract.Add("Default", "Prop02", MetadataContractCategory.Default);
-            contract.Add("Dependency", "Dependency02", MetadataContractCategory.Dependencies);
-            contract.Add("Host", "Host02", MetadataContractCategory.Host);
-            contract.Add("Scenario", "Scenario02", MetadataContractCategory.Scenario);
-            contract.Add("Runtime", "Version2", MetadataContractCategory.Runtime);
+            contract.Add("Default", "Prop02", MetadataContract.DefaultCategory);
+            contract.Add("Dependency", "Dependency02", MetadataContract.DependenciesCategory);
+            contract.Add("Host", "Host02", MetadataContract.HostCategory);
+            contract.Add("Scenario", "Scenario02", MetadataContract.ScenarioCategory);
+            contract.Add("Runtime", "Version2", MetadataContract.RuntimeCategory);
             contract.Apply(telemetryContext);
 
             // Example Format
@@ -469,7 +432,7 @@ namespace VirtualClient.Metadata
             {
                 metadataContract.Add(
                     extensions.Keys.ToDictionary(key => key, entry => extensions[entry] as object),
-                    MetadataContractCategory.ScenarioExtensions,
+                    MetadataContract.ScenarioExtensionsCategory,
                     replace: true);
             }
 
