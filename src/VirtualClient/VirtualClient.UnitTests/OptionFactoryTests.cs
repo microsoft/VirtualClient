@@ -7,7 +7,6 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
-    using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
     using System.IO;
     using System.Linq;
@@ -15,10 +14,10 @@ namespace VirtualClient
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Identity;
 
     [TestFixture]
@@ -285,13 +284,71 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--debug")]
-        [TestCase("--verbose")]
-        public void DebugFlagSupportsExpectedAliases(string alias)
+        [TestCase("--format")]
+        public void DataFormatOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateVerboseFlag();
-            ParseResult result = option.Parse(alias);
+            DataFormat expectedFormat = DataFormat.Yaml;
+            Option option = OptionFactory.CreateDataFormatOption();
+            ParseResult result = option.Parse($"{alias}={expectedFormat}");
+
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedFormat, Enum.Parse<DataFormat>(result.Tokens.ElementAt(1).Value));
+        }
+
+        [Test]
+        public void DataFormatOptionSupportsStringRepresentationsOfTheDataFormatEnumeration()
+        {
+            foreach (DataFormat format in Enum.GetValues<DataFormat>().Where(f => f != DataFormat.Undefined))
+            {
+                Option option = OptionFactory.CreateDataFormatOption();
+                ParseResult result = option.Parse($"--format={format}");
+
+                Assert.IsFalse(result.Errors.Any());
+                Assert.AreEqual(format.ToString(), result.Tokens.ElementAt(1).Value);
+            }
+        }
+
+        [Test]
+        public void DataFormatOptionThrowsOnAnInvalidValue()
+        {
+            Option option = OptionFactory.CreateDataFormatOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"--format={DataFormat.Undefined}"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--format=100"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--format=vinyl"));
+        }
+
+        [Test]
+        [TestCase("--schema")]
+        public void DataSchemaOptionSupportsExpectedAliases(string alias)
+        {
+            DataSchema expectedSchema = DataSchema.Metrics;
+            Option option = OptionFactory.CreateDataSchemaOption();
+            ParseResult result = option.Parse($"{alias}={expectedSchema}");
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedSchema, Enum.Parse<DataSchema>(result.Tokens.ElementAt(1).Value));
+        }
+
+        [Test]
+        public void DataSchemaOptionSupportsStringRepresentationsOfTheDataFormatEnumeration()
+        {
+            foreach (DataSchema schema in Enum.GetValues<DataSchema>().Where(f => f != DataSchema.Undefined))
+            {
+                Option option = OptionFactory.CreateDataSchemaOption();
+                ParseResult result = option.Parse($"--schema={schema}");
+
+                Assert.IsFalse(result.Errors.Any());
+                Assert.AreEqual(schema.ToString(), result.Tokens.ElementAt(1).Value);
+            }
+        }
+
+        [Test]
+        public void DataSchemaOptionThrowsOnAnInvalidValue()
+        {
+            Option option = OptionFactory.CreateDataSchemaOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"--schema={DataSchema.Undefined}"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--schema=100"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--schema=sql"));
         }
 
         [Test]
@@ -376,6 +433,15 @@ namespace VirtualClient
         public void FailFastFlagSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateFailFastFlag();
+            ParseResult result = option.Parse(alias);
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--intrinsic")]
+        public void IntrinsicFlagSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateIntrinsicFlag();
             ParseResult result = option.Parse(alias);
             Assert.IsFalse(result.Errors.Any());
         }
@@ -606,6 +672,16 @@ namespace VirtualClient
             ParseResult result = option.Parse(alias);
             Assert.IsFalse(result.Errors.Any());
         }
+
+        [Test]
+        [TestCase("--match")]
+        public void MatchExpressionOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateMatchExpressionOption();
+            ParseResult result = option.Parse($"{alias}=anypackage");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
 
         [Test]
         [TestCase("--metadata")]
@@ -1022,6 +1098,15 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--recursive")]
+        public void RecursiveFlagSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateRecursiveFlag();
+            ParseResult result = option.Parse(alias);
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCase("--scenarios")]
         [TestCase("--sc")]
         public void ScenariosOptionSupportsExpectedAliases(string alias)
@@ -1101,6 +1186,118 @@ namespace VirtualClient
             Option option = OptionFactory.CreateSystemOption();
             ParseResult result = option.Parse($"{alias}=Profile");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--directory")]
+        public void TargetDirectoryOptionSupportsExpectedAliases(string alias)
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreateTargetDirectoryOption();
+            ParseResult result = option.Parse($"{alias}={path}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void TargetDirectoryOptionSupportsFullPaths()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreateTargetDirectoryOption();
+            ParseResult result = option.Parse($"--directory={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--directory")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TargetDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateTargetDirectoryOption();
+            ParseResult result = option.Parse($"--directory={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--directory")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase("--files")]
+        public void TargetFilesOptionSupportsExpectedAliases(string alias)
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path\\csv.metrics" : "/home/any/directory/path/csv.metrics";
+            Option option = OptionFactory.CreateTargetFilesOption();
+            ParseResult result = option.Parse($"{alias}={path}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void TargetFilesOptionSupportsFullPaths_1()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path\\csv.metrics" : "/home/any/directory/path/csv.metrics";
+            Option option = OptionFactory.CreateTargetFilesOption();
+            ParseResult result = option.Parse($"--files={path}");
+
+            string expectedPath = path;
+            IEnumerable<string> actualPaths = result.ValueForOption("--files") as IEnumerable<string>;
+
+            Assert.IsFalse(result.Errors.Any());
+            CollectionAssert.AreEqual(new string[] { expectedPath }, actualPaths);
+        }
+
+        [Test]
+        public void TargetFilesOptionSupportsFullPaths_2()
+        {
+            string path1 = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path\\csv1.metrics" : "/home/any/directory/path/csv1.metrics";
+            string path2 = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path\\csv2.metrics" : "/home/any/directory/path/csv2.metrics";
+
+            Option option = OptionFactory.CreateTargetFilesOption();
+            ParseResult result = option.Parse($"--files={path1},{path2}");
+
+            IEnumerable<string> actualPaths = result.ValueForOption("--files") as IEnumerable<string>;
+
+            Assert.IsFalse(result.Errors.Any());
+            CollectionAssert.AreEqual(new string[] { path1, path2 }, actualPaths);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path\\csv.metrics")]
+        [TestCase("..\\Any\\Directory\\Path\\csv.metrics")]
+        [TestCase("..\\..\\Any\\Directory\\Path\\csv.metrics")]
+        public void TargetFilesOptionSupportsRelativePaths_1(string path)
+        {
+            Option option = OptionFactory.CreateTargetFilesOption();
+            ParseResult result = option.Parse($"--files={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            IEnumerable<string> actualPaths = result.ValueForOption("--files") as IEnumerable<string>;
+
+            Assert.IsFalse(result.Errors.Any());
+            CollectionAssert.AreEqual(new string[] { expectedPath }, actualPaths);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path\\csv1.metrics", ".\\Any\\Directory\\Path\\csv2.metrics")]
+        [TestCase("..\\Any\\Directory\\Path\\csv1.metrics", "..\\Any\\Directory\\Path\\csv2.metrics")]
+        [TestCase("..\\..\\Any\\Directory\\Path\\csv1.metrics", "..\\..\\Any\\Directory\\Path\\csv2.metrics")]
+        public void TargetFilesOptionSupportsRelativePaths_2(string path1, string path2)
+        {
+            Option option = OptionFactory.CreateTargetFilesOption();
+            ParseResult result = option.Parse($"--files={path1},{path2}");
+
+            string expectedPath1 = Path.GetFullPath(path1);
+            string expectedPath2 = Path.GetFullPath(path2);
+            IEnumerable<string> actualPaths = result.ValueForOption("--files") as IEnumerable<string>;
+
+            Assert.IsFalse(result.Errors.Any());
+            CollectionAssert.AreEqual(new string[] { expectedPath1, expectedPath2 }, actualPaths);
         }
 
         [Test]
@@ -1223,6 +1420,16 @@ namespace VirtualClient
                 CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { }, tokenSource);
                 ParseResult result = commandBuilder.Build().Parse($"{sasPart} {iterationPart} {eventhubPart}");
             }
+        }
+
+        [Test]
+        [TestCase("--debug")]
+        [TestCase("--verbose")]
+        public void VerboseFlagSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateVerboseFlag();
+            ParseResult result = option.Parse(alias);
+            Assert.IsFalse(result.Errors.Any());
         }
 
         private static X509Certificate2 GenerateMockCertificate()

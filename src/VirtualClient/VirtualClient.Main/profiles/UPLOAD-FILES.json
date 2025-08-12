@@ -17,7 +17,7 @@
     ],
     "Dependencies": [
         {
-            "Type": "RequestFileUpload",
+            "Type": "UploadFiles",
             "Parameters": {
                 "Scenario": "UploadFiles",
                 "TargetDirectory": "$.Parameters.TargetDirectory",

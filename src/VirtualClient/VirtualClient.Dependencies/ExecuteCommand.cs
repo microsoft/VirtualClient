@@ -5,14 +5,11 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.CommandLine.Builder;
-    using System.CommandLine.Parsing;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;

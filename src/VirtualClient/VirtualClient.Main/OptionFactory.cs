@@ -14,9 +14,9 @@ namespace VirtualClient
     using System.Net;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Actions;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Identity;
 
     /// <summary>
@@ -230,6 +230,98 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option indicates the format for a data point file (Csv, Json, Yaml).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateDataFormatOption(bool required = true, object defaultValue = null)
+        {
+            Option<DataFormat> option = new Option<DataFormat>(
+                new string[] { "--format" },
+                new ParseArgument<DataFormat>(result =>
+                {
+                    DataFormat format = DataFormat.Undefined;
+                    string value = result.Tokens.First().Value;
+
+                    switch (value?.ToLowerInvariant())
+                    {
+                        case "csv":
+                            format = DataFormat.Csv;
+                            break;
+
+                        case "json":
+                            format = DataFormat.Json;
+                            break;
+
+                        case "yaml":
+                            format = DataFormat.Yaml;
+                            break;
+                    }
+
+                    if (format == DataFormat.Undefined)
+                    {
+                        throw new ArgumentException($"The data format '{value}' is not supported.");
+                    }
+
+                    return format;
+                }))
+            {
+                Name = "DataFormat",
+                Description = "Indicates the data format. Supported values = Csv, Json, Yaml.",
+                ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option indicates the schema for the content in a data point file (Events, Metrics).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateDataSchemaOption(bool required = true, object defaultValue = null)
+        {
+            Option<DataSchema> option = new Option<DataSchema>(
+                new string[] { "--schema" },
+                new ParseArgument<DataSchema>(result =>
+                {
+                    DataSchema schema = DataSchema.Undefined;
+                    string value = result.Tokens.First().Value;
+
+                    switch (value?.ToLowerInvariant())
+                    {
+                        case "events":
+                            schema = DataSchema.Events;
+                            break;
+
+                        case "metrics":
+                            schema = DataSchema.Metrics;
+                            break;
+                    }
+
+                    if (schema == DataSchema.Undefined)
+                    {
+                        throw new ArgumentException($"The data schema '{value}' is not supported.");
+                    }
+
+                    return schema;
+                }))
+            {
+                Name = "DataSchema",
+                Description = "Indicates the data schema. Supported values = Events, Metrics.",
+                ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line flag indicates only the profile dependencies should be evaluated/installed.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -347,6 +439,26 @@ namespace VirtualClient
                 Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",
                 ArgumentHelpName = "Flag",
                 AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line flag indicates data is intrinsic to the current system.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateIntrinsicFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--intrinsic" })
+            {
+                Name = "Intrinsic",
+                Description = "Flag indicates the data is intrinsic to the current system.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -475,7 +587,7 @@ namespace VirtualClient
         {
             Option<string> option = new Option<string>(
                 new string[] { "--ldir", "--log-dir" },
-                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "LogDirectory",
                 Description = "Defines an alternate directory to which log files should be written.",
@@ -592,6 +704,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines an expression to use for matching.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateMatchExpressionOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--match" })
+            {
+                Name = "MatchExpression",
+                Description = "An expression to use for matching.",
+                ArgumentHelpName = "expression",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines metadata properties (key/value pairs) supplied to
         /// the application.
         /// </summary>
@@ -687,7 +819,7 @@ namespace VirtualClient
         {
             Option<string> option = new Option<string>(
                 new string[] { "--pdir", "--package-dir" },
-                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "PackageDirectory",
                 Description = "Defines an alternate directory to which packages will be downloaded.",
@@ -880,6 +1012,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line flag indicates a recursive search instruction.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateRecursiveFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--recursive" })
+            {
+                Name = "Recursive",
+                Description = "Flag requests a recursive search.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the scenarios/tests to target as part of a profile execution.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -944,7 +1096,7 @@ namespace VirtualClient
         {
             Option<string> option = new Option<string>(
                 new string[] { "--sdir", "--state-dir" },
-                new ParseArgument<string>(arg => OptionFactory.ParseDirectory(arg)))
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "StateDirectory",
                 Description = "Defines an alternate directory to which state files/documents will be written.",
@@ -969,6 +1121,59 @@ namespace VirtualClient
                 Name = "ExecutionSystem",
                 Description = "The execution system/environment platform (e.g. Azure).",
                 ArgumentHelpName = "system",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines a target directory.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTargetDirectoryOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--directory" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
+            {
+                Name = "TargetDirectory",
+                Description = "The target directory to search.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines a set of target files.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTargetFilesOption(bool required = false, object defaultValue = null)
+        {
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(
+                new string[] { "--files" },
+                new ParseArgument<IEnumerable<string>>(result =>
+                {
+                    IEnumerable<string> files = null;
+                    if (result.Tokens?.Any() == true)
+                    {
+                        files = OptionFactory.ParseDelimitedValues(result.Tokens.First().Value);
+                    }
+
+                    return files?.Select(file => OptionFactory.ToFullPath(file)).OrderBy(file => file);
+                }))
+            {
+                Name = "TargetFiles",
+                Description = "The target files (comma-delimited).",
+                ArgumentHelpName = "file,file...",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -1132,21 +1337,6 @@ namespace VirtualClient
             return delimitedValues;
         }
 
-        private static string ParseDirectory(ArgumentResult arg)
-        {
-            string directory = arg.Tokens?.FirstOrDefault()?.Value?.Trim();
-            if (!string.IsNullOrWhiteSpace(directory))
-            {
-                if (!Path.IsPathRooted(directory))
-                {
-                    // Relative path
-                    directory = Path.GetFullPath(directory);
-                }
-            }
-
-            return directory;
-        }
-
         private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
         {
             DependencyStore store = null;
@@ -1177,6 +1367,11 @@ namespace VirtualClient
             }
 
             return store;
+        }
+
+        private static string ParsePath(ArgumentResult arg)
+        {
+            return OptionFactory.ToFullPath(arg.Tokens?.FirstOrDefault()?.Value?.Trim());
         }
 
         private static IEnumerable<DependencyProfileReference> ParseProfiles(ArgumentResult parsedResult, ICertificateManager certificateManager, IFileSystem fileSystem)
@@ -1386,6 +1581,21 @@ namespace VirtualClient
             {
                 throw new ArgumentException(errorMessage);
             }
+        }
+
+        private static string ToFullPath(string path)
+        {
+            string fullPath = path;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    // Relative path
+                    fullPath = Path.GetFullPath(path);
+                }
+            }
+
+            return fullPath;
         }
     }
 }

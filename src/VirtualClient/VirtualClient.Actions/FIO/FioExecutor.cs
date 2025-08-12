@@ -804,7 +804,7 @@ namespace VirtualClient.Actions
 
                 if (!string.IsNullOrEmpty(fioVersion))
                 {
-                    this.MetadataContract.Add("fio_version", fioVersion, MetadataContractCategory.Dependencies);
+                    this.MetadataContract.Add("fio_version", fioVersion, MetadataContract.DependenciesCategory);
                 }
             }
             

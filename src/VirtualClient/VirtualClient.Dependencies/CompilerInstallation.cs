@@ -144,7 +144,7 @@ namespace VirtualClient.Dependencies
             // The compiler + version installed is an important part of the metadata
             // contract for VC scenarios.
             IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
-            MetadataContract.Persist(compilerMetadata, MetadataContractCategory.Dependencies, true);
+            MetadataContract.Persist(compilerMetadata, MetadataContract.DependenciesCategory, true);
         }
 
         /// <summary>

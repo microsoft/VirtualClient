@@ -16,6 +16,7 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
 
     [TestFixture]
     [Category("Unit")]
@@ -89,7 +90,7 @@ namespace VirtualClient.Contracts
             originalComponent.Metadata.Add("Metadata", 1234);
 
             // Metadata Contract
-            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContractCategory.Scenario);
+            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContract.ScenarioCategory);
 
             // Extensions
             originalComponent.Extensions.Add("Contacts", JToken.Parse("[ 'virtualclient@microsoft.com' ]"));
@@ -114,8 +115,8 @@ namespace VirtualClient.Contracts
                 component.Metadata.Select(p => $"{p.Key}={p.Value}"));
 
             CollectionAssert.AreEquivalent(
-                originalComponent.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"),
-                component.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"));
+                originalComponent.MetadataContract.Get(MetadataContract.ScenarioCategory).Select(p => $"{p.Key}={p.Value}"),
+                component.MetadataContract.Get(MetadataContract.ScenarioCategory).Select(p => $"{p.Key}={p.Value}"));
 
             Assert.AreEqual(originalComponent.Extensions["Contacts"], component.Extensions["Contacts"]);
         }

@@ -14,6 +14,7 @@ namespace VirtualClient.Logging
     using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Provides an <see cref="ILogger"/> implementation for writing telemetry events
@@ -134,23 +135,40 @@ namespace VirtualClient.Logging
         /// </summary>
         /// <param name="eventMessage">The message to set for the event data object.</param>
         /// <param name="logLevel">The severity level of the logged event.</param>
+        /// <param name="eventTimestamp">A timestamp for the event.</param>
         /// <param name="eventContext">Provides additional context information to include in the event data object.</param>
         /// <param name="bufferInfo">Provides information on the current buffered messages count/state to include in the event data object.</param>
         /// <returns></returns>
-        protected virtual EventData CreateEventObject(string eventMessage, LogLevel logLevel, EventContext eventContext, object bufferInfo = null)
+        protected virtual EventData CreateEventObject(string eventMessage, LogLevel logLevel, DateTime eventTimestamp, EventContext eventContext, object bufferInfo = null)
         {
+            // Allow for specific property overrides.
+            eventContext.Properties.TryGetValue(MetadataContract.AppHost, out object appHost);
+            eventContext.Properties.TryGetValue(MetadataContract.AppName, out object appName);
+            eventContext.Properties.TryGetValue(MetadataContract.AppVersion, out object appVersion);
+
+            DateTime timestamp = eventTimestamp;
+            if (eventContext.Properties.TryGetValue(MetadataContract.Timestamp, out object datetime))
+            {
+                DateTime.TryParse(datetime?.ToString(), out timestamp);
+            }
+
+            if (timestamp.Kind == DateTimeKind.Local)
+            {
+                timestamp = timestamp.ToUniversalTime();
+            }
+
             var eventObject = new
             {
-                timestamp = DateTime.UtcNow.ToString("o"),
-                message = eventMessage,
+                appName = appName ?? EventHubTelemetryLogger.executingAssembly.Name,
+                appHost = appHost ?? Environment.MachineName,
+                itemType = logLevel.ToString().ToLowerInvariant(),
                 severityLevel = (int)logLevel,
-                itemType = "trace",
-                customDimensions = eventContext != null ? EventHubTelemetryLogger.GetContextProperties(eventContext, bufferInfo) : null,
+                message = eventMessage,
+                timestamp = timestamp.ToString("o"),
                 operation_Id = eventContext?.ActivityId.ToString() ?? string.Empty,
                 operation_ParentId = eventContext?.ParentActivityId.ToString() ?? string.Empty,
-                sdkVersion = EventHubTelemetryLogger.loggingAssembly.Version.ToString(),
-                appName = EventHubTelemetryLogger.executingAssembly.Name,
-                appHost = Environment.MachineName
+                sdkVersion = appVersion ?? EventHubTelemetryLogger.loggingAssembly.Version.ToString(),
+                customDimensions = eventContext != null ? EventHubTelemetryLogger.GetContextProperties(eventContext, bufferInfo) : null,
             };
 
             return new EventData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventObject, this.jsonSerializationSettings)));
@@ -158,10 +176,11 @@ namespace VirtualClient.Logging
 
         private static IEnumerable<KeyValuePair<string, object>> GetContextProperties(EventContext context, object bufferInfo = null)
         {
-            Dictionary<string, object> contextProperties = new Dictionary<string, object>();
-
-            contextProperties.Add("transactionId", context.TransactionId);
-            contextProperties.Add("durationMs", context.DurationMs);
+            Dictionary<string, object> contextProperties = new Dictionary<string, object>
+            {
+                { "transactionId", context.TransactionId },
+                { "durationMs", context.DurationMs }
+            };
 
             if (bufferInfo != null)
             {
@@ -170,7 +189,8 @@ namespace VirtualClient.Logging
 
             if (context.Properties?.Any() == true)
             {
-                contextProperties.AddRange(context.Properties.Select(prop => new KeyValuePair<string, object>(prop.Key, prop.Value)));
+                contextProperties.AddRange(context.Properties.Select(prop => new KeyValuePair<string, object>(prop.Key, prop.Value))
+                    .OrderBy(entry => entry.Key));
             }
 
             return contextProperties;
@@ -225,13 +245,13 @@ namespace VirtualClient.Logging
                 };
             }
 
-            EventData eventData = this.CreateEventObject(eventMessage, logLevel, eventContext, bufferInfo);
+            EventData eventData = this.CreateEventObject(eventMessage, logLevel, DateTime.UtcNow, eventContext, bufferInfo);
             if (eventData.Body.Length > EventHubTelemetryChannel.MaxEventDataBytes)
             {
                 EventContext scaledDownContext = eventContext.Clone(withProperties: false)
                     .AddContext("exceededSizeLimits", bool.TrueString);
 
-                eventData = this.CreateEventObject(eventMessage, logLevel, scaledDownContext, bufferInfo);
+                eventData = this.CreateEventObject(eventMessage, logLevel, DateTime.UtcNow, scaledDownContext, bufferInfo);
             }
 
             return eventData;
