@@ -10,6 +10,167 @@
         "MonitorFrequency": "00:05:00",
         "MonitorWarmupPeriod": "00:05:00"
     },
+    "Monitors": [
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureSystemDescription",
+                "Command": "hostnamectl",
+                "LogFolderName": "hostnamectl",
+                "MonitorStrategy": "Once",
+                "MonitorEventType": "system.description",
+                "MonitorEventSource": "hostnamectl",
+                "MonitorEventId": "linux.hostnamectl",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureSystemDescription",
+                "Command": "lspci -vvvnn",
+                "LogFolderName": "lspci",
+                "MonitorStrategy": "OnceAtBeginAndEnd",
+                "MonitorEventType": "system.devices",
+                "MonitorEventSource": "lspci",
+                "MonitorEventId": "linux.lspci",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureProcessorInformation",
+                "Command": "lscpu",
+                "LogFolderName": "lscpu",
+                "MonitorStrategy": "OnceAtBeginAndEnd",
+                "MonitorEventType": "system.hardware.cpu",
+                "MonitorEventSource": "lscpu",
+                "MonitorEventId": "linux.lscpu",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureDiskInformation",
+                "Command": "sudo lshw -c storage -c disk -c volume",
+                "LogFolderName": "lshw_disk",
+                "MonitorStrategy": "OnceAtBeginAndEnd",
+                "MonitorEventType": "system.hardware.disks",
+                "MonitorEventSource": "lshw",
+                "MonitorEventId": "linux.lshw.disks",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureNetworkInformation",
+                "Command": "sudo lshw -c network",
+                "LogFolderName": "lshw_network",
+                "MonitorStrategy": "OnceAtBeginAndEnd",
+                "MonitorEventType": "system.hardware.network",
+                "MonitorEventSource": "lshw",
+                "MonitorEventId": "linux.lshw.network",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "LinuxPerformanceCounterMonitor",
+            "Parameters": {
+                "Scenario": "CaptureCounters",
+                "MonitorFrequency": "00:02:00",
+                "MonitorWarmupPeriod": "00:00:30",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "LinuxEventLogMonitor",
+            "Parameters": {
+                "Scenario": "CaptureSystemLog",
+                "MonitorFrequency": "00:05:00",
+                "MonitorWarmupPeriod": "00:00:30",
+                "LogLevel": "Error",
+                "SupportedPlatforms": "linux-arm64,linux-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureSystemDescription",
+                "Command": "systeminfo",
+                "LogFolderName": "systeminfo",
+                "MonitorStrategy": "Once",
+                "MonitorEventType": "system.description",
+                "MonitorEventSource": "systeminfo",
+                "MonitorEventId": "windows.systeminfo",
+                "SupportedPlatforms": "win-arm64,win-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureDevices",
+                "Command": "pnputil /enum-devices /drivers",
+                "LogFolderName": "pnputil",
+                "MonitorStrategy": "OnceAtBeginAndEnd",
+                "MonitorEventType": "system.devices",
+                "MonitorEventSource": "pnputil",
+                "MonitorEventId": "windows.pnputil",
+                "SupportedPlatforms": "win-arm64,win-x64"
+            }
+        },
+        {
+            "Type": "ExecuteCommandMonitor",
+            "Parameters": {
+                "Scenario": "CaptureNetworkInformation",
+                "Command": "ipconfig /all",
+                "LogFolderName": "ipconfig",
+                "MonitorStrategy": "OnceAtBeginAndEnd",
+                "MonitorEventType": "system.hardware.network",
+                "MonitorEventSource": "ipconfig",
+                "MonitorEventId": "windows.ipconfig",
+                "SupportedPlatforms": "win-arm64,win-x64"
+            }
+        },
+        {
+            "Type": "WindowsPerformanceCounterMonitor",
+            "Parameters": {
+                "Scenario": "CaptureCounters",
+                "MonitorFrequency": "00:02:00",
+                "MonitorWarmupPeriod": "00:00:30",
+                "SupportedPlatforms": "win-arm64,win-x64",
+                "Counters01": "Hyper-V Hypervisor Logical Processor=\\(_Total\\)",
+                "Counters02": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time",
+                "Counters03": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\(CPU Wait Time Per Dispatch|Hardware Interrupts/sec|Hypercalls Cost|Hypercalls/sec|Long Spin Wait Hypercalls/sec)",
+                "Counters04": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\(Total Intercepts Cost|Total Intercepts/sec)",
+                "Counters05": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total|VTL2) Run Time",
+                "Counters06": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(CPU Wait Time Per Dispatch|Hardware Interrupts/sec|Hypercalls Cost|Hypercalls/sec|Logical Processor Migrations/sec|Long Spin Wait Hypercalls/sec)",
+                "Counters07": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(Nested Page Fault Intercepts/sec|Posted Interrupt Notifications/sec|Posted Interrupt Scans/sec|Total Intercepts Cost|Total Intercepts/sec)",
+                "Counters08": "IPv4=.",
+                "Counters09": "Memory=(Available|Cache|Committed) Bytes",
+                "Counters10": "Memory=Faults/sec",
+                "Counters11": "Memory=(Page Reads/sec|Page Writes/sec|Pages/sec|Pages Input/sec|Pages Output/sec)",
+                "Counters12": "PhysicalDisk=\\(_Total\\)",
+                "Counters13": "Processor=\\(_Total\\)",
+                "Counters14": "Processor=\\([0-9]+\\)\\\\% (C[0-9]+|Idle|Interrupt|Privileged|Processor|User) Time",
+                "Counters15": "System=.",
+                "Comments": "The counters defined are formatted as {category}={counter_match_expression}. The match expression is a regular expression to allow for handling variability of counters available on different systems. JSON content has eccentricities. Use 4-backslashes to represent a single backslash and 2-backslashes to represent a regular expression character escape."
+            }
+        },
+        {
+            "Type": "WindowsEventLogMonitor",
+            "Parameters": {
+                "Scenario": "CaptureSystemEvents",
+                "LogNames": "Application,Security,System",
+                "MonitorFrequency": "00:05:00",
+                "MonitorWarmupPeriod": "00:00:30",
+                "LogLevel": "Error",
+                "SupportedPlatforms": "win-arm64,win-x64"
+            }
+        }
+    ],
     "Dependencies": [
         {
             "Type": "LinuxPackageInstallation",
@@ -27,24 +188,6 @@
                 "Packages": "atop",
                 "AllowUpgrades": true
             }
-        }
-    ],
-    "Monitors": [
-        {
-            "Type": "PerfCounterMonitor",
-            "Parameters": {
-                "Scenario": "CaptureCounters",
-                "MonitorFrequency": "$.Parameters.MonitorFrequency",
-                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
-            }
-        },
-        {
-          "Type": "LspciMonitor",
-          "Parameters": {
-            "Scenario": "CaptureDeviceInformation",
-            "MonitorFrequency": "12:00:00",
-            "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
-          }
         }
     ]
 }

@@ -17,12 +17,131 @@ namespace VirtualClient.Contracts.Metadata
     /// </summary>
     public class MetadataContract
     {
-        internal const string CategoryDefault = "metadata";
-        internal const string CategoryDependencies = "metadata_dependencies";
-        internal const string CategoryHost = "metadata_host";
-        internal const string CategoryRuntime = "metadata_runtime";
-        internal const string CategoryScenario = "metadata_scenario";
-        internal const string CategoryScenarioExtensions = "metadata_scenario_ext";
+        /// <summary>
+        /// Default Metadata Category = metadata
+        /// </summary>
+        public const string DefaultCategory = "metadata";
+
+        /// <summary>
+        /// Dependencies Metadata Category = metadata_dependencies
+        /// </summary>
+        public const string DependenciesCategory = "metadata_dependencies";
+
+        /// <summary>
+        /// Host/System Metadata Category = metadata_host
+        /// </summary>
+        public const string HostCategory = "metadata_host";
+
+        /// <summary>
+        /// Runtime Metadata Category = metadata_runtime
+        /// </summary>
+        public const string RuntimeCategory = "metadata_runtime";
+
+        /// <summary>
+        /// Scenario-specific Metadata Category = metadata_scenario
+        /// </summary>
+        public const string ScenarioCategory = "metadata_scenario";
+
+        /// <summary>
+        /// Scenario-specific Extensions Metadata Category = metadata_scenario_ext
+        /// </summary>
+        public const string ScenarioExtensionsCategory = "metadata_scenario_ext";
+
+        /// <summary>
+        /// Application Host/System
+        /// </summary>
+        internal const string AppHost = "appHost";
+
+        /// <summary>
+        /// Application Name
+        /// </summary>
+        internal const string AppName = "appName";
+
+        /// <summary>
+        /// Application Version
+        /// </summary>
+        internal const string AppVersion = "appVersion";
+
+        /// <summary>
+        /// Application Platform Version
+        /// </summary>
+        internal const string AppPlatformVersion = "appPlatformVersion";
+
+        /// <summary>
+        /// Client/Agent ID
+        /// </summary>
+        internal const string ClientId = "clientId";
+
+        /// <summary>
+        /// Client/Agent Instance (unique identifier for each client running).
+        /// </summary>
+        internal const string ClientInstance = "clientInstance";
+
+        /// <summary>
+        /// Application execution arguments (e.g. command line).
+        /// </summary>
+        internal const string ExecutionArguments = "executionArguments";
+
+        /// <summary>
+        /// The profile that describes the overall execution workflow (e.g. PERF-CPU-OPENSSL (win-x64)).
+        /// </summary>
+        internal const string ExecutionProfile = "executionProfile";
+
+        /// <summary>
+        /// A description of the execution profile.
+        /// </summary>
+        internal const string ExecutionProfileDescription = "executionProfileDescription";
+
+        /// <summary>
+        /// The name of the profile that describes the overall execution workflow.
+        /// </summary>
+        internal const string ExecutionProfileName = "executionProfileName";
+
+        /// <summary>
+        /// The path to the profile that describes the overall execution workflow.
+        /// </summary>
+        internal const string ExecutionProfilePath = "executionProfilePath";
+
+        /// <summary>
+        /// The execution system launching the application.
+        /// </summary>
+        internal const string ExecutionSystem = "executionSystem";
+
+        /// <summary>
+        /// Experiment ID
+        /// </summary>
+        internal const string ExperimentId = "experimentId";
+
+        /// <summary>
+        /// A timestamp representing the point at which a set of data is actually
+        /// ingested into a target data store.
+        /// </summary>
+        internal const string IngestionTimestamp = "ingestionTimestamp";
+
+        /// <summary>
+        /// The Linux distro information.
+        /// </summary>
+        internal const string LinuxDistribution = "linuxDistribution";
+
+        /// <summary>
+        /// The OS platform (Win32NT, Unix).
+        /// </summary>
+        internal const string OperatingSystemPlatform = "operatingSystemPlatform";
+
+        /// <summary>
+        /// Parameters supplied to the application or component.
+        /// </summary>
+        internal const string Parameters = "parameters";
+
+        /// <summary>
+        /// The OS platform and CPU architecture (e.g. linux-arm64, linux-x64, win-arm64, win-x64).
+        /// </summary>
+        internal const string PlatformArchitecture = "platformArchitecture";
+
+        /// <summary>
+        /// A timestamp
+        /// </summary>
+        internal const string Timestamp = "timestamp";
 
         /// <summary>
         /// Metadata properties available during the lifetime of a single VC execution.
@@ -45,16 +164,6 @@ namespace VirtualClient.Contracts.Metadata
         {
             category.ThrowIfNullOrWhiteSpace(nameof(category));
             return MetadataContract.GetCategoryMetadata(category, MetadataContract.persistedMetadata);
-        }
-
-        /// <summary>
-        /// Returns the set of persisted metadata for the specific category.
-        /// </summary>
-        /// <param name="category">The metadata category (e.g. metadata_host, metadata_runtime, metadata_scenario).</param>
-        public static IDictionary<string, object> GetPersisted(MetadataContractCategory category)
-        {
-            string categoryName = MetadataContract.GetCategoryName(category);
-            return MetadataContract.GetCategoryMetadata(categoryName, MetadataContract.persistedMetadata);
         }
 
         /// <summary>
@@ -86,22 +195,6 @@ namespace VirtualClient.Contracts.Metadata
             {
                 existingMetadata[name] = value;
             }
-        }
-
-        /// <summary>
-        /// Persists the property (name/value) to the global metadata contract for the specific category
-        /// (e.g. metadata_host, metadata_runtime, metadata_scenario).
-        /// </summary>
-        /// <param name="name">The name of the metadata property.</param>
-        /// <param name="value">The value for the metadata property.</param>
-        /// <param name="category">The category of metadata.</param>
-        /// <param name="replace">True to replace the property for the category of metadata. False to leave any existing value as-is.</param>
-        public static void Persist(string name, object value, MetadataContractCategory category, bool replace = true)
-        {
-            name.ThrowIfNullOrWhiteSpace(nameof(name));
-
-            string categoryName = MetadataContract.GetCategoryName(category);
-            MetadataContract.Persist(name, value, categoryName, replace);
         }
 
         /// <summary>
@@ -140,24 +233,6 @@ namespace VirtualClient.Contracts.Metadata
         }
 
         /// <summary>
-        /// Adds the properties to the "global" metadata contract for the specific category
-        /// (e.g. metadata_hw, metadata_os, metadata_host).
-        /// </summary>
-        /// <param name="metadata">A set of metadata properties.</param>
-        /// <param name="category">The category of metadata.</param>
-        /// <param name="replace">True to replace the property for the category of metadata. False to leave any existing value as-is.</param>
-        public static void Persist(IDictionary<string, object> metadata, MetadataContractCategory category, bool replace = true)
-        {
-            metadata.ThrowIfNull(nameof(metadata));
-
-            if (metadata.Any())
-            {
-                string categoryName = MetadataContract.GetCategoryName(category);
-                MetadataContract.Persist(metadata, categoryName, replace);
-            }
-        }
-
-        /// <summary>
         /// Resets the underlying metadata sets for the scope specified.
         /// </summary>
         public static void ResetPersisted()
@@ -170,11 +245,15 @@ namespace VirtualClient.Contracts.Metadata
         /// categories of metadata to the properties.
         /// </summary>
         /// <param name="telemetryContext">The telemetry event context to which the metadata contract should be applied.</param>
-        public void Apply(EventContext telemetryContext)
+        /// <param name="persisted">Apply persisted/global metadata.</param>
+        public void Apply(EventContext telemetryContext, bool persisted = true)
         {
             lock (this.lockObject)
             {
-                MetadataContract.ApplyMetadata(telemetryContext, MetadataContract.persistedMetadata);
+                if (persisted)
+                {
+                    MetadataContract.ApplyMetadata(telemetryContext, MetadataContract.persistedMetadata);
+                }
 
                 // Component-scope properties take precedence over global properties in the case that there
                 // is a conflict. Any existing global properties will be overridden in the case of a conflict.
@@ -214,22 +293,6 @@ namespace VirtualClient.Contracts.Metadata
         }
 
         /// <summary>
-        /// Adds the property (name/value) to the "global" metadata contract for the specific category
-        /// (e.g. metadata_hw, metadata_os, metadata_host).
-        /// </summary>
-        /// <param name="name">The name of the metadata property.</param>
-        /// <param name="value">The value for the metadata property.</param>
-        /// <param name="category">The category of metadata.</param>
-        /// <param name="replace">True to replace the property for the category of metadata. False to leave any existing value as-is.</param>
-        public void Add(string name, object value, MetadataContractCategory category, bool replace = true)
-        {
-            name.ThrowIfNullOrWhiteSpace(nameof(name));
-
-            string categoryName = MetadataContract.GetCategoryName(category);
-            this.Add(name, value, categoryName, replace);
-        }
-
-        /// <summary>
         /// Adds the properties to the "global" metadata contract for the specific category
         /// (e.g. metadata_hw, metadata_os, metadata_host).
         /// </summary>
@@ -265,24 +328,6 @@ namespace VirtualClient.Contracts.Metadata
         }
 
         /// <summary>
-        /// Adds the properties to the "global" metadata contract for the specific category
-        /// (e.g. metadata_hw, metadata_os, metadata_host).
-        /// </summary>
-        /// <param name="metadata">A set of metadata properties.</param>
-        /// <param name="category">The category of metadata.</param>
-        /// <param name="replace">True to replace the property for the category of metadata. False to leave any existing value as-is.</param>
-        public void Add(IDictionary<string, object> metadata, MetadataContractCategory category, bool replace = true)
-        {
-            metadata.ThrowIfNull(nameof(metadata));
-
-            if (metadata.Any())
-            {
-                string categoryName = MetadataContract.GetCategoryName(category);
-                this.Add(metadata, categoryName, replace);
-            }
-        }
-
-        /// <summary>
         /// Returns the set of metadata for the specific category and scope.
         /// </summary>
         /// <param name="category">The name of the metadata category (e.g. metadata_hw, metadata_host).</param>
@@ -293,16 +338,6 @@ namespace VirtualClient.Contracts.Metadata
         }
 
         /// <summary>
-        /// Returns the set of metadata for the specific category.
-        /// </summary>
-        /// <param name="category">The name of the metadata category (e.g. metadata_hw, metadata_host).</param>
-        public IDictionary<string, object> Get(MetadataContractCategory category)
-        {
-            string categoryName = MetadataContract.GetCategoryName(category);
-            return MetadataContract.GetCategoryMetadata(categoryName, this.instanceMetadata);
-        }
-
-        /// <summary>
         /// Resets the metadata contract instance and underlying properties.
         /// </summary>
         public void Reset()
@@ -310,10 +345,15 @@ namespace VirtualClient.Contracts.Metadata
             this.instanceMetadata.Clear();
         }
 
-        private static void ApplyMetadata(EventContext telemetryContext, IDictionary<string, IDictionary<string, object>> metadata)
+        private static void ApplyMetadata(EventContext telemetryContext, IDictionary<string, IDictionary<string, object>> metadata, string category = null)
         {
             foreach (var entry in metadata)
             {
+                if (!string.IsNullOrWhiteSpace(category) && !string.Equals(category, entry.Key, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 IDictionary<string, object> metadataSet = null;
                 if (!telemetryContext.Properties.TryGetValue(entry.Key, out object properties))
                 {
@@ -331,42 +371,6 @@ namespace VirtualClient.Contracts.Metadata
                     metadataSet.AddRange(entry.Value, withReplace: true);
                 }
             }
-        }
-
-        private static string GetCategoryName(MetadataContractCategory category)
-        {
-            string categoryName = null;
-            switch (category)
-            {
-                case MetadataContractCategory.Default:
-                    categoryName = MetadataContract.CategoryDefault;
-                    break;
-
-                case MetadataContractCategory.Dependencies:
-                    categoryName = MetadataContract.CategoryDependencies;
-                    break;
-
-                case MetadataContractCategory.Host:
-                    categoryName = MetadataContract.CategoryHost;
-                    break;
-
-                case MetadataContractCategory.Runtime:
-                    categoryName = MetadataContract.CategoryRuntime;
-                    break;
-
-                case MetadataContractCategory.Scenario:
-                    categoryName = MetadataContract.CategoryScenario;
-                    break;
-
-                case MetadataContractCategory.ScenarioExtensions:
-                    categoryName = MetadataContract.CategoryScenarioExtensions;
-                    break;
-
-                default:
-                    throw new NotSupportedException($"Metadata category '{category}' is not supported.");
-            }
-
-            return categoryName;
         }
 
         private static IDictionary<string, object> GetCategoryMetadata(string category, IDictionary<string, IDictionary<string, object>> propertySet)

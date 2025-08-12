@@ -122,7 +122,7 @@ namespace VirtualClient.Dependencies
             MetadataContract.Persist(
                 $"package_{this.PackageName}",
                 this.BlobName,
-                MetadataContractCategory.Dependencies,
+                MetadataContract.DependenciesCategory,
                 true);
 
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();

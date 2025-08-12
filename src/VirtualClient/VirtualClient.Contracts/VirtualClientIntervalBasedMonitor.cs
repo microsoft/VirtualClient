@@ -17,7 +17,7 @@ namespace VirtualClient.Contracts
         /// The default frequency that monitors run at (every five minutes)
         /// </summary>
         private static TimeSpan defaultFrequency = TimeSpan.FromMinutes(5);
-        private static TimeSpan defaultWarmupPeriod = TimeSpan.FromMinutes(5);
+        private static TimeSpan defaultWarmupPeriod = TimeSpan.Zero;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualClientIntervalBasedMonitor"/> class.
@@ -52,8 +52,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetTimeSpanValue(
-                    nameof(VirtualClientIntervalBasedMonitor.MonitorFrequency), VirtualClientIntervalBasedMonitor.defaultFrequency);
+                return this.Parameters.GetTimeSpanValue(nameof(this.MonitorFrequency), VirtualClientIntervalBasedMonitor.defaultFrequency);
             }
         }
 
@@ -64,8 +63,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetTimeSpanValue(
-                    nameof(VirtualClientIntervalBasedMonitor.MonitorWarmupPeriod), VirtualClientIntervalBasedMonitor.defaultWarmupPeriod);
+                return this.Parameters.GetTimeSpanValue(nameof(this.MonitorWarmupPeriod), VirtualClientIntervalBasedMonitor.defaultWarmupPeriod);
             }
         }
 
@@ -77,8 +75,19 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetValue<long>(
-                    nameof(VirtualClientIntervalBasedMonitor.MonitorIterations), -1);
+                return this.Parameters.GetValue<long>(nameof(this.MonitorIterations), -1);
+            }
+        }
+
+        /// <summary>
+        /// Defines a monitoring strategy for more complex monitoring cadences.
+        /// </summary>
+        public MonitorStrategy? MonitorStrategy
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.MonitorStrategy), out IConvertible strategy);
+                return strategy != null ? Enum.Parse<MonitorStrategy>(strategy.ToString()) : null;
             }
         }
 

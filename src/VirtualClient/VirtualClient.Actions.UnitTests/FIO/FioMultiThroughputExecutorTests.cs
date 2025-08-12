@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             {
                 { nameof(FioMultiThroughputExecutor.TemplateJobFile), "oltp-c.fio.jobfile" },
                 { nameof(FioMultiThroughputExecutor.GroupReporting), 1 },
-                { nameof(FioMultiThroughputExecutor.DurationSec), 1 },
+                { nameof(FioMultiThroughputExecutor.Duration), 1 },
                 { nameof(FioMultiThroughputExecutor.DirectIO), 1 },
                 { nameof(FioMultiThroughputExecutor.TargetIOPS), "5000" },
                 { nameof(FioMultiThroughputExecutor.TargetPercents), 10 },

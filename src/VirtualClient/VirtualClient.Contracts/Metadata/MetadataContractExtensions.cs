@@ -50,7 +50,7 @@ namespace VirtualClient.Contracts.Metadata
                 }
             }
 
-            metadataContract.Add(metadata, MetadataContractCategory.Scenario, true);
+            metadataContract.Add(metadata, MetadataContract.ScenarioCategory, true);
         }
     }
 }

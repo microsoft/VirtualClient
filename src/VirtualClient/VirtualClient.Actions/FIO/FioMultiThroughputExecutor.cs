@@ -177,11 +177,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Run Time for running the FIO in Seconds.
         /// </summary>
-        public int DurationSec
+        public string Duration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.DurationSec));
+                return TimeSpan.Parse(this.Parameters.GetValue<string>(nameof(this.Duration))).TotalSeconds.ToString();
             }
         }
 
@@ -595,7 +595,7 @@ namespace VirtualClient.Actions
             if (this.DiskFill)
             {
                 text = text.Replace("${ioengine}", this.Engine);
-                text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
+                text = text.Replace($"${{{nameof(this.Duration).ToLower()}}}", this.Duration.ToString());
                 text = text.Replace($"${{{nameof(this.GroupReporting).ToLower()}}}", this.GroupReporting.ToString());
                 text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", direct.ToString());
                 text = text.Replace($"${{{nameof(this.RandomIOFileSize).ToLower()}}}", this.RandomIOFileSize.ToString());
@@ -612,7 +612,7 @@ namespace VirtualClient.Actions
 
                 text = text.Replace("${ioengine}", this.Engine);
                 text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", direct.ToString());
-                text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
+                text = text.Replace($"${{{nameof(this.Duration).ToLower()}}}", this.Duration.ToString());
                 text = text.Replace($"${{{nameof(this.GroupReporting).ToLower()}}}", this.GroupReporting.ToString());
 
                 text = text.Replace($"${{{nameof(this.RandomIOFileSize).ToLower()}}}", this.RandomIOFileSize.ToString());
@@ -755,7 +755,7 @@ namespace VirtualClient.Actions
                 }
 
                 metadata[nameof(this.TargetIOPS).CamelCased()] = this.TargetIOPS;
-                metadata[nameof(this.DurationSec).CamelCased()] = this.DurationSec;
+                metadata[nameof(this.Duration).CamelCased()] = this.Duration;
                 metadata[nameof(this.DirectIO).CamelCased()] = this.DirectIO;
                 metadata[nameof(this.GroupReporting).CamelCased()] = this.GroupReporting;
                 metadata[nameof(ioType).CamelCased()] = ioType;

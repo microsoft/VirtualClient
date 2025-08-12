@@ -266,6 +266,11 @@ namespace VirtualClient
         PackageStoreNotDefined = 530,
 
         /// <summary>
+        /// The content store was not defined on the command line.
+        /// </summary>
+        ContentStoreNotDefined = 530,
+
+        /// <summary>
         /// The Virtual Client API service failed to startup.
         /// </summary>
         ApiStartupFailed = 535,
@@ -627,53 +632,6 @@ namespace VirtualClient
     }
 
     /// <summary>
-    /// Defines a category of the Virtual Client metadata data contract
-    /// (e.g. CPU, Memory, System).
-    /// </summary>
-    public enum MetadataContractCategory
-    {
-        /// <summary>
-        /// The default metadata category. In telemetry output, the metadata section 
-        /// name will be: 'metadata'.
-        /// </summary>
-        Default,
-
-        /// <summary>
-        /// Metadata related to dependencies/packages that are installed on the system.
-        /// In telemetry output, the metadata section name will be: 'metadata_dependencies'.
-        /// </summary>
-        Dependencies,
-
-        /// <summary>
-        /// Metadata related to the the host and operating system. In telemetry output, the metadata 
-        /// section name will be: 'metadata_host'.
-        /// </summary>
-        Host,
-
-        /// <summary>
-        /// Metadata related to the Virtual Client platform runtime
-        /// (e.g. profile, timeout, iterations). In telemetry output, the metadata section 
-        /// name will be: 'metadata_runtime'.
-        /// </summary>
-        Runtime,
-
-        /// <summary>
-        /// Metadata related to the Virtual Client runtime scenario 
-        /// (e.g. workload, monitor, dependency scenario). In telemetry output, 
-        /// the metadata section name will be: 'metadata_scenario'.
-        /// </summary>
-        Scenario,
-
-        /// <summary>
-        /// Metadata related to the Virtual Client runtime scenario 
-        /// (e.g. workload, monitor, dependency scenario) as "extensions" to
-        /// that scenario definition. In telemetry output, the metadata section name 
-        /// will be: 'metadata_scenario_ext'.
-        /// </summary>
-        ScenarioExtensions
-    }
-
-    /// <summary>
     /// Defines the scope of a metadata contract property (e.g. the lifetime of the property
     /// within the execution of the application).
     /// </summary>
@@ -711,6 +669,28 @@ namespace VirtualClient
         /// LowerIsBetter (i.e. lower values are considered better outcomes).
         /// </summary>
         LowerIsBetter = 2
+    }
+
+    /// <summary>
+    /// Defines a monitoring strategy to apply.
+    /// </summary>
+    public enum MonitorStrategy
+    {
+        /// <summary>
+        /// Undefined
+        /// </summary>
+        Undefined = 0,
+
+        /// <summary>
+        /// Strategy indicates the monitor should run only once.
+        /// </summary>
+        Once,
+
+        /// <summary>
+        /// Strategy indicates the monitor should run once at the
+        /// beginning of operations and once at the end before exit.
+        /// </summary>
+        OnceAtBeginAndEnd
     }
 
     /// <summary>

@@ -18,7 +18,7 @@ bs=${randomreadblocksize}
 iodepth=${randomreadiodepth}
 numjobs=${randomreadnumjobs}
 rate_iops=2708
-runtime=${durationsec}
+runtime=${duration}
 rw=randread
 size=${randomiofilesize}
 
@@ -29,7 +29,7 @@ bs=${randomwriteblocksize}
 iodepth=${randomwriteiodepth}
 numjobs=${randomwritenumjobs}
 rate_iops=2128
-runtime=${durationsec}
+runtime=${duration}
 rw=randwrite
 size=${randomiofilesize}
 
@@ -40,7 +40,7 @@ bs=${sequentialreadblocksize}
 iodepth=${sequentialreadiodepth}
 numjobs=${sequentialreadnumjobs}
 rate_iops=0
-runtime=${durationsec}
+runtime=${duration}
 rw=read
 size=${sequentialiofilesize}
 
@@ -51,6 +51,6 @@ bs=${sequentialwriteblocksize}
 iodepth=${sequentialwriteiodepth}
 numjobs=${sequentialwritenumjobs}
 rate_iops=164
-runtime=${durationsec}
+runtime=${duration}
 rw=write
 size=${sequentialiofilesize}

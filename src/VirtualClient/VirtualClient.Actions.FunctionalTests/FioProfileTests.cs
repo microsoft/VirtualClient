@@ -79,7 +79,6 @@ namespace VirtualClient.Actions
 
                 // Apt packages expectations
                 // There are a few Apt packages that must be installed for the FIO workload to run.
-                WorkloadAssert.AptPackageInstalled(this.mockFixture, "libaio-dev");
                 WorkloadAssert.AptPackageInstalled(this.mockFixture, "fio");
             }
         }

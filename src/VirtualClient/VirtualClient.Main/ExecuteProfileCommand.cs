@@ -400,7 +400,7 @@ namespace VirtualClient
 
             MetadataContract.Persist(
                 profile.Metadata.Keys.ToDictionary(key => key, entry => profile.Metadata[entry] as object).ObscureSecrets(),
-                MetadataContractCategory.Default);
+                MetadataContract.DefaultCategory);
 
             return profile;
         }
@@ -482,11 +482,6 @@ namespace VirtualClient
         {
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
-            {
-                ["experimentId"] = this.ExperimentId.ToLowerInvariant()
-            });
-
             base.SetGlobalTelemetryProperties(args);
 
             DependencyProfileReference profile = this.Profiles.First();
@@ -499,10 +494,10 @@ namespace VirtualClient
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 // Ex: PERF-CPU-OPENSSL (win-x64)
-                ["executionProfile"] = platformSpecificProfileName,
+                [MetadataContract.ExecutionProfile] = platformSpecificProfileName,
 
                 // Ex: PERF-CPU-OPENSSL.json
-                ["executionProfileName"] = profileName
+                [MetadataContract.ExecutionProfileName] = profileName
             });
         }
 
@@ -516,8 +511,7 @@ namespace VirtualClient
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["executionProfileDescription"] = profile.Description,
-                ["profileFriendlyName"] = profile.Description,
+                [MetadataContract.ExecutionProfileDescription] = profile.Description
             });
         }
 
@@ -532,21 +526,17 @@ namespace VirtualClient
             string profile = profiles.First();
             string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
 
-            AddLinuxDistributionInfo(systemManagement);
-
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["executionProfilePath"] = profileFullPath
+                [MetadataContract.ExecutionProfilePath] = profileFullPath
             });
-        }
 
-        private void AddLinuxDistributionInfo(ISystemManagement systemManagement)
-        {
             try
             {
-                EventContext.PersistentProperties.Add("linuxDistributionInfo", systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult());
+                EventContext.PersistentProperties[MetadataContract.LinuxDistribution] = systemManagement.GetLinuxDistributionAsync(CancellationToken.None)
+                    .GetAwaiter().GetResult();
             }
             catch
             {
@@ -575,7 +565,7 @@ namespace VirtualClient
 
             MetadataContract.Persist(
                 hostMetadata,
-                MetadataContractCategory.Host);
+                MetadataContract.HostCategory);
 
             MetadataContract.Persist(
                 new Dictionary<string, object>
@@ -589,39 +579,7 @@ namespace VirtualClient
                     { "timeoutScope", this.Timeout?.LevelOfDeterminism.ToString() },
                     { "scenarios", this.Scenarios != null ? string.Join(",", this.Scenarios) : null },
                 },
-                MetadataContractCategory.Runtime);
-        }
-
-        private async Task CaptureSystemInfoAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            try
-            {
-                ILogger logger = dependencies.GetService<ILogger>();
-                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-                IEnumerable<IDictionary<string, IConvertible>> systemDetails = await systemManagement.GetSystemDetailedInfoAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (systemDetails?.Any() == true)
-                {
-                    foreach (var entry in systemDetails)
-                    {
-                        if (entry.TryGetValue("toolset", out IConvertible toolset) && !string.IsNullOrWhiteSpace(toolset?.ToString()))
-                        {
-                            logger.LogSystemEvent(
-                                "SystemInfo",
-                                toolset.ToString(),
-                                $"systeminfo_{toolset}".ToLowerInvariant(),
-                                LogLevel.Information,
-                                EventContext.Persisted(),
-                                eventInfo: entry.ToDictionary(e => e.Key, e => e.Value as object));
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Best Effort only
-            }
+                MetadataContract.RuntimeCategory);
         }
 
         private async Task<PlatformExtensions> DiscoverExtensionsAsync(IPackageManager packageManager, CancellationToken cancellationToken)
@@ -662,9 +620,6 @@ namespace VirtualClient
             }));
 
             this.SetGlobalTelemetryProperties(profile);
-
-            await this.CaptureSystemInfoAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
 
             // The environment layout provides information for other Virtual Client instances
             // that may be a part of the workload execution. This enables support for client/server
@@ -755,9 +710,6 @@ namespace VirtualClient
             }
 
             this.SetGlobalTelemetryProperties(profile);
-
-            await this.CaptureSystemInfoAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
 
             // The environment layout provides information for other Virtual Client instances
             // that may be a part of the workload execution. This enables support for client/server

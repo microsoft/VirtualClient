@@ -201,7 +201,7 @@ namespace VirtualClient.Dependencies
                     { "gpuDriverVersion_nvidia", this.LinuxDriverVersion },
                     { "cudaVersion", this.LinuxCudaVersion }
                 },
-                MetadataContractCategory.Dependencies,
+                MetadataContract.DependenciesCategory,
                 true);
 
             // The .bashrc file is used to define commands that should be run whenever the system
@@ -382,7 +382,7 @@ namespace VirtualClient.Dependencies
                 {
                     { "package_nvidia_driver", this.PackageName }
                 },
-                MetadataContractCategory.Dependencies,
+                MetadataContract.DependenciesCategory,
                 true);
 
             if (this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)

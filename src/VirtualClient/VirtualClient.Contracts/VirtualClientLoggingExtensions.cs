@@ -659,6 +659,7 @@ namespace VirtualClient.Contracts
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
         /// <param name="metricMetadata">Telemetry context related to metric.</param>
+        /// <param name="metricLevel">A severity level to apply to the metric.</param>
         public static void LogMetric(
             this ILogger logger,
             string toolName,
@@ -677,7 +678,8 @@ namespace VirtualClient.Contracts
             string description = null,
             string toolResults = null,
             string toolVersion = null,
-            IEnumerable<KeyValuePair<string, IConvertible>> metricMetadata = null)
+            IEnumerable<KeyValuePair<string, IConvertible>> metricMetadata = null,
+            LogLevel metricLevel = LogLevel.Information)
         {
             logger.ThrowIfNull(nameof(logger));
             scenarioName.ThrowIfNullOrWhiteSpace(nameof(scenarioName));
@@ -687,6 +689,7 @@ namespace VirtualClient.Contracts
 
             var properties = new Dictionary<string, object>
             {
+                { "scenario", scenarioName },
                 { "scenarioName", scenarioName },
                 { "scenarioStartTime", scenarioStartTime },
                 { "scenarioEndTime", scenarioEndTime },
@@ -699,8 +702,10 @@ namespace VirtualClient.Contracts
                 { "metricRelativity", relativity.ToString() },
                 { "metricVerbosity", verbosity.ToString() },
                 { "toolName", toolName },
+                { "toolset", toolName },
                 { "toolVersion", toolVersion ?? string.Empty },
-                { "toolResults", toolResults ?? string.Empty },
+                { "toolsetVersion", toolVersion ?? string.Empty },
+                { "toolsetResults", toolResults ?? string.Empty },
                 { "tags", tags != null ? string.Join(',', tags) : string.Empty },
                 { "metadata_metrics", metricMetadata as object ?? string.Empty }
             };
@@ -708,7 +713,7 @@ namespace VirtualClient.Contracts
             EventContext metricsContext = eventContext.Clone();
             metricsContext.Properties.AddRange(properties, withReplace: true);
 
-            VirtualClientLoggingExtensions.LogMessage(logger, $"{toolName}.ScenarioResult", LogLevel.Information, LogType.Metric, metricsContext);
+            VirtualClientLoggingExtensions.LogMessage(logger, $"{toolName.RemoveWhitespace()}.ScenarioResult", metricLevel, LogType.Metric, metricsContext);
         }
 
         /// <summary>
@@ -765,6 +770,7 @@ namespace VirtualClient.Contracts
                     if (counter != Metric.None)
                     {
                         EventContext counterContext = eventContext.Clone();
+                        counterContext.Properties["scenario"] = scenarioName;
                         counterContext.Properties["scenarioName"] = scenarioName;
                         counterContext.Properties["scenarioStartTime"] = startTime;
                         counterContext.Properties["scenarioEndTime"] = endTime;
@@ -774,7 +780,9 @@ namespace VirtualClient.Contracts
                         counterContext.Properties["metricDescription"] = counter.Description ?? string.Empty;
                         counterContext.Properties["metricRelativity"] = counter.Relativity;
                         counterContext.Properties["toolName"] = toolName;
+                        counterContext.Properties["toolset"] = toolName;
                         counterContext.Properties["toolVersion"] = toolVersion;
+                        counterContext.Properties["toolsetVersion"] = toolVersion;
                         counterContext.Properties["tags"] = counter.Tags != null ? $"{string.Join(",", counter.Tags)}" : string.Empty;
                         counterContext.Properties["metadata_metrics"] = counter.Metadata as object;
 
@@ -819,6 +827,7 @@ namespace VirtualClient.Contracts
         /// <param name="eventCode">A numeric identifier/code to use for the event. This is helpful where for eventing systems that are numeric code-based.</param>
         /// <param name="eventDescription">A description of the event.</param>
         /// <param name="eventInfo">A set of key/value pairs that describe the event information/context.</param>
+        /// <param name="tags">Tags associated with the event.</param>
         public static void LogSystemEvent(
             this ILogger logger,
             string eventType,
@@ -828,7 +837,8 @@ namespace VirtualClient.Contracts
             EventContext eventContext,
             long? eventCode = null,
             string eventDescription = null,
-            IEnumerable<KeyValuePair<string, object>> eventInfo = null)
+            IEnumerable<KeyValuePair<string, object>> eventInfo = null,
+            IEnumerable<string> tags = null)
         {
             logger.ThrowIfNull(nameof(logger));
             eventType.ThrowIfNullOrWhiteSpace(nameof(eventType));
@@ -837,7 +847,7 @@ namespace VirtualClient.Contracts
             eventContext.ThrowIfNull(nameof(eventContext));
 
             // Consolidate the event information.
-            IDictionary<string, object> systemEventInfo = new Dictionary<string, object>(StringComparer.Ordinal);
+            IDictionary<string, object> systemEventInfo = new SortedDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             if (eventInfo != null)
             {
@@ -850,10 +860,15 @@ namespace VirtualClient.Contracts
             systemEventInfo["eventSource"] = eventSource;
 
             EventContext systemEventContext = eventContext.Clone();
+            systemEventContext.Properties["eventId"] = eventId;
             systemEventContext.Properties["eventType"] = eventType;
+            systemEventContext.Properties["eventDescription"] = eventDescription;
+            systemEventContext.Properties["eventSource"] = eventSource;
+            systemEventContext.Properties["eventCode"] = eventCode ?? -1;
             systemEventContext.Properties["eventInfo"] = systemEventInfo;
+            systemEventContext.Properties["tags"] = tags != null ? $"{string.Join(",", tags)}" : string.Empty;
 
-            VirtualClientLoggingExtensions.LogMessage(logger, eventType, eventLevel, LogType.SystemEvent, systemEventContext);
+            VirtualClientLoggingExtensions.LogMessage(logger, $"{eventType.RemoveWhitespace()}.EventResult", eventLevel, LogType.SystemEvent, systemEventContext);
         }
 
         /// <summary>

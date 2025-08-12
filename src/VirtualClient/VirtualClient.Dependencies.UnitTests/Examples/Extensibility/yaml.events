@@ -1,0 +1,74 @@
+# Part A Fields
+appHost: linux-demo01
+appName: PerfCheck
+appVersion: 1.5.0
+operationId: 98733b6a-9a19-4c50-85ce-9ef95f74b79c
+operationParentId: 8c3956be-54cd-456c-b784-06f41730f8fc
+severityLevel: 5
+timestamp: 2025-07-23T20:34:48.6439102Z   
+
+# Part B/C Fields (Custom Dimensions)
+clientId: linux-demo01-client-01
+executionProfile: METIS-CPU-CRYPTOGRAPHIC
+executionSystem: Metis
+experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
+eventCode: 500
+eventDescription: Critical system event
+eventId: eventlog.journalctl
+eventSource: journalctl
+eventType: EventLog
+eventInfo:
+  lastCheckPoint: 2025-07-23T20:30:48.6439102Z
+  message: "CRITICAL: Unexpected termination due to segmentation fault"
+  priority: 2
+  bootId: a1b2c3d4e5f6g7h8i9j0
+  exe: /usr/bin/myapp1
+  unit: myapp1.service
+metadata:
+  groupId: Group A
+  intent: System Pre-Check
+  owner: metis-support@company.com
+  revision: 2.6
+metadata_host:
+  osDescription: Unix 6.11.0.1013
+  osFamily: Unix
+  osName: Ubuntu 24.04.2 LTS
+operatingSystemPlatform: Unix
+platformArchitecture: linux-x64
+tags: CPU;OpenSSL;Cryptography
+-----
+appHost: linux-demo01
+appName: PerfCheck
+appVersion: 1.5.0
+operationId: 98733b6a-9a19-4c50-85ce-9ef95f74b79c
+operationParentId: 8c3956be-54cd-456c-b784-06f41730f8fc
+severityLevel: 5
+timestamp: 2025-07-23T20:34:48.6439102Z
+clientId: linux-demo01-client-01
+executionProfile: METIS-CPU-CRYPTOGRAPHIC
+executionSystem: Metis
+experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
+eventCode: 500
+eventDescription: Critical system event
+eventId: eventlog.journalctl
+eventSource: journalctl
+eventType: EventLog
+eventInfo:
+  lastCheckPoint: 2025-07-23T20:30:48.6439102Z
+  message: "CRITICAL: Power supply unit failure detected on PSU1"
+  priority: 2
+  bootId: a1b2c3d4e5f6g7h8i9j0
+  exe: /usr/lib/systemd/systemd
+  unit: power-monitor.service
+metadata:
+  groupId: Group A
+  intent: System Pre-Check
+  owner: metis-support@company.com
+  revision: 2.6
+metadata_host:
+  osDescription: Unix 6.11.0.1013
+  osFamily: Unix
+  osName: Ubuntu 24.04.2 LTS
+operatingSystemPlatform: Unix
+platformArchitecture: linux-x64
+tags: CPU;OpenSSL;Cryptography

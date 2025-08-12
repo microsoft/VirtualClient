@@ -89,9 +89,29 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. for more details.     | BiggestSize |
-  | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the DiskSpd profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). Note that this parameter is application ONLY on the Stress profile. | 500G |
-  | FileSize                  | Optional. Allows the user to override the default file size used in the DiskSpd profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). Note that this parameter is application ONLY on the Stress profile. | 496G |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. | BiggestSize |
+  | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
+  | Duration                  | Optional. Defines the amount of time to run each FIO scenario/action within the profile. | 5 minutes |
+  | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
+  | ProcessModel              | Optional. Defines how the FIO processes will be executed. The following are valid process models:<br/><br/><b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). | SingleProcess |
+  | QueueDepth                | Optional. Defines the I/O queue depth to use for the operations | 512/the thread count |
+  | ThreadCount               | Optional. Specifies the number of distinct parallel operations/threads to run per job. | # logical processors / 2 |
+
+  * **Profile Component Parameters**  
+  The following section describes the parameters used by the individual components in the profile.
+
+  | Parameter                 | Purpose                                                                         | Accepted Values |
+  |---------------------------|-------------------------------------------------------------------------------|-----------------|
+  | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
+  | MetricsScenario           | The name to use as the "scenario" for all metrics output for the particular profile action. | |
+  | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
+  | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Specific Disks' at the top for more details. |
+  | Duration                  | Defines the amount of time to run each FIO scenario/action within the profile. | integer or time span |
+  | PackageName               | The logical name for FIO package downloaded and that contains the toolset. | |
+  | ProcessModel              | Defines how the FIO processes will be executed. | <b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). |
+  | QueueDepth                | Defines the I/O queue depth to use for the operations | integer |
+  | Tags                      | Tags useful for telemetry data | Any comma-separated string |
+  | ThreadCount               | Specifies the number of distinct parallel operations/threads to run per job. | |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

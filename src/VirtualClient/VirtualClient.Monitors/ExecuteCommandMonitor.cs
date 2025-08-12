@@ -65,6 +65,18 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Parameter defines the event ID (e.g. eventlog.journalctl)
+        /// </summary>
+        public string MonitorEventId
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.MonitorEventId), out IConvertible eventId);
+                return eventId?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Parameter defines the event source (e.g. ipconfig). 
         /// </summary>
         public string MonitorEventSource
@@ -128,13 +140,26 @@ namespace VirtualClient.Dependencies
                     {
                         try
                         {
-                            iterations++;
-                            if (this.IsIterationComplete(iterations))
+                            if (this.MonitorStrategy != null)
                             {
-                                break;
+                                switch (this.MonitorStrategy)
+                                {
+                                    case VirtualClient.MonitorStrategy.Once:
+                                    case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                                        await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                                        break;
+                                }
                             }
+                            else
+                            {
+                                iterations++;
+                                if (this.IsIterationComplete(iterations))
+                                {
+                                    break;
+                                }
 
-                            await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                                await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                            }
                         }
                         catch (Exception exc)
                         {
@@ -145,6 +170,11 @@ namespace VirtualClient.Dependencies
                         {
                             await this.WaitAsync(this.MonitorFrequency, cancellationToken);
                         }
+                    }
+
+                    if (this.MonitorStrategy == VirtualClient.MonitorStrategy.OnceAtBeginAndEnd)
+                    {
+                        await this.ExecuteCommandAsync(telemetryContext, CancellationToken.None);
                     }
                 }
                 catch (OperationCanceledException)
@@ -238,6 +268,26 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Validates the parameters supplied to the monitor.
+        /// </summary>
+        protected override void Validate()
+        {
+            base.Validate();
+            if (this.MonitorStrategy != null)
+            {
+                switch (this.MonitorStrategy)
+                {
+                    case VirtualClient.MonitorStrategy.Once:
+                    case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"The monitoring strategy '{this.MonitorStrategy}' is not supported.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns true/false whether the component is supported on the system.
         /// </summary>
         protected override bool IsSupported()
@@ -270,10 +320,25 @@ namespace VirtualClient.Dependencies
                 standardError = $"{standardError.Substring(0, MaxOutputLength)}...";
             }
 
+            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType) 
+                ? this.MonitorEventType
+                : "system.monitor";
+
+            string eventSource = !string.IsNullOrWhiteSpace(this.MonitorEventSource)
+                ? this.MonitorEventSource
+                : "system";
+
+            string eventId = !string.IsNullOrWhiteSpace(this.MonitorEventId)
+                ? this.MonitorEventId
+
+                // Give the same command, the hashcode will be the same every time and is sufficient
+                // to use for an identifier (e.g. system.monitor.173564897).
+                : $"{eventType}.{this.Command.ToLowerInvariant().Replace("-", string.Empty).RemoveWhitespace().GetHashCode()}";
+
             this.Logger.LogSystemEvent(
-                this.MonitorEventType,
-                this.MonitorEventSource,
-                $"{this.MonitorEventType}_{this.MonitorEventSource}".ToLowerInvariant(),
+                eventType,
+                eventSource,
+                eventId,
                 LogLevel.Information,
                 telemetryContext,
                 eventCode: process.ExitCode,
