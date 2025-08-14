@@ -427,8 +427,11 @@ namespace VirtualClient
                             $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.");
                     }
 
-                    string layoutContent = await systemManagement.FileSystem.File.ReadAllTextAsync(layoutFullPath)
-                        .ConfigureAwait(false);
+                    string layoutContent = await RetryPolicies.FileOperations
+                        .ExecuteAsync(() =>
+                        {
+                             return systemManagement.FileSystem.File.ReadAllTextAsync(layoutFullPath);
+                        });
 
                     layout = layoutContent.FromJson<EnvironmentLayout>();
                 }

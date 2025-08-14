@@ -188,7 +188,7 @@ namespace VirtualClient.Dependencies
             List<string> commandsToExecute = new List<string>();
             bool sudo = this.Command.StartsWith("sudo", StringComparison.OrdinalIgnoreCase);
 
-            IEnumerable<string> commands = this.Command.Split("&&", StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
+            IEnumerable<string> commands = this.Command.Split("&&", StringSplitOptions.RemoveEmptyEntries)?.Select(cmd => cmd.Trim());
 
             foreach (string fullCommand in commands)
             {
