@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
@@ -58,18 +59,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Optional Parameter to make Mount Location at the Root
-        /// </summary>
-        public string? MountLocation
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(MountDisks.MountLocation), out IConvertible mountLocation);
-                return mountLocation?.ToString();
-            }
-        }
-
-        /// <summary>
         /// Provides components and services for managing the system.
         /// </summary>
         protected ISystemManagement SystemManagement { get; private set; }
@@ -99,13 +88,7 @@ namespace VirtualClient.Dependencies
                     ErrorReason.DependencyNotFound);
             }
 
-            string mountLocation = null;
-            if (string.Equals(this.MountLocation, "Root") && this.Platform == PlatformID.Unix)
-            {
-                mountLocation = $"/";
-            }
-
-            if (await this.CreateMountPointsAsync(disks, this.MountPointPrefix, mountLocation, cancellationToken))
+            if (await this.CreateMountPointsAsync(disks, this.MountPointPrefix, cancellationToken))
             {
                 // Refresh the disks to pickup the mount point changes.
                 await Task.Delay(1000);
@@ -131,9 +114,8 @@ namespace VirtualClient.Dependencies
         /// <param name="disks">This disks for which mount points need to be created.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="mountPrefix">The prefix to use for the mount points (e.g. mnt_vc).</param>
-        /// <param name="mountDirectory">The parent directory in which the mount points will be created. Default is the user home/profile directory.</param>
         /// <returns>True if any 1 or more mount points are created, false if none.</returns>
-        private async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, string mountPrefix = null, string mountDirectory = null, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, string mountPrefix = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             bool mountPointsCreated = false;
 
@@ -155,24 +137,42 @@ namespace VirtualClient.Dependencies
                     // mount every volume that doesn't have an accessPath.
                     foreach (DiskVolume diskVolume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
                     {
-                        string newMountPoint = null;
                         string mountPointName = diskVolume.GetDefaultMountPointName(prefix: mountPrefix);
-                        string mountPointPath = mountDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                        string mountPointPath = null;
 
-                        // e.g.
-                        // C:\Users\User\mnt_c
-                        // C:\Users\User\mnt_d
-                        // /home/user/mnt_dev_sdc1
-                        // /home/user/mnt_dev_sdd1
-                        // /home/user/mnt_dev_sdd2
-                        newMountPoint = this.Combine(mountPointPath, mountPointName);
-
-                        if (!this.systemManager.FileSystem.Directory.Exists(newMountPoint))
+                        switch (this.Platform)
                         {
-                            this.systemManager.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                            case PlatformID.Unix:
+                                // e.g.
+                                // /mnt_dev_sdc1
+                                // /mnt_dev_sdd1
+                                // /mnt_dev_sdd2
+                                mountPointPath = $"/{mountPointName}";
+                                break;
+
+                            case PlatformID.Win32NT:
+                                // e.g.
+                                // C:\mnt_c
+                                // D:\mnt_d
+                                mountPointPath = this.Combine(diskVolume.DevicePath, mountPointName);
+                                break;
                         }
 
-                        await this.systemManager.DiskManager.CreateMountPointAsync(diskVolume, newMountPoint, cancellationToken);
+                        if (!this.systemManager.FileSystem.Directory.Exists(mountPointPath))
+                        {
+                            this.systemManager.FileSystem.Directory.CreateDirectory(mountPointPath);
+                        }
+
+                        await this.systemManager.MakeFilesExecutableAsync(
+                            mountPointPath, 
+                            this.Platform, 
+                            cancellationToken);
+
+                        await this.systemManager.DiskManager.CreateMountPointAsync(
+                            diskVolume, 
+                            mountPointPath, 
+                            cancellationToken);
+
                         mountPointsCreated = true;
                     }
                 }
