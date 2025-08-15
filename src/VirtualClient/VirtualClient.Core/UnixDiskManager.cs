@@ -9,7 +9,6 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Org.BouncyCastle.Pqc.Crypto.Lms;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -21,33 +20,6 @@ namespace VirtualClient
     /// </summary>
     public class UnixDiskManager : DiskManager
     {
-        private const string BusInfo = "businfo";
-        private const string Capacity = "capacity";
-        private const string Capabilities = "capabilities";
-        private const string Claimed = "claimed";
-        private const string Class = "class";
-        private const string Device = "dev";
-        private const string Description = "description";
-        private const string FileSystem = "filesystem";
-        private const string Handle = "handle";
-        private const string Id = "id";
-        private const string LogicalName = "logicalname";
-        private const string PhysicalId = "physid";
-        private const string Product = "product";
-        private const string Serial = "serial";
-        private const string Size = "size";
-        private const string Vendor = "vendor";
-        private const string Version = "version";
-
-        // Key   = The mount point/path
-        // Value = The relative priority in relation to other paths or mount points when accessing the disk. < 0 = not typically accessible.
-        private static readonly Dictionary<string, int> SystemDefinedMountPoints = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "/", 100 },
-            { "/mnt", 100 },
-            { "/boot/efi", -1 } // Not typically accessible
-        };
-
         /// <summary>
         /// Initializes a new instance of the <see cref="UnixDiskManager"/> class.
         /// </summary>

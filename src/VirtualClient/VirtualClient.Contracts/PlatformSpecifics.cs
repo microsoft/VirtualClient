@@ -453,18 +453,19 @@ namespace VirtualClient.Contracts
         public string GetLoggedInUser()
         {
             string loggedInUserName = Environment.UserName;
-            if (string.Equals(loggedInUserName, "root"))
+            if (this.Platform == PlatformID.Unix)
             {
-                loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
-                if (string.IsNullOrWhiteSpace(loggedInUserName))
+                // Note that when the user is "root" and running a command with "sudo", there will be
+                // no "SUDO_USER" environment variable.
+                string sudoUser = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+                if (string.IsNullOrWhiteSpace(sudoUser))
                 {
-                    loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
-                    if (string.IsNullOrEmpty(loggedInUserName))
-                    {
-                        // When the user is "root" and running a command with "sudo", there will be
-                        // no "SUDO_USER" environment variable.
-                        return "root";
-                    }
+                    sudoUser = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
+                }
+
+                if (!string.IsNullOrEmpty(sudoUser))
+                {
+                    return sudoUser;
                 }
             }
 

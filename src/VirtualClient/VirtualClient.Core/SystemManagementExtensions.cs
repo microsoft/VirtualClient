@@ -10,13 +10,17 @@ namespace VirtualClient
     using System.Net.NetworkInformation;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// Extension methods for <see cref="ISystemManagement"/> instances.
@@ -177,6 +181,71 @@ namespace VirtualClient
 
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sets the directory (and any subdirectories or files) to allow full permissions on the system to any
+        /// user or group (e.g. chmod -R 777 on Linux).
+        /// <list type="bullet">
+        /// <item>https://linuxhandbook.com/linux-file-permissions/</item>
+        /// <item>https://chmodcommand.com/chmod-777/</item>
+        /// </list>
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="directoryPath">The path to the directory.</param>
+        /// <param name="platform">The OS platform on which the binary should be executable.</param>
+        /// <param name="telemetryContext">Provides context information for telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="owner">Defines a user to apply to the directory structure as owner.</param>
+        /// <param name="logger">A logger to use for capturing telemetry.</param>
+        public static async Task SetFullPermissionsAsync(
+            this ISystemManagement systemManagement, string directoryPath, PlatformID platform, EventContext telemetryContext, CancellationToken cancellationToken, string owner = null, ILogger logger = null)
+        {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+            directoryPath.ThrowIfNullOrWhiteSpace(nameof(directoryPath));
+            PlatformSpecifics.ThrowIfNotSupported(platform);
+
+            if (!systemManagement.FileSystem.Directory.Exists(directoryPath))
+            {
+                throw new DependencyException($"The directory '{directoryPath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
+            }
+
+            switch (platform)
+            {
+                case PlatformID.Unix:
+                    // https://chmodcommand.com/chmod-777/
+                    // https://linuxhandbook.com/linux-file-permissions/
+
+                    EventContext relatedContext = telemetryContext.Clone();
+                    relatedContext.AddContext("directory", directoryPath);
+                    relatedContext.AddContext("owner", owner);
+                    relatedContext.AddContext("permissions", "777");
+
+                    logger?.LogMessage($"SetFullPermissions (directory = '{directoryPath}', owner = '{owner}')", relatedContext);
+                    
+                    using (IProcessProxy chmod = systemManagement.ProcessManager.CreateProcess("sudo", $"chmod -R 777 \"{directoryPath}\""))
+                    {
+                        await chmod.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(30));
+
+                        chmod.ThrowIfErrored<WorkloadException>(
+                            ProcessProxy.DefaultSuccessCodes,
+                            $"Failed to attribute the directory '{directoryPath}' with full permissions.");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(owner))
+                    {
+                        using (IProcessProxy chown = systemManagement.ProcessManager.CreateProcess("sudo", $"chown {owner}:{owner} \"{directoryPath}\""))
+                        {
+                            await chown.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(30));
+
+                            chown.ThrowIfErrored<WorkloadException>(
+                                ProcessProxy.DefaultSuccessCodes,
+                                $"Failed to set owner for the directory '{directoryPath}' to '{owner}'.");
+                        }
+                    }
+
+                    break;
             }
         }
     }

@@ -267,7 +267,7 @@ namespace VirtualClient.Dependencies
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)};";
+                    diskPaths += $"{this.Combine(disk.GetPreferredAccessPath(this.Platform), "postgresql")};";
                 }
             }
 
