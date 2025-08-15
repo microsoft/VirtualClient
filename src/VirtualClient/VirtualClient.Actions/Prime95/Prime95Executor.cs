@@ -8,10 +8,8 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -27,6 +25,7 @@ namespace VirtualClient.Actions
     {
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
+        private ProcessManager processManager;
         private ISystemManagement systemManagement;
         private List<int> successExitCodes;
 
@@ -41,6 +40,7 @@ namespace VirtualClient.Actions
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
+            this.processManager = this.systemManagement.ProcessManager;
 
             // The exit code on SafeKill is -1 which is not a part of the default success codes.
             this.successExitCodes = new List<int>(ProcessProxy.DefaultSuccessCodes) { -1 };
@@ -279,7 +279,7 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.Prime95Package.Path))
+                    using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, commandArguments, this.Prime95Package.Path))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -290,7 +290,7 @@ namespace VirtualClient.Actions
                         if (process.Start())
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
-                            process.Kill(entireProcessTree: true);
+                            this.processManager.Kill(new List<string> { process.Name });
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
