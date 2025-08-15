@@ -41,7 +41,7 @@ namespace VirtualClient.Logging
         /// <summary>
         /// The default console logger.
         /// </summary>
-        public static ConsoleLogger Default { get; set; } = new ConsoleLogger("VirtualClient", LogLevel.Debug);
+        public static ConsoleLogger Default { get; set; } = new ConsoleLogger("VirtualClient", LogLevel.Trace);
 
         /// <summary>
         /// True to include log severity levels in output.

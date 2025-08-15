@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Http.HttpResults;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -182,6 +183,11 @@ namespace VirtualClient.Actions
                     processProxy.SafeKill();
                 }
             }
+
+            if (this.fileSystem.File.Exists(this.ResultsFilePath))
+            {
+                await this.fileSystem.File.DeleteAsync(this.ResultsFilePath, RetryPolicies.FileDelete);
+            }
         }
 
         /// <summary>
@@ -221,8 +227,8 @@ namespace VirtualClient.Actions
                     ErrorReason.DependencyNotFound);
             }
 
-            this.SettingsFilePath = this.Combine(this.Prime95Package.Path, "prime.txt");
-            this.ResultsFilePath = this.Combine(this.Prime95Package.Path, "results.txt");
+            this.SettingsFilePath = this.Combine(this.GetTempPath(), "prime.txt");
+            this.ResultsFilePath = this.Combine(this.GetTempPath(), FileContext.GetFileName("results.txt", DateTime.UtcNow));
         }
 
         /// <summary>
@@ -298,10 +304,13 @@ namespace VirtualClient.Actions
 
                                 try
                                 {
-                                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                                    await RetryPolicies.FileOperations.ExecuteAsync(async () =>
                                     {
-                                        results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
-                                    }
+                                        if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                                        {
+                                            results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
+                                        }
+                                    });
                                     
                                     if (string.IsNullOrWhiteSpace(results))
                                     {

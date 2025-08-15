@@ -2,7 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the Flexible I/O Tester (FIO) workload.  
 
 * [Workload Details](./fio.md)  
-* [Testing Specific Disks](../../guides/0220-usage-testing-disks.md)
+* [Testing Disks](../../guides/0220-usage-testing-disks.md)
 
 ## PERF-IO-FIO.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset to test performance of disks on the system. Although this profile
@@ -53,7 +53,8 @@ aspects of the workload execution.
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -100,7 +101,7 @@ aspects of the workload execution.
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | DataIntegrityFileSize     | Optional. Defines the size of the file/disk space that will be used for profile disk integrity scenarios/actions. | 4GB |
-  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. | BiggestSize |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Disks' at the top for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
   | Duration                  | Optional. Defines the amount of time to run each FIO scenario/action within the profile. | 5 minutes |
   | Engine                    | Optional. Defines the I/O engine to use for the FIO operations (e.g. posixaio, libaio, windowsaio). | Linux = libaio, Windows = windowsaio |
@@ -117,7 +118,7 @@ aspects of the workload execution.
   | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
   | MetricsScenario           | The name to use as the "scenario" for all metrics output for the particular profile action. | |
   | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
-  | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Specific Disks' at the top for more details. |
+  | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Disks' at the top for more details. |
   | Duration                  | Defines the amount of time to run each FIO scenario/action within the profile. | integer or time span |
   | Engine                    | Optional. Defines the I/O engine to use for the FIO operations (e.g. posixaio, libaio, windowsaio). | Linux = libaio, Windows = windowsaio |
   | PackageName               | The logical name for FIO package downloaded and that contains the toolset. | |
@@ -132,7 +133,7 @@ aspects of the workload execution.
   number of system cores. 
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Specific Disks'
+  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Disks'
   for information on how to target select disks on the system.
 
   ``` bash
@@ -202,7 +203,8 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -376,7 +378,8 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -507,7 +510,8 @@ Therefore, they are performed on different disks
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)

@@ -2,7 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the DiskSpd workload.  
 
 * [Workload Details](./diskspd.md)  
-* [Testing Specific Disks](../../guides/0220-usage-testing-disks.md)
+* [Testing Disks](../../guides/0220-usage-testing-disks.md)
 
 ## PERF-IO-DISKSPD.json
 Runs an high stress IO-intensive workload using the DiskSpd toolset to test performance of disks on the system. This profile is a Windows-only profile. 
@@ -51,7 +51,7 @@ aspects of the workload execution.
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -89,7 +89,7 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. | BiggestSize |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Disks' at the top for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
   | Duration                  | Optional. Defines the amount of time to run each FIO scenario/action within the profile. | 5 minutes |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
@@ -105,7 +105,7 @@ aspects of the workload execution.
   | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
   | MetricsScenario           | The name to use as the "scenario" for all metrics output for the particular profile action. | |
   | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
-  | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Specific Disks' at the top for more details. |
+  | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Disks' at the top for more details. |
   | Duration                  | Defines the amount of time to run each FIO scenario/action within the profile. | integer or time span |
   | PackageName               | The logical name for FIO package downloaded and that contains the toolset. | |
   | ProcessModel              | Defines how the FIO processes will be executed. | <b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). |
@@ -119,7 +119,7 @@ aspects of the workload execution.
   number of system cores. 
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Specific Disks'
+  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Disks'
   for information on how to target select disks on the system.
 
   ``` bash

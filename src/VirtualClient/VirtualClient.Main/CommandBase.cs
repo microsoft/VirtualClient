@@ -503,7 +503,7 @@ namespace VirtualClient
 
             if (this.Verbose)
             {
-                this.LoggingLevel = LogLevel.Debug;
+                this.LoggingLevel = LogLevel.Trace;
             }
             else if (this.LoggingLevel == null)
             {

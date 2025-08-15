@@ -62,7 +62,7 @@ namespace VirtualClient.Contracts
 
             if (timestamped)
             {
-                blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
+                blobName = FileContext.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
             // The caller of this factory method makes the determination on the runtime parameters that are 

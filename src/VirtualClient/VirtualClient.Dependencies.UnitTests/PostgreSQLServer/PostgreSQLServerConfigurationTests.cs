@@ -185,12 +185,16 @@ namespace VirtualClient.Dependencies
 
             if (platform == PlatformID.Unix)
             {
-                expectedCommand = $"python3 {this.packagePath}/distribute-database.py --dbName hammerdbtest --directories \"/home/user/mnt_dev_sdc1;/home/user/mnt_dev_sdd1;/home/user/mnt_dev_sde1;\" --password [A-Za-z0-9+/=]+";
+                expectedCommand = 
+                    $"python3 {this.packagePath}/distribute-database.py " +
+                    $"--dbName hammerdbtest " +
+                    $"--directories \"/home/user/mnt_dev_sdc1/postgresql;/home/user/mnt_dev_sdd1/postgresql;/home/user/mnt_dev_sde1/postgresql;\" " +
+                    $"--password [A-Za-z0-9+/=]+";
             }
             else
             {
                 string tempPackagePath = this.packagePath.Replace(@"\", @"\\");
-                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"D:\\\\;E:\\\\;F:\\\\;\" --password [A-Za-z0-9+/=]+";
+                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"D:\\\\postgresql;E:\\\\postgresql;F:\\\\postgresql;\" --password [A-Za-z0-9+/=]+";
             }
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
