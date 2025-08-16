@@ -726,13 +726,13 @@ namespace VirtualClient
 
                         // First, we need to pre-evaluate any nested calculate expressions inside the condition,
                         // true branch, or false branch
-                        EvaluationResult conditionEvaluation = await EvaluateExpressionAsync(dependencies, parameters, function, CancellationToken.None);
+                        EvaluationResult conditionEvaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(ProfileExpressionEvaluator.Evaluators, dependencies, parameters, function, CancellationToken.None);
                         function = conditionEvaluation.Outcome;
 
-                        EvaluationResult trueEvaluation = await EvaluateExpressionAsync(dependencies, parameters, trueExpression, CancellationToken.None);
+                        EvaluationResult trueEvaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(ProfileExpressionEvaluator.Evaluators, dependencies, parameters, trueExpression, CancellationToken.None);
                         trueExpression = trueEvaluation.Outcome;
 
-                        EvaluationResult falseEvaluation = await EvaluateExpressionAsync(dependencies, parameters, falseExpression, CancellationToken.None);
+                        EvaluationResult falseEvaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(ProfileExpressionEvaluator.Evaluators, dependencies, parameters, falseExpression, CancellationToken.None);
                         falseExpression = falseEvaluation.Outcome;
 
                         // Now construct the full ternary expression with evaluated parts
