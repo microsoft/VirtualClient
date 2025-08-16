@@ -39,14 +39,14 @@ namespace VirtualClient
         ProcessManager ProcessManager { get; }
 
         /// <summary>
+        /// Provides features for creating and managing processes on the system.
+        /// </summary>
+        ISshClientFactory SshClientFactory { get; }
+
+        /// <summary>
         /// Provides features for managing/preserving state on the system.
         /// </summary>
         IStateManager StateManager { get; }
-
-        /// <summary>
-        /// Provides features for creating and managing processes on the system.
-        /// </summary>
-        ISshClientManager SshClientManager { get; }
 
         /// <summary>
         /// Overwrite the default of 260 char in windows file path length to 32,767.

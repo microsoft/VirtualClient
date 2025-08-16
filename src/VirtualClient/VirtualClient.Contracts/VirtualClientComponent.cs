@@ -57,7 +57,7 @@ namespace VirtualClient.Contracts
             : this(component?.Dependencies, component?.Parameters)
         {
             this.ClientRequestId = component.ClientRequestId;
-            this.ExecutionSeed = component.ExecutionSeed;
+            this.Seed = component.Seed;
             this.FailFast = component.FailFast;
             this.LogToFile = component.LogToFile;
             this.MetadataContract = component.MetadataContract;
@@ -135,12 +135,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Parameter defines the content path template to use when uploading content
-        /// to target storage resources. When not defined the default template will be used.
-        /// </summary>
-        public static string ContentPathTemplate { get; set; }
-
-        /// <summary>
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
         /// </summary>
         public string AgentId { get; }
@@ -182,6 +176,12 @@ namespace VirtualClient.Contracts
         public ComponentType ComponentType { get; set; }
 
         /// <summary>
+        /// The content path template to use when uploading content
+        /// to target storage resources. When not defined the default template will be used.
+        /// </summary>
+        public string ContentPathTemplate { get; set; }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -195,11 +195,6 @@ namespace VirtualClient.Contracts
         /// Component end time
         /// </summary>
         public DateTime EndTime { get; private set; }
-
-        /// <summary>
-        /// Random execution seed
-        /// </summary>
-        public int? ExecutionSeed { get; set; }
 
         /// <summary>
         /// The ID of the larger experiment in which the Virtual Client instance
@@ -223,7 +218,7 @@ namespace VirtualClient.Contracts
                 return this.Parameters.GetValue<bool>(nameof(this.FailFast), false);
             }
 
-            set
+            protected set
             {
                 this.Parameters[nameof(this.FailFast)] = value;
             }
@@ -268,7 +263,18 @@ namespace VirtualClient.Contracts
         /// True/false whether the output of processes should be logged to files 
         /// in the logs directory.
         /// </summary>
-        public bool LogToFile { get; set; }
+        public bool LogToFile
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.LogToFile), false);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogToFile)] = value;
+            }
+        }
 
         /// <summary>
         /// Metadata provided to the application on the command line.
@@ -303,7 +309,7 @@ namespace VirtualClient.Contracts
                     : Array.Empty<string>();
             }
 
-            set
+            protected set
             {
                 this.Parameters[nameof(this.MetricFilters)] = string.Join(VirtualClientComponent.CommonDelimiters.First(), value);
             }
@@ -526,6 +532,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// A seed to apply to scenarios where a common base is required
+        /// for randomization operations.
+        /// </summary>
+        public int Seed
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(VirtualClientComponent.Seed), 777);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.Seed)] = value;
+            }
+        }
+
+        /// <summary>
         /// Action start time
         /// </summary>
         public DateTime StartTime { get; private set; }
@@ -648,7 +671,7 @@ namespace VirtualClient.Contracts
                     {
                         this.MetadataContract.Add(
                             this.Metadata.Keys.ToDictionary(key => key, entry => this.Metadata[entry] as object).ObscureSecrets(),
-                            MetadataContractCategory.Default,
+                            MetadataContract.DefaultCategory,
                             replace: true);
                     }
 
@@ -656,7 +679,7 @@ namespace VirtualClient.Contracts
                     {
                         this.MetadataContract.Add(
                             this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
-                            MetadataContractCategory.Scenario,
+                            MetadataContract.ScenarioCategory,
                             replace: true);
                     }
 
@@ -669,7 +692,7 @@ namespace VirtualClient.Contracts
                         {
                             this.MetadataContract.Add(
                                 this.Extensions.Keys.ToDictionary(key => key, entry => this.Extensions[entry] as object),
-                                MetadataContractCategory.ScenarioExtensions,
+                                MetadataContract.ScenarioExtensionsCategory,
                                 replace: true);
                         }
                     }
@@ -704,7 +727,6 @@ namespace VirtualClient.Contracts
                         finally
                         {
                             this.EndTime = DateTime.UtcNow;
-
                             this.LogSuccessOrFailedMetric(succeeded, scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
                         }
 

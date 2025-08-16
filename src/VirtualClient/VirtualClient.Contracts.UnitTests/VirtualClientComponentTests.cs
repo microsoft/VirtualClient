@@ -16,6 +16,7 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
 
     [TestFixture]
     [Category("Unit")]
@@ -77,9 +78,9 @@ namespace VirtualClient.Contracts
             // The following information should be copied from the original component to the new component:
             //
             // Properties
-            originalComponent.ExecutionSeed = 7777;
-            originalComponent.FailFast = true;
-            originalComponent.LogToFile = true;
+            originalComponent.Parameters[nameof(VirtualClientComponent.Seed)] = 7777;
+            originalComponent.Parameters[nameof(VirtualClientComponent.FailFast)] = true;
+            originalComponent.Parameters[nameof(VirtualClientComponent.LogToFile)] = true;
             originalComponent.SupportedRoles = new List<string> { "Client", "Server" };
 
             // Parameters
@@ -89,7 +90,7 @@ namespace VirtualClient.Contracts
             originalComponent.Metadata.Add("Metadata", 1234);
 
             // Metadata Contract
-            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContractCategory.Scenario);
+            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContract.ScenarioCategory);
 
             // Extensions
             originalComponent.Extensions.Add("Contacts", JToken.Parse("[ 'virtualclient@microsoft.com' ]"));
@@ -99,7 +100,7 @@ namespace VirtualClient.Contracts
 
             Assert.IsTrue(object.ReferenceEquals(originalComponent.Dependencies, component.Dependencies));
             Assert.AreEqual(originalComponent.ClientRequestId, component.ClientRequestId);
-            Assert.AreEqual(originalComponent.ExecutionSeed, component.ExecutionSeed);
+            Assert.AreEqual(originalComponent.Seed, component.Seed);
             Assert.AreEqual(originalComponent.FailFast, component.FailFast);
             Assert.AreEqual(originalComponent.LogToFile, component.LogToFile);
             CollectionAssert.AreEquivalent(originalComponent.SupportedPlatforms, component.SupportedPlatforms);
@@ -114,8 +115,8 @@ namespace VirtualClient.Contracts
                 component.Metadata.Select(p => $"{p.Key}={p.Value}"));
 
             CollectionAssert.AreEquivalent(
-                originalComponent.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"),
-                component.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"));
+                originalComponent.MetadataContract.Get(MetadataContract.ScenarioCategory).Select(p => $"{p.Key}={p.Value}"),
+                component.MetadataContract.Get(MetadataContract.ScenarioCategory).Select(p => $"{p.Key}={p.Value}"));
 
             Assert.AreEqual(originalComponent.Extensions["Contacts"], component.Extensions["Contacts"]);
         }

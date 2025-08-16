@@ -1,0 +1,13 @@
+Collecting connection statistics for 5 seconds
+*****************
+
+17 connections in 1.54s; 11.04 connections/user sec, bytes read 9126806252
+17 connections in 6 real seconds, 536870956 bytes read per connection
+
+
+Now timing with session id reuse.
+starting
+rrrrrrrrrrrrrrrrr
+
+17 connections in 1.54s; 11.04 connections/user sec, bytes read 9126806252
+17 connections in 6 real seconds, 536870956 bytes read per connection

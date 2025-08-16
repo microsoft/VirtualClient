@@ -108,7 +108,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
                 return Convert.ToBase64String(hashBytes);
             }
         }
@@ -267,7 +267,7 @@ namespace VirtualClient.Dependencies
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)};";
+                    diskPaths += $"{this.Combine(disk.GetPreferredAccessPath(this.Platform), "postgresql")};";
                 }
             }
 

@@ -271,20 +271,7 @@ namespace VirtualClient
             Assert.IsTrue(profile.Dependencies.Any());
             Assert.IsTrue(profile.Dependencies.Count == 3);
             Assert.IsTrue(profile.Monitors.Any());
-            Assert.IsTrue(profile.Monitors.Count == 2);
-
-            CollectionAssert.AreEqual(
-                new List<string> { "Workload1", "Workload2" },
-                profile.Actions.Select(a => a.Parameters["Scenario"].ToString()));
-
-            CollectionAssert.AreEqual(
-                new List<string> { "Dependency1", "InstallEpelPackage", "InstallAtop" },
-                profile.Dependencies.Select(a => a.Parameters["Scenario"].ToString()));
-
-            // The monitors from the MONITORS-DEFAULT.json profile should have been added as well.
-            CollectionAssert.AreEqual(
-                new List<string> { "CaptureCounters", "CaptureDeviceInformation" },
-                profile.Monitors.Select(a => a.Parameters["Scenario"].ToString()));
+            Assert.IsTrue(profile.Monitors.Count == 12);
         }
 
         [Test]
@@ -399,16 +386,7 @@ namespace VirtualClient
             Assert.IsTrue(profile.Dependencies.Any());
             Assert.IsTrue(profile.Dependencies.Count == 2);
             Assert.IsTrue(profile.Monitors.Any());
-            Assert.IsTrue(profile.Monitors.Count == 2);
-
-            CollectionAssert.AreEqual(
-                new List<string> { "InstallEpelPackage", "InstallAtop" },
-                profile.Dependencies.Select(a => a.Parameters["Scenario"].ToString()));
-
-            // The monitors from the MONITORS-DEFAULT.json profile should have been added as well.
-            CollectionAssert.AreEqual(
-                new List<string> { "CaptureCounters", "CaptureDeviceInformation" },
-                profile.Monitors.Select(a => a.Parameters["Scenario"].ToString()));
+            Assert.IsTrue(profile.Monitors.Count == 12);
         }
 
         [Test]

@@ -30,6 +30,11 @@ namespace VirtualClient.Contracts
         public const string Terabytes = "terabytes";
 
         /// <summary>
+        /// Gibibytes per second
+        /// </summary>
+        public const string GibibytesPerSecond = "gibibytes/sec";
+
+        /// <summary>
         /// Gigabytes
         /// </summary>
         public const string Gigabytes = "gigabytes";
@@ -73,6 +78,11 @@ namespace VirtualClient.Contracts
         /// Count
         /// </summary>
         public const string Count = "count";
+
+        /// <summary>
+        /// Kibibytes per second
+        /// </summary>
+        public const string KibibytesPerSecond = "kibibytes/sec";
 
         /// <summary>
         /// Kilobytes per second
@@ -138,5 +148,10 @@ namespace VirtualClient.Contracts
         /// Watts
         /// </summary>
         public const string Watts = "watts";
+
+        /// <summary>
+        /// Bytes per connection
+        /// </summary>
+        public const string BytesPerConnection = "bytes/connection";
     }
 }

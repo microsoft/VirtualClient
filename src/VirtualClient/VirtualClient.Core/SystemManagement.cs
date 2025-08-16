@@ -5,13 +5,11 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Security.Principal;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -101,7 +99,7 @@ namespace VirtualClient
         public bool RunningInContainer { get; internal set; } = PlatformSpecifics.RunningInContainer;
 
         /// <inheritdoc />
-        public ISshClientManager SshClientManager { get; internal set; }
+        public ISshClientFactory SshClientFactory { get; internal set; }
 
         /// <summary>
         /// Provides features for managing/preserving state on the system.
@@ -279,9 +277,16 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
         public async Task WaitAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(100, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // expected if the CancellationToken receives a cancellation request.
             }
         }
 
@@ -293,20 +298,27 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
         public async Task WaitAsync(DateTime timeout, CancellationToken cancellationToken)
         {
-            DateTime effectiveTimeout = timeout;
-            if (timeout.Kind != DateTimeKind.Utc)
+            try
             {
-                effectiveTimeout = timeout.ToUniversalTime();
-            }
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (DateTime.UtcNow >= effectiveTimeout)
+                DateTime effectiveTimeout = timeout;
+                if (timeout.Kind != DateTimeKind.Utc)
                 {
-                    break;
+                    effectiveTimeout = timeout.ToUniversalTime();
                 }
 
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    if (DateTime.UtcNow >= effectiveTimeout)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(100, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // expected if the CancellationToken receives a cancellation request.
             }
         }
 
@@ -316,9 +328,16 @@ namespace VirtualClient
         /// </summary>
         /// <param name="timeout">The maximum time to wait before continuing.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
-        public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            return Task.Delay(timeout, cancellationToken);
+            try
+            {
+                await Task.Delay(timeout, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // expected if the CancellationToken receives a cancellation request.
+            }
         }
 
         private async Task<CpuInfo> GetCpuInfoOnUnixAsync()

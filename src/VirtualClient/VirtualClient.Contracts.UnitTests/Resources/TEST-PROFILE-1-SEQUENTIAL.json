@@ -1,0 +1,53 @@
+{
+    "Description": "Test Sequential Execution Profile",
+    "MinimumExecutionInterval": "00:01:00",
+    "Parameters": {
+        "Parameter1": "AnyValue",
+        "Parameter2": 12345
+    },
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Scenario1",
+                "PackageName": "anypackage",
+                "Parameter1": "$.Parameters.Parameter1",
+                "Parameter2": "$.Parameters.Parameter2"
+            }
+        },
+        {
+            "Type": "SequentialExecution",
+            "Parameters": {
+                "LoopCount": 2
+            },
+            "Components": [
+                {
+                    "Type": "TestExecutor",
+                    "Parameters": {
+                        "Scenario": "ScenarioA",
+                        "Parameter1": "$.Parameters.Parameter1"
+                    }
+                },
+                {
+                    "Type": "TestExecutor",
+                    "Parameters": {
+                        "Scenario": "ScenarioB",
+                        "Parameter1": "$.Parameters.Parameter1"
+                    }
+                }
+            ]
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "TestDependency",
+            "Parameters": {}
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "TestMonitor",
+            "Parameters": {}
+        }
+    ]
+}

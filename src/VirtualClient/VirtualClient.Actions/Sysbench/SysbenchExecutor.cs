@@ -42,11 +42,6 @@ namespace VirtualClient.Actions
         protected const string PythonCommand = "python3";
 
         private readonly IStateManager stateManager;
-        private static readonly string[] SelectWorkloads =
-        {
-            "select_random_points",
-            "select_random_ranges"
-        };
 
         /// <summary>
         /// Constructor for <see cref="SysbenchExecutor"/>
@@ -65,7 +60,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The database name option passed to Sysbench.
+        /// The benchmark (e.g. OLTP, TPCC).
         /// </summary>
         public string Benchmark
         {
@@ -111,7 +106,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The workload option passed to Sysbench.
+        /// The number of tables to create in the database.
         /// </summary>
         public int? TableCount
         {
@@ -135,7 +130,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of records per table.
+        /// The database system (e.g. MySQL, PostgreSQL).
         /// </summary>
         public string DatabaseSystem
         {
@@ -152,13 +147,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
                 return Convert.ToBase64String(hashBytes);
             }
         }
 
         /// <summary>
-        /// Number of records per table.
+        /// Number of warehouses.
         /// </summary>
         public int? WarehouseCount
         {
@@ -170,7 +165,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The workload option passed to Sysbench.
+        /// The workload option passed to Sysbench (e.g. oltp_update_index, oltp_update_non_index).
         /// </summary>
         public string Workload
         {
@@ -252,7 +247,6 @@ namespace VirtualClient.Actions
             recordCountExponent = Math.Max(3, recordCountExponent);
 
             int recordEstimate = (int)Math.Pow(10, recordCountExponent);
-
             int recordCount = records.GetValueOrDefault(recordEstimate);
 
             // record count specified in profile if it is the configurable scenario

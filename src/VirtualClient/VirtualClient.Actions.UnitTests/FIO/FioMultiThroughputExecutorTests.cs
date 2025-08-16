@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             {
                 { nameof(FioMultiThroughputExecutor.TemplateJobFile), "oltp-c.fio.jobfile" },
                 { nameof(FioMultiThroughputExecutor.GroupReporting), 1 },
-                { nameof(FioMultiThroughputExecutor.DurationSec), 1 },
+                { nameof(FioMultiThroughputExecutor.Duration), 1 },
                 { nameof(FioMultiThroughputExecutor.DirectIO), 1 },
                 { nameof(FioMultiThroughputExecutor.TargetIOPS), "5000" },
                 { nameof(FioMultiThroughputExecutor.TargetPercents), 10 },
@@ -207,13 +207,13 @@ namespace VirtualClient.Actions
 
             this.disks = new List<Disk>
             {
-                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
-                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(2, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(3, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(4, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(5, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
+                this.mockFixture.CreateDisk(0, PlatformID.Unix, os: true, "/dev/sda", "/dev/sda1"),
+                this.mockFixture.CreateDisk(1, PlatformID.Unix, os: false, "/dev/sdc", "/dev/sdc1"),
+                this.mockFixture.CreateDisk(2, PlatformID.Unix, os: false, "/dev/sdd", "/dev/sdd1"),
+                this.mockFixture.CreateDisk(3, PlatformID.Unix, os: false, "/dev/sde", "/dev/sde1"),
+                this.mockFixture.CreateDisk(4, PlatformID.Unix, os: false, "/dev/sdf", "/dev/sdf1"),
+                this.mockFixture.CreateDisk(5, PlatformID.Unix, os: false, "/dev/sdg", "/dev/sdg1"),
+                this.mockFixture.CreateDisk(6, PlatformID.Unix, os: false, "/dev/sdh", "/dev/sdh1")
             };
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
@@ -242,13 +242,13 @@ namespace VirtualClient.Actions
 
             this.disks = new List<Disk>
             {
-                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
-                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(2, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(3, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(4, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(5, PlatformID.Unix, true, os: false),
-                FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
+                this.mockFixture.CreateDisk(0, PlatformID.Unix, os: true, "/dev/sda", "/dev/sda1"),
+                this.mockFixture.CreateDisk(1, PlatformID.Unix, os: false, "/dev/sdc", "/dev/sdc1"),
+                this.mockFixture.CreateDisk(2, PlatformID.Unix, os: false, "/dev/sdd", "/dev/sdd1"),
+                this.mockFixture.CreateDisk(3, PlatformID.Unix, os: false, "/dev/sde", "/dev/sde1"),
+                this.mockFixture.CreateDisk(4, PlatformID.Unix, os: false, "/dev/sdf", "/dev/sdf1"),
+                this.mockFixture.CreateDisk(5, PlatformID.Unix, os: false, "/dev/sdg", "/dev/sdg1"),
+                this.mockFixture.CreateDisk(6, PlatformID.Unix, os: false, "/dev/sdh", "/dev/sdh1")
             };
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
@@ -278,8 +278,8 @@ namespace VirtualClient.Actions
 
             this.disks = new List<Disk>
             {
-                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
-                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
+                this.mockFixture.CreateDisk(0, PlatformID.Unix, os: true, "/dev/sda", "/dev/sda1"),
+                this.mockFixture.CreateDisk(1, PlatformID.Unix, os: false, "/dev/sdc", "/dev/sdc1")
             };
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
@@ -315,8 +315,8 @@ namespace VirtualClient.Actions
 
             this.disks = new List<Disk>
             {
-                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
-                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
+                this.mockFixture.CreateDisk(0, PlatformID.Unix, os: true, "/dev/sda", "/dev/sda1"),
+                this.mockFixture.CreateDisk(1, PlatformID.Unix, os: false, "/dev/sdc", "/dev/sdc1")
             };
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))

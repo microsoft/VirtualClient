@@ -177,11 +177,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Run Time for running the FIO in Seconds.
         /// </summary>
-        public int DurationSec
+        public string Duration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.DurationSec));
+                return TimeSpan.Parse(this.Parameters.GetValue<string>(nameof(this.Duration))).TotalSeconds.ToString();
             }
         }
 
@@ -340,6 +340,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Template for Job file.
+        /// </summary>
+        public string TemplateJobFile
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.TemplateJobFile));
+            }
+        }
+
+        /// <summary>
         /// Retry Wait Time for FIO executors.
         /// </summary>
         protected static TimeSpan RetryWaitTime { get; } = TimeSpan.FromSeconds(10);
@@ -351,8 +362,6 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
-
             IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
                         .ConfigureAwait(false);
 
@@ -388,7 +397,6 @@ namespace VirtualClient.Actions
             this.UpdateTestFilePaths(disksToTest);
 
             telemetryContext.AddContext("executable", this.ExecutablePath);
-            telemetryContext.AddContext(nameof(ioEngine), ioEngine);
             telemetryContext.AddContext(nameof(disks), disks);
             telemetryContext.AddContext(nameof(disksToTest), disksToTest);
             telemetryContext.AddContext(nameof(this.sequentialIOFilePath), this.sequentialIOFilePath);
@@ -538,10 +546,7 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
-
                 telemetryContext.AddContext("executable", this.ExecutablePath);
-                telemetryContext.AddContext(nameof(ioEngine), ioEngine);
                 telemetryContext.AddContext(nameof(this.TemplateJobFile), this.TemplateJobFile);
 
                 string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
@@ -589,8 +594,8 @@ namespace VirtualClient.Actions
 
             if (this.DiskFill)
             {
-                text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
-                text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
+                text = text.Replace("${ioengine}", this.Engine);
+                text = text.Replace($"${{{nameof(this.Duration).ToLower()}}}", this.Duration.ToString());
                 text = text.Replace($"${{{nameof(this.GroupReporting).ToLower()}}}", this.GroupReporting.ToString());
                 text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", direct.ToString());
                 text = text.Replace($"${{{nameof(this.RandomIOFileSize).ToLower()}}}", this.RandomIOFileSize.ToString());
@@ -605,9 +610,9 @@ namespace VirtualClient.Actions
                 int sequentialReadIOdepth = this.SequentialReadQueueDepth / this.SequentialReadNumJobs;
                 int sequentialWriteIOdepth = this.SequentialWriteQueueDepth / this.SequentialWriteNumJobs;
 
-                text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
+                text = text.Replace("${ioengine}", this.Engine);
                 text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", direct.ToString());
-                text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
+                text = text.Replace($"${{{nameof(this.Duration).ToLower()}}}", this.Duration.ToString());
                 text = text.Replace($"${{{nameof(this.GroupReporting).ToLower()}}}", this.GroupReporting.ToString());
 
                 text = text.Replace($"${{{nameof(this.RandomIOFileSize).ToLower()}}}", this.RandomIOFileSize.ToString());
@@ -750,7 +755,7 @@ namespace VirtualClient.Actions
                 }
 
                 metadata[nameof(this.TargetIOPS).CamelCased()] = this.TargetIOPS;
-                metadata[nameof(this.DurationSec).CamelCased()] = this.DurationSec;
+                metadata[nameof(this.Duration).CamelCased()] = this.Duration;
                 metadata[nameof(this.DirectIO).CamelCased()] = this.DirectIO;
                 metadata[nameof(this.GroupReporting).CamelCased()] = this.GroupReporting;
                 metadata[nameof(ioType).CamelCased()] = ioType;

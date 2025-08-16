@@ -65,6 +65,13 @@
             }
         },
         {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
             "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneMLCommonsRepo",

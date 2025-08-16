@@ -157,7 +157,7 @@ namespace VirtualClient.Monitors
                 DateTime lastCheckpoint = DateTime.Now.AddSeconds(-30);
                 await monitor.ProcessEventsAsync(lastCheckpoint, EventContext.None, CancellationToken.None);
 
-                var messagesLogged = this.Logger.MessagesLogged("EventLog");
+                var messagesLogged = this.Logger.MessagesLogged("EventLog.EventResult");
                 Assert.IsNotNull(messagesLogged);
                 Assert.IsTrue(messagesLogged.Count() == 1);
 

@@ -382,7 +382,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     this.MetadataContract.Add(
                         parser.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                        MetadataContractCategory.Scenario,
+                        MetadataContract.ScenarioCategory,
                         true);
 
                     foreach (var entry in parser.Metadata)

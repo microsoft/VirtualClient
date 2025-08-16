@@ -2,7 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the Flexible I/O Tester (FIO) workload.  
 
 * [Workload Details](./fio.md)  
-* [Testing Specific Disks](../../guides/0220-usage-testing-disks.md)
+* [Testing Disks](../../guides/0220-usage-testing-disks.md)
 
 ## PERF-IO-FIO.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset to test performance of disks on the system. Although this profile
@@ -53,7 +53,8 @@ aspects of the workload execution.
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -99,10 +100,32 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. | BiggestSize |
+  | DataIntegrityFileSize     | Optional. Defines the size of the file/disk space that will be used for profile disk integrity scenarios/actions. | 4GB |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Disks' at the top for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
+  | Duration                  | Optional. Defines the amount of time to run each FIO scenario/action within the profile. | 5 minutes |
+  | Engine                    | Optional. Defines the I/O engine to use for the FIO operations (e.g. posixaio, libaio, windowsaio). | Linux = libaio, Windows = windowsaio |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
-  | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | false (initialized sequentially) |
+  | ProcessModel              | Optional. Defines how the FIO processes will be executed. The following are valid process models:<br/><br/><b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). | SingleProcess |
+  | QueueDepth                | Optional. Defines the I/O queue depth to use for the operations | 512/the thread count |
+  | ThreadCount               | Optional. Specifies the number of distinct parallel operations/threads to run per job. | # logical processors / 2 |
+
+  * **Profile Component Parameters**  
+  The following section describes the parameters used by the individual components in the profile.
+
+  | Parameter                 | Purpose                                                                         | Accepted Values |
+  |---------------------------|-------------------------------------------------------------------------------|-----------------|
+  | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
+  | MetricsScenario           | The name to use as the "scenario" for all metrics output for the particular profile action. | |
+  | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
+  | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Disks' at the top for more details. |
+  | Duration                  | Defines the amount of time to run each FIO scenario/action within the profile. | integer or time span |
+  | Engine                    | Optional. Defines the I/O engine to use for the FIO operations (e.g. posixaio, libaio, windowsaio). | Linux = libaio, Windows = windowsaio |
+  | PackageName               | The logical name for FIO package downloaded and that contains the toolset. | |
+  | ProcessModel              | Defines how the FIO processes will be executed. | <b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). |
+  | QueueDepth                | Defines the I/O queue depth to use for the operations | integer |
+  | Tags                      | Tags useful for telemetry data | Any comma-separated string |
+  | ThreadCount               | Specifies the number of distinct parallel operations/threads to run per job. | |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -110,7 +133,7 @@ aspects of the workload execution.
   number of system cores. 
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Specific Disks'
+  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Disks'
   for information on how to target select disks on the system.
 
   ``` bash
@@ -180,7 +203,8 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -225,11 +249,13 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See '[disk testing scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)' for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 134GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 134GB |
+  | Engine                    | Optional. Defines the I/O engine to use for the FIO operations (e.g. posixaio, libaio, windowsaio). | Linux = libaio, Windows = windowsaio |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 134GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 134GB |
   | ProcessModel              | Optional. Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). | SingleProcess |
-  | MaxThreads                | Optional. Allows the user to override the maximum number of threads used by FIO.By default if 'null' is given as value. It will use the number cores of the machine | Number of CPU cores |
+  | MaxThreads                | Optional. Allows the user to override the maximum number of threads used by FIO. | # of logical processors |
+  | ProcessModel              | Optional. Defines how the FIO processes will be executed. The following are valid process models:<br/><br/><b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). | SingleProcess |
   | QueueDepths               | Optional. Allows the user to override the a comma seperated list of queuedepths to iterate. A single queueDepth can be named as ScenarioQueueDepth | "1,4,16,64,256,1024" |
-  | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | DirectIO                  | Optional. Set to true to use hardware I/O buffering and false to operate directly against the disk without any hardware buffering/caching (i.e. pure disk). | true |
   | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
   
 * **Profile Component Parameters**  
@@ -238,14 +264,17 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   | Parameter                 | Purpose                                                                         | Accepted Values |
   |---------------------------|-------------------------------------------------------------------------------|-----------------|
   | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
-  | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
+  | CommandLine               | The command line parameters for FIO tool set. | valid FIO arguments  |
   | BlockSize                 | The block size for FIO tool set. | 4k;8k;16k |
-  | DurationSecs              | The number of seconds to run the FIO scenario/action |  |
-  | IOType                    | Type of Input Output operation | RandRead;RandWrite;Read;Write |
+  | DirectIO                  | Set to true to use hardware I/O buffering and false to operate directly against the disk without any hardware buffering/caching (i.e. pure disk). | true |
+  | Duration                  | Defines the amount of time to run each FIO scenario/action within the profile. | integer or time span |
+  | Engine                    | Defines the I/O engine to use for the FIO operations (e.g. posixaio, libaio, windowsaio). | Linux = libaio, Windows = windowsaio |
+  | IOType                    | Type of Input Output operation | randread, randwrite, read, write |
+  | MaxThreads                | Allows the user to override the maximum number of threads used by FIO per job. | integer |
   | PackageName               | The logical name for FIO package downloaded and that contains the toolset. | fio |
-  | Tags                      | Tags usefull for telemetry data | Any comma seperated string |
-  | DeleteTestFilesOnFinish   | Not used. |  |
-  | Tests                     | Not used. |  |
+  | ProcessModel              | Defines how the FIO processes will be executed. | <b>SingleProcess</b><br/>Executes a single FIO process running 1 job targeting I/O operations against each disk. Results are separated per-disk.<br/><br/><b>SingleProcessPerDisk</b><br/>Executes a single FIO process for each disk with each process running 1 job targeting I/O operations against that disk (higher stress profile). Results are separated per-disk.<br/><br/><b>SingleProcessAggregated</b><br/>Executes a single FIO process running 1 job per disk targeting I/O operations against that disk. Results are provided as an aggregation across all disks (i.e. a rollup). |
+  | QueueDepths               | Allows the user to override the a comma seperated list of queuedepths to iterate. A single queueDepth can be named as ScenarioQueueDepth | "1,4,16,64,256,1024" |
+  | Tags                      | Tags useful for telemetry data | Any comma-separated string |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -349,7 +378,8 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -480,7 +510,8 @@ Therefore, they are performed on different disks
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+  * Disk mount points exist for the disks to be targeted. Virtual Client will generally ensure that mount points exist by default. Details for mount point creation procedures can be found in the 'Testing Disks' documentation above.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)

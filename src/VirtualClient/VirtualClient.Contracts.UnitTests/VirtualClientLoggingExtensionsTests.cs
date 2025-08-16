@@ -17,7 +17,6 @@ namespace VirtualClient.Contracts
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -52,7 +51,7 @@ namespace VirtualClient.Contracts
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
         [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public void AddProcessContextExtensionAddsTheExpectedProcessInformationToTheEventContext(
+        public void AddProcessDetailsExtensionAddsTheExpectedProcessInformationToTheEventContext(
            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
         {
             InMemoryProcess process = new InMemoryProcess
@@ -68,8 +67,7 @@ namespace VirtualClient.Contracts
                 StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process);
-
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"));
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             string expectedProcessInfo = new
@@ -87,41 +85,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 1")]
-        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 2")]
-        public void AddProcessContextExtensionAddsTheExpectedProcessInformationToTheEventContextWhenResultsAreProvided(
-           int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedResults)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                ExitCode = expectedExitCode,
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = expectedCommand,
-                    Arguments = expectedArguments,
-                    WorkingDirectory = expectedWorkingDir
-                }
-            };
-
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, results: expectedResults);
-
-            Assert.IsTrue(telemetryContext.Properties.TryGetValue("processResults", out object processContext));
-
-            string expectedProcessInfo = new
-            {
-                id = process.Id,
-                command = $"{expectedCommand} {expectedArguments}".Trim(),
-                workingDir = expectedWorkingDir ?? string.Empty,
-                exitCode = expectedExitCode,
-                results = expectedResults,
-            }.ToJson();
-            
-            string actualProcessInfo = processContext.ToJson();
-            SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
-        }
-
-        [Test]
-        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputOnlyScenario()
+        public void AddProcessDetailsExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputOnlyScenario()
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -135,7 +99,7 @@ namespace VirtualClient.Contracts
                 StandardOutput = new Common.ConcurrentBuffer(new StringBuilder("Standard output from the process."))
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars:15);
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"), maxChars:15);
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             JObject processDetails = JObject.FromObject(processContext);
@@ -148,7 +112,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardErrorOnlyScenario()
+        public void AddProcessDetailsExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardErrorOnlyScenario()
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -162,7 +126,7 @@ namespace VirtualClient.Contracts
                 StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 14);
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"), maxChars: 14);
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             JObject processDetails = JObject.FromObject(processContext);
@@ -175,7 +139,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputPlusErrorScenario()
+        public void AddProcessDetailsExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputPlusErrorScenario()
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -192,7 +156,7 @@ namespace VirtualClient.Contracts
                 StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 47);
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"), maxChars: 47);
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             JObject processDetails = JObject.FromObject(processContext);
@@ -208,7 +172,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThresholdWhichIsLargerThanTheEntiretyOfStandardOutput()
+        public void AddProcessDetailsExtensionHandlesOutputThatExceedsTheMaximumCharacterThresholdWhichIsLargerThanTheEntiretyOfStandardOutput()
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -225,7 +189,7 @@ namespace VirtualClient.Contracts
                 StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 14);
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"), maxChars: 14);
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             JObject processDetails = JObject.FromObject(processContext);
@@ -240,7 +204,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_WorseCaseScenario()
+        public void AddProcessDetailsExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_WorseCaseScenario()
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -257,7 +221,7 @@ namespace VirtualClient.Contracts
                 StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 0);
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"), maxChars: 0);
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             JObject processDetails = JObject.FromObject(processContext);
@@ -271,7 +235,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void AddProcessContextExtensionValidatesTheMaxCharacterCount()
+        public void AddProcessDetailsExtensionValidatesTheMaxCharacterCount()
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -284,9 +248,41 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            Assert.Throws<ArgumentException>(() => new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: -1));
+            Assert.Throws<ArgumentException>(() => new EventContext(Guid.NewGuid()).AddProcessDetails(process.ToProcessDetails("anytoolset"), maxChars: -1));
         }
 
+        [Test]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 1")]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 2")]
+        public void AddProcessResultsExtensionAddsTheExpectedProcessInformationToTheEventContextWhenResultsAreProvided(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedResults)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                }
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(process.ToProcessDetails("anytoolset", expectedResults.AsArray()));
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            string expectedProcessInfo = new
+            {
+                id = process.Id,
+                command = $"{expectedCommand} {expectedArguments}".Trim(),
+                workingDir = expectedWorkingDir ?? string.Empty,
+                exitCode = expectedExitCode,
+                results = expectedResults
+            }.ToJson();
+
+            string actualProcessInfo = processContext.ToJson();
+            SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+        }
 
         [Test]
         [TestCase("PropertyName", "propertyName")]
@@ -607,9 +603,10 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 16
+                It.Is<EventContext>(context => context.Properties.Count == 19
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenario")
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -621,9 +618,12 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("toolset")
+                    && context.Properties.ContainsKey("toolsetVersion")
+                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
+                    && context.Properties["scenario"].ToString() == expectedScenarioName
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -636,7 +636,9 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
-                    && context.Properties["toolResults"].ToString() == string.Empty
+                    && context.Properties["toolset"].ToString() == expectedToolName
+                    && context.Properties["toolsetVersion"].ToString() == string.Empty
+                    && context.Properties["toolsetResults"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
@@ -688,9 +690,10 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 16
+                It.Is<EventContext>(context => context.Properties.Count == 19
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenario")
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
@@ -702,7 +705,9 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("toolset")
+                    && context.Properties.ContainsKey("toolsetResults")
+                    && context.Properties.ContainsKey("toolsetVersion")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
@@ -716,10 +721,12 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
                     && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"] == expectedMetadata as Object
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
-                    && context.Properties["toolResults"].ToString() == expectedToolResults
+                    && context.Properties["toolsetResults"].ToString() == expectedToolResults
+                    && context.Properties["toolsetVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)),
                 null,
                 null));
@@ -753,6 +760,7 @@ namespace VirtualClient.Contracts
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenario")
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioArguments")
                     && context.Properties.ContainsKey("scenarioStartTime")
@@ -763,7 +771,9 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("toolset")
+                    && context.Properties.ContainsKey("toolsetVersion")
+                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")),
                 null,
                 null));
@@ -797,6 +807,7 @@ namespace VirtualClient.Contracts
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
                 It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenario")
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioArguments")
                     && context.Properties.ContainsKey("scenarioStartTime")
@@ -807,7 +818,9 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("toolset")
+                    && context.Properties.ContainsKey("toolsetVersion")
+                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")),
                 null,
                 null));
@@ -882,22 +895,27 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 12
+                It.Is<EventContext>(context => context.Properties.Count == 15
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("toolset")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolsetVersion")
                     && context.Properties.ContainsKey("metricName")
                     && context.Properties.ContainsKey("metricValue")
                     && context.Properties.ContainsKey("metricUnit")
                     && context.Properties.ContainsKey("metricDescription")
                     && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("scenario")
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
+                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["scenario"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -907,7 +925,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricDescription"].ToString() == "Metric 1 description"
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                   && context.Properties["metadata_metrics"] == expectedCounters[0].Metadata as object),
+                    && context.Properties["metadata_metrics"] == expectedCounters[0].Metadata as object),
                 null,
                 null));
         }
@@ -941,21 +959,26 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 12
+                It.Is<EventContext>(context => context.Properties.Count == 15
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("toolset")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("metricName")
                     && context.Properties.ContainsKey("metricValue")
                     && context.Properties.ContainsKey("metricUnit")
+                    && context.Properties.ContainsKey("scenario")
                     && context.Properties.ContainsKey("scenarioName")
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
+                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["toolsetVersion"].ToString() == expectedToolVersion
+                    && context.Properties["scenario"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -1023,7 +1046,7 @@ namespace VirtualClient.Contracts
                 }
                 else if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessResults")
                 {
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("processResults", out object processResultsContext));
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processResultsContext));
                     string expectedProcessInfo = new
                     {
                         id = process.Id,
@@ -1170,7 +1193,7 @@ namespace VirtualClient.Contracts
                 }
                 else if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessResults")
                 {
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("processResults", out object processResultsContext));
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processResultsContext));
                     string expectedProcessInfo = new
                     {
                         id = process.Id,
@@ -1265,7 +1288,7 @@ namespace VirtualClient.Contracts
                 else if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessResults")
                 {
                     Assert.IsInstanceOf<EventContext>(state);
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("processResults", out object processContext));
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
 
                     string actualProcessInfo = processContext.ToJson();
                     Assert.IsFalse(actualProcessInfo.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
@@ -1285,8 +1308,6 @@ namespace VirtualClient.Contracts
             // The default scenario is where the component has no 'Scenario' defined and the tool name
             // is not provided either.
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
-
             InMemoryProcess process = new InMemoryProcess();
 
             bool expectedLogFileWritten = false;
@@ -1296,7 +1317,7 @@ namespace VirtualClient.Contracts
                     string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()), "Log file name not matched");
 
                     expectedLogFileWritten = true;
                 });
@@ -1313,8 +1334,6 @@ namespace VirtualClient.Contracts
             // The default scenario is where the component has no 'Scenario' defined and the tool name
             // is not provided either.
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
-
             InMemoryProcess process = new InMemoryProcess();
 
             bool expectedLogFileWritten = false;
@@ -1324,7 +1343,7 @@ namespace VirtualClient.Contracts
                     string expectedLogDirectory = this.mockFixture.GetLogsPath("AnyTool".ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith("AnyTool.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()), "Log file name not matched");
 
                     expectedLogFileWritten = true;
                 });
@@ -1403,7 +1422,6 @@ namespace VirtualClient.Contracts
             int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
         {
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
 
             InMemoryProcess process = new InMemoryProcess
             {
@@ -1425,10 +1443,7 @@ namespace VirtualClient.Contracts
                     string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
-                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
-                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
-                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()), "Log file name not matched");
                     Assert.IsFalse(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter unexpected");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
@@ -1475,6 +1490,8 @@ namespace VirtualClient.Contracts
                 StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
             };
 
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
             string expectedToolset = "AnyWorkloadToolset";
             bool expectedLogFileWritten = false;
 
@@ -1484,10 +1501,7 @@ namespace VirtualClient.Contracts
                     string expectedLogDirectory = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith($"{expectedToolset}.log".ToLowerInvariant()), "Log file name not matched");
-                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
-                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
-                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()), "Log file name not matched");
                     Assert.IsFalse(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter unexpected");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
@@ -1504,8 +1518,7 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
+            
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
@@ -1536,6 +1549,8 @@ namespace VirtualClient.Contracts
                 StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
             };
 
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
             bool expectedLogFileWritten = false;
             string expectedResults = "Any results from the execution of the process.";
 
@@ -1545,10 +1560,7 @@ namespace VirtualClient.Contracts
                     string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
                     Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
-                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
-                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
-                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()), "Log file name not matched");
                     Assert.IsTrue(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter missing");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
@@ -1566,9 +1578,7 @@ namespace VirtualClient.Contracts
 
                     expectedLogFileWritten = true;
                 });
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
+            
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
@@ -1641,7 +1651,6 @@ namespace VirtualClient.Contracts
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -1650,11 +1659,11 @@ namespace VirtualClient.Contracts
                     string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
 
                     Assert.IsTrue(path.StartsWith(expectedLogPath));
-                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()));
                     confirmed = true;
                 });
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), "AnyToolset", logToTelemetry: false, logToFile: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), "Any Toolset", logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
             Assert.IsTrue(confirmed);
@@ -1674,7 +1683,6 @@ namespace VirtualClient.Contracts
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -1683,7 +1691,7 @@ namespace VirtualClient.Contracts
                     string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
 
                     Assert.IsTrue(path.StartsWith(expectedLogPath));
-                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
+                    Assert.IsTrue(path.EndsWith($"{component.Scenario}.log".ToLowerInvariant()));
                     confirmed = true;
                 });
 
@@ -1708,7 +1716,6 @@ namespace VirtualClient.Contracts
 
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -1741,7 +1748,6 @@ namespace VirtualClient.Contracts
 
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -1779,7 +1785,6 @@ namespace VirtualClient.Contracts
 
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -2082,10 +2087,12 @@ namespace VirtualClient.Contracts
         [TestCase(LogLevel.Warning)]
         public void LogSystemEventExtensionLogsTheExpectedEvents(LogLevel expectedEventLevel)
         {
-            string expectedEventType = "EventResult";
+            string expectedEventId = "eventlog.journalctl";
+            string expectedEventType = "EventLog";
             string expectedEventSource = "AnySource";
             string expectedEventDescription = "Test of the system event telemetry system.";
-            long expectedEventId = 100;
+            long expectedEventCode = 100;
+            string[] expectedTags = new string[] { "Tag1", "Tag2" };
 
             IDictionary<string, object> expectedEventInfo = new Dictionary<string, object>
             {
@@ -2096,20 +2103,26 @@ namespace VirtualClient.Contracts
             this.mockLogger.Object.LogSystemEvent(
                 expectedEventType, 
                 expectedEventSource,
-                expectedEventId.ToString(),
+                expectedEventId,
                 expectedEventLevel,
                 this.mockEventContext,
-                null,
+                expectedEventCode,
                 expectedEventDescription,
-                expectedEventInfo);
+                expectedEventInfo,
+                expectedTags);
 
             this.mockLogger.Verify(logger => logger.Log(
                 expectedEventLevel,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedEventType),
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == $"{expectedEventType}.EventResult"),
                 It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("eventId")
                     && context.Properties.ContainsKey("eventType")
-                    && context.Properties.ContainsKey("eventInfo")),
+                    && context.Properties.ContainsKey("eventSource")
+                    && context.Properties.ContainsKey("eventDescription")
+                    && context.Properties.ContainsKey("eventCode")
+                    && context.Properties.ContainsKey("eventInfo")
+                    && context.Properties.ContainsKey("tags")),
                 null,
                 null),
                 Times.Exactly(1));

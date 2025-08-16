@@ -200,7 +200,7 @@ namespace VirtualClient
                 OptionFactory.CreateEventHubStoreOption(required: false),
 
                 // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
@@ -274,48 +274,6 @@ namespace VirtualClient
             rootCommand.TreatUnmatchedTokensAsErrors = false;
             rootCommand.Handler = CommandHandler.Create<ExecuteCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
-            Command runApiCommand = new Command(
-                "runapi",
-                "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --api-port
-                OptionFactory.CreateApiPortOption(required: false),
-
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --ip-address
-                OptionFactory.CreateIPAddressOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false),
-
-                // --monitor
-                OptionFactory.CreateMonitorFlag(required: false, false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            runApiCommand.TreatUnmatchedTokensAsErrors = true;
-            runApiCommand.AddAlias("RunApi");
-            runApiCommand.AddAlias("RunAPI");
-            runApiCommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
             Command runBootstrapCommand = new Command(
                 "bootstrap",
                 "Bootstraps/installs a dependency package on the system.")
@@ -325,9 +283,12 @@ namespace VirtualClient
                 // --package
                 OptionFactory.CreatePackageOption(required: true),
 
+                // --package-store
+                OptionFactory.CreatePackageStoreOption(required: true),
+
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                 // --clean
+                // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
                 // --client-id
@@ -340,13 +301,10 @@ namespace VirtualClient
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
 
                 // --iterations (for integration only. not used/always = 1)
                 OptionFactory.CreateIterationsOption(required: false),
-
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
 
                 // --layout-path (for integration only. not used.)
                 OptionFactory.CreateLayoutPathOption(required: false),
@@ -357,6 +315,9 @@ namespace VirtualClient
                 // --name
                 OptionFactory.CreateNameOption(required: false),
 
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false),
+
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
 
@@ -366,17 +327,8 @@ namespace VirtualClient
                 // --log-retention
                 OptionFactory.CreateLogRetentionOption(required: false),
 
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false),
-
                 // --package-dir
                 OptionFactory.CreatePackageDirectoryOption(required: false),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
 
                 // --proxy-api
                 OptionFactory.CreateProxyApiOption(required: false),
@@ -398,13 +350,16 @@ namespace VirtualClient
             runBootstrapCommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             Command runResetCommand = new Command(
-                "reset",
+                "clean",
                 "Resets the state of the Virtual Client for a 'first run' scenario.")
             {
                 // OPTIONAL
                 // -------------------------------------------------------------------
                  // --clean
                 OptionFactory.CreateCleanOption(required: false),
+
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false),
 
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
@@ -420,9 +375,7 @@ namespace VirtualClient
             };
 
             runResetCommand.TreatUnmatchedTokensAsErrors = true;
-            runResetCommand.AddAlias("Reset");
             runResetCommand.AddAlias("Clean");
-            runResetCommand.AddAlias("clean");
             runResetCommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             Command convertCommand = new Command(
@@ -442,10 +395,121 @@ namespace VirtualClient
             convertCommand.TreatUnmatchedTokensAsErrors = true;
             convertCommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
+
+            Command runApiCommand = new Command(
+                "runapi",
+                "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
+            {
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --api-port
+                OptionFactory.CreateApiPortOption(required: false),
+
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --ip-address
+                OptionFactory.CreateIPAddressOption(required: false),
+
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --monitor
+                OptionFactory.CreateMonitorFlag(required: false, false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            runApiCommand.TreatUnmatchedTokensAsErrors = true;
+            runApiCommand.AddAlias("RunApi");
+            runApiCommand.AddAlias("RunAPI");
+            runApiCommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+
+            Command uploadTelemetryCommand = new Command(
+                "upload-telemetry",
+                "Uploads telemetry (e.g. events, metrics) from data point files on the system.")
+            {
+                // Required
+                // -------------------------------------------------------------------
+                // --format
+                OptionFactory.CreateDataFormatOption(required: true),
+
+                // --schema
+                OptionFactory.CreateDataSchemaOption(required: true),
+
+                // --logger
+                OptionFactory.CreateLoggerOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --event-hub
+                OptionFactory.CreateEventHubStoreOption(required: false),
+
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
+
+                // --intrinsic
+                OptionFactory.CreateIntrinsicFlag(required: false),
+
+                // --match
+                OptionFactory.CreateMatchExpressionOption(required: false),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --recursive
+                OptionFactory.CreateRecursiveFlag(required: false),
+
+                // --system
+                OptionFactory.CreateSystemOption(required: false),
+
+                // --directory
+                OptionFactory.CreateTargetDirectoryOption(required: false),
+
+                // --files
+                OptionFactory.CreateTargetFilesOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            uploadTelemetryCommand.TreatUnmatchedTokensAsErrors = true;
+            uploadTelemetryCommand.AddAlias("Upload-Telemetry");
+            uploadTelemetryCommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+
             rootCommand.AddCommand(runApiCommand);
             rootCommand.AddCommand(runBootstrapCommand);
             rootCommand.AddCommand(runResetCommand);
             rootCommand.AddCommand(convertCommand);
+            rootCommand.AddCommand(uploadTelemetryCommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }

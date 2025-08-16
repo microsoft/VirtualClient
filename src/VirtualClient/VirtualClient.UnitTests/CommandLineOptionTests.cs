@@ -194,8 +194,6 @@ namespace VirtualClient
         [TestCase("--contentpath", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
         [TestCase("--content-path", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
         [TestCase("--cp", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
-        [TestCase("--debug", null)]
-        [TestCase("--verbose", null)]
         [TestCase("--dependencies", null)]
         [TestCase("--eventHubConnectionString", "Endpoint=ConnectionString")]
         [TestCase("--eventhubconnectionstring", "Endpoint=ConnectionString")]
@@ -215,11 +213,15 @@ namespace VirtualClient
         [TestCase("--wait", "00:10:00")]
         [TestCase("--i", "3")]
         [TestCase("--iterations", "3")]
+        [TestCase("--kv", "https://anyvault.vault.windows.net")]
+        [TestCase("--keyvault", "https://anyvault.vault.windows.net")]
+        [TestCase("--key-vault", "https://anyvault.vault.windows.net")]
         [TestCase("--layout-path", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layoutPath", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layoutpath", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--lp", "C:\\any\\path\\to\\layout.json")]
+        [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
         [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--ll", "3")]
@@ -258,9 +260,15 @@ namespace VirtualClient
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
         [TestCase("--t", "1440")]
+        [TestCase("--proxy", "https://proxy.azure.net?crti=issuerName&crts=subjectName")]
+        [TestCase("--proxy", "https://proxy.azure.net")]
+        [TestCase("--proxy", "https://192.168.1.10:8443")]
+        [TestCase("--proxy", "https://192.168.1.10")]
+        [TestCase("--proxy-api", "https://proxy.azure.net/?crti=issuerName&crts=subjectName")]
         [TestCase("--timeout", "01:00:00")]
         [TestCase("--timeout", "01:00:00,deterministic")]
         [TestCase("--timeout", "01:00:00,deterministic*")]
+        [TestCase("--verbose", null)]
         public void VirtualClientDefaultCommandSupportsAllExpectedOptions(string option, string value)
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
@@ -299,7 +307,6 @@ namespace VirtualClient
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "logs,packages,state")]
-        [TestCase("--debug", null)]
         [TestCase("--event-hub", "Endpoint=ConnectionString")]
         [TestCase("--eventHub", "Endpoint=ConnectionString")]
         [TestCase("--eventhub", "Endpoint=ConnectionString")]
@@ -311,6 +318,9 @@ namespace VirtualClient
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--n", "anypackage")]
+        [TestCase("--name", "anypackage")]
+        [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
         [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
@@ -321,20 +331,13 @@ namespace VirtualClient
         [TestCase("--log-retention", "10.00:00:00")]
         [TestCase("--lr", "14400")]
         [TestCase("--lr", "10.00:00:00")]
-        [TestCase("--log-to-file", null)]
-        [TestCase("--ltf", null)]
         [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
         [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
-        [TestCase("--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
         [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
         [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
+        [TestCase("--verbose", null)]
         public void VirtualClientBootstrapCommandSupportsAllExpectedOptions(string option, string value)
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
@@ -343,7 +346,7 @@ namespace VirtualClient
                 {
                     "bootstrap",
                     "--package", "anypackage.1.0.0.zip",
-                    "--name", "anypackage"
+                    "--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b"
                 };
 
                 arguments.Add(option);
@@ -370,6 +373,7 @@ namespace VirtualClient
                 {
                     "bootstrap",
                     "--package", "anypackage.1.0.0.zip",
+                    "--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b",
                     "--iterations", "1",
                     "--layoutPath", "/home/user/any/layout.json"
                 };
@@ -391,6 +395,7 @@ namespace VirtualClient
         [TestCase("--clean", "packages")]
         [TestCase("--clean", "state")]
         [TestCase("--clean", "logs,packages,state")]
+        [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
         [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
@@ -401,6 +406,7 @@ namespace VirtualClient
         [TestCase("--log-retention", "10.00:00:00")]
         [TestCase("--lr", "14400")]
         [TestCase("--lr", "10.00:00:00")]
+        [TestCase("--verbose", null)]
         public void VirtualClientCleanCommandSupportsAllExpectedOptions(string option, string value)
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
@@ -454,7 +460,7 @@ namespace VirtualClient
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "logs,packages,state")]
-        [TestCase("--debug", null)]
+        [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
         [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
@@ -465,10 +471,7 @@ namespace VirtualClient
         [TestCase("--log-retention", "10.00:00:00")]
         [TestCase("--lr", "14400")]
         [TestCase("--lr", "10.00:00:00")]
-        [TestCase("--log-to-file", null)]
-        [TestCase("--ltf", null)]
-        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
-        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
+        [TestCase("--verbose", null)]
         public void VirtualClientRunApiCommandSupportsAllExpectedOptions(string option, string value)
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())

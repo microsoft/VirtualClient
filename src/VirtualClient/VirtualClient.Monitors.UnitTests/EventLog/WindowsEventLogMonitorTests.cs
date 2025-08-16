@@ -158,7 +158,7 @@ namespace VirtualClient.Monitors
 
                 await monitor.ProcessEventsAsync(EventContext.None, CancellationToken.None);
 
-                var messagesLogged = this.Logger.MessagesLogged("EventLog");
+                var messagesLogged = this.Logger.MessagesLogged("EventLog.EventResult");
                 Assert.IsNotNull(messagesLogged);
                 Assert.IsTrue(messagesLogged.Count() == 1);
             }
@@ -188,7 +188,7 @@ namespace VirtualClient.Monitors
 
                 await monitor.ProcessEventsAsync(EventContext.None, CancellationToken.None);
 
-                var messagesLogged = this.Logger.MessagesLogged("EventLog");
+                var messagesLogged = this.Logger.MessagesLogged("EventLog.EventResult");
                 Assert.IsNotNull(messagesLogged);
                 Assert.IsTrue(messagesLogged.Count() == 2);
             }

@@ -44,7 +44,7 @@ namespace VirtualClient
                 Arguments = "--argument1=123 --argument2=value"
             };
             this.processDetails = new ProcessDetails();
-            this.processDetails.GeneratedResults = new List<string>();
+            this.processDetails.Results = new List<string>();
         }
 
         /// <summary>
@@ -171,21 +171,6 @@ namespace VirtualClient
         /// 'Start' method is called.
         /// </summary>
         public Func<bool> OnStart { get; set; }
-
-        /// <inheritdoc />
-        public ProcessDetails ProcessDetails
-        {
-            get
-            {
-                this.processDetails.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
-                this.processDetails.ExitCode = this.ExitCode;
-                this.processDetails.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
-                this.processDetails.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
-                this.processDetails.WorkingDirectory = this.StartInfo?.WorkingDirectory;
-
-                return this.processDetails;
-            }
-        }
 
         /// <summary>
         /// Closes the fake process.

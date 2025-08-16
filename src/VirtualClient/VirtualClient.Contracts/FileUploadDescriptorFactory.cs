@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class FileUploadDescriptorFactory
     {
-        private const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+        internal const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
 
         private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -53,7 +53,8 @@ namespace VirtualClient.Contracts
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
         /// <param name="pathTemplate">Content path template to use when uploading content to target storage resources.</param>
-        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null)
+        /// <param name="subPath">A base directory path to preserve when creating the blob path.</param>
+        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null, string subPath = null)
         {
             fileContext.ThrowIfNull(nameof(fileContext));
 
@@ -61,7 +62,7 @@ namespace VirtualClient.Contracts
 
             if (timestamped)
             {
-                blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
+                blobName = FileContext.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
             // The caller of this factory method makes the determination on the runtime parameters that are 
@@ -97,7 +98,7 @@ namespace VirtualClient.Contracts
             }
 
             effectivePathTemplate = effectivePathTemplate ?? FileUploadDescriptorFactory.DefaultContentPathTemplate;
-            string resolvedTemplate = FileUploadDescriptorFactory.ResolveContentPathTemplateParts(effectivePathTemplate, runtimeParameters, parameters, metadata);
+            string resolvedTemplate = FileUploadDescriptorFactory.ResolveContentPathTemplateParts(effectivePathTemplate, runtimeParameters, parameters, metadata, subPath);
 
             string[] resolvedTemplateParts = resolvedTemplate?.Split("/", StringSplitOptions.RemoveEmptyEntries);
             if (resolvedTemplateParts?.Any() != true)
@@ -141,7 +142,8 @@ namespace VirtualClient.Contracts
             string pathTemplate,
             IDictionary<string, IConvertible> runtimeMetadata,
             IDictionary<string, IConvertible> parameters,
-            IDictionary<string, IConvertible> metadata)
+            IDictionary<string, IConvertible> metadata,
+            string subPath = null)
         {
             string resolvedTemplate = pathTemplate;
             MatchCollection matches = FileUploadDescriptorFactory.TemplatePlaceholderExpression.Matches(pathTemplate);
@@ -194,6 +196,12 @@ namespace VirtualClient.Contracts
                         resolvedTemplate = resolvedTemplate.Replace(match.Value, string.Empty);
                     }
                 }
+            }
+
+            if (!string.IsNullOrWhiteSpace(subPath))
+            {
+                string effectiveSubpath = subPath.Replace('\\', '/').Trim('/');
+                resolvedTemplate = $"{resolvedTemplate}/{effectiveSubpath}";
             }
 
             return resolvedTemplate.Replace("//", "/").Trim('/');

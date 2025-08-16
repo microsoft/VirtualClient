@@ -42,7 +42,6 @@ namespace VirtualClient
 
         static DependencyFixture()
         {
-            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>
@@ -186,7 +185,7 @@ namespace VirtualClient
         /// <summary>
         /// Test/fake Ssh Client manager.
         /// </summary>
-        public InMemorySshClientManager SshClientManager { get; set; }
+        public InMemorySshClientFactory SshClientFactory { get; set; }
 
         /// <summary>
         /// Test/fake state manager.
@@ -291,7 +290,7 @@ namespace VirtualClient
             this.PackageManager = new InMemoryPackageManager(this.PlatformSpecifics);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.ProcessManager = new InMemoryProcessManager(platform);
-            this.SshClientManager = new InMemorySshClientManager();
+            this.SshClientFactory = new InMemorySshClientFactory();
             this.StateManager = new InMemoryStateManager();
             this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
 
@@ -302,7 +301,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(this.FileSystem);
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(this.FirewallManager);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
-            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientFactory).Returns(this.SshClientFactory);
             this.SystemManagement.SetupGet(sm => sm.RunningInContainer).Returns(false);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
@@ -424,7 +423,7 @@ namespace VirtualClient
                 .AddSingleton<IFileSystem>(this.FileSystem)
                 .AddSingleton<IFirewallManager>(this.FirewallManager)
                 .AddSingleton<IPackageManager>(this.PackageManager)
-                .AddSingleton<ISshClientManager>(this.SshClientManager)
+                .AddSingleton<ISshClientFactory>(this.SshClientFactory)
                 .AddSingleton<IStateManager>(this.StateManager)
                 .AddSingleton<ProfileTiming>(this.Timing);
 

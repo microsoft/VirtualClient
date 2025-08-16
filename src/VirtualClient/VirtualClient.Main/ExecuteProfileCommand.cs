@@ -16,9 +16,6 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -60,7 +57,7 @@ namespace VirtualClient
         /// A seed that can be used to guarantee identical randomization bases for workloads that
         /// require it.
         /// </summary>
-        public int RandomizationSeed { get; set; }
+        public int? RandomizationSeed { get; set; }
 
         /// <summary>
         /// Defines a set of scenarios (as defined in a workload profile) to execute
@@ -108,11 +105,6 @@ namespace VirtualClient
                 if (this.Timeout == null && this.Iterations == null)
                 {
                     this.Timeout = ProfileTiming.OneIteration();
-                }
-
-                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
-                {
-                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
                 }
 
                 this.SetGlobalTelemetryProperties(args);
@@ -412,7 +404,7 @@ namespace VirtualClient
 
             MetadataContract.Persist(
                 profile.Metadata.Keys.ToDictionary(key => key, entry => profile.Metadata[entry] as object).ObscureSecrets(),
-                MetadataContractCategory.Default);
+                MetadataContract.DefaultCategory);
 
             return profile;
         }
@@ -439,8 +431,11 @@ namespace VirtualClient
                             $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.");
                     }
 
-                    string layoutContent = await systemManagement.FileSystem.File.ReadAllTextAsync(layoutFullPath)
-                        .ConfigureAwait(false);
+                    string layoutContent = await RetryPolicies.FileOperations
+                        .ExecuteAsync(() =>
+                        {
+                             return systemManagement.FileSystem.File.ReadAllTextAsync(layoutFullPath);
+                        });
 
                     layout = layoutContent.FromJson<EnvironmentLayout>();
                 }
@@ -494,11 +489,6 @@ namespace VirtualClient
         {
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
-            {
-                ["experimentId"] = this.ExperimentId.ToLowerInvariant()
-            });
-
             base.SetGlobalTelemetryProperties(args);
 
             DependencyProfileReference profile = this.Profiles.First();
@@ -511,10 +501,10 @@ namespace VirtualClient
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 // Ex: PERF-CPU-OPENSSL (win-x64)
-                ["executionProfile"] = platformSpecificProfileName,
+                [MetadataContract.ExecutionProfile] = platformSpecificProfileName,
 
                 // Ex: PERF-CPU-OPENSSL.json
-                ["executionProfileName"] = profileName
+                [MetadataContract.ExecutionProfileName] = profileName
             });
         }
 
@@ -528,8 +518,7 @@ namespace VirtualClient
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["executionProfileDescription"] = profile.Description,
-                ["profileFriendlyName"] = profile.Description,
+                [MetadataContract.ExecutionProfileDescription] = profile.Description
             });
         }
 
@@ -544,21 +533,17 @@ namespace VirtualClient
             string profile = profiles.First();
             string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
 
-            AddLinuxDistributionInfo(systemManagement);
-
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                ["executionProfilePath"] = profileFullPath
+                [MetadataContract.ExecutionProfilePath] = profileFullPath
             });
-        }
 
-        private void AddLinuxDistributionInfo(ISystemManagement systemManagement)
-        {
             try
             {
-                EventContext.PersistentProperties.Add("linuxDistributionInfo", systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult());
+                EventContext.PersistentProperties[MetadataContract.LinuxDistribution] = systemManagement.GetLinuxDistributionAsync(CancellationToken.None)
+                    .GetAwaiter().GetResult();
             }
             catch
             {
@@ -587,7 +572,7 @@ namespace VirtualClient
 
             MetadataContract.Persist(
                 hostMetadata,
-                MetadataContractCategory.Host);
+                MetadataContract.HostCategory);
 
             MetadataContract.Persist(
                 new Dictionary<string, object>
@@ -601,39 +586,7 @@ namespace VirtualClient
                     { "timeoutScope", this.Timeout?.LevelOfDeterminism.ToString() },
                     { "scenarios", this.Scenarios != null ? string.Join(",", this.Scenarios) : null },
                 },
-                MetadataContractCategory.Runtime);
-        }
-
-        private async Task CaptureSystemInfoAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            try
-            {
-                ILogger logger = dependencies.GetService<ILogger>();
-                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-                IEnumerable<IDictionary<string, IConvertible>> systemDetails = await systemManagement.GetSystemDetailedInfoAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (systemDetails?.Any() == true)
-                {
-                    foreach (var entry in systemDetails)
-                    {
-                        if (entry.TryGetValue("toolset", out IConvertible toolset) && !string.IsNullOrWhiteSpace(toolset?.ToString()))
-                        {
-                            logger.LogSystemEvent(
-                                "SystemInfo",
-                                toolset.ToString(),
-                                $"systeminfo_{toolset}".ToLowerInvariant(),
-                                LogLevel.Information,
-                                EventContext.Persisted(),
-                                eventInfo: entry.ToDictionary(e => e.Key, e => e.Value as object));
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Best Effort only
-            }
+                MetadataContract.RuntimeCategory);
         }
 
         private async Task<PlatformExtensions> DiscoverExtensionsAsync(IPackageManager packageManager, CancellationToken cancellationToken)
@@ -675,9 +628,6 @@ namespace VirtualClient
 
             this.SetGlobalTelemetryProperties(profile);
 
-            await this.CaptureSystemInfoAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
             // The environment layout provides information for other Virtual Client instances
             // that may be a part of the workload execution. This enables support for client/server
             // workload requirements.
@@ -692,14 +642,20 @@ namespace VirtualClient
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
 
+            ComponentSettings componentSettings = new ComponentSettings
+            {
+                ContentPathTemplate = this.ContentPathTemplate,
+                ExitWait = this.ExitWait,
+                FailFast = this.FailFast,
+                LogToFile = this.LogToFile,
+                Seed = this.RandomizationSeed
+            };
+
             // Only dependencies defined in the profile will be considered.
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
             {
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
-                profileExecutor.ExitWait = this.ExitWait;
-                profileExecutor.FailFast = this.FailFast;
-                profileExecutor.LogToFile = this.LogToFile;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
@@ -762,9 +718,6 @@ namespace VirtualClient
 
             this.SetGlobalTelemetryProperties(profile);
 
-            await this.CaptureSystemInfoAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
             // The environment layout provides information for other Virtual Client instances
             // that may be a part of the workload execution. This enables support for client/server
             // workload requirements.
@@ -790,13 +743,17 @@ namespace VirtualClient
             
             this.Validate(dependencies, profile);
 
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
+            ComponentSettings componentSettings = new ComponentSettings
             {
-                profileExecutor.RandomizationSeed = this.RandomizationSeed;
-                profileExecutor.ExitWait = this.ExitWait;
-                profileExecutor.FailFast = this.FailFast;
-                profileExecutor.LogToFile = this.LogToFile;
+                ContentPathTemplate = this.ContentPathTemplate,
+                ExitWait = this.ExitWait,
+                FailFast = this.FailFast,
+                LogToFile = this.LogToFile,
+                Seed = this.RandomizationSeed
+            };
 
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
+            {
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
                     this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);
@@ -848,76 +805,61 @@ namespace VirtualClient
                     ILogger logger = dependencies.GetService<ILogger>();
                     EventContext telemetryContext = EventContext.Persisted();
 
-                    // Add telemetry context for debugging
                     telemetryContext.AddContext("profileDescription", profile.Description);
                     telemetryContext.AddContext("parametersOnCount", profile.ParametersOn.Count);
 
                     logger?.LogMessage($"{nameof(ExecuteProfileCommand)}.ProcessParametersOn.Starting", telemetryContext);
 
-                    // Store all condition keys for cleanup later
-                    List<string> conditionKeys = new List<string>();
+                    IDictionary<string, IConvertible> conditions = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
-                    // Iterate through each conditional parameter set
                     for (int i = 0; i < profile.ParametersOn.Count; i++)
                     {
                         var parametersOn = profile.ParametersOn[i];
 
-                        // Extract the condition and add it to profile.Parameters with a unique key
                         if (parametersOn.TryGetValue("Condition", out IConvertible condition))
                         {
                             string conditionKey = $"Condition_{i}";
-                            profile.Parameters[conditionKey] = condition;
-                            conditionKeys.Add(conditionKey);
+                            conditions[conditionKey] = condition;
 
                             telemetryContext.AddContext($"condition_{i}", condition.ToString());
                         }
+                        else
+                        {
+                            throw new Exception(
+                                $"Invalid ParametersOn configuration. The 'Condition' key is missing in the ParametersOn entry at index {i}.");
+                        }
                     }
 
-                    // Evaluate all parameters including the conditions
-                    await evaluator.EvaluateAsync(dependencies, profile.Parameters);
+                    await evaluator.EvaluateAsync(dependencies, conditions);
 
-                    // Fill back the condition values from profile.Par
-
-                    // Track which condition matched (if any)
                     bool matchFound = false;
-
-                    // Check which condition is true and apply its parameters
-                    for (int i = 0; i < profile.ParametersOn.Count && !matchFound; i++)
+                    for (int i = 0; i < profile.ParametersOn.Count; i++)
                     {
                         string conditionKey = $"Condition_{i}";
-                        if (profile.Parameters.TryGetValue(conditionKey, out IConvertible evaluatedCondition) &&
+                        if (conditions.TryGetValue(conditionKey, out IConvertible evaluatedCondition) &&
                             bool.TryParse(evaluatedCondition.ToString(), out bool conditionResult) &&
                             conditionResult)
                         {
+                            matchFound = true;
                             var parametersOn = profile.ParametersOn[i];
 
-                            // Apply the parameters from the matching conditional set
-                            // Skip the "Condition" key itself
                             foreach (var parameter in parametersOn.Where(p => !string.Equals(p.Key, "Condition", StringComparison.OrdinalIgnoreCase)))
                             {
-                                if(profile.Parameters.ContainsKey(parameter.Key))
+                                if (profile.Parameters.ContainsKey(parameter.Key))
                                 {
                                     profile.Parameters[parameter.Key] = parameter.Value;
                                     telemetryContext.AddContext($"applied_{parameter.Key}", parameter.Value?.ToString());
                                 }
                             }
-
-                            // We found a match, no need to check other conditions
-                            matchFound = true;
+                            
+                            break;
                         }
                     }
 
-                    // Clean up all temporary condition keys
-                    foreach (string conditionKey in conditionKeys)
+                    foreach (string conditionKey in conditions.Keys)
                     {
-                        // Fill the Condition value to the respective parameter set based on the index
-                        if (profile.ParametersOn.Count > 0 && profile.ParametersOn.Count > conditionKeys.IndexOf(conditionKey))
-                        {
-                            profile.ParametersOn[conditionKeys.IndexOf(conditionKey)]["Condition"] = profile.Parameters[conditionKey];
-                        }
-
-                        profile.Parameters.Remove(conditionKey);
-
+                        int index = int.Parse(conditionKey.Split('_')[1]);
+                        profile.ParametersOn[index]["Condition"] = conditions[conditionKey];
                     }
 
                     logger?.LogMessage(
