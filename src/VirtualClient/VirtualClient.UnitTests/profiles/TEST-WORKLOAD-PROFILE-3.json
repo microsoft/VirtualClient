@@ -1,46 +1,46 @@
 {
-  "Description": "Default profile scenario containing a workload to run but no explicit monitors.",
-  "Metadata": {
-  },
-  "Parameters": {
-    "Parameter1": false,
-    "Parameter2": "base2",
-    "Parameter3": "base3",
-    "Parameter4": "base4"
-  },
-  "ParametersOn": [
-    {
-      "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base2\")} ? \"true\" : \"false\")}",
-      "Parameter3": "conditional3",
-      "Parameter4": "conditional4"
+    "Description": "Default profile scenario containing a workload to run but no explicit monitors.",
+    "Metadata": {
     },
-    {
-      "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base3\")} ? \"true\" : \"false\")}",
-      "Parameter3": "conditional5",
-      "Parameter4": "conditional6"
-    }
-  ],
-  "Actions": [
-    {
-      "Type": "TestExecutor",
-      "Parameters": {
-        "Scenario": "Workload1",
-        "NewFlag": "$.Parameters.Parameter3"
-      }
+    "Parameters": {
+        "Parameter1": false,
+        "Parameter2": "base2",
+        "Parameter3": "base3",
+        "Parameter4": "base4"
     },
-    {
-      "Type": "TestExecutor",
-      "Parameters": {
-        "Scenario": "Workload2"
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "TestDependency",
-      "Parameters": {
-        "Scenario": "Dependency1"
-      }
-    }
-  ]
+    "ParametersOn": [
+        {
+            "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base2\")} ? \"true\" : \"false\")}",
+            "Parameter3": "conditional3",
+            "Parameter4": "conditional4"
+        },
+        {
+            "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base3\")} ? \"true\" : \"false\")}",
+            "Parameter3": "conditional5",
+            "Parameter4": "conditional6"
+        }
+    ],
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload1",
+                "NewFlag": "$.Parameters.Parameter3"
+            }
+        },
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload2"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "TestDependency",
+            "Parameters": {
+                "Scenario": "Dependency1"
+            }
+        }
+    ]
 }

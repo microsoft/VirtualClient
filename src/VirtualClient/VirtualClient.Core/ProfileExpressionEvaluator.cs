@@ -98,9 +98,9 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
-        // {Architecture}
-        private static readonly Regex ArchitectureExpression = new Regex(
-            @"\{Architecture\}",
+        // {CpuArchitecture}
+        private static readonly Regex CpuArchitectureExpression = new Regex(
+            @"\{CpuArchitecture\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -210,13 +210,13 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {Architecture}
+            // Expression: {CpuArchitecture}
             // Resolves to the current CPU architecture (e.g. Arm64, X64)
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ArchitectureExpression.Matches(expression);
+                MatchCollection matches = ProfileExpressionEvaluator.CpuArchitectureExpression.Matches(expression);
 
                 if (matches?.Any() == true)
                 {

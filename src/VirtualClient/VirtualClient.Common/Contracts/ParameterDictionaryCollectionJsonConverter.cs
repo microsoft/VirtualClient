@@ -14,7 +14,7 @@ namespace VirtualClient.Common.Contracts
     /// Provides a JSON converter that can handle the serialization/deserialization of
     /// <see cref="List{T}"/> objects where T is <see cref="IDictionary{TKey, TValue}"/> with string keys and <see cref="IConvertible"/> values.
     /// </summary>
-    public class ParameterDictionaryListJsonConverter : JsonConverter
+    public class ParameterDictionaryCollectionJsonConverter : JsonConverter
     {
         private static readonly Type ParameterDictionaryListType = typeof(List<IDictionary<string, IConvertible>>);
         private static readonly ParameterDictionaryJsonConverter DictionaryConverter = new ParameterDictionaryJsonConverter();

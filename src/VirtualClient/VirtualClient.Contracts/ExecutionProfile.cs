@@ -159,7 +159,7 @@ namespace VirtualClient.Contracts
         /// List of parameter dictionaries that are associated with the profile.
         /// </summary>
         [JsonProperty(PropertyName = "ParametersOn", Required = Required.Default, Order = 75)]
-        [JsonConverter(typeof(ParameterDictionaryListJsonConverter))]
+        [JsonConverter(typeof(ParameterDictionaryCollectionJsonConverter))]
         public List<IDictionary<string, IConvertible>> ParametersOn { get; }
 
         /// <summary>

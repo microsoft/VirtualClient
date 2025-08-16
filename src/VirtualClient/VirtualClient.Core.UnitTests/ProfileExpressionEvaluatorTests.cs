@@ -439,8 +439,8 @@ namespace VirtualClient
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
-                { "{Architecture}", expectedValue },
-                { "--arch={Architecture}", $"--arch={expectedValue}" }
+                { "{CpuArchitecture}", expectedValue },
+                { "--arch={CpuArchitecture}", $"--arch={expectedValue}" }
             };
 
             foreach (var entry in expressions)
@@ -1119,7 +1119,7 @@ namespace VirtualClient
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
-                { "Flags", "{calculate({calculate(\"{specProfile}\" == \"fprate\")} ? \"-O3 -flto -march=native\" : {calculate({calculate(\"{specProfile}\" == \"intrate\")} ? {calculate({calculate(\"{Architecture}\" == \"x64\")} ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")} : \"-O3 -march=native\")})}" },
+                { "Flags", "{calculate({calculate(\"{specProfile}\" == \"fprate\")} ? \"-O3 -flto -march=native\" : {calculate({calculate(\"{specProfile}\" == \"intrate\")} ? {calculate({calculate(\"{CpuArchitecture}\" == \"x64\")} ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")} : \"-O3 -march=native\")})}" },
                 { "specProfile", "intrate" },
             };
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
