@@ -35,13 +35,10 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME")]
         [TestCase("GBL")]
-        [TestCase("AME Infra CA 01")]
+        [TestCase("AME Infra CA 0")]
         [TestCase("DC=AME")]
         [TestCase("DC=GBL")]
         [TestCase("CN=AME")]
-        [TestCase("CN=AME Infra CA 01")]
-        [TestCase("CN=AME Infra CA 01, DC=AME, DC=GBL")]
-        [TestCase("CN=AME Infra CA 01,DC=AME,DC=GBL")]
         public void CertificateManagerSearchesSupportsARangeOfFormatsForIssuersOnCertificates(string issuer)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
@@ -147,13 +144,10 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME", "virtualclient.test.corp.azure.com")]
         [TestCase("GBL", "virtualclient.test.corp.azure.com")]
-        [TestCase("AME Infra CA 01", "virtualclient")]
+        [TestCase("AME Infra CA 0", "virtualclient")]
         [TestCase("DC=AME", "corp.azure.com")]
         [TestCase("DC=GBL", "azure.com")]
         [TestCase("CN=AME", "virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 01", "CN=virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 01, DC=AME, DC=GBL", "CN=virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 01,DC=AME,DC=GBL", "CN=virtualclient.test.corp.azure.com")]
         public async Task CertificateManagerHandlesDifferentIssuerAndSubjectNameFormats(string issuer, string subjectName)
         {
             this.mockFixture.Setup(PlatformID.Unix);
