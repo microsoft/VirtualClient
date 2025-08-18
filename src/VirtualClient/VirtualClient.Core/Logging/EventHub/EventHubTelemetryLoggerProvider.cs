@@ -5,6 +5,7 @@ namespace VirtualClient.Logging
 {
     using System;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -12,6 +13,7 @@ namespace VirtualClient.Logging
     /// Provides methods for creating <see cref="ILogger"/> instances that can
     /// be used to log events/messages to an Application Insights endpoint.
     /// </summary>
+    [LoggerAlias("Eventhub")]
     [LoggerSpecialization(Name = SpecializationConstant.Telemetry)]
     public sealed class EventHubTelemetryLoggerProvider : ILoggerProvider
     {

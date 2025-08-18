@@ -7,6 +7,7 @@ namespace VirtualClient.Logging
     using System.Collections.Generic;
     using global::Serilog;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -15,6 +16,7 @@ namespace VirtualClient.Logging
     /// Provides methods for creating <see cref="ILogger"/> instances that can
     /// be used to log events/messages to a local file.
     /// </summary>
+    [LoggerAlias("File")]
     [LoggerSpecialization(Name = SpecializationConstant.StructuredLogging)]
     public sealed class SerilogFileLoggerProvider : ILoggerProvider, IDisposable
     {
