@@ -313,12 +313,14 @@ namespace VirtualClient.Logging
             string scenarioName = context.Properties["scenarioName"].ToString();
             string outcome = context.Properties["metricName"].ToString();
             outcome = outcome == "Succeeded" ? "PASS" : "* Failed *";
-            TimeSpan duration = (DateTime)context.Properties["scenarioEndTime"] - (DateTime)context.Properties["scenarioStartTime"];
+            DateTime scenarioStartTime = (DateTime)context.Properties["scenarioStartTime"];
+            DateTime scenarioEndTime = (DateTime)context.Properties["scenarioEndTime"];
+            TimeSpan duration = scenarioEndTime - scenarioStartTime;
 
             messageBuilder.AppendLine();
             messageBuilder.AppendMessage($"Component : {componentName} -> {scenarioName}");
             messageBuilder.AppendMessage(SummaryFileLogger.DashLine);
-            messageBuilder.AppendMessage($"Duration  : {duration.ToString()}");
+            messageBuilder.AppendMessage($"Duration  : {duration.ToString()}. Start Time  : {scenarioStartTime}. End Time  : {scenarioEndTime}.");
             messageBuilder.AppendMessage($"Outcome   : {outcome}");
             messageBuilder.AppendLine();
 
