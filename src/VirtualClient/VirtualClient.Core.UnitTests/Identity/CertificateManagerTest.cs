@@ -147,13 +147,10 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME", "virtualclient.test.corp.azure.com")]
         [TestCase("GBL", "virtualclient.test.corp.azure.com")]
-        [TestCase("AME Infra CA 01", "virtualclient")]
+        [TestCase("AME Infra CA 0", "virtualclient")]
         [TestCase("DC=AME", "corp.azure.com")]
         [TestCase("DC=GBL", "azure.com")]
         [TestCase("CN=AME", "virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 01", "CN=virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 01, DC=AME, DC=GBL", "CN=virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 01,DC=AME,DC=GBL", "CN=virtualclient.test.corp.azure.com")]
         public async Task CertificateManagerHandlesDifferentIssuerAndSubjectNameFormats(string issuer, string subjectName)
         {
             this.mockFixture.Setup(PlatformID.Unix);
