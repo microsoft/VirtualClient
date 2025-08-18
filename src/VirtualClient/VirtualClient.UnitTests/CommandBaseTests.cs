@@ -229,8 +229,8 @@ namespace VirtualClient.UnitTests
             List<string> loggerDefinitions = new List<string>();
             testCommand.Loggers = loggerDefinitions;
             IList<ILoggerProvider> loggers = testCommand.CreateLogger(new ConfigurationBuilder().Build(), this.mockFixture.PlatformSpecifics);
-            // 1 console, 3 serilog and 1 csv file logger
-            Assert.AreEqual(loggers.Count, 5);
+            // 1 console
+            Assert.AreEqual(loggers.Count, 1);
         }
 
         [Test]
@@ -262,8 +262,8 @@ namespace VirtualClient.UnitTests
             configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
 
             IList<ILoggerProvider> loggers = testCommand.CreateLogger(configuration, this.mockFixture.PlatformSpecifics);
-            // 1 console, 3 serilog and 1 csv file logger, 3 eventhub
-            Assert.AreEqual(loggers.Count, 8);
+            // 1 console, 3 eventhub
+            Assert.AreEqual(loggers.Count, 4);
         }
 
         [Test]

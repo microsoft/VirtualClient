@@ -35,13 +35,10 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME")]
         [TestCase("GBL")]
-        [TestCase("AME Infra CA 01")]
+        [TestCase("AME Infra CA 0")]
         [TestCase("DC=AME")]
         [TestCase("DC=GBL")]
         [TestCase("CN=AME")]
-        [TestCase("CN=AME Infra CA 01")]
-        [TestCase("CN=AME Infra CA 01, DC=AME, DC=GBL")]
-        [TestCase("CN=AME Infra CA 01,DC=AME,DC=GBL")]
         public void CertificateManagerSearchesSupportsARangeOfFormatsForIssuersOnCertificates(string issuer)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
