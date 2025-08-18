@@ -16,6 +16,8 @@ namespace VirtualClient.Contracts
     /// </summary>
     public class FileContext
     {
+        private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-fffffK";
+        private static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
         private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -93,6 +95,19 @@ namespace VirtualClient.Contracts
         /// The name of the tool/toolset that produced the file (e.g. FioExecutor, FIO).
         /// </summary>
         public string ToolName { get; }
+
+        /// <summary>
+        /// Returns a file name containing a timestamp as part of the name having removed any
+        /// characters not allowed in file paths (e.g. 2023-02-01T12-23-30241Z-randomwrite_4k_blocksize.log).
+        /// </summary>
+        /// <param name="fileName">The name of the file (e.g. randomwrite_4k_blocksize.log)</param>
+        /// <param name="timestamp">The timestamp to add to the file name.</param>
+        public static string GetFileName(string fileName, DateTime timestamp)
+        {
+            return PathReservedCharacterExpression.Replace(
+                $"{timestamp.ToString(FileTimestampFormat)}-{fileName.RemoveWhitespace()}",
+                string.Empty);
+        }
 
         /// <summary>
         /// Resolves placeholders in the path template provided.

@@ -378,7 +378,7 @@ namespace VirtualClient.Contracts
                         fileSystem.Directory.CreateDirectory(targetDirectory);
                     }
 
-                    string fileName = FileUploadDescriptor.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
+                    string fileName = FileContext.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
                     string filePath = component.Combine(targetDirectory, fileName.ToLowerInvariant());
 
                     await fileSystem.File.WriteAllTextAsync(filePath, descriptor.ToJson());

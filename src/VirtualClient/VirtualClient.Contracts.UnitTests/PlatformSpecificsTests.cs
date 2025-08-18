@@ -64,6 +64,62 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "User01");
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnWindowsSystems_2()
+        {
+            // Environment variables do not matter on Windows and should not affect
+            // the return user.
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "User01");
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER, "User02");
+            user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Unix, Architecture.X64);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnUnixSystemsWhenSudoIsUsed()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string sudoUser = "User01";
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, sudoUser);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(sudoUser, user);
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnUnixSystemsWhenCustomSudoAlternativesAreUsed()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string sudoUser = "User01";
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER, sudoUser);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(sudoUser, user);
+        }
+
+        [Test]
         public void GetPackagePathReturnsTheExpectedPathOnWindowsSystems()
         {
             PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");

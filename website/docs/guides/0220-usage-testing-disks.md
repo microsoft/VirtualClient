@@ -1,11 +1,40 @@
 # Usage: Testing Disks
 VC automates disk formating and run storage workloads on the target systems. We documented the rules and the mechanism we used to identify disks to run workloads on.
 
-## Rules
-1. On OS Disk, only run on the OS partition.
-2. If other disks have more than 1 partition, run on all concurrently that passes the filters (exclude /, /mnt, /boot.efi)
-3. On Linux, only run on four prefix: `/dev/hd`, `/dev/sd`, `/dev/nvme`, `/dev/xvd`.
-4. On Windows, disks with status set to offline and read-only will be filtered out.
+## Disk Mount Points
+On certain systems, Virtual Client may need to create mount points on each of the disks in order to have both permissions and a path to
+operate disk I/O work. In general, Virtual Client must create mount points when the following is true:
+
+* Disks exist that do not have file system partitions/volumes (i.e. uninitialized disks).
+* Disks exist with file system partitions/volumes but without any pre-existing mount points/access paths.
+
+The remainder of this section documents where disk mount points are created on the system when required.
+
+### Mount Points on Unix Systems
+The following table illustrates the mount points that will be created when required on Unix systems. When logged in as the "root" on the system,
+mount points will be created at the root of the file system directory structure. When logged in as a user other than "root"
+(including when running as "sudo"), mount points will be created in the user home directory (e.g. /home/user)
+
+| Logged In User | Disk/Device Paths | Mount Points/Paths |
+|----------------|-------------------|-------------------------|
+| root           | /dev/sdc1<br/>/dev/sdd1 | /mnt_dev_sdc1<br/>/mnt_dev_sdd1 |
+| root           | /dev/sdc1<br/>/dev/sdc2<br/>/dev/sdd1<br/>/dev/sdd2 | /mnt_dev_sdc1<br/>/mnt_dev_sdc2<br/>/mnt_dev_sdd1<br/>/mnt_dev_sdd2 |
+| non-root user  | /dev/sdc1<br/>/dev/sdd1 | /mnt_dev_sdc1<br/>/mnt_dev_sdd1 |
+| non-root user  | /dev/sdc1<br/>/dev/sdc2<br/>/dev/sdd1<br/>/dev/sdd2 | /home/\{user\}/mnt_dev_sdc1<br/>/home/\{user\}/mnt_dev_sdc2<br/>/home/\{user\}/mnt_dev_sdd1<br/>/home/\{user\}/mnt_dev_sdd2 |
+
+### Mount Points on Windows Systems
+Mount points are NOT typically required on Windows systems once disks are formatted and have partitions/volumes. This is because Windows associates 
+a letter with each volume (e.g. C:\, D:\) and this the disk volume + file system is accessible through this path.
+
+<mark>Virtual Client does not currently support formatting disks beyond the first 26 disks due to inherent Windows limitations. Virtual Client can
+operate on systems with more than 26 total partitions/volumes; however, these must be prepared before running the application</mark>
+
+## General Disk Testing Guidelines
+1. When targeting the OS disk, ONLY the OS partition for that disk will be targeted.
+2. For systems having disks with more than 1 partition, all partitions will be targeted.
+3. On Unix systems having disks with more than 1 partition, the following device paths are excluded: ```/```, ```/mnt```, ```/boot/efi```.
+3. On Unix systems, device paths having the following prefixes are targeted: `/dev/hd`, `/dev/sd`, `/dev/nvme`, `/dev/xvd`.
+4. On Windows systems, disks that are offline or read-only will not be targeted.
 
 ## Disk Filters
 Different environments, Azure, AWS/GCP, Lab host, Lab VM, have vastly different configuration of disks. It is a challenge to have a schema that allows you to target the desired disk consistently.

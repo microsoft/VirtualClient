@@ -37,9 +37,11 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountDirectory = this.mockFixture.StandardizePath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-                    string expectedMountPoint = this.mockFixture.Combine(expectedMountDirectory, diskVolume.GetDefaultMountPointName());
-
+                    // e.g.
+                    // /home/user/mnt_dev_sdc1
+                    // /home/user/mnt_dev_sdd1
+                    // /home/user/mnt_dev_sdd2
+                    string expectedMountPoint = $"/home/{Environment.UserName}/{diskVolume.GetDefaultMountPointName()}";
                     this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
                 }
             }
@@ -58,9 +60,74 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountDirectory = this.mockFixture.StandardizePath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-                    string expectedMountPoint = this.mockFixture.Combine(expectedMountDirectory, diskVolume.GetDefaultMountPointName());
+                    string expectedMountPoint = $"/home/{Environment.UserName}/{diskVolume.GetDefaultMountPointName()}";
+                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
+                }
+            }
+        }
 
+        [Test]
+        public async Task MountDisksHandlesCasesWhenRunningOnUnixWithSudo()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                diskMounter.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "user01");
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    // e.g.
+                    // /home/user01/mnt_dev_sdc1
+                    // /home/user01/mnt_dev_sdd1
+                    // /home/user01/mnt_dev_sdd2
+                    string expectedMountPoint = $"/home/user01/{diskVolume.GetDefaultMountPointName()}";
+                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
+                }
+            }
+        }
+
+        [Test]
+        public async Task MountDisksHandlesCasesWhenRunningOnUnixAsRoot()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // SUDO_USER will be set to "root" when logged in as root.
+                diskMounter.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "root");
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    // e.g.
+                    // /mnt_dev_sdc1
+                    // /mnt_dev_sdd1
+                    // /mnt_dev_sdd2
+                    string expectedMountPoint = $"/{diskVolume.GetDefaultMountPointName()}";
+                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
+                }
+            }
+        }
+
+        [Test]
+        [TestCase("mount_points")]
+        [TestCase("/mount_points")]
+        [TestCase("/mount_points/")]
+        [TestCase("  /mount_points/  ")]
+        public async Task MountDisksMountsTheExpectedPathOnUnixWhenAMountLocationIsProvided(string expectedMountLocation)
+        {
+            this.SetupTest(PlatformID.Unix);
+            this.mockFixture.Parameters["MountLocation"] = expectedMountLocation;
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    string expectedMountPoint = $"/{expectedMountLocation.Trim().Trim('/')}/{diskVolume.GetDefaultMountPointName()}";
                     this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
                 }
             }
@@ -78,22 +145,16 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountDirectory = this.mockFixture.StandardizePath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-
-                    string expectedMountPoint = this.mockFixture.Combine(
-                        expectedMountDirectory, 
-                        diskVolume.GetDefaultMountPointName(prefix: "mnt_test"));
-
+                    string expectedMountPoint = $"/home/{Environment.UserName}/{diskVolume.GetDefaultMountPointName(prefix: "mnt_test")}";
                     this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
                 }
             }
         }
 
         [Test]
-        public async Task MountDisksMountsTheExpectedPathOnUnixWhenAMountLocationIsProvided_Root()
+        public async Task MountDisksSetsExpectedPermissionsOnTheMountPointDirectoryOnUnixSystems()
         {
             this.SetupTest(PlatformID.Unix);
-            this.mockFixture.Parameters["MountLocation"] = "Root";
 
             using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -101,8 +162,31 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountPoint = this.mockFixture.Combine("/", diskVolume.GetDefaultMountPointName());
-                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
+                    string expectedUser = Environment.UserName;
+                    string expectedDirectory = $"/home/{Environment.UserName}/{diskVolume.GetDefaultMountPointName()}";
+                    Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"chmod -R 777 \"{expectedDirectory}\""));
+                    Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"chown {expectedUser}:{expectedUser} \"{expectedDirectory}\""));
+                }
+            }
+        }
+
+        [Test]
+        public async Task MountDisksSetsExpectedPermissionsOnTheMountPointDirectoryOnUnixSystemsWhenRunningAsRoot()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // SUDO_USER will be set to "root" when logged in as root.
+                diskMounter.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "root");
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    string expectedUser = "root";
+                    string expectedDirectory = $"/{diskVolume.GetDefaultMountPointName()}";
+                    Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"chmod -R 777 \"{expectedDirectory}\""));
+                    Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"chown {expectedUser}:{expectedUser} \"{expectedDirectory}\""));
                 }
             }
         }
@@ -118,9 +202,7 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountDirectory = this.mockFixture.StandardizePath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-                    string expectedMountPoint = this.mockFixture.Combine(expectedMountDirectory, diskVolume.GetDefaultMountPointName());
-
+                    string expectedMountPoint = this.mockFixture.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), diskVolume.GetDefaultMountPointName());
                     this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
                 }
             }
@@ -139,9 +221,28 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountDirectory = this.mockFixture.StandardizePath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-                    string expectedMountPoint = this.mockFixture.Combine(expectedMountDirectory, diskVolume.GetDefaultMountPointName());
+                    string expectedMountPoint = this.mockFixture.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), diskVolume.GetDefaultMountPointName());
+                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
+                }
+            }
+        }
 
+        [Test]
+        [TestCase("C:\\mount_points")]
+        [TestCase("C:\\mount_points\\")]
+        [TestCase("  C:\\mount_points\\  ")]
+        public async Task MountDisksMountsTheExpectedPathOnWindowsWhenAMountLocationIsProvided(string expectedMountLocation)
+        {
+            this.SetupTest(PlatformID.Win32NT);
+            this.mockFixture.Parameters["MountLocation"] = expectedMountLocation;
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    string expectedMountPoint = $@"{expectedMountLocation.Trim().Trim('\\')}\{diskVolume.GetDefaultMountPointName()}";
                     this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
                 }
             }
@@ -159,9 +260,7 @@ namespace VirtualClient.Dependencies
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
-                    string expectedMountDirectory = this.mockFixture.StandardizePath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-                    string expectedMountPoint = this.mockFixture.Combine(expectedMountDirectory, diskVolume.GetDefaultMountPointName(prefix: "mnt_test"));
-
+                    string expectedMountPoint = this.mockFixture.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), diskVolume.GetDefaultMountPointName(prefix: "mnt_test"));
                     this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
                 }
             }

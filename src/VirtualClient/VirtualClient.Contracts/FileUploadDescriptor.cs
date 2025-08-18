@@ -24,9 +24,6 @@ namespace VirtualClient.Contracts
         /// The default extension for the file uploads.
         /// </summary>
         public const string UploadDescriptorFileExtension = "upload.json";
-
-        private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-fffffK";
-        private static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
         private static readonly char[] PathDelimiters = new char[] { '/', '\\' };
 
         /// <summary>
@@ -171,19 +168,6 @@ namespace VirtualClient.Contracts
             }
 
             return fileManifest.ObscureSecrets();
-        }
-
-        /// <summary>
-        /// Returns a file name containing a timestamp as part of the name having removed any
-        /// characters not allowed in file paths (e.g. 2023-02-01T12-23-30241Z-randomwrite_4k_blocksize.log).
-        /// </summary>
-        /// <param name="fileName">The name of the file (e.g. randomwrite_4k_blocksize.log)</param>
-        /// <param name="timestamp">The timestamp to add to the file name.</param>
-        public static string GetFileName(string fileName, DateTime timestamp)
-        {
-            return PathReservedCharacterExpression.Replace(
-                $"{timestamp.ToString(FileTimestampFormat)}-{fileName.RemoveWhitespace()}",
-                string.Empty);
         }
 
         /// <summary>

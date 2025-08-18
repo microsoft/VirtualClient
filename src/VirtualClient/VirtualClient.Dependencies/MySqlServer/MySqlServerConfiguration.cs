@@ -302,7 +302,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)};";
+                    diskPaths += $"{this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql")};";
                 }
             }
 

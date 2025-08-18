@@ -167,12 +167,12 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, @"\win-x64\results.txt")]
-        [TestCase(PlatformID.Unix, @"/linux-x64/results.txt")]
-        public void Prime95ExecutorThrowsWhenWorkloadResultsFileNotFound(PlatformID platform, string resultsPath)
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public void Prime95ExecutorThrowsWhenWorkloadResultsFileNotFound(PlatformID platform)
         {
             this.SetupTest(platform);
-            this.mockFixture.File.Setup(fe => fe.Exists(this.mockPackage.Path + resultsPath))
+            this.mockFixture.File.Setup(fe => fe.Exists(It.Is<string>(file => file.EndsWith("results.txt"))))
                 .Returns(false);
 
             using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
