@@ -41,7 +41,7 @@ OpenSSL client requests specific file size varying 1KiB - 512 MiB and reports th
 
 
 ### Workload Metrics
-The following metrics are examples of those captured by the Virtual Client when running the OpenSSL Speed workload
+The following section explains the metrics of this workload. These metrics are measured on the client side from s_time. 
 
 There are 6 metrics.
 
@@ -130,6 +130,12 @@ echo "$FOOTER"
 echo "Generated $FILENAME with size approximately ${SIZE_KB}KB."
 ```
 
+For eg., to generate a html file size of 100KiB run the script as follows
+```bash
+./generate_html.sh test_100KiB.html 100
+```
+
+These files (1 and 2) i.e., server key/certs and required html files are packaged in to a zip file and installed on the server machine while setting up the workload. It is important to note that the html files should be present in the same path where openssl binary runs (this is handled inside the VC code). If a file that is not present is passed in the command line, a standard index.html is returned by s_server and this may disrupt our throughput measurement. _
 # Reference
 
 * [OpenSSL GitHub](https://github.com/openssl/openssl)
