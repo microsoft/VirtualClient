@@ -18,7 +18,7 @@ openssl s_time -connect localhost:4433 -new -time 10
 this simple command will connect to the server and send requests for 10 seconds, measuring number of new connections (in 10 seconds) and number of reuse connections (in 10 seconds). This however does not report throughput.
 To measure throughput, we can request a specific html file from the server and that reports number of bytes for every transaction and total throughput. 
 ```bash
-s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3
+s_time -connect {ServerIp}:{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3
 ```
 
 This command requests a html file of size 1K and uses AES_128_GCM_SHA256 algorithm for its secure transaction. 
@@ -113,8 +113,8 @@ HEADER_SIZE=$(echo -n "$HEADER$FOOTER" | wc -c)
 PADDING_SIZE=$((SIZE_BYTES - HEADER_SIZE))
 
 if [ $PADDING_SIZE -le 0 ]; then
-  echo "Requested size too small. Minimum size is $HEADER_SIZE bytes."
-  exit 1
+Â  echo "Requested size too small. Minimum size is $HEADER_SIZE bytes."
+Â  exit 1
 fi
 
 # Generate padding
@@ -135,7 +135,7 @@ For eg., to generate a html file size of 100KiB run the script as follows
 ./generate_html.sh test_100KiB.html 100
 ```
 
-These files (1 and 2) i.e., server key/certs and required html files are packaged in to a zip file and installed on the server machine while setting up the workload. It is important to note that the html files should be present in the same path where openssl binary runs (this is handled inside the VC code). If a file that is not present is passed in the command line, a standard index.html is returned by s_server and this may disrupt our throughput measurement. _
+These files (1 and 2) i.e., server key/certs and required html files are packaged in to a zip file and installed on the server machine while setting up the workload. It is important to note that the html files should be present in the same path where openssl binary runs (this is handled inside the VC code). If a file that is not present is passed in the command line, a standard index.html is returned by s_server and this may disrupt our throughput measurement.
 # Reference
 
 * [OpenSSL GitHub](https://github.com/openssl/openssl)
@@ -146,4 +146,5 @@ These files (1 and 2) i.e., server key/certs and required html files are package
 # Technical Debt:
 
 Evaluate what is the ideal buffer size to measure, currently the profile has sizes from 1KiB - 512MiB
-Evalueate ideal duration to use, currently 30 seconds is used. 
+Evaluate ideal duration to use, currently 30 seconds is used. 
+Add more unit test coverage for Openssl-tls, Openssl-client, TlsOpenssl-metric parser. 
