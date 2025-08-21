@@ -4,11 +4,13 @@
 namespace VirtualClient.Logging
 {
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
 
     /// <summary>
     /// A very thin settings passthrough provider as a stop gap to handle the missing obsoleted functionality .NET Core 2.2 and .NET Core 3.0 implementation.
     /// See https://github.com/aspnet/EntityFramework.Docs/pull/1164 for full discussion of issue.
     /// </summary>
+    [LoggerAlias("Console")]
     public sealed class ConsoleLoggerProvider : ILoggerProvider
     {
         /// <summary>
