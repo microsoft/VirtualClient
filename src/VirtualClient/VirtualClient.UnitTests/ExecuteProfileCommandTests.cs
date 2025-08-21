@@ -393,18 +393,18 @@ namespace VirtualClient
         public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario1()
         {
             // Create a new profile with ParametersOn list for testing
-            string profile1 = "TEST-WORKLOAD-PROFILE-3.json";
-            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
 
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
-                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
 
             this.command.Profiles = new List<DependencyProfileReference>
             {
-                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+                new DependencyProfileReference(testWorkloadProfile3)
             };
 
             // Act: Load and initialize the profile
@@ -440,8 +440,8 @@ namespace VirtualClient
         public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario2()
         {
             // Create a new profile with ParametersOn list for testing
-            string profile1 = "TEST-WORKLOAD-PROFILE-3.json";
-            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
 
             this.command.Parameters = new Dictionary<string, IConvertible>();
 
@@ -451,8 +451,8 @@ namespace VirtualClient
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
-                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
 
             this.command.Profiles = new List<DependencyProfileReference>
             {
@@ -492,8 +492,8 @@ namespace VirtualClient
         public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario3()
         {
             // Create a new profile with ParametersOn list for testing
-            string profile1 = "TEST-WORKLOAD-PROFILE-3.json";
-            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile1) };
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
 
             this.command.Parameters = new Dictionary<string, IConvertible>();
 
@@ -503,8 +503,8 @@ namespace VirtualClient
             // Setup:
             // Read the actual profile content from the local file system.
             this.mockFixture.File
-                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
 
             this.command.Profiles = new List<DependencyProfileReference>
             {

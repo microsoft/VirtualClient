@@ -6,7 +6,11 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Extension methods for <see cref="ExecutionProfile"/>
@@ -26,6 +30,96 @@ namespace VirtualClient.Contracts
             elements.AddRange(profile.Monitors);
 
             ExecutionProfileExtensions.InlineElements(elements, profile.Parameters);
+        }
+
+        /// <summary>
+        /// Processes conditional parameter sets in the profile's ParametersOn property.
+        /// </summary>
+        /// <param name="profile">The execution profile to process.</param>
+        /// <param name="dependencies">The service dependencies.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        public static async Task ProcessParametersOnAsync(this ExecutionProfile profile, IServiceCollection dependencies)
+        {
+            try
+            {
+                if (profile.ParametersOn?.Any() == true && dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
+                {
+                    ILogger logger = dependencies.GetService<ILogger>();
+                    EventContext telemetryContext = EventContext.Persisted();
+
+                    telemetryContext.AddContext("profileDescription", profile.Description);
+                    telemetryContext.AddContext("parametersOnCount", profile.ParametersOn.Count);
+
+                    logger?.LogMessage($"{nameof(ExecutionProfileExtensions)}.ProcessParametersOn.Starting", telemetryContext);
+
+                    List<string> conditionKeys = new List<string>();
+
+                    for (int i = 0; i < profile.ParametersOn.Count; i++)
+                    {
+                        var parametersOn = profile.ParametersOn[i];
+
+                        if (parametersOn.TryGetValue("Condition", out IConvertible condition))
+                        {
+                            string conditionKey = $"Condition_{i}";
+                            profile.Parameters[conditionKey] = condition;
+                            conditionKeys.Add(conditionKey);
+
+                            telemetryContext.AddContext($"condition_{i}", condition.ToString());
+                        }
+                        else
+                        {
+                            throw new Exception(
+                                $"Invalid ParametersOn configuration. The 'Condition' key is missing in the ParametersOn entry at index {i}.");
+                        }
+                    }
+
+                    await evaluator.EvaluateAsync(dependencies, profile.Parameters);
+
+                    bool matchFound = false;
+
+                    for (int i = 0; i < profile.ParametersOn.Count && !matchFound; i++)
+                    {
+                        string conditionKey = $"Condition_{i}";
+                        if (profile.Parameters.TryGetValue(conditionKey, out IConvertible evaluatedCondition) &&
+                            bool.TryParse(evaluatedCondition.ToString(), out bool conditionResult) &&
+                            conditionResult)
+                        {
+                            var parametersOn = profile.ParametersOn[i];
+
+                            foreach (var parameter in parametersOn.Where(p => !string.Equals(p.Key, "Condition", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                if (profile.Parameters.ContainsKey(parameter.Key))
+                                {
+                                    profile.Parameters[parameter.Key] = parameter.Value;
+                                    telemetryContext.AddContext($"applied_{parameter.Key}", parameter.Value?.ToString());
+                                }
+                            }
+
+                            matchFound = true;
+                        }
+                    }
+
+                    foreach (string conditionKey in conditionKeys)
+                    {
+                        if (profile.ParametersOn.Count > 0 && profile.ParametersOn.Count > conditionKeys.IndexOf(conditionKey))
+                        {
+                            profile.ParametersOn[conditionKeys.IndexOf(conditionKey)]["Condition"] = profile.Parameters[conditionKey];
+                        }
+
+                        profile.Parameters.Remove(conditionKey);
+                    }
+
+                    logger?.LogMessage(
+                        $"{nameof(ExecutionProfileExtensions)}.ProcessParametersOn.{(matchFound ? "MatchFound" : "NoMatchFound")}",
+                        telemetryContext);
+                }
+            }
+            catch (Exception exc)
+            {
+                throw new NotSupportedException(
+                    $"Error processing ParametersOn conditional parameters: {exc.Message}",
+                    exc);
+            }
         }
 
         /// <summary>

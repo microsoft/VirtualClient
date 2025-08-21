@@ -55,7 +55,7 @@ namespace VirtualClient
         // Expression: {calculate(512 == 4)}
         // Expression: {calculate(512 > 2)}
         // Expression: {calculate(512 != {LogicalCoreCount})}
-        private static readonly Regex CalculateComparisionExpression = new Regex(
+        private static readonly Regex CalculateComparisonExpression = new Regex(
             @"\{calculate\(((?:\d+|""[^""]*""|\{[^}]+\})\s*(?:==|!=|<|>|<=|>=|&&|\|\|)\s*(?:\d+|""[^""]*""|\{[^}]+\}))\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -513,35 +513,35 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
-            ////// Expression: {calculate(512 == 4)}
-            ////// Expression: {calculate(512 > 2)}
-            ////// Expression: {calculate(512 != {LogicalCoreCount})}
-            ////// **IMPORTANT**
-            ////// This expression evaluation MUST come last after arthematic caluculation evaluators.
-            ////new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
-            ////{
-            ////    bool isMatched = false;
-            ////    string evaluatedExpression = expression;
-            ////    MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisionExpression.Matches(expression);
+            // Expression: {calculate(512 == 4)}
+            // Expression: {calculate(512 > 2)}
+            // Expression: {calculate(512 != {LogicalCoreCount})}
+            // **IMPORTANT**
+            // This expression evaluation MUST come last after arthematic caluculation evaluators.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisonExpression.Matches(expression);
 
-            ////    if (matches?.Any() == true)
-            ////    {
-            ////        isMatched = true;
-            ////        foreach (Match match in matches)
-            ////        {
-            ////            string function = match.Groups[1].Value;
-            ////            bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    foreach (Match match in matches)
+                    {
+                        string function = match.Groups[1].Value;
+                        bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
 
-            ////            evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-            ////        }
-            ////    }
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString().ToLower());
+                    }
+                }
 
-            ////    return new EvaluationResult
-            ////    {
-            ////        IsMatched = isMatched,
-            ////        Outcome = evaluatedExpression
-            ////    };
-            ////}),
+                return new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                };
+            })
             ////// Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
             ////// Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
             ////// **IMPORTANT**
@@ -901,14 +901,8 @@ namespace VirtualClient
             //
             //    LogicalCoreCount = # of logical cores on system.
 
-            int maxIterations = 5;
-            int iterations = 0;
-
-            while (this.ContainsReferences(parameters) && iterations < maxIterations)
-            {
-                iterations++;
-                await ProfileExpressionEvaluator.EvaluateWellKnownParametersAsync(dependencies, parameters, cancellationToken);
-            }
+            const int maxIterations = 5;
+            int iterations;
 
             iterations = 0;
             while (this.ContainsReferences(parameters) && iterations < maxIterations)
@@ -918,6 +912,13 @@ namespace VirtualClient
                 // We take as many passes through to ensure that all placeholders/expressions have been evaluated. This allows
                 // placeholders that are themselves contained/nested within parent placeholders to be successfully resolved.
                 ProfileExpressionEvaluator.EvaluateParameterSpecificExpressions(dependencies, parameters, cancellationToken);
+            }
+
+            iterations = 0;
+            while (this.ContainsReferences(parameters) && iterations < maxIterations)
+            {
+                iterations++;
+                await ProfileExpressionEvaluator.EvaluateWellKnownParametersAsync(dependencies, parameters, cancellationToken);
             }
 
             iterations = 0;

@@ -785,94 +785,9 @@ namespace VirtualClient
             result.ThrowIfInvalid();
 
             // Process conditional parameters (ParametersOn feature)
-            await this.ProcessParametersOnAsync(profile, dependencies);
+            await profile.ProcessParametersOnAsync(dependencies);
 
             profile.Inline();
-        }
-
-        /// <summary>
-        /// Processes conditional parameter sets in the profile's ParametersOn property.
-        /// </summary>
-        /// <param name="profile">The execution profile to process.</param>
-        /// <param name="dependencies">The service dependencies.</param>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        private async Task ProcessParametersOnAsync(ExecutionProfile profile, IServiceCollection dependencies)
-        {
-            try
-            {
-                if (profile.ParametersOn?.Any() == true && dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
-                {
-                    ILogger logger = dependencies.GetService<ILogger>();
-                    EventContext telemetryContext = EventContext.Persisted();
-
-                    telemetryContext.AddContext("profileDescription", profile.Description);
-                    telemetryContext.AddContext("parametersOnCount", profile.ParametersOn.Count);
-
-                    logger?.LogMessage($"{nameof(ExecuteProfileCommand)}.ProcessParametersOn.Starting", telemetryContext);
-
-                    IDictionary<string, IConvertible> conditions = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-
-                    for (int i = 0; i < profile.ParametersOn.Count; i++)
-                    {
-                        var parametersOn = profile.ParametersOn[i];
-
-                        if (parametersOn.TryGetValue("Condition", out IConvertible condition))
-                        {
-                            string conditionKey = $"Condition_{i}";
-                            conditions[conditionKey] = condition;
-
-                            telemetryContext.AddContext($"condition_{i}", condition.ToString());
-                        }
-                        else
-                        {
-                            throw new Exception(
-                                $"Invalid ParametersOn configuration. The 'Condition' key is missing in the ParametersOn entry at index {i}.");
-                        }
-                    }
-
-                    await evaluator.EvaluateAsync(dependencies, conditions);
-
-                    bool matchFound = false;
-                    for (int i = 0; i < profile.ParametersOn.Count; i++)
-                    {
-                        string conditionKey = $"Condition_{i}";
-                        if (conditions.TryGetValue(conditionKey, out IConvertible evaluatedCondition) &&
-                            bool.TryParse(evaluatedCondition.ToString(), out bool conditionResult) &&
-                            conditionResult)
-                        {
-                            matchFound = true;
-                            var parametersOn = profile.ParametersOn[i];
-
-                            foreach (var parameter in parametersOn.Where(p => !string.Equals(p.Key, "Condition", StringComparison.OrdinalIgnoreCase)))
-                            {
-                                if (profile.Parameters.ContainsKey(parameter.Key))
-                                {
-                                    profile.Parameters[parameter.Key] = parameter.Value;
-                                    telemetryContext.AddContext($"applied_{parameter.Key}", parameter.Value?.ToString());
-                                }
-                            }
-                            
-                            break;
-                        }
-                    }
-
-                    foreach (string conditionKey in conditions.Keys)
-                    {
-                        int index = int.Parse(conditionKey.Split('_')[1]);
-                        profile.ParametersOn[index]["Condition"] = conditions[conditionKey];
-                    }
-
-                    logger?.LogMessage(
-                        $"{nameof(ExecuteProfileCommand)}.ProcessParametersOn.{(matchFound ? "MatchFound" : "NoMatchFound")}",
-                        telemetryContext);
-                }
-            }
-            catch (Exception exc)
-            {
-                throw new NotSupportedException(
-                    $"Error processing ParametersOn conditional parameters: {exc.Message}",
-                    exc);
-            }
         }
 
         private Task LoadExtensionsBinariesAsync(PlatformExtensions extensions, CancellationToken cancellationToken)
