@@ -4,20 +4,23 @@
     },
     "Parameters": {
         "Parameter1": false,
-        "Parameter2": "base2",
-        "Parameter3": "base3",
-        "Parameter4": "base4"
+        "Parameter2": "base1",
+        "Parameter3": "conditional1",
+        "Parameter4": "conditionalA"
     },
     "ParametersOn": [
         {
-            "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base2\")} ? \"true\" : \"false\")}",
-            "Parameter3": "conditional3",
-            "Parameter4": "conditional4"
+            "Condition": "{calculate(\"{Parameter2}\" == \"base2\")}",
+            "Parameter3": "conditional2"
         },
         {
-            "Condition": "{calculate({calculate(\"{Parameter2}\" == \"base3\")} ? \"true\" : \"false\")}",
-            "Parameter3": "conditional5",
-            "Parameter4": "conditional6"
+            "Condition": "{calculate(\"{Parameter2}\" == \"base3\")}",
+            "Parameter1": true,
+            "Parameter3": "conditional3"
+        },
+        {
+            "Condition": "{calculate(\"{Parameter2}\" == \"base4\")}",
+            "Parameter3": "conditional4"
         }
     ],
     "Actions": [

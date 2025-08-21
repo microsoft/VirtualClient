@@ -785,7 +785,7 @@ namespace VirtualClient
             result.ThrowIfInvalid();
 
             // Process conditional parameters (ParametersOn feature)
-            await profile.ProcessParametersOnAsync(dependencies);
+            await profile.EvaluateConditionalParametersAsync(dependencies);
 
             profile.Inline();
         }

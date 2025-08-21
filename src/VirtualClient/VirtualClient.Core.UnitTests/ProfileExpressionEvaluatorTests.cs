@@ -428,29 +428,6 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.Arm64, "arm64")]
-        [TestCase(PlatformID.Unix, Architecture.X64, "x64")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "arm64")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "x64")]
-        public async Task ProfileExpressionEvaluatorSupportsArchitectureReferences(PlatformID platform, Architecture architecture, string expectedValue)
-        {
-            this.SetupDefaults(platform, architecture);
-
-            Dictionary<string, string> expressions = new Dictionary<string, string>
-            {
-                { "{CpuArchitecture}", expectedValue },
-                { "--arch={CpuArchitecture}", $"--arch={expectedValue}" }
-            };
-
-            foreach (var entry in expressions)
-            {
-                string expectedExpression = entry.Value;
-                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
-                Assert.AreEqual(expectedExpression, actualExpression);
-            }
-        }
-
-        [Test]
         public async Task ProfileExpressionEvaluatorHandlesCasesWherePlatformSpecificPackagePathAndPlatformAreUsedTogether()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
@@ -1020,6 +997,112 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(Architecture.Arm64)]
+        [TestCase(Architecture.X64)]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionArchitecture(Architecture architecture)
+        {
+            this.SetupDefaults(PlatformID.Unix, architecture);
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--architecture={Architecture}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--architecture={architecture.ToString().ToLowerInvariant()}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, "windows")]
+        [TestCase(PlatformID.Unix, "linux")]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionOS(PlatformID platformID, string os)
+        {
+            this.SetupDefaults(platformID);
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--os={OS}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--os={os}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionLogicalCoreCount()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            int expectedLogicalCores = 4;
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--threads={LogicalCoreCount}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--threads={expectedLogicalCores}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionPackagePath()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+
+            // The package MUST be actually registered with VC.
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--package={PackagePath:anypackage}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--package={packagePath}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "/linux-x64")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "/linux-arm64")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "\\win-x64")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "\\win-arm64")]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionPackagePathPlatform(PlatformID platformID, Architecture architecture, string platform)
+        {
+            this.SetupDefaults(platformID, architecture);
+            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, this.mockFixture.Platform.ToString());
+
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--package={PackagePath/Platform:anypackage}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--package={packagePath}{platform}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorParameterSetExpressionsFollowTheCaseSensitivityOfTheParameterDictionary()
         {
             this.SetupDefaults(PlatformID.Unix);
@@ -1106,14 +1189,14 @@ namespace VirtualClient
             // {calculate(calculate(512 / (4 / 2)) ? "Yes" : "No")}
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
-                { "BUILD_TLS", "{calculate({BindToCores} ? \"yes\" : \"no\" )}" },
-                { "BindToCores" , true },
+                { "BUILD_TLS", "{calculate({IsTLSEnabled} ? \"yes\" : \"no\" )}" },
+                { "IsTLSEnabled" , true }
             };
 
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
 
             Assert.AreEqual("yes", parameters["BUILD_TLS"]);
-            Assert.AreEqual(true, parameters["BindToCores"]);
+            Assert.AreEqual(true, parameters["IsTLSEnabled"]);
         }
 
         [Test]
@@ -1209,110 +1292,73 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_7()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
-            {
-                { "Flags", "{calculate({calculate(\"{PerformanceLibraryVersion}\" == \"25.01\")} ? \"Yes\" : \"No\")}" },
-                { "PerformanceLibraryVersion", "25.01" }
-            };
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("Yes", parameters["Flags"]);
-        }
 
-        [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_8()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
-            {
-                { "Flags", "{calculate({calculate(\"{PerformanceLibraryVersion}\" == \"25.01\")} ? \"Yes\" : \"No\")}" },
-                { "PerformanceLibraryVersion", "25.02" }
-            };
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("No", parameters["Flags"]);
-        }
-
-        [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_9()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
-            {
-                { "Flags", "{calculate({calculate((\"{PerformanceLibraryVersion}\" == \"25.01\") && (\"{platform}\" == \"linux-x64\"))} ? \"Yes\" : \"No\")}" },
-                { "PerformanceLibraryVersion", "25.01" }
-            };
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("Yes", parameters["Flags"]);
-        }
-
-        [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_10()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
-            {
-                { "Flags", "{calculate({calculate((\"{PerformanceLibraryVersion}\" == \"25.01\") && (\"{platform}\" == \"linux-x64\"))} ? \"Yes\" : \"No\")}" },
-                { "PerformanceLibraryVersion", "25.02" }
-            };
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("No", parameters["Flags"]);
-        }
-
-        /*
-        [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_11()
+        public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_1()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
-                { "Flags", "{calculate({calculate(\"{specProfile}\" == \"fprate\")} ? \"-O3 -flto -march=native\" : {calculate({calculate(\"{specProfile}\" == \"intrate\")} ? {calculate({calculate(\"{CpuArchitecture}\" == \"x64\")} ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")} : \"-O3 -march=native\")})}" },
-                { "specProfile", "fprate" },
+                {
+                    "Flags",
+                    "{calculate(\"{SpecProfile}\" == \"fprate\" ? \"-O3 -flto -march=native\" : \"{calculate(\"{SpecProfile}\" == \"intrate\" ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")}\")}"
+                },
+                {
+                    "SpecProfile",
+                    "fprate"
+                }
             };
+
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
             Assert.AreEqual("-O3 -flto -march=native", parameters["Flags"]);
         }
 
         [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_12()
+        public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_2()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
-                { "Flags", "{calculate({calculate(\"{specProfile}\" == \"fprate\")} ? \"-O3 -flto -march=native\" : {calculate({calculate(\"{specProfile}\" == \"intrate\")} ? {calculate({calculate(\"{CpuArchitecture}\" == \"x64\")} ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")} : \"-O3 -march=native\")})}" },
-                { "specProfile", "intrate" },
+                {
+                    "Flags",
+                    "{calculate(\"{SpecProfile}\" == \"fprate\" ? \"-O3 -flto -march=native\" : \"{calculate(\"{SpecProfile}\" == \"intrate\" && \"{CpuArchitecture}\" == \"x64\" ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")}\")}"
+                },
+                {
+                    "SpecProfile",
+                    "fprate"
+                },
+                {
+                    "CpuArchitecture",
+                    "{calculate(\"{Platform}\".EndsWith(\"arm64\") ? \"arm64\" : \"x64\")}"
+                }
             };
+
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("-O2 -flto -march=core-avx2", parameters["Flags"]);
+            Assert.AreEqual("-O3 -flto -march=native", parameters["Flags"]);
         }
 
         [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_13()
+        [TestCase(Architecture.Arm64, "-O2 -flto -march=armv8.2-a")]
+        [TestCase(Architecture.X64, "-O2 -flto -march=core-avx2")]
+        public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_3(Architecture architecture, string expectedValue)
         {
-            this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
+            this.SetupDefaults(PlatformID.Unix, architecture);
             Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
             {
-                { "Flags", "{calculate({calculate(\"{specProfile}\" == \"fprate\")} ? \"-O3 -flto -march=native\" : {calculate({calculate(\"{specProfile}\" == \"intrate\")} ? {calculate({calculate(\"{CpuArchitecture}\" == \"x64\")} ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")} : \"-O3 -march=native\")})}" },
-                { "specProfile", "intrate" },
+                {
+                    "Flags",
+                    "{calculate(\"{SpecProfile}\" == \"fprate\" ? \"-O3 -flto -march=native\" : \"{calculate(\"{SpecProfile}\" == \"intrate\" && \"{Architecture}\" == \"x64\" ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")}\")}"
+                },
+                {
+                    "SpecProfile",
+                    "intrate"
+                }
             };
-            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("-O2 -flto -march=armv8.2-a", parameters["Flags"]);
-        }
 
-        [Test]
-        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_14()
-        {
-            this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
-            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
-            {
-                { "Flags", "{calculate({calculate(\"{specProfile}\" == \"fprate\")} ? \"-O3 -flto -march=native\" : {calculate({calculate(\"{specProfile}\" == \"intrate\")} ? {calculate({calculate(\"{CpuArchitecture}\" == \"x64\")} ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")} : \"-O3 -march=native\")})}" },
-                { "specProfile", "special" },
-            };
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
-            Assert.AreEqual("-O3 -march=native", parameters["Flags"]);
+            Assert.AreEqual(expectedValue, parameters["Flags"]);
         }
-        */
 
         [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferencesInParameterSets_Scenario_1()
