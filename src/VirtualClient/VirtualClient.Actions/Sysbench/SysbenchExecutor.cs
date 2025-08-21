@@ -426,6 +426,42 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Build the Sysbench Logging Basic Arguments, having the common parameters
+        /// dbName, databaseSystem, benchmark and tableCount.
+        /// </summary>
+        /// <returns></returns>
+        protected string BuildSysbenchLoggingBasicArguments()
+        {
+            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
+
+            return $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount}";
+        }
+
+        /// <summary>
+        /// Build the Sysbench Logging OLTP Basic Arguments, having the common parameters
+        /// dbName, databaseSystem, benchmark, tableCount, recordCount and threadCount.
+        /// </summary>
+        /// <returns></returns>
+        protected string BuildSysbenchLoggingOLTPBasicArguments()
+        {
+            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            return $"{this.BuildSysbenchLoggingBasicArguments()} --recordCount {recordCount} --threadCount {threadCount}";
+        }
+
+        /// <summary>
+        /// Build the Sysbench Logging TPCC Basic Arguments, having the common parameters
+        /// dbName, databaseSystem, benchmark, tableCount, warehouses and threadCount.
+        /// </summary>
+        /// <returns></returns>
+        protected string BuildSysbenchLoggingTPCCBasicArguments()
+        {
+            int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            return $"{this.BuildSysbenchLoggingBasicArguments()} --warehouses {warehouseCount} --threadCount {threadCount}";
+        }
+
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)
