@@ -32,6 +32,7 @@ namespace VirtualClient
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Identity;
+    using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
     /// <summary>
@@ -443,13 +444,6 @@ namespace VirtualClient
                 loggerDefinitions.Add("console");
             }
 
-            // Add default file logging
-            // e.g. (--logger=file)
-            if (loggerDefinitions?.Any(l => Regex.IsMatch(l, "^file", RegexOptions.IgnoreCase)) != true)
-            {
-                loggerDefinitions.Add("file");
-            }
-
             // backward compatibility for --eventhub
             if (!string.IsNullOrEmpty(this.EventHubStore))
             {
@@ -686,6 +680,11 @@ namespace VirtualClient
 
                     case "proxy":
                         CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), this.CertificateManager, source);
+                        break;
+
+                    case "summary":
+                        ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(string.Empty);
+                        loggingProviders.Add(summaryLoggerProvider);
                         break;
 
                     default:

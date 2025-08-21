@@ -26,8 +26,8 @@
 	      {
           "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_1k",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-1k",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_1KiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-1KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -39,8 +39,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_4k",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-4k",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_4KiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-4KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_4k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -52,8 +52,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_16k_{Duration}",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-16k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_16KiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-16KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_16k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -65,8 +65,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_64k_{Duration}",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-64k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_64KiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-64KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_64k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -78,8 +78,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_256k_{Duration}",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-256k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_256KiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-256KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_256k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -91,8 +91,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_1mb_{Duration}",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-1mb_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_1MiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-1MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_1mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -104,8 +104,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_100mb_{Duration}",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-100mb_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_100MiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-100MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_100mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -117,8 +117,8 @@
         {
           "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_512mb",
-            "MetricScenario": "tls_client_aes-128-gcm-sha256-512mb",
+            "Scenario": "OpenSSL_TLS_Client_AES_128_GCM_SHA256_512MiB",
+            "MetricScenario": "tls_client_aes-128-gcm-sha256-512MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_512mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -130,8 +130,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_1k",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-1k",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_1KiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-1KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -143,8 +143,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_4k",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-4k",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_4KiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-4KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_4k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -156,8 +156,8 @@
          {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_16k_{Duration}",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-16k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_16KiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-16KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_16k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -169,8 +169,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_64k_{Duration}",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-64k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_64KiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-64KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_64k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -182,8 +182,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_256k_{Duration}",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-256k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_256KiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-256KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_256k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -195,8 +195,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_1mb_{Duration}",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-1mb_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_1MiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-1MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_1mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -208,8 +208,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_100mb_{Duration}",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-100mb_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_100MiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-100MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_100mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -221,8 +221,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_512mb",
-            "MetricScenario": "tls_client_aes-256-gcm-sha384-512mb",
+            "Scenario": "OpenSSL_TLS_Client_AES_256_GCM_SHA384_512MiB",
+            "MetricScenario": "tls_client_aes-256-gcm-sha384-512MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_512mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -234,8 +234,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_1k",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-1k",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_1KiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-1KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -247,8 +247,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_4k",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-4k",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_4KiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-4KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_4k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -260,8 +260,8 @@
          {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_16k_{Duration}",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-16k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_16KiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-16KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_16k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -273,8 +273,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_64k_{Duration}",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-64k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_64KiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-64KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_64k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -286,8 +286,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_256k_{Duration}",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-256k_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_256KiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-256KiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_256k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -299,8 +299,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_1mb_{Duration}",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-1mb_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_1MiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-1MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_1mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -312,8 +312,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20-POLY1305-SHA256-100mb_{Duration}",
-            "MetricScenario": "tls_client_chacha20_poly1305_sha256_100mb_{Duration}",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20-POLY1305-SHA256-100MiB",
+            "MetricScenario": "tls_client_chacha20_poly1305_sha256_100MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_100mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
@@ -325,8 +325,8 @@
         {
             "Type": "TlsOpenSslClientExecutor",
           "Parameters": {
-            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_512mb",
-            "MetricScenario": "tls_client_chacha20-poly1305-sha256-512mb",
+            "Scenario": "OpenSSL_TLS_Client_CHACHA20_POLY1305_SHA256_512MiB",
+            "MetricScenario": "tls_client_chacha20-poly1305-sha256-512MiB",
             "CommandArguments": "s_time -connect :{ServerPort} -www /test_512mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
             "Duration": "$.Parameters.Duration",
             "ServerPort": "$.Parameters.ServerPort",
