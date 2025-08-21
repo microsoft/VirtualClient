@@ -389,6 +389,129 @@ namespace VirtualClient
             Assert.IsTrue(profile.Monitors.Count == 12);
         }
 
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfileNoConditionsMatch()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference(testWorkloadProfile3)
+            };
+
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base1", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional1", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
+        }
+
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfileFirstConditionMatches()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
+
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+
+            // User providing a parameter through command line to override the profile value
+            this.command.Parameters.Add("Parameter2", "base2");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base2", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional2", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
+        }
+
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfileSecondConditionMatches()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
+
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+
+            // User providing a parameter through command line to override the profile value
+            this.command.Parameters.Add("Parameter2", "base3");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            Assert.IsTrue((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base3", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional3", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
+        }
+
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfileThirdConditionMatches()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
+
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+
+            // User providing a parameter through command line to override the profile value
+            this.command.Parameters.Add("Parameter2", "base4");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base4", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional4", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
+        }
+
         private class TestRunProfileCommand : ExecuteProfileCommand
         {
             public new PlatformExtensions Extensions
