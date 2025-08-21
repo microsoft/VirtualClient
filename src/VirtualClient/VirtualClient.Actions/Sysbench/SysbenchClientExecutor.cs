@@ -203,7 +203,7 @@ namespace VirtualClient.Actions
 
         private async Task RunOLTPWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.sysbenchLoggingArguments = $"{this.BuildSysbenchLoggingOLTPBasicArguments()} --workload {this.Workload}  ";
+            this.sysbenchLoggingArguments = $"{this.BuildSysbenchLoggingOLTPBasicArguments()} --workload {this.Workload} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
@@ -231,7 +231,7 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
-            this.sysbenchLoggingArguments = $"{this.BuildSysbenchLoggingTPCCBasicArguments()} --workload tpcc  ";
+            this.sysbenchLoggingArguments = $"{this.BuildSysbenchLoggingTPCCBasicArguments()} --workload tpcc ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";

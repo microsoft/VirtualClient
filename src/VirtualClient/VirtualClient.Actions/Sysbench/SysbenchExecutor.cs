@@ -433,7 +433,7 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         protected string BuildSysbenchLoggingBasicArguments()
         {
-            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
 
             return $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount}";
         }
