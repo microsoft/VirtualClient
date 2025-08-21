@@ -454,7 +454,12 @@ namespace VirtualClient
             // e.g. (--logger=proxy;http://192.168.1.25:9812)
             if (!loggerDefinitions.Any(l => Regex.IsMatch(l, "^proxy;", RegexOptions.IgnoreCase)) && this.ProxyApiUri != null)
             {
-                loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
+                if (loggerDefinitions.Any( l => Regex.IsMatch(l, "^file", RegexOptions.IgnoreCase)))
+                {
+                    // only add proxy logger if user also asked for file logging.
+                    loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
+                }
+                
             }
 
             return loggerDefinitions;
