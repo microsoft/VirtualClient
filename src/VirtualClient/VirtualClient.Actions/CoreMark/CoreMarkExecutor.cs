@@ -114,6 +114,15 @@ namespace VirtualClient.Actions
                     case PlatformID.Unix:
                         using (IProcessProxy process = await this.ExecuteCommandAsync("make", argument, this.PackagePath, telemetryContext, cancellationToken))
                         {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                if (process.IsErrored())
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true);
+                                    process.ThrowIfWorkloadFailed(errorReason: ErrorReason.CompilationFailed);
+                                }
+                            }
+
                             await this.CaptureMetricsAsync(process, argument, telemetryContext, cancellationToken);
                         }
 
@@ -125,6 +134,15 @@ namespace VirtualClient.Actions
 
                         using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {argument}", this.PackagePath, cygwinPackage.Path, telemetryContext, cancellationToken))
                         {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                if (process.IsErrored())
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true);
+                                    process.ThrowIfWorkloadFailed(errorReason: ErrorReason.CompilationFailed);
+                                }
+                            }
+
                             await this.CaptureMetricsAsync(process, argument, telemetryContext, cancellationToken);
                         }
 
