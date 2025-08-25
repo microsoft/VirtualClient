@@ -457,6 +457,10 @@ namespace VirtualClient
                 if (loggerDefinitions.Any( l => Regex.IsMatch(l, "^file", RegexOptions.IgnoreCase)))
                 {
                     // only add proxy logger if user also asked for file logging.
+                    loggerDefinitions.Add($"proxy;file;{this.ProxyApiUri.ToString()}");
+                }
+                else
+                {
                     loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
                 }
                 
@@ -684,7 +688,8 @@ namespace VirtualClient
                         break;
 
                     case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), this.CertificateManager, source);
+
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, loggerParameters, this.CertificateManager, source);
                         break;
 
                     case "summary":
@@ -805,14 +810,21 @@ namespace VirtualClient
             }
         }
 
-        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, Uri proxyApiUri, ICertificateManager certificateManager, string source = null)
+        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, string parameters, ICertificateManager certificateManager, string source = null)
         {
-            if (proxyApiUri != null)
+            ILogger debugLogger = null;
+            if (parameters.StartsWith("file;", StringComparison.OrdinalIgnoreCase))
             {
-                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
+                debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
                     .CreateLogger("Proxy");
 
                 CommandBase.proxyApiDebugLoggers.Add(debugLogger);
+                parameters = parameters.Substring("file;".Length);
+            }
+
+            if (!string.IsNullOrEmpty(parameters))
+            {
+                Uri proxyApiUri = new Uri(parameters);
 
                 X509Certificate2 certificate = null;
                 if (EndpointUtility.TryParseCertificateReference(proxyApiUri, out string issuer, out string subject))
