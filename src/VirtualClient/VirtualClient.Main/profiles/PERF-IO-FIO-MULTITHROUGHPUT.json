@@ -2,8 +2,8 @@
     "Description": "FIO Multi Throughput (OLTP-C) Workload",
     "Metadata": {
         "DiskSelectionInformation": "Sequential disk count specifies the number of disks being used for Sequential I/O from selected disks. Out of which the smallest disks are selected.",
-	"RecommendedMinimumExecutionTime": "02:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
