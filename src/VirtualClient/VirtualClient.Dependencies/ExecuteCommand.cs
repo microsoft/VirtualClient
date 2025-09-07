@@ -134,9 +134,9 @@ namespace VirtualClient.Dependencies
                                     if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
                                     {
                                         this.PlatformSpecifics.SetEnvironmentVariable(
-                                            EnvironmentVariable.PATH, 
-                                            effectiveWorkingDirectory, 
-                                            EnvironmentVariableTarget.Process, 
+                                            EnvironmentVariable.PATH,
+                                            effectiveWorkingDirectory,
+                                            EnvironmentVariableTarget.Process,
                                             append: true);
                                     }
 

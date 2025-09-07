@@ -10,15 +10,34 @@ namespace VirtualClient.Cleanup
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Extensions;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Extension methods that support runtime cleanup operations.
     /// </summary>
     public static class CleanupExtensions
     {
+        /// <summary>
+        /// Cleans the default "contentuploads" directory provided deleting any files and folders that are beyond the
+        /// defined retention period.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="retentionDate">A retention date to apply to files within the directory. Any files created within this retention date are preserved.</param>
+        public static async Task CleanContentUploadsDirectoryAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken, DateTime? retentionDate = null)
+        {
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            string contentUploadsDirectory = systemManagement.PlatformSpecifics.ContentUploadsDirectory;
+
+            if (fileSystem.Directory.Exists(contentUploadsDirectory))
+            {
+                IEnumerable<string> uploadRequestFiles = fileSystem.Directory.EnumerateFiles(contentUploadsDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteFilesAsync(fileSystem, uploadRequestFiles, retentionDate, cancellationToken);
+
+                IEnumerable<string> contentUploadDirectories = fileSystem.Directory.EnumerateDirectories(contentUploadsDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, contentUploadDirectories, retentionDate, cancellationToken);
+            }
+        }
+
         /// <summary>
         /// Cleans the default "logs" directory provided deleting any files and folders that are beyond the
         /// defined retention period.

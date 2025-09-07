@@ -36,9 +36,16 @@ namespace VirtualClient.UnitTests
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.SetupCertificateMocks();
+
+            this.ExperimentId = null;
+            this.LogDirectory = null;
+            this.PackageDirectory = null;
+            this.StateDirectory = null;
+            this.TempDirectory = null;
         }
 
         [Test]
+        [Order(0)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -58,6 +65,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(1)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -78,6 +86,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(2)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -98,6 +107,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(3)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -117,6 +127,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(4)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -137,6 +148,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(5)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -157,6 +169,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(6)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -177,6 +190,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(7)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -197,6 +211,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(8)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -217,6 +232,70 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(9)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedDefaultTempDirectoryLocation(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
+            string expectedDirectory = this.mockFixture.Combine(MockFixture.GetDirectory(typeof(CommandBaseTests), "temp"));
+            string defaultDirectory = platformSpecifics.TempDirectory;
+
+            this.EvaluateDirectoryPathOverrides(platformSpecifics);
+            string actualDirectory = platformSpecifics.TempDirectory;
+
+            Assert.AreEqual(expectedDirectory, defaultDirectory, "Default temp directory does not match expected.");
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(10)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedTempDirectoryLocationWhenSpecifiedOnTheCommandLine(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Setup:
+            // Property set when --temp-dir=<path> is used on the command line.
+            string expectedDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "alternate_temp_1");
+            this.TempDirectory = expectedDirectory;
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(11)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedTempDirectoryLocationWhenSpecifiedInTheSupportedEnvironmentVariable(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Setup:
+            // Environment variable 'VC_TEMP_DIR' can be used to define the logs directory.
+            string expectedDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "alternate_temp_2");
+            this.mockFixture.SetEnvironmentVariable(EnvironmentVariable.VC_TEMP_DIR, expectedDirectory);
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(15)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -234,6 +313,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(16)]
         public void CommandBaseCanCreateEventHubLoggers()
         {
             this.SetupTest(PlatformID.Unix, Architecture.X64);
@@ -267,6 +347,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(17)]
         public void CommandBaseCanCreateMultipleLoggers()
         {
             this.SetupTest(PlatformID.Unix, Architecture.X64);
@@ -276,7 +357,6 @@ namespace VirtualClient.UnitTests
                 .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
             List<string> loggerDefinitions = new List<string>();
             loggerDefinitions.Add("eventHub;sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
-            loggerDefinitions.Add(@"proxy;https://vc.com");
             loggerDefinitions.Add("console");
             loggerDefinitions.Add("csv");
             loggerDefinitions.Add("file");
@@ -299,8 +379,8 @@ namespace VirtualClient.UnitTests
             configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
 
             IList<ILoggerProvider> loggers = testCommand.CreateLogger(configuration, this.mockFixture.PlatformSpecifics);
-            // 1 console, 3 serilog and 1 csv file logger, 3 eventhub, 1 proxy
-            Assert.AreEqual(loggers.Count, 9);
+            // 1 console, 3 serilog and 1 csv file logger, 3 eventhub
+            Assert.AreEqual(loggers.Count, 8);
         }
 
         /// <summary>

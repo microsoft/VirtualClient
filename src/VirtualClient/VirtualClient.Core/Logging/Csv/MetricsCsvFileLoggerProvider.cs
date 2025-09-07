@@ -5,7 +5,6 @@ namespace VirtualClient.Logging
 {
     using System;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -14,7 +13,6 @@ namespace VirtualClient.Logging
     /// Provides methods for creating <see cref="ILogger"/> instances that can be used
     /// to write metrics data to a CSV file.
     /// </summary>
-    [Alias("Csv,File")]
     public sealed class MetricsCsvFileLoggerProvider : ILoggerProvider
     {
         private string filePath;

@@ -166,12 +166,10 @@ namespace VirtualClient
             }
             catch (VirtualClientException exc)
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)exc.Reason;
             }
-            catch (Exception exc)
+            catch
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = 1;
             }
             finally
