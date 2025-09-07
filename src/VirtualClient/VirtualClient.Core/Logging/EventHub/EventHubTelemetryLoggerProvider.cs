@@ -7,6 +7,7 @@ namespace VirtualClient.Logging
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides methods for creating <see cref="ILogger"/> instances that can

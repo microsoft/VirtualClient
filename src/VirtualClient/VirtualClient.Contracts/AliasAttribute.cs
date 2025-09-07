@@ -10,7 +10,7 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Defines one or more aliases for a given class for reflection support.
     /// </summary>
-    [AttributeUsage(validOn: AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class AliasAttribute : Attribute
     {
         /// <summary>

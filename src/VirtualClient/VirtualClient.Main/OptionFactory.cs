@@ -30,6 +30,42 @@ namespace VirtualClient
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
 
         /// <summary>
+        /// Command line option defines the target agent SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateAgentOption(bool required = false, object defaultValue = null)
+        {
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "--agent" })
+            {
+                Name = "TargetAgents",
+                Description = "The target agent/system SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).",
+                ArgumentHelpName = "target",
+                AllowMultipleArgumentsPerToken = true
+            };
+
+            option.AddValidator(result =>
+            {
+                foreach (Token token in result.Tokens)
+                {
+                    string agentSsh = token.Value;
+                    if (!SshClientProxy.TryGetSshTargetInformation(agentSsh, out string host, out string username, out string pass))
+                    {
+                        throw new NotSupportedException(
+                            $"Invalid target agent definition. The SSH host, username or password information provided is not a valid format. " +
+                            $"Agent SSH targets should be in a format similar to the following example: user@192.168.1.15;pw@rd");
+                    }
+                }
+
+                return string.Empty;
+            });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the port on which the local self-hosted REST API service
         /// should list for HTTP traffic.
         /// </summary>
@@ -140,7 +176,10 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 2 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--c", "--client", "--client-id", "--clientId", "--clientid", "--agent-id", "--agentId", "--agentid" })
+            //
+            // **IMPORTANT**
+            // Note that the --agentId option will be deprecated in the future.
+            Option<string> option = new Option<string>(new string[] { "--c", "--client-id", "--agentId" })
             {
                 Name = "ClientId",
                 Description = "A name/identifier to describe the instance of the application (the agent) that will be included with all " +
@@ -181,7 +220,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--cp", "--content-path", "--content-path-template", "--contentPathTemplate", "--contentpathtemplate", "--contentPath", "--contentpath" })
+            Option<string> option = new Option<string>(new string[] { "--cp", "--content-path", "--content-path-template" })
             {
                 Name = "ContentPathTemplate",
                 Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
@@ -212,7 +251,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore", },
+                new string[] { "--cs", "--content", "--content-store" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,
@@ -366,8 +405,11 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
+            //
+            // **IMPORTANT**
+            // Note that this option will be deprecated in the future.
             Option<string> option = new Option<string>(
-                new string[] { "--eh", "--eventhub", "--event-hub", "--eventHub", "--eventHubConnectionString", "--eventhubconnectionstring" })
+                new string[] { "--event-hub", "--eventHubConnectionString" })
             {
                 Name = "EventHubStore",
                 Description = "An endpoint URI or connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
@@ -390,7 +432,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--wait", "--exit-wait", "--flush-wait" },
+                new string[] { "--wait", "--exit-wait" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "ExitWait",
@@ -414,7 +456,10 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--e", "--experiment", "--experiment-id", "--experimentId", "--experimentid" })
+            //
+            // **IMPORTANT**
+            // Note that the --experimentId option will be deprecated in the future.
+            Option<string> option = new Option<string>(new string[] { "--e", "--experiment-id", "--experimentId" })
             {
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
@@ -584,7 +629,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--lp", "--layout", "--layout-path", "--layoutPath", "--layoutpath",  })
+            Option<string> option = new Option<string>(new string[] { "--lp", "--layout", "--layout-path",  })
             {
                 Name = "LayoutPath",
                 Description = "The path to the environment layout .json file required for client/server operations. The contents of this " +
@@ -887,7 +932,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--ps", "--packages", "--package-store", "--packageStore", "--packagestore"  },
+                new string[] { "--ps", "--packages", "--package-store" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Packages,
@@ -1102,6 +1147,42 @@ namespace VirtualClient
                 ArgumentHelpName = "integer",
                 AllowMultipleArgumentsPerToken = false
             };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the target agent SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateSshOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--ssh" })
+            {
+                Name = "SshTarget",
+                Description = "The target SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).",
+                ArgumentHelpName = "target",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            option.AddValidator(result =>
+            {
+                foreach (Token token in result.Tokens)
+                {
+                    string agentSsh = token.Value;
+                    if (!SshClientProxy.TryGetSshTargetInformation(agentSsh, out string host, out string username, out string pass))
+                    {
+                        throw new NotSupportedException(
+                            $"Invalid SSH target. The SSH host, username or password information provided is not a valid format. " +
+                            $"SSH targets should be in a format similar to the following example: user@192.168.1.15;pw@rd");
+                    }
+                }
+
+                return string.Empty;
+            });
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
@@ -1623,6 +1704,14 @@ namespace VirtualClient
         private static void ThrowIfOptionExists(OptionResult parsedResult, string optionName, string errorMessage)
         {
             if (parsedResult.Parent?.Children?.Any(option => string.Equals(option.Symbol.Name, optionName, StringComparison.OrdinalIgnoreCase)) == true)
+            {
+                throw new ArgumentException(errorMessage);
+            }
+        }
+
+        private static void ThrowIfOptionDoesNotExists(OptionResult parsedResult, string optionName, string errorMessage)
+        {
+            if (parsedResult.Parent?.Children?.Any(option => string.Equals(option.Symbol.Name, optionName, StringComparison.OrdinalIgnoreCase)) != true)
             {
                 throw new ArgumentException(errorMessage);
             }

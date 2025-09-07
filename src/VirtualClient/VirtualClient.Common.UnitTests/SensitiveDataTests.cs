@@ -217,6 +217,18 @@ namespace VirtualClient.Common
         }
 
         [Test]
+        [TestCase("user@10.2.3.5;pass_;wor;d", "user@10.2.3.5;...")]
+        [TestCase("user@10.2.3.5;pass__w@rd", "user@10.2.3.5;...")]
+        [TestCase("user@machine@somewhere;pass", "user@machine@somewhere;...")]
+        [TestCase("user@machine@somewhere;pass;_w@rd", "user@machine@somewhere;...")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass;_w@rd", "user@2001:db8:85a3:0:0:8a2e:370:7334;...")]
+        public void ObscureSecretsObfuscatesPasswordsInAgentSshConnections(string originalString, string expectedString)
+        {
+            string obscuredString = SensitiveData.ObscureSecrets(originalString);
+            Assert.AreEqual(expectedString, obscuredString);
+        }
+
+        [Test]
         public void ObscureSecretsObfuscatesSecretsThatMatchAGivenRegularExpression_Scenario1()
         {
             string stringContainingSecrets = "Secret=AnySecretHereae09g34YT112;Property1=Value1;Property2=1234";

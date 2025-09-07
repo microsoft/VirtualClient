@@ -374,6 +374,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid state file path.
+        /// </summary>
+        public string GetStatePath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetStatePath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid default temp path.
         /// </summary>
         public string GetTempPath(params string[] pathSegments)

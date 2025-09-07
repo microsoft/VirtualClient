@@ -9,6 +9,7 @@ namespace VirtualClient.Logging
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>

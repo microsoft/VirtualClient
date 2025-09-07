@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;

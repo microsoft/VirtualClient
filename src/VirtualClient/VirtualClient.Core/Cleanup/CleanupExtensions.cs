@@ -10,9 +10,6 @@ namespace VirtualClient.Cleanup
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Extensions;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Extension methods that support runtime cleanup operations.

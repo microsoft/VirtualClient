@@ -31,6 +31,63 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--ssh")]
+        [TestCase("--agent-ssh")]
+        public void AgentSshOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateSshOption();
+            ParseResult result = option.Parse($"{alias}=user@10.2.3.4;pass");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void AgentSshOptionSupportsMultipleUsagesOnTheCommandLine()
+        {
+            Option option = OptionFactory.CreateSshOption();
+            ParseResult result = option.Parse($"--agent-ssh=user@10.2.3.4;pass --agent-ssh=user@10.2.3.5;pass");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass")]
+        [TestCase("user@machine_name;pass")]
+        [TestCase("user@2001:0db8:85a3:0000:0000:8a2e:0370:7334;pass")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass")]
+        [TestCase("user@2001:db8:85a3::8a2e:370:7334;pass")]
+        public void AgentSshOptionSupportsExpectedSshConnectionValues(string value)
+        {
+            Option option = OptionFactory.CreateSshOption();
+            ParseResult result = option.Parse($"--agent-ssh={value}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass_;w0r;d")]
+        [TestCase("user@10.2.3.5;pass__w@rd")]
+        [TestCase("user@machine@somewhere;pass")]
+        [TestCase("user@machine@somewhere;pass;_w@rd")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass;_w@rd")]
+        public void AgentSshOptionHandlesSshConnectionsContainingDelimitersInTrickyLocations(string value)
+        {
+            Option option = OptionFactory.CreateSshOption();
+            ParseResult result = option.Parse($"--agent-ssh={value}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("user@")]
+        [TestCase("@10.2.3.4;pass")]
+        [TestCase("user@10.2.3.4")]
+        [TestCase("user;pass")]
+        [TestCase("user;10.2.3.4;pass")]
+        public void AgentSshOptionValidatesSshConnectionFormats(string invalidValue)
+        {
+            Option option = OptionFactory.CreateSshOption();
+            NotSupportedException error = Assert.Throws<NotSupportedException>(() => option.Parse($"--agent-ssh={invalidValue}"));
+            Assert.IsTrue(error.Message.StartsWith("Invalid agent SSH target. The SSH host, username or password information provided is not a valid format."));
+        }
+
+        [Test]
         [TestCase("--port")]
         [TestCase("--api-port")]
         public void ApiPortOptionSupportsExpectedAliases(string alias)
@@ -105,17 +162,21 @@ namespace VirtualClient
             Assert.IsFalse(result.Errors.Any());
             Assert.AreEqual("state", result.Tokens[1].Value);
 
+            result = option.Parse($"{alias}=temp");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("temp", result.Tokens[1].Value);
+
             result = option.Parse($"{alias}=all");
             Assert.IsFalse(result.Errors.Any());
             Assert.AreEqual("all", result.Tokens[1].Value);
 
-            result = option.Parse($"{alias}=logs,packages,state");
+            result = option.Parse($"{alias}=logs,packages,state,temp");
             Assert.IsFalse(result.Errors.Any());
-            Assert.AreEqual("logs,packages,state", result.Tokens[1].Value);
+            Assert.AreEqual("logs,packages,state,temp", result.Tokens[1].Value);
 
-            result = option.Parse($"{alias}=logs;packages;state");
+            result = option.Parse($"{alias}=logs;packages;state;temp");
             Assert.IsFalse(result.Errors.Any());
-            Assert.AreEqual("logs;packages;state", result.Tokens[1].Value);
+            Assert.AreEqual("logs;packages;state;temp", result.Tokens[1].Value);
         }
 
         [Test]
@@ -127,13 +188,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--agent-id")]
         [TestCase("--agentId")]
-        [TestCase("--agentid")]
         [TestCase("--client-id")]
-        [TestCase("--clientId")]
-        [TestCase("--clientid")]
-        [TestCase("--client")]
         [TestCase("--c")]
         public void ClientIdOptionSupportsExpectedAliases(string alias)
         {
@@ -144,8 +200,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--content-store")]
-        [TestCase("--contentStore")]
-        [TestCase("--contentstore")]
         [TestCase("--content")]
         [TestCase("--cs")]
         public void ContentStoreOptionSupportsExpectedAliases(string alias)
@@ -229,7 +283,7 @@ namespace VirtualClient
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--contentStore={argument}");
+            ParseResult result = option.Parse($"--content-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -257,7 +311,7 @@ namespace VirtualClient
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--contentStore={argument}");
+            ParseResult result = option.Parse($"--content-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -265,16 +319,12 @@ namespace VirtualClient
         public void ContentStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreateContentStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--contentStore=NotAValidConnectionStringOrSasTokenUri"));
+            Assert.Throws<SchemaException>(() => option.Parse($"--content-store=NotAValidConnectionStringOrSasTokenUri"));
         }
 
         [Test]
         [TestCase("--content-path-template")]
         [TestCase("--content-path")]
-        [TestCase("--contentPathTemplate")]
-        [TestCase("--contentpathtemplate")]
-        [TestCase("--contentPath")]
-        [TestCase("--contentpath")]
         [TestCase("--cp")]
         public void ContentPathTemplateOptionSupportsExpectedAliases(string alias)
         {
@@ -353,11 +403,7 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--event-hub")]
-        [TestCase("--eventHub")]
-        [TestCase("--eventhub")]
-        [TestCase("--eventhubconnectionstring")]
         [TestCase("--eventHubConnectionString")]
-        [TestCase("--eh")]
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateEventHubStoreOption();
@@ -395,8 +441,6 @@ namespace VirtualClient
         [Test]
         [TestCase("--experiment-id")]
         [TestCase("--experimentId")]
-        [TestCase("--experimentid")]
-        [TestCase("--experiment")]
         [TestCase("--e")]
         public void ExperimentIdOptionSupportsExpectedAliases(string alias)
         {
@@ -408,7 +452,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--exit-wait")]
-        [TestCase("--flush-wait")]
         [TestCase("--wait")]
         public void ExitWaitOptionSupportsExpectedAliases(string alias)
         {
@@ -553,8 +596,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--layout-path")]
-        [TestCase("--layoutPath")]
-        [TestCase("--layoutpath")]
         [TestCase("--layout")]
         [TestCase("--lp")]
         public void LayoutPathOptionSupportsExpectedAliases(string alias)
@@ -815,8 +856,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--package-store")]
-        [TestCase("--packageStore")]
-        [TestCase("--packagestore")]
         [TestCase("--packages")]
         [TestCase("--ps")]
         public void PackageStoreOptionSupportsExpectedAliases(string alias)
@@ -1095,11 +1134,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHub=sb://any.servicebus.hub?miid=1234567 --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--event-hub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--event-hub=sb://any.servicebus.hub?miid=1234567 --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHub=sb://any.servicebus.hub?miid=1234567"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--event-hub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --event-hub=sb://any.servicebus.hub?miid=1234567"));
             }
         }
 

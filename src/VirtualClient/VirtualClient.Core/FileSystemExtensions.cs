@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Polly;
+    using Polly.Retry;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -39,6 +40,42 @@ namespace VirtualClient
             {
                 throw new FileNotFoundException(errorMessage ?? $"The file '{file}' could not be found.");
             }
+        }
+
+        /// <summary>
+        /// Attempts to delete a file with transient issue retry handling.
+        /// </summary>
+        /// <param name="fileHandler">An interface to the filesystem to interact on a per file basis.</param>
+        /// <param name="file">the fully qualified path to the file to delete.</param>
+        /// <param name="retryPolicy">The retry policy to apply to the deletion.</param>
+        public static void Delete(this IFile fileHandler, string file, RetryPolicy retryPolicy = null)
+        {
+            fileHandler.ThrowIfNull(nameof(fileHandler));
+            file.ThrowIfNullOrWhiteSpace(nameof(file));
+
+            // IOException is thrown when a process still has a descriptor open on file. This is retryable
+            // when a process is closing.
+            // https://docs.microsoft.com/en-us/dotnet/api/system.io.file.delete?view=net-5.0
+            (retryPolicy ?? Policy.Handle<IOException>().WaitAndRetry(10, (attempts) => TimeSpan.FromSeconds(Math.Pow(attempts, 2)))).Execute(() =>
+            {
+                try
+                {
+                    fileHandler.Delete(file);
+                }
+                catch (FileNotFoundException)
+                {
+                    // This can happen in certain scenarios. The outcome is the same as the one
+                    // expected...the file no longer exists!
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    // This can happen in certain scenarios. The outcome is the same as the one
+                    // expected...the file no longer exists!
+                }
+
+                return Task.CompletedTask;
+
+            });
         }
 
         /// <summary>

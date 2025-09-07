@@ -7,7 +7,6 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Configuration;
     using System.Data;
     using System.Diagnostics;
     using System.IO;
@@ -19,7 +18,6 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -42,8 +40,6 @@ namespace VirtualClient
     public abstract class CommandBase
     {
         private const string defaultPackageStoreUri = "https://virtualclient.blob.core.windows.net/packages";
-        private string experimentId;
-        private string clientId;
         private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
@@ -52,6 +48,9 @@ namespace VirtualClient
         protected CommandBase()
         {
             this.CertificateManager = new CertificateManager();
+            this.ClientId = Environment.MachineName.ToLowerInvariant();
+            this.ClientInstance = Guid.NewGuid();
+            this.ExperimentId = Guid.NewGuid().ToString().ToLowerInvariant();
         }
 
         /// <summary>
@@ -68,18 +67,13 @@ namespace VirtualClient
         /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
         /// and to include in telemetry output.
         /// </summary>
-        public string ClientId
-        {
-            get
-            {
-                return this.clientId;
-            }
+        public string ClientId { get; set; }
 
-            set
-            {
-                this.clientId = value?.ToLowerInvariant();
-            }
-        }
+        /// <summary>
+        /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
+        /// and to include in telemetry output.
+        /// </summary>
+        public Guid ClientInstance { get; }
 
         /// <summary>
         /// Describes the target store to which content files/logs should be uploaded.
@@ -122,18 +116,7 @@ namespace VirtualClient
         /// <summary>
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
-        public string ExperimentId
-        {
-            get
-            {
-                return this.experimentId;
-            }
-
-            set
-            {
-                this.experimentId = value?.ToLowerInvariant();
-            }
-        }
+        public string ExperimentId { get; set; }
 
         /// <summary>
         /// True if a request to perform clean operations was requested on the
@@ -225,6 +208,11 @@ namespace VirtualClient
         /// or downloaded from the proxy endpoint.
         /// </summary>
         public Uri ProxyApiUri { get; set; }
+
+        /// <summary>
+        /// The target system to establish an SSH session (e.g. anyuser@192.168.1.15;pass_w_@rd).
+        /// </summary>
+        public string SshTarget { get; set; }
 
         /// <summary>
         /// An alternate directory to which state files/documents should be written. Setting this overrides
@@ -456,17 +444,7 @@ namespace VirtualClient
                     platformSpecifics.TempDirectory = this.EvaluatePathReplacements(environmentVariableValue);
                 }
             }
-
-            if (this.Isolated)
-            {
-                string experimentIdFolder = this.ExperimentId.ToLowerInvariant();
-                platformSpecifics.LogsDirectory = platformSpecifics.Combine(platformSpecifics.LogsDirectory, experimentIdFolder);
-                platformSpecifics.PackagesDirectory = platformSpecifics.Combine(platformSpecifics.PackagesDirectory, experimentIdFolder);
-                platformSpecifics.StateDirectory = platformSpecifics.Combine(platformSpecifics.StateDirectory, experimentIdFolder);
-                platformSpecifics.TempDirectory = platformSpecifics.Combine(platformSpecifics.TempDirectory, experimentIdFolder);
-            }
         }
-
 
         /// <summary>
         /// Returns the full set of logger definitions to use when constructing the application
@@ -574,7 +552,8 @@ namespace VirtualClient
                 this.ClientId,
                 this.ExperimentId,
                 platformSpecifics,
-                logger);
+                logger,
+                this.Isolated);
 
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IProfileManager profileManager = new ProfileManager();
@@ -670,6 +649,14 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
 
+            if (!string.IsNullOrWhiteSpace(this.SshTarget))
+            {
+                if (SshClientProxy.TryGetSshTargetInformation(this.SshTarget, out string host, out string username, out string password))
+                {
+                    dependencies.AddSingleton(sshClientFactory.CreateClient(host, username, password));
+                }
+            }
+
             return dependencies;
         }
 
@@ -742,7 +729,6 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         protected virtual async Task InitializePackagesAsync(IPackageManager packageManager, CancellationToken cancellationToken)
         {
-            // 3) Initialize, discover and register any pre-existing packages on the system.
             await packageManager.InitializePackagesAsync(cancellationToken);
 
             IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken);
@@ -766,7 +752,7 @@ namespace VirtualClient
             {
                 [MetadataContract.ExperimentId] = this.ExperimentId,
                 [MetadataContract.ClientId] = this.ClientId,
-                [MetadataContract.ClientInstance] = Guid.NewGuid().ToString().ToLowerInvariant(),
+                [MetadataContract.ClientInstance] = this.ClientInstance.ToString().ToLowerInvariant(),
                 [MetadataContract.AppVersion] = extensionsVersion ?? platformVersion,
                 [MetadataContract.AppPlatformVersion] = platformVersion,
                 [MetadataContract.ExecutionArguments] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
@@ -775,8 +761,8 @@ namespace VirtualClient
                 [MetadataContract.PlatformArchitecture] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
             });
 
-            IDictionary<string, IConvertible> parameters = this.Parameters?.ObscureSecrets();
-            EventContext.PersistentProperties[MetadataContract.Parameters] = parameters;
+            IDictionary<string, IConvertible> safeParameters = this.Parameters?.ObscureSecrets();
+            EventContext.PersistentProperties[MetadataContract.Parameters] = safeParameters;
 
             IDictionary<string, object> metadata = new Dictionary<string, object>();
 
@@ -788,11 +774,9 @@ namespace VirtualClient
                 });
             }
 
-            EventContext.PersistentProperties[MetadataContract.DefaultCategory] = metadata;
-
-            MetadataContract.Persist(
-                metadata?.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                MetadataContract.DefaultCategory);
+            IDictionary<string, object> safeMetadata = metadata?.ObscureSecrets();
+            EventContext.PersistentProperties[MetadataContract.DefaultCategory] = safeMetadata;
+            MetadataContract.Persist(safeMetadata, MetadataContract.DefaultCategory);
         }
 
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
@@ -902,7 +886,7 @@ namespace VirtualClient
                 {
                     { "experimentId", this.ExperimentId },
                     { "agentId", this.ClientId },
-                    { "clientId", this.ClientId },
+                    { "clientId", this.ClientId }
                 };
 
                 if (this.Metadata?.Any() == true)

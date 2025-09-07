@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.Options;
     using NUnit.Framework;
     using Renci.SshNet;
     using VirtualClient.Common;
@@ -23,6 +24,40 @@ namespace VirtualClient
         {
             this.Setup(PlatformID.Unix);
             this.fileSystem = new FileSystem();
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass")]
+        [TestCase("user@machine_name;pass")]
+        [TestCase("user@2001:0db8:85a3:0000:0000:8a2e:0370:7334;pass")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass")]
+        [TestCase("user@2001:db8:85a3::8a2e:370:7334;pass")]
+        public void SshClientProxySupportsExpectedSshConnectionValues(string value)
+        {
+            string[] sections = value.Split("@");
+            string[] sections2 = sections[1].Split(";");
+            string expectedUser = sections[0];
+            string expectedHost = sections2[0];
+            string expectedPass = sections2[1];
+
+            Assert.IsTrue(SshClientProxy.TryGetSshTargetInformation(value, out string actualHost, out string actualUsername, out string actualPass));
+            Assert.AreEqual(expectedUser, actualUsername);
+            Assert.AreEqual(expectedHost, actualHost);
+            Assert.AreEqual(expectedPass, actualPass);
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass_;wor;d", "user", "10.2.3.5", "pass_;wor;d")]
+        [TestCase("user@10.2.3.5;pass__w@rd", "user", "10.2.3.5", "pass__w@rd")]
+        [TestCase("user@machine@somewhere;pass", "user", "machine@somewhere", "pass")]
+        [TestCase("user@machine@somewhere;pass;_w@rd", "user", "machine@somewhere", "pass;_w@rd")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass;_w@rd", "user", "2001:db8:85a3:0:0:8a2e:370:7334", "pass;_w@rd")]
+        public void SshClientProxyHandlesSshConnectionValuesContainingDelimitersInTrickyLocations(string value, string expectedUser, string expectedHost, string expectedPass)
+        {
+            Assert.IsTrue(SshClientProxy.TryGetSshTargetInformation(value, out string actualHost, out string actualUser, out string actualPass));
+            Assert.AreEqual(expectedUser, actualUser);
+            Assert.AreEqual(expectedHost, actualHost);
+            Assert.AreEqual(expectedPass, actualPass);
         }
 
         [Test]

@@ -275,11 +275,6 @@ namespace VirtualClient.Actions
                             await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
                             process.ThrowIfWorkloadFailed();
 
-                            if (process.StandardError.Length > 0)
-                            {
-                                process.ThrowOnStandardError<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                            }
-
                             string standardOutput = process.StandardOutput.ToString();
                             this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
                         }
