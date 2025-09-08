@@ -14,6 +14,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -100,92 +101,112 @@ namespace VirtualClient
             {
                 try
                 {
-                    process.Kill(entireProcessTree);
+                    process.Kill(entireProcessTree, logger);
                 }
-                catch (Exception exc)
+                catch
                 {
                     // Best effort here.
-                    logger?.LogTraceMessage($"Kill Process Failure. Error = {exc.Message}");
                 }
             }
         }
 
         /// <summary>
-        /// Kills the associated process and/or its child/dependent processes if it is still running.
-        /// Retries up to 5 times using exponential backoff with a total wait limit of 3 minutes.
-        /// Logs error when failed to kill.
+        /// Kills the associated process and/or its child/dependent processes.
         /// </summary>
         /// <param name="process">The process to kill.</param>
         /// <param name="entireProcessTree">true to kill associated process and its descendants; false to only kill the process.</param>
-        /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
-        public static void Kill(this IProcessProxy process, ILogger logger = null, bool entireProcessTree = false, TimeSpan timeout = default)
+        /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
+        public static void Kill(this IProcessProxy process, bool entireProcessTree = false, ILogger logger = null, TimeSpan timeout = default)
         {
-            timeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
-            const int maxRetries = 5;
+            TimeSpan effectiveTimeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
+            DateTime exitTime = DateTime.UtcNow.Add(effectiveTimeout);
+            List<Exception> errors = new List<Exception>();
 
-            Stopwatch stopWatch = Stopwatch.StartNew();
-
-            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource(effectiveTimeout))
             {
-                int delaySeconds = Math.Min((int)Math.Pow(2, attempt), (int)(timeout - stopWatch.Elapsed).TotalSeconds);
-                if (process.HasExited || delaySeconds <= 0)
+                while (DateTime.UtcNow < exitTime)
                 {
-                    break; // Exit if timeout is reached or process exited.
-                }
+                    if (process.HasExited)
+                    {
+                        // Process confirmed exited
+                        break;
+                    }
 
-                try
-                {
-                    process.Kill(entireProcessTree);
-                    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(delaySeconds));
-                    // CancellationToken should cancel first, the timeout here is precaution.
-                    process.WaitForExitAsync(cts.Token, timeout).GetAwaiter().GetResult();
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogTraceMessage($"Attempt {attempt}: Kill failed. {ex.Message}");
+                    try
+                    {
+                        process.Kill(entireProcessTree);
+                        process.WaitForExitAsync(tokenSource.Token).GetAwaiter().GetResult();
+                    }
+                    catch (Exception exc)
+                    {
+                        errors.Add(exc);
+                    }
                 }
             }
 
             if (!process.HasExited)
             {
-                logger?.LogError("Failed to kill process after retries.");
+                string processName = SafeGet<string>(() => process.Name);
+                int processId = SafeGet<int>(() => process.Id);
+
+                EventContext errorContext = EventContext.Persisted();
+                errorContext.AddProcessDetails(process.ToProcessDetails(process.Name));
+                if (errors.Any())
+                {
+                    errorContext.AddError(new AggregateException(
+                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={effectiveTimeout}).", 
+                        errors));
+                }
+
+                logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
             }
         }
 
         /// <summary>
-        /// Kills any processes that are defined and handles any errors that
-        /// can occurs if the process has gone out of scope.
+        /// Uses pkill on Linux systems to kill the associated process and/or its child/dependent processes.
         /// </summary>
-        /// <param name="processManager">The process manager used to find the processes.</param>
-        /// <param name="processNames">The names/paths of the processes to kill.</param>
+        /// <param name="processManager">Provides functionality for creating processes.</param>
+        /// <param name="process">The process to kill.</param>
+        /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
-        public static void Kill(this ProcessManager processManager, IEnumerable<string> processNames, ILogger logger = null)
+        public static void UnixKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan timeout = default)
         {
-            processManager.ThrowIfNull(nameof(processManager));
+            TimeSpan effectiveTimeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
 
-            if (processNames?.Any() == true)
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource(effectiveTimeout))
             {
-                foreach (string process in processNames)
-                {
-                    try
-                    {
-                        // Processes are named without the extensions (e.g. VirtualClient not VirtualClient.exe).
-                        string processName = Path.GetFileNameWithoutExtension(process);
-                        IEnumerable<IProcessProxy> processes = processManager.GetProcesses(processName);
+                string processName = null;
+                int processId = -1;
 
-                        if (processes?.Any() == true)
+                try
+                {
+                    processName = SafeGet<string>(() => process.Name);
+                    processId = SafeGet<int>(() => process.Id);
+
+                    using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
+                    {
+                        kill.StartAndWaitAsync(tokenSource.Token, timeout)
+                            .GetAwaiter().GetResult();
+
+                        // 0 = Success
+                        // 1 = Process not found
+                        if (kill.ExitCode != 0 && kill.ExitCode != 1)
                         {
-                            foreach (IProcessProxy sideProcess in processes)
-                            {
-                                sideProcess.Kill(logger);
-                            }
+                            kill.ThrowErrored<WorkloadException>(
+                                $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, name={processName}, timeout={effectiveTimeout}). " +
+                                $"{kill.StandardOutput} {kill.StandardError}".Trim(),
+                                ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                     }
-                    catch
-                    {
-                        // best effort
-                    }
+                }
+                catch (Exception exc)
+                {
+                    EventContext errorContext = EventContext.Persisted();
+                    errorContext.AddProcessDetails(process.ToProcessDetails(processName));
+                    errorContext.AddError(exc);
+
+                    logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
                 }
             }
         }
@@ -399,6 +420,21 @@ namespace VirtualClient
                     }
                 }
             }
+        }
+
+        private static T SafeGet<T>(Func<T> propertyAccessor)
+            where T : IConvertible
+        {
+            T propertyValue = default(T);
+            try
+            {
+                propertyValue = propertyAccessor.Invoke();
+            }
+            catch
+            {
+            }
+
+            return propertyValue;
         }
 
         private static void ThrowErrored<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TError>(this IProcessProxy process, string errorMessage, ErrorReason errorReason)
