@@ -3,6 +3,8 @@
 
 namespace VirtualClient
 {
+    using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
@@ -36,7 +38,8 @@ namespace VirtualClient
         /// <param name="uploadStream">The stream that contains the blob binary content to upload.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
+        /// <param name="metadata">Metadata in which to tag the blob.</param>
         /// <returns>Full details for the blob as it exists in the store (e.g. name, content encoding, content type).</returns>
-        Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null);
+        Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null, IAsyncPolicy retryPolicy = null);
     }
 }

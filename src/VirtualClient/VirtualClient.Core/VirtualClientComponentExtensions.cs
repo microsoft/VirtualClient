@@ -560,7 +560,7 @@ namespace VirtualClient
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
                                         BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
-                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
+                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken, component.Metadata);
 
                                         if (uploadManifest && descriptor.Manifest?.Any() == true)
                                         {
