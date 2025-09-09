@@ -5,7 +5,6 @@ namespace VirtualClient.Common
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace VirtualClient.Common
     /// </summary>
     public static class ProcessExtensions
     {
-        /// <summary>
+                /// <summary>
         /// Sets the process for interactive mode (e.g. standard output and input redirected).
         /// </summary>
         /// <param name="process">Represents a process on the system.</param>

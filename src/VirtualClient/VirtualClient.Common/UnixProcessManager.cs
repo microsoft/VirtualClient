@@ -4,7 +4,6 @@
 namespace VirtualClient.Common
 {
     using System.Diagnostics;
-    using System.IO;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -23,7 +22,7 @@ namespace VirtualClient.Common
                 {
                     FileName = command,
                     Arguments = arguments,
-                    WorkingDirectory = workingDir ?? Path.GetDirectoryName(command).Replace('\\', '/'),
+                    WorkingDirectory = workingDir,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,
