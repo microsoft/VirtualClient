@@ -93,50 +93,36 @@ namespace VirtualClient
         /// </summary>
         /// <param name="process">The process to kill.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
-        /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
-        public static void SafeKill(this IProcessProxy process, ILogger logger = null, TimeSpan timeout = default)
+        /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
+        public static void SafeKill(this IProcessProxy process, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
         {
-            TimeSpan effectiveTimeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
-            DateTime exitTime = DateTime.UtcNow.Add(effectiveTimeout);
-            List<Exception> errors = new List<Exception>();
-
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource(effectiveTimeout))
-            {
-                while (DateTime.UtcNow < exitTime)
-                {
-                    if (process.HasExited)
-                    {
-                        // Process confirmed exited
-                        break;
-                    }
-
-                    try
-                    {
-                        process.Kill(true);
-                        process.WaitForExitAsync(tokenSource.Token).GetAwaiter().GetResult();
-                    }
-                    catch (Exception exc)
-                    {
-                        errors.Add(exc);
-                    }
-                }
-            }
+            TimeSpan effectiveTimeout = confirmationWaitTime ?? TimeSpan.FromSeconds(10);
 
             if (!process.HasExited)
             {
-                string processName = SafeGet<string>(() => process.Name);
-                int processId = SafeGet<int>(() => process.Id);
-
-                EventContext errorContext = EventContext.Persisted();
-                errorContext.AddProcessDetails(process.ToProcessDetails(process.Name));
-                if (errors.Any())
+                // Process confirmed exited
+                try
                 {
-                    errorContext.AddError(new AggregateException(
-                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={effectiveTimeout}).",
-                        errors));
-                }
+                    process.Kill(true);
 
-                logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
+                    if (confirmationWaitTime != TimeSpan.Zero)
+                    {
+                        process.WaitForExitAsync(CancellationToken.None, confirmationWaitTime).GetAwaiter().GetResult();
+                    }
+                }
+                catch (Exception exc)
+                {
+                    string processName = SafeGet<string>(() => process.Name);
+                    int processId = SafeGet<int>(() => process.Id);
+
+                    EventContext errorContext = EventContext.Persisted();
+                    errorContext.AddProcessDetails(process.ToProcessDetails(process.Name));
+                    errorContext.AddError(new WorkloadException(
+                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={effectiveTimeout}).",
+                        exc));
+
+                    logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
+                }
             }
         }
 
@@ -181,11 +167,11 @@ namespace VirtualClient
         /// </summary>
         /// <param name="processManager">Provides functionality for creating processes.</param>
         /// <param name="process">The process to kill.</param>
-        /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
-        public static void SafeKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan timeout = default)
+        /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
+        public static void SafeKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
         {
-            TimeSpan effectiveTimeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
+            TimeSpan effectiveTimeout = confirmationWaitTime ?? TimeSpan.FromSeconds(10);
 
             using (CancellationTokenSource tokenSource = new CancellationTokenSource(effectiveTimeout))
             {
@@ -201,7 +187,7 @@ namespace VirtualClient
                     {
                         using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
                         {
-                            kill.StartAndWaitAsync(tokenSource.Token, timeout)
+                            kill.StartAndWaitAsync(tokenSource.Token, confirmationWaitTime)
                                 .GetAwaiter().GetResult();
 
                             // 0 = Success
@@ -219,7 +205,7 @@ namespace VirtualClient
                     {
                         using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
                         {
-                            taskkill.StartAndWaitAsync(tokenSource.Token, timeout)
+                            taskkill.StartAndWaitAsync(tokenSource.Token, confirmationWaitTime)
                                 .GetAwaiter().GetResult();
 
                             // 0 = Success

@@ -139,20 +139,5 @@ namespace VirtualClient.Common
 
             return process.WaitForResponseAsync(new Regex(response, comparisonOptions), cancellationToken, timeout);
         }
-
-        private static T SafeGet<T>(Func<T> propertyAccessor)
-            where T : IConvertible
-        {
-            T propertyValue = default(T);
-            try
-            {
-                propertyValue = propertyAccessor.Invoke();
-            }
-            catch
-            {
-            }
-
-            return propertyValue;
-        }
     }
 }
