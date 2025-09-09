@@ -14,6 +14,11 @@ namespace VirtualClient.Common
     public abstract class ProcessManager
     {
         /// <summary>
+        /// The OS platform for the current runtime.
+        /// </summary>
+        public abstract PlatformID Platform { get; }
+
+        /// <summary>
         /// Creates a process manager for the OS/system.
         /// </summary>
         /// <param name="platform">The OS/system platform (e.g. Windows, Linux).</param>

@@ -261,7 +261,7 @@ namespace VirtualClient.Actions
                 // We create a operating system process to host the executing workload, start it and wait for it to exit.
                 using (IProcessProxy workloadProcess = this.ProcessManager.CreateProcess(this.WorkloadExecutablePath, commandArguments, this.WorkloadPackage.Path))
                 {
-                    this.CleanupTasks.Add(() => workloadProcess.SafeKill());
+                    this.CleanupTasks.Add(() => workloadProcess.SafeKill(this.Logger));
 
                     await workloadProcess.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);

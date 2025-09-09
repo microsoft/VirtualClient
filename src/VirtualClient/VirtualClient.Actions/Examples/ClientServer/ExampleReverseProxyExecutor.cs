@@ -198,7 +198,7 @@ namespace VirtualClient.Actions
                     throw new WorkloadException($"The API reverse proxy workload did not start as expected.", ErrorReason.WorkloadFailed);
                 }
 
-                this.CleanupTasks.Add(() => webHostProcess.SafeKill());
+                this.CleanupTasks.Add(() => webHostProcess.SafeKill(this.Logger));
 
                 // Notify clients that the reverse proxy server is online.
                 Item<State> serverOnline = new Item<State>(ExampleClientServerExecutor.ServerReadyState, new State());

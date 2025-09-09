@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
             {
                 foreach (IProcessProxy processProxy in runningProcesses)
                 {
-                    processProxy.SafeKill();
+                    processProxy.SafeKill(this.Logger);
                 }
             }
 
@@ -287,7 +287,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.Prime95Package.Path))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                         // Prime95 does not stop on it's own. It will run until you tell it to stop.
                         // We have to definitively stop the program.
@@ -296,7 +296,7 @@ namespace VirtualClient.Actions
                         if (process.Start())
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
-                            process.SafeKill();
+                            process.SafeKill(this.Logger);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {

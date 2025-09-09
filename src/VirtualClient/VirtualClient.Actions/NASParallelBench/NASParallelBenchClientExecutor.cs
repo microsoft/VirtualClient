@@ -132,7 +132,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, "bash", $"-c \"{command}\""))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)

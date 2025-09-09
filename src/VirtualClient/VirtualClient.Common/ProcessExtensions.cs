@@ -28,48 +28,6 @@ namespace VirtualClient.Common
         }
 
         /// <summary>
-        /// Kills the process if it is still running and handles any errors that
-        /// can occurs if the process has gone out of scope.
-        /// </summary>
-        /// <param name="process">The process to kill.</param>
-        public static void SafeKill(this IProcessProxy process)
-        {
-            if (process != null)
-            {
-                try
-                {
-                    process.Kill(true);
-                }
-                catch (Exception exc)
-                {
-                    int processId = -1;
-                    string processName = "Indeterminate";
-
-                    try
-                    {
-                        processId = process.Id;
-                    }
-                    catch
-                    {
-                        // Best effort here.
-                    }
-
-                    try
-                    {
-                        processName = process.Name;
-                    }
-                    catch
-                    {
-                        // Best effort here.
-                    }
-
-                    // Best effort here.
-                    Console.WriteLine($"Process Cleanup Error: ID={processId}, Name={processName}, Error={exc.Message}");
-                }
-            }
-        }
-
-        /// <summary>
         /// Starts the underlying process and monitors it for completion.
         /// </summary>
         /// <param name="process">Represents a process on the system.</param>
@@ -180,6 +138,21 @@ namespace VirtualClient.Common
             response.ThrowIfNullOrWhiteSpace(nameof(response));
 
             return process.WaitForResponseAsync(new Regex(response, comparisonOptions), cancellationToken, timeout);
+        }
+
+        private static T SafeGet<T>(Func<T> propertyAccessor)
+            where T : IConvertible
+        {
+            T propertyValue = default(T);
+            try
+            {
+                propertyValue = propertyAccessor.Invoke();
+            }
+            catch
+            {
+            }
+
+            return propertyValue;
         }
     }
 }

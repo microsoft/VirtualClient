@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Common
 {
+    using System;
     using System.Diagnostics;
     using VirtualClient.Common.Extensions;
 
@@ -11,6 +12,9 @@ namespace VirtualClient.Common
     /// </summary>
     public class WindowsProcessManager : ProcessManager
     {
+        /// <inheritdoc />
+        public override PlatformID Platform => PlatformID.Win32NT;
+
         /// <inheritdoc />
         public override IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null)
         {

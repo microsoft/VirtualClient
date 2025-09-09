@@ -89,35 +89,12 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Kills the associated process and/or it's child/dependent processes if it is still running and 
-        /// handles any errors that can occurs if the process has gone out of scope.
-        /// </summary>
-        /// <param name="process">The process to kill.</param>
-        /// <param name="entireProcessTree">true to kill asociated process and it's descendents, false to only kill the process.</param>
-        /// <param name="logger">The logger to use to write trace information.</param>
-        public static void SafeKill(this IProcessProxy process, ILogger logger = null, bool entireProcessTree = false)
-        {
-            if (process != null)
-            {
-                try
-                {
-                    process.Kill(entireProcessTree, logger);
-                }
-                catch
-                {
-                    // Best effort here.
-                }
-            }
-        }
-
-        /// <summary>
         /// Kills the associated process and/or its child/dependent processes.
         /// </summary>
         /// <param name="process">The process to kill.</param>
-        /// <param name="entireProcessTree">true to kill associated process and its descendants; false to only kill the process.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
         /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
-        public static void Kill(this IProcessProxy process, bool entireProcessTree = false, ILogger logger = null, TimeSpan timeout = default)
+        public static void SafeKill(this IProcessProxy process, ILogger logger = null, TimeSpan timeout = default)
         {
             TimeSpan effectiveTimeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
             DateTime exitTime = DateTime.UtcNow.Add(effectiveTimeout);
@@ -135,7 +112,7 @@ namespace VirtualClient
 
                     try
                     {
-                        process.Kill(entireProcessTree);
+                        process.Kill(true);
                         process.WaitForExitAsync(tokenSource.Token).GetAwaiter().GetResult();
                     }
                     catch (Exception exc)
@@ -155,11 +132,47 @@ namespace VirtualClient
                 if (errors.Any())
                 {
                     errorContext.AddError(new AggregateException(
-                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={effectiveTimeout}).", 
+                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={effectiveTimeout}).",
                         errors));
                 }
 
                 logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
+            }
+        }
+
+        /// <summary>
+        /// Kills any processes that are defined.
+        /// </summary>
+        /// <param name="processManager">The process manager used to find the processes.</param>
+        /// <param name="processNames">The names/paths of the processes to kill.</param>
+        /// <param name="logger">The logger to use to write trace information.</param>
+        public static void SafeKill(this ProcessManager processManager, IEnumerable<string> processNames, ILogger logger = null)
+        {
+            processManager.ThrowIfNull(nameof(processManager));
+
+            if (processNames?.Any() == true)
+            {
+                foreach (string process in processNames)
+                {
+                    try
+                    {
+                        // Processes are named without the extensions (e.g. VirtualClient not VirtualClient.exe).
+                        string processName = Path.GetFileNameWithoutExtension(process);
+                        IEnumerable<IProcessProxy> processes = processManager.GetProcesses(processName);
+
+                        if (processes?.Any() == true)
+                        {
+                            foreach (IProcessProxy sideProcess in processes)
+                            {
+                                sideProcess.SafeKill(logger);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // best effort
+                    }
+                }
             }
         }
 
@@ -170,7 +183,7 @@ namespace VirtualClient
         /// <param name="process">The process to kill.</param>
         /// <param name="timeout">Max duration to wait for exit, default to 3 minutes.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
-        public static void UnixKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan timeout = default)
+        public static void SafeKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan timeout = default)
         {
             TimeSpan effectiveTimeout = timeout == default ? TimeSpan.FromMinutes(3) : timeout;
 
@@ -184,19 +197,40 @@ namespace VirtualClient
                     processName = SafeGet<string>(() => process.Name);
                     processId = SafeGet<int>(() => process.Id);
 
-                    using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
+                    if (processManager.Platform == PlatformID.Unix)
                     {
-                        kill.StartAndWaitAsync(tokenSource.Token, timeout)
-                            .GetAwaiter().GetResult();
-
-                        // 0 = Success
-                        // 1 = Process not found
-                        if (kill.ExitCode != 0 && kill.ExitCode != 1)
+                        using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
                         {
-                            kill.ThrowErrored<WorkloadException>(
-                                $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, name={processName}, timeout={effectiveTimeout}). " +
-                                $"{kill.StandardOutput} {kill.StandardError}".Trim(),
-                                ErrorReason.WorkloadUnexpectedAnomaly);
+                            kill.StartAndWaitAsync(tokenSource.Token, timeout)
+                                .GetAwaiter().GetResult();
+
+                            // 0 = Success
+                            // 1 = Process not found
+                            if (kill.ExitCode != 0 && kill.ExitCode != 1)
+                            {
+                                kill.ThrowErrored<WorkloadException>(
+                                    $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, name={processName}, timeout={effectiveTimeout}). " +
+                                    $"{kill.StandardOutput} {kill.StandardError}".Trim(),
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
+                        }
+                    }
+                    else if (processManager.Platform == PlatformID.Win32NT)
+                    {
+                        using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
+                        {
+                            taskkill.StartAndWaitAsync(tokenSource.Token, timeout)
+                                .GetAwaiter().GetResult();
+
+                            // 0 = Success
+                            // 1 = Process not found
+                            if (taskkill.ExitCode != 0 && taskkill.ExitCode != 128)
+                            {
+                                taskkill.ThrowErrored<WorkloadException>(
+                                    $"Windows taskkill attempt failed with exit code {taskkill.ExitCode} for process (id={processId}, name={processName}, timeout={effectiveTimeout}). " +
+                                    $"{taskkill.StandardOutput} {taskkill.StandardError}".Trim(),
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
                         }
                     }
                 }

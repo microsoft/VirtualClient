@@ -163,18 +163,11 @@ namespace VirtualClient.Actions
                     {
                         this.CleanupTasks.Add(() =>
                         {
-                            if (this.Platform == PlatformID.Unix)
-                            {
-                                // Note:
-                                // Issues were found on Linux/ARM64 systems with the process failing to be killed
-                                // using standard .NET logic. This happens on Ampere systems with lots of cores.
-                                // We are using the 'kill -9' option as a workaround.
-                                this.processManager.UnixKill(process, this.Logger);
-                            }
-                            else
-                            {
-                                process.Kill(true, this.Logger);
-                            }
+                            // Note:
+                            // Issues were found on Linux/ARM64 systems with the process failing to be killed
+                            // using standard .NET logic. This happens on Ampere systems with lots of cores.
+                            // We are using the 'kill -9' option as a workaround.
+                            this.processManager.SafeKill(process, this.Logger);
                         });
 
                         await process.StartAndWaitAsync(cancellationToken);
@@ -268,18 +261,11 @@ namespace VirtualClient.Actions
                     {
                         this.CleanupTasks.Add(() =>
                         {
-                            if (this.Platform == PlatformID.Unix)
-                            {
-                                // Note:
-                                // Issues were found on Linux/ARM64 systems with the process failing to be killed
-                                // using standard .NET logic. This happens on Ampere systems with lots of cores.
-                                // We are using the 'kill -9' option as a workaround.
-                                this.processManager.UnixKill(process, this.Logger);
-                            }
-                            else
-                            {
-                                process.Kill(true, this.Logger);
-                            }
+                            // Note:
+                            // Issues were found on Linux/ARM64 systems with the process failing to be killed
+                            // using standard .NET logic. This happens on Ampere systems with lots of cores.
+                            // We are using the 'kill -9' option as a workaround.
+                            this.processManager.SafeKill(process, this.Logger);
                         });
 
                         await process.StartAndWaitAsync(cancellationToken);

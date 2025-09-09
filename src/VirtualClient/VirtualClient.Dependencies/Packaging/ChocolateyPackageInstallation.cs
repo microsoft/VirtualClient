@@ -105,7 +105,7 @@ namespace VirtualClient.Dependencies
                 // retries are expended.
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, chocoExePath, formattedArguments))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     await process.StartAndWaitAsync(cancellationToken)
                        .ConfigureAwait(false);

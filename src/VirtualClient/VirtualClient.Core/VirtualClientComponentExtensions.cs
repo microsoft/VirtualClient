@@ -145,7 +145,7 @@ namespace VirtualClient
                     process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
-                component.CleanupTasks.Add(() => process.SafeKill());
+                component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
                 component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);

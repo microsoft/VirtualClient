@@ -165,7 +165,7 @@ namespace VirtualClient.Dependencies
 
             using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, SnapPackageInstallation.SnapCommand, $"list {packageName}"))
             {
-                this.CleanupTasks.Add(() => process.SafeKill());
+                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                 await process.StartAndWaitAsync(cancellationToken)
                        .ConfigureAwait(false);
@@ -188,7 +188,7 @@ namespace VirtualClient.Dependencies
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                     this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
 
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
