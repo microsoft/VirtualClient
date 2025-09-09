@@ -93,11 +93,9 @@ namespace VirtualClient
         /// </summary>
         /// <param name="process">The process to kill.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
-        /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
+        /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = no wait.</param>
         public static void SafeKill(this IProcessProxy process, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
         {
-            TimeSpan effectiveTimeout = confirmationWaitTime ?? TimeSpan.FromSeconds(10);
-
             if (!process.HasExited)
             {
                 // Process confirmed exited
@@ -118,7 +116,7 @@ namespace VirtualClient
                     EventContext errorContext = EventContext.Persisted();
                     errorContext.AddProcessDetails(process.ToProcessDetails(process.Name));
                     errorContext.AddError(new WorkloadException(
-                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={effectiveTimeout}).",
+                        $"Process kill attempt failed (id={processId}, name={processName}, timeout={confirmationWaitTime?.ToString() ?? "none"}).",
                         exc));
 
                     logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
@@ -171,63 +169,58 @@ namespace VirtualClient
         /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
         public static void SafeKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
         {
-            TimeSpan effectiveTimeout = confirmationWaitTime ?? TimeSpan.FromSeconds(10);
+            string processName = null;
+            int processId = -1;
 
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource(effectiveTimeout))
+            try
             {
-                string processName = null;
-                int processId = -1;
+                processName = SafeGet<string>(() => process.Name);
+                processId = SafeGet<int>(() => process.Id);
 
-                try
+                if (processManager.Platform == PlatformID.Unix)
                 {
-                    processName = SafeGet<string>(() => process.Name);
-                    processId = SafeGet<int>(() => process.Id);
-
-                    if (processManager.Platform == PlatformID.Unix)
+                    using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
                     {
-                        using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
-                        {
-                            kill.StartAndWaitAsync(tokenSource.Token, confirmationWaitTime)
-                                .GetAwaiter().GetResult();
+                        kill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
+                            .GetAwaiter().GetResult();
 
-                            // 0 = Success
-                            // 1 = Process not found
-                            if (kill.ExitCode != 0 && kill.ExitCode != 1)
-                            {
-                                kill.ThrowErrored<WorkloadException>(
-                                    $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, name={processName}, timeout={effectiveTimeout}). " +
-                                    $"{kill.StandardOutput} {kill.StandardError}".Trim(),
-                                    ErrorReason.WorkloadUnexpectedAnomaly);
-                            }
-                        }
-                    }
-                    else if (processManager.Platform == PlatformID.Win32NT)
-                    {
-                        using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
+                        // 0 = Success
+                        // 1 = Process not found
+                        if (kill.ExitCode != 0 && kill.ExitCode != 1)
                         {
-                            taskkill.StartAndWaitAsync(tokenSource.Token, confirmationWaitTime)
-                                .GetAwaiter().GetResult();
-
-                            // 0 = Success
-                            // 1 = Process not found
-                            if (taskkill.ExitCode != 0 && taskkill.ExitCode != 128)
-                            {
-                                taskkill.ThrowErrored<WorkloadException>(
-                                    $"Windows taskkill attempt failed with exit code {taskkill.ExitCode} for process (id={processId}, name={processName}, timeout={effectiveTimeout}). " +
-                                    $"{taskkill.StandardOutput} {taskkill.StandardError}".Trim(),
-                                    ErrorReason.WorkloadUnexpectedAnomaly);
-                            }
+                            kill.ThrowErrored<WorkloadException>(
+                                $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, name={processName}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
+                                $"{kill.StandardOutput} {kill.StandardError}".Trim(),
+                                ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                     }
                 }
-                catch (Exception exc)
+                else if (processManager.Platform == PlatformID.Win32NT)
                 {
-                    EventContext errorContext = EventContext.Persisted();
-                    errorContext.AddProcessDetails(process.ToProcessDetails(processName));
-                    errorContext.AddError(exc);
+                    using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
+                    {
+                        taskkill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
+                            .GetAwaiter().GetResult();
 
-                    logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
+                        // 0 = Success
+                        // 1 = Process not found
+                        if (taskkill.ExitCode != 0 && taskkill.ExitCode != 128)
+                        {
+                            taskkill.ThrowErrored<WorkloadException>(
+                                $"Windows taskkill attempt failed with exit code {taskkill.ExitCode} for process (id={processId}, name={processName}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
+                                $"{taskkill.StandardOutput} {taskkill.StandardError}".Trim(),
+                                ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+                    }
                 }
+            }
+            catch (Exception exc)
+            {
+                EventContext errorContext = EventContext.Persisted();
+                errorContext.AddProcessDetails(process.ToProcessDetails(processName));
+                errorContext.AddError(exc);
+
+                logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
             }
         }
 
