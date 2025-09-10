@@ -74,18 +74,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the job files specified in the profile.
-        /// </summary>
-        public string JobFiles
-        {
-            get
-            {
-                return this.Parameters.ContainsKey(nameof(this.JobFiles)) ? 
-                    this.Parameters.GetValue<string>(nameof(this.JobFiles)) : null;
-            }
-        }
-
-        /// <summary>
         /// True/false whether the test files that FIO uses in benchmark tests should be deleted at the end
         /// of each individual round of test execution.
         /// </summary>
@@ -318,11 +306,6 @@ namespace VirtualClient.Actions
                     if (this.DiskFill && await this.IsDiskFillCompleteAsync(cancellationToken))
                     {
                         return;
-                    }
-
-                    if (!string.IsNullOrEmpty(this.JobFiles))
-                    {
-                        this.CommandLine = this.GetCommandForJobFilesAsync(cancellationToken);
                     }
 
                     // Apply parameters to the FIO command line options.
@@ -863,18 +846,11 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override void Validate()
         {
-            if (string.IsNullOrWhiteSpace(this.CommandLine) && string.IsNullOrWhiteSpace(this.JobFiles))
+            if (string.IsNullOrWhiteSpace(this.CommandLine))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
-                    $"required '{nameof(FioExecutor.CommandLine)}' or '{nameof(FioExecutor.JobFiles)}' arguments defined.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (!string.IsNullOrWhiteSpace(this.CommandLine) && !string.IsNullOrWhiteSpace(this.JobFiles))
-            {
-                throw new WorkloadException(
-                    "Unexpected profile definition. Only one of JobFiles or CommandLine can be defined.",
+                    $"required '{nameof(FioExecutor.CommandLine)}' argument defined.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -886,7 +862,7 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.DiskFill && string.IsNullOrWhiteSpace(this.JobFiles) && string.IsNullOrWhiteSpace(this.DiskFillSize))
+            if (this.DiskFill && string.IsNullOrWhiteSpace(this.DiskFillSize))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
@@ -1022,55 +998,11 @@ namespace VirtualClient.Actions
             return processes;
         }
 
-        private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
-        {
-            string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
-
-            foreach (string key in this.Parameters.Keys)
-            {
-                string value = this.Parameters.GetValue<string>(key);
-                if (!string.IsNullOrEmpty(value))
-                {
-                    text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", value);
-                }
-            }
-
-            this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
-        }
-
         private string FilterWarnings(string fioOutput)
         {
             string modifiedOutput = Regex.Replace(fioOutput, @"^fio:.*$", string.Empty, RegexOptions.Multiline).Trim();
 
             return modifiedOutput;
-        }
-
-        private string GetCommandForJobFilesAsync(CancellationToken cancellationToken)
-        {
-            string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
-            string updatedJobFileFolder = Path.Combine(jobFileFolder, "updated");
-
-            if (!this.SystemManagement.FileSystem.Directory.Exists(updatedJobFileFolder))
-            {
-                this.SystemManagement.FileSystem.Directory.CreateDirectory(updatedJobFileFolder);
-            }
-
-            string command = string.Empty;
-            string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
-
-            foreach (string templateJobFilePath in templateJobFilePaths)
-            {
-                // Create/update new job file at runtime.
-                string templateJobFileName = Path.GetFileName(templateJobFilePath);
-                string updatedJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, "updated", templateJobFileName);
-                this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
-
-                // Update command to include the new job file.
-                command += $"{updatedJobFilePath} ";
-            }
-
-            command = $"{command.Trim()} --output-format=json";
-            return command;
         }
 
         private string RemoveOption(string commandLine, string option)

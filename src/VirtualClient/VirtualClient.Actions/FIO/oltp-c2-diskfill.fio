@@ -3,7 +3,7 @@
 
 # --------------- Global section defines defaults across all components
 [global]
-direct=${directio}
+direct=1
 group_reporting=0
 time_based=1
 
@@ -18,7 +18,7 @@ bs=256K
 iodepth=64
 numjobs=1
 rw=write
-size=${randomiofilesize}
+size=124G
 
 # Initialize logs database.
 [initsequentialio]
@@ -27,4 +27,4 @@ bs=256K
 iodepth=64
 numjobs=1
 rw=write
-size=${sequentialiofilesize}
+size=20G

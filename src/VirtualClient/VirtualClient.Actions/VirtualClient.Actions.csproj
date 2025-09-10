@@ -22,7 +22,7 @@
         <!--
         Scripts/content that needs to be copied into the build output 'scripts' directory.
         -->
-        <ScriptFiles Include="FIO\*.jobfile" />
+        <ScriptFiles Include="FIO\*.fio" />
         <ScriptFiles Include="SPECcpu\*.cfg;SPECcpu\*.sh;SPECcpu\*.bat" />
         <ScriptFiles Include="Lzbench\*.sh" />
         <ScriptFiles Include="HammerDB\*.sh" />

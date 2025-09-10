@@ -3,7 +3,7 @@
 
 # --------------- Global section defines defaults across all components
 [global]
-direct=${directio}
+direct=1
 group_reporting=0
 time_based=1
 
@@ -14,43 +14,43 @@ time_based=1
 # Represents reading of data from sql/OLTP database.
 [randomreader]
 new_group
-bs=${randomreadblocksize}
-iodepth=${randomreadiodepth}
-numjobs=${randomreadnumjobs}
+bs=4k
+iodepth=512
+numjobs=1
 rate_iops=2708
-runtime=${duration}
+runtime=180
 rw=randread
-size=${randomiofilesize}
+size=124G
 
 # Represents writing of data in sql/OLTP database.
 [randomwriter]
 new_group
-bs=${randomwriteblocksize}
-iodepth=${randomwriteiodepth}
-numjobs=${randomwritenumjobs}
+bs=4k
+iodepth=512
+numjobs=1
 rate_iops=2128
-runtime=${duration}
+runtime=180
 rw=randwrite
-size=${randomiofilesize}
+size=124G
 
 # Represents log readers of sql/OLTP database.
 [sequentialreader]
 new_group
-bs=${sequentialreadblocksize}
-iodepth=${sequentialreadiodepth}
-numjobs=${sequentialreadnumjobs}
+bs=4k
+iodepth=64
+numjobs=1
 rate_iops=0
-runtime=${duration}
+runtime=180
 rw=read
-size=${sequentialiofilesize}
+size=20G
 
 # Represents log writers of sql/OLTP database.
 [sequentialwriter]
 new_group
-bs=${sequentialwriteblocksize}
-iodepth=${sequentialwriteiodepth}
-numjobs=${sequentialwritenumjobs}
+bs=4k
+iodepth=64
+numjobs=1
 rate_iops=164
-runtime=${duration}
+runtime=180
 rw=write
-size=${sequentialiofilesize}
+size=20G
