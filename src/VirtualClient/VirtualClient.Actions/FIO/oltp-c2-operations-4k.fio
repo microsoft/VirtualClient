@@ -6,6 +6,9 @@
 direct=1
 group_reporting=0
 time_based=1
+bs=4k
+runtime=180
+numjobs=1
 
 # by setting the submit mode to offload, we can guarantee a fixed rate of
 # submission regardless of what the device completion rate is.
@@ -14,43 +17,31 @@ time_based=1
 # Represents reading of data from sql/OLTP database.
 [randomreader]
 new_group
-bs=4k
 iodepth=512
-numjobs=1
 rate_iops=2708
-runtime=180
 rw=randread
 size=124G
 
 # Represents writing of data in sql/OLTP database.
 [randomwriter]
 new_group
-bs=4k
 iodepth=512
-numjobs=1
 rate_iops=2128
-runtime=180
 rw=randwrite
 size=124G
 
 # Represents log readers of sql/OLTP database.
 [sequentialreader]
 new_group
-bs=4k
 iodepth=64
-numjobs=1
 rate_iops=0
-runtime=180
 rw=read
 size=20G
 
 # Represents log writers of sql/OLTP database.
 [sequentialwriter]
 new_group
-bs=4k
 iodepth=64
-numjobs=1
 rate_iops=164
-runtime=180
 rw=write
 size=20G
