@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDir))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)

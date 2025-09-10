@@ -123,7 +123,7 @@ namespace VirtualClient.Proxy
             return descriptor;
         }
 
-        public async Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
+        public async Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null, IAsyncPolicy retryPolicy = null)
         {
             descriptor.ThrowIfNull(nameof(descriptor));
             uploadStream.ThrowIfNull(nameof(uploadStream));

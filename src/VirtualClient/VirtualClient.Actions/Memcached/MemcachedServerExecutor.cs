@@ -250,7 +250,7 @@ namespace VirtualClient.Actions
             {
                 foreach (IProcessProxy process in processes)
                 {
-                    process.SafeKill();
+                    process.SafeKill(this.Logger);
                 }
             }
 

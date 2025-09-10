@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
             {
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(command, commandArguments, this.LMbenchPackage.Path))
                 {
-                    this.CleanupTasks.Add(() => process?.SafeKill());
+                    this.CleanupTasks.Add(() => process?.SafeKill(this.Logger));
                     await process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
@@ -236,7 +236,7 @@ namespace VirtualClient.Actions
                             }
                         }
 
-                        this.CleanupTasks.Add(() => process?.SafeKill());
+                        this.CleanupTasks.Add(() => process?.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
@@ -257,7 +257,7 @@ namespace VirtualClient.Actions
 
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(command, commandArguments, resultsPath))
                 {
-                    this.CleanupTasks.Add(() => process?.SafeKill());
+                    this.CleanupTasks.Add(() => process?.SafeKill(this.Logger));
                     await process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)

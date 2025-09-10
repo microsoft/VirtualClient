@@ -210,7 +210,7 @@ namespace VirtualClient.Monitors
                 {
                     using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                         DateTime startTime = DateTime.UtcNow;
                         await process.StartAndWaitAsync(cancellationToken);

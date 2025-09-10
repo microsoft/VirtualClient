@@ -344,7 +344,7 @@ namespace VirtualClient.Actions
                     // wait for it to exit.
                     using (IProcessProxy workloadProcess = this.processManager.CreateProcess(this.WorkloadExecutablePath, commandArguments, this.WorkloadPackage.Path))
                     {
-                        this.CleanupTasks.Add(() => workloadProcess.SafeKill());
+                        this.CleanupTasks.Add(() => workloadProcess.SafeKill(this.Logger));
 
                         await workloadProcess.StartAndWaitAsync(cancellationToken)
                             .ConfigureAwait(false);

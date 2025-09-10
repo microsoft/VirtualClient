@@ -15,14 +15,12 @@ namespace VirtualClient
     /// </summary>
     public class InMemoryProcessManager : ProcessManager
     {
-        private PlatformID platform;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryProcessManager"/> class.
         /// </summary>
         public InMemoryProcessManager(PlatformID platform)
         {
-            this.platform = platform;
+            this.Platform = platform;
             this.Processes = new List<IProcessProxy>();
         }
 
@@ -81,6 +79,9 @@ namespace VirtualClient
         public Action<IProcessProxy> OnProcessCreated { get; set; }
 
         /// <inheritdoc />
+        public override PlatformID Platform { get; }
+
+        /// <inheritdoc />
         public override IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null)
         {
             IProcessProxy process = null;
@@ -96,7 +97,7 @@ namespace VirtualClient
                     {
                         FileName = command,
                         Arguments = arguments,
-                        WorkingDirectory = workingDir ?? (this.platform == PlatformID.Unix 
+                        WorkingDirectory = workingDir ?? (this.Platform == PlatformID.Unix 
                             ? Path.GetDirectoryName(command).Replace('\\', '/')
                             : Path.GetDirectoryName(command))
                     }

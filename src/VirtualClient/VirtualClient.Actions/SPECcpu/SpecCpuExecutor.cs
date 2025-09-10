@@ -297,7 +297,7 @@ namespace VirtualClient.Actions
 
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments, workingDirectory))
             {
-                this.CleanupTasks.Add(() => process.SafeKill());
+                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                 this.LogProcessTrace(process);
 
                 await process.StartAndWaitAsync(cancellationToken);

@@ -9,7 +9,10 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
+    using Newtonsoft.Json.Linq;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using YamlDotNet.Core.Tokens;
 
     /// <summary>
     /// Defines platform-specific information and properties for dependencies and
@@ -605,7 +608,7 @@ namespace VirtualClient.Contracts
                 {
                     commitChange = true;
                 }
-                else if (!originalValue.EndsWith(value))
+                else if (!originalValue.Contains(value, StringComparison.Ordinal))
                 {
                     commitChange = true;
                     newValue = $"{originalValue}{delimiter}{newValue}";
@@ -615,6 +618,51 @@ namespace VirtualClient.Contracts
             if (commitChange)
             {
                 Environment.SetEnvironmentVariable(name, newValue, target);
+            }
+        }
+
+        /// <summary>
+        /// Adds the environment variable to the process variables.
+        /// </summary>
+        /// <param name="process">The process to which to add the environment variables.</param>
+        /// <param name="name">The name of the environment variable to set.</param>
+        /// <param name="value">The value to which to set the environment variable or append to the end of the existing value.</param>
+        /// <param name="append">True to append the value to the end of the existing environment variable value. False to replace the existing value.</param>
+        public void SetEnvironmentVariable(IProcessProxy process, string name, string value, bool append = false)
+        {
+            process.ThrowIfNull(nameof(process));
+            name.ThrowIfNullOrWhiteSpace(nameof(name));
+            value.ThrowIfNullOrWhiteSpace(nameof(value));
+
+            string originalValue = null;
+            if (process.EnvironmentVariables.ContainsKey(name))
+            {
+                originalValue = process.EnvironmentVariables[name];
+            }
+
+            string newValue = value ?? string.Empty;
+            bool commitChange = true;
+
+            if (!string.IsNullOrWhiteSpace(originalValue) && append)
+            {
+                commitChange = false;
+                char delimiter = this.Platform == PlatformID.Unix ? ':' : ';';
+
+                originalValue = originalValue?.TrimEnd(delimiter);
+                if (string.IsNullOrWhiteSpace(originalValue))
+                {
+                    commitChange = true;
+                }
+                else if (!originalValue.Contains(value, StringComparison.Ordinal))
+                {
+                    commitChange = true;
+                    newValue = $"{originalValue}{delimiter}{newValue}";
+                }
+            }
+
+            if (commitChange)
+            {
+                process.EnvironmentVariables[name] = newValue;
             }
         }
 
