@@ -43,6 +43,66 @@
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_8K_BlockSize",
+                "MetricScenario": "read_write_operations_8k_blocksize",
+                "PackageName": "fio",
+                "CommandLine": "--bs=8k --size={FileSize} --ioengine={Engine} {ScriptPath:fio}/oltp-c-operations.fio --output-format=json",
+                "Engine": "$.Parameters.Engine",
+                "FileSize": "$.Parameters.FileSize",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "ProcessModel": "SingleProcess",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_12K_BlockSize",
+                "MetricScenario": "read_write_operations_12k_blocksize",
+                "PackageName": "fio",
+                "CommandLine": "--bs=12k --size={FileSize} --ioengine={Engine} {ScriptPath:fio}/oltp-c-operations.fio --output-format=json",
+                "Engine": "$.Parameters.Engine",
+                "FileSize": "$.Parameters.FileSize",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "ProcessModel": "SingleProcess",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_16K_BlockSize",
+                "MetricScenario": "read_write_operations_16k_blocksize",
+                "PackageName": "fio",
+                "CommandLine": "--bs=16k --size={FileSize} --ioengine={Engine} {ScriptPath:fio}/oltp-c-operations.fio --output-format=json",
+                "Engine": "$.Parameters.Engine",
+                "FileSize": "$.Parameters.FileSize",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "ProcessModel": "SingleProcess",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,FIO,OLTP"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "FioExecutorJobFile_1024K_BlockSize",
+                "MetricScenario": "read_write_operations_1024k_blocksize",
+                "PackageName": "fio",
+                "CommandLine": "--bs=1024k --size={FileSize} --ioengine={Engine} {ScriptPath:fio}/oltp-c-operations.fio --output-format=json",
+                "Engine": "$.Parameters.Engine",
+                "FileSize": "$.Parameters.FileSize",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "ProcessModel": "SingleProcess",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,FIO,OLTP"
+            }
         }
     ],
     "Dependencies": [
