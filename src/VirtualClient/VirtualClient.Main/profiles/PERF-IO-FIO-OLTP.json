@@ -9,8 +9,9 @@
     },
     "Parameters": {
         "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
-        "DiskFilter": "BiggestSize",
-        "ProcessModel": "SingleProcess"
+        "DiskFillSize": "200G",
+        "FileSize": "124G",
+        "DiskFilter": "BiggestSize"
     },
     "Actions": [
         {
@@ -19,10 +20,11 @@
                 "Scenario": "DiskFill",
                 "MetricScenario": "disk_fill",
                 "PackageName": "fio",
-                "CommandLine": "--ioengine={Engine} {ScriptPath:fio}/oltp-c2-diskfill.fio --output-format=json",
-                "Engine": "$.Parameters.Engine",
-                "FileName": "fio-test.dat",
                 "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=disk_fill --size={DiskFillSize} --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={Engine} --direct=1 --overwrite=1 --thread",
+                "Engine": "$.Parameters.Engine",
+                "DiskFill": true,
+                "DiskFillSize": "$.Parameters.DiskFillSize",
                 "ProcessModel": "SingleProcessPerDisk",
                 "DeleteTestFilesOnFinish": false
             }
@@ -33,11 +35,11 @@
                 "Scenario": "FioExecutorJobFile_4K_BlockSize",
                 "MetricScenario": "read_write_operations_4k_blocksize",
                 "PackageName": "fio",
-                "CommandLine": "--ioengine={Engine} {ScriptPath:fio}/oltp-c2-operations-4k.fio --output-format=json",
+                "CommandLine": "--bs=4k --size={FileSize} --ioengine={Engine} {ScriptPath:fio}/oltp-c-operations.fio --output-format=json",
                 "Engine": "$.Parameters.Engine",
-                "FileName": "fio-test.dat",
+                "FileSize": "$.Parameters.FileSize",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "ProcessModel": "$.Parameters.ProcessModel",
+                "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }

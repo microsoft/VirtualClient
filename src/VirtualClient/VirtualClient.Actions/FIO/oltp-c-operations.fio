@@ -6,7 +6,6 @@
 direct=1
 group_reporting=0
 time_based=1
-bs=4k
 runtime=180
 numjobs=1
 
@@ -18,30 +17,22 @@ numjobs=1
 [randomreader]
 new_group
 iodepth=512
-rate_iops=2708
 rw=randread
-size=124G
 
 # Represents writing of data in sql/OLTP database.
 [randomwriter]
 new_group
 iodepth=512
-rate_iops=2128
 rw=randwrite
-size=124G
 
 # Represents log readers of sql/OLTP database.
 [sequentialreader]
 new_group
 iodepth=64
-rate_iops=0
 rw=read
-size=20G
 
 # Represents log writers of sql/OLTP database.
 [sequentialwriter]
 new_group
 iodepth=64
-rate_iops=164
 rw=write
-size=20G
