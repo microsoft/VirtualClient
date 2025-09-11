@@ -6,7 +6,6 @@
 direct=1
 group_reporting=0
 time_based=1
-runtime=180
 numjobs=1
 
 # by setting the submit mode to offload, we can guarantee a fixed rate of
@@ -16,23 +15,19 @@ numjobs=1
 # Represents reading of data from sql/OLTP database.
 [randomreader]
 new_group
-iodepth=512
 rw=randread
 
 # Represents writing of data in sql/OLTP database.
 [randomwriter]
 new_group
-iodepth=512
 rw=randwrite
 
 # Represents log readers of sql/OLTP database.
 [sequentialreader]
 new_group
-iodepth=64
 rw=read
 
 # Represents log writers of sql/OLTP database.
 [sequentialwriter]
 new_group
-iodepth=64
 rw=write
