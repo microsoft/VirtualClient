@@ -498,9 +498,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--key-vault")]
-        [TestCase("--key-Vault")]
-        [TestCase("--keyvault")]
-        [TestCase("--keyVault")]
         [TestCase("--kv")]
         public void KeyVaultOptionSupportsExpectedAliases(string alias)
         {
@@ -542,6 +539,15 @@ namespace VirtualClient
         {
             Option option = OptionFactory.CreateKeyVaultOption();
             ParseResult result = option.Parse($"--kv={argument}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("--isolated")]
+        public void IsolatedFlagSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateIsolatedFlag();
+            ParseResult result = option.Parse(alias);
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -1298,6 +1304,47 @@ namespace VirtualClient
 
             Assert.IsFalse(result.Errors.Any());
             CollectionAssert.AreEqual(new string[] { expectedPath1, expectedPath2 }, actualPaths);
+        }
+
+        [Test]
+        [TestCase("--temp-dir")]
+        [TestCase("--tdir")]
+        public void TempDirectoryOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateTempDirectoryOption();
+            ParseResult result = option.Parse($"{alias}=\\Any\\Directory\\Path");
+
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void TempDirectoryOptionSupportsFullPaths()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreateTempDirectoryOption();
+            ParseResult result = option.Parse($"--temp-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--temp-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TempDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateTempDirectoryOption();
+            ParseResult result = option.Parse($"--temp-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--temp-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]

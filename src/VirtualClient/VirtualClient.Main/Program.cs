@@ -21,6 +21,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging.Abstractions;
     using Org.BouncyCastle.Bcpg.OpenPgp;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Configuration;
     using VirtualClient.Logging;
 
     /// <summary>
@@ -28,7 +29,11 @@ namespace VirtualClient
     /// </summary>
     public sealed class Program
     {
+        internal static IConfiguration Configuration { get; private set; }
+
         internal static ILogger Logger { get; set; }
+
+        internal static DefaultSettings Settings { get; private set; }
 
         /// <summary>
         /// The application entry point/method.
@@ -54,6 +59,18 @@ namespace VirtualClient
                 // We do not want to miss any startup errors that happen before we can get the rest of
                 // the loggers setup.
                 Program.InitializeStartupLogging(args);
+                Program.Configuration = Program.LoadAppSettings();
+                IConfigurationSection defaultSettings = Program.Configuration.GetSection("DefaultSettings");
+
+                if (defaultSettings?.Exists() == true)
+                {
+                    Program.Settings = new DefaultSettings();
+                    defaultSettings.Bind(Program.Settings);
+                }
+                else
+                {
+                    Program.Settings = DefaultSettings.Create();
+                }
 
                 using (CancellationTokenSource cancellationSource = VirtualClientRuntime.CancellationSource)
                 {
@@ -171,6 +188,7 @@ namespace VirtualClient
         /// </summary>
         internal static CommandLineBuilder SetupCommandLine(string[] args, CancellationTokenSource cancellationTokenSource)
         {
+            DefaultSettings settings = Program.Settings ?? DefaultSettings.Create();
             RootCommand rootCommand = new RootCommand("Executes workload and monitoring profiles on the system.")
             {
                 // OPTIONAL
@@ -192,15 +210,15 @@ namespace VirtualClient
 
                 // --content-path-template
                 OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --timeout
-                OptionFactory.CreateTimeoutOption(required: false),
+                
+                // --dependencies
+                OptionFactory.CreateDependenciesFlag(required: false),
 
                 // --event-hub
                 OptionFactory.CreateEventHubStoreOption(required: false),
 
                 // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
@@ -208,8 +226,8 @@ namespace VirtualClient
                 // --fail-fast
                 OptionFactory.CreateFailFastFlag(required: false),
 
-                // --dependencies
-                OptionFactory.CreateDependenciesFlag(required: false),
+                // --isolated
+                OptionFactory.CreateIsolatedFlag(required: false),
 
                 // --iterations
                 OptionFactory.CreateIterationsOption(required: false),
@@ -221,10 +239,10 @@ namespace VirtualClient
                 OptionFactory.CreateLayoutPathOption(required: false),
 
                 // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
 
                 // --logger
-                OptionFactory.CreateLoggerOption(required: false),
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
 
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
@@ -233,13 +251,13 @@ namespace VirtualClient
                 OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false),
+                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
 
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
 
                 // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false),
+                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
 
                 // --package-store
                 OptionFactory.CreatePackageStoreOption(required: false),
@@ -257,10 +275,16 @@ namespace VirtualClient
                 OptionFactory.CreateSeedOption(required: false, 777),
 
                 // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
+                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
 
                 // --system
                 OptionFactory.CreateSystemOption(required: false),
+
+                // --temp-dir
+                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
+
+                 // --timeout
+                OptionFactory.CreateTimeoutOption(required: false),
 
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false)
@@ -270,134 +294,41 @@ namespace VirtualClient
             // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
             // while additionally having the full set of other options available for profile execution.
             rootCommand.AddArgument(OptionFactory.CreateCommandArgument(required: false, string.Empty));
-
             rootCommand.TreatUnmatchedTokensAsErrors = false;
             rootCommand.Handler = CommandHandler.Create<ExecuteCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
-            Command runBootstrapCommand = new Command(
-                "bootstrap",
-                "Bootstraps/installs a dependency package on the system.")
-            {
-                // Required
-                // -------------------------------------------------------------------
-                // --package
-                OptionFactory.CreatePackageOption(required: true),
+            Command apiSubcommand = Program.CreateApiSubcommand(settings);
+            apiSubcommand.TreatUnmatchedTokensAsErrors = true;
+            apiSubcommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(apiSubcommand);
 
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: true),
+            Command bootstrapSubcommand = Program.CreateBootstrapSubcommand(settings);
+            bootstrapSubcommand.TreatUnmatchedTokensAsErrors = true;
+            bootstrapSubcommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(bootstrapSubcommand);
 
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
+            Command cleanSubcommand = Program.CreateCleanSubcommand(settings);
+            cleanSubcommand.TreatUnmatchedTokensAsErrors = true;
+            cleanSubcommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(cleanSubcommand);
 
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+            Command convertSubcommand = Program.CreateConvertSubcommand(settings);
+            convertSubcommand.TreatUnmatchedTokensAsErrors = true;
+            convertSubcommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(convertSubcommand);
 
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
+            Command uploadTelemetrySubcommand = Program.CreateUploadTelemetrySubcommand(settings);
+            uploadTelemetrySubcommand.TreatUnmatchedTokensAsErrors = true;
+            uploadTelemetrySubcommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(uploadTelemetrySubcommand);
 
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+            return new CommandLineBuilder(rootCommand).WithDefaults();
+        }
 
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
-
-                // --iterations (for integration only. not used/always = 1)
-                OptionFactory.CreateIterationsOption(required: false),
-
-                // --layout-path (for integration only. not used.)
-                OptionFactory.CreateLayoutPathOption(required: false),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --name
-                OptionFactory.CreateNameOption(required: false),
-
-                // --logger
-                OptionFactory.CreateLoggerOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            runBootstrapCommand.TreatUnmatchedTokensAsErrors = true;
-            runBootstrapCommand.AddAlias("Bootstrap");
-            runBootstrapCommand.AddAlias("Install");
-            runBootstrapCommand.AddAlias("install");
-            runBootstrapCommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command runResetCommand = new Command(
-                "clean",
-                "Resets the state of the Virtual Client for a 'first run' scenario.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --logger
-                OptionFactory.CreateLoggerOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            runResetCommand.TreatUnmatchedTokensAsErrors = true;
-            runResetCommand.AddAlias("Clean");
-            runResetCommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command convertCommand = new Command(
-                "convert",
-                "Converts execution profiles from JSON to YAML format and vice-versa.")
-            {
-                // Required
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(required: true),
-
-                // --output-path
-                OptionFactory.CreateOutputDirectoryOption(required: true)
-            };
-
-            convertCommand.AddAlias("Convert");
-            convertCommand.TreatUnmatchedTokensAsErrors = true;
-            convertCommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-
-            Command runApiCommand = new Command(
-                "runapi",
+        private static Command CreateApiSubcommand(DefaultSettings settings)
+        {
+            Command apiCommand = new Command(
+                "api",
                 "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
             {
                 // OPTIONAL
@@ -411,11 +342,14 @@ namespace VirtualClient
                 // --ip-address
                 OptionFactory.CreateIPAddressOption(required: false),
 
-                // --logger
-                OptionFactory.CreateLoggerOption(required: false),
+                // --isolated
+                OptionFactory.CreateIsolatedFlag(required: false),
 
                 // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
+
+                 // --logger
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
 
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
@@ -423,21 +357,176 @@ namespace VirtualClient
                 // --log-retention
                 OptionFactory.CreateLogRetentionOption(required: false),
 
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
+
                 // --monitor
                 OptionFactory.CreateMonitorFlag(required: false, false),
+
+                // --state-dir
+                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
+
+                // --temp-dir
+                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
 
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
-            runApiCommand.TreatUnmatchedTokensAsErrors = true;
-            runApiCommand.AddAlias("RunApi");
-            runApiCommand.AddAlias("RunAPI");
-            runApiCommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            return apiCommand;
+        }
 
+        private static Command CreateBootstrapSubcommand(DefaultSettings settings)
+        {
+            Command bootstrapCommand = new Command(
+                "bootstrap",
+                "Bootstraps/installs a dependency package on the system.")
+            {
+                // Required
+                // -------------------------------------------------------------------
+                // --package
+                OptionFactory.CreatePackageOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --event-hub
+                OptionFactory.CreateEventHubStoreOption(required: false),
+
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --isolated
+                OptionFactory.CreateIsolatedFlag(required: false),
+
+                // --iterations (for integration only. not used/always = 1)
+                OptionFactory.CreateIterationsOption(required: false),
+
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: false),
+
+                // --layout-path (for integration only. not used.)
+                OptionFactory.CreateLayoutPathOption(required: false),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
+
+                // --name
+                OptionFactory.CreateNameOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
+
+                 // --logger
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
+
+                // --package-dir
+                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --package-store
+                OptionFactory.CreatePackageStoreOption(required: false),
+
+                // --proxy-api
+                OptionFactory.CreateProxyApiOption(required: false),
+
+                // --system
+                OptionFactory.CreateSystemOption(required: false),
+
+                // --state-dir
+                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
+
+                // --temp-dir
+                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return bootstrapCommand;
+        }
+
+        private static Command CreateCleanSubcommand(DefaultSettings settings)
+        {
+            Command cleanCommand = new Command(
+                "clean",
+                "Resets the state of the Virtual Client for a 'first run' scenario.")
+            {
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
+
+                 // --logger
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --package-dir
+                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
+
+                 // --state-dir
+                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
+
+                // --temp-dir
+                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return cleanCommand;
+        }
+
+        private static Command CreateConvertSubcommand(DefaultSettings settings)
+        {
+            Command convertCommand = new Command(
+                "convert",
+                "Converts execution profiles from JSON to YAML format and vice-versa.")
+            {
+                // Required
+                // -------------------------------------------------------------------
+                // --profile
+                OptionFactory.CreateProfileOption(required: true),
+
+                // --output-path
+                OptionFactory.CreateOutputDirectoryOption(required: true)
+            };
+
+            return convertCommand;
+        }
+
+        private static Command CreateUploadTelemetrySubcommand(DefaultSettings settings)
+        {
             Command uploadTelemetryCommand = new Command(
-                "upload-telemetry",
-                "Uploads telemetry (e.g. events, metrics) from data point files on the system.")
+               "upload-telemetry",
+               "Uploads telemetry (e.g. events, metrics) from data point files on the system.")
             {
                 // Required
                 // -------------------------------------------------------------------
@@ -501,17 +590,7 @@ namespace VirtualClient
                 OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
-            uploadTelemetryCommand.TreatUnmatchedTokensAsErrors = true;
-            uploadTelemetryCommand.AddAlias("Upload-Telemetry");
-            uploadTelemetryCommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            rootCommand.AddCommand(runApiCommand);
-            rootCommand.AddCommand(runBootstrapCommand);
-            rootCommand.AddCommand(runResetCommand);
-            rootCommand.AddCommand(convertCommand);
-            rootCommand.AddCommand(uploadTelemetryCommand);
-
-            return new CommandLineBuilder(rootCommand).WithDefaults();
+            return uploadTelemetryCommand;
         }
 
         private static void InitializeStartupLogging(string[] args)

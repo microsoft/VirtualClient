@@ -123,6 +123,51 @@ namespace VirtualClient.Contracts
             return type != null;
         }
 
+        /// <summary>
+        /// Returns true if 1 or more matching types exists in the type cache.
+        /// </summary>
+        /// <param name="baseType">The base type of the component (e.g. ILoggerProvider).</param>
+        /// <param name="alias">An alias for the matching type.</param>
+        /// <param name="types">A set of types having a matching alias.</param>
+        /// <returns>
+        /// True if 1 or more matching types exists in the type cache.
+        /// </returns>
+        public bool TryGetComponentTypes(Type baseType, string alias, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] out IEnumerable<Type> types)
+        {
+            baseType.ThrowIfNull(nameof(baseType));
+            alias.ThrowIfNullOrWhiteSpace(nameof(alias));
+
+            types = null;
+            List<Type> matchingAliasedTypes = new List<Type>();
+            IEnumerable<CachedComponentType> matchedTypes = this.Where(t => t.Type.IsAssignableTo(baseType));
+
+            if (matchedTypes?.Any() == true)
+            {
+                foreach (CachedComponentType matchedType in matchedTypes)
+                {
+                    if (!matchedType.Type.IsAbstract)
+                    {
+                        IEnumerable<AliasAttribute> aliases = matchedType.Type.GetCustomAttributes<AliasAttribute>();
+                        foreach (AliasAttribute attribute in aliases)
+                        {
+                            if (attribute.Aliases.Contains(alias, StringComparer.OrdinalIgnoreCase))
+                            {
+                                matchingAliasedTypes.Add(matchedType.Type);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (matchingAliasedTypes.Any())
+            {
+                types = matchingAliasedTypes;
+            }
+
+            return types != null;
+        }
+
         private static IEnumerable<string> GetAssemblies(string directoryPath)
         {
             List<string> assemblies = new List<string>();

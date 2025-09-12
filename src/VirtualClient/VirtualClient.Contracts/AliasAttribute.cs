@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Common
+namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Defines one or more aliases for ILoggerProvider class.
+    /// Defines one or more aliases for a given class for reflection support.
     /// </summary>
     [AttributeUsage(validOn: AttributeTargets.Class)]
-    public class LoggerAliasAttribute : Attribute
+    public class AliasAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="LoggerAliasAttribute"/> class.
+        /// Initializes a new instance of the <see cref="AliasAttribute"/> class.
         /// </summary>
         /// <param name="alias">Alias or aliases delimited by comma.</param>
-        public LoggerAliasAttribute(string alias)
+        public AliasAttribute(string alias)
         {
             alias.ThrowIfNullOrEmpty(nameof(alias));
             this.Aliases = alias.Split(',');

@@ -111,7 +111,8 @@ namespace VirtualClient
                         CleanTargets.All,
                         CleanTargets.Logs,
                         CleanTargets.Packages,
-                        CleanTargets.State
+                        CleanTargets.State,
+                        CleanTargets.Temp
                     };
 
                     IEnumerable<string> otherTargets = targets.Except(validTargets);
@@ -501,6 +502,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option indicates that the application should run with isolated logs, packages, 
+        /// state and temp directories.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateIsolatedFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--isolated" })
+            {
+                Name = "Isolated",
+                Description = "Flag indicates that the application should run with isolated logs, packages, state and temp directories.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the number of rounds/iterations to run the profile actions.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -540,7 +562,7 @@ namespace VirtualClient
         public static Option CreateKeyVaultOption(bool required = false, object defaultValue = null)
         {
             Option<string> option = new Option<string>(
-                new string[] { "--kv", "--keyvault", "--key-vault", "--keyVault", "--key-Vault" })
+                new string[] { "--kv", "--key-vault" })
             {
                 Name = "KeyVault",
                 Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
@@ -1174,6 +1196,29 @@ namespace VirtualClient
                 Name = "TargetFiles",
                 Description = "The target files (comma-delimited).",
                 ArgumentHelpName = "file,file...",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an alternate directory on the system in 
+        /// which to write temp files/documents.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTempDirectoryOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--tdir", "--temp-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
+            {
+                Name = "TempDirectory",
+                Description = "Defines an alternate directory to which temp files/documents will be written.",
+                ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
 

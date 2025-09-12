@@ -278,6 +278,7 @@ namespace VirtualClient.UnitTests
             loggerDefinitions.Add("eventHub;sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
             loggerDefinitions.Add(@"proxy;https://vc.com");
             loggerDefinitions.Add("console");
+            loggerDefinitions.Add("csv");
             loggerDefinitions.Add("file");
             testCommand.Loggers = loggerDefinitions;
 

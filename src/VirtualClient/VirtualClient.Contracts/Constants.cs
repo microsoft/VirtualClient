@@ -204,6 +204,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_SUDO_USER
         /// </summary>
         public const string VC_SUDO_USER = nameof(VC_SUDO_USER);
+
+        /// <summary>
+        /// Name = VC_TEMP_DIR
+        /// </summary>
+        public const string VC_TEMP_DIR = nameof(VC_TEMP_DIR);
     }
 
     /// <summary>

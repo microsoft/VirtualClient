@@ -146,7 +146,7 @@ namespace VirtualClient.Dependencies
 
                                         if (!cancellationToken.IsCancellationRequested)
                                         {
-                                            await this.LogProcessDetailsAsync(process, telemetryContext, this.LogFolderName);
+                                            await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName);
                                             process.ThrowIfComponentOperationFailed(this.ComponentType);
                                         }
                                     }

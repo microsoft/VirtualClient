@@ -58,6 +58,16 @@ namespace VirtualClient
         public static string[] CommandLineArguments { get; internal set; }
 
         /// <summary>
+        /// Metadata provided to VC on the command line.
+        /// </summary>
+        public static IReadOnlyDictionary<string, IConvertible> CommandLineMetadata { get; internal set; }
+
+        /// <summary>
+        /// Parameters provided to VC on the command line.
+        /// </summary>
+        public static IReadOnlyDictionary<string, IConvertible> CommandLineParameters { get; internal set; }
+
+        /// <summary>
         /// The current experiment ID for the application.
         /// </summary>
         public static string ExperimentId { get; internal set; }

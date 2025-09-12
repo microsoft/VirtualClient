@@ -151,7 +151,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory where scripts related to workloads exist.
         /// </summary>
-        public string TempDirectory { get; }
+        public string TempDirectory { get; set; }
 
         /// <summary>
         /// The directory where built-in tools/toolsets are stored.

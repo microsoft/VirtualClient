@@ -237,6 +237,24 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The name of the file to which log files should be
+        /// written (e.g. ipmiutil -> ipmiutil_sel.log).
+        /// </summary>
+        public string LogFileName
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.LogFileName), out IConvertible logFileName);
+                return logFileName?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogFolderName)] = value;
+            }
+        }
+
+        /// <summary>
         /// The name of the directory/folder to which log files should be
         /// written (e.g. geekbench -> ./logs/geekbench).
         /// </summary>

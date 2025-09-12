@@ -652,6 +652,7 @@ namespace VirtualClient
             };
 
             // Only dependencies defined in the profile will be considered.
+            dependencies.AddSingleton(profile);
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
             {
                 profileExecutor.ExecuteActions = false;
@@ -752,6 +753,7 @@ namespace VirtualClient
                 Seed = this.RandomizationSeed
             };
 
+            dependencies.AddSingleton(profile);
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
             {
                 profileExecutor.BeforeExiting += (source, args) =>

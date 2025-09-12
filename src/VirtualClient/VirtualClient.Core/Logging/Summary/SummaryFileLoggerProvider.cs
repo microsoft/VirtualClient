@@ -6,7 +6,6 @@ namespace VirtualClient.Logging
     using System;
     using System.Runtime.InteropServices;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -14,7 +13,6 @@ namespace VirtualClient.Logging
     /// Provides methods for creating <see cref="ILogger"/> instances that can be used
     /// to write summary log files.
     /// </summary>
-    [LoggerAlias("Summary,File")]
     public sealed class SummaryFileLoggerProvider : ILoggerProvider
     {
         private string filePath;

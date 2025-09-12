@@ -14,7 +14,7 @@ namespace VirtualClient.Logging
     /// Provides methods for creating <see cref="ILogger"/> instances that can be used
     /// to write metrics data to a CSV file.
     /// </summary>
-    [LoggerAlias("Csv,File")]
+    [Alias("Csv,File")]
     public sealed class MetricsCsvFileLoggerProvider : ILoggerProvider
     {
         private string filePath;
