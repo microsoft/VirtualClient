@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
                             process.ExitTime,
                             metrics,
                             null,
-                            null,
+                            scenarioArguments: $"[ -VirtualUsers {this.VirtualUsers} -WarehouseCount {this.WarehouseCount}]",
                             this.Tags,
                             telemetryContext);
                     }
