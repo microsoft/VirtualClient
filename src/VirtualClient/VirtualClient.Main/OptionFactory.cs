@@ -617,7 +617,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -849,7 +855,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -1126,7 +1138,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -1168,7 +1186,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -1222,7 +1246,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -1635,7 +1665,7 @@ namespace VirtualClient
             {
                 if (!Path.IsPathRooted(path))
                 {
-                    // Relative path
+                    // Convert relative path to full path.
                     fullPath = Path.GetFullPath(path);
                 }
             }

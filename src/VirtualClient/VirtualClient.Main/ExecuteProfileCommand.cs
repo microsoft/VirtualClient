@@ -827,6 +827,7 @@ namespace VirtualClient
             ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Package Directory: {platformSpecifics.PackagesDirectory}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"State Directory: {platformSpecifics.StateDirectory}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Temp Directory: {platformSpecifics.TempDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {

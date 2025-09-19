@@ -606,6 +606,21 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void LogDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateLogDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--log-dir")?.ToString();
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase("--log-level")]
         [TestCase("--ll")]
         public void LogLevelOptionSupportsExpectedAliases(string alias)
@@ -810,6 +825,21 @@ namespace VirtualClient
             string actualPath = result.ValueForOption("--package-dir")?.ToString();
 
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void PackageDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreatePackageDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--package-dir")?.ToString();
+
             Assert.AreEqual(expectedPath, actualPath);
         }
 
@@ -1185,6 +1215,21 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void StateDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateStateDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--state-dir")?.ToString();
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase("--system")]
         [TestCase("--s")]
         public void SystemOptionSupportsExpectedAliases(string alias)
@@ -1231,6 +1276,21 @@ namespace VirtualClient
             string actualPath = result.ValueForOption("--directory")?.ToString();
 
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TargetDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateTargetDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--directory")?.ToString();
+
             Assert.AreEqual(expectedPath, actualPath);
         }
 
@@ -1344,6 +1404,21 @@ namespace VirtualClient
             string actualPath = result.ValueForOption("--temp-dir")?.ToString();
 
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TempDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateTempDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--temp-dir")?.ToString();
+
             Assert.AreEqual(expectedPath, actualPath);
         }
 
