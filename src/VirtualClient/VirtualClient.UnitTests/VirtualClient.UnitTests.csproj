@@ -25,9 +25,6 @@
         <Content Include="..\VirtualClient.Main\profiles\MONITORS-DEFAULT.json" Link="profiles\MONITORS-DEFAULT.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\VirtualClient.Main\profiles\MONITORS-NONE.json" Link="profiles\MONITORS-NONE.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
         
         <None Update="profiles\TEST-WORKLOAD-PROFILE-2.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
