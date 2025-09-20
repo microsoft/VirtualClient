@@ -157,19 +157,22 @@ namespace VirtualClient.Dependencies
                     {
                         try
                         {
+                            iterations++;
                             if (this.MonitorStrategy != null)
                             {
-                                switch (this.MonitorStrategy)
+                                if (iterations <= 1)
                                 {
-                                    case VirtualClient.MonitorStrategy.Once:
-                                    case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
-                                        await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
-                                        break;
+                                    switch (this.MonitorStrategy)
+                                    {
+                                        case VirtualClient.MonitorStrategy.Once:
+                                        case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                                            await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                                            break;
+                                    }
                                 }
                             }
                             else
                             {
-                                iterations++;
                                 if (this.IsIterationComplete(iterations))
                                 {
                                     break;
