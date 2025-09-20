@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -28,6 +29,8 @@ namespace VirtualClient
 
         private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
             .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries));
+
+        private static readonly Semaphore FileAccessLock = new Semaphore(1, 1);
 
         /// <summary>
         /// Captures the details of the process including standard output, standard error and exit codes to 
@@ -87,38 +90,48 @@ namespace VirtualClient
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
-            if (logToTelemetry)
+            if (VirtualClientLoggingExtensions.FileAccessLock.WaitOne())
             {
                 try
                 {
-                    component.Logger?.LogProcessDetails(processDetails, component.TypeName, telemetryContext, logToTelemetryMaxChars);
-                }
-                catch (Exception exc)
-                {
-                    // Best effort but we should never crash VC if the logging fails. Metric capture
-                    // is more important to the operations of VC. We do want to log the failure.
-                    component.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                }
-            }
+                    if (logToTelemetry)
+                    {
+                        try
+                        {
+                            component.Logger?.LogProcessDetails(processDetails, component.TypeName, telemetryContext, logToTelemetryMaxChars);
+                        }
+                        catch (Exception exc)
+                        {
+                            // Best effort but we should never crash VC if the logging fails. Metric capture
+                            // is more important to the operations of VC. We do want to log the failure.
+                            component.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                        }
+                    }
 
-            // The VirtualClientComponent itself has a global setting (defined on the command line)
-            // for logging to file. The secondary extension method level boolean parameter here enables
-            // individual usages of this method to override if needed at the use case level.
-            // 
-            // e.g.
-            // The user may request logging to file on the command line. However, a specific component
-            // implementation may want to avoid logging its contents to file because it is not useful information etc...
-            if (component.LogToFile && logToFile)
-            {
-                try
-                {
-                    await component.LogProcessDetailsToFileAsync(processDetails, telemetryContext, logFileName, timestamped, upload);
+                    // The VirtualClientComponent itself has a global setting (defined on the command line)
+                    // for logging to file. The secondary extension method level boolean parameter here enables
+                    // individual usages of this method to override if needed at the use case level.
+                    // 
+                    // e.g.
+                    // The user may request logging to file on the command line. However, a specific component
+                    // implementation may want to avoid logging its contents to file because it is not useful information etc...
+                    if (component.LogToFile && logToFile)
+                    {
+                        try
+                        {
+                            await component.LogProcessDetailsToFileAsync(processDetails, telemetryContext, logFileName, timestamped, upload);
+                        }
+                        catch (Exception exc)
+                        {
+                            // Best effort but we should never crash VC if the logging fails. Metric capture
+                            // is more important to the operations of VC. We do want to log the failure.
+                            component.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                        }
+                    }
                 }
-                catch (Exception exc)
+                finally
                 {
-                    // Best effort but we should never crash VC if the logging fails. Metric capture
-                    // is more important to the operations of VC. We do want to log the failure.
-                    component.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    VirtualClientLoggingExtensions.FileAccessLock.Release();
                 }
             }
         }
@@ -382,7 +395,10 @@ namespace VirtualClient
 
             if (timestamped)
             {
-                effectiveLogFileName = $"{DateTime.UtcNow.ToString("yyyy-MM-dd-HHmmssfff")}-{effectiveLogFileName}";
+                // Note:
+                // In order to best ensure we handle concurrent writes happening at near the same instant
+                // in time, we include parts of the timestamp down to the millionths of a second.
+                effectiveLogFileName = $"{DateTime.UtcNow.ToString("yyyy-MM-dd-HHmmssffffff")}-{effectiveLogFileName}";
             }
 
             return effectiveLogFileName.ToLowerInvariant();

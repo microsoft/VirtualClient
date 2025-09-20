@@ -95,7 +95,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The directory for file/content upload notifications (e.g. /logs/contentuploads).
         /// </summary>
-        public string ContentUploadsDirectory { get; }
+        public string ContentUploadsDirectory { get; set; }
 
         /// <summary>
         /// The CPU architecture (e.g. x64, arm64).

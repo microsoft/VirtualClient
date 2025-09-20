@@ -121,7 +121,7 @@ namespace VirtualClient
                 // e.g.
                 // /home/user/virtualclient/logs/testexecutor/2025-07-20-193948162-anyscenario.log
                 string expectedLogDirectory = this.GetLogsPath(component.TypeName.ToLowerInvariant());
-                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{9}}-{component.Scenario}.log".ToLowerInvariant();
+                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{12}}-{component.Scenario}.log".ToLowerInvariant();
 
                 this.FileSystem
                     .Setup(fs => fs.Directory.CreateDirectory(expectedLogDirectory))
@@ -162,7 +162,7 @@ namespace VirtualClient
                 // e.g.
                 // /home/user/virtualclient/logs/bash/2025-07-20-193948162-anyscenario.log
                 string expectedLogDirectory = this.GetLogsPath("bash");
-                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{9}}-{component.Scenario}.log".ToLowerInvariant();
+                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{12}}-{component.Scenario}.log".ToLowerInvariant();
 
                 this.FileSystem
                     .Setup(fs => fs.Directory.CreateDirectory(expectedLogDirectory))
@@ -412,7 +412,7 @@ namespace VirtualClient
                 // e.g.
                 // /home/user/virtualclient/logs/workloads/bash.log
                 string expectedLogDirectory = this.GetLogsPath("workloads");
-                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{9}}-{component.Scenario.ToLowerInvariant()}.log";
+                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{12}}-{component.Scenario.ToLowerInvariant()}.log";
 
                 this.FileSystem
                     .Setup(fs => fs.Directory.CreateDirectory(expectedLogDirectory))
