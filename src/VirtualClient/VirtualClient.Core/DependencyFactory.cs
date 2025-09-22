@@ -597,7 +597,8 @@ namespace VirtualClient
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
         /// <param name="logger">The logger to use for capturing telemetry.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -609,6 +610,12 @@ namespace VirtualClient
             IFileSystem fileSystem = new FileSystem();
             IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
             IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
+
+            if (isolated)
+            {
+                packageManager = new IsolatedPackageManager(packageManager);
+            }
+
             ISshClientFactory sshClientManager = new SshClientFactory();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
 

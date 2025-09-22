@@ -9,17 +9,18 @@ namespace VirtualClient
     using System.CommandLine.Builder;
     using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.ServiceProcess;
-    using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using Org.BouncyCastle.Bcpg.OpenPgp;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Logging;
@@ -46,6 +47,8 @@ namespace VirtualClient
 
             try
             {
+                VirtualClientRuntime.CommandLineArguments = args;
+
                 // We want to ensure that the platform on which we are running is actually supported.
                 PlatformSpecifics.ThrowIfNotSupported(Environment.OSVersion.Platform);
                 PlatformSpecifics.ThrowIfNotSupported(RuntimeInformation.ProcessArchitecture);
@@ -92,16 +95,13 @@ namespace VirtualClient
                         // On Windows systems, this is required when running Virtual Client as a service.
                         // Certain notifications have to be sent to the Windows service control manager (SCM)
                         // in order to ensure the service is recognized as running.
-                        Task serviceHostTask = Task.Run(() =>
+                        if (Environment.OSVersion.Platform == PlatformID.Win32NT && Program.IsRunningAsService(Environment.OSVersion.Platform))
                         {
-                            if (Program.IsRunningAsService())
+                            Task serviceHostTask = Task.Run(() =>
                             {
-                                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                                {
-                                    Program.RunAsWindowsService(cancellationSource);
-                                }
-                            }
-                        });
+                                Program.RunAsWindowsService(cancellationSource);
+                            });
+                        }
 
                         exitCode = executionTask.GetAwaiter().GetResult();
                     }
@@ -189,11 +189,12 @@ namespace VirtualClient
         internal static CommandLineBuilder SetupCommandLine(string[] args, CancellationTokenSource cancellationTokenSource)
         {
             DefaultSettings settings = Program.Settings ?? DefaultSettings.Create();
+
             RootCommand rootCommand = new RootCommand("Executes workload and monitoring profiles on the system.")
             {
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                 // --profile
+                // --profile
                 OptionFactory.CreateProfileOption(required: false),
 
                 // --api-port
@@ -225,9 +226,6 @@ namespace VirtualClient
 
                 // --fail-fast
                 OptionFactory.CreateFailFastFlag(required: false),
-
-                // --isolated
-                OptionFactory.CreateIsolatedFlag(required: false),
 
                 // --iterations
                 OptionFactory.CreateIterationsOption(required: false),
@@ -280,10 +278,13 @@ namespace VirtualClient
                 // --system
                 OptionFactory.CreateSystemOption(required: false),
 
+                // --agent-ssh
+                OptionFactory.CreateTargetAgentOption(required: false),
+
                 // --temp-dir
                 OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
 
-                 // --timeout
+                // --timeout
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --verbose
@@ -317,6 +318,11 @@ namespace VirtualClient
             convertSubcommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(convertSubcommand);
 
+            Command remoteSubcommand = Program.CreateRemoteSubcommand(settings);
+            remoteSubcommand.TreatUnmatchedTokensAsErrors = true;
+            remoteSubcommand.Handler = CommandHandler.Create<ExecuteRemoteAgentCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(remoteSubcommand);
+
             Command uploadTelemetrySubcommand = Program.CreateUploadTelemetrySubcommand(settings);
             uploadTelemetrySubcommand.TreatUnmatchedTokensAsErrors = true;
             uploadTelemetrySubcommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
@@ -341,9 +347,6 @@ namespace VirtualClient
 
                 // --ip-address
                 OptionFactory.CreateIPAddressOption(required: false),
-
-                // --isolated
-                OptionFactory.CreateIsolatedFlag(required: false),
 
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
@@ -382,14 +385,14 @@ namespace VirtualClient
                 "bootstrap",
                 "Bootstraps/installs a dependency package on the system.")
             {
-                // Required
+                // REQUIRED
                 // -------------------------------------------------------------------
                 // --package
                 OptionFactory.CreatePackageOption(required: true),
 
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                 // --clean
+                // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
                 // --client-id
@@ -403,9 +406,6 @@ namespace VirtualClient
 
                 // --experiment-id
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --isolated
-                OptionFactory.CreateIsolatedFlag(required: false),
 
                 // --iterations (for integration only. not used/always = 1)
                 OptionFactory.CreateIterationsOption(required: false),
@@ -510,7 +510,7 @@ namespace VirtualClient
                 "convert",
                 "Converts execution profiles from JSON to YAML format and vice-versa.")
             {
-                // Required
+                // REQUIRED
                 // -------------------------------------------------------------------
                 // --profile
                 OptionFactory.CreateProfileOption(required: true),
@@ -522,13 +522,120 @@ namespace VirtualClient
             return convertCommand;
         }
 
+        private static Command CreateRemoteSubcommand(DefaultSettings settings)
+        {
+            Command remoteExecuteCommand = new Command(
+                "remote",
+                "Executes workload and monitoring profiles on a remote/target system through an SSH connection.")
+            {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --agent-ssh
+                OptionFactory.CreateTargetAgentOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --profile
+                OptionFactory.CreateProfileOption(required: false),
+
+                // --api-port
+                OptionFactory.CreateApiPortOption(required: false),
+
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --content-store
+                OptionFactory.CreateContentStoreOption(required: false),
+
+                // --content-path-template
+                OptionFactory.CreateContentPathTemplateOption(required: false),
+
+                // --dependencies
+                OptionFactory.CreateDependenciesFlag(required: false),
+
+                // --event-hub
+                OptionFactory.CreateEventHubStoreOption(required: false),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
+                // --fail-fast
+                OptionFactory.CreateFailFastFlag(required: false),
+
+                // --iterations
+                OptionFactory.CreateIterationsOption(required: false),
+
+                // --layout-path
+                OptionFactory.CreateLayoutPathOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
+
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
+
+                // --package-dir
+                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
+
+                // --package-store
+                OptionFactory.CreatePackageStoreOption(required: false),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --proxy-api
+                OptionFactory.CreateProxyApiOption(required: false),
+
+                // --scenarios
+                OptionFactory.CreateScenariosOption(required: false),
+
+                // --seed
+                OptionFactory.CreateSeedOption(required: false, 777),
+
+                // --state-dir
+                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
+
+                // --system
+                OptionFactory.CreateSystemOption(required: false),
+
+                // --temp-dir
+                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
+
+                 // --timeout
+                OptionFactory.CreateTimeoutOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return remoteExecuteCommand;
+        }
+
         private static Command CreateUploadTelemetrySubcommand(DefaultSettings settings)
         {
             Command uploadTelemetryCommand = new Command(
                "upload-telemetry",
                "Uploads telemetry (e.g. events, metrics) from data point files on the system.")
             {
-                // Required
+                // REQUIRED
                 // -------------------------------------------------------------------
                 // --format
                 OptionFactory.CreateDataFormatOption(required: true),
@@ -601,9 +708,18 @@ namespace VirtualClient
             Program.Logger = new LoggerFactory(loggerProviders).CreateLogger("VirtualClient");
         }
 
-        private static bool IsRunningAsService()
+        private static bool IsRunningAsService(PlatformID platform)
         {
-            return !Environment.UserInteractive;
+            bool isService = false;
+            if (platform == PlatformID.Win32NT)
+            {
+                // Windows services run as child processes of the "services.exe" module.
+                int currentProcessId = Process.GetCurrentProcess().Id;
+                int parentProcessId = WindowsServiceHost.GetParentProcessId(currentProcessId);
+                isService = currentProcessId != parentProcessId;
+            }
+
+            return isService;
         }
 
         private static void RunAsWindowsService(CancellationTokenSource cancellationTokenSource)
@@ -635,6 +751,25 @@ namespace VirtualClient
             {
                 this.cancellationTokenSource = cancellationTokenSource;
                 this.logger = logger ?? NullLogger.Instance;
+            }
+
+            internal static int GetParentProcessId(int processId)
+            {
+                IntPtr hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.QueryLimitedInformation, false, processId);
+                if (hProcess == IntPtr.Zero) return -1;
+
+                try
+                {
+                    PROCESS_BASIC_INFORMATION pbi = new PROCESS_BASIC_INFORMATION();
+                    int returnLength;
+                    int status = NativeMethods.NtQueryInformationProcess(hProcess, 0, ref pbi, Marshal.SizeOf(pbi), out returnLength);
+
+                    return (status == 0) ? pbi.ParentProcessId : -1;
+                }
+                finally
+                {
+                    NativeMethods.CloseHandle(hProcess);
+                }
             }
 
             /// <inheritdoc/>
@@ -674,10 +809,20 @@ namespace VirtualClient
                 NativeMethods.SetServiceStatus(this.ServiceHandle, ref serviceStatus);
             }
 
-            private static class NativeMethods
+            internal static class NativeMethods
             {
                 [DllImport("advapi32.dll", SetLastError = true)]
                 internal static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
+
+                [DllImport("ntdll.dll")]
+                internal static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass,
+                    ref PROCESS_BASIC_INFORMATION processInformation, int processInformationLength, out int returnLength);
+
+                [DllImport("kernel32.dll")]
+                internal static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
+
+                [DllImport("kernel32.dll")]
+                internal static extern bool CloseHandle(IntPtr hObject);
             }
 
             internal enum ServiceState
@@ -704,6 +849,22 @@ namespace VirtualClient
                 public long ServiceSpecificExitCode;
                 public long CheckPoint;
                 public long WaitHint;
+            }
+
+            internal struct PROCESS_BASIC_INFORMATION
+            {
+                public IntPtr Reserved1;
+                public IntPtr PebBaseAddress;
+                public IntPtr Reserved2;
+                public IntPtr Reserved3;
+                public int ParentProcessId;
+                public IntPtr Reserved4;
+            }
+
+            [Flags]
+            internal enum ProcessAccessFlags : uint
+            {
+                QueryLimitedInformation = 0x1000
             }
         }
     }

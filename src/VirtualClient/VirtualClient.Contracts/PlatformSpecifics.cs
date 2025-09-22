@@ -149,7 +149,7 @@ namespace VirtualClient.Contracts
         public string StateDirectory { get; set; }
 
         /// <summary>
-        /// The directory where scripts related to workloads exist.
+        /// The directory where temp files can be saved.
         /// </summary>
         public string TempDirectory { get; set; }
 
@@ -280,8 +280,8 @@ namespace VirtualClient.Contracts
                     {
                         // Ensure that relative working directory paths are fully expanded. Preserve case-sensitivity
                         // to avoid anomalies on Linux.
-                        string relativeDirectory = match.Value;
-                        resolved = resolved.Replace(relativeDirectory, Path.GetFullPath(relativeDirectory), StringComparison.Ordinal);
+                        string relativePath = match.Value;
+                        resolved = resolved.Replace(relativePath, Path.GetFullPath(relativePath), StringComparison.Ordinal);
                     }
                 }
             }
