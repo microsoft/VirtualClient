@@ -301,7 +301,15 @@ namespace VirtualClient.Dependencies.MySqlServer
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql")};";
+                    string mysqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql");
+                    
+                    // Create the directory if it doesn't exist
+                    if (!this.FileSystem.Directory.Exists(mysqlPath))
+                    {
+                        this.FileSystem.Directory.CreateDirectory(mysqlPath);
+                    }
+                    
+                    diskPaths += $"{mysqlPath};";
                 }
             }
 
