@@ -304,9 +304,9 @@ namespace VirtualClient.Dependencies.MySqlServer
                     string mysqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql");
                     
                     // Create the directory if it doesn't exist
-                    if (!this.FileSystem.Directory.Exists(mysqlPath))
+                    if (!this.SystemManager.FileSystem.Directory.Exists(mysqlPath))
                     {
-                        this.FileSystem.Directory.CreateDirectory(mysqlPath);
+                        this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
                     }
                     
                     diskPaths += $"{mysqlPath};";
