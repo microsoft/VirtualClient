@@ -150,7 +150,7 @@ namespace VirtualClient.Actions
 
                         if (!string.IsNullOrEmpty(sysbenchVersion))
                         {
-                            this.MetadataContract.Add("sysbench_version", sysbenchVersion, MetadataContractCategory.Dependencies);
+                            this.MetadataContract.Add("sysbench_version", sysbenchVersion, MetadataContract.DependenciesCategory);
                         }
 
                         this.MetadataContract.Apply(telemetryContext);
@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
                     {
                         string mysqlVersion = await this.GetMySQLVersionAsync(telemetryContext, cancellationToken);
 
-                        this.MetadataContract.Add("mysql_version", mysqlVersion, MetadataContractCategory.Dependencies);
+                        this.MetadataContract.Add("mysql_version", mysqlVersion, MetadataContract.DependenciesCategory);
                         this.MetadataContract.Apply(telemetryContext);
                     }
 
