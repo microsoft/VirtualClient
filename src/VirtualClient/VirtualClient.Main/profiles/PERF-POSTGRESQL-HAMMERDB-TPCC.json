@@ -71,7 +71,7 @@
             "Parameters": {
                 "Scenario": "DownloadPostgreSQLPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev3.zip",
+                "BlobName": "postgresql.16.0.0.rev2.zip",
                 "PackageName": "postgresql",
                 "Extract": true
             }
@@ -81,7 +81,7 @@
             "Parameters": {
                 "Scenario": "DownloadHammerDBPackage",
                 "BlobContainer": "packages",
-                "BlobName": "hammerdb.4.7.0.rev1.zip",
+                "BlobName": "hammerdb.4.12.0.rev2.zip",
                 "PackageName": "hammerdb",
                 "Extract": true
             }
