@@ -5,13 +5,10 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
@@ -36,7 +33,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("Compete-OPENSSL-TLS.json")]
+        [TestCase("PERF-CPU-OPENSSL-TLS.json")]
         public async Task TlsOpenSslClientCreatesExpectedStateAndExecutesWorkload(string profile)
         {
             List<string> expectedCommands = new List<string>();
