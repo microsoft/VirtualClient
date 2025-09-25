@@ -75,11 +75,7 @@ namespace VirtualClient.Actions
 
         private async Task PrepareOLTPMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
-
-            string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            string sysbenchLoggingArguments = this.BuildSysbenchLoggingOLTPBasicArguments();
             this.sysbenchPrepareArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
             string serverIp = "localhost";
@@ -107,11 +103,7 @@ namespace VirtualClient.Actions
 
         private async Task PrepareTPCCMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
-
-            string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses {warehouseCount} --threadCount {threadCount}";
+            string sysbenchLoggingArguments = this.BuildSysbenchLoggingTPCCBasicArguments();
             this.sysbenchPrepareArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
             string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
