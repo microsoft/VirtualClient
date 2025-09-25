@@ -1,0 +1,368 @@
+{
+    "Description": "OpenSSL 3.5.0 Benchmark with TLS",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "03:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Parameters": {
+        "ServerPort": 5000,
+        "ClientInstances": 1,
+        "Duration": "00:00:30"
+    },
+    "Actions": [
+        {
+            "Type": "TlsOpenSslServerExecutor",
+            "Parameters": {
+                "Scenario": "OpenSSL_TLS_Server",
+                "MetricScenario": "tls_server",
+                "CommandArguments": "s_server -accept {ServerPort} -cert server.crt -key server.key -tls1_3 -WWW",
+                "PackageName": "openssl",
+                "ServerPort": "$.Parameters.ServerPort",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_1KiB",
+                "MetricScenario": "aes_128_gcm-sha256-1kib",
+                "CommandArguments": "s_time _connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_4KiB",
+                "MetricScenario": "aes_128-gcm-sha256-4kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_4k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_16KiB",
+                "MetricScenario": "aes-128-gcm-sha256-16kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_16k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_64KiB",
+                "MetricScenario": "aes-128-gcm-sha256-64kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_64k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_256KiB",
+                "MetricScenario": "aes-128-gcm-sha256-256kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_256k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_1MiB",
+                "MetricScenario": "aes-128-gcm-sha256-1kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_1mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_100MiB",
+                "MetricScenario": "aes-128-gcm-sha256-100mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_100mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_128_GCM_SHA256_512MiB",
+                "MetricScenario": "aes-128-gcm-sha256-512mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_512mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_1KiB",
+                "MetricScenario": "aes-256-gcm-sha384-1kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_4KiB",
+                "MetricScenario": "aes-256-gcm-sha384-4kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_4k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_16KiB",
+                "MetricScenario": "aes-256-gcm-sha384-16kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_16k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_64KiB",
+                "MetricScenario": "aes-256-gcm-sha384-64kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_64k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_256KiB",
+                "MetricScenario": "aes-256-gcm-sha384-256kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_256k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_1MiB",
+                "MetricScenario": "aes-256-gcm-sha384-1mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_1mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_100MiB",
+                "MetricScenario": "aes-256-gcm-sha384-100mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_100mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "AES_256_GCM_SHA384_512MiB",
+                "MetricScenario": "aes-256-gcm-sha384-512mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_512mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_1KiB",
+                "MetricScenario": "chacha20-poly1305-sha256-1kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_4KiB",
+                "MetricScenario": "chacha20-poly1305-sha256-4kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_4k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_16KiB",
+                "MetricScenario": "chacha20-poly1305-sha256-16kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_16k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_64KiB",
+                "MetricScenario": "chacha20-poly1305-sha256-64kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_64k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_256KiB",
+                "MetricScenario": "chacha20-poly1305-sha256-256kib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_256k.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_1MiB",
+                "MetricScenario": "chacha20-poly1305-sha256-1mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_1mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20-POLY1305-SHA256-100MiB",
+                "MetricScenario": "chacha20_poly1305_sha256_100mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_100mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "TlsOpenSslClientExecutor",
+            "Parameters": {
+                "Scenario": "CHACHA20_POLY1305_SHA256_512MiB",
+                "MetricScenario": "chacha20-poly1305-sha256-512mib",
+                "CommandArguments": "s_time -connect :{ServerPort} -www /test_512mb.html -time {Duration.TotalSeconds} -ciphersuites TLS_CHACHA20_POLY1305_SHA256 -tls1_3",
+                "Duration": "$.Parameters.Duration",
+                "ServerPort": "$.Parameters.ServerPort",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallOpenSSLPackage",
+                "BlobContainer": "packages",
+                "BlobName": "openssl.3.5.0.zip",
+                "PackageName": "openssl",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallTlsResourcesPackage",
+                "BlobContainer": "packages",
+                "BlobName": "tls-resources.zip",
+                "PackageName": "tls-resources",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
+}

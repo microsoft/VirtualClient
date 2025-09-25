@@ -44,10 +44,13 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="ref\net9.0" />
         
         <!-- 
         win-x64
@@ -55,10 +58,13 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\win-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\win-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\win-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="runtimes\win-x64\lib\net9.0" />
 
 
         <!-- 
@@ -67,10 +73,13 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\win-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\win-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\win-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="runtimes\win-arm64\lib\net9.0" />
 
         <!-- 
         linux-x64
@@ -78,10 +87,13 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\linux-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\linux-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\linux-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="runtimes\linux-x64\lib\net9.0" />
 
         <!-- 
         linux-arm64
@@ -89,9 +101,12 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\linux-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\linux-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\linux-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="runtimes\linux-arm64\lib\net9.0" />
     </files>
 </package>
