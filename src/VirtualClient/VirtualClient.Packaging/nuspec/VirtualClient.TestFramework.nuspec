@@ -26,8 +26,10 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.dll" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.xml" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.dll" target="ref\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.xml" target="ref\net9.0" />
         
         <!-- 
         win-x64
@@ -35,8 +37,10 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.dll" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.pdb" target="runtimes\win-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.xml" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.dll" target="runtimes\win-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.pdb" target="runtimes\win-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.xml" target="runtimes\win-x64\lib\net9.0" />
 
         <!-- 
         win-arm64
@@ -44,8 +48,10 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.dll" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.pdb" target="runtimes\win-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.xml" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.dll" target="runtimes\win-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.pdb" target="runtimes\win-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.xml" target="runtimes\win-arm64\lib\net9.0" />
 
         <!-- 
         linux-x64
@@ -53,8 +59,10 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.dll" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.pdb" target="runtimes\linux-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.xml" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.dll" target="runtimes\linux-x64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.pdb" target="runtimes\linux-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.xml" target="runtimes\linux-x64\lib\net9.0" />
 
         <!-- 
         linux-arm64
@@ -62,8 +70,10 @@
         -->
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.dll" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.pdb" target="runtimes\linux-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net9.0\VirtualClient.TestFramework.xml" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.dll" target="runtimes\linux-arm64\lib\net9.0" />
         <file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.pdb" target="runtimes\linux-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.xml" target="runtimes\linux-arm64\lib\net9.0" />
 
     </files>
 </package>

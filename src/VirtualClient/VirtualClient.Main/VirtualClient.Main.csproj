@@ -51,7 +51,7 @@
     -->
     <Target Name="CopyProfilesToOutputDirectory" AfterTargets="Build">
         <ItemGroup>
-            <ProfileFiles Include="profiles\*.*" />
+            <ProfileFiles Include="profiles\**\*.*" />
         </ItemGroup>
 
         <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />
