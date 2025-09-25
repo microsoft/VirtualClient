@@ -3,56 +3,14 @@ The use of scripting languages (e.g. Python, PowerShell) is a popular choice for
 on bare metal hardware systems. The Virtual Client platform provides runtime support for running scripts directly from the command line and additionally 
 supports a controller/agent workflow for remote execution through SSH sessions on both Linux and Windows systems.
 
+[Controller/Agent Overview](../guides/0021-controller-agent.md)
+
 The following document provides a set of general guidelines to consider when developing script-based automation extensions so that they can be readily integrated
-into the Virtual Client platform.  
-
-## Preliminaries
-The following section covers some of the important preliminaries required for executing script-based automation on hardware systems.
-
-### Linux System Setup
-This section describes system setup considerations when running on Linux systems.
-
-#### User/Execution Account Requirements
-A lot of test automation for hardware systems requires elevated privileges to access parts of the Linux system. This means that the
-user accounts in which the automation is running must have the ability to elevate. There are a few ways that this is typically done:
-
-* **Run as "root"**  
-  Whereas this is not generally recommended, the user or execution CAN login as the **root** user. One of the most common use cases involves installing
-  services/daemons configured to run as the **root** user.
-  
-  **Run as User Account with Root Privileges**  
-  A more typical scenario is to run under a specific account (e.g. user_admin) that has been configured to have root privileges. The following section describes
-  how to configure an account to have root privileges.
-
-  <mark>Note that commands requiring elevated permissions (e.g. dmidecode -t bios) must be executed using "sudo" so that they
-  are running with superuser privileges.</mark>
-
-  ``` bash
-  # Option 1: Configure a Single User Account
-  # --------------------------------------------
-  # With this option, we configure a single user account. Note that you MUST be executing 
-  # the following commands when logged in as the "root" account or with an account that has "root" 
-  # privileges.
-  
-  # Given there is a user account named "user_admin"...
-  #
-  # 1) Provide the account with membership to the "sudo" group
-  sudo usermod -aG sudo user_admin
-
-  # 2a) Add a file to the /etc/sudoers.d directory with the following content. This enables
-  #    the execution of sudo commands without requiring a password. This is very important
-  #    for unattended automation scenarios where there will be no one there to provide it.
-  #
-  # Run as "root"
-  su -
-
-  # Create the permissions file. You can name it whatever you like but it is best to 
-  # ensure it is specific to the 1 user account (to allow for other accounts in the future).
-  echo "user_admin  ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/user_admin_permissions
-  ```
+into the Virtual Client platform. 
 
 ## Script Extensions Usage
-The following sections illustrate how to integrate script packages into the Virtual Client platform for execution via the command line. Whereas the Virtual Client
+Before going into the details for script extensions development, it is helpful to have an idea of how they can be used in the
+Virtual Client platform. The following sections illustrate how to integrate script packages into the Virtual Client platform for execution via the command line. Whereas the Virtual Client
 platform often defines complex workflows using profiles, scripts can be executed directly without the need for a profile. Before getting into design and implementation
 recommendations for script-based automation, it is helpful to get a sense of how they will be used in Virtual Client.
 
