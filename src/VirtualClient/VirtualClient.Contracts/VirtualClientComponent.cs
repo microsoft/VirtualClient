@@ -61,6 +61,7 @@ namespace VirtualClient.Contracts
             this.FailFast = component.FailFast;
             this.LogToFile = component.LogToFile;
             this.MetadataContract = component.MetadataContract;
+            this.ContentPathTemplate = component.ContentPathTemplate;
 
             if (component.Metadata?.Any() == true)
             {
