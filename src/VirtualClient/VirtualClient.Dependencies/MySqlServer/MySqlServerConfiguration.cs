@@ -165,14 +165,13 @@ namespace VirtualClient.Dependencies.MySqlServer
                             await this.DistributeMySQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
+                        case ConfigurationAction.SetGlobalVariables:
+                            await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+                            break;
                     }
 
                     await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
-                }
-                else if (this.Action == ConfigurationAction.SetGlobalVariables)
-                {
-                    await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
                 }
             }
         }
@@ -302,7 +301,15 @@ namespace VirtualClient.Dependencies.MySqlServer
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql")};";
+                    string mysqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql");
+                    
+                    // Create the directory if it doesn't exist
+                    if (!this.SystemManager.FileSystem.Directory.Exists(mysqlPath))
+                    {
+                        this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
+                    }
+                    
+                    diskPaths += $"{mysqlPath};";
                 }
             }
 
