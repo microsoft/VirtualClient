@@ -11,16 +11,20 @@ namespace VirtualClient
     using System.CommandLine.Parsing;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.ServiceProcess;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Contracts;
+    using Microsoft.AspNetCore.Diagnostics;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Logging;
@@ -116,21 +120,31 @@ namespace VirtualClient
                     }
                 }
             }
-            catch (ObjectDisposedException exc)
+            catch (ObjectDisposedException)
             {
                 // Expected when the CancellationTokenSource is cancelled followed by being disposed.
-                Console.WriteLine(exc.Message);
             }
-            catch (OperationCanceledException exc)
+            catch (OperationCanceledException)
             {
                 // Expected when the Ctrl-C is pressed to cancel operation.
-                Console.WriteLine(exc.Message);
+            }
+            catch (CryptographicException exc)
+            {
+                // Certificate-related issues.
+                exitCode = (int)ErrorReason.InvalidCertificate;
+                Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+            }
+            catch (NotSupportedException exc)
+            {
+                // Various usages that are not supported.
+                exitCode = (int)ErrorReason.NotSupported;
+                Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
             }
             catch (Exception exc)
             {
                 exitCode = 1;
-                Console.Error.WriteLine(exc.Message);
-                Console.Error.WriteLine(exc.StackTrace);
+                Console.Error.WriteLine(exc.ToString(withCallStack: true, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
             }
 
             return exitCode;
@@ -734,6 +748,28 @@ namespace VirtualClient
                 host.CanStop = true;
 
                 ServiceBase.Run(host);
+            }
+        }
+
+        private static void WriteCrashLog(Exception exc)
+        {
+            try
+            {
+                string crashLogDirectory = Path.Combine(Environment.CurrentDirectory, "logs");
+                if (!Directory.Exists(crashLogDirectory))
+                {
+                    Directory.CreateDirectory(crashLogDirectory);
+                }
+
+                File.AppendAllText(
+                    Path.Combine(crashLogDirectory, "crash.log"),
+                    $"[{DateTime.Now.ToString("yyyy-MM-ddThh:mm:ss")}] Unhandled/Unexpected Error:{Environment.NewLine}" +
+                    $"-----------------------------------------------------------------------------{Environment.NewLine}" +
+                    $"{exc.ToString(withCallStack: true, withErrorTypes: true)}{Environment.NewLine}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Best effort
             }
         }
 

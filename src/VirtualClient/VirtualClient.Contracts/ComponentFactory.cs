@@ -110,7 +110,7 @@ namespace VirtualClient.Contracts
                 settings = new ComponentSettings();
             }
 
-            IDictionary<string, IConvertible> effectiveParameters = new OrderedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            IDictionary<string, IConvertible> effectiveParameters = new SortedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             if (componentDescription.Parameters?.Any() == true)
             {
                 effectiveParameters.AddRange(componentDescription.Parameters);

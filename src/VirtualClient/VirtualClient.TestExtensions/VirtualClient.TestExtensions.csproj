@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <AssemblyName>VirtualClient.TestExtensions</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <NoWarn>CA2214;CS1591;SA1508</NoWarn>
@@ -24,6 +24,9 @@
     <ItemGroup>
         <None Update="Resources\test-certificate.private">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\test-certificate.public">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

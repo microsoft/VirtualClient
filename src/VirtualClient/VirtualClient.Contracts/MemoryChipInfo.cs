@@ -27,10 +27,21 @@ namespace VirtualClient.Contracts
         public MemoryChipInfo(string name, string description, long capacity, long? speed = null, string manufacturer = null, string partNumber = null, IDictionary<string, IConvertible> properties = null)
             : base(HardwareInfo.ComponentTypeMemoryChip, name, description, properties)
         {
-            this[nameof(this.Capacity)] = capacity;
+            this[nameof(this.CapacityBytes)] = capacity;
             this[nameof(this.Speed)] = speed;
             this[nameof(this.Manufacturer)] = manufacturer;
             this[nameof(this.PartNumber)] = partNumber;
+        }
+
+        /// <summary>
+        /// The memory chip capacity (in-bytes).
+        /// </summary>
+        public long CapacityBytes
+        {
+            get
+            {
+                return this.GetValue<long>(nameof(this.CapacityBytes));
+            }
         }
 
         /// <summary>
@@ -54,17 +65,6 @@ namespace VirtualClient.Contracts
             {
                 this.TryGetValue(nameof(this.PartNumber), out IConvertible partNumber);
                 return partNumber?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// The memory chip capacity (in-bytes).
-        /// </summary>
-        public new long Capacity
-        {
-            get
-            {
-                return this.GetValue<long>(nameof(this.Capacity));
             }
         }
 

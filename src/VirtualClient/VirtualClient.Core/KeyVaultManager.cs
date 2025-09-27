@@ -241,7 +241,11 @@ namespace VirtualClient
                     {
                         // If private key not needed, load cert from PublicBytes
                         KeyVaultCertificateWithPolicy cert = await client.GetCertificateAsync(certName, cancellationToken: cancellationToken);
+#if NET9_0_OR_GREATER
                         return X509CertificateLoader.LoadCertificate(cert.Cer);
+#elif NET8_0_OR_GREATER
+                        return new X509Certificate2(cert.Cer);
+#endif
                     }
                 }).ConfigureAwait(false);
             }

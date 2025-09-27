@@ -30,7 +30,7 @@ namespace VirtualClient.Contracts.Parser
             Assert.AreEqual("Micron Memory Chip", chip.Description);
             Assert.AreEqual("Micron", chip.Manufacturer);
             Assert.AreEqual("16KTF1G64HZ-1G9P1", chip.PartNumber);
-            Assert.AreEqual(8589934592, chip.Capacity);
+            Assert.AreEqual(8589934592, chip.CapacityBytes);
             Assert.AreEqual(1866, chip.Speed);
         }
 
@@ -50,7 +50,7 @@ namespace VirtualClient.Contracts.Parser
             Assert.AreEqual("HK Hynix Memory Chip", chip.Description);
             Assert.AreEqual("HK Hynix", chip.Manufacturer);
             Assert.AreEqual("HMA81GS6JJR8N-VK", chip.PartNumber);
-            Assert.AreEqual(4294967296, chip.Capacity);
+            Assert.AreEqual(4294967296, chip.CapacityBytes);
             Assert.AreEqual(1868, chip.Speed);
 
             // Memory Chip #2
@@ -59,7 +59,7 @@ namespace VirtualClient.Contracts.Parser
             Assert.AreEqual("Micron Memory Chip", chip.Description);
             Assert.AreEqual("Micron", chip.Manufacturer);
             Assert.AreEqual("16KTF1G64HZ-1G9P1", chip.PartNumber);
-            Assert.AreEqual(8589934592, chip.Capacity);
+            Assert.AreEqual(8589934592, chip.CapacityBytes);
             Assert.AreEqual(1866, chip.Speed);
         }
 

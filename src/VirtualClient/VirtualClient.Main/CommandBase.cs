@@ -805,7 +805,7 @@ namespace VirtualClient
         {
             IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(platformSpecifics.LogsDirectory);
 
-            if (loggingProviders?.Any() == true)
+            if (logProviders?.Any() == true)
             {
                 loggingProviders.AddRange(logProviders);
             }
@@ -859,7 +859,7 @@ namespace VirtualClient
                 FileLogSettings.Default(), 
                 level);
 
-            if (loggingProviders?.Any() == true)
+            if (logProviders?.Any() == true)
             {
                 loggingProviders.AddRange(logProviders);
             }
