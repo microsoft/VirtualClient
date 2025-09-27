@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <AssemblyName>VirtualClient.Contracts</AssemblyName>
         <NoWarn>SA1117;SA1508;IL2026;IL2072</NoWarn>
     </PropertyGroup>

@@ -270,14 +270,17 @@ namespace VirtualClient
                     // ##GeneratedResults##
                     // Any results from the output of the process
 
-                    IDictionary<string, IConvertible> metadata = new OrderedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                    // We are using a list of Tuples here to ensure the items are written in the exact
+                    // order they are defined. We have to support multiple .NET frameworks and this is a lowest
+                    // common denominator choice.
+                    IList<KeyValuePair<string, IConvertible>> metadata = new List<KeyValuePair<string, IConvertible>>
                     {
-                        { "Command", effectiveCommand },
-                        { "WorkingDirectory", processDetails?.WorkingDirectory },
-                        { "ElapsedTime", processDetails?.ElapsedTime?.ToString() },
-                        { "StartTime", processDetails?.StartTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ") },
-                        { "ExitTime", processDetails?.ExitTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ") },
-                        { "ExitCode", processDetails?.ExitCode },
+                        new KeyValuePair<string, IConvertible>("Command", effectiveCommand),
+                        new KeyValuePair<string, IConvertible>("WorkingDirectory", processDetails?.WorkingDirectory),
+                        new KeyValuePair<string, IConvertible>("ElapsedTime", processDetails?.ElapsedTime?.ToString()),
+                        new KeyValuePair<string, IConvertible>("StartTime", processDetails?.StartTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ")),
+                        new KeyValuePair<string, IConvertible>("ExitTime", processDetails?.ExitTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ")),
+                        new KeyValuePair<string, IConvertible>("ExitCode", processDetails?.ExitCode),
                     };
 
                     IDictionary<string, IConvertible> additionalMetadata = new SortedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
@@ -303,7 +306,7 @@ namespace VirtualClient
                         }
                     }
 
-                    int maxKeyLength1 = metadata.Keys.Max(key => key.Length);
+                    int maxKeyLength1 = metadata.Max(item => item.Key.Length);
                     int maxKeyLength2 = additionalMetadata.Keys.Max(key => key.Length);
                     int keyColumnWidth = maxKeyLength1 >= maxKeyLength2 ? maxKeyLength1 : maxKeyLength2;
 

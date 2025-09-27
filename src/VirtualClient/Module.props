@@ -7,10 +7,12 @@
     *****************************************************************************
     -->
     <PropertyGroup>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <ModuleName>$([MSBuild]::MakeRelative($([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props)), $(MSBuildThisFileDirectory)).TrimEnd('\'))</ModuleName>
         <ModulePath>$(MSBuildThisFileDirectory)</ModulePath>
+		<PackagePreReleaseSuffix></PackagePreReleaseSuffix>
         <Platforms>AnyCPU;x64;ARM64</Platforms>
-        <NoWarn>$(NoWarn),CS8632</NoWarn>
+        <NoWarn>$(NoWarn);CS8632;NU5182</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -175,21 +177,38 @@
     should be set to 1.0.0.0. This helps to simplify the debugging experience for developers
     who are creating extensions to the Virtual Client by avoiding errors/warnings surfaced by
     the Visual Studio debugger around mismatched versions of common .dlls.
-    
+	
+	Default build/assembly versions are defined in the VERSION file in the root of
+	the repo. This version can be overridden on the command line by setting the
+	'VCBuildVersion' environment variable before building.
+	
+	e.g.
+	set VCBuildVersion=2.1.0
+	build.cmd
     *****************************************************************************
     -->
-    <PropertyGroup>
-        <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
-        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">1.0.0.0</AssemblyVersion>
-        <AssemblyInformationalVersion>$(AssemblyVersion)</AssemblyInformationalVersion>
-        <FileVersion>$(AssemblyVersion)</FileVersion>
-        <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
-        <Product>Virtual Client Framework</Product>
-        <Product Condition="'$(OutputType)' == 'Exe'">Virtual Client Platform</Product>
-        <ProductName>Virtual Client</ProductName>
-        <ProductVersion>$(AssemblyVersion)</ProductVersion>
-    </PropertyGroup>
+	<Target Name="SetDefaultVersion" BeforeTargets="BeforeBuild" Condition="'$(AssemblyVersion)' == ''">
+		<ReadLinesFromFile File="$(RepoPath)\VERSION">
+			<Output TaskParameter="Lines" PropertyName="VersionFileValue" />
+		</ReadLinesFromFile>
+
+		<PropertyGroup>
+			<AssemblyVersion>$(VersionFileValue)</AssemblyVersion>
+		</PropertyGroup>
+	</Target>
+
+	<Target Name="SetFileVersionInformation" AfterTargets="SetDefaultVersion">
+
+		<PropertyGroup>
+			<AssemblyInformationalVersion>$(AssemblyVersion)</AssemblyInformationalVersion>
+			<FileVersion>$(AssemblyVersion)</FileVersion>
+			<InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+			<Product>Virtual Client Framework</Product>
+			<Product Condition="'$(OutputType)' == 'Exe'">Virtual Client Platform</Product>
+			<ProductName>Virtual Client</ProductName>
+			<ProductVersion>$(AssemblyVersion)</ProductVersion>
+		</PropertyGroup>
+	</Target>
 
     <!--
     *****************************************************************************

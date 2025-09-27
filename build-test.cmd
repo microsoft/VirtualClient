@@ -1,24 +1,13 @@
 @echo Off
 
 set EXIT_CODE=0
-set BUILD_CONFIGURATION=
+set BUILD_CONFIGURATION=Debug
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 
 if /i "%~1" == "/?" Goto :Usage
 if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
-
-rem The default build configuration is 'Release'.
-set BUILD_CONFIGURATION=Release
-
-rem The default build configuration (e.g. Release) can be overridden 
-rem by the 'VCBuildConfiguration' environment variable
-if defined VCBuildConfiguration (
-    echo:
-    echo Using 'VCBuildConfiguration' = %VCBuildConfiguration%
-    set BUILD_CONFIGURATION=%VCBuildConfiguration%
-)
 
 echo ********************************************************************
 echo Repo Root       : %SCRIPT_DIR%
@@ -31,7 +20,7 @@ echo [Running Tests]
 echo --------------------------------------------------
 
 for /f "tokens=*" %%f in ('dir /B /S %~dp0src\*Tests.csproj') do (
-    call dotnet test -c %BUILD_CONFIGURATION% %%f --no-restore --no-build --filter "(Category=Unit|Category=Functional)" --logger "console;verbosity=normal" && echo: || Goto :Error
+    call dotnet test -c Debug %%f --no-restore --no-build --filter "(Category=Unit|Category=Functional)" --logger "console;verbosity=normal" && echo: || Goto :Error
 )
 
 Goto :End

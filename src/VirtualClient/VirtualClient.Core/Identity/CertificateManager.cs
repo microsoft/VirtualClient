@@ -101,152 +101,151 @@ namespace VirtualClient.Identity
         }
 
         /// <inheritdoc/>
-        public async Task<X509Certificate2> GetCertificateFromPathAsync(string thumbprint, string directoryPath)
+        public Task<X509Certificate2> GetCertificateFromPathAsync(string thumbprint, string directoryPath)
         {
             thumbprint.ThrowIfNullOrWhiteSpace(nameof(thumbprint));
             directoryPath.ThrowIfNullOrWhiteSpace(nameof(directoryPath));
 
-            X509Certificate2 certificate = null;
-            string errorMessage = $"Certificate not found. A certificate with matching thumbprint '{thumbprint}' " +
-                $"was not found in the expected certificate directory: {directoryPath}";
-
-            try
+            return Task.Run(() =>
             {
-                if (this.FileSystem.Directory.Exists(directoryPath))
+                X509Certificate2 certificate = null;
+                List<X509Certificate2> matchingCertificates = new List<X509Certificate2>();
+
+                try
                 {
-                    List<X509Certificate2> matchingCertificates = new List<X509Certificate2>();
-                    string[] certificateFiles = this.FileSystem.Directory.GetFiles(directoryPath);
-                    string normalizedThumbprint = CertificateManager.NormalizeThumbprint(thumbprint);
-
-                    foreach (string file in certificateFiles)
+                    if (this.FileSystem.Directory.Exists(directoryPath))
                     {
-                        try
-                        {
-                            byte[] certificateBytes = await this.FileSystem.File.ReadAllBytesAsync(file);
-                            if (certificateBytes?.Any() == true)
-                            {
-                                X509Certificate2 certificateFromFile = X509CertificateLoader.LoadPkcs12(
-                                    certificateBytes,
-                                    null,
-                                    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+                        string[] certificateFiles = this.FileSystem.Directory.GetFiles(directoryPath);
+                        string normalizedThumbprint = CertificateManager.NormalizeThumbprint(thumbprint);
 
-                                if (certificateFromFile != null)
+                        foreach (string file in certificateFiles)
+                        {
+                            try
+                            {
+                                if (this.TryGetCertificateFromFile(file, out X509Certificate2 certificateFromFile))
                                 {
                                     if (string.Equals(certificateFromFile.Thumbprint, normalizedThumbprint, StringComparison.OrdinalIgnoreCase))
                                     {
                                         matchingCertificates.Add(certificateFromFile);
+
+                                        if (DateTime.Now < certificateFromFile.NotAfter)
+                                        {
+                                            certificate = certificateFromFile;
+                                            break;
+                                        }
                                     }
                                 }
                             }
+                            catch
+                            {
+                                // There may be non-certificate files in the directory or certificates that
+                                // are not private key format.
+                            }
                         }
-                        catch
-                        {
-                            // There may be non-certificate files in the directory or certificates that
-                            // are not .pfx format.
-                        }
-                    }
-
-                    // Take the certificate with the latest expiration date that is not 
-                    // currently expired.
-                    if (matchingCertificates?.Any() == true)
-                    {
-                        DateTime now = DateTime.Now;
-                        certificate = matchingCertificates.Where(cert => now >= cert.NotBefore && now < cert.NotAfter)?.OrderByDescending(cert => cert.NotAfter).First();
                     }
                 }
-            }
-            catch (IOException)
-            {
-                // Directory access store permissions.
-                throw;
-            }
-            catch (SecurityException)
-            {
-                // Directory access store permissions.
-                throw;
-            }
+                catch (IOException)
+                {
+                    // Directory access store permissions.
+                    throw;
+                }
+                catch (SecurityException)
+                {
+                    // Directory access store permissions.
+                    throw;
+                }
 
-            if (certificate == null)
-            {
-                throw new CryptographicException(errorMessage);
-            }
+                if (certificate == null)
+                {
+                    if (matchingCertificates.Any() && matchingCertificates.All(cert => DateTime.Now >= cert.NotAfter))
+                    {
+                        throw new CryptographicException(
+                            $"Certificate expired. The certificate with thumbprint '{thumbprint}' is expired.");
+                    }
+                    else
+                    {
+                        throw new CryptographicException(
+                            $"Certificate not found. A certificate with matching thumbprint '{thumbprint}' " +
+                            $"does not exist in the specified certificate directory '{directoryPath}'");
+                    }
+                }
 
-            return certificate;
+                return certificate;
+            });
         }
 
         /// <inheritdoc/>
-        public async Task<X509Certificate2> GetCertificateFromPathAsync(string issuer, string subjectName, string directoryPath)
+        public Task<X509Certificate2> GetCertificateFromPathAsync(string issuer, string subjectName, string directoryPath)
         {
             issuer.ThrowIfNullOrWhiteSpace(nameof(issuer));
             subjectName.ThrowIfNullOrWhiteSpace(nameof(subjectName));
             directoryPath.ThrowIfNullOrWhiteSpace(nameof(directoryPath));
 
-            X509Certificate2 certificate = null;
-            string errorMessage = $"Certificate not found. A certificate with matching issuer '{issuer}' and subject '{subjectName}' " +
-                $"was not found in the expected certificate directory: {directoryPath}";
-
-            try
+            return Task.Run(() =>
             {
-                if (this.FileSystem.Directory.Exists(directoryPath))
+                X509Certificate2 certificate = null;
+                List<X509Certificate2> matchingCertificates = new List<X509Certificate2>();
+
+                try
                 {
-                    List<X509Certificate2> matchingCertificates = new List<X509Certificate2>();
-                    string[] certificateFiles = this.FileSystem.Directory.GetFiles(directoryPath);
-
-                    foreach (string file in certificateFiles)
+                    if (this.FileSystem.Directory.Exists(directoryPath))
                     {
-                        try
-                        {
-                            byte[] certificateBytes = await this.FileSystem.File.ReadAllBytesAsync(file);
-                            if (certificateBytes?.Any() == true)
-                            {
-                                X509Certificate2 certificateFromFile = X509CertificateLoader.LoadPkcs12(
-                                    certificateBytes,
-                                    string.Empty,
-                                    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+                        string[] certificateFiles = this.FileSystem.Directory.GetFiles(directoryPath);
 
-                                if (certificateFromFile != null)
+                        foreach (string file in certificateFiles)
+                        {
+                            try
+                            {
+                                if (this.TryGetCertificateFromFile(file, out X509Certificate2 certificateFromFile))
                                 {
-                                    if (CertificateManager.IsMatchingIssuer(certificateFromFile, issuer)
-                                        && CertificateManager.IsMatchingSubjectName(certificateFromFile, subjectName))
+                                    if (CertificateManager.IsMatchingIssuer(certificateFromFile, issuer) && CertificateManager.IsMatchingSubjectName(certificateFromFile, subjectName))
                                     {
                                         matchingCertificates.Add(certificateFromFile);
+ 
+                                        if (DateTime.Now < certificateFromFile.NotAfter)
+                                        {
+                                            certificate = certificateFromFile;
+                                            break;
+                                        }
                                     }
                                 }
                             }
+                            catch
+                            {
+                                // There may be non-certificate files in the directory or certificates that
+                                // are not in the private key format.
+                            }
                         }
-                        catch
-                        {
-                            // There may be non-certificate files in the directory or certificates that
-                            // are not .pfx format.
-                        }
-                    }
-
-                    // Take the certificate with the latest expiration date that is not 
-                    // currently expired.
-                    if (matchingCertificates?.Any() == true)
-                    {
-                        DateTime now = DateTime.Now;
-                        certificate = matchingCertificates.Where(cert => now >= cert.NotBefore && now < cert.NotAfter)?.OrderByDescending(cert => cert.NotAfter).First();
                     }
                 }
-            }
-            catch (IOException)
-            {
-                // Directory access store permissions.
-                throw;
-            }
-            catch (SecurityException)
-            {
-                // Directory access store permissions.
-                throw;
-            }
+                catch (IOException)
+                {
+                    // Directory access store permissions.
+                    throw;
+                }
+                catch (SecurityException)
+                {
+                    // Directory access store permissions.
+                    throw;
+                }
 
-            if (certificate == null)
-            {
-                throw new CryptographicException(errorMessage);
-            }
+                if (certificate == null)
+                {
+                    if (matchingCertificates.Any() && matchingCertificates.All(cert => DateTime.Now >= cert.NotAfter))
+                    {
+                        throw new CryptographicException(
+                            $"Certificate expired. The certificate with issuer '{issuer}' and subject '{subjectName}' is expired.");
+                    }
+                    else
+                    {
+                        throw new CryptographicException(
+                            $"Certificate not found. A certificate with matching issuer '{issuer}' and subject '{subjectName}' " +
+                            $"does not exist in the specified certificate directory '{directoryPath}'");
+                    }
+                }
 
-            return certificate;
+                return certificate;
+            });
         }
 
         /// <inheritdoc/>
@@ -262,10 +261,8 @@ namespace VirtualClient.Identity
                 };
             }
 
-            X509Certificate2 result = null;
-            string errorMessage = $"Certificate not found. A certificate for user '{Environment.UserName}' with matching thumbprint '{thumbprint}' " +
-                $"was not found in any one of the following expected certificate stores: " +
-                $"{string.Join(", ", storeLocations.Select(l => $"{l.ToString()}/{storeName.ToString()}"))}";
+            X509Certificate2 certificate = null;
+            List<X509Certificate2> matchingCertificates = new List<X509Certificate2>();
 
             foreach (StoreLocation storeLocation in storeLocations)
             {
@@ -273,7 +270,17 @@ namespace VirtualClient.Identity
                 {
                     using (X509Store store = new X509Store(storeName, storeLocation))
                     {
-                        result = await this.GetCertificateFromStoreAsync(store, thumbprint);
+                        X509Certificate2 certificateFromStore = await this.GetCertificateFromStoreAsync(store, thumbprint);
+
+                        if (certificateFromStore != null)
+                        {
+                            matchingCertificates.Add(certificateFromStore);
+                            if (DateTime.Now < certificateFromStore.NotAfter)
+                            {
+                                certificate = certificateFromStore;
+                                break;
+                            }
+                        }
                     }
                 }
                 catch (CryptographicException)
@@ -286,23 +293,24 @@ namespace VirtualClient.Identity
                     // Certificate access permissions issue
                     throw;
                 }
-                catch (Exception exc)
-                {
-                    errorMessage = errorMessage + $"Message from location '{storeLocation.ToString()}': {exc.Message}.";
-                }
-
-                if (result != null)
-                {
-                    break;
-                }
             }
 
-            if (result == null)
+            if (certificate == null)
             {
-                throw new CryptographicException(errorMessage);
+                if (matchingCertificates.Any() && matchingCertificates.All(cert => DateTime.Now >= cert.NotAfter))
+                {
+                    throw new CryptographicException(
+                        $"Certificate expired. The certificate with thumbprint '{thumbprint}' is expired.");
+                }
+                else
+                {
+                    throw new CryptographicException(
+                        $"Certificate not found. A certificate with matching thumbprint '{thumbprint}' " +
+                        $"does not exist in the expected certificate stores: {string.Join(", ", storeLocations.Select(l => $"{l.ToString()}/{storeName.ToString()}"))}");
+                }
             }
 
-            return result;
+            return certificate;
         }
 
         /// <inheritdoc/>
@@ -320,10 +328,8 @@ namespace VirtualClient.Identity
                 };
             }
 
-            X509Certificate2 result = null;
-            string errorMessage = $"Certificate not found. A certificate for user '{Environment.UserName}' with matching issuer '{issuer}' and subject '{subject}' " +
-                $"was not found in any one of the following expected certificate stores: " +
-                $"{string.Join(", ", storeLocations.Select(l => $"{l.ToString()}/{storeName.ToString()}"))}";
+            X509Certificate2 certificate = null;
+            List<X509Certificate2> matchingCertificates = new List<X509Certificate2>();
 
             foreach (StoreLocation storeLocation in storeLocations)
             {
@@ -331,7 +337,23 @@ namespace VirtualClient.Identity
                 {
                     using (X509Store store = new X509Store(storeName, storeLocation))
                     {
-                        result = await this.GetCertificateFromStoreAsync(store, issuer, subject);
+                        IEnumerable<X509Certificate2> certificatesFromStore = await this.GetCertificatesFromStoreAsync(store, issuer, subject);
+                        if (certificatesFromStore?.Any() == true)
+                        {
+                            matchingCertificates.AddRange(certificatesFromStore);
+
+                            // Take the certificate with the latest expiration date that is not 
+                            // currently expired.
+                            X509Certificate2 certificateFromStore = certificatesFromStore.Where(cert => DateTime.Now < cert.NotAfter)
+                                ?.OrderByDescending(cert => cert.NotAfter)
+                                ?.FirstOrDefault();
+
+                            if (certificateFromStore != null)
+                            {
+                                certificate = certificateFromStore;
+                                break;
+                            }
+                        }
                     }
                 }
                 catch (CryptographicException)
@@ -344,23 +366,53 @@ namespace VirtualClient.Identity
                     // Certificate access permissions issue
                     throw;
                 }
-                catch (Exception exc)
-                {
-                    errorMessage = errorMessage + $"Message from location '{storeLocation.ToString()}': {exc.Message}.";
-                }
-
-                if (result != null)
-                {
-                    break;
-                }
             }
 
-            if (result == null)
+            if (certificate == null)
             {
-                throw new CryptographicException(errorMessage);
+                if (matchingCertificates.Any() && matchingCertificates.All(cert => DateTime.Now >= cert.NotAfter))
+                {
+                    throw new CryptographicException(
+                        $"Certificate expired. The certificate with issuer '{issuer}' and subject '{subject}' is expired.");
+                }
+                else
+                {
+                    throw new CryptographicException(
+                        $"Certificate not found. A certificate with matching issuer '{issuer}' and subject '{subject}' " +
+                        $"does not exist in the expected certificate stores: {string.Join(", ", storeLocations.Select(l => $"{l.ToString()}/{storeName.ToString()}"))}");
+                }
             }
 
-            return result;
+            return certificate;
+        }
+
+        /// <summary>
+        /// Returns a valid certificate from the file at the path provided
+        /// </summary>
+        /// <param name="filePath">The path to the certificate file.</param>
+        /// <param name="certificate">The certificate loaded from the file.</param>
+        /// <returns>True if the file contains valid certificate content.</returns>
+        protected virtual bool TryGetCertificateFromFile(string filePath, out X509Certificate2 certificate)
+        {
+            certificate = null;
+            byte[] certificateBytes = this.FileSystem.File.ReadAllBytes(filePath);
+            if (certificateBytes?.Any() == true)
+            {
+                try
+                {
+#if NET9_0_OR_GREATER
+                    certificate = X509CertificateLoader.LoadPkcs12(certificateBytes, null, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+#elif NET8_0_OR_GREATER
+                    certificate = new X509Certificate2(certificateBytes, string.Empty, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+#endif
+                }
+                catch
+                {
+                    // Best effort
+                }
+            }
+
+            return certificate != null;
         }
 
         /// <summary>
@@ -402,16 +454,7 @@ namespace VirtualClient.Identity
                     store.Close();
                 }
 
-                // Take the certificate with the latest expiration date that is not 
-                // currently expired.
-                X509Certificate2 certificate = null;
-                if (matchingCertificates?.Any() == true)
-                {
-                    DateTime now = DateTime.Now;
-                    certificate = matchingCertificates.Where(cert => now >= cert.NotBefore && now < cert.NotAfter)?.OrderByDescending(cert => cert.NotAfter).First();
-                }
-
-                return certificate;
+                return matchingCertificates?.OrderByDescending(cert => cert.NotAfter)?.FirstOrDefault();
             });
         }
 
@@ -430,7 +473,7 @@ namespace VirtualClient.Identity
         /// <returns>
         /// A set of certificates from the store having a matching issuer and subject name.
         /// </returns>
-        protected virtual Task<X509Certificate2> GetCertificateFromStoreAsync(X509Store store, string issuer, string subjectName)
+        protected virtual Task<IEnumerable<X509Certificate2>> GetCertificatesFromStoreAsync(X509Store store, string issuer, string subjectName)
         {
             store.ThrowIfNull(nameof(store));
             issuer.ThrowIfNullOrWhiteSpace(issuer);
@@ -442,7 +485,6 @@ namespace VirtualClient.Identity
 
             return Task.Run(() =>
             {
-                X509Certificate2 certificate = null;
                 X509Certificate2Collection matchingCertificates = null;
                 X509Certificate2Collection certsByIssuer = null;
 
@@ -499,21 +541,13 @@ namespace VirtualClient.Identity
                                 validOnly: false);
                         }
                     }
-
-                    // Take the certificate with the latest expiration date that is not 
-                    // currently expired.
-                    if (matchingCertificates?.Any() == true)
-                    {
-                        DateTime now = DateTime.Now;
-                        certificate = matchingCertificates.Where(cert => now >= cert.NotBefore && now < cert.NotAfter)?.OrderByDescending(cert => cert.NotAfter).First();
-                    }
                 }
                 finally
                 {
                     store.Close();
                 }
 
-                return certificate;
+                return matchingCertificates?.OrderByDescending(cert => cert.NotAfter)?.Select(cert => cert);
             });
         }
     }
