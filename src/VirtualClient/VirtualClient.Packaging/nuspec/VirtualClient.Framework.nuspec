@@ -14,6 +14,9 @@
 			<group targetFramework="net8.0">
 				<dependency id="Azure.Identity" version="$Azure_Identity_Version$" exclude="Build,Analyzers" />
 				<dependency id="Azure.Messaging.EventHubs" version="$Azure_Messaging_EventHubs_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Certificates" version="$Azure_Security_KeyVault_Certificates_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Keys" version="$Azure_Security_KeyVault_Keys_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Secrets" version="$Azure_Security_KeyVault_Secrets_Version$" exclude="Build,Analyzers" />
 				<dependency id="Azure.Storage.Blobs" version="$Azure_Storage_Blobs_Version$" exclude="Build,Analyzers" />
 				<dependency id="MathNet.Numerics.Signed" version="$MathNet_Numerics_Signed_Version$" exclude="Build,Analyzers" />
 				<dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="$Microsoft_CodeAnalysis_CSharp_Scripting_Version$" exclude="Build,Analyzers" />
@@ -31,12 +34,18 @@
 				<dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.IO.FileSystem.Primitives" version="$System_IO_FileSystem_Primitives_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Net.Http" version="$System_Net_Http_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.Net.NameResolution" version="$System_Net_NameResolution_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Private.Uri" version="$System_Private_Uri_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Text.RegularExpressions" version="$System_Text_RegularExpressions_Version$" exclude="Build,Analyzers" />
 				<dependency id="YamlDotNet" version="$YamlDotNet_Version$" exclude="Build,Analyzers" />
 			</group>
             <group targetFramework="net9.0">
                 <dependency id="Azure.Identity" version="$Azure_Identity_Version$" exclude="Build,Analyzers" />
                 <dependency id="Azure.Messaging.EventHubs" version="$Azure_Messaging_EventHubs_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Certificates" version="$Azure_Security_KeyVault_Certificates_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Keys" version="$Azure_Security_KeyVault_Keys_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Secrets" version="$Azure_Security_KeyVault_Secrets_Version$" exclude="Build,Analyzers" />
                 <dependency id="Azure.Storage.Blobs" version="$Azure_Storage_Blobs_Version$" exclude="Build,Analyzers" />
                 <dependency id="MathNet.Numerics.Signed" version="$MathNet_Numerics_Signed_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="$Microsoft_CodeAnalysis_CSharp_Scripting_Version$" exclude="Build,Analyzers" />
@@ -54,7 +63,10 @@
                 <dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.IO.FileSystem.Primitives" version="$System_IO_FileSystem_Primitives_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Net.Http" version="$System_Net_Http_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.Net.NameResolution" version="$System_Net_NameResolution_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Private.Uri" version="$System_Private_Uri_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Text.RegularExpressions" version="$System_Text_RegularExpressions_Version$" exclude="Build,Analyzers" />
                 <dependency id="YamlDotNet" version="$YamlDotNet_Version$" exclude="Build,Analyzers" />
             </group>
         </dependencies>

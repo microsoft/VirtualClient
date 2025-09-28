@@ -34,6 +34,15 @@
         <!-- Framework Package = Azure.Messaging.EventHubs -->
         <NuspecProperties>$(NuspecProperties);Azure_Messaging_EventHubs_Version=$(Azure_Messaging_EventHubs_PackageVersion)</NuspecProperties>
 
+		<!-- Framework Package = Azure.Security.KeyVault.Certificates -->
+		<NuspecProperties>$(NuspecProperties);Azure_Security_KeyVault_Certificates_Version=$(Azure_Security_KeyVault_Certificates_PackageVersion)</NuspecProperties>
+
+		<!-- Framework Package = Azure.Security.KeyVault.Keys -->
+		<NuspecProperties>$(NuspecProperties);Azure_Security_KeyVault_Keys_Version=$(Azure_Security_KeyVault_Keys_PackageVersion)</NuspecProperties>
+
+		<!-- Framework Package = Azure.Security.KeyVault.Secrets -->
+		<NuspecProperties>$(NuspecProperties);Azure_Security_KeyVault_Secrets_Version=$(Azure_Security_KeyVault_Secrets_PackageVersion)</NuspecProperties>
+		
         <!-- Framework Package = Azure.Storage.Blobs -->
         <NuspecProperties>$(NuspecProperties);Azure_Storage_Blobs_Version=$(Azure_Storage_Blobs_PackageVersion)</NuspecProperties>
 
@@ -94,8 +103,17 @@
         <!-- Framework Package = System.IO.FileSystem.Primitives -->
         <NuspecProperties>$(NuspecProperties);System_IO_FileSystem_Primitives_Version=$(System_IO_FileSystem_Primitives_PackageVersion)</NuspecProperties>
 
+		<!-- Framework Package = System.Net.Http -->
+		<NuspecProperties>$(NuspecProperties);System_Net_Http_Version=$(System_Net_Http_PackageVersion)</NuspecProperties>
+		
         <!-- Framework Package = System.Net.NameResolution -->
         <NuspecProperties>$(NuspecProperties);System_Net_NameResolution_Version=$(System_Net_NameResolution_PackageVersion)</NuspecProperties>
+
+		<!-- Framework Package = System.Private.Uri -->
+		<NuspecProperties>$(NuspecProperties);System_Private_Uri_Version=$(System_Private_Uri_PackageVersion)</NuspecProperties>
+
+		<!-- Framework Package = System.Text.RegularExpressions -->
+		<NuspecProperties>$(NuspecProperties);System_Text_RegularExpressions_Version=$(System_Text_RegularExpressions_PackageVersion)</NuspecProperties>
 
         <!-- Framework Package = YamlDotNet -->
         <NuspecProperties>$(NuspecProperties);YamlDotNet_Version=$(YamlDotNet_PackageVersion)</NuspecProperties>
