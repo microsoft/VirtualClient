@@ -9,12 +9,12 @@
         <NoWarn>AsyncFixer02;SA1025;SA1116;SA1118</NoWarn>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
-        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
-        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Moq" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+	</ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\VirtualClient.Dependencies\VirtualClient.Dependencies.csproj" />

@@ -1,33 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <RunAnalyzers>false</RunAnalyzers>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<RunCodeAnalysis>false</RunCodeAnalysis>
+		<RunAnalyzers>false</RunAnalyzers>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Moq" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+	</ItemGroup>
 
 
-  <ItemGroup>
-      <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
-      <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
-      <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
-      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\VirtualClient.Monitors\VirtualClient.Monitors.csproj" />
+		<ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
+	</ItemGroup>
 
 
-  <ItemGroup>
-    <ProjectReference Include="..\VirtualClient.Monitors\VirtualClient.Monitors.csproj" />
-    <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="Examples\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
-
-  <ItemGroup>
-	  <None Update="Examples\**\*.*">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-  </ItemGroup>
-
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+	<Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

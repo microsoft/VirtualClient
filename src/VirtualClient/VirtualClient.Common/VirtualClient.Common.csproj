@@ -7,22 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)"/>
-        <PackageReference Include="System.Private.Uri" Version="$(System_Private_Uri_PackageVersion)"/>
-        <PackageReference Include="System.Text.RegularExpressions" Version="$(System_Text_RegularExpressions_PackageVersion)"/>
-        <PackageReference Include="Azure.Messaging.EventHubs" Version="$(Azure_Messaging_EventHubs_PackageVersion)" />
-        <PackageReference Include="Azure.Storage.Blobs" Version="$(Azure_Storage_Blobs_PackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="$(Microsoft_Extensions_Configuration_PackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(Microsoft_Extensions_DependencyInjection_PackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="$(Microsoft_Extensions_Logging_PackageVersion)" />
-        <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_PackageVersion)" />
-        <PackageReference Include="Polly" Version="$(Polly_PackageVersion)" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="$(Serilog_Extensions_Logging_PackageVersion)" />
-        <PackageReference Include="Serilog.Sinks.File" Version="$(Serilog_Sinks_File_PackageVersion)" />
-        <PackageReference Include="Serilog.Sinks.RollingFile" Version="$(Serilog_Sinks_RollingFile_PackageVersion)" />
-        <PackageReference Include="SSH.NET" Version="$(SSH_Net_PackageVersion)" />
-        <PackageReference Include="System.Net.NameResolution" Version="$(System_Net_NameResolution_PackageVersion)" />
-
+        <PackageReference Include="System.Net.Http" />
+        <PackageReference Include="System.Private.Uri" />
+        <PackageReference Include="System.Text.RegularExpressions" />
+        <PackageReference Include="Azure.Messaging.EventHubs" />
+        <PackageReference Include="Azure.Storage.Blobs" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Logging" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Polly" />
+        <PackageReference Include="Serilog.Extensions.Logging" />
+        <PackageReference Include="Serilog.Sinks.File" />
+        <PackageReference Include="SSH.NET" />
+        <PackageReference Include="System.Net.NameResolution" />
     </ItemGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

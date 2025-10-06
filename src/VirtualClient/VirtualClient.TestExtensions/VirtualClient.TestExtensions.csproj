@@ -10,9 +10,9 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extensions_Configuration_Json_PackageVersion)" />
-        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
-        <PackageReference Include="System.IO.FileSystem.AccessControl" Version="$(System_IO_FileSystem_AccessControl_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+        <PackageReference Include="NUnit" />
+        <PackageReference Include="System.IO.FileSystem.AccessControl" />
     </ItemGroup>
 
     <ItemGroup>

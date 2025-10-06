@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MathNet.Numerics.Signed" Version="$(MathNet_Numerics_Signed_PackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="$(Microsoft_Extensions_Http_Polly_PackageVersion)" />
-		<PackageReference Include="MimeMapping " Version="[$(MimeMapping_PackageVersion)]" />
-        <PackageReference Include="System.IO.Abstractions" Version="$(System_IO_Abstractions_PackageVersion)" />
-        <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
-        <PackageReference Include="YamlDotNet" Version="$(YamlDotNet_PackageVersion)" />
+        <PackageReference Include="MathNet.Numerics.Signed" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+		<PackageReference Include="MimeMapping" />
+        <PackageReference Include="System.IO.Abstractions" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 
     <ItemGroup>
