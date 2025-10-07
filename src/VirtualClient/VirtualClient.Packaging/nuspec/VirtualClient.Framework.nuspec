@@ -24,12 +24,11 @@
 				<dependency id="Microsoft.Extensions.DependencyInjection" version="$Microsoft_Extensions_DependencyInjection_Version$" exclude="Build,Analyzers" />
 				<dependency id="Microsoft.Extensions.Logging" version="$Microsoft_Extensions_Logging_Version$" exclude="Build,Analyzers" />
 				<dependency id="Microsoft.Extensions.Http.Polly" version="$Microsoft_Extensions_Http_Polly_Version$" exclude="Build,Analyzers" />
-				<dependency id="MimeMapping" version="$MimeMapping$" exclude="Build,Analyzers" />
+				<dependency id="MimeMapping" version="$MimeMapping_Version$" exclude="Build,Analyzers" />
 				<dependency id="Newtonsoft.Json" version="$Newtonsoft_Json_Version$" exclude="Build,Analyzers" />
 				<dependency id="Polly" version="$Polly_Version$" exclude="Build,Analyzers" />
 				<dependency id="Serilog.Extensions.Logging" version="$Serilog_Extensions_Logging_Version$" exclude="Build,Analyzers" />
 				<dependency id="Serilog.Sinks.File" version="$Serilog_Sinks_File_Version$" exclude="Build,Analyzers" />
-				<dependency id="Serilog.Sinks.RollingFile" version="$Serilog_Sinks_RollingFile_Version$" exclude="Build,Analyzers" />
 				<dependency id="SSH.NET" version="$SSH_NET_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
@@ -53,12 +52,11 @@
                 <dependency id="Microsoft.Extensions.DependencyInjection" version="$Microsoft_Extensions_DependencyInjection_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Logging" version="$Microsoft_Extensions_Logging_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Http.Polly" version="$Microsoft_Extensions_Http_Polly_Version$" exclude="Build,Analyzers" />
-				<dependency id="MimeMapping" version="$MimeMapping$" exclude="Build,Analyzers" />
+				<dependency id="MimeMapping" version="$MimeMapping_Version$" exclude="Build,Analyzers" />
                 <dependency id="Newtonsoft.Json" version="$Newtonsoft_Json_Version$" exclude="Build,Analyzers" />
                 <dependency id="Polly" version="$Polly_Version$" exclude="Build,Analyzers" />
                 <dependency id="Serilog.Extensions.Logging" version="$Serilog_Extensions_Logging_Version$" exclude="Build,Analyzers" />
                 <dependency id="Serilog.Sinks.File" version="$Serilog_Sinks_File_Version$" exclude="Build,Analyzers" />
-                <dependency id="Serilog.Sinks.RollingFile" version="$Serilog_Sinks_RollingFile_Version$" exclude="Build,Analyzers" />
                 <dependency id="SSH.NET" version="$SSH_NET_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
