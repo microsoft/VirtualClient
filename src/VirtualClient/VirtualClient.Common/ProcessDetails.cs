@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VirtualClient.Common
 {
@@ -78,5 +79,35 @@ namespace VirtualClient.Common
         /// Working Directory.
         /// </summary>
         public string WorkingDirectory { get; set; }
+
+        /// <summary>
+        /// Returns a clone of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A clone of the current instance.
+        /// </returns>
+        public virtual ProcessDetails Clone()
+        {
+            ProcessDetails clonedDetails = new ProcessDetails
+            {
+                Id = this.Id,
+                CommandLine = this.CommandLine,
+                ExitTime = this.ExitTime,
+                ExitCode = this.ExitCode,
+                StandardOutput = this.StandardOutput,
+                StandardError = this.StandardError,
+                StartTime = this.StartTime,
+                ToolName = this.ToolName,
+                WorkingDirectory = this.WorkingDirectory
+            };
+
+            // Create a new list to avoid sharing the same collection reference
+            if (this.Results?.Any() == true)
+            {
+                clonedDetails.Results = new List<string>(this.Results);
+            }
+
+            return clonedDetails;
+        }
     }
 }
