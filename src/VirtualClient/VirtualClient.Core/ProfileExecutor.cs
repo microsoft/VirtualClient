@@ -520,9 +520,22 @@ namespace VirtualClient
                         monitoringTasks.Add(monitor.ExecuteAsync(cancellationToken));
                     }
                 }
+                catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || monitor?.FailFast == true)
+                {
+                    // Error reasons have numeric/integer values that indicate their severity. Error reasons
+                    // with a value >= 500 are terminal situations where the workload cannot run successfully
+                    // regardless of how many times we attempt it.
+                    throw;
+                }
                 catch (VirtualClientException)
                 {
-                    throw;
+                    // Exceptions with error reasons < 500 are potentially transient issues. We do not want to 
+                    // cause VC to exit in these cases but to give it a chance to retry the logic that failed on
+                    // subsequent rounds of processing.
+                    //
+                    // Exceptions having error reasons with a value between 400 - 499 are serious errors but they represent
+                    // issues that may be transient and that can be resolve after a period of time. When
+                    // we catch these type of errors, we may want to reset and start over in the test workflow.
                 }
                 catch (MissingMemberException exc)
                 {

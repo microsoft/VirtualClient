@@ -133,12 +133,14 @@ namespace VirtualClient
                 // Certificate-related issues.
                 exitCode = (int)ErrorReason.InvalidCertificate;
                 Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
             }
             catch (NotSupportedException exc)
             {
                 // Various usages that are not supported.
                 exitCode = (int)ErrorReason.NotSupported;
                 Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
             }
             catch (Exception exc)
             {

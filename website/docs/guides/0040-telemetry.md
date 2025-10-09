@@ -656,7 +656,7 @@ Fields that are part of the custom dimensions.
 The following example illustrates the schema requirements for the various supported log file formats:
 
 * **JSON Schema and Requirements**  
-  The example below illustrates the supported JSON format for log files. Each JSON data point/fragment should be separated from the next using a ```---``` delimiter as is shown in 
+  The example below illustrates the supported JSON format for log files. Each JSON data point/fragment should be separated from the next using a ```-----``` delimiter as is shown in 
   the example.
 
   ``` json
