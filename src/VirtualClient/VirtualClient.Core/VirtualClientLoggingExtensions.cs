@@ -188,7 +188,7 @@ namespace VirtualClient
                     !string.IsNullOrWhiteSpace(processDetails.ToolName) ? $"{componentType}.{processDetails.ToolName}" : componentType,
                     string.Empty);
 
-                if (enableOutputSplit)
+                if (enableOutputSplit && (processDetails.StandardOutput.Length + processDetails.StandardError.Length > logToTelemetryMaxChars))
                 {
                     // Handle splitting standard output and error if enabled and necessary
                     List<string> standardOutputChunks = VirtualClientLoggingExtensions.SplitString(processDetails.StandardOutput, logToTelemetryMaxChars);
