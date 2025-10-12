@@ -38,6 +38,8 @@ namespace VirtualClient.Contracts
             this.mockLogger = new Mock<ILogger>();
             this.mockEventContext = new EventContext(Guid.NewGuid());
 
+            this.mockFixture.Parameters[nameof(TestExecutor.LogToFile)] = true;
+
             // When there is a content manager, the application will also write a file
             // upload notification file (e.g. upload.json). We validate this separately.
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();

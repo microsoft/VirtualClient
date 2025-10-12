@@ -25,6 +25,7 @@ namespace VirtualClient
         public void Setup()
         {
             this.Setup(PlatformID.Unix);
+            this.Parameters[nameof(TestExecutor.LogToFile)] = true;
         }
 
         [Test]

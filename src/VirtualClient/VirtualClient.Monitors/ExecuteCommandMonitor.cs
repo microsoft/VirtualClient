@@ -252,7 +252,7 @@ namespace VirtualClient.Dependencies
 
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName);
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, timestamped: this.LogTimestamped);
                                         process.ThrowIfMonitorFailed();
                                         this.CaptureEventInformation(process, telemetryContext);
                                     }

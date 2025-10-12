@@ -105,28 +105,24 @@ namespace VirtualClient.Contracts
             IEnumerable<string> includeScenarios = null,
             IEnumerable<string> excludeScenarios = null)
         {
-            if (!dependencies.TryGetService<ComponentSettings>(out ComponentSettings settings))
-            {
-                settings = new ComponentSettings();
-            }
-
             IDictionary<string, IConvertible> effectiveParameters = new SortedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             if (componentDescription.Parameters?.Any() == true)
             {
                 effectiveParameters.AddRange(componentDescription.Parameters);
             }
 
-            if (componentSettings.FailFast != null)
+            // We do not override profile component-level/defined settings.
+            if (componentSettings.FailFast != null && !effectiveParameters.ContainsKey(nameof(VirtualClientComponent.FailFast)))
             {
                 effectiveParameters[nameof(VirtualClientComponent.FailFast)] = componentSettings.FailFast.Value;
             }
 
-            if (componentSettings.LogToFile != null)
+            if (componentSettings.LogToFile != null && !effectiveParameters.ContainsKey(nameof(VirtualClientComponent.LogToFile)))
             {
                 effectiveParameters[nameof(VirtualClientComponent.LogToFile)] = componentSettings.LogToFile.Value;
             }
 
-            if (componentSettings.Seed != null)
+            if (componentSettings.Seed != null && !effectiveParameters.ContainsKey(nameof(VirtualClientComponent.Seed)))
             {
                 effectiveParameters[nameof(VirtualClientComponent.Seed)] = componentSettings.Seed.Value;
             }

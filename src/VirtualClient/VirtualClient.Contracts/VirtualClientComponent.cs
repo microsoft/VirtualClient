@@ -296,6 +296,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// True/false whether log files written will have timestamps appended to the 
+        /// file names (e.g. 2023-02-01-100530635478-geekbench.log). Default = true.
+        /// </summary>
+        public bool LogTimestamped
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.LogTimestamped), true);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogTimestamped)] = value;
+            }
+        }
+
+        /// <summary>
         /// Metadata provided to the application on the command line.
         /// </summary>
         public IDictionary<string, IConvertible> Metadata { get; }
