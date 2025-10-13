@@ -71,7 +71,6 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = await this.ExecuteCommandAsync(command, argument, ".", telemetryContext, cancellationToken)
                         .ConfigureAwait(false))
                     {
-                        // this.Logger.LogInformation($"inside using process");
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Cassandra", logToFile: true);
@@ -81,23 +80,20 @@ namespace VirtualClient.Actions
 
                         if (process.ExitCode != 0)
                         {
-                            this.Logger.LogInformation($"inside if block");
                             throw new WorkloadException($"Command failed with exit code {process.ExitCode}.");
                         }
-
-                        // this.Logger.LogInformation($"Command output: {output}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 // Log the error and rethrow
-                this.Logger.LogInformation($"catch exception : {ex.Message}");
+                this.Logger.LogMessage($"Failed to parse cassandra output: {ex.Message}", LogLevel.Warning, telemetryContext);
                 throw new WorkloadException($"Failed to parse cassandra output: {ex.Message}", ex);
             }
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationtoken)
+        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -107,7 +103,7 @@ namespace VirtualClient.Actions
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
 
-                await this.Logger.LogMessageAsync($"{nameof(YcsbExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{nameof(CassandraExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
                     DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
@@ -155,7 +151,4 @@ namespace VirtualClient.Actions
         }
     }
 }
-
-
-            
 

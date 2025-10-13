@@ -69,37 +69,35 @@ namespace VirtualClient.Actions
  
         private void ExtractMetrics()
         {
-            this.ExtractMetric(OpRateRegex, "Op Rate", "ops/s");
-            this.ExtractMetric(PartitionRateRegex, "Partition Rate", "pk/s");
-            this.ExtractMetric(RowRateRegex, "Row Rate", "row/s");
-            this.ExtractMetric(LatencyMeanRegex, "Latency Mean", "ms");
-            this.ExtractMetric(LatencyMaxRegex, "Latency Max", "ms");
-            this.ExtractMetric(TotalErrorsRegex, "Total Errors", "count");
-            // this.ExtractMetric(TotalOperationTimeRegex, "Total Operation Time", "time");
+            this.ExtractMetric(OpRateRegex, "Op Rate", "ops/s", true);
+            this.ExtractMetric(PartitionRateRegex, "Partition Rate", "pk/s", false);
+            this.ExtractMetric(RowRateRegex, "Row Rate", "row/s", true);
+            this.ExtractMetric(LatencyMeanRegex, "Latency Mean", "ms", false);
+            this.ExtractMetric(LatencyMaxRegex, "Latency Max", "ms", false);
+            this.ExtractMetric(TotalErrorsRegex, "Total Errors", "count", false);
             var match = TotalOperationTimeRegex.Match(this.PreprocessedText);
             if (match.Success)
             {
                 if (TimeSpan.TryParse(match.Groups[1].Value, out TimeSpan operationTime))
-                {
-                    this.Metrics.Add(new Metric("Total Operation Time", operationTime.ToString(@"hh\:mm\:ss"), "hh:mm:ss"));
+                {   
+                    double totalSeconds = operationTime.TotalSeconds;
+                    this.Metrics.Add(new Metric("Total Operation Time", totalSeconds, "seconds", MetricRelativity.LowerIsBetter));
                 }
                 else
                 {
                     throw new FormatException($"Invalid operation time format: {match.Groups[1].Value}");
                 }
             }
-
         }
 
-        private void ExtractMetric(Regex regex, string metricName, string unit)
+        private void ExtractMetric(Regex regex, string metricName, string unit, bool higherIsBetter)
         {
             var match = regex.Match(this.PreprocessedText);
             if (match.Success)
             {
-                this.Metrics.Add(new Metric(metricName, match.Groups[1].Value, unit));
+                this.Metrics.Add(new Metric(metricName, Convert.ToDouble(match.Groups[1].Value), unit, higherIsBetter ? MetricRelativity.HigherIsBetter : MetricRelativity.LowerIsBetter));
             }
         }
     }
 }
-
 
