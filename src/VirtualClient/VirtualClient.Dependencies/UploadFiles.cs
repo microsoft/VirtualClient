@@ -22,6 +22,7 @@ namespace VirtualClient.Dependencies
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class UploadFiles : VirtualClientComponent
     {
+        private const string DefaultContentPathTemplate = "{experimentId}/{agentId}";
         private IFileSystem fileSystem;
 
         /// <summary>
@@ -42,6 +43,19 @@ namespace VirtualClient.Dependencies
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.DeleteOnUpload), false);
+            }
+        }
+
+        /// <summary>
+        /// Set to true to request the files across all subdirectories be flattened
+        /// into a single directory. Set to false to preserve the directory structure.
+        /// Default = false.
+        /// </summary>
+        public bool Flatten
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.Flatten), false);
             }
         }
 
@@ -69,18 +83,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The name of the tool in which to associate the file content.
-        /// </summary>
-        public string Toolname
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.Toolname), out IConvertible toolName);
-                return toolName?.ToString();
-            }
-        }
-
-        /// <summary>
         /// Executes the logic to process the files in the logs directory.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -99,10 +101,11 @@ namespace VirtualClient.Dependencies
 
             IEnumerable<FileUploadDescriptor> uploadDescriptors = this.CreateFileUploadDescriptors(
                 this.TargetDirectory,
-                this.Toolname,
+                null,
                 this.Parameters,
                 this.Metadata,
-                timestamped: this.Timestamped);
+                timestamped: this.Timestamped,
+                flatten: this.Flatten);
 
             if (uploadDescriptors?.Any() != true)
             {
@@ -120,6 +123,19 @@ namespace VirtualClient.Dependencies
                 descriptor.DeleteOnUpload = this.DeleteOnUpload;
                 await this.RequestFileUploadAsync(descriptor);
             }
+        }
+
+        /// <summary>
+        /// Initializes the component properties.
+        /// </summary>
+        protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(this.ContentPathTemplate))
+            {
+                this.ContentPathTemplate = UploadFiles.DefaultContentPathTemplate;
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

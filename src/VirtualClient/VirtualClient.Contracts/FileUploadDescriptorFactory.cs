@@ -70,6 +70,7 @@ namespace VirtualClient.Contracts
             {
                 { "experimentId", fileContext.ExperimentId },
                 { "agentId", fileContext.AgentId },
+                { "clientId", fileContext.AgentId },
                 { "toolName", fileContext.ToolName },
                 { "role", fileContext.Role },
                 { "scenario", fileContext.Scenario }
