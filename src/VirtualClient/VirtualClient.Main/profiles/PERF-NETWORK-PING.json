@@ -6,7 +6,8 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "IPAddress": "NotDefined"
+        "IPAddress": "NotDefined",
+        "Duration": "00:00:00"
     },
     "Actions": [
         {
@@ -14,6 +15,7 @@
             "Parameters": {
                 "Scenario": "ICMP",
                 "IPAddress": "$.Parameters.IPAddress",
+                "Duration": "$.Parameters.Duration",
                 "PingIterations": 300,
                 "Tags": "Performance,Networking,Ping"
             }

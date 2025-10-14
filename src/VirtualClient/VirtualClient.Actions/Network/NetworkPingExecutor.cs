@@ -65,6 +65,18 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Parameter. Defines the duration for which the network ping test will run.
+        /// This can be a valid timespan (e.g. 00:10:00) or a simple numeric value representing total seconds (e.g. 600).
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(NetworkPingExecutor.Duration), TimeSpan.Zero);
+            }
+        }
+
+        /// <summary>
         /// The retry policy to apply to ping operations for handling transient
         /// issues/errors.
         /// </summary>
@@ -116,7 +128,13 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 DateTime startTime = DateTime.UtcNow;
                 Stopwatch blipTimer = Stopwatch.StartNew();
-                while (iterations < this.PingIterations && !cancellationToken.IsCancellationRequested)
+
+                // Use Duration if specified, otherwise use PingIterations
+                bool useDuration = this.Duration > TimeSpan.Zero;
+                DateTime endTime = useDuration ? startTime.Add(this.Duration) : DateTime.MaxValue;
+
+                while (!cancellationToken.IsCancellationRequested &&
+                       (useDuration ? DateTime.UtcNow < endTime : iterations < this.PingIterations))
                 {
                     try
                     {
@@ -168,7 +186,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     }
                 }
 
-                DateTime endTime = DateTime.UtcNow;
+                DateTime metricsEndTime = DateTime.UtcNow;
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -185,7 +203,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             "NetworkPing",
                             "Network Ping",
                             startTime,
-                            endTime,
+                            metricsEndTime,
                             "avg. round trip time",
                             responseTimes.Average(),
                             MetricUnit.Milliseconds,
@@ -204,7 +222,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             "NetworkPing",
                             "Network Ping",
                             startTime,
-                            endTime,
+                            metricsEndTime,
                             "avg. number of connections",
                             networkConnections.Average(),
                             "count",
@@ -223,7 +241,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             "NetworkPing",
                             "Network Ping",
                             startTime,
-                            endTime,
+                            metricsEndTime,
                             "# of blips",
                             networkBlips.Count,
                             "count",
@@ -237,7 +255,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             "NetworkPing",
                             "Network Ping",
                             startTime,
-                            endTime,
+                            metricsEndTime,
                             "dropped pings",
                             networkBlips.Select(blip => blip.DroppedAttempts).Aggregate((total, attempts) => total += attempts),
                             "count",
@@ -253,7 +271,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 "NetworkPing",
                                 "Network Ping",
                                 startTime,
-                                endTime,
+                                metricsEndTime,
                                 "blip duration",
                                 blip.Duration,
                                 MetricUnit.Milliseconds,

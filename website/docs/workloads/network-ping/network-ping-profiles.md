@@ -30,9 +30,11 @@ respond to network ping requests.
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
-  | Parameter   | Purpose |
-  |-------------|---------|
-  | IPAddress   | Required. The IP address of the target endpoint to which to send network pings and measure round trip response times. Loopback address can be used: 127.0.0.1.  |
+  | Parameter      | Purpose | Default Value |
+  |----------------|---------|---------------|
+  | IPAddress      | Required. The IP address of the target endpoint to which to send network pings and measure round trip response times. Loopback address can be used: 127.0.0.1.  | NotDefined |
+  | Duration       | Optional. The duration for which the network ping test will run. This can be a valid timespan (e.g. 00:10:00 for 10 minutes) or a simple numeric value representing total seconds (e.g. 600). When specified, it overrides PingIterations. | Not specified (uses PingIterations) |
+  | PingIterations | Optional. The number of individual network pings that will be conducted. This is used when Duration is not specified. | 300 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -43,6 +45,12 @@ respond to network ping requests.
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  # Execute the workload profile
+  # Execute the workload profile with default behavior (300 ping iterations)
   VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=1.2.3.4
+
+  # Execute the workload profile with custom duration (10 minutes)
+  VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=1.2.3.4,,,Duration=00:10:00
+
+  # Execute the workload profile with custom ping iterations
+  VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=1.2.3.4,,,PingIterations=500
   ```
