@@ -631,16 +631,16 @@ Fields that are part of the custom dimensions.
 | Field                   | Required    | Description |
 |-------------------------|-------------|-------------|
 | clientId                | Yes         | A unique identifier for the application (as a client running on the system). Note that there can be more than one running on a system and this enables a way to distinguish one instance of an application from another. This might simply be the system/machine name similar to 'appHost' if distinguishing between different instances of the same application running is not required. |
-| executionProfile        | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
+| profileName             | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
 | experimentId            | Yes         | The fundamental correlation identifier for Virtual Client, the experiment ID is a unique identifier that can be used to group all telemetry together for a given execution of the application. Note that the determination of what defines an "experiment" is up to the user. The user might prefer to have each individual execution of the application have a unique ID. The user might also prefer to aggregate any number of executions together as "1 experiment" and thus would use the same experiment ID across those different runs. Either of these preferences readily serve a wide range of automation process telemetry correlation needs. |
 | metricName              | Yes         | The name of the metric. |
 | metricRelativity        | Yes         | Describes whether higher or lower values indicate better outcomes. Supported values = Undefined, HigherIsBetter, LowerIsBetter. |
 | metricValue             | Yes         | The value for the metric. |
 | operatingSystemPlatform | Yes         | The OS platform. Supported values = Unix, Win32NT. |
-| scenario                | Yes         | A name for the scenario being conducted that produced the metric. Certain workloads for example can be executed in different ways but produce metrics that have the same name. The scenario name allows for a way to distinguish one set of metrics produced from another (e.g. fio_write_4k_block_size, fio_write_8k_block_size, fio_write_256K_block_size). |
+| scenarioName            | Yes         | A name for the scenario being conducted that produced the metric. Certain workloads for example can be executed in different ways but produce metrics that have the same name. The scenario name allows for a way to distinguish one set of metrics produced from another (e.g. fio_write_4k_block_size, fio_write_8k_block_size, fio_write_256K_block_size). |
 | scenarioEndTime         | Yes         | The date/time at which the step/operation that produced the metric ended/completed. This should be should be formatted as an [ISO 8601 (universal round-trip)](https://www.iso.org/iso-8601-date-and-time-format.html) value (e.g. 2024-05-21T15:55:35.376Z). |
 | scenarioStartTime       | Yes         | The date/time at which the step/operation that produced the metric started/began. This should be should be formatted as an [ISO 8601 (universal round-trip)](https://www.iso.org/iso-8601-date-and-time-format.html) value (e.g. 2024-05-21T15:55:35.376Z). |
-| toolset                 | Yes         | The name of the system feature or 3rd-party toolset/software that produce the metric. For example, the application might execute the 'OpenSSL' toolset to evaluate the performance of the system for cryptographic operations. |
+| toolName                | Yes         | The name of the system feature or 3rd-party toolset/software that produce the metric. For example, the application might execute the 'OpenSSL' toolset to evaluate the performance of the system for cryptographic operations. |
 | executionSystem         | No          | Describes the name of the execution/automation system running the application. This allows for distinguishing between different "automation harnesses" running the same application. |
 | metadata                | No          | A set of additional metadata (key/value pairs) to include in telemetry. Note that this field should be in a simple dictionary format. |  
 | metadata_host           | No          | A set of additional metadata specifically related to the host system (key/value pairs) to include in telemetry. Note that this field should be in a simple dictionary format. |  
@@ -650,8 +650,8 @@ Fields that are part of the custom dimensions.
 | metricVerbosity         | No          | Allows the user to ascribe different levels of priority/verbosity to a set of metrics that can be used for queries/filtering. Lower values indicate higher priority. For example, metrics considered to be the most critical for decision making would be set with verbosity = 0 (Critical). Default = 1 (Standard). Supported Values = 0 (Critical), 1 (Standard), 2 (Informational), etc... |
 | platformArchitecture    | No          | The OS platform + CPU architecture. Supported values = linux-arm64, linux-x64, win-arm64, win-x64. |
 | tags                    | No          | A semi-colon delimited list of tags to associate with the metric for enhancing queryability of the data at-scale. |
-| toolsetResults          | No          | Output from the 3rd-party toolset/software. Note that there are often size restrictions on cloud messaging systems. It is recommended that the size of the toolset results be kept to a minimum having only highly useful information. |
-| toolsetVersion          | No          | The version of the system feature or 3rd-party toolset/software that produced the metric. |
+| toolResults             | No          | Output from the 3rd-party toolset/software. Note that there are often size restrictions on cloud messaging systems. It is recommended that the size of the toolset results be kept to a minimum having only highly useful information. |
+| toolVersion             | No          | The version of the system feature or 3rd-party toolset/software that produced the metric. |
 
 The following example illustrates the schema requirements for the various supported log file formats:
 
@@ -672,7 +672,7 @@ The following example illustrates the schema requirements for the various suppor
 
       # Part B/C Fields (Custom Dimensions)
       "clientId": "linux-demo01-client-01",
-      "executionProfile": "METIS-CPU-CRYPTOGRAPHIC",
+      "profileName": "METIS-CPU-CRYPTOGRAPHIC",
       "executionSystem": "Metis",
       "experimentId": "6c83d269-2dff-4fb5-9924-375d84602c5b",
       "metadata": {
@@ -695,13 +695,13 @@ The following example illustrates the schema requirements for the various suppor
       "metricVerbosity": 0,
       "operatingSystemPlatform": "Unix",
       "platformArchitecture": "linux-x64",
-      "scenario": "sha256",
+      "scenarioName": "sha256",
       "scenarioEndTime": "2025-07-23T20:34:48.6298225Z",
       "scenarioStartTime": "2025-07-23T20:24:48.6170306Z",
       "tags": "CPU;OpenSSL;Cryptography",
-      "toolset": "OpenSSL",
-      "toolsetResults": "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-      "toolsetVersion": "3.0.0"
+      "toolName": "OpenSSL",
+      "toolResults": "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+      "toolVersion": "3.0.0"
   }
   -----
   {
@@ -713,7 +713,7 @@ The following example illustrates the schema requirements for the various suppor
       "severityLevel": 2,
       "timestamp": "2025-07-23T20:34:48.6439102Z",
       "clientId": "linux-demo01-client-01",
-      "executionProfile": "METIS-CPU-CRYPTOGRAPHIC",
+      "profileName": "METIS-CPU-CRYPTOGRAPHIC",
       "executionSystem": "Metis",
       "experimentId": "6c83d269-2dff-4fb5-9924-375d84602c5b",
       "metadata": {
@@ -736,13 +736,13 @@ The following example illustrates the schema requirements for the various suppor
       "metricVerbosity": 0,
       "operatingSystemPlatform": "Unix",
       "platformArchitecture": "linux-x64",
-      "scenario": "sha256",
+      "scenarioName": "sha256",
       "scenarioEndTime": "2025-07-23T20:34:48.6298225Z",
       "scenarioStartTime": "2025-07-23T20:24:48.6170306Z",
       "tags": "CPU;OpenSSL;Cryptography",
-      "toolset": "OpenSSL",
-      "toolsetResults": "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-      "toolsetVersion": "3.0.0"
+      "toolName": "OpenSSL",
+      "toolResults": "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+      "toolVersion": "3.0.0"
   }
   ```
 
@@ -764,7 +764,7 @@ The following example illustrates the schema requirements for the various suppor
 
   # Part B/C Fields (Custom Dimensions)
   clientId: linux-demo01-client-01
-  executionProfile: METIS-CPU-CRYPTOGRAPHIC
+  profileName: METIS-CPU-CRYPTOGRAPHIC
   executionSystem: Metis
   experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
   metadata:
@@ -785,22 +785,22 @@ The following example illustrates the schema requirements for the various suppor
   metricVerbosity: 0
   operatingSystemPlatform: Unix
   platformArchitecture: linux-x64
-  scenario: sha256
+  scenarioName: sha256
   scenarioEndTime: 2025-07-23T20:34:48.6298225Z
   scenarioStartTime: 2025-07-23T20:24:48.6170306Z
   tags: CPU;OpenSSL;Cryptography
-  toolset: OpenSSL
+  toolName: OpenSSL
 
   # using a 'block scalar' to encapsulate a block of text that contains
   # reserved characters
-  toolsetResults: |
+  toolResults: |
     version: 3.0.0-beta3-dev
     built on: Fri Aug 13 03:16:55 2021 UTC
     options: bn(64,64) 
     compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
     CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
     sha256         4530442.74 15234880.42
-  toolsetVersion: 3.0.0
+  toolVersion: 3.0.0
   -----
   appHost: linux-demo01
   appName: PerfCheck
@@ -810,7 +810,7 @@ The following example illustrates the schema requirements for the various suppor
   severityLevel: 2
   timestamp: 2025-07-23T20:34:48.6439102Z
   clientId: linux-demo01-client-01
-  executionProfile: METIS-CPU-CRYPTOGRAPHIC
+  profileName: METIS-CPU-CRYPTOGRAPHIC
   executionSystem: Metis
   experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
   metadata:
@@ -831,19 +831,19 @@ The following example illustrates the schema requirements for the various suppor
   metricVerbosity: 0
   operatingSystemPlatform: Unix
   platformArchitecture: linux-x64
-  scenario: sha256
+  scenarioName: sha256
   scenarioEndTime: 2025-07-23T20:34:48.6298225Z
   scenarioStartTime: 2025-07-23T20:24:48.6170306Z
   tags: CPU;OpenSSL;Cryptography
-  toolset: OpenSSL
-  toolsetResults: |
+  toolName: OpenSSL
+  toolResults: |
     version: 3.0.0-beta3-dev
     built on: Fri Aug 13 03:16:55 2021 UTC
     options: bn(64,64) 
     compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
     CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
     sha256         4530442.74 15234880.42
-  toolsetVersion: 3.0.0
+  toolVersion: 3.0.0
   ```
 
 * **CSV Schema and Requirements**  
@@ -858,11 +858,18 @@ The following example illustrates the schema requirements for the various suppor
   ``` bash
   # First row are the headers. They may be ordered in any way that is preferable;
   # however, they must be named exactly as shown below. The headers are case-insentive.
-  Timestamp,ExperimentID,ExecutionSystem,ExecutionProfile,ClientID,SeverityLevel,Toolset,ToolsetVersion,Scenario,ScenarioStartTime,ScenarioEndTime,MetricName,MetricValue,MetricDescription,MetricUnit,MetricCategorization,MetricRelativity,MetricVerbosity,AppHost,AppName,AppVersion,OperatingSystemPlatform,PlatformArchitecture,OperationID,OperationParentID,Metadata,Metadata_Host,ToolsetResults,Tags
+  Timestamp,ExperimentID,ExecutionSystem,ProfileName,ClientID,SeverityLevel,ToolName,ToolVersion,ScenarioName,ScenarioStartTime,ScenarioEndTime,MetricName,MetricValue,MetricDescription,MetricUnit,MetricCategorization,MetricRelativity,MetricVerbosity,AppHost,AppName,AppVersion,OperatingSystemPlatform,PlatformArchitecture,OperationID,OperationParentID,Metadata,Metadata_Host,ToolResults,Tags
 
   # Each row thereafter contains matching field values for a single metric.
-  2025-07-23T20:34:48.6439102Z,6c83d269-2dff-4fb5-9924-375d84602c5b,Metis,METIS-CPU-CRYPTOGRAPHIC,linux-demo01-client-01,2,OpenSSL,3.0.0,sha256,2025-07-23T20:24:48.6170306Z,2025-07-23T20:34:48.6298225Z,sha256 16-byte,4530442.74,SHA256 algorithm operation rate,kilobytes/sec,Cryptographic Operations,HigherIsBetter,0,linux-demo01,PerfCheck,1.5.0,Unix,linux-x64,98733b6a-9a19-4c50-85ce-9ef95f74b79c,8c3956be-54cd-456c-b784-06f41730f8fc,"GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS","version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",CPU;OpenSSL;Cryptography
-  2025-07-23T20:34:48.6439102Z,6c83d269-2dff-4fb5-9924-375d84602c5b,Metis,METIS-CPU-CRYPTOGRAPHIC,linux-demo01-client-01,2,OpenSSL,3.0.0,sha256,2025-07-23T20:24:48.6170306Z,2025-07-23T20:34:48.6298225Z,sha256 64-byte,15234880.42,SHA256 algorithm operation rate,kilobytes/sec,Cryptographic Operations,HigherIsBetter,0,linux-demo01,PerfCheck,1.5.0,Unix,linux-x64,98733b6a-9a19-4c50-85ce-9ef95f74b79c,8c3956be-54cd-456c-b784-06f41730f8fc,"GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS","version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",CPU;OpenSSL;Cryptography
+  2025-07-23T20:34:48.6439102Z,6c83d269-2dff-4fb5-9924-375d84602c5b,Metis,METIS-CPU-CRYPTOGRAPHIC,linux-demo01-client-01,2,OpenSSL,3.0.0,SHA256,2025-07-23T20:24:48.6170306Z,2025-07-23T20:34:48.6298225Z,sha256 16-byte,4530442.74,SHA256 algorithm operation rate,kilobytes/sec,Cryptographic Operations,HigherIsBetter,0,linux-demo01,PerfCheck,1.5.0,Unix,linux-x64,98733b6a-9a19-4c50-85ce-9ef95f74b79c,8c3956be-54cd-456c-b784-06f41730f8fc,"GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS","version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",CPU;OpenSSL;Cryptography
+  2025-07-23T20:34:48.6439102Z,6c83d269-2dff-4fb5-9924-375d84602c5b,Metis,METIS-CPU-CRYPTOGRAPHIC,linux-demo01-client-01,2,OpenSSL,3.0.0,SHA256,2025-07-23T20:24:48.6170306Z,2025-07-23T20:34:48.6298225Z,sha256 64-byte,15234880.42,SHA256 algorithm operation rate,kilobytes/sec,Cryptographic Operations,HigherIsBetter,0,linux-demo01,PerfCheck,1.5.0,Unix,linux-x64,98733b6a-9a19-4c50-85ce-9ef95f74b79c,8c3956be-54cd-456c-b784-06f41730f8fc,"GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS","version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",CPU;OpenSSL;Cryptography
+  ```
+
+  ``` bash
+  # Headers and fields can also be fully surrounded with quotation marks. This is useful
+  # when the values themselves may contain CSV control characters such as commas.
+  "Timestamp","ExperimentID","ExecutionSystem","ProfileName","ClientID","SeverityLevel","ToolName","ToolVersion","ScenarioName","ScenarioStartTime","ScenarioEndTime","MetricName","MetricValue","MetricDescription","MetricUnit","MetricCategorization","MetricRelativity","MetricVerbosity","AppHost","AppName","AppVersion","OperatingSystemPlatform","PlatformArchitecture","OperationID","OperationParentID","Metadata","Metadata_Host","ToolResults","Tags"
+  "2025-07-23T20:34:48.6439102Z","6c83d269-2dff-4fb5-9924-375d84602c5b","Metis"",METIS-CPU-CRYPTOGRAPHIC","linux-demo01-client-01","2","OpenSSL","3.0.0","SHA256","2025-07-23T20:24:48.6170306Z","2025-07-23T20:34:48.6298225Z","sha256 16-byte","4530442.74","SHA256 algorithm operation rate","kilobytes/sec","Cryptographic Operations","HigherIsBetter","0","linux-demo01","PerfCheck","1.5.0","Unix","linux-x64","98733b6a-9a19-4c50-85ce-9ef95f74b79c","8c3956be-54cd-456c-b784-06f41730f8fc","GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS","version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42","CPU;OpenSSL;Cryptography"
   ```
 
 ### Events Log File Schema and Requirements  
@@ -896,7 +903,7 @@ Fields that are part of the custom dimensions.
 | Field                   | Required    | Description |
 |-------------------------|-------------|-------------|
 | clientId                | Yes         | A unique identifier for the application (as a client running on the system). Note that there can be more than one running on a system and this enables a way to distinguish one instance of an application from another. This might simply be the system/machine name similar to 'appHost' if distinguishing between different instances of the same application running is not required. |
-| executionProfile        | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
+| profileName             | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
 | experimentId            | Yes         | The fundamental correlation identifier for Virtual Client, the experiment ID is a unique identifier that can be used to group all telemetry together for a given execution of the application. Note that the determination of what defines an "experiment" is up to the user. The user might prefer to have each individual execution of the application have a unique ID. The user might also prefer to aggregate any number of executions together as "1 experiment" and thus would use the same experiment ID across those different runs. Either of these preferences readily serve a wide range of automation process telemetry correlation needs. |
 | eventId                 | Yes         | An identifier for the event (e.g. eventlog.journalctl). |
 | eventSource             | Yes         | The source/provider of the event (e.g. journalctl). |
@@ -930,7 +937,7 @@ The following example illustrates the schema requirements for the various suppor
 
       # Part B/C Fields (Custom Dimensions)
       "clientId": "linux-demo01-client-01",
-      "executionProfile": "METIS-CPU-CRYPTOGRAPHIC",
+      "profileName": "METIS-CPU-CRYPTOGRAPHIC",
       "executionSystem": "Metis",
       "experimentId": "b7b1e371-dea4-4597-81af-cd7a9ea25230",
       "eventCode": 500,
@@ -971,7 +978,7 @@ The following example illustrates the schema requirements for the various suppor
       "severityLevel": 5,
       "timestamp": "2025-07-31T20:05:26.7370850Z",
       "clientId": "linux-demo01-client-01",
-      "executionProfile": "METIS-CPU-CRYPTOGRAPHIC",
+      "profileName": "METIS-CPU-CRYPTOGRAPHIC",
       "executionSystem": "Metis",
       "experimentId": "b7b1e371-dea4-4597-81af-cd7a9ea25230",
       "eventCode": 500,
@@ -1022,7 +1029,7 @@ The following example illustrates the schema requirements for the various suppor
 
   # Part B/C Fields (Custom Dimensions)
   clientId: linux-demo01-client-01
-  executionProfile: METIS-CPU-CRYPTOGRAPHIC
+  profileName: METIS-CPU-CRYPTOGRAPHIC
   executionSystem: Metis
   experimentId: b7b1e371-dea4-4597-81af-cd7a9ea25230
   eventCode: 500
@@ -1058,7 +1065,7 @@ The following example illustrates the schema requirements for the various suppor
   severityLevel: 5
   timestamp: 2025-07-31T20:05:26.7370850Z
   clientId: linux-demo01-client-01
-  executionProfile: METIS-CPU-CRYPTOGRAPHIC
+  profileName: METIS-CPU-CRYPTOGRAPHIC
   executionSystem: Metis
   experimentId: b7b1e371-dea4-4597-81af-cd7a9ea25230
   eventCode: 500
@@ -1099,11 +1106,18 @@ The following example illustrates the schema requirements for the various suppor
   ``` bash
   # First row are the headers. They may be ordered in any way that is preferable;
   # however, they must be named exactly as shown below. The headers are case-insentive.
-  Timestamp,ExperimentID,ExecutionSystem,ExecutionProfile,ClientID,SeverityLevel,EventType,EventId,EventDescription,EventSource,EventCode,EventInfo,AppHost,AppName,AppVersion,OperatingSystemPlatform,PlatformArchitecture,OperationID,OperationParentID,Metadata,Metadata_Host,Tags
+  Timestamp,ExperimentID,ExecutionSystem,ProfileName,ClientID,SeverityLevel,EventType,EventId,EventDescription,EventSource,EventCode,EventInfo,AppHost,AppName,AppVersion,OperatingSystemPlatform,PlatformArchitecture,OperationID,OperationParentID,Metadata,Metadata_Host,Tags
 
   # Each row thereafter contains matching field values for a single metric.
   2025-07-31T20:05:26.7370850Z,b7b1e371-dea4-4597-81af-cd7a9ea25230,Metis,METIS-CPU-CRYPTOGRAPHIC,linux-demo01-client-01,5,EventLog,eventlog.journalctl,Critical system event,journalctl,500,"LastCheckPoint=2025-07-31T20:01:40.0774251Z,,,Message=CRITICAL: Unexpected termination due to segmentation fault,,,Priority=2,,,BootId=a1b2c3d4e5f6g7h8i9j0,,,Exe=/usr/bin/myapp1,,,Unit=myapp1.service",linux-demo01,PerfCheck,1.5.0,Unix,linux-x64,98733b6a-9a19-4c50-85ce-9ef95f74b79c,8c3956be-54cd-456c-b784-06f41730f8fc,"GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS",Linux;EventLog
   2025-07-31T20:05:26.7370850Z,b7b1e371-dea4-4597-81af-cd7a9ea25230,Metis,METIS-CPU-CRYPTOGRAPHIC,linux-demo01-client-01,5,EventLog,eventlog.journalctl,Critical system event,journalctl,500,"LastCheckPoint=2025-07-31T20:01:40.0774251Z,,,Message=CRITICAL: Power supply unit failure detected on PSU1,,,Priority=2,,,BootId=a1b2c3d4e5f6g7h8i9j0,,,Exe=/usr/lib/systemd/systemd,,,Unit=power-monitor.service",linux-demo01,PerfCheck,1.5.0,Unix,linux-x64,98733b6a-9a19-4c50-85ce-9ef95f74b79c,8c3956be-54cd-456c-b784-06f41730f8fc,"GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS",Linux;EventLog
+  ```
+
+  ``` bash
+  # Headers and fields can also be fully surrounded with quotation marks. This is useful
+  # when the values themselves may contain CSV control characters such as commas.
+  "Timestamp","ExperimentID","ExecutionSystem","ProfileName","ClientID","SeverityLevel","EventType","EventId","EventDescription","EventSource","EventCode","EventInfo","AppHost","AppName","AppVersion","OperatingSystemPlatform","PlatformArchitecture","OperationID","OperationParentID","Metadata","Metadata_Host","Tags"
+  "2025-07-31T20:05:26.7370850Z","b7b1e371-dea4-4597-81af-cd7a9ea25230","Metis","METIS-CPU-CRYPTOGRAPHIC","linux-demo01-client-01","5","EventLog","eventlog.journalctl","Critical system event","journalctl","500","LastCheckPoint=2025-07-31T20:01:40.0774251Z,,,Message=CRITICAL: Unexpected termination due to segmentation fault,,,Priority=2,,,BootId=a1b2c3d4e5f6g7h8i9j0,,,Exe=/usr/bin/myapp1,,,Unit=myapp1.service","linux-demo01","PerfCheck","1.5.0","Unix","linux-x64","98733b6a-9a19-4c50-85ce-9ef95f74b79c","8c3956be-54cd-456c-b784-06f41730f8fc","GroupId=Group A;Intent=System Pre-Check;Owner=metis-support@company.com;Revision=2.6","OsDescription=Unix 6.11.0.1013;OsFamily=Unix;OsName=Ubuntu 24.04.2 LTS","Linux;EventLog"
   ```
 
 ## Larger-Scale Scenarios

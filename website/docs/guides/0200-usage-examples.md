@@ -74,7 +74,7 @@ VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStor
 ./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
 ```
 
-## Scenario: Instruct the Appliction to Perform an Initial Cleanup
+## Scenario: Instruct the Application to Perform an Initial Cleanup
 Virtual Client writes various types of content to the file system. Some common types of content include log files, package downloads and
 files used to represent state for managing repeat operations/idempotency. Over time the count and size of the file content on the file
 system can grow to where it becomes desirable to cleanup some of the files. For example, a user might want to cleanup up the log files

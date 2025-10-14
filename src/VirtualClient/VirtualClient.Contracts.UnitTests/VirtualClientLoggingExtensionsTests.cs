@@ -605,7 +605,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 19
+                It.Is<EventContext>(context => context.Properties.Count == 17
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenario")
@@ -620,9 +620,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetVersion")
-                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenario"].ToString() == expectedScenarioName
@@ -638,9 +635,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
-                    && context.Properties["toolset"].ToString() == expectedToolName
-                    && context.Properties["toolsetVersion"].ToString() == string.Empty
-                    && context.Properties["toolsetResults"].ToString() == string.Empty
+                    && context.Properties["toolResults"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
@@ -692,7 +687,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 19
+                It.Is<EventContext>(context => context.Properties.Count == 17
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenario")
@@ -707,9 +702,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetResults")
-                    && context.Properties.ContainsKey("toolsetVersion")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
@@ -723,12 +715,9 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
                     && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
-                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"] == expectedMetadata as Object
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
-                    && context.Properties["toolsetResults"].ToString() == expectedToolResults
-                    && context.Properties["toolsetVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)),
                 null,
                 null));
@@ -773,9 +762,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetVersion")
-                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")),
                 null,
                 null));
@@ -820,9 +806,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetVersion")
-                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")),
                 null,
                 null));
@@ -897,13 +880,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 13
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("toolset")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolsetVersion")
                     && context.Properties.ContainsKey("metricName")
                     && context.Properties.ContainsKey("metricValue")
                     && context.Properties.ContainsKey("metricUnit")
@@ -915,7 +896,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
-                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["scenario"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
@@ -961,10 +941,9 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 13
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("toolset")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("metricName")
@@ -976,10 +955,8 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
-                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
-                    && context.Properties["toolsetVersion"].ToString() == expectedToolVersion
                     && context.Properties["scenario"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
