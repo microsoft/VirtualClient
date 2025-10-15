@@ -52,18 +52,18 @@ namespace VirtualClient
         /// <param name="logFileName">The name to use for the log file when writing to the file system. Default = component 'Scenario' parameter value.</param>
         /// <param name="timestamped">True if any log files generated should be prefixed with timestamps. Default = true.</param>
         /// <param name="upload">True to request the file be uploaded when a content store is defined.</param>
-        /// <param name="enableOutputSplit">
-        /// When true, splits the standard output and error into multiple telemetry events if they exceed maxChars.
+        /// <param name="telemetrySplit">
+        /// When true, splits the standard output and standard error into multiple telemetry events if they exceed maxChars.
         /// When false, truncates the standard output/error at maxChars (existing behavior).
         /// </param>
         public static Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000, string logFileName = null, bool timestamped = true, bool upload = true, bool enableOutputSplit = false)
+            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000, string logFileName = null, bool timestamped = true, bool upload = true, bool telemetrySplit = false)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
-            return LogProcessDetailsAsync(component, process.ToProcessDetails(toolName, results), telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars, logFileName, timestamped, upload, enableOutputSplit);
+            return LogProcessDetailsAsync(component, process.ToProcessDetails(toolName, results), telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars, logFileName, timestamped, upload, telemetrySplit);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace VirtualClient
                     {
                         try
                         {
-                            component.Logger?.LogProcessDetails(processDetails, component.TypeName, telemetryContext, logToTelemetryMaxChars, enableOutputSplit: enableOutputSplit);
+                            component.Logger?.LogProcessDetails(processDetails, component.TypeName, telemetryContext, logToTelemetryMaxChars, telemetrySplit: enableOutputSplit);
                         }
                         catch (Exception exc)
                         {
@@ -158,17 +158,17 @@ namespace VirtualClient
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        /// <param name="enableOutputSplit">
+        /// <param name="telemetrySplit">
         /// When true, splits the standard output and error into multiple telemetry events if they exceed maxChars.
         /// When false, truncates the standard output/error at maxChars (existing behavior).
         /// </param>
-        internal static void LogProcessDetails(this ILogger logger, ProcessDetails processDetails, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000, bool enableOutputSplit = false)
+        internal static void LogProcessDetails(this ILogger logger, ProcessDetails processDetails, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000, bool telemetrySplit = false)
         {
             logger.ThrowIfNull(nameof(logger));
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
-            telemetryContext.AddContext(nameof(enableOutputSplit), enableOutputSplit);
+            telemetryContext.AddContext(nameof(telemetrySplit), telemetrySplit);
             
             try
             {
@@ -187,7 +187,7 @@ namespace VirtualClient
                     !string.IsNullOrWhiteSpace(processDetails.ToolName) ? $"{componentType}.{processDetails.ToolName}" : componentType,
                     string.Empty);
 
-                if (enableOutputSplit && (processDetails.StandardOutput.Length + processDetails.StandardError.Length > logToTelemetryMaxChars))
+                if (telemetrySplit && (processDetails.StandardOutput.Length + processDetails.StandardError.Length > logToTelemetryMaxChars))
                 {                    
                     // Handle splitting standard output and error if enabled and necessary
                     List<string> standardOutputChunks = VirtualClientLoggingExtensions.SplitString(processDetails.StandardOutput, logToTelemetryMaxChars);
