@@ -168,9 +168,8 @@ namespace VirtualClient
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
-
             telemetryContext.AddContext(nameof(enableOutputSplit), enableOutputSplit);
-
+            
             try
             {
                 // Obscure sensitive data in the command line
@@ -189,7 +188,7 @@ namespace VirtualClient
                     string.Empty);
 
                 if (enableOutputSplit && (processDetails.StandardOutput.Length + processDetails.StandardError.Length > logToTelemetryMaxChars))
-                {
+                {                    
                     // Handle splitting standard output and error if enabled and necessary
                     List<string> standardOutputChunks = VirtualClientLoggingExtensions.SplitString(processDetails.StandardOutput, logToTelemetryMaxChars);
                     List<string> standardErrorChunks = VirtualClientLoggingExtensions.SplitString(processDetails.StandardError, logToTelemetryMaxChars);
