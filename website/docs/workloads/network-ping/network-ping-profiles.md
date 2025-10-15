@@ -33,7 +33,7 @@ respond to network ping requests.
   | Parameter      | Purpose | Default Value |
   |----------------|---------|---------------|
   | IPAddress      | Required. The IP address of the target endpoint to which to send network pings and measure round trip response times. Loopback address can be used: 127.0.0.1.  | NotDefined |
-  | Duration       | Optional. The duration for which the network ping test will run. This can be a valid timespan (e.g. 00:10:00 for 10 minutes) or a simple numeric value representing total seconds (e.g. 600). When specified, it overrides PingIterations. | Not specified (uses PingIterations) |
+  | Duration       | Optional. The duration for which the network ping test will run. This can be a valid timespan (e.g. 00:10:00 for 10 minutes) or a simple numeric value representing total seconds (e.g. 600). When specified, it overrides PingIterations. | null (uses PingIterations) |
   | PingIterations | Optional. The number of individual network pings that will be conducted. This is used when Duration is not specified. | 300 |
 
 * **Profile Runtimes**  
