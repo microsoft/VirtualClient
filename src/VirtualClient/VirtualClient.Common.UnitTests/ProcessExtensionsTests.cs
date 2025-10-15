@@ -66,5 +66,35 @@ namespace VirtualClient.Common
             Assert.ThrowsAsync<TimeoutException>(
                 () => this.mockProcess.WaitForResponseAsync("NeverGonnaShow", CancellationToken.None, timeout: TimeSpan.Zero));
         }
+
+        [Test]
+        public void ProcessDetailsCloneCreatesANewInstanceWithTheSameValues()
+        {
+            ProcessDetails process1 = new ProcessDetails
+            {
+                Id = -1,
+                CommandLine = Guid.NewGuid().ToString(),
+                ExitTime = DateTime.UtcNow,
+                ExitCode = -2,
+                StandardOutput = Guid.NewGuid().ToString(),
+                StandardError = Guid.NewGuid().ToString(),
+                StartTime = DateTime.MinValue,
+                ToolName = Guid.NewGuid().ToString(),
+                WorkingDirectory = Guid.NewGuid().ToString()
+            };
+
+            ProcessDetails process2 = process1.Clone();
+
+            Assert.AreNotEqual(process1, process2);
+            Assert.AreEqual(process1.Id, process2.Id);
+            Assert.AreEqual(process1.CommandLine, process2.CommandLine);
+            Assert.AreEqual(process1.ExitTime, process2.ExitTime);
+            Assert.AreEqual(process1.ExitCode, process2.ExitCode);
+            Assert.AreEqual(process1.StandardOutput, process2.StandardOutput);
+            Assert.AreEqual(process1.StandardError, process2.StandardError);
+            Assert.AreEqual(process1.StartTime, process2.StartTime);
+            Assert.AreEqual(process1.ToolName, process2.ToolName);
+            Assert.AreEqual(process1.WorkingDirectory, process2.WorkingDirectory);
+        }
     }
 }
