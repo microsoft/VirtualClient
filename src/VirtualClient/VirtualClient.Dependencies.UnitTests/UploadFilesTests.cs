@@ -93,6 +93,7 @@ namespace VirtualClient.Dependencies
         [Test]
         [TestCase(PlatformID.Unix)]
         [TestCase(PlatformID.Win32NT)]
+        [Platform("Win", Reason = "Path.GetDirectoryName does not work consistently on Linux builds.")]
         public async Task UploadFilesUploadsTheFilesInTheTargetDirectoryToTheExpectedDefaultContentPathLocation(PlatformID platform)
         {
             // Scenario:
@@ -140,6 +141,7 @@ namespace VirtualClient.Dependencies
         [Test]
         [TestCase(PlatformID.Unix)]
         [TestCase(PlatformID.Win32NT)]
+        [Platform("Win", Reason = "Path.GetDirectoryName does not work consistently on Linux builds.")]
         public async Task UploadFilesUploadsTheFilesInTheTargetDirectoryToTheExpectedContentPathLocationWhenDefined(PlatformID platform)
         {
             // Scenario:
@@ -193,6 +195,7 @@ namespace VirtualClient.Dependencies
         [Test]
         [TestCase(PlatformID.Unix)]
         [TestCase(PlatformID.Win32NT)]
+        [Platform("Win", Reason = "Path.GetDirectoryName does not work consistently on Linux builds.")]
         public async Task UploadFilesUploadsTheFilesInTheTargetDirectoryToTheExpectedContentPathLocationWhenFlattened(PlatformID platform)
         {
             this.SetupTest(platform);
