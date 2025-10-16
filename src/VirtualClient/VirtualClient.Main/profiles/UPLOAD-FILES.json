@@ -3,14 +3,14 @@
     "Parameters": {
         "TargetDirectory": null,
         "Timestamped": false,
-        "ToolName": null,
+        "FlattenStructure": false,
         "DeleteOnUpload": false
     },
     "Actions": [
         {
             "Type": "WaitExecutor",
             "Parameters": {
-                "Scenario": "Initialize",
+                "Scenario": "Finalize",
                 "Duration": "00:00:01"
             }
         }
@@ -22,8 +22,8 @@
                 "Scenario": "UploadFiles",
                 "TargetDirectory": "$.Parameters.TargetDirectory",
                 "Timestamped": "$.Parameters.Timestamped",
-                "ToolName": "$.Parameters.ToolName",
-                "DeleteOnUpload": "$.Parameters.DeleteOnUpload"
+                "DeleteOnUpload": "$.Parameters.DeleteOnUpload",
+                "Flatten": "$.Parameters.FlattenStructure"
             }
         }
     ]
