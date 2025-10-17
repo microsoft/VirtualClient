@@ -12,6 +12,8 @@ namespace VirtualClient.UnitTests
     using System.Threading.Tasks;
     using AutoFixture;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
@@ -307,7 +309,9 @@ namespace VirtualClient.UnitTests
             TestCommandBase testCommand = new TestCommandBase();
             List<string> loggerDefinitions = new List<string>();
             testCommand.Loggers = loggerDefinitions;
-            IList<ILoggerProvider> loggers = testCommand.CreateLogger(new ConfigurationBuilder().Build(), this.mockFixture.PlatformSpecifics);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(this.mockFixture.Dependencies);
+
             // 1 console
             Assert.AreEqual(loggers.Count, 1);
         }
@@ -321,6 +325,7 @@ namespace VirtualClient.UnitTests
             TestCommandBase testCommand = new TestCommandBase(this.mockFixture.CertificateManager.Object);
             this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
                 .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+
             List<string> loggerDefinitions = new List<string>();
             loggerDefinitions.Add("eventHub;sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
             testCommand.Loggers = loggerDefinitions;
@@ -341,7 +346,11 @@ namespace VirtualClient.UnitTests
             var eventHubLogSettings = new EventHubLogSettings();
             configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
 
-            IList<ILoggerProvider> loggers = testCommand.CreateLogger(configuration, this.mockFixture.PlatformSpecifics);
+            this.mockFixture.Dependencies.RemoveAll<IConfiguration>();
+            this.mockFixture.Dependencies.AddSingleton(configuration);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(this.mockFixture.Dependencies);
+
             // 1 console, 3 eventhub
             Assert.AreEqual(loggers.Count, 4);
         }
@@ -355,6 +364,7 @@ namespace VirtualClient.UnitTests
             TestCommandBase testCommand = new TestCommandBase(this.mockFixture.CertificateManager.Object);
             this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
                 .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+
             List<string> loggerDefinitions = new List<string>();
             loggerDefinitions.Add("eventHub;sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
             loggerDefinitions.Add("console");
@@ -378,7 +388,11 @@ namespace VirtualClient.UnitTests
             var eventHubLogSettings = new EventHubLogSettings();
             configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
 
-            IList<ILoggerProvider> loggers = testCommand.CreateLogger(configuration, this.mockFixture.PlatformSpecifics);
+            this.mockFixture.Dependencies.RemoveAll<IConfiguration>();
+            this.mockFixture.Dependencies.AddSingleton(configuration);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(this.mockFixture.Dependencies);
+
             // 1 console, 3 serilog and 1 csv file logger, 3 eventhub
             Assert.AreEqual(loggers.Count, 8);
         }
@@ -404,9 +418,9 @@ namespace VirtualClient.UnitTests
                 this.CertificateManager = certManager;
             }
 
-            public IList<ILoggerProvider> CreateLogger(IConfiguration configuration, PlatformSpecifics platformSpecifics)
+            public IList<ILoggerProvider> CreateLogger(IServiceCollection dependencies)
             {
-                return base.InitializeLoggerProviders(configuration, platformSpecifics, null);
+                return base.InitializeLoggerProviders(dependencies, null);
             }
 
             public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)

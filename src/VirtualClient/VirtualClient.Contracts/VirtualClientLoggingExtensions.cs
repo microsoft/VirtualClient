@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Diagnostics;
     using System.Linq;
     using System.Net.Http;
+    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
@@ -299,20 +300,60 @@ namespace VirtualClient.Contracts
         /// <param name="propertyName">The property name to camel-case.</param>
         public static string CamelCased(this string propertyName)
         {
-            // We are not trying to get overly fancy here. We just make sure the first character
-            // is lower-cased and leave it at that.
-            return $"{propertyName.Substring(0, 1).ToLowerInvariant()}{propertyName.Substring(1)}";
-        }
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                return propertyName;
+            }
 
-        /// <summary>
-        /// Returns a pascal-cased version of the property name (e.g. someValue -> SomeValue).
-        /// </summary>
-        /// <param name="propertyName">The property name to pascal-case.</param>
-        public static string PascalCased(this string propertyName)
-        {
-            // We are not trying to get overly fancy here. We just make sure the first character
-            // is lower-cased and leave it at that.
-            return $"{propertyName.Substring(0, 1).ToUpperInvariant()}{propertyName.Substring(1)}";
+            // Should handle all of the following correctly:
+            // - PropertyName            -> propertyName
+            // - OperatingSystemPlatform -> operatingSystemPlatform
+            // - IPAddress               -> ipAddress
+            // - MACAddress              -> macAddress
+            // - Property_Name           -> property_Name
+
+            int precedingUpperCasedLetterCount = 0;
+
+            // Count the number of letters from the start of the word/property that are
+            // upper-cased.
+            foreach (char letter in propertyName)
+            {
+                if (char.IsUpper(letter) || !char.IsAsciiLetter(letter))
+                {
+                    precedingUpperCasedLetterCount++;
+                    continue;
+                }
+
+                break;
+            }
+
+            // Case:
+            // No upper case letters at all (e.g. timestamp).
+            if (precedingUpperCasedLetterCount == 0)
+            {
+                return propertyName;
+            }
+
+            // Case:
+            // There is only 1 upper case letter at the start (e.g. Property).
+            if (precedingUpperCasedLetterCount == 1)
+            {
+                return propertyName.Substring(0, 1).ToLowerInvariant() + propertyName.Substring(1);
+            }
+
+            // Case:
+            // The entire word is upper-cased (e.g. MAC).
+            if (precedingUpperCasedLetterCount == propertyName.Length)
+            {
+                return propertyName.ToLowerInvariant();
+            }
+
+            // Case:
+            // There are multiple upper case letters at the start of the word (e.g. MACAddress).
+            string prefix = propertyName.Substring(0, precedingUpperCasedLetterCount - 1).ToLowerInvariant();
+            string suffix = propertyName.Substring(precedingUpperCasedLetterCount - 1);
+            
+            return $"{prefix}{suffix}";
         }
 
         /// <summary>
