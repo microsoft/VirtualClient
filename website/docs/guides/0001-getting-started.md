@@ -20,20 +20,20 @@ You can find latest production quality release zip packages in [GitHub Releases]
 ### NuGet Packages
 All builds and releases of Virtual Client are published as NuGet packages for each platform-architecture (e.g. linux-arm64, linux-x64, win-arm64, win-x64).  
 
-* **linux-arm64**  
-  Builds that run on Linux operating systems with ARM64 processors.
+* **[linux-arm64]**  
+  Builds that run on Linux operating systems with ARM64 processors.  
   https://www.nuget.org/packages/VirtualClient.linux-arm64
 
 * **linux-x64**  
-  Builds that run on Linux operating systems with Intel/AMD X64 processors.
+  Builds that run on Linux operating systems with Intel/AMD X64 processors.  
   https://www.nuget.org/packages/VirtualClient.linux-x64
 
 * **win-arm64**  
-  Builds that run on Windows operating systems with ARM64 processors.
+  Builds that run on Windows operating systems with ARM64 processors.  
   https://www.nuget.org/packages/VirtualClient.win-arm64
 
 * **win-x64**  
-  Builds that run on Windows operating systems with Intel/AMD X64 processors.
+  Builds that run on Windows operating systems with Intel/AMD X64 processors.  
   https://www.nuget.org/packages/VirtualClient.win-x64
 
 You can download in a browser directly from NuGet by defining the version and copying any of the following URIs to the browser address bar. 
