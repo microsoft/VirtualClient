@@ -6,7 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -137,9 +137,23 @@ namespace VirtualClient.Actions
                 if (!string.IsNullOrEmpty(text)) 
                 {
                     try
-                    {
+                    {                        
                         SysbenchMetricsParser parser = new SysbenchMetricsParser(text);
                         IList<Metric> metrics = parser.Parse();
+                        string sysbenchVersion = null;
+
+                        var sysbenchVersionMetric = metrics.FirstOrDefault();
+                        if (sysbenchVersionMetric != null && sysbenchVersionMetric.Metadata.TryGetValue("sysbench_version", out var versionValue))
+                        {
+                            sysbenchVersion = versionValue?.ToString();
+                        }
+
+                        if (!string.IsNullOrEmpty(sysbenchVersion))
+                        {
+                            this.MetadataContract.Add("sysbench_version", sysbenchVersion, MetadataContract.DependenciesCategory);
+                        }
+
+                        this.MetadataContract.Apply(telemetryContext);
 
                         this.Logger.LogMetrics(
                             toolName: "Sysbench",
@@ -150,7 +164,8 @@ namespace VirtualClient.Actions
                             null,
                             scenarioArguments: this.sysbenchLoggingArguments,
                             this.Tags,
-                            telemetryContext);
+                            telemetryContext,
+                            toolVersion: sysbenchVersion);
                     }
                     catch (Exception exc)
                     {
@@ -166,6 +181,14 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
+                    if (this.DatabaseSystem == "MySQL")
+                    {
+                        string mysqlVersion = await this.GetMySQLVersionAsync(telemetryContext, cancellationToken);
+
+                        this.MetadataContract.Add("mysql_version", mysqlVersion, MetadataContract.DependenciesCategory);
+                        this.MetadataContract.Apply(telemetryContext);
+                    }
+
                     if (this.Benchmark == BenchmarkName.OLTP)
                     {
                         if (this.Action == ClientAction.TruncateDatabase)
@@ -181,6 +204,10 @@ namespace VirtualClient.Actions
                         else if (this.Action == ClientAction.PopulateDatabase)
                         {
                             await this.PrepareOLTPMySQLDatabase(telemetryContext, cancellationToken);
+                        }
+                        else if (this.Action == ClientAction.Cleanup)
+                        {
+                            await this.CleanUpDatabase(telemetryContext, cancellationToken);
                         }
                         else
                         {
@@ -225,6 +252,33 @@ namespace VirtualClient.Actions
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
 
                     this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                }
+            }
+        }
+
+        private async Task CleanUpDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+
+            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                                    .FirstOrDefault()?.IPAddress
+                                    ?? "localhost";
+
+            string sysbenchCleanupArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount}  --hostIpAddress {serverIp}";
+
+            string script = $"{this.SysbenchPackagePath}/cleanup-database.py ";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                SysbenchExecutor.PythonCommand,
+                script + sysbenchCleanupArguments,
+                this.SysbenchPackagePath,
+                telemetryContext,
+                cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
                 }
             }
         }
@@ -288,7 +342,7 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount}";
             this.sysbenchPrepareArguments = $"{this.sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
@@ -313,6 +367,29 @@ namespace VirtualClient.Actions
 
                     this.AddMetric(this.sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns MySQL Version.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        private async Task<string> GetMySQLVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            try
+            { 
+                IProcessProxy mysqlversionprocess = await this.ExecuteCommandAsync("sudo", $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} -e \"SELECT VERSION();\"", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                string mysqlVersion = mysqlversionprocess.StandardOutput.ToString();
+
+                Regex regex = new Regex(@"(\d+\.\d+\.\d+)");
+                Match match = regex.Match(mysqlVersion);
+
+                return match.Success ? match.Groups[1].Value : string.Empty;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
             }
         }
     }

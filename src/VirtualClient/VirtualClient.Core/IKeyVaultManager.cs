@@ -8,7 +8,6 @@ namespace VirtualClient
     using System.Threading.Tasks;
     using Azure.Security.KeyVault.Keys;
     using Polly;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides methods for retrieving secrets, keys, and certificates from an Azure Key Vault.

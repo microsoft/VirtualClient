@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <AssemblyName>VirtualClient.Controller</AssemblyName>
+        <NoWarn>SA1508;CA1416;CS4014;CA2213;IL2026</NoWarn>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+    </ItemGroup>
+
+    <Target Name="CopyWorkloadScriptsToOutput" AfterTargets="Build">
+        <Message Importance="high" Text="Publish workload scripts/content..." />
+
+        <ItemGroup>
+            <Scripts Include="@(ScriptFiles)">
+                <ScriptDirLc>$([System.String]::new('%(ScriptFiles.RelativeDir)').ToLower().Split('\\')[0])</ScriptDirLc>
+            </Scripts>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(Scripts)" DestinationFiles="@(Scripts->'$(RepoPath)\out\scripts\%(ScriptDirLc)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

@@ -6,13 +6,12 @@ set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 set BUILD_CONFIGURATION=
 set BUILD_FLAGS=
 set BUILD_VERSION=
-set VC_SOLUTION_DIR=%SCRIPT_DIR%\src\VirtualClient
-
+set BUILD_ALL=true
 set BUILD_LINUX_X64=false
 set BUILD_LINUX_ARM64=false
 set BUILD_WIN_X64=false
 set BUILD_WIN_ARM64=false
-set ANY_RUNTIME_SELECTED=false
+set VC_SOLUTION_DIR=%SCRIPT_DIR%\src\VirtualClient
 
 if /i "%~1" == "/?" Goto :Usage
 if /i "%~1" == "-?" Goto :Usage
@@ -23,19 +22,19 @@ for %%a in (%*) do (
 
     if /i "%%a" == "--linux-x64" (
         set BUILD_LINUX_X64=true
-        set ANY_RUNTIME_SELECTED=true
+        set BUILD_ALL=false
     )
     if /i "%%a" == "--linux-arm64" (
         set BUILD_LINUX_ARM64=true
-        set ANY_RUNTIME_SELECTED=true
+        set BUILD_ALL=false
     )
     if /i "%%a" == "--win-x64" (
         set BUILD_WIN_X64=true
-        set ANY_RUNTIME_SELECTED=true
+        set BUILD_ALL=false
     )
     if /i "%%a" == "--win-arm64" (
         set BUILD_WIN_ARM64=true
-        set ANY_RUNTIME_SELECTED=true
+        set BUILD_ALL=false
     )
 )
 
@@ -67,10 +66,17 @@ echo **********************************************************************
 echo:
 echo [Build Solution]
 echo -------------------------------------------------------
-call dotnet build "%VC_SOLUTION_DIR%\VirtualClient.sln" -c %BUILD_CONFIGURATION% ^
+REM We build the AnyCPU .dlls with Debug configuration to support extensions debugging for
+REM external users and partner teams.
+echo:
+echo !!!
+echo !!! Note that the solution is be built with 'Debug' configuration in order to support a better debugging experience for extensions development.
+echo !!!
+echo:
+call dotnet build "%VC_SOLUTION_DIR%\VirtualClient.sln" -c Debug -v Detailed ^
 -p:AssemblyVersion=%BUILD_VERSION% && echo: || Goto :Error
 
-if /i "%ANY_RUNTIME_SELECTED%" == "false" (
+if /i "%BUILD_ALL%" == "true" (
     set BUILD_LINUX_X64=true
     set BUILD_LINUX_ARM64=true
     set BUILD_WIN_X64=true
@@ -81,7 +87,7 @@ if /i "%BUILD_LINUX_X64%" == "true" (
     echo:
     echo [Build Virtual Client: linux-x64]
     echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% --self-contained ^
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
     -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
 )
 
@@ -89,7 +95,7 @@ if /i "%BUILD_LINUX_ARM64%" == "true" (
     echo:
     echo [Build Virtual Client: linux-arm64]
     echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% --self-contained ^
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
     -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
 )
 
@@ -97,15 +103,15 @@ if /i "%BUILD_WIN_X64%" == "true" (
     echo:
     echo [Build Virtual Client: win-x64]
     echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% --self-contained ^
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
     -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
 )
 
 if /i "%BUILD_WIN_ARM64%" == "true" (
     echo:
     echo [Build Virtual Client: win-arm64]
-    echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% --self-contained ^
+    echo ---------------------------------------------------------------------- 
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
     -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
 )
 
@@ -125,6 +131,11 @@ echo ---------------------
 echo # Build all targets:
 echo %SCRIPT_DIR%^> build.cmd
 echo:
+echo # Build with specific version and Debug configuration:
+echo set VCBuildVersion=2.1.0
+echo set VCBuildConfiguration=Debug
+echo %SCRIPT_DIR%^> build.cmd
+echo:
 echo # Build only for Windows x64
 echo %SCRIPT_DIR%^> build.cmd --win-x64
 echo:
@@ -142,11 +153,11 @@ set BUILD_CONFIGURATION=
 set BUILD_VERSION=
 set SCRIPT_DIR=
 set VC_SOLUTION_DIR=
+set BUILD_ALL=
 set BUILD_LINUX_X64=
 set BUILD_LINUX_ARM64=
 set BUILD_WIN_X64=
 set BUILD_WIN_ARM64=
-set ANY_RUNTIME_SELECTED=
 
 echo Build Stage Exit Code: %EXIT_CODE%
 

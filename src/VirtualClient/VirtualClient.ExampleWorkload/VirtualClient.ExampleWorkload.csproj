@@ -13,10 +13,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
-        <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
-        <PackageReference Include="System.IO.Abstractions" Version="$(System_IO_Abstractions_PackageVersion)" />
-        <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+        <PackageReference Include="System.CommandLine" />
+        <PackageReference Include="System.IO.Abstractions" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" />
     </ItemGroup>
 
     <ItemGroup>

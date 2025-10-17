@@ -175,7 +175,7 @@ namespace VirtualClient.Actions
                 // Point 3DMark to DLC Path
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --path={this.DLCPath}", this.psexecDir))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     try
                     {
@@ -201,7 +201,7 @@ namespace VirtualClient.Actions
                 // Lisence Registry
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LisenceKey}", this.psexecDir))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     try
                     {
@@ -238,7 +238,7 @@ namespace VirtualClient.Actions
 
                         using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
+                            this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                             try
                             {
@@ -264,7 +264,7 @@ namespace VirtualClient.Actions
                         string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
                         using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
+                            this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                             try
                             {

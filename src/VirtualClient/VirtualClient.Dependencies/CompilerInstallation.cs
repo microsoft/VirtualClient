@@ -347,7 +347,7 @@ namespace VirtualClient.Dependencies
                  string output = string.Empty;
                  using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                  {
-                     this.CleanupTasks.Add(() => process.SafeKill());
+                     this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                      this.LogProcessTrace(process);
 
                      await process.StartAndWaitAsync(cancellationToken);

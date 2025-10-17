@@ -3,8 +3,15 @@
 
 namespace VirtualClient
 {
+    using Azure.Storage.Blobs;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
+    using Polly;
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
@@ -12,10 +19,7 @@ namespace VirtualClient
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -160,9 +164,17 @@ namespace VirtualClient
                 Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)ErrorReason.NotSupported;
             }
+            catch (StartupException exc)
+            {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = (int)exc.Reason;
+            }
             catch (VirtualClientException exc)
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
                 exitCode = (int)exc.Reason;
             }
             catch (Exception exc)
@@ -302,7 +314,7 @@ namespace VirtualClient
                     // If the profile defined is not a full path to a profile located on the system, then we
                     // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
                     // parent directory itself or in any platform extensions locations.
-                    throw new DependencyException(
+                    throw new StartupException(
                         $"Profile not found. Profile does not exist at the path '{profileFullPath}' nor in any extensions location.",
                         ErrorReason.ProfileNotFound);
                 }
@@ -371,7 +383,7 @@ namespace VirtualClient
             ExecutionProfile profile = await this.ReadExecutionProfileAsync(profiles.First(), dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
-            this.InitializeProfile(profile);
+            await this.InitializeProfileAsync(profile, dependencies);
 
             if (profiles.Count() > 1)
             {
@@ -380,7 +392,7 @@ namespace VirtualClient
                     ExecutionProfile otherProfile = await this.ReadExecutionProfileAsync(additionalProfile, dependencies, cancellationToken)
                         .ConfigureAwait(false);
 
-                    this.InitializeProfile(otherProfile);
+                    await this.InitializeProfileAsync(otherProfile, dependencies);
                     profile = profile.MergeWith(otherProfile);
                 }
             }
@@ -394,7 +406,7 @@ namespace VirtualClient
                 ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
                     .ConfigureAwait(false);
 
-                this.InitializeProfile(fileUploadMonitorProfile);
+                await this.InitializeProfileAsync(fileUploadMonitorProfile, dependencies);
                 profile = profile.MergeWith(fileUploadMonitorProfile);
             }
 
@@ -423,8 +435,9 @@ namespace VirtualClient
 
                     if (!systemManagement.FileSystem.File.Exists(layoutFullPath))
                     {
-                        throw new FileNotFoundException(
-                            $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.");
+                        throw new StartupException(
+                            $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.",
+                            ErrorReason.LayoutInvalid);
                     }
 
                     string layoutContent = await RetryPolicies.FileOperations
@@ -648,6 +661,7 @@ namespace VirtualClient
             };
 
             // Only dependencies defined in the profile will be considered.
+            dependencies.AddSingleton(profile);
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
             {
                 profileExecutor.ExecuteActions = false;
@@ -748,6 +762,7 @@ namespace VirtualClient
                 Seed = this.RandomizationSeed
             };
 
+            dependencies.AddSingleton(profile);
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, componentSettings, this.Scenarios, logger))
             {
                 profileExecutor.BeforeExiting += (source, args) =>
@@ -762,7 +777,7 @@ namespace VirtualClient
             }
         }
 
-        private void InitializeProfile(ExecutionProfile profile)
+        private async Task InitializeProfileAsync(ExecutionProfile profile, IServiceCollection dependencies)
         {
             if (this.Metadata?.Any() == true)
             {
@@ -779,6 +794,10 @@ namespace VirtualClient
 
             ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
             result.ThrowIfInvalid();
+
+            // Process conditional parameters (ParametersOn feature)
+            await profile.EvaluateConditionalParametersAsync(dependencies);
+
             profile.Inline();
         }
 
@@ -817,6 +836,7 @@ namespace VirtualClient
             ConsoleLogger.Default.LogMessage($"Log Directory: {platformSpecifics.LogsDirectory}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Package Directory: {platformSpecifics.PackagesDirectory}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"State Directory: {platformSpecifics.StateDirectory}", telemetryContext);
+            ConsoleLogger.Default.LogMessage($"Temp Directory: {platformSpecifics.TempDirectory}", telemetryContext);
 
             if (!string.IsNullOrWhiteSpace(this.LayoutPath))
             {

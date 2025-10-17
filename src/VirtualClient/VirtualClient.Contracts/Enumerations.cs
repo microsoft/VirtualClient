@@ -281,6 +281,11 @@ namespace VirtualClient
         Unauthorized = 540,
 
         /// <summary>
+        /// Certificate provided by user is either expired or not found.
+        /// </summary>
+        InvalidCertificate = 541,
+
+        /// <summary>
         /// The environment layout is null.
         /// </summary>
         EnvironmentLayoutNotDefined = 550,

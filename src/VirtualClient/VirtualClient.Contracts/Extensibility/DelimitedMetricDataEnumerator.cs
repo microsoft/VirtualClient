@@ -66,8 +66,8 @@ namespace VirtualClient.Contracts.Extensibility
                         dataPoint.MetricVerbosity = int.Parse(fieldValue);
                         break;
 
-                    case "scenario":
-                        dataPoint.Scenario = fieldValue;
+                    case "scenarioname":
+                        dataPoint.ScenarioName = fieldValue;
                         break;
 
                     case "scenarioendtime":
@@ -78,16 +78,16 @@ namespace VirtualClient.Contracts.Extensibility
                         dataPoint.ScenarioStartTime = DateTime.Parse(fieldValue, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
                         break;
 
-                    case "toolset":
-                        dataPoint.Toolset = fieldValue;
+                    case "toolname":
+                        dataPoint.ToolName = fieldValue;
                         break;
 
-                    case "toolsetresults":
-                        dataPoint.ToolsetResults = fieldValue;
+                    case "toolresults":
+                        dataPoint.ToolResults = fieldValue;
                         break;
 
-                    case "toolsetversion":
-                        dataPoint.ToolsetVersion = fieldValue;
+                    case "toolversion":
+                        dataPoint.ToolVersion = fieldValue;
                         break;
                 }
             }

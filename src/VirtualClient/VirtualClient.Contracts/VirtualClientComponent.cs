@@ -61,6 +61,7 @@ namespace VirtualClient.Contracts
             this.FailFast = component.FailFast;
             this.LogToFile = component.LogToFile;
             this.MetadataContract = component.MetadataContract;
+            this.ContentPathTemplate = component.ContentPathTemplate;
 
             if (component.Metadata?.Any() == true)
             {
@@ -237,6 +238,24 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The name of the file to which log files should be
+        /// written (e.g. ipmiutil -> ipmiutil_sel.log).
+        /// </summary>
+        public string LogFileName
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.LogFileName), out IConvertible logFileName);
+                return logFileName?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogFolderName)] = value;
+            }
+        }
+
+        /// <summary>
         /// The name of the directory/folder to which log files should be
         /// written (e.g. geekbench -> ./logs/geekbench).
         /// </summary>
@@ -273,6 +292,23 @@ namespace VirtualClient.Contracts
             protected set
             {
                 this.Parameters[nameof(this.LogToFile)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True/false whether log files written will have timestamps appended to the 
+        /// file names (e.g. 2023-02-01-100530635478-geekbench.log). Default = true.
+        /// </summary>
+        public bool LogTimestamped
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.LogTimestamped), true);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogTimestamped)] = value;
             }
         }
 
@@ -359,7 +395,7 @@ namespace VirtualClient.Contracts
         /// placeholders and well-known terms to be replaced in the values of the parameters before
         /// execution of workloads, monitors or dependencies.
         /// </summary>
-        public bool ParametersEvaluated { get; internal set; }
+        public bool ParametersEvaluated { get; protected set; }
 
         /// <summary>
         /// The OS/system platform (e.g. Windows, Unix).
@@ -639,6 +675,28 @@ namespace VirtualClient.Contracts
             }
 
             return platformSupported && component.IsSupported();
+        }
+
+        /// <summary>
+        /// Evaluates each of the parameters provided to the component to replace
+        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
+        public async Task EvaluateParametersAsync(CancellationToken cancellationToken, bool force = false)
+        {
+            if (!this.ParametersEvaluated || force)
+            {
+                if (this.Parameters?.Any() == true)
+                {
+                    if (this.Dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
+                    {
+                        await evaluator.EvaluateAsync(this.Dependencies, this.Parameters, cancellationToken);
+                    }
+                }
+
+                this.ParametersEvaluated = true;
+            }
         }
 
         /// <summary>

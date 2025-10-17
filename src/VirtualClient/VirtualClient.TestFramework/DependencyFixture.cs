@@ -429,7 +429,7 @@ namespace VirtualClient
 
             Mock<IBlobManager> contentBlobManager = new Mock<IBlobManager>();
             contentBlobManager.SetupGet(mgr => mgr.StoreDescription).Returns(new DependencyBlobStore(DependencyStore.Content, "connection token"));
-            contentBlobManager.Setup(mgr => mgr.UploadBlobAsync(It.IsAny<DependencyDescriptor>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy>()))
+            contentBlobManager.Setup(mgr => mgr.UploadBlobAsync(It.IsAny<DependencyDescriptor>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>(), It.IsAny<IDictionary<string, IConvertible>>(), It.IsAny<IAsyncPolicy>()))
                 .ReturnsAsync(new BlobDescriptor
                 {
                     Name = "any/path/to/blob/content.txt",

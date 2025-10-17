@@ -6,7 +6,7 @@ namespace VirtualClient
 
     using System;
     using System.Collections.Generic;
-    using System.Configuration;
+    using System.Collections.ObjectModel;
     using System.Data;
     using System.Diagnostics;
     using System.IO;
@@ -18,7 +18,6 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -40,10 +39,8 @@ namespace VirtualClient
     /// </summary>
     public abstract class CommandBase
     {
-        private const string defaultPackageStoreUri = "https://virtualclient.blob.core.windows.net/packages";
-        private static List<ILogger> proxyApiDebugLoggers = new List<ILogger>();
-        private string experimentId;
-        private string clientId;
+        private const string defaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
+        private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandBase"/> class.
@@ -51,6 +48,9 @@ namespace VirtualClient
         protected CommandBase()
         {
             this.CertificateManager = new CertificateManager();
+            this.ClientId = Environment.MachineName.ToLowerInvariant();
+            this.ClientInstance = Guid.NewGuid();
+            this.ExperimentId = Guid.NewGuid().ToString().ToLowerInvariant();
         }
 
         /// <summary>
@@ -67,18 +67,13 @@ namespace VirtualClient
         /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
         /// and to include in telemetry output.
         /// </summary>
-        public string ClientId
-        {
-            get
-            {
-                return this.clientId;
-            }
+        public string ClientId { get; set; }
 
-            set
-            {
-                this.clientId = value?.ToLowerInvariant();
-            }
-        }
+        /// <summary>
+        /// The ID to use as the identifier for the agent (i.e. the instance of Virtual Client)
+        /// and to include in telemetry output.
+        /// </summary>
+        public Guid ClientInstance { get; }
 
         /// <summary>
         /// Describes the target store to which content files/logs should be uploaded.
@@ -121,18 +116,7 @@ namespace VirtualClient
         /// <summary>
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
-        public string ExperimentId
-        {
-            get
-            {
-                return this.experimentId;
-            }
-
-            set
-            {
-                this.experimentId = value?.ToLowerInvariant();
-            }
-        }
+        public string ExperimentId { get; set; }
 
         /// <summary>
         /// True if a request to perform clean operations was requested on the
@@ -147,7 +131,14 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Describes the target Key vault from where secrets and certificates shold be accessed.
+        /// True if the application should run with isolation in place. This flag causes
+        /// the application to use logs, packages, state and temp directories that are unique
+        /// to the experiment ID defined.
+        /// </summary>
+        public bool Isolated { get; set; }
+
+        /// <summary>
+        /// Describes the target Key vault from where secrets and certificates should be accessed.
         /// </summary>
         public string KeyVault { get; set; }
 
@@ -230,6 +221,23 @@ namespace VirtualClient
         /// </remarks>
         public string StateDirectory { get; set; }
 
+        /// <summary>
+        /// The target agents/systems to establish an SSH session (e.g. anyuser@192.168.1.15;pass_w_@rd).
+        /// </summary>
+        public IEnumerable<string> TargetAgents { get; set; }
+
+        /// <summary>
+        /// An alternate directory to which temp files/documents should be written. Setting this overrides
+        /// the defaults and takes precedence over any 'VC_TEMP_DIR' environment variable values.
+        /// </summary>
+        /// <remarks>
+        /// Order of Priority
+        /// 1) --temp-dir command line option defined location
+        /// 2) VC_TEMP_DIR environment variable defined location
+        /// 3) default /temp folder location.
+        /// </remarks>
+        public string TempDirectory { get; set; }
+
         /// <summary>s
         /// True to have debug/verbose output emitted to standard output on
         /// the console/terminal.
@@ -305,6 +313,7 @@ namespace VirtualClient
                         await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
                         {
                             await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
+                            await systemManagement.CleanContentUploadsDirectoryAsync(cancellationToken, logRetentionDate);
                         });
                     }
                     catch
@@ -371,7 +380,7 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(this.LogDirectory))
             {
                 // Users can override on the command line with the --log-dir option.
-                platformSpecifics.LogsDirectory = this.LogDirectory;
+                platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(this.LogDirectory);
             }
             else
             {
@@ -379,7 +388,7 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_LOGS_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.LogsDirectory = environmentVariableValue;
+                    platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(environmentVariableValue);
                 }
             }
 
@@ -389,23 +398,15 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(this.PackageDirectory))
             {
                 // Users can override on the command line with the --package-dir option.
-                platformSpecifics.PackagesDirectory = this.PackageDirectory;
+                platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(this.PackageDirectory);
             }
             else
             {
-                // Users can also override using the 'VC_PACKAGES_DIR' or 'SDK_PACKAGES_DIR' environment variables.
-                string environmentVariableValue1 = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
-                string environmentVariableValue2 = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_PACKAGES_DIR);
-                if (!string.IsNullOrWhiteSpace(environmentVariableValue1))
+                // Users can also override using the 'VC_PACKAGES_DIR' environment variable.
+                string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
+                if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.PackagesDirectory = environmentVariableValue1;
-                }
-                else if (!string.IsNullOrWhiteSpace(environmentVariableValue2))
-                {
-                    // We also support an environment variable 'SDK_PACKAGES_DIR' for other use cases where naming conventions
-                    // follow a different nomenclature related to VC being used as an SDK. The 'VC_PACKAGES_DIR' environment variable
-                    // noted above takes precedence.
-                    platformSpecifics.PackagesDirectory = environmentVariableValue2;
+                    platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(environmentVariableValue);
                 }
             }
 
@@ -415,7 +416,7 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(this.StateDirectory))
             {
                 // Users can override on the command line with the --state-dir option.
-                platformSpecifics.StateDirectory = this.StateDirectory;
+                platformSpecifics.StateDirectory = this.EvaluatePathReplacements(this.StateDirectory);
             }
             else
             {
@@ -423,11 +424,28 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_STATE_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.StateDirectory = environmentVariableValue;
+                    platformSpecifics.StateDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                }
+            }
+
+            // Priority (temp directory):
+            // 1) --temp-dir command line option
+            // 2) VC_TEMP_DIR environment variable
+            if (!string.IsNullOrWhiteSpace(this.TempDirectory))
+            {
+                // Users can override on the command line with the --temp-dir option.
+                platformSpecifics.TempDirectory = this.EvaluatePathReplacements(this.TempDirectory);
+            }
+            else
+            {
+                // Users can also override using the 'VC_TEMP_DIR' environment variable.
+                string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_TEMP_DIR);
+                if (!string.IsNullOrWhiteSpace(environmentVariableValue))
+                {
+                    platformSpecifics.TempDirectory = this.EvaluatePathReplacements(environmentVariableValue);
                 }
             }
         }
-
 
         /// <summary>
         /// Returns the full set of logger definitions to use when constructing the application
@@ -435,7 +453,7 @@ namespace VirtualClient
         /// </summary>
         protected virtual IEnumerable<string> GetLoggerDefinitions()
         {
-            List<string> loggerDefinitions = this.Loggers?.Select(logger => logger.Trim())?.ToList() ?? new List<string>();
+            List<string> loggerDefinitions = this.Loggers?.Select(logger => logger.Trim())?.Distinct()?.ToList() ?? new List<string>();
 
             // Add default console logging
             // e.g. (--logger=console)
@@ -445,15 +463,17 @@ namespace VirtualClient
             }
 
             // backward compatibility for --eventhub
-            if (!string.IsNullOrEmpty(this.EventHubStore))
+            if (!string.IsNullOrEmpty(this.EventHubStore) && loggerDefinitions?.Any(l => Regex.IsMatch(l, "^eventhub", RegexOptions.IgnoreCase)) != true)
             {
                 loggerDefinitions.Add($"eventhub;{this.EventHubStore}");
             }
 
             // Proxy API client
-            // e.g. (--logger=proxy;http://192.168.1.25:9812)
-            if (!loggerDefinitions.Any(l => Regex.IsMatch(l, "^proxy;", RegexOptions.IgnoreCase)) && this.ProxyApiUri != null)
+            // e.g. (--logger=proxy -> --logger=proxy;http://192.168.1.25:9812)
+            if (this.ProxyApiUri != null && loggerDefinitions?.Any(l => Regex.IsMatch(l, "^proxy;http", RegexOptions.IgnoreCase)) != true)
             {
+                // Remove if --logger=proxy was supplied. We need a complete definition.
+                loggerDefinitions.Remove("proxy");
                 loggerDefinitions.Add($"proxy;{this.ProxyApiUri.ToString()}");
             }
 
@@ -490,6 +510,25 @@ namespace VirtualClient
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
+            if (this.Metadata?.Any() == true)
+            {
+                // Metadata passed into VC on the command line.
+                VirtualClientRuntime.CommandLineMetadata = new ReadOnlyDictionary<string, IConvertible>(this.Metadata);
+            }
+
+            if (this.Parameters?.Any() == true)
+            {
+                // Parameters passed into VC on the command line.
+                VirtualClientRuntime.CommandLineParameters = new ReadOnlyDictionary<string, IConvertible>(this.Parameters);
+            }
+
+            // Ensure that isolation is in place for controller operations. This helps
+            // protect against race conditions with package management/download/extract operations.
+            if (this.TargetAgents?.Any() == true)
+            {
+                this.Isolated = true;
+            }
+
             // Users can override the location of the "logs", "packages" and "state" folders on the command line
             // or by using environment variables. This is used in scenarios where VC may be used as a base for other
             // applications that want to have a shared resource + dependency directories.
@@ -521,7 +560,8 @@ namespace VirtualClient
                 this.ClientId,
                 this.ExperimentId,
                 platformSpecifics,
-                logger);
+                logger,
+                this.Isolated);
 
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IProfileManager profileManager = new ProfileManager();
@@ -548,10 +588,8 @@ namespace VirtualClient
                 this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
                 this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
 
-                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces-blobs.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
+                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
                     .CreateLogger("Proxy");
-
-                CommandBase.proxyApiDebugLoggers.Add(debugLogger);
 
                 blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString(), debugLogger, certificate));
                 blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString(), debugLogger, certificate));
@@ -578,10 +616,8 @@ namespace VirtualClient
                     IConvertible packageSource = null;
                     this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
 
-                    ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces-blobs.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
+                    ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
                         .CreateLogger("Proxy");
-
-                    CommandBase.proxyApiDebugLoggers.Add(debugLogger);
 
                     blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
 
@@ -621,6 +657,22 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
 
+            // Add in any SSH targets to the dependencies.
+            if (this.TargetAgents?.Any() == true)
+            {
+                List<ISshClientProxy> sshClients = new List<ISshClientProxy>();
+                foreach (string targetAgent in this.TargetAgents)
+                {
+                    if (SshClientProxy.TryGetSshTargetInformation(targetAgent, out string host, out string username, out string password))
+                    {
+                        ISshClientProxy sshClient = sshClientFactory.CreateClient(host, username, password);
+                        sshClients.Add(sshClient);
+                    }
+                }
+
+                dependencies.AddSingleton<IEnumerable<ISshClientProxy>>(sshClients);
+            }
+
             return dependencies;
         }
 
@@ -640,7 +692,7 @@ namespace VirtualClient
 
                 // e.g.
                 // --logger=eventhub;sb://anynamespace.servicebus.net?cid=4F93d5a6-7833-4434-8a93-27b0d2ae624c&tid=77ab...
-                // --logger=SummaryFileLoggerProvider;../logs/{experimentId}-summary.txt
+                // --logger=summary;../logs/{experimentId}-summary.txt
                 int indexOfDelimiter = loggerDefinition.IndexOf(';');
                 if (indexOfDelimiter >= 0)
                 {
@@ -648,25 +700,16 @@ namespace VirtualClient
                     loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1).Trim();
                 }
 
-                // Support placeholder replacements (e.g. {experimentId}, {agentId}).
-                IDictionary<string, IConvertible> replacements = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-                {
-                    { "experimentId", this.ExperimentId },
-                    { "agentId", this.ClientId },
-                    { "clientId", this.ClientId }
-                };
-
-                if (this.Metadata?.Any() == true)
-                {
-                    replacements.AddRange(this.Metadata);
-                }
-
-                loggerParameters = FileContext.ResolvePathTemplate(loggerParameters, replacements);
+                loggerParameters = this.EvaluatePathReplacements(loggerParameters);
 
                 switch (loggerName.ToLowerInvariant())
                 {
                     case "console":
                         CommandBase.AddConsoleLogging(loggingProviders, loggingLevel);
+                        break;
+
+                    case "csv":
+                        CommandBase.AddCsvLogging(loggingProviders, platformSpecifics);
                         break;
 
                     case "file":
@@ -679,24 +722,15 @@ namespace VirtualClient
                         break;
 
                     case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, new Uri(loggerParameters), this.CertificateManager, source);
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, loggerParameters, this.CertificateManager, source);
                         break;
 
                     case "summary":
-                        ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(string.Empty);
-                        loggingProviders.Add(summaryLoggerProvider);
+                        CommandBase.AddSummaryLogging(loggingProviders, loggerParameters);
                         break;
 
                     default:
-                        if (!ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type subcomponentType))
-                        {
-                            throw new TypeLoadException(
-                                $"Specified logger '{loggerName}' is not supported. It may not be a valid ILoggerProvider implementation " +
-                                $"or is not defined in the extensions assemblies provided to the application.");
-                        }
-
-                        ILoggerProvider customLoggerProvider = (ILoggerProvider)Activator.CreateInstance(subcomponentType, loggerParameters);
-                        loggingProviders.Add(customLoggerProvider);
+                        CommandBase.AddCustomLogging(loggingProviders, loggerName, loggerParameters);
                         break;
                 }
             }
@@ -711,7 +745,6 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         protected virtual async Task InitializePackagesAsync(IPackageManager packageManager, CancellationToken cancellationToken)
         {
-            // 3) Initialize, discover and register any pre-existing packages on the system.
             await packageManager.InitializePackagesAsync(cancellationToken);
 
             IEnumerable<DependencyPath> packages = await packageManager.DiscoverPackagesAsync(cancellationToken);
@@ -735,7 +768,7 @@ namespace VirtualClient
             {
                 [MetadataContract.ExperimentId] = this.ExperimentId,
                 [MetadataContract.ClientId] = this.ClientId,
-                [MetadataContract.ClientInstance] = Guid.NewGuid().ToString().ToLowerInvariant(),
+                [MetadataContract.ClientInstance] = this.ClientInstance.ToString().ToLowerInvariant(),
                 [MetadataContract.AppVersion] = extensionsVersion ?? platformVersion,
                 [MetadataContract.AppPlatformVersion] = platformVersion,
                 [MetadataContract.ExecutionArguments] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
@@ -744,8 +777,8 @@ namespace VirtualClient
                 [MetadataContract.PlatformArchitecture] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
             });
 
-            IDictionary<string, IConvertible> parameters = this.Parameters?.ObscureSecrets();
-            EventContext.PersistentProperties[MetadataContract.Parameters] = parameters;
+            IDictionary<string, IConvertible> safeParameters = this.Parameters?.ObscureSecrets();
+            EventContext.PersistentProperties[MetadataContract.Parameters] = safeParameters;
 
             IDictionary<string, object> metadata = new Dictionary<string, object>();
 
@@ -757,17 +790,49 @@ namespace VirtualClient
                 });
             }
 
-            EventContext.PersistentProperties[MetadataContract.DefaultCategory] = metadata;
-
-            MetadataContract.Persist(
-                metadata?.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                MetadataContract.DefaultCategory);
+            IDictionary<string, object> safeMetadata = metadata?.ObscureSecrets();
+            EventContext.PersistentProperties[MetadataContract.DefaultCategory] = safeMetadata;
+            MetadataContract.Persist(safeMetadata, MetadataContract.DefaultCategory);
         }
 
         private static void AddConsoleLogging(List<ILoggerProvider> loggerProviders, LogLevel level)
         {
             loggerProviders.Add(new VirtualClient.Logging.ConsoleLoggerProvider(level)
                 .HandleTraces());
+        }
+
+        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, PlatformSpecifics platformSpecifics)
+        {
+            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(platformSpecifics.LogsDirectory);
+
+            if (logProviders?.Any() == true)
+            {
+                loggingProviders.AddRange(logProviders);
+            }
+        }
+
+        private static void AddCustomLogging(List<ILoggerProvider> loggingProviders, string loggerName, string loggerParameters)
+        {
+            List<Type> loggerProviderTypes = new List<Type>();
+            if (ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type providerType))
+            {
+                loggerProviderTypes.Add(providerType);
+            }
+            else if (ComponentTypeCache.Instance.TryGetComponentTypes(typeof(ILoggerProvider), loggerName, out IEnumerable<Type> providerTypes))
+            {
+                loggerProviderTypes.AddRange(providerTypes);
+            }
+            else
+            {
+                throw new TypeLoadException(
+                    $"The specified logger '{loggerName}' or alias is not supported. It may not be a valid {nameof(ILoggerProvider)} implementation " +
+                    $"or is not defined in the extensions assemblies provided to the application.");
+            }
+
+            foreach (Type loggerProviderType in loggerProviderTypes)
+            {
+                loggingProviders.Add((ILoggerProvider)Activator.CreateInstance(loggerProviderType, loggerParameters));
+            }
         }
 
         private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level)
@@ -794,20 +859,20 @@ namespace VirtualClient
                 FileLogSettings.Default(), 
                 level);
 
-            if (loggingProviders?.Any() == true)
+            if (logProviders?.Any() == true)
             {
                 loggingProviders.AddRange(logProviders);
             }
         }
 
-        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, Uri proxyApiUri, ICertificateManager certificateManager, string source = null)
+        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, string parameters, ICertificateManager certificateManager, string source = null)
         {
-            if (proxyApiUri != null)
-            {
-                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Trace)
+            ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
                     .CreateLogger("Proxy");
 
-                CommandBase.proxyApiDebugLoggers.Add(debugLogger);
+            if (!string.IsNullOrEmpty(parameters))
+            {
+                Uri proxyApiUri = new Uri(parameters);
 
                 X509Certificate2 certificate = null;
                 if (EndpointUtility.TryParseCertificateReference(proxyApiUri, out string issuer, out string subject))
@@ -820,6 +885,33 @@ namespace VirtualClient
 
                 loggingProviders.Add(new ProxyLoggerProvider(telemetryChannel, source));
             }
+        }
+
+        private static void AddSummaryLogging(List<ILoggerProvider> loggingProviders, string loggerParameters)
+        {
+            ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(loggerParameters);
+            loggingProviders.Add(summaryLoggerProvider);
+        }
+
+        private string EvaluatePathReplacements(string path)
+        {
+            if (this.pathReplacements == null)
+            {
+                // Support placeholder replacements (e.g. {experimentId}, {agentId}).
+                this.pathReplacements = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "experimentId", this.ExperimentId },
+                    { "agentId", this.ClientId },
+                    { "clientId", this.ClientId }
+                };
+
+                if (this.Metadata?.Any() == true)
+                {
+                    this.pathReplacements.AddRange(this.Metadata);
+                }
+            }
+
+            return FileContext.ResolvePathTemplate(path, this.pathReplacements);
         }
     }
 }

@@ -46,5 +46,17 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "latency p95", 68.05, "milliseconds");
             MetricAssert.Exists(metrics, "latency sum", 7458385.25, "milliseconds");
         }
+
+        [Test]
+        public void SysbenchParserParsesMetricsMetadataCorrectly()
+        {
+            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "SysbenchExample1.txt"));
+            SysbenchMetricsParser parser = new SysbenchMetricsParser(rawText);
+
+            IList<Metric> metrics = parser.Parse();
+            Assert.AreEqual(17, metrics.Count);
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("sysbench_version"));
+            Assert.IsTrue(metrics[0].Metadata["sysbench_version"].Equals("1.1.0"));
+        }
     }
 }

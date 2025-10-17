@@ -40,7 +40,7 @@ namespace VirtualClient.Contracts.Extensibility
             this.AppName = dataPoint.AppName;
             this.AppVersion = dataPoint.AppVersion;
             this.ClientId = dataPoint.ClientId;
-            this.ExecutionProfile = dataPoint.ExecutionProfile;
+            this.ProfileName = dataPoint.ProfileName;
             this.ExecutionSystem = dataPoint.ExecutionSystem;
             this.ExperimentId = dataPoint.ExperimentId;
             this.OperatingSystemPlatform = dataPoint.OperatingSystemPlatform;
@@ -95,14 +95,6 @@ namespace VirtualClient.Contracts.Extensibility
         [JsonProperty("clientId", Required = Required.Default)]
         [YamlMember(Alias = "clientId", ScalarStyle = ScalarStyle.Plain)]
         public string ClientId;
-
-        /// <summary>
-        /// A name describing the operations profile. This may be the name of a JSON profile file
-        /// or may be any other logical name describing the overall purpose of the operations workflow.
-        /// </summary>
-        [JsonProperty("executionProfile", Required = Required.Default)]
-        [YamlMember(Alias = "executionProfile", ScalarStyle = ScalarStyle.Plain)]
-        public string ExecutionProfile;
 
         /// <summary>
         /// A name describing an execution system in which the application is running.
@@ -161,6 +153,14 @@ namespace VirtualClient.Contracts.Extensibility
         [JsonProperty("platformArchitecture", Required = Required.Default)]
         [YamlMember(Alias = "platformArchitecture", ScalarStyle = ScalarStyle.Plain)]
         public string PlatformArchitecture;
+
+        /// <summary>
+        /// A name describing the operations profile. This may be the name of a JSON profile file
+        /// or may be any other logical name describing the overall purpose of the operations workflow.
+        /// </summary>
+        [JsonProperty("profileName", Required = Required.Default)]
+        [YamlMember(Alias = "profileName", ScalarStyle = ScalarStyle.Plain)]
+        public string ProfileName;
 
         /// <summary>
         /// The severity/concern level represented by the data point. 
@@ -245,9 +245,9 @@ namespace VirtualClient.Contracts.Extensibility
                 validationErrors.Add("A client ID is required (clientId).");
             }
 
-            if (string.IsNullOrWhiteSpace(this.ExecutionProfile))
+            if (string.IsNullOrWhiteSpace(this.ProfileName))
             {
-                validationErrors.Add("An execution profile is required (executionProfile).");
+                validationErrors.Add("A profile name is required (profileName).");
             }
 
             if (string.IsNullOrWhiteSpace(this.ExperimentId))

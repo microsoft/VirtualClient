@@ -138,16 +138,13 @@
          Build Output Diagnostics targets
      *********************************************************************** -->
     <Target Name="ShowBuildPropertiesInOutput" BeforeTargets="Build" Condition="'$(BuildPropertyOutput)' == 'true'">
+		<Message Text=" " Importance="High" />
         <Message Text="************************************************************" Importance="High" />
-        <Message Text="*** Property/Macro Values:" Importance="High" />
         <Message Text="MSBuildProjectName            : '$(MSBuildProjectName)'" Importance="High" />
-        <Message Text="DefineConstants               : '$(DefineConstants)'" Importance="High" />
         <Message Text="OutputType                    : '$(OutputType)'" Importance="High" />
-        <Message Text="ModuleName                    : '$(ModuleName)'" Importance="High" />
         <Message Text="ModulePath                    : '$(ModulePath)'" Importance="High" />
         <Message Text="AssemblyVersion               : '$(AssemblyVersion)'" Importance="High" />
         <Message Text="FileVersion                   : '$(FileVersion)'" Importance="High" />
-        <Message Text="PackageVersion                : '$(Version)'" Importance="High" Condition="'$(Version)' != '' and '$(Version)' != '1.0.0'" />
         <Message Text="Product                       : '$(Product)'" Importance="High" />
         <Message Text="BuildInParallel               : '$(BuildInParallel)'" Importance="High" />
         <Message Text="BuildEnvPath                  : '$(BuildEnvPath)'" Importance="High" />
@@ -184,26 +181,14 @@
         <Message Text="TargetFramework               : '$(TargetFramework)'" Importance="High" />
         <Message Text="Configuration                 : '$(Configuration)'" Importance="High" />
         <Message Text="Platform                      : '$(Platform)'" Importance="High" />
-        <Message Text="PlatformName                  : '$(PlatformName)'" Importance="High" />
-        <Message Text="PlatformTarget                : '$(PlatformTarget)'" Importance="High" />
-        <Message Text="IsDotNetCore                  : '$(IsDotNetCore)'" Importance="High" />
-        <Message Text="IsDotNetStandard              : '$(IsDotNetStandard)'" Importance="High" />
-        <Message Text="IsUniversalWindows            : '$(IsUniversalWindows)'" Importance="High" />
         <Message Text="RuntimeIdentifier             : '$(RuntimeIdentifier)'" Importance="High" />
-        <Message Text="RuntimeIdentifiers            : '$(RuntimeIdentifiers)'" Importance="High" />
-        <Message Text="VCTargetsPath                 : '$(VCTargetsPath)'" Importance="High" />
         <Message Text="MSBuildExtensionsPath         : '$(MSBuildExtensionsPath)'" Importance="High" />
         <Message Text="MSBuildTasksAssemblyFullPath  : '$(MSBuildTasksAssemblyFullPath)'" Importance="High" />
         <Message Text="MSBuildAssemblyVersion        : '$(MSBuildAssemblyVersion)'" Importance="High" />
-        <Message Text="ProjectTypeExtension          : '$(ProjectTypeExtension)'" Importance="High" />
-        <Message Text="BuildingInsideVisualStudio    : '$(BuildingInsideVisualStudio)'" Importance="High" />
-        <Message Text="RunCodeAnalysis               : '$(RunCodeAnalysis)'" Importance="High" />
         <Message Text="CodeAnalysisRuleSet           : '$(CodeAnalysisRuleSet)'" Importance="High" />
         <Message Text="NoWarn                        : '$(NoWarn)'" Importance="High" />
         <Message Text="DocumentationFile             : '$(DocumentationFile)'" Importance="High" />
-        <Message Text="DocumentationMarkDownFile     : '$(DocumentationMarkDownFile)'" Importance="High" />
-        <Message Text="AppxPackageDir                : '$(AppxPackageDir)'" Importance="High" />
-        <Message Text="AssemblySearchPaths           : '$(AssemblySearchPaths)'" Importance="High" />
+		<Message Text="DefineConstants               : '$(DefineConstants)'" Importance="High" />
         <Message Text="************************************************************" Importance="High" />
         <Message Text=" " Importance="High" />
     </Target>

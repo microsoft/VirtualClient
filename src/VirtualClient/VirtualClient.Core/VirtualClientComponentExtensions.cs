@@ -145,7 +145,7 @@ namespace VirtualClient
                     process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
-                component.CleanupTasks.Add(() => process.SafeKill());
+                component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
                 component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
@@ -560,7 +560,7 @@ namespace VirtualClient
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
                                         BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
-                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
+                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken, component.Metadata);
 
                                         if (uploadManifest && descriptor.Manifest?.Any() == true)
                                         {

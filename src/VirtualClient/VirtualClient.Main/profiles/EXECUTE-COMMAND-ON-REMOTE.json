@@ -1,0 +1,23 @@
+{
+    "Description": "Executes a command through the agent on a remote system.",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": {
+        "Command": null,
+        "SshTarget": null,
+        "SshPassword": null
+    },
+    "Actions": [
+        {
+            "Type": "RemoteAgentExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteAgentOnTarget",
+                "Command": "$.Parameters.Command",
+                "SshTarget": "$.Parameters.SshTarget",
+                "SshPassword": "$.Parameters.SshPassword",
+                "Tags": "VC,SSH,Controller"
+            }
+        }
+    ]
+}

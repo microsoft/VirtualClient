@@ -76,7 +76,7 @@ namespace VirtualClient.Actions
                         throw new WorkloadException($"The API server workload did not start as expected.", ErrorReason.WorkloadFailed);
                     }
 
-                    this.CleanupTasks.Add(() => webHostProcess.SafeKill());
+                    this.CleanupTasks.Add(() => webHostProcess.SafeKill(this.Logger));
                     this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
 
                     // Signal to clients that the server-side is online and ready to receive requests. The server-side is offline

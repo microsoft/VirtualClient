@@ -119,8 +119,8 @@ namespace VirtualClient.Dependencies
                 Assert.AreEqual(dataPoint.AppName, metricContext.Properties["appName"]);
                 Assert.AreEqual(dataPoint.AppVersion, metricContext.Properties["appVersion"]);
                 Assert.AreEqual(dataPoint.ClientId, metricContext.Properties["clientId"]);
-                Assert.AreEqual($"{dataPoint.ExecutionProfile} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
-                Assert.AreEqual(dataPoint.ExecutionProfile, metricContext.Properties["executionProfileName"]);
+                Assert.AreEqual($"{dataPoint.ProfileName} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
+                Assert.AreEqual(dataPoint.ProfileName, metricContext.Properties["executionProfileName"]);
                 Assert.AreEqual(dataPoint.ExperimentId, metricContext.Properties["experimentId"]);
                 Assert.AreEqual(dataPoint.OperatingSystemPlatform, metricContext.Properties["operatingSystemPlatform"]);
                 Assert.AreEqual(dataPoint.OperationId, metricContext.ActivityId);
@@ -174,8 +174,8 @@ namespace VirtualClient.Dependencies
                 Assert.AreEqual(dataPoint.AppName, metricContext.Properties["appName"]);
                 Assert.AreEqual(dataPoint.AppVersion, metricContext.Properties["appVersion"]);
                 Assert.AreEqual(dataPoint.ClientId, metricContext.Properties["clientId"]);
-                Assert.AreEqual($"{dataPoint.ExecutionProfile} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
-                Assert.AreEqual(dataPoint.ExecutionProfile, metricContext.Properties["executionProfileName"]);
+                Assert.AreEqual($"{dataPoint.ProfileName} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
+                Assert.AreEqual(dataPoint.ProfileName, metricContext.Properties["executionProfileName"]);
                 Assert.AreEqual(dataPoint.ExperimentId, metricContext.Properties["experimentId"]);
                 Assert.AreEqual(dataPoint.OperatingSystemPlatform, metricContext.Properties["operatingSystemPlatform"]);
                 Assert.AreEqual(dataPoint.OperationId, metricContext.ActivityId);
@@ -239,8 +239,8 @@ namespace VirtualClient.Dependencies
                 Assert.AreEqual(dataPoint.AppName, metricContext.Properties["appName"]);
                 Assert.AreEqual(dataPoint.AppVersion, metricContext.Properties["appVersion"]);
                 Assert.AreEqual(dataPoint.ClientId, metricContext.Properties["clientId"]);
-                Assert.AreEqual($"{dataPoint.ExecutionProfile} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
-                Assert.AreEqual(dataPoint.ExecutionProfile, metricContext.Properties["executionProfileName"]);
+                Assert.AreEqual($"{dataPoint.ProfileName} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
+                Assert.AreEqual(dataPoint.ProfileName, metricContext.Properties["executionProfileName"]);
                 Assert.AreEqual(dataPoint.ExperimentId, metricContext.Properties["experimentId"]);
                 Assert.AreEqual(dataPoint.OperatingSystemPlatform, metricContext.Properties["operatingSystemPlatform"]);
                 Assert.AreEqual(dataPoint.OperationId, metricContext.ActivityId);
@@ -294,8 +294,8 @@ namespace VirtualClient.Dependencies
                 Assert.AreEqual(dataPoint.AppName, metricContext.Properties["appName"]);
                 Assert.AreEqual(dataPoint.AppVersion, metricContext.Properties["appVersion"]);
                 Assert.AreEqual(dataPoint.ClientId, metricContext.Properties["clientId"]);
-                Assert.AreEqual($"{dataPoint.ExecutionProfile} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
-                Assert.AreEqual(dataPoint.ExecutionProfile, metricContext.Properties["executionProfileName"]);
+                Assert.AreEqual($"{dataPoint.ProfileName} ({dataPoint.PlatformArchitecture})", metricContext.Properties["executionProfile"]);
+                Assert.AreEqual(dataPoint.ProfileName, metricContext.Properties["executionProfileName"]);
                 Assert.AreEqual(dataPoint.ExperimentId, metricContext.Properties["experimentId"]);
                 Assert.AreEqual(dataPoint.OperatingSystemPlatform, metricContext.Properties["operatingSystemPlatform"]);
                 Assert.AreEqual(dataPoint.OperationId, metricContext.ActivityId);
@@ -652,9 +652,9 @@ namespace VirtualClient.Dependencies
                 Assert.AreEqual("2025-07-23T20:34:48.6298225Z", ((DateTime)metricContext.Properties["scenarioEndTime"]).ToString("o"));
                 Assert.AreEqual("2025-07-23T20:24:48.6170306Z", ((DateTime)metricContext.Properties["scenarioStartTime"]).ToString("o"));
                 Assert.AreEqual("CPU,OpenSSL,Cryptography", metricContext.Properties["tags"]);
-                Assert.AreEqual("OpenSSL", metricContext.Properties["toolset"]);
-                Assert.AreEqual("3.0.0", metricContext.Properties["toolsetVersion"]);
-                Assert.IsTrue(metricContext.Properties["toolsetResults"].ToString().StartsWith("version: 3.0.0-beta3-dev"));
+                Assert.AreEqual("OpenSSL", metricContext.Properties["toolName"]);
+                Assert.AreEqual("3.0.0", metricContext.Properties["toolVersion"]);
+                Assert.IsTrue(metricContext.Properties["toolResults"].ToString().StartsWith("version: 3.0.0-beta3-dev"));
             }
 
             EventContext metric1Context = messagesLogged.ElementAt(0).Item3 as EventContext;
@@ -674,7 +674,7 @@ namespace VirtualClient.Dependencies
                 AppName = "PerfCheck",
                 AppVersion = "1.5.0",
                 ClientId = Guid.NewGuid().ToString(),
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 OperatingSystemPlatform = Environment.OSVersion.Platform.ToString(),
@@ -727,7 +727,7 @@ namespace VirtualClient.Dependencies
                 MetricCategorization = "Cryptographic Operations",
                 ClientId = Guid.NewGuid().ToString(),
                 MetricDescription = "Total throughput while processing the algorithm.",
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 MetricName = "bandwidth",
@@ -736,15 +736,15 @@ namespace VirtualClient.Dependencies
                 OperationParentId = Guid.NewGuid(),
                 PlatformArchitecture = Contracts.PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 MetricRelativity = MetricRelativity.HigherIsBetter,
-                Scenario = "sha256",
+                ScenarioName = "sha256",
                 ScenarioEndTime = DateTime.UtcNow.AddMinutes(-1),
                 ScenarioStartTime = DateTime.UtcNow.AddMinutes(-10),
                 SeverityLevel = 2,
                 Tags = "Performance;CPU",
                 Timestamp = DateTime.UtcNow,
-                Toolset = "OpenSSL",
-                ToolsetResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-                ToolsetVersion = "3.0.0",
+                ToolName = "OpenSSL",
+                ToolResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+                ToolVersion = "3.0.0",
                 MetricUnit = "kilobytes/sec",
                 MetricValue = 15234880.42,
                 MetricVerbosity = 0,

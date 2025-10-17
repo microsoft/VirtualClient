@@ -1,0 +1,30 @@
+{
+    "Description": "Installs the agent on a remote system.",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": {
+        "SshTarget": null,
+        "SshPassword": null
+    },
+    "Actions": [
+        {
+            "Type": "WaitExecutor",
+            "Parameters": {
+                "Scenario": "Wait",
+                "Duration": "00:00:01"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "RemoteAgentInstallation",
+            "Parameters": {
+                "Scenario": "InstallAgentOnTarget",
+                "SshTarget": "$.Parameters.SshTarget",
+                "SshPassword": "$.Parameters.SshPassword",
+                "Tags": "VC,SSH,Controller"
+            }
+        }
+    ]
+}

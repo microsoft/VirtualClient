@@ -74,7 +74,7 @@ VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStor
 ./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
 ```
 
-## Scenario: Instruct the Appliction to Perform an Initial Cleanup
+## Scenario: Instruct the Application to Perform an Initial Cleanup
 Virtual Client writes various types of content to the file system. Some common types of content include log files, package downloads and
 files used to represent state for managing repeat operations/idempotency. Over time the count and size of the file content on the file
 system can grow to where it becomes desirable to cleanup some of the files. For example, a user might want to cleanup up the log files
@@ -86,24 +86,24 @@ user would want to cleanup the local state files. The following examples show ho
 # Perform a full clean. This will remove ALL log files/directories, any packages previously downloaded minus
 # those that are "built-in" or part of the Virtual Client package itself and any state files previously written.
 # This essentially resets Virtual Client back to the state it was in before the first run on the system.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=all
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=all
 
 # Clean specific target resources.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=packages
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=logs
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=packages
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=state
 
 # Clean multiple specific target resources all together.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs,state
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --clean=logs,packages,state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=logs,state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=logs,packages,state
 
 # Apply a log retention period to the log files. This will cause log files older than the period to
 # be removed but will preserve any remaining. Note that this is the same as --clean=logs --log-retention=02.00:00:00.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=02.00:00:00
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --log-retention=02.00:00:00
 
 # Log retentions can be in 'minutes' as well (e.g. 2800 minutes = 2 days). Note that this is the same as --clean=logs --log-retention=2880.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-retention=2880
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --log-retention=2880
 ```
 
 ## Scenario: Upload Metrics and Logs to an Event Hub
@@ -115,7 +115,7 @@ Note that the Virtual Client does have a set of explicit expectations for how th
 
 ``` bash
 # To send data to an Event Hub, supply a connection string to the Event Hub namespace on the command line.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --event-hub="{EventHubConnectionString}"
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --logger="eventhub;{ConnectionString|SAS URI}"
 ```
 
 ## Scenario: Upload Log Files to a Content Store
@@ -127,7 +127,7 @@ on monitor profiles below for additional details on which profiles support this.
 * [Monitor Profiles](../monitors/0200-monitor-profiles.md)
 
 ``` bash
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --content="{BlobStoreConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --content="{ConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
 ```
 
 ## Scenario: Change the Amount of Operational Trace Telemetry Emitted
@@ -136,26 +136,26 @@ amount of information is not desirable. The logging level (or severity) can be c
 
 ``` bash
 # Emit traces for 'Warning' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Warning
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Warning
 
 # Emit traces for 'Error' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Error
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Error
 
 # Emit traces for 'Critical' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Critical
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Critical
 ```
 
 Correspondingly, there are times when more operational traces are desirable (e.g. for debugging scenarios). The default logging level is 'Information'.
 
 ``` bash
 # Emit all traces (...the most verbose option)
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Trace
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Trace
 
 # Emit traces for 'Debug' level and above.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Debug
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Debug
 
 # Emit traces for 'Information' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-level=Information
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Information
 ```
 
 ## Scenario: Change the Default Location for Log Files
@@ -165,11 +165,11 @@ available.
 
 ``` bash
 # Define an alternate location for log files on the command line.
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --log-dir="/home/user/logs"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-dir="/home/user/logs"
 
 # Define an alternate location for log files using an environment variable.
 /home/user/virtualclient$ export VC_LOGS_DIR="/home/user/logs"
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}"
 ```
 
 ## Scenario: Change the Default Location for Package Downloads
@@ -179,11 +179,11 @@ available.
 
 ``` bash
 # Define an alternate location for package downloads on the command line.
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --package-dir="/home/user/packages"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --package-dir="/home/user/packages"
 
 # Define an alternate location for package downloads using an environment variable.
 /home/user/virtualclient$ export VC_PACKAGES_DIR="/home/user/packages"
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}"
 ```
 
 ## Supported Environment Variables
@@ -269,4 +269,20 @@ can be used to define alternate locations for dependencies:
   # Note that the state directory can be defined on the command line as well. State directories
   # defined on the command line take priority over those defined by the environment variable.
   /home/user/virtualclient$ ./VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=120 --state-dir="/home/user/state"
+  ```
+
+* **VC_TEMP_DIR**  
+  Defines an alternate directory path to which Virtual Client should write temp files/documents. This overrides the default temp location 
+  (e.g. \<application-dir\>/temp).
+
+  ``` bash
+  # On Windows systems
+  C:\VirtualClient> set VC_TEMP_DIR=C:\Users\User1\Temp
+
+  # On Linux systems.
+  /home/user/virtualclient$ export VC_TEMP_DIR="/home/user/temp"
+
+  # Note that the temp directory can be defined on the command line as well. Temp directories
+  # defined on the command line take priority over those defined by the environment variable.
+  /home/user/virtualclient$ ./VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=120 --temp-dir="/home/user/temp"
   ```

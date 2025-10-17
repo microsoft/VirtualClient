@@ -4,19 +4,14 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
-    using Moq;
     using NUnit.Framework;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
-    
+
     [TestFixture]
     [Category("Functional")]
     public class TlsOpenSslServerProfileTests
@@ -37,7 +32,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("Compete-OPENSSL-TLS.json")]
+        [TestCase("PERF-CPU-OPENSSL-TLS.json")]
         public async Task TlsOpenSslServerWorkloadProfileInstallsTheExpectedDependenciesOnUnixPlatform(string profile)
         {
             // Setup the expectations for the workload
@@ -60,7 +55,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("Compete-OPENSSL-TLS.json")]
+        [TestCase("PERF-CPU-OPENSSL-TLS.json")]
         public void TlsOpenSslServerWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
         {
             // We ensure the workload package does not exist.

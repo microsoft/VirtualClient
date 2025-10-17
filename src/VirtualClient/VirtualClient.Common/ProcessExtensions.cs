@@ -5,7 +5,6 @@ namespace VirtualClient.Common
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace VirtualClient.Common
     /// </summary>
     public static class ProcessExtensions
     {
-        /// <summary>
+                /// <summary>
         /// Sets the process for interactive mode (e.g. standard output and input redirected).
         /// </summary>
         /// <param name="process">Represents a process on the system.</param>
@@ -26,48 +25,6 @@ namespace VirtualClient.Common
             process.RedirectStandardInput = true;
             process.RedirectStandardOutput = true;
             return process;
-        }
-
-        /// <summary>
-        /// Kills the process if it is still running and handles any errors that
-        /// can occurs if the process has gone out of scope.
-        /// </summary>
-        /// <param name="process">The process to kill.</param>
-        public static void SafeKill(this IProcessProxy process)
-        {
-            if (process != null)
-            {
-                try
-                {
-                    process.Kill(true);
-                }
-                catch (Exception exc)
-                {
-                    int processId = -1;
-                    string processName = "Indeterminate";
-
-                    try
-                    {
-                        processId = process.Id;
-                    }
-                    catch
-                    {
-                        // Best effort here.
-                    }
-
-                    try
-                    {
-                        processName = process.Name;
-                    }
-                    catch
-                    {
-                        // Best effort here.
-                    }
-
-                    // Best effort here.
-                    Console.WriteLine($"Process Cleanup Error: ID={processId}, Name={processName}, Error={exc.Message}");
-                }
-            }
         }
 
         /// <summary>

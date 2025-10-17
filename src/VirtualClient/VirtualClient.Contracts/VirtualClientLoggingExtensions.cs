@@ -702,10 +702,8 @@ namespace VirtualClient.Contracts
                 { "metricRelativity", relativity.ToString() },
                 { "metricVerbosity", verbosity.ToString() },
                 { "toolName", toolName },
-                { "toolset", toolName },
                 { "toolVersion", toolVersion ?? string.Empty },
-                { "toolsetVersion", toolVersion ?? string.Empty },
-                { "toolsetResults", toolResults ?? string.Empty },
+                { "toolResults", toolResults ?? string.Empty },
                 { "tags", tags != null ? string.Join(',', tags) : string.Empty },
                 { "metadata_metrics", metricMetadata as object ?? string.Empty }
             };
@@ -780,9 +778,7 @@ namespace VirtualClient.Contracts
                         counterContext.Properties["metricDescription"] = counter.Description ?? string.Empty;
                         counterContext.Properties["metricRelativity"] = counter.Relativity;
                         counterContext.Properties["toolName"] = toolName;
-                        counterContext.Properties["toolset"] = toolName;
                         counterContext.Properties["toolVersion"] = toolVersion;
-                        counterContext.Properties["toolsetVersion"] = toolVersion;
                         counterContext.Properties["tags"] = counter.Tags != null ? $"{string.Join(",", counter.Tags)}" : string.Empty;
                         counterContext.Properties["metadata_metrics"] = counter.Metadata as object;
 

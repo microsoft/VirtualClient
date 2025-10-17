@@ -10,6 +10,7 @@ namespace VirtualClient.Contracts.Extensibility
     using System.Globalization;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using YamlDotNet.Serialization;
 
@@ -156,8 +157,8 @@ namespace VirtualClient.Contracts.Extensibility
                         dataPoint.ClientId = fieldValue;
                         break;
 
-                    case "executionprofile":
-                        dataPoint.ExecutionProfile = fieldValue;
+                    case "profilename":
+                        dataPoint.ProfileName = fieldValue;
                         break;
 
                     case "executionsystem":
@@ -173,11 +174,21 @@ namespace VirtualClient.Contracts.Extensibility
                         break;
 
                     case "operationid":
-                        dataPoint.OperationId = Guid.Parse(fieldValue);
+                        dataPoint.OperationParentId = Guid.Empty;
+                        if (Guid.TryParse(fieldValue, out Guid operationId))
+                        {
+                            dataPoint.OperationId = operationId;
+                        }
+
                         break;
 
                     case "operationparentid":
-                        dataPoint.OperationParentId = Guid.Parse(fieldValue);
+                        dataPoint.OperationParentId = Guid.Empty;
+                        if (Guid.TryParse(fieldValue, out Guid operationParentId))
+                        {
+                            dataPoint.OperationParentId = operationParentId;
+                        }
+
                         break;
 
                     case "platformarchitecture":
@@ -185,7 +196,12 @@ namespace VirtualClient.Contracts.Extensibility
                         break;
 
                     case "severitylevel":
-                        dataPoint.SeverityLevel = int.Parse(fieldValue);
+                        dataPoint.SeverityLevel = (int)LogLevel.Information;
+                        if (int.TryParse(fieldValue, out int severity))
+                        {
+                            dataPoint.SeverityLevel = severity;
+                        }
+                        
                         break;
 
                     case "tags":
@@ -260,7 +276,7 @@ namespace VirtualClient.Contracts.Extensibility
                 {
                     if (this.csvColumns == null)
                     {
-                        this.csvColumns = this.csvLines[0].Split(',', StringSplitOptions.TrimEntries);
+                        this.csvColumns = this.csvLines[0].Split(',', StringSplitOptions.TrimEntries)?.Select(c => c.Trim(csvTrimChars)).ToArray();
 
                         if (this.csvColumns?.Any() != true)
                         {
@@ -273,7 +289,7 @@ namespace VirtualClient.Contracts.Extensibility
                     {
                         try
                         {
-                            nextLine = this.csvLines.Skip(1).ElementAt(this.currentItemIndex);
+                            nextLine = this.csvLines.Skip(1).ElementAt(this.currentItemIndex).Trim();
                             MatchCollection matches = Regex.Matches(nextLine, "(?:^|,)(?:\"([^\"]*)\"|([^\",\\n\\r]*))");
                             if (matches?.Any() == true)
                             {

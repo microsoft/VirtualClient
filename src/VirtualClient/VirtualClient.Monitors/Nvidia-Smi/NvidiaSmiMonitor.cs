@@ -101,7 +101,7 @@ namespace VirtualClient.Monitors
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia_SMI_GPU_Links");
+                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: "nvidia_smi", logFileName: "nvidia_smi_links.log");
                         process.ThrowIfMonitorFailed();
 
                         if (process.StandardOutput.Length > 0)
@@ -172,7 +172,7 @@ namespace VirtualClient.Monitors
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         // We cannot log the process details here. The output is too large.
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia_SMI_GPU_Status");
+                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: "nvidia_smi", logFileName: "nvidia_smi_status.log");
                         process.ThrowIfMonitorFailed();
 
                         if (process.StandardOutput.Length > 0)

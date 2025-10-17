@@ -7,12 +7,12 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
-    using Azure.Core;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
     using Polly;
@@ -34,8 +34,6 @@ namespace VirtualClient
             (int)HttpStatusCode.GatewayTimeout,
             (int)HttpStatusCode.InternalServerError
         };
-
-        private static readonly char[] UriDelimiters = new char[] { '/', '\\' };
 
         private static IAsyncPolicy defaultRetryPolicy = Policy.Handle<RequestFailedException>(error =>
         {
@@ -88,8 +86,7 @@ namespace VirtualClient
                 return await (retryPolicy ?? BlobManager.defaultRetryPolicy).ExecuteAsync(async () =>
                 {
                     BlobDescriptor blobInfo = new BlobDescriptor(descriptor);
-                    Response response = await this.DownloadToStreamAsync(blobDescriptor, downloadStream, cancellationToken)
-                        .ConfigureAwait(false);
+                    Response response = await this.DownloadToStreamAsync(blobDescriptor, downloadStream, cancellationToken);
 
                     if (response.Status >= 300)
                     {
@@ -107,7 +104,7 @@ namespace VirtualClient
 
                     return blobInfo;
 
-                }).ConfigureAwait(false);
+                });
             }
             catch (RequestFailedException exc) when (exc.Status == (int)HttpStatusCode.Forbidden)
             {
@@ -144,7 +141,7 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
-        public async Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
+        public async Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null, IAsyncPolicy retryPolicy = null)
         {
             descriptor.ThrowIfNull(nameof(descriptor));
             uploadStream.ThrowIfNull(nameof(uploadStream));
@@ -193,7 +190,8 @@ namespace VirtualClient
                                 ContentType = blobDescriptor.ContentType
                             }
                         },
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken,
+                        metadata);
 
                     Response rawResponse = response.GetRawResponse();
                     if (rawResponse.Status >= 300)
@@ -210,7 +208,7 @@ namespace VirtualClient
 
                     return blobInfo;
 
-                }).ConfigureAwait(false);
+                });
             }
             catch (RequestFailedException exc) when (exc.Status == (int)HttpStatusCode.Forbidden)
             {
@@ -342,7 +340,7 @@ namespace VirtualClient
         /// <summary>
         /// Uploads the blob from the stream provided.
         /// </summary>
-        protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
+        protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null)
         {
             DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
             BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
@@ -353,16 +351,21 @@ namespace VirtualClient
                 // Container-specific SAS URIs do not allow the client to access container existence, properties or
                 // to create the container. Furthermore, the container MUST already exist in order for this type of
                 // SAS URI to be created from it.
-                await containerClient.CreateIfNotExistsAsync(PublicAccessType.None)
-                    .ConfigureAwait(false);
+                await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
             }
             catch
             {
                 // Do nothing if identity doesn't have container access.
             }
 
-            return await blobClient.UploadAsync(stream, uploadOptions, cancellationToken)
-                .ConfigureAwait(false);
+            Response<BlobContentInfo> response = await blobClient.UploadAsync(stream, uploadOptions, cancellationToken);
+
+            if (metadata?.Any() == true)
+            {
+                blobClient.SetMetadata(metadata.ToDictionary(entry => entry.Key, entry => entry.Value?.ToString()));
+            }
+
+            return response;
         }
 
         private static string GetHttpStatusCodeName(int statusCode)

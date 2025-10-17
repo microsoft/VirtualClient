@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -78,6 +79,14 @@ namespace VirtualClient
             @"\{PhysicalCoreCount\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex ArchitectureExpression = new Regex(
+            @"\{Architecture\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex OSExpression = new Regex(
+            @"\{OS\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         // e.g.
         // {SystemMemoryBytes}
         // {SystemMemoryKilobytes}
@@ -135,6 +144,35 @@ namespace VirtualClient
                         }
 
                         evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {OS}
+            // Resolves to the current operating system (e.g. linux, windows).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.OSExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    PlatformID platform = systemManagement.PlatformSpecifics.Platform;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(
+                            evaluatedExpression,
+                            match.Value,
+                            platform == PlatformID.Unix ? "linux" : "windows");
                     }
                 }
 
@@ -337,6 +375,35 @@ namespace VirtualClient
                                 }
                             }
                         }
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {Architecture}
+            // Resolves to the current architecture for the system (e.g. x64, arm64).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ArchitectureExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    Architecture architecture = systemManagement.PlatformSpecifics.CpuArchitecture;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(
+                            evaluatedExpression,
+                            match.Value,
+                            architecture.ToString().ToLowerInvariant());
                     }
                 }
 

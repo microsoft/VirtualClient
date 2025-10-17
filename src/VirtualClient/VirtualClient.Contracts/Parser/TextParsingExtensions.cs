@@ -109,7 +109,9 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Sectionize raw text into sections based on regex. First line of each section will become section key!
+        /// Parses a set of delimited key/value pairs (e.g. key1=value1;key2=value2). Supported delimiters are
+        /// a comma ',', a semi-colon ';' or a triple-comma ',,,'. Delimiters cannot be mixed (i.e. the same delimiter
+        /// must be used across the board).
         /// </summary>
         /// <param name="text">Raw text.</param>
         public static IDictionary<string, IConvertible> ParseDelimitedValues(string text)

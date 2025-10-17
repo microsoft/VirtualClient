@@ -70,6 +70,51 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("TEST-PROFILE-1.json")]
+        public void ComponentFactorySetsComponentPropertiesToExpectedDefaults(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                Assert.IsNotNull(component);
+                Assert.IsNotNull(component.Parameters);
+                Assert.IsFalse(component.LogToFile);
+                Assert.IsTrue(component.LogTimestamped);
+                Assert.IsNull(component.ContentPathTemplate);
+                Assert.IsNull(component.LogFileName);
+                Assert.IsNull(component.LogFolderName);
+            }
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-5.json")]
+        public void ComponentFactoryDoesNotInadvertentlyOverwriteComponentLevelProperties(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            ComponentSettings settings = new ComponentSettings
+            {
+                ContentPathTemplate = "content/path/template/A",
+                LogToFile = false
+            };
+
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies, settings);
+                Assert.IsNotNull(component);
+                Assert.IsNotNull(component.Parameters);
+                Assert.IsTrue(component.LogToFile);
+                Assert.IsFalse(component.LogTimestamped);
+                Assert.AreEqual("test.log", component.LogFileName);
+                Assert.AreEqual("test", component.LogFolderName);
+            }
+        }
+
+        [Test]
         [TestCase("TEST-PROFILE-3-PARALLEL.json")]
         public void ComponentFactoryCreatesExpectedParallelExecutionComponentsFromAnExecutionProfile(string profileName)
         {

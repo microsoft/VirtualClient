@@ -164,61 +164,41 @@ namespace VirtualClient
                 });
 
                 Assert.IsTrue(error.Message.StartsWith(
-                    $"Invalid Usage. The following command line options are not supported: {option}", 
+                    $"Invalid Usage. The following command line options are not supported: {option}",
                     StringComparison.OrdinalIgnoreCase));
             }
         }
 
         [Test]
-        [TestCase("--agent-id", "AgentID")]
         [TestCase("--agentId", "AgentID")]
-        [TestCase("--agentid", "AgentID")]
-        [TestCase("--clientId", "AgentID")]
-        [TestCase("--clientid", "AgentID")]
-        [TestCase("--client", "AgentID")]
+        [TestCase("--client-id", "AgentID")]
         [TestCase("--c", "AgentID")]
         [TestCase("--port", "4501")]
         [TestCase("--api-port", "4501")]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
-        [TestCase("--clean", "logs,packages,state")]
+        [TestCase("--clean", "logs,packages,state,temp")]
         [TestCase("--content-store", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
-        [TestCase("--contentStore", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
-        [TestCase("--contentstore", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--content", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--cs", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--content-path-template", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
-        [TestCase("--contentPathTemplate", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
-        [TestCase("--contentpathtemplate", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
-        [TestCase("--contentPath", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
-        [TestCase("--contentpath", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
         [TestCase("--content-path", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
         [TestCase("--cp", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
         [TestCase("--dependencies", null)]
         [TestCase("--eventHubConnectionString", "Endpoint=ConnectionString")]
-        [TestCase("--eventhubconnectionstring", "Endpoint=ConnectionString")]
         [TestCase("--event-hub", "Endpoint=ConnectionString")]
-        [TestCase("--eventHub", "Endpoint=ConnectionString")]
-        [TestCase("--eventhub", "Endpoint=ConnectionString")]
-        [TestCase("--eh", "Endpoint=ConnectionString")]
         [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--experimentid", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--experiment", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--fail-fast", null)]
         [TestCase("--ff", null)]
-        [TestCase("--flush-wait", "00:10:00")]
         [TestCase("--exit-wait", "00:10:00")]
         [TestCase("--wait", "00:10:00")]
         [TestCase("--i", "3")]
         [TestCase("--iterations", "3")]
         [TestCase("--kv", "https://anyvault.vault.windows.net")]
-        [TestCase("--keyvault", "https://anyvault.vault.windows.net")]
         [TestCase("--key-vault", "https://anyvault.vault.windows.net")]
         [TestCase("--layout-path", "C:\\any\\path\\to\\layout.json")]
-        [TestCase("--layoutPath", "C:\\any\\path\\to\\layout.json")]
-        [TestCase("--layoutpath", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--lp", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--logger", "file")]
@@ -226,7 +206,6 @@ namespace VirtualClient
         [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--ll", "3")]
         [TestCase("--log-level", "2")]
-        [TestCase("--ll", "3")]
         [TestCase("--log-level", "Information")]
         [TestCase("--ll", "Error")]
         [TestCase("--log-retention", "14400")]
@@ -240,15 +219,8 @@ namespace VirtualClient
         [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
         [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
         [TestCase("--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--key-Vault", "https://my-keyvault.vault.azure.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--key-vault", "https://my-keyvault.vault.azure.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--keyVault", "https://my-keyvault.vault.azure.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--keyvault", "https://my-keyvault.vault.azure.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--kv", "https://my-keyvault.vault.azure.net/?sv=2020-08-04&ss=b")]
         [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
         [TestCase("--pm", "Param1=Value1,,,Param2=Value2")]
         [TestCase("--seed", "1234")]
@@ -259,15 +231,17 @@ namespace VirtualClient
         [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
-        [TestCase("--t", "1440")]
         [TestCase("--proxy", "https://proxy.azure.net?crti=issuerName&crts=subjectName")]
         [TestCase("--proxy", "https://proxy.azure.net")]
         [TestCase("--proxy", "https://192.168.1.10:8443")]
         [TestCase("--proxy", "https://192.168.1.10")]
         [TestCase("--proxy-api", "https://proxy.azure.net/?crti=issuerName&crts=subjectName")]
+        [TestCase("--t", "1440")]
         [TestCase("--timeout", "01:00:00")]
         [TestCase("--timeout", "01:00:00,deterministic")]
         [TestCase("--timeout", "01:00:00,deterministic*")]
+        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
+        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
         [TestCase("--verbose", null)]
         public void VirtualClientDefaultCommandSupportsAllExpectedOptions(string option, string value)
         {
@@ -297,24 +271,15 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--agentId", "AgentID")]
-        [TestCase("--agentid", "AgentID")]
-        [TestCase("--agent-id", "AgentID")]
-        [TestCase("--clientId", "AgentID")]
-        [TestCase("--clientid", "AgentID")]
         [TestCase("--client-id", "AgentID")]
-        [TestCase("--client", "AgentID")]
         [TestCase("--c", "AgentID")]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
-        [TestCase("--clean", "logs,packages,state")]
+        [TestCase("--clean", "logs,packages,state,temp")]
         [TestCase("--event-hub", "Endpoint=ConnectionString")]
-        [TestCase("--eventHub", "Endpoint=ConnectionString")]
-        [TestCase("--eventhub", "Endpoint=ConnectionString")]
-        [TestCase("--eh", "Endpoint=ConnectionString")]
+        [TestCase("--eventHubConnectionString", "Endpoint=ConnectionString")]
         [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--experimentid", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--experiment", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
@@ -337,6 +302,8 @@ namespace VirtualClient
         [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
+        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
+        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
         [TestCase("--verbose", null)]
         public void VirtualClientBootstrapCommandSupportsAllExpectedOptions(string option, string value)
         {
@@ -375,7 +342,7 @@ namespace VirtualClient
                     "--package", "anypackage.1.0.0.zip",
                     "--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b",
                     "--iterations", "1",
-                    "--layoutPath", "/home/user/any/layout.json"
+                    "--layout-path", "/home/user/any/layout.json"
                 };
 
                 Assert.DoesNotThrow(() =>
@@ -406,6 +373,12 @@ namespace VirtualClient
         [TestCase("--log-retention", "10.00:00:00")]
         [TestCase("--lr", "14400")]
         [TestCase("--lr", "10.00:00:00")]
+        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
+        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
+        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
+        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
         [TestCase("--verbose", null)]
         public void VirtualClientCleanCommandSupportsAllExpectedOptions(string option, string value)
         {
@@ -471,6 +444,10 @@ namespace VirtualClient
         [TestCase("--log-retention", "10.00:00:00")]
         [TestCase("--lr", "14400")]
         [TestCase("--lr", "10.00:00:00")]
+        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
+        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
+        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
+        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
         [TestCase("--verbose", null)]
         public void VirtualClientRunApiCommandSupportsAllExpectedOptions(string option, string value)
         {
@@ -478,7 +455,7 @@ namespace VirtualClient
             {
                 List<string> arguments = new List<string>()
                 {
-                    "runapi"
+                    "api"
                 };
 
                 arguments.Add(option);

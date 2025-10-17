@@ -314,15 +314,10 @@ namespace VirtualClient.Actions
                 return;
             }
 
-            if (this.TryGetContentStoreManager(out IBlobManager blobManager))
-            {
-                await this.RequestUpload(sourcePath);
-            }
-
+            string destPath = sourcePath;
             await (this.FileOperationsRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(() =>
             {
                 string fileName = Path.GetFileName(sourcePath);
-                string destPath;
 
                 if (!string.IsNullOrEmpty(sourceRoot))
                 {
@@ -344,6 +339,11 @@ namespace VirtualClient.Actions
                 this.fileSystem.File.Move(sourcePath, destPath, true);
                 return Task.CompletedTask;
             });
+
+            if (this.TryGetContentStoreManager(out IBlobManager blobManager))
+            {
+                await this.RequestUpload(destPath);
+            }
         }
     }
 }
