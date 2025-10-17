@@ -44,6 +44,7 @@ namespace VirtualClient
             switch (dependencyStore.StoreType)
             {
                 case DependencyStore.StoreTypeAzureStorageBlob:
+                case DependencyStore.StoreTypeAzureCDN:
                     DependencyBlobStore blobStore = dependencyStore as DependencyBlobStore;
                     if (blobStore != null)
                     {

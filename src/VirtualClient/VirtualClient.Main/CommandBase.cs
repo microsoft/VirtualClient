@@ -39,7 +39,7 @@ namespace VirtualClient
     /// </summary>
     public abstract class CommandBase
     {
-        private const string defaultPackageStoreUri = "https://virtualclient.blob.core.windows.net/packages";
+        private const string defaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
         private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
