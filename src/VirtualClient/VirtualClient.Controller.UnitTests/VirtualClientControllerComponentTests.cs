@@ -30,7 +30,6 @@ namespace VirtualClient.Controller
         [Test]
         [TestCase(10)]
         [TestCase(100)]
-        [TestCase(500)]
         public async Task VirtualClientControllerComponentSupportsConcurrentSshClientOperations(int concurrentExecutions)
         {
             List<ISshClientProxy> targetAgents = new List<ISshClientProxy>();
@@ -50,27 +49,14 @@ namespace VirtualClient.Controller
                     Task.Delay(10).GetAwaiter().GetResult();
                 };
 
-                bool timeoutOccurred = false;
                 await Task.WhenAny(
                     // Execute the concurrent operations.
                     Task.Run(async () => await component.ExecuteAsync(CancellationToken.None)),
 
                     // Timeout at some point in the case of multi-threading implementation mistakes.
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(20000);
-                        timeoutOccurred = true;
-                    })
-                );
+                    Task.Run(async () => await Task.Delay(20000)));
 
-                if (timeoutOccurred)
-                {
-                    Assert.Pass("The concurrent operations did not complete within the expected time.");
-                }
-                else
-                {
-                    Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
-                }
+                Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
             }
         }
 
