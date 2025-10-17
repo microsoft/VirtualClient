@@ -58,7 +58,10 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NetworkingWorkloadStateInstancesAreJsonSerializable()
+        [TestCase(null)]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void NetworkingWorkloadStateInstancesAreJsonSerializable(bool? noSyncEnabled)
         {
             NetworkingWorkloadState state = new NetworkingWorkloadState(
                 "networking",
@@ -87,6 +90,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                noSyncEnabled,
                 Guid.NewGuid());
 
             SerializationAssert.IsJsonSerializable(state);
@@ -122,6 +126,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                false,
                 Guid.NewGuid(),
                 //
                 // With Metadata
@@ -169,6 +174,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                false,
                 Guid.NewGuid(),
                 //
                 // With Metadata

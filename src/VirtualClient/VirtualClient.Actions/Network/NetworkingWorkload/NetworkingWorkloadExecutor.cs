@@ -400,6 +400,23 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Parameter indicates that synchronization is disabled for the client.
+        /// </summary>
+        public bool? NoSyncEnabled
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.NoSyncEnabled), out IConvertible noSyncEnabled);
+                return noSyncEnabled?.ToBoolean(CultureInfo.InvariantCulture);
+            }
+
+            set
+            {
+                this.Parameters[nameof(NetworkingWorkloadExecutor.NoSyncEnabled)] = value;
+            }
+        }
+
+        /// <summary>
         /// Cancellation Token Source for Server.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
@@ -785,6 +802,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.ProfilingScenario = serverInstructions.ProfilingScenario;
                                     this.ProfilingPeriod = serverInstructions.ProfilingPeriod;
                                     this.ProfilingWarmUpPeriod = serverInstructions.ProfilingWarmUpPeriod;
+                                    this.NoSyncEnabled = serverInstructions.NoSyncEnabled;
 
                                     if (serverInstructions.Metadata?.Any() == true)
                                     {
@@ -948,6 +966,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.ProfilingScenario,
                             this.ProfilingPeriod.ToString(),
                             this.ProfilingWarmUpPeriod.ToString(),
+                            this.NoSyncEnabled,
                             requestId);
 
                         Item<State> instructions = new Item<State>(nameof(NetworkingWorkloadState), workloadInstructions);

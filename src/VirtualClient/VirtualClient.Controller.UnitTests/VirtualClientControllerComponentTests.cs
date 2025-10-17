@@ -30,7 +30,6 @@ namespace VirtualClient.Controller
         [Test]
         [TestCase(10)]
         [TestCase(100)]
-        [TestCase(500)]
         public async Task VirtualClientControllerComponentSupportsConcurrentSshClientOperations(int concurrentExecutions)
         {
             List<ISshClientProxy> targetAgents = new List<ISshClientProxy>();

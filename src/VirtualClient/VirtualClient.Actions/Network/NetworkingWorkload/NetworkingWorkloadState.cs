@@ -129,6 +129,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string profilingScenario = null,
             string profilingPeriod = null,
             string profilingWarmUpPeriod = null,
+            bool? noSyncEnabled = null,
             Guid? clientRequestId = null,
             IDictionary<string, IConvertible> metadata = null)
         {
@@ -163,6 +164,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.ProfilingScenario)] = profilingScenario;
             this.Properties[nameof(this.ProfilingPeriod)] = profilingPeriod;
             this.Properties[nameof(this.ProfilingWarmUpPeriod)] = profilingWarmUpPeriod;
+            this.Properties[nameof(this.NoSyncEnabled)] = noSyncEnabled;
             this.ClientRequestId = clientRequestId;
 
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
@@ -489,6 +491,18 @@ namespace VirtualClient.Actions.NetworkPerformance
             {
                 this.Properties.TryGetValue(nameof(this.DevInterruptsDifferentiator), out IConvertible devInterruptsDifferentiator);
                 return devInterruptsDifferentiator?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Parameter indicates that synchronization is disabled for the client (Parameter for Tools: NTttcp)
+        /// </summary>
+        public bool? NoSyncEnabled
+        {
+            get
+            {
+                this.Properties.TryGetValue(nameof(this.NoSyncEnabled), out IConvertible noSyncEnabled);
+                return noSyncEnabled?.ToBoolean(CultureInfo.InvariantCulture);
             }
         }
 
