@@ -140,7 +140,7 @@ namespace VirtualClient.Actions
         [TestCase(false)]
         public async Task NTttcpExecutorClientExecutesAsExpectedInWindows(bool? noSyncEnabled)
         {
-            this.SetupTest(PlatformID.Win32NT);
+            this.SetupTest();
 
             NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             await networkingWorkloadExecutor.OnInitialize.Invoke(EventContext.None, CancellationToken.None);
@@ -175,6 +175,8 @@ namespace VirtualClient.Actions
             {
                 this.mockFixture.Parameters["NoSyncEnabled"] = noSyncEnabled.Value;
             }
+
+            this.mockFixture.SystemManagement.SetupGet(sm => sm.Platform).Returns(PlatformID.Win32NT);
 
             TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
