@@ -136,7 +136,7 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/inikep/lzbench.git", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
                 
                 // Build Lzbench.
-                await this.ExecuteCommandAsync("make", string.Empty, this.LzbenchDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("make", string.Empty, this.LzbenchDirectory, cancellationToken, errorReason: ErrorReason.CompilationFailed);
 
                 // Choose default file for compression and decompression if files/dirs are not provided.
                 if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
@@ -196,7 +196,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken, ErrorReason errorReason = ErrorReason.WorkloadFailed)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -220,7 +220,7 @@ namespace VirtualClient.Actions
                             await this.LogProcessDetailsAsync(process, telemetryContext)
                                 .ConfigureAwait(false);
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            process.ThrowIfErrored<WorkloadException>(errorReason: errorReason);
                         }
                     }
                 }).ConfigureAwait(false);
