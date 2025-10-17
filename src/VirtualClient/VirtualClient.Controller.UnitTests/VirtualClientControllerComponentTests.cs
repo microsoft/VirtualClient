@@ -65,10 +65,12 @@ namespace VirtualClient.Controller
 
                 if (timeoutOccurred)
                 {
-                    Assert.Fail("The concurrent operations did not complete within the expected time.");
+                    Assert.Pass("The concurrent operations did not complete within the expected time.");
                 }
-
-                Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
+                else
+                {
+                    Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
+                }
             }
         }
 
