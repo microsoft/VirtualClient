@@ -50,12 +50,23 @@ namespace VirtualClient.Controller
                     Task.Delay(10).GetAwaiter().GetResult();
                 };
 
+                bool timeoutOccurred = false;
                 await Task.WhenAny(
                     // Execute the concurrent operations.
                     Task.Run(async () => await component.ExecuteAsync(CancellationToken.None)),
 
                     // Timeout at some point in the case of multi-threading implementation mistakes.
-                    Task.Run(async () => await Task.Delay(20000)));
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(20000);
+                        timeoutOccurred = true;
+                    })
+                );
+
+                if (timeoutOccurred)
+                {
+                    Assert.Fail("The concurrent operations did not complete within the expected time.");
+                }
 
                 Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
             }
