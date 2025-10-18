@@ -59,12 +59,17 @@ the system. The following table describes the set of well-known parameters that 
 
 | Parameter                             | Description |
 |---------------------------------------|-------------|
-| LogicalCoreCount                      | Represents the number of logical cores/vCPUs on the system. |
-| PhysicalCoreCount                     | Represents the number of physical cores on the system. |
-| PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
-| PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
-| Platform                              | Represents the platform-architecture for the system on which Virtual Client is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64) |
-| ScriptPath:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
+| Architecture                          | Represents the processor/CPU architecture. Supported values include: x64, arm64. |
+| ExperimentId                          | Represents the ID of the experiment for the running application. |
+| LogDir                                | Represents the path to the application logs directory (e.g. /home/users/virtualclient/logs). |
+| LogicalProcessorCount                 | Represents the number of logical processors/cores/vCPUs on the system. |
+| OS                                    | Represents the name of operating system. Supported values include: linux, windows. |
+| PackageDir:\{package_name\}           | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
+| PackageDir/Platform:\{package_name\}  | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
+| Platform                              | Represents the platform-architecture for the system on which the application is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64) |
+| PhysicalProcessorCount                | Represents the number of physical processors/cores on the system. |
+| ScriptDir:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
+| TempDir                               | Represents the path to the application temp directory (e.g. /home/users/virtualclient/temp). |
 | SystemMemoryBytes                     | Represents the total memory/RAM (in bytes) on the system. |
 | SystemMemoryKilobytes                 | Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes). |
 | SystemMemoryMegabytes                 | Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes). |
@@ -80,7 +85,7 @@ the system. The following table describes the set of well-known parameters that 
             "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
-            "ServerInstances": "{LogicalCoreCount}",
+            "ServerInstances": "{LogicalProcessorCount}",
             "ServerThreadCount": "$.Parameters.ServerThreadCount",
             "Role": "Server"
         }
@@ -104,7 +109,7 @@ the system. The following table describes the set of well-known parameters that 
             "Scenario": "CompileMemcached",
             "Platforms": "linux-x64,linux-arm64",
             "Command": "bash -c './configure'&&make",
-            "WorkingDirectory": "{PackagePath:memcached}"
+            "WorkingDirectory": "{PackageDir:memcached}"
         }
     }
 ]
@@ -126,7 +131,7 @@ the system. The following table describes the set of well-known parameters that 
             "Scenario": "CompileCoremark",
             "Platforms": "linux-x64,linux-arm64",
             "Command": "bash -c './configure'&&make",
-            "WorkingDirectory": "{PackagePath/Platform:coremark}"
+            "WorkingDirectory": "{PackageDir/Platform:coremark}"
         }
     }
 ]
@@ -138,7 +143,7 @@ the system. The following table describes the set of well-known parameters that 
             "Scenario": "InstallCustomToolsetPackage",
             "BlobContainer": "packages",
             "BlobName": "customtoolset-{Platform}.1.0.0.zip",
-            "PackageName": "customtoolset-{Platform}",
+            "PackageName": "customtoolset",
             "Extract": true
         }
     },
@@ -146,9 +151,8 @@ the system. The following table describes the set of well-known parameters that 
         "Type": "ExecuteCommand",
         "Parameters": {
             "Scenario": "InstallCustomToolset",
-            "Platforms": "{Platform}",
-            "Command": "bash -c 'install-toolset.sh'",
-            "WorkingDirectory": "{PackagePath:customtoolset-{Platform}}"
+            "Command": "bash -c 'install-toolset.sh --log-dir {LogDir}/installation'",
+            "WorkingDirectory": "{PackageDir:customtoolset}"
         }
     }
 ]
@@ -159,7 +163,7 @@ the system. The following table describes the set of well-known parameters that 
 		"Parameters": {
 			"Scenario": "FioExecutorJobFile",
 			"PackageName": "fio",
-			"JobFile": "{ScriptPath:fio}/oltp-c.jobfile",
+			"JobFile": "{ScriptDir:fio}/oltp-c.jobfile",
 			"CommandLine": "--thread {JobFile}"
 		}
 	}
@@ -332,8 +336,8 @@ Calculations in parameter values should use the following format:
 
 e.g.
 {calculate(100 / {TotalThreads})}
-{calculate({LogicalCoreCount} - 2)}
-{calculate(({LogicalCoreCount} - 2) / 512)}
+{calculate({LogicalProcessorCount} - 2)}
+{calculate(({LogicalProcessorCount} - 2) / 512)}
 {calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}
 ```
 
@@ -345,7 +349,7 @@ e.g.
           "Scenario": "RandomWrite_4k_BlockSize",
           "PackageName": "diskspd",
           "DiskFilter": "$.Parameters.DiskFilter",
-          "CommandLine": "-c496G -b4K -r4K -t{calculate({LogicalCoreCount}/2)} -o{calculate(512/{ThreadCount})} -w100 -d300 -Suw -W15 -D -L -Rtext",
+          "CommandLine": "-c496G -b4K -r4K -t{calculate({LogicalProcessorCount}/2)} -o{calculate(512/{ThreadCount})} -w100 -d300 -Suw -W15 -D -L -Rtext",
           "FileName": "diskspd-test.dat",
           "ProcessModel": "SingleProcess",
           "DeleteTestFilesOnFinish": false,
@@ -366,7 +370,7 @@ e.g.
           "CommandLine": "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration} -Suw -W15 -D -L -Rtext",
           "TestName": "diskspd_randwrite_{FileSize}_4k_d{ThreadCount}_th{ThreadCount}",
           "Duration": "$.Parameters.Duration",
-          "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+          "ThreadCount": "{calculate({LogicalProcessorCount}/2)}",
           "QueueDepth": "{calculate(512/{ThreadCount})}",
           "FileSize": "$.Parameters.FileSize",
           "FileName": "diskspd-test.dat",
