@@ -14,7 +14,6 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -26,10 +25,6 @@ namespace VirtualClient
     public static class VirtualClientLoggingExtensions
     {
         internal static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
-
-        private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries));
-
         private static readonly Semaphore FileAccessLock = new Semaphore(1, 1);
 
         /// <summary>
@@ -226,6 +221,7 @@ namespace VirtualClient
                     string[] possibleLogFileNames = new string[]
                     {
                         logFileName,
+                        component.LogFileName,
                         component.Scenario,
                         processDetails.ToolName,
                         component.TypeName
@@ -275,27 +271,27 @@ namespace VirtualClient
                     // common denominator choice.
                     IList<KeyValuePair<string, IConvertible>> metadata = new List<KeyValuePair<string, IConvertible>>
                     {
-                        new KeyValuePair<string, IConvertible>("Command", effectiveCommand),
-                        new KeyValuePair<string, IConvertible>("WorkingDirectory", processDetails?.WorkingDirectory),
-                        new KeyValuePair<string, IConvertible>("ElapsedTime", processDetails?.ElapsedTime?.ToString()),
-                        new KeyValuePair<string, IConvertible>("StartTime", processDetails?.StartTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ")),
-                        new KeyValuePair<string, IConvertible>("ExitTime", processDetails?.ExitTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ")),
-                        new KeyValuePair<string, IConvertible>("ExitCode", processDetails?.ExitCode),
+                        new KeyValuePair<string, IConvertible>("command", effectiveCommand),
+                        new KeyValuePair<string, IConvertible>("workingDirectory", processDetails?.WorkingDirectory),
+                        new KeyValuePair<string, IConvertible>("elapsedTime", processDetails?.ElapsedTime?.ToString()),
+                        new KeyValuePair<string, IConvertible>("startTime", processDetails?.StartTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ")),
+                        new KeyValuePair<string, IConvertible>("exitTime", processDetails?.ExitTime?.ToString("yyyy-MM-ddThh:mm:ss.fffZ")),
+                        new KeyValuePair<string, IConvertible>("exitCode", processDetails?.ExitCode),
                     };
 
                     IDictionary<string, IConvertible> additionalMetadata = new SortedDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
                     {
-                        { "ExperimentId", component.ExperimentId },
-                        { "ClientId", component.AgentId },
-                        { "ComponentType", component.ComponentType },
-                        { "MachineName", Environment.MachineName },
-                        { "PlatformArchitecture", component.PlatformSpecifics.PlatformArchitectureName },
-                        { "OperatingSystemVersion", Environment.OSVersion.ToString() },
-                        { "OperatingSystemDescription", RuntimeInformation.OSDescription },
-                        { "Role", component.Roles?.FirstOrDefault() },
-                        { "Scenario", component.Scenario },
-                        { "TimeZone", TimeZoneInfo.Local.StandardName },
-                        { "ToolName", processDetails.ToolName }
+                        { "experimentId", component.ExperimentId },
+                        { "clientId", component.AgentId },
+                        { "componentType", component.ComponentType },
+                        { "machineName", Environment.MachineName },
+                        { "platformArchitecture", component.PlatformSpecifics.PlatformArchitectureName },
+                        { "operatingSystemVersion", Environment.OSVersion.ToString() },
+                        { "operatingSystemDescription", RuntimeInformation.OSDescription },
+                        { "role", component.Roles?.FirstOrDefault() },
+                        { "scenario", component.Scenario },
+                        { "timezone", TimeZoneInfo.Local.StandardName },
+                        { "toolName", processDetails.ToolName }
                     };
 
                     foreach (var entry in component.Metadata)
@@ -313,12 +309,12 @@ namespace VirtualClient
                     StringBuilder outputBuilder = new StringBuilder();
                     foreach (var entry in metadata)
                     {
-                        outputBuilder.AppendLine(string.Format($"{{0,-{keyColumnWidth}}} : {{1}}", entry.Key, entry.Value));
+                        outputBuilder.AppendLine(string.Format($"{{0,-{keyColumnWidth}}} : {{1}}", entry.Key.CamelCased(), entry.Value));
                     }
 
                     foreach (var entry in additionalMetadata)
                     {
-                        outputBuilder.AppendLine(string.Format($"{{0,-{keyColumnWidth}}} : {{1}}", entry.Key, entry.Value));
+                        outputBuilder.AppendLine(string.Format($"{{0,-{keyColumnWidth}}} : {{1}}", entry.Key.CamelCased(), entry.Value));
                     }
 
                     if (!string.IsNullOrWhiteSpace(processDetails.StandardOutput))
@@ -342,7 +338,7 @@ namespace VirtualClient
                         outputBuilder.AppendLine(string.Join('\n', processDetails.Results));
                     }
 
-                    await VirtualClientLoggingExtensions.FileSystemAccessRetryPolicy.ExecuteAsync(async () =>
+                    await RetryPolicies.FileOperations.ExecuteAsync(async () =>
                     {
                         await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
                     });

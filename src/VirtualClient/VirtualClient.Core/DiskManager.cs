@@ -20,15 +20,7 @@ namespace VirtualClient
         /// <summary>
         /// Initializes a new instance of the <see cref="DiskManager"/> class.
         /// </summary>
-        protected DiskManager()
-            : this(NullLogger.Instance)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DiskManager"/> class.
-        /// </summary>
-        protected DiskManager(ILogger logger)
+        protected DiskManager(ILogger logger = null)
         {
             this.Logger = logger ?? NullLogger.Instance;
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries + 1));

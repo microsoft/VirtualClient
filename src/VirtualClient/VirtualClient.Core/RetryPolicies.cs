@@ -35,7 +35,7 @@ namespace VirtualClient
         /// <summary>
         /// Synchronous retry policies.
         /// </summary>
-        public static class Synchrounous
+        public static class Synchronous
         {
             /// <summary>
             /// Common retry policy for deleting files.

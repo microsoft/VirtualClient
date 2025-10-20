@@ -287,8 +287,26 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase(null, null)]
+        [TestCase("", "")]
+        [TestCase(" ", " ")]
+        [TestCase("p", "p")]
+        [TestCase("P", "p")]
+        [TestCase("MAC", "mac")]
         [TestCase("PropertyName", "propertyName")]
         [TestCase("propertyName", "propertyName")]
+        [TestCase("propertyname", "propertyname")]
+        [TestCase("IPAddress", "ipAddress")]
+        [TestCase("MACAddress", "macAddress")]
+        [TestCase("OperatingSystemPlatform", "operatingSystemPlatform")]
+        [TestCase("operatingSystemPlatform", "operatingSystemPlatform")]
+        [TestCase("Property_Name", "property_Name")]
+        [TestCase("property_Name", "property_Name")]
+        [TestCase("Operating_System_Platform", "operating_System_Platform")]
+        [TestCase("operating_System_Platform", "operating_System_Platform")]
+        [TestCase("MAC_Address", "mac_Address")]
+        [TestCase("_MAC_Address", "_mac_Address")]
+        [TestCase("__MAC__Address", "__mac__Address")]
         public void CamelCasedExtensionCreatesTheExpectedPropertyName(string propertyName, string expectedValue)
         {
             string actualValue = propertyName.CamelCased();

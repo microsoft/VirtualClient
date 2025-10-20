@@ -4,7 +4,6 @@
 namespace VirtualClient.Contracts
 {
     using System;
-    using System.Collections.Generic;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -20,12 +19,12 @@ namespace VirtualClient.Contracts
         public AliasAttribute(string alias)
         {
             alias.ThrowIfNullOrEmpty(nameof(alias));
-            this.Aliases = alias.Split(',');
+            this.Alias = alias;
         }
 
         /// <summary>
         /// The aliases for the logger provider.
         /// </summary>
-        public IEnumerable<string> Aliases { get; }
+        public string Alias { get; }
     }
 }

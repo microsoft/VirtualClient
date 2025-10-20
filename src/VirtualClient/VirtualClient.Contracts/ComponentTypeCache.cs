@@ -151,7 +151,7 @@ namespace VirtualClient.Contracts
                         IEnumerable<AliasAttribute> aliases = matchedType.Type.GetCustomAttributes<AliasAttribute>();
                         foreach (AliasAttribute attribute in aliases)
                         {
-                            if (attribute.Aliases.Contains(alias, StringComparer.OrdinalIgnoreCase))
+                            if (string.Equals(attribute.Alias, alias, StringComparison.OrdinalIgnoreCase))
                             {
                                 matchingAliasedTypes.Add(matchedType.Type);
                                 break;

@@ -3,7 +3,6 @@
 
 namespace VirtualClient
 {
-
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
@@ -28,6 +27,7 @@ namespace VirtualClient
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Identity;
@@ -278,91 +278,83 @@ namespace VirtualClient
         {
             VirtualClient.Contracts.CleanTargets targets = null;
             DateTime? logRetentionDate = null;
+            EventContext telemetryContext = EventContext.Persisted();
+            Type commandType = this.GetType();
 
-            if (this.LogRetention != null)
+            try
             {
-                logRetentionDate = DateTime.UtcNow.Subtract(this.LogRetention.Value);
-            }
-
-            if (this.CleanTargets != null)
-            {
-                if (this.CleanTargets?.Any() != true)
-                {
-                    // --clean used as a flag
-                    targets = VirtualClient.Contracts.CleanTargets.Create();
-                }
-                else
-                {
-                    targets = VirtualClient.Contracts.CleanTargets.Create(this.CleanTargets);
-                }
-
-                Type commandType = this.GetType();
-                EventContext telemetryContext = EventContext.Persisted();
-
-                telemetryContext.AddContext("cleanTargets", this.CleanTargets);
-
                 if (this.LogRetention != null)
                 {
-                    telemetryContext.AddContext("logRetention", this.LogRetention);
+                    logRetentionDate = DateTime.UtcNow.Subtract(this.LogRetention.Value);
                 }
 
-                if (targets.CleanLogs)
+                if (this.CleanTargets != null)
                 {
-                    try
+                    if (this.CleanTargets?.Any() != true)
                     {
-                        await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
+                        // --clean used as a flag
+                        targets = VirtualClient.Contracts.CleanTargets.Create();
+                    }
+                    else
+                    {
+                        targets = VirtualClient.Contracts.CleanTargets.Create(this.CleanTargets);
+                    }
+
+                    telemetryContext.AddContext("cleanTargets", this.CleanTargets);
+
+                    if (this.LogRetention != null)
+                    {
+                        telemetryContext.AddContext("logRetention", this.LogRetention);
+                    }
+
+                    if (targets.CleanLogs)
+                    {
+                        try
                         {
                             await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
                             await systemManagement.CleanContentUploadsDirectoryAsync(cancellationToken, logRetentionDate);
-                        });
+                        }
+                        catch
+                        {
+                            // Best effort.
+                        }
+                    }
+
+                    if (targets.CleanPackages)
+                    {
+                        await systemManagement.CleanPackagesDirectoryAsync(cancellationToken);
+                    }
+
+                    if (targets.CleanState)
+                    {
+                        await systemManagement.CleanStateDirectoryAsync(cancellationToken);
+                    }
+
+                    if (targets.CleanTemp)
+                    {
+                        await systemManagement.CleanTempDirectoryAsync(cancellationToken);
+                    }
+                }
+                else if (logRetentionDate != null)
+                {
+                    telemetryContext.AddContext("logRetention", this.LogRetention);
+
+                    try
+                    {
+                        await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
                     }
                     catch
                     {
                         // Best effort.
                     }
                 }
-
-                if (targets.CleanPackages)
-                {
-                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanPackages", LogLevel.Trace, telemetryContext, async () =>
-                    {
-                        await systemManagement.CleanPackagesDirectoryAsync(cancellationToken);
-                    });
-                }
-
-                if (targets.CleanState)
-                {
-                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanState", LogLevel.Trace, telemetryContext, async () =>
-                    {
-                        await systemManagement.CleanStateDirectoryAsync(cancellationToken);
-                    });
-                }
-
-                if (targets.CleanTemp)
-                {
-                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanTemp", LogLevel.Trace, telemetryContext, async () =>
-                    {
-                        await systemManagement.CleanTempDirectoryAsync(cancellationToken);
-                    });
-                }
             }
-            else if (logRetentionDate != null)
+            finally
             {
-                Type commandType = this.GetType();
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("logRetention", this.LogRetention);
-
-                try
-                {
-                    await (logger ?? NullLogger.Instance).LogMessageAsync($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext, async () =>
-                    {
-                        await systemManagement.CleanLogsDirectoryAsync(cancellationToken, logRetentionDate);
-                    });
-                }
-                catch
-                {
-                    // Best effort.
-                }
+                // The logging has to come at the end in case any of the loggers write
+                // log files to the /logs directory. These might get deleted by the clean
+                // operations. Having the logging last helps ensure we do not miss those logs.
+                (logger ?? NullLogger.Instance).LogMessage($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext);
             }
         }
 
@@ -549,20 +541,7 @@ namespace VirtualClient
 
             ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
-            IList<ILoggerProvider> loggerProviders = this.InitializeLoggerProviders(
-                configuration,
-                platformSpecifics,
-                telemetrySource?.ToString());
-
-            ILogger logger = loggerProviders.Any() ? new LoggerFactory(loggerProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
-
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
-                this.ClientId,
-                this.ExperimentId,
-                platformSpecifics,
-                logger,
-                this.Isolated);
-
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.Isolated);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IProfileManager profileManager = new ProfileManager();
             ISshClientFactory sshClientFactory = new SshClientFactory();
@@ -648,7 +627,6 @@ namespace VirtualClient
             dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
             dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
             dependencies.AddSingleton<IKeyVaultManager>(keyVaultManager);
-            dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
             dependencies.AddSingleton<IProfileManager>(profileManager);
             dependencies.AddSingleton<ISshClientFactory>(sshClientFactory);
@@ -656,6 +634,12 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemInfo>(systemManagement);
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
+
+            IList<ILoggerProvider> loggerProviders = this.InitializeLoggerProviders(dependencies, telemetrySource?.ToString());
+            ILogger logger = loggerProviders.Any() ? new LoggerFactory(loggerProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
+
+            systemManagement.SetLogger(logger);
+            dependencies.AddSingleton<ILogger>(logger);
 
             // Add in any SSH targets to the dependencies.
             if (this.TargetAgents?.Any() == true)
@@ -679,12 +663,14 @@ namespace VirtualClient
         /// <summary>
         /// Creates a logger instance based on the specified configuration and loggers.
         /// </summary>
-        protected virtual IList<ILoggerProvider> InitializeLoggerProviders(IConfiguration configuration, PlatformSpecifics platformSpecifics, string source = null)
+        protected virtual IList<ILoggerProvider> InitializeLoggerProviders(IServiceCollection dependencies, string source = null)
         {
             List<ILoggerProvider> loggingProviders = new List<ILoggerProvider>();
             IEnumerable<string> loggerDefinitions = this.GetLoggerDefinitions();
-
             LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
+            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+            IConfiguration configuration = dependencies.GetService<IConfiguration>();
+
             foreach (string loggerDefinition in loggerDefinitions)
             {
                 string loggerName = loggerDefinition;
@@ -730,7 +716,7 @@ namespace VirtualClient
                         break;
 
                     default:
-                        CommandBase.AddCustomLogging(loggingProviders, loggerName, loggerParameters);
+                        CommandBase.AddCustomLogging(loggingProviders, dependencies, loggerName, loggerParameters);
                         break;
                 }
             }
@@ -811,9 +797,21 @@ namespace VirtualClient
             }
         }
 
-        private static void AddCustomLogging(List<ILoggerProvider> loggingProviders, string loggerName, string loggerParameters)
+        private static void AddCustomLogging(List<ILoggerProvider> loggingProviders, IServiceCollection dependencies, string loggerName, string loggerParameters)
         {
+            Type[] supportedConstructor1Types = new Type[]
+            {
+                typeof(string)
+            };
+
+            Type[] supportedConstructor2Types = new Type[]
+            {
+                typeof(IServiceCollection),
+                typeof(string)
+            };
+
             List<Type> loggerProviderTypes = new List<Type>();
+
             if (ComponentTypeCache.Instance.TryGetComponentType(loggerName, out Type providerType))
             {
                 loggerProviderTypes.Add(providerType);
@@ -825,13 +823,29 @@ namespace VirtualClient
             else
             {
                 throw new TypeLoadException(
-                    $"The specified logger '{loggerName}' or alias is not supported. It may not be a valid {nameof(ILoggerProvider)} implementation " +
+                    $"The specified logger provider '{loggerName}' or alias is not supported. It may not be a valid {nameof(ILoggerProvider)} implementation " +
                     $"or is not defined in the extensions assemblies provided to the application.");
             }
 
             foreach (Type loggerProviderType in loggerProviderTypes)
             {
-                loggingProviders.Add((ILoggerProvider)Activator.CreateInstance(loggerProviderType, loggerParameters));
+                ConstructorInfo constructor2 = loggerProviderType.GetConstructor(supportedConstructor2Types);
+                if (constructor2 != null)
+                {
+                    loggingProviders.Add((ILoggerProvider)Activator.CreateInstance(loggerProviderType, dependencies, loggerParameters));
+                    continue;
+                }
+
+                ConstructorInfo constructor1 = loggerProviderType.GetConstructor(supportedConstructor1Types);
+                if (constructor1 != null)
+                {
+                    loggingProviders.Add((ILoggerProvider)Activator.CreateInstance(loggerProviderType, loggerParameters));
+                    continue;
+                }
+
+                throw new TypeLoadException(
+                    $"The specified logger provider '{loggerName}' does not implement a supported constructor. A logger provider extension must implement " +
+                    $"at least one of two supported constructors: new(string) or new(IServiceCollection, string).");
             }
         }
 

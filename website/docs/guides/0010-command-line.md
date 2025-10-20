@@ -413,6 +413,37 @@ line by specifying each using the `--logger` option.
   VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger="eventhub;sb://anynamespace.servicebus.windows.net?cid=...&tid=..."
   ```
 
+* **Metadata/Marker Logger**  
+  Provides support for writing metadata to a log file as a "marker" for signalling other operations. Additionally, the metadata/marker
+  file can be used to provide metadata to out-of-band processes that benefit from having that information available outside of the context
+  of the Virtual Client (e.g. scripts that parse information from log files reading the metadata from the file to include with the information
+  parsed). A file path/name can be provided on the command line. Additionally, the following placeholders can be used in the log file path and 
+  will be replaced with actual values at runtime:
+
+  * **\{experimentId\}**  
+    The ID of the experiment.
+
+  * **\{clientId\}**  
+    The ID of the agent/client. Default = the name of the machine.
+
+  * **any metadata values passed in on the command line**
+
+  ``` bash
+  # Default metadata marker usage. A 'metadata.log' file will be written to the /logs directory.
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger=marker
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger=metadata
+
+  # The file name can be defined and will be written to the /logs directory.
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger=marker;marker.log
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger=metadata;evidence_metadata.log
+
+  # A full file path/location can be defined.
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger=marker;C:\Users\AnyUser\Logs\marker.log
+
+  # Relative paths are supported as well (relative to the application directory).
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --logger=metadata;.\logs\evidence\evidence_metadata.log
+  ```
+
 * **Summary Logger**  
   Provides support for writing an operations summary to a log file on the system. A file path/name can be provided on the command line.
   Additionally, the following placeholders can be used in the log file path and will be replaced with actual values at runtime:

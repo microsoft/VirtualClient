@@ -60,8 +60,9 @@ namespace VirtualClient
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
                 this.ClientId,
                 Guid.NewGuid().ToString(),
-                platformSpecifics,
-                logger);
+                platformSpecifics);
+
+            systemManagement.SetLogger(logger);
 
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
 
