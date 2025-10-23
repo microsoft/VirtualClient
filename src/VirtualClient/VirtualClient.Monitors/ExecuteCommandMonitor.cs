@@ -116,6 +116,17 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Parameter defines Telemetry Splitting (true/false). Default = false.
+        /// </summary>
+        public bool TelemetrySplit
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.TelemetrySplit), false);
+            }
+        }
+
+        /// <summary>
         /// A policy that defines how the component will retry when it experiences transient issues.
         /// </summary>
         public IAsyncPolicy RetryPolicy { get; set; }
@@ -252,7 +263,7 @@ namespace VirtualClient.Dependencies
 
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName);
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, telemetrySplit: this.TelemetrySplit);
                                         process.ThrowIfMonitorFailed();
                                         this.CaptureEventInformation(process, telemetryContext);
                                     }
