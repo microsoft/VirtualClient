@@ -454,7 +454,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-p {this.Port} " +
                 $"-xml {this.ResultsPath} " +
                 $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.NoSyncEnabled == true) ? "-ns" : string.Empty)} " +
+                $"{(this.NoSyncEnabled == true ? "-ns" : string.Empty)} " +
                 $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
         }
 
@@ -475,7 +475,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"{((this.IsInServerRole && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
                 $"{((this.IsInClientRole && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
                 $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.NoSyncEnabled == true) ? "-N" : string.Empty)} " +
+                $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
                 $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
         }
     }
