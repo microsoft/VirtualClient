@@ -85,10 +85,12 @@ This profile is designed to identify general/broad regressions when compared aga
 
   | Platform                 | PerformanceLibrary          |        PerformanceLibraryVersion              |  CompilerName   |  CompilerVersion  |  Commandline Usage  |
   |--------------------------|-----------------------------|-----------------------------------------------|-----------------|-------------------|---------------------|
-  |   arm64 | ARM    | 23.04.1, 24.10 and 25.04.1 | gcc | 11 |  --parameters=PerformanceLibrary=ARM,,,PerformanceLibraryVersion=23.04.10,,,CompilerName=gcc,,,CompilerVersion=11 |
-  |   x64   | AMD    | 4.2.0, 5.0.0, 5.1.0        | gcc | 11 |   --parameters=PerformanceLibrary=AMD,,,PerformanceLibraryVersion=4.2.0,,,CompilerName=gcc,,,CompilerVersion=11 |
-  |   x64   | INTEL  | 2024.2.2.17, 2025.1.0.803  | gcc | 13 |   --parameters=PerformanceLibrary=INTEL,,,PerformanceLibraryVersion=2024.2.2.17,,,CompilerVersion=13 |
+  |   arm64 | ARM    | 23.04.1, 24.10 and 25.04.1 | gcc | 11 |  --parameters=PerformanceLibrary=ARM,,,PerformanceLibraryVersion=23.04.10 |
+  |   x64   | AMD    | 4.2.0, 5.0.0, 5.1.0        | gcc | 11 |   --parameters=PerformanceLibrary=AMD,,,PerformanceLibraryVersion=4.2.0 |
+  |   x64   | INTEL  | 2024.2.2.17  | gcc | 13 |   --parameters=PerformanceLibrary=INTEL,,,PerformanceLibraryVersion=2024.2.2.17 |
 
+
+  **Note**: The INTEL Performance Libraries are only supported on Intel® Xeon® Platinum 8473C (Sapphire Rapids), Intel® Xeon® Platinum 8370C (Ice Lake) processors.
 * **Resources**
 
 * [Performance Libraries for ARM] (https://developer.arm.com/downloads/-/arm-performance-libraries)

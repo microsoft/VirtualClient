@@ -31,8 +31,7 @@ namespace VirtualClient.Actions
             this.mockPackage = new DependencyPath("HPL", this.mockFixture.GetPackagePath("hplinpack"));
             this.mockPerformanceLibariesPackage = new DependencyPath("hplperformancelibraries", this.mockFixture.GetPackagePath("hplperformancelibraries"));
 
-
-            this.mockFixture.Setup(platform, architecture);
+            this.mockFixture.Setup(platform, architecture); 
             this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.SetupPackage(this.mockPerformanceLibariesPackage);
 
@@ -75,16 +74,12 @@ namespace VirtualClient.Actions
             this.SetupTest(platform, architecture);
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-                {
-                    return this.mockFixture.Process;
-                };
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) => this.mockFixture.Process;
 
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
                 string workloadExpectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
-
                 Assert.AreEqual(workloadExpectedPath, executor.GetHPLDirectory);
             }
         }
@@ -120,13 +115,13 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl")
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -137,7 +132,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(expectedCommands.Count, 0);
+                Assert.AreEqual(0, expectedCommands.Count);
             }
         }
 
@@ -153,19 +148,19 @@ namespace VirtualClient.Actions
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockPackage.Path, "ARM", "arm-performance-libraries_23.04.1.sh")}",
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "ARM", "arm-performance-libraries_23.04.1.sh")}",
                     $"sudo ./arm-performance-libraries_23.04.1.sh -a",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl")
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -176,7 +171,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(expectedCommands.Count, 0);
+                Assert.AreEqual(0, expectedCommands.Count);
             }
         }
 
@@ -191,19 +186,19 @@ namespace VirtualClient.Actions
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockPackage.Path, "ARM", "arm-performance-libraries_24.10.sh")}",
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "ARM", "arm-performance-libraries_24.10.sh")}",
                     $"sudo ./arm-performance-libraries_24.10.sh -a",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl")
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -214,7 +209,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(expectedCommands.Count, 0);
+                Assert.AreEqual(0, expectedCommands.Count);
             }
         }
 
@@ -230,19 +225,19 @@ namespace VirtualClient.Actions
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockPackage.Path, "ARM", "arm-performance-libraries_25.04.1.sh")}",
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "ARM", "arm-performance-libraries_25.04.1.sh")}",
                     $"sudo ./arm-performance-libraries_25.04.1.sh -a",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl")
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -253,7 +248,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(expectedCommands.Count, 0);
+                Assert.AreEqual(0, expectedCommands.Count);
             }
         }
 
@@ -265,7 +260,7 @@ namespace VirtualClient.Actions
         {
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "AMD";
-            this.mockFixture.Parameters["PerformanceLibraryVersion"] = $"{performanceLibraryVersion}";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = performanceLibraryVersion;
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
@@ -277,13 +272,13 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} --allow-run-as-root --bind-to core ./xhpl")
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -294,10 +289,9 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(expectedCommands.Count, 0);
+                Assert.AreEqual(0, expectedCommands.Count);
             }
         }
-
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "1.0.0")]
@@ -313,83 +307,40 @@ namespace VirtualClient.Actions
                     () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
                 Assert.AreEqual(
-                    $"The HPL workload currently only supports 4.2.0, 5.0.0 and 5.1.0 versions of AMD performance libraries",
+                    "The HPL workload currently only supports 4.2.0, 5.0.0 and 5.1.0 versions of AMD performance libraries",
                     exception.Message);
             }
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64, "2025.1.0.803")]
-        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibraries25OnUbuntuX64IntelPlatform(PlatformID platform, Architecture architecture, string performanceLibraryVersion)
-        {
-            this.SetupTest(platform, architecture);
-            this.mockFixture.Parameters["PerformanceLibrary"] = "INTEL";
-            this.mockFixture.Parameters["PerformanceLibraryVersion"] = $"{performanceLibraryVersion}";
-
-            // Setup CPU info with socket count for Intel execution path
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new CpuInfo("cpu", "description", 2, 9, 11, 13, true));
-
-            using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
-            {
-                List<string> expectedCommands = new List<string>()
-                {
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", $"{performanceLibraryVersion}", "intel-onemkl-2025.1.0.803_offline.sh")}",
-                    $"sudo ./intel-onemkl-2025.1.0.803_offline.sh -a --silent --eula accept",
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", "2025.1.0.803", "intel-oneapi-hpc-toolkit-2025.1.3.10_offline.sh")}",
-                    $"sudo ./intel-oneapi-hpc-toolkit-2025.1.3.10_offline.sh -a --silent --eula accept",
-                    $"cp -r /opt/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", "2025.1.0.803")}",
-                    $"make arch=Linux_GCC",
-                    $"sudo bash -c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\""
-                };
-
-                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-                {
-                    expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"-c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\"")
-                    {
-                        this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
-                    }
-                                                                                                                            
-                    return this.mockFixture.Process;
-                };
-
-                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                Assert.AreEqual(expectedCommands.Count, 0);
-            }
-        }
-
-        [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "2024.2.2.17")]
-        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibraries24OnUbuntuX64IntelPlatform(PlatformID platform, Architecture architecture, string performanceLibraryVersion)
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibrariesOnUbuntuX64IntelPlatform(PlatformID platform, Architecture architecture, string performanceLibraryVersion)
         {
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "INTEL";
-            this.mockFixture.Parameters["PerformanceLibraryVersion"] = $"{performanceLibraryVersion}";
+            this.mockFixture.Parameters["PerformanceLibraryVersion"] = performanceLibraryVersion;
 
-            // Setup CPU info with socket count for Intel execution path
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new CpuInfo("cpu", "description", 2, 9, 11, 13, true));
+                .ReturnsAsync(new CpuInfo("cpu", "description", 2, 4, 1, 1, true));
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", $"{performanceLibraryVersion}", "l_onemkl_p_2024.2.2.17_offline.sh")}",
-                    $"sudo ./l_onemkl_p_2024.2.2.17_offline.sh -a --silent --eula accept",
-                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", "2024.2.2.17", "l_HPCKit_p_2024.2.1.79_offline.sh")}",
+                    // Order: HPC toolkit then MKL per implementation
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", performanceLibraryVersion, "l_HPCKit_p_2024.2.1.79_offline.sh")}",
                     $"sudo ./l_HPCKit_p_2024.2.1.79_offline.sh -a --silent --eula accept",
-                    $"cp -r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", "2024.2.2.17")}",
+                    $"sudo chmod +x {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", performanceLibraryVersion, "l_onemkl_p_2024.2.2.17_offline.sh")}",
+                    $"sudo ./l_onemkl_p_2024.2.2.17_offline.sh -a --silent --eula accept",
+                    $"cp -r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.GetPackagePath("hplperformancelibraries"), "INTEL", performanceLibraryVersion)}",
                     $"make arch=Linux_GCC",
-                    $"sudo bash -c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\""
+                    $"sudo bash -c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && ./runme_intel64_dynamic\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"-c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\"")
+                    if (arguments == "-c \". /opt/intel/oneapi/mpi/2021.13/env/vars.sh && ./runme_intel64_dynamic\"")
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -400,7 +351,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(expectedCommands.Count, 0);
+                Assert.AreEqual(0, expectedCommands.Count);
             }
         }
 
@@ -418,7 +369,7 @@ namespace VirtualClient.Actions
                     () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
                 Assert.AreEqual(
-                    $"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library",
+                    "The HPL workload currently only supports 2024.2.2.17 version of INTEL Math Kernel Library",
                     exception.Message);
             }
         }
