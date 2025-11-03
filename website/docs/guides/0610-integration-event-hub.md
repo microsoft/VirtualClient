@@ -89,7 +89,7 @@ The following documentation illustrates how to use URI-style references for acce
     # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
     
     # Reference certificate by thumbprint
-    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
+    --event-hub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crtt=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
     ```
 
   * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
@@ -119,12 +119,12 @@ The following documentation illustrates how to use URI-style references for acce
     # Certificate Subject   = CN=any.domain.com
 
     # Reference certificate by issuer and subject
-    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com"
+    --event-hub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=CN=ABC CA 01, DC=ABC, DC=COM&crts=CN=any.domain.com"
 
     # Reference parts of the certificate issuer and subject (e.g. COM, ABC, ABC CA 01).
-    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=COM&crts=any.domain.com"
-    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC&crts=any.domain.com"
-    --eventHub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC CA 01&crts=any.domain.com"
+    --event-hub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=COM&crts=any.domain.com"
+    --event-hub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC&crts=any.domain.com"
+    --event-hub="sb://any.servicebus.windows.net?cid=08331e3b-1458-4de2-b1d6-7007bc7221d5&tid=573b5dBbe-c477-4a10-8986-a7fe10e2d79B&crti=ABC CA 01&crts=any.domain.com"
     ```
 
   * **Microsoft Azure Managed Identity**  
@@ -170,7 +170,7 @@ The following documentation illustrates how to use connection string-style refer
     # Certificate Thumbprint = f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f
 
     # Reference certificate by thumbprint
-    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
+    --event-hub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
     ```
 
   * **Microsoft Entra ID/App With Certificate (referenced by issuer and subject name)**  
@@ -203,12 +203,12 @@ The following documentation illustrates how to use connection string-style refer
     # Certificate Subject   = CN=any.domain.com
     
     # Reference certificate by issuer and subject
-    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com"
+    --event-hub="EndpointUrl=sb://any.servicebus.windows.net;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com"
 
     # Reference parts of the certificate issuer and subject (e.g. COM, ABC, ABC CA 01).
-    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=COM;CertificateSubject=any.domain.com"
-    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
-    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC CA 01;CertificateSubject=any.domain.com"
+    --event-hub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=COM;CertificateSubject=any.domain.com"
+    --event-hub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC;CertificateSubject=any.domain.com"
+    --event-hub="EndpointUrl=sb://any.servicebus.windows.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=ABC CA 01;CertificateSubject=any.domain.com"
     ```
 
   * **Microsoft Azure Managed Identity**  
@@ -226,7 +226,7 @@ The following documentation illustrates how to use connection string-style refer
     # Given a Microsoft Azure Managed Identity with the following properties:
     # Managed Identity ID = 6d3c5db8-e14b-44b7-9887-d168b5f659f6
 
-    --eventhub="EndpointUrl=sb://any.servicebus.windows.net;ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
+    --event-hub="EndpointUrl=sb://any.servicebus.windows.net;ManagedIdentityId=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
     ```
 
   * **Event Hub Namespace Shared Access Policies**  
@@ -236,7 +236,7 @@ The following documentation illustrates how to use connection string-style refer
     https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string
 
     ``` bash
-    --eventHub="Endpoint=sb://aaa.servicebus.windows.net/;SharedAccessKeyName=TelemetrySharedAccessKey;SharedAccessKey=bbbbbbbbbb..."
+    --event-hub="Endpoint=sb://aaa.servicebus.windows.net/;SharedAccessKeyName=TelemetrySharedAccessKey;SharedAccessKey=bbbbbbbbbb..."
     ```
 
 ### Create Event Hub Namespace
