@@ -207,14 +207,9 @@ namespace VirtualClient.Actions
                     string intelMklPath = "/opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack";
                     await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
                 }
-                else if (this.PerformanceLibraryVersion == "2025.1.0.803")
-                {
-                    string intelMklPath = "~/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack";
-                    await this.ExecuteCommandAsync("cp", $"-r {intelMklPath} {this.intelPerfLibrariesPath}", this.HPLDirectory, telemetryContext, cancellationToken);
-                }
                 else
                 {
-                    throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library");
+                    throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 version of INTEL Math Kernel Library");
                 }
             }
             else
@@ -365,12 +360,8 @@ namespace VirtualClient.Actions
                             this.hplIntelMKL = "l_onemkl_p_2024.2.2.17_offline.sh";
                             this.hplIntelHpcToolkit = "l_HPCKit_p_2024.2.1.79_offline.sh";
                             break;
-                        case "2025.1.0.803":
-                            this.hplIntelMKL = "intel-onemkl-2025.1.0.803_offline.sh";
-                            this.hplIntelHpcToolkit = "intel-oneapi-hpc-toolkit-2025.1.3.10_offline.sh";
-                            break;
                         default:
-                            throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 and 2025.1.0.803 versions of INTEL Math Kernel Library");
+                            throw new WorkloadException($"The HPL workload currently only supports 2024.2.2.17 version of INTEL Math Kernel Library");
                     }
 
                     this.intelPerfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "INTEL", this.PerformanceLibraryVersion);
@@ -467,18 +458,19 @@ namespace VirtualClient.Actions
             string hplDatFile;
             if (this.CpuArchitecture == Architecture.X64 && this.PerformanceLibrary == "INTEL")
             {
-                this.SetParameters(this.cpuInfo.SocketCount);
+                // Hard coding the processes to 1 socket for now as the Intel's Distro for HPL only supports single process runs.
+                this.SetParameters(1);
                 hplDatFile = this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack", "HPL.dat");
 
                 string hplRunmeFile = this.PlatformSpecifics.Combine(this.intelPerfLibrariesPath, "mp_linpack", "runme_intel64_dynamic");
                 await this.fileSystem.File.ReplaceInFileAsync(
-                    hplRunmeFile, @"export MPI_PROC_NUM *= *[^\n]*", $"export MPI_PROC_NUM={this.cpuInfo.SocketCount}", cancellationToken);
+                    hplRunmeFile, @"export MPI_PROC_NUM *= *[^\n]*", $"export MPI_PROC_NUM=1", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                   hplRunmeFile, @"export MPI_PER_NODE *= *[^\n]*", $"export MPI_PER_NODE={this.cpuInfo.SocketCount}", cancellationToken);
+                   hplRunmeFile, @"export MPI_PER_NODE *= *[^\n]*", $"export MPI_PER_NODE=1", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                   hplRunmeFile, @"export NUMA_PER_MPI *= *[^\n]*", $"export NUMA_PER_MPI={this.cpuInfo.SocketCount}", cancellationToken);
+                   hplRunmeFile, @"export NUMA_PER_MPI *= *[^\n]*", $"export NUMA_PER_MPI=1", cancellationToken);
             }
             else
             {
