@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// DeathStarBench Executor
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64")]
+    [SupportedPlatforms("linux-x64")]
     public class DeathStarBenchExecutor : VirtualClientComponent
     {
         /// <summary>
