@@ -96,9 +96,10 @@ namespace VirtualClient.Actions
             {
                 @"bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/scripts/dockerComposeScript.sh",
                 @"chmod +x ""/usr/local/bin/docker-compose""",
-                @"python3 -m pip install -U pip",
-                @"python3 -m pip install -U setuptools",
-                @"-H python3 -m pip install aiohttp asyncio",
+                @"python3 -m venv /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv",
+                @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install -U pip",
+                @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install -U setuptools",
+                @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install aiohttp asyncio",
                 @"luarocks install luasocket",
             };
 

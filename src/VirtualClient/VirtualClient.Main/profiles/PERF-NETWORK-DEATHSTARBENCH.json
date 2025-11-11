@@ -75,7 +75,6 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Repositories-Apt": "deb http://security.ubuntu.com/ubuntu xenial-security main",
                 "Packages-Apt": "python3-pip,libssl-dev,libz-dev,luarocks,libssl1.0.0"
             }
         },
