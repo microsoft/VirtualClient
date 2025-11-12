@@ -254,7 +254,7 @@ namespace VirtualClient.Actions
             using (TestCPSExecutor executor = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutInvalid, exception.Reason);
             }
         }
 
@@ -273,7 +273,7 @@ namespace VirtualClient.Actions
             using (TestCPSExecutor executor = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutInvalid, exception.Reason);
             }
         }
 
@@ -289,7 +289,7 @@ namespace VirtualClient.Actions
             using (TestCPSExecutor executor = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutNotDefined, exception.Reason);
             }
         }
 
@@ -306,7 +306,7 @@ namespace VirtualClient.Actions
             using (TestCPSExecutor executor = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutNotDefined, exception.Reason);
             }
         }
 

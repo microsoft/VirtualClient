@@ -149,6 +149,12 @@ namespace VirtualClient
                 Program.WriteCrashLog(exc);
             }
 
+            if (exitCode != 0)
+            {
+                int statusCode = StatusCodeRegistry.GetStatusCode(exitCode);
+                Console.Error.WriteLine($"Status Code = {statusCode}");
+            }
+
             return exitCode;
          }
 
@@ -418,6 +424,12 @@ namespace VirtualClient
 
                 // --client-id
                 OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --content-store
+                OptionFactory.CreateContentStoreOption(required: false),
+
+                // --content-path
+                OptionFactory.CreateContentPathTemplateOption(required: false),
 
                 // --event-hub
                 OptionFactory.CreateEventHubStoreOption(required: false),
