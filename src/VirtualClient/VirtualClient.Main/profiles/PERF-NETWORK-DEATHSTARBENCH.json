@@ -54,35 +54,54 @@
             }
         }
     ],
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallDeathStarBenchPackage",
-                "BlobContainer": "packages",
-                "BlobName": "deathstarbench.3.0.0.zip",
-                "PackageName": "deathstarbench",
-                "Extract": true
-            }
-        },
-        {
-            "Type": "DockerInstallation",
-            "Parameters": {
-                "Scenario": "InstallDocker"
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "python3-pip,libssl-dev,libz-dev,luarocks,libssl1.0.0"
-            }
-        },
-        {
-            "Type": "ApiServer",
-            "Parameters": {
-                "Scenario": "StartAPIServer"
-            }
-        }
-    ]
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallDeathStarBenchPackage",
+        "BlobContainer": "packages",
+        "BlobName": "deathstarbench.3.0.0.zip",
+        "PackageName": "deathstarbench",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DockerInstallation",
+      "Parameters": {
+        "Scenario": "InstallDocker"
+      }
+    },
+    {
+      "Type": "WgetPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLibsslPackage",
+        "PackageName": "libssl",
+        "PackageUri": "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb",
+        "SupportedPlatforms": "linux-x64",
+        "Notes": "Example path to package -> /packages/libssl"
+      }
+    },
+    {
+      "Type": "ExecuteCommand",
+      "Parameters": {
+        "Scenario": "InstallLibssl",
+        "SupportedPlatforms": "linux-x64",
+        "Command": "dpkg -i libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb",
+        "WorkingDirectory": "{PackagePath:libssl}"
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
+        "Packages-Apt": "python3-pip,libssl-dev,libz-dev,luarocks,libssl1.0.0,python3.12-venv"
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer"
+      }
+    }
+  ]
 }
