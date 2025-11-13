@@ -96,9 +96,11 @@ namespace VirtualClient.Actions
             {
                 @"bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/scripts/dockerComposeScript.sh",
                 @"chmod +x ""/usr/local/bin/docker-compose""",
-                @"python3 -m pip install -U pip",
-                @"python3 -m pip install -U setuptools",
-                @"-H python3 -m pip install aiohttp asyncio",
+                @"apt install python3-venv -y",
+                @"python3 -m venv /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv",
+                @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install -U pip",
+                @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install -U setuptools",
+                @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install aiohttp asyncio",
                 @"luarocks install luasocket",
             };
 
@@ -116,7 +118,7 @@ namespace VirtualClient.Actions
 
                 await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
-                Assert.AreEqual(6, executed);
+                Assert.AreEqual(8, executed);
             }
         }
 

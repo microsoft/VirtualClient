@@ -38,6 +38,7 @@ namespace VirtualClient.Actions
             DeathStarBenchExecutor.StateConfirmationPollingTimeout = TimeSpan.FromSeconds(1);
 
             this.mockFixture.SetupPackage("deathstarbench");
+            this.mockFixture.SetupPackage("libssl");
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
         }
 
