@@ -96,6 +96,7 @@ namespace VirtualClient.Actions
             {
                 @"bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/scripts/dockerComposeScript.sh",
                 @"chmod +x ""/usr/local/bin/docker-compose""",
+                @"apt install python3-venv -y",
                 @"python3 -m venv /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv",
                 @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install -U pip",
                 @"/home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/venv/bin/pip install -U setuptools",
@@ -117,7 +118,7 @@ namespace VirtualClient.Actions
 
                 await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
-                Assert.AreEqual(6, executed);
+                Assert.AreEqual(8, executed);
             }
         }
 
