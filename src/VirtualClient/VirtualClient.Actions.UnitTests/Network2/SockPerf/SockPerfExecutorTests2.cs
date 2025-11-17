@@ -176,7 +176,7 @@ namespace VirtualClient.Actions
             using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutInvalid, exception.Reason);
             }
         }
 
@@ -192,7 +192,7 @@ namespace VirtualClient.Actions
             using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutNotDefined, exception.Reason);
             }
         }
 
