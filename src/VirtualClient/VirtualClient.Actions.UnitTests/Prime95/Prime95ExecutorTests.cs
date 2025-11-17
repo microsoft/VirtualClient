@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
         {
             this.SetupTest(platform);
             this.mockFixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync("");
+                .ReturnsAsync("Invalid results");
 
             using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
@@ -162,14 +162,14 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
                 
-                Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
+                Assert.AreEqual(ErrorReason.InvalidResults, exception.Reason);
             }
         }
 
         [Test]
         [TestCase(PlatformID.Win32NT)]
         [TestCase(PlatformID.Unix)]
-        public void Prime95ExecutorThrowsWhenWorkloadResultsFileNotFound(PlatformID platform)
+        public void Prime95ExecutorHandlesCasesWhereTheResultsFileIsNotProduced(PlatformID platform)
         {
             this.SetupTest(platform);
             this.mockFixture.File.Setup(fe => fe.Exists(It.Is<string>(file => file.EndsWith("results.txt"))))
@@ -178,11 +178,7 @@ namespace VirtualClient.Actions
             using (TestPrime95Executor executor = new TestPrime95Executor(this.mockFixture))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
-
-                WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
-                    () => executor.ExecuteAsync(CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
             }
         }
 
