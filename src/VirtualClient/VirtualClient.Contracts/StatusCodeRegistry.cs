@@ -1,30 +1,28 @@
 ﻿namespace VirtualClient.Contracts
 {
-    using System;
-
     /// <summary>
     /// Provides a registry of exit/status codes.
     /// <list type="bullet">
     /// <item>
-    /// <description>CodeError: 110000 - 119999</description>
+    /// <description><b>CodeError</b>: 110000 - 119999</description>
     /// </item>
     /// <item>
-    /// <description>OrchestrationError: 210000 - 219999</description>
+    /// <description><b>OrchestrationError</b>: 210000 - 219999</description>
     /// </item>
     /// <item>
-    /// <description>ToolsetError: 211000 - 211999 (subset of ToolsetError)</description>
+    /// <description><b>ToolsetError</b>: 211000 - 211999<br/>(Note that this is a subset of OrchestrationError)</description>
     /// </item>
     /// <item>
-    /// <description>ConfigurationError: 310000 - 319999</description>
+    /// <description><b>ConfigurationError</b>: 310000 - 319999</description>
     /// </item>
     /// <item>
-    /// <description>UsageError: 311000 - 311999 (subset of ConfigurationError).</description>
+    /// <description><b>UsageError</b>: 311000 - 311999<br/>(Note that this is a subset of ConfigurationError)</description>
     /// </item>
     /// <item>
-    /// <description>SystemError: 410000 - 419999</description>
+    /// <description><b>SystemError</b>: 410000 - 419999</description>
     /// </item>
     /// <item>
-    /// <description>ThresholdOrKpiError: 510000 - 519999</description>
+    /// <description><b>ThresholdOrKpiError</b>: 510000 - 519999</description>
     /// </item>
     /// </list>
     /// </summary>

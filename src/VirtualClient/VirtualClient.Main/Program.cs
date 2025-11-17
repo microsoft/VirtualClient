@@ -152,7 +152,7 @@ namespace VirtualClient
             if (exitCode != 0)
             {
                 int statusCode = StatusCodeRegistry.GetStatusCode(exitCode);
-                Console.Error.WriteLine($"Status Code = {statusCode}");
+                Console.Error.WriteLine($"Status Code: Virtual Client = {statusCode}");
             }
 
             return exitCode;
