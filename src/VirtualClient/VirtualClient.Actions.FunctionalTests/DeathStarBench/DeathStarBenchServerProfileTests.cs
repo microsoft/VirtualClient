@@ -43,18 +43,19 @@ namespace VirtualClient.Actions
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
             this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
+            this.mockFixture.SetupPackage("libssl");
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
-            {
+            { 
                 executor.ExecuteActions = false;
 
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
-
-                // Workload dependency package expectations  
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "deathstarbench");
             }
+
+            // Workload dependency package expectations  
+            WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "deathstarbench");
         }
 
         [Test]
@@ -118,6 +119,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
+            this.mockFixture.SetupPackage("libssl");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {

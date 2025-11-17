@@ -244,7 +244,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Client instance not found. A client instance does not exist in the environment layout " +
                     $"provided to the Virtual Client for agent ID '{desiredAgentId}'.",
-                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+                    ErrorReason.LayoutInvalid);
             }
 
             return instance;
@@ -274,7 +274,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Client instances not found. A set of client instances do not exist in the environment layout " +
                     $"provided to the Virtual Client for the role '{role}'.",
-                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+                    ErrorReason.LayoutInvalid);
             }
 
             return clientInstances;
@@ -486,7 +486,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     "The environment layout is not defined. An environment layout must be provided to the " +
                     "Virtual Client application on the command line.",
-                    ErrorReason.EnvironmentLayoutNotDefined);
+                    ErrorReason.LayoutNotDefined);
             }
         }
 
@@ -505,7 +505,7 @@ namespace VirtualClient.Contracts
                 throw new WorkloadException(
                     $"The IP address defined in the environment layout for this agent " +
                     $"instance '{ipAddress}' does not match with the IP addresses defined on the system.",
-                    ErrorReason.LayoutIPAddressDoesNotMatch);
+                    ErrorReason.LayoutInvalid);
             }
         }
 
