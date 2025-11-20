@@ -340,7 +340,7 @@ namespace VirtualClient.Actions
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray(), logToFile: true);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true, results: new KeyValuePair<string, string>(this.ResultsPath, results));
                                 }
                             }
                             catch (TimeoutException exc)

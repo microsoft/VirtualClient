@@ -332,10 +332,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true, results: results);
 
-                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
+                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results.Value);
                     IList<Metric> metrics = parser.Parse();
                     metrics.LogConsole(this.Scenario, "SPECcpu");
 

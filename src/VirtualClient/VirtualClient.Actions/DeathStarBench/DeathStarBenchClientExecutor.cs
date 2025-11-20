@@ -157,8 +157,8 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: results.AsArray(), logToFile: true);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", logToFile: true, results: results);
 
                 this.MetadataContract.AddForScenario(
                     "DeathStarBench",
@@ -167,7 +167,7 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results);
+                DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results.Value);
                 IList<Metric> metrics = deathStarBenchMetricsParser.Parse();
 
                 this.Logger.LogMetrics(

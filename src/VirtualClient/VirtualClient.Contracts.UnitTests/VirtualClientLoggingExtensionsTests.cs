@@ -270,7 +270,8 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(process.ToProcessDetails("anytoolset", expectedResults.AsArray()));
+            ProcessDetails processDetails = process.ToProcessDetails("anytoolset", new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults));
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(processDetails, processDetails.Results.ElementAt(0));
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             string expectedProcessInfo = new
@@ -279,6 +280,7 @@ namespace VirtualClient.Contracts
                 command = $"{expectedCommand} {expectedArguments}".Trim(),
                 workingDir = expectedWorkingDir ?? string.Empty,
                 exitCode = expectedExitCode,
+                filePath = $"{expectedWorkingDir}\\Results.txt",
                 results = expectedResults
             }.ToJson();
 
@@ -1050,6 +1052,7 @@ namespace VirtualClient.Contracts
                         command = $"{expectedCommand} {expectedArguments}".Trim(),
                         workingDir = expectedWorkingDir ?? string.Empty,
                         exitCode = expectedExitCode,
+                        filePath = $"{expectedWorkingDir}\\Results.txt",
                         results = expectedResults
                     }.ToJson();
 
@@ -1061,7 +1064,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, results: new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults))
                 .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1097,7 +1100,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
                 .ConfigureAwait(false);
         }
 
@@ -1197,6 +1200,7 @@ namespace VirtualClient.Contracts
                         command = $"{expectedCommand} {expectedArguments}".Trim(),
                         workingDir = expectedWorkingDir ?? string.Empty,
                         exitCode = expectedExitCode,
+                        filePath = $"{expectedWorkingDir}\\Results.txt",
                         results = expectedResults
                     }.ToJson();
 
@@ -1208,7 +1212,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: new List<string> { expectedResults }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, logToTelemetry: true, results: new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults))
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1245,7 +1249,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, results: new List<string> { "Any results" }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, logToTelemetry: true, results: new KeyValuePair<string, string>("Results", "Any Results"))
                .ConfigureAwait(false);
 
             Assert.IsTrue(processDetailsHandled);
@@ -1293,7 +1297,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { "Any results" }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, results: new KeyValuePair<string, string>("Results", "Any Results"))
                .ConfigureAwait(false);
 
             Assert.IsTrue(confirmed);
@@ -1576,7 +1580,7 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
             
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: false, logToFile: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true, results: new KeyValuePair<string, string>("Results", expectedResults))
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedLogFileWritten);

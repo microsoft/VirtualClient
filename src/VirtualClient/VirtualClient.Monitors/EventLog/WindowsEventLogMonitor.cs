@@ -399,12 +399,12 @@ namespace VirtualClient.Monitors
                     {
                         foreach (var channelGroup in eventsGroupedByChannel)
                         {
-                            List<string> logOutputResults = new List<string>();
+                            List<KeyValuePair<string, string>> logOutputResults = new List<KeyValuePair<string, string>>();
                             foreach (LogEvent channelEvent in channelGroup)
                             {
                                 try
                                 {
-                                    logOutputResults.Add(channelEvent.ToDictionary().ToJson(WindowsEventLogMonitor.SerializationSettings));
+                                    logOutputResults.Add(channelEvent.LogName, channelEvent.ToDictionary().ToJson(WindowsEventLogMonitor.SerializationSettings));
                                 }
                                 catch (Exception exc)
                                 {

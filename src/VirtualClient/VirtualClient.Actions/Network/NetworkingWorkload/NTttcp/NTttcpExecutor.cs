@@ -340,7 +340,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 else
                                 {
                                     string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray());
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                     this.CaptureMetrics(
                                         results,

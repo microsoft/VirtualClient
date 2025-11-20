@@ -206,16 +206,16 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
-                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results.AsArray(), logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", logToFile: true, results: results);
 
-                if (string.IsNullOrWhiteSpace(results))
+                if (string.IsNullOrWhiteSpace(results.Value))
                 {
                     throw new WorkloadResultsException($"Invalid results. The StressAppTest workload did not produce valid results.", ErrorReason.InvalidResults);
                 }
 
-                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(results);
+                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(results.Value);
                 IList<Metric> workloadMetrics = parser.Parse();
 
                 foreach (Metric metric in workloadMetrics)

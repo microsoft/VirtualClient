@@ -306,20 +306,24 @@ namespace VirtualClient.Actions
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                string results = null;
+                                KeyValuePair<string, string> results = default;
+
                                 if (this.fileSystem.File.Exists(this.ResultsFilePath))
                                 {
-                                    results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
+                                    await RetryPolicies.FileOperations.ExecuteAsync(async () =>
+                                    {
+                                        results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
+                                    });
                                 }
 
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results?.AsArray());
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results);
 
                                 // The exit code on SafeKill is -1 which is not a part of the default success codes.
                                 process.ThrowIfWorkloadFailed(this.successExitCodes);
 
-                                if (!string.IsNullOrWhiteSpace(results))
+                                if (!string.IsNullOrWhiteSpace(results.Value))
                                 {
-                                    this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
+                                    this.CaptureMetrics(process, results.Value, telemetryContext, cancellationToken);
                                 }
                             }
                         }

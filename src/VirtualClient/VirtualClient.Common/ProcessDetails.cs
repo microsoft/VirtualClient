@@ -52,7 +52,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Generated Results of the command.
         /// </summary>
-        public IEnumerable<string> Results { get; set; }
+        public IEnumerable<KeyValuePair<string, string>> Results { get; set; }
 
         /// <summary>
         /// Standard output of the command.

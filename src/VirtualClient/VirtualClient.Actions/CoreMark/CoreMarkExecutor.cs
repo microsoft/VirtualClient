@@ -163,11 +163,9 @@ namespace VirtualClient.Actions
 
                     this.MetadataContract.Apply(telemetryContext);
 
-                    IEnumerable<string> results = await this.LoadResultsAsync(
-                        new string[] { this.OutputFile1Path, this.OutputFile2Path },
-                        cancellationToken);
+                    IEnumerable<string> resultsFiles = new string[] { this.OutputFile1Path, this.OutputFile2Path };
 
-                    foreach (string result in results)
+                    foreach (string filePath in resultsFiles)
                     {
                         if (process.IsErrored())
                         {
@@ -175,11 +173,12 @@ namespace VirtualClient.Actions
                             process.ThrowIfWorkloadFailed();
                         }
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: result.AsArray(), logToFile: true);
+                        KeyValuePair<string, string> results = await this.LoadResultsAsync(filePath, cancellationToken);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true, results: results);
 
-                        if (!string.IsNullOrWhiteSpace(result))
+                        if (!string.IsNullOrWhiteSpace(results.Value))
                         {
-                            CoreMarkMetricsParser parser = new CoreMarkMetricsParser(result);
+                            CoreMarkMetricsParser parser = new CoreMarkMetricsParser(results.Value);
                             IList<Metric> metrics = parser.Parse();
 
                             this.Logger.LogMetrics(
