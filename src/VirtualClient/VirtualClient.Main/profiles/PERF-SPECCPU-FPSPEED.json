@@ -15,8 +15,8 @@
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
-        "BaseOptimizingFlags": "-g -O3 -march=native -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march=native -flto -frecord-gcc-switches"
+        "BaseOptimizingFlags": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"-g -O3 -march=native -frecord-gcc-switches\" : \"-g -O3 -march=native\")}",
+        "PeakOptimizingFlags": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"-g -Ofast -march=native -flto -frecord-gcc-switches\" : \"-g -Ofast -march=native -flto\")}"
     },
     "Actions": [
         {
