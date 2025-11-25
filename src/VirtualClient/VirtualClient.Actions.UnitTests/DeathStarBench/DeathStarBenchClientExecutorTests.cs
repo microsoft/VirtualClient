@@ -159,10 +159,10 @@ namespace VirtualClient.Actions
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1000 >> results.txt\"",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read -R 1000 >> results.txt\"",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-user-timeline.lua http://localhost:8080/wrk2-api/user-timeline/read -R 1000 >> results.txt\"",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/mixed-workload.lua http://localhost:8080 -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/read-user-timeline.lua http://localhost:8080/wrk2-api/user-timeline/read -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/mixed-workload.lua http://localhost:8080 -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh"
             };
@@ -211,7 +211,7 @@ namespace VirtualClient.Actions
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
             };
@@ -258,7 +258,7 @@ namespace VirtualClient.Actions
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/hotel-reservation/mixed-workload_type_1.lua http://0.0.0.0:5000 -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/hotel-reservation/mixed-workload_type_1.lua http://0.0.0.0:5000 -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh"
             };
