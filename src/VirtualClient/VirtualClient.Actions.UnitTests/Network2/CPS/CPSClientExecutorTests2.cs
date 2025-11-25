@@ -51,9 +51,9 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["PackageName"] = "cps";
             this.mockFixture.Parameters["Port"] = 3001;
             this.mockFixture.Parameters["Connections"] = 256;
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 44;
-            this.mockFixture.Parameters["Delaytime"] = 30;
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:00:44";
+            this.mockFixture.Parameters["Delaytime"] = "00:00:30";
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
             string exampleResults = File.ReadAllText(Path.Combine(CPSClientExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt"));
@@ -108,8 +108,8 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(stateItem.Definition.Properties["Type"], typeof(CPSServerExecutor2).Name);
                     Assert.AreEqual(stateItem.Definition.Properties["Connections"], 256);
                     Assert.AreEqual(stateItem.Definition.Properties["Port"], 3001);
-                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
-                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 44);
+                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], "00:05:00");
+                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], "00:00:44");
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 

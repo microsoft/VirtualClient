@@ -53,11 +53,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The TimeInSeconds argument defined in the profile.
         /// </summary>
-        public int TimeInSeconds
+        public TimeSpan TimeInSeconds
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(StressAppTestExecutor.TimeInSeconds));
+                return this.Parameters.GetTimeSpanValue(nameof(StressAppTestExecutor.TimeInSeconds), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -136,11 +136,11 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.TimeInSeconds <= 0)
+            if (this.TimeInSeconds <= TimeSpan.Zero)
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.TimeInSeconds)}' arguments defined. {nameof(this.TimeInSeconds)} should be an integer greater than 0",
+                    $"required value for'{nameof(this.TimeInSeconds)}' arguments defined. {nameof(this.TimeInSeconds)} should be greater than 0",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string commandLineArguments = this.CommandLine;
-                    commandLineArguments += " -s " + this.TimeInSeconds;
+                    commandLineArguments += " -s " + this.TimeInSeconds.TotalSeconds;
                     if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
                     {
                         commandLineArguments += " -W";

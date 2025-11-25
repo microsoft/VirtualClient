@@ -83,7 +83,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
             this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.ThreadCount)] = "20";
             this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.ConnectionCount)] = "1000";
-            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "600s";
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "00:05:00";
             this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.RequestPerSec)] = "1000";
             this.mockFixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";
             this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm";

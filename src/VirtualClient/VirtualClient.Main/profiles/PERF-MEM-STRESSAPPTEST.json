@@ -6,7 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
     },
     "Parameters": {
-        "TimeInSeconds": "60",
+        "TimeInSeconds": "00:01:00",
         "UseCpuStressfulMemoryCopy": false
     },
     "Actions": [

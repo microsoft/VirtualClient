@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
                 { nameof(StressAppTestExecutor.PackageName), "stressapptest" },
                 { nameof(StressAppTestExecutor.CommandLine), "" },
                 { nameof(StressAppTestExecutor.Scenario), "ApplyStress" },
-                { nameof(StressAppTestExecutor.TimeInSeconds), "60" },
+                { nameof(StressAppTestExecutor.TimeInSeconds), "00:01:00" },
                 { nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy), false }
             };
 
@@ -129,7 +129,7 @@ namespace VirtualClient.Actions
             }
 
             this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "0";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "00:00:00";
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());

@@ -88,11 +88,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The duration for running DeathStarBench workload.
         /// </summary>
-        public string Duration
+        public TimeSpan Duration
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DeathStarBenchClientExecutor.Duration));
+                return this.Parameters.GetTimeSpanValue(nameof(DeathStarBenchClientExecutor.Duration), TimeSpan.FromSeconds(300));
             }
         }
 
@@ -303,7 +303,7 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string commandArguments = 
-                        @$"-c ""./wrk -D exp -t {this.ThreadCount} -c {this.ConnectionCount} -d {this.Duration} -L -s {this.actionScript[this.ServiceName][action]} -R {this.RequestPerSec} >> results.txt""";
+                        @$"-c ""./wrk -D exp -t {this.ThreadCount} -c {this.ConnectionCount} -d {this.Duration.TotalSeconds}s -L -s {this.actionScript[this.ServiceName][action]} -R {this.RequestPerSec} >> results.txt""";
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(@$"bash", commandArguments, this.MakefileDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
