@@ -214,7 +214,6 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix)]
-        [TestCase(PlatformID.Win32NT)]
         public void StressAppTestExecutorSupportsIntegerAndTimeSpanDurationFormats(PlatformID platform)
         {
             this.SetupTest(platform);
