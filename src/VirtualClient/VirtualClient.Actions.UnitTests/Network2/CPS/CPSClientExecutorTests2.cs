@@ -173,16 +173,14 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        public async Task CPSClientExecutor2ExecutesAsExpectedWithIntegerBasedTimeParameters(PlatformID platformID, Architecture architecture)
+        public async Task CPSClientExecutor2ExecutesAsExpectedWithIntegerTimeParameters(PlatformID platformID, Architecture architecture)
         {
-            // This test verifies that the executor runs correctly when time parameters are provided as integers
-            // (legacy format), ensuring backward compatibility for partner teams' existing profiles.
-
             int processExecuted = 0;
             this.SetupTest(platformID, architecture);
 
-            // Override with integer-based time parameters
-            this.mockFixture.Parameters["TestDuration"] = 180;      // 180 seconds (integer)
+            this.mockFixture.Parameters["TestDuration"] = 180;
+            this.mockFixture.Parameters["WarmupTime"] = 45;
+            this.mockFixture.Parameters["Delaytime"] = 20;
             this.mockFixture.Parameters["WarmupTime"] = 45;         // 45 seconds (integer)
             this.mockFixture.Parameters["Delaytime"] = 20;          // 20 seconds (integer)
 
@@ -197,81 +195,63 @@ namespace VirtualClient.Actions
 
             TestCPSClientExecutor component = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            // Verify the parameters are correctly converted to TimeSpan
             Assert.AreEqual(TimeSpan.FromSeconds(180), component.TestDuration);
             Assert.AreEqual(TimeSpan.FromSeconds(45), component.WarmupTime);
             Assert.AreEqual(TimeSpan.FromSeconds(20), component.DelayTime);
 
-            // Verify the executor runs successfully
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
             string exe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
-            // Verify the command line includes the integer values (180, 45, 20)
             if (platformID == PlatformID.Win32NT)
             {
                 Assert.AreEqual(1, processExecuted);
-                Assert.IsTrue(commandsExecuted[0].Contains("-t 180"), "Command should contain TestDuration of 180 seconds");
-                Assert.IsTrue(commandsExecuted[0].Contains("-wt 45"), "Command should contain WarmupTime of 45 seconds");
-                Assert.IsTrue(commandsExecuted[0].Contains("-ds 20"), "Command should contain DelayTime of 20 seconds");
+                Assert.IsTrue(commandsExecuted[0].Contains("-t 180"));
+                Assert.IsTrue(commandsExecuted[0].Contains("-wt 45"));
+                Assert.IsTrue(commandsExecuted[0].Contains("-ds 20"));
             }
             else
             {
                 Assert.AreEqual(2, processExecuted);
-                Assert.IsTrue(commandsExecuted[1].Contains("-t 180"), "Command should contain TestDuration of 180 seconds");
-                Assert.IsTrue(commandsExecuted[1].Contains("-wt 45"), "Command should contain WarmupTime of 45 seconds");
-                Assert.IsTrue(commandsExecuted[1].Contains("-ds 20"), "Command should contain DelayTime of 20 seconds");
+                Assert.IsTrue(commandsExecuted[1].Contains("-t 180"));
+                Assert.IsTrue(commandsExecuted[1].Contains("-wt 45"));
+                Assert.IsTrue(commandsExecuted[1].Contains("-ds 20"));
             }
         }
 
         [Test]
-        public void CPSClientExecutor2SupportsBackwardCompatibilityWithIntegerBasedTimeParameters()
+        public void CPSClientExecutor2SupportsIntegerAndTimeSpanTimeFormats()
         {
-            // This test ensures backward compatibility: partners' profiles using integer-based time parameters
-            // (representing seconds) will continue to work after the conversion to TimeSpan-based parameters.
-
             this.SetupTest(PlatformID.Unix, Architecture.X64);
 
-            // Test 1: Integer format (legacy - seconds as integers)
-            this.mockFixture.Parameters["TestDuration"] = 300;      // 300 seconds (integer)
-            this.mockFixture.Parameters["WarmupTime"] = 60;         // 60 seconds (integer)
-            this.mockFixture.Parameters["Delaytime"] = 30;          // 30 seconds (integer)
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 60;
+            this.mockFixture.Parameters["Delaytime"] = 30;
 
             TestCPSClientExecutor executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            // Verify integer values are correctly converted to TimeSpan
-            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration, 
-                "TestDuration should accept integer (300 seconds) and convert to TimeSpan");
-            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime, 
-                "WarmupTime should accept integer (60 seconds) and convert to TimeSpan");
-            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime, 
-                "DelayTime should accept integer (30 seconds) and convert to TimeSpan");
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
 
-            // Test 2: TimeSpan string format (new format)
-            this.mockFixture.Parameters["TestDuration"] = "00:05:00";    // 5 minutes (TimeSpan format)
-            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";      // 1 minute (TimeSpan format)
-            this.mockFixture.Parameters["Delaytime"] = "00:00:30";       // 30 seconds (TimeSpan format)
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";
+            this.mockFixture.Parameters["Delaytime"] = "00:00:30";
 
             executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            // Verify TimeSpan string values work correctly
-            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration, 
-                "TestDuration should accept TimeSpan string format");
-            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime, 
-                "WarmupTime should accept TimeSpan string format");
-            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime, 
-                "DelayTime should accept TimeSpan string format");
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
 
-            // Test 3: Verify both formats produce equivalent results
-            this.mockFixture.Parameters["TestDuration"] = 180;  // 180 seconds (integer)
+            this.mockFixture.Parameters["TestDuration"] = 180;
             executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             TimeSpan integerBasedDuration = executor.TestDuration;
 
-            this.mockFixture.Parameters["TestDuration"] = "00:03:00";  // 3 minutes (TimeSpan format)
+            this.mockFixture.Parameters["TestDuration"] = "00:03:00";
             executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             TimeSpan timespanBasedDuration = executor.TestDuration;
 
-            Assert.AreEqual(integerBasedDuration, timespanBasedDuration, 
-                "Integer-based (180) and TimeSpan-based ('00:03:00') parameters must produce identical TimeSpan values");
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         private class TestCPSClientExecutor : CPSClientExecutor2

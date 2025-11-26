@@ -111,19 +111,14 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix)]
-        public async Task StressAppTestExecutorExecutesAsExpectedWithIntegerBasedTimeParameters(PlatformID platform)
+        public async Task StressAppTestExecutorExecutesAsExpectedWithIntegerDurationParameter(PlatformID platform)
         {
-            // This test verifies that the executor runs correctly when Duration is provided as an integer
-            // (legacy format), ensuring backward compatibility for partner teams' existing profiles.
-
             this.SetupTest(platform);
 
-            // Override with integer-based time parameter
             this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 120;  // 120 seconds (integer)
 
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
-                // Verify the parameter is correctly converted to TimeSpan
                 Assert.AreEqual(TimeSpan.FromSeconds(120), executor.Duration);
 
                 bool commandExecuted = false;
@@ -148,7 +143,6 @@ namespace VirtualClient.Actions
                     };
                 };
 
-                // Verify the executor runs successfully
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.IsTrue(commandExecuted);
             }
@@ -221,42 +215,31 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix)]
         [TestCase(PlatformID.Win32NT)]
-        public void StressAppTestExecutorSupportsBackwardCompatibilityWithIntegerBasedTimeParameters(PlatformID platform)
+        public void StressAppTestExecutorSupportsIntegerAndTimeSpanDurationFormats(PlatformID platform)
         {
-            // This test ensures backward compatibility: partners' profiles using integer-based time parameters
-            // (representing seconds) will continue to work after the conversion to TimeSpan-based parameters.
-
             this.SetupTest(platform);
 
-            // Test 1: Integer format (legacy - seconds as integers)
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 300;  // 300 seconds (integer)
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 300;
 
             TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture);
 
-            // Verify integer value is correctly converted to TimeSpan
-            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.Duration, 
-                "Duration should accept integer (300 seconds) and convert to TimeSpan");
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.Duration);
 
-            // Test 2: TimeSpan string format (new format)
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:05:00";  // 5 minutes (TimeSpan format)
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:05:00";
 
             executor = new TestStressAppTestExecutor(this.mockFixture);
 
-            // Verify TimeSpan string value works correctly
-            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.Duration, 
-                "Duration should accept TimeSpan string format");
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.Duration);
 
-            // Test 3: Verify both formats produce equivalent results
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 180;  // 180 seconds (integer)
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 180;
             executor = new TestStressAppTestExecutor(this.mockFixture);
             TimeSpan integerBasedDuration = executor.Duration;
 
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:03:00";  // 3 minutes (TimeSpan format)
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:03:00";
             executor = new TestStressAppTestExecutor(this.mockFixture);
             TimeSpan timespanBasedDuration = executor.Duration;
 
-            Assert.AreEqual(integerBasedDuration, timespanBasedDuration, 
-                "Integer-based (180) and TimeSpan-based ('00:03:00') parameters must produce identical TimeSpan values");
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         private class TestStressAppTestExecutor : StressAppTestExecutor
