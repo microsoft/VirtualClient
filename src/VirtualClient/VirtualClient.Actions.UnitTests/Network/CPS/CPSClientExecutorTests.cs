@@ -43,9 +43,9 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters["PackageName"] = "Networking";
             this.mockFixture.Parameters["Connections"] = "256";
-            this.mockFixture.Parameters["TestDuration"] = "300";
-            this.mockFixture.Parameters["WarmupTime"] = "30";
-            this.mockFixture.Parameters["Delaytime"] = "0";
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:00:30";
+            this.mockFixture.Parameters["Delaytime"] = "00:00:00";
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -94,6 +94,39 @@ namespace VirtualClient.Actions
             Assert.AreEqual(1, processExecuted);
         }
 
+        [Test]
+        public async Task CPSClientExecutorExecutesAsExpectedWithIntegerTimeParameters()
+        {
+            this.mockFixture.Parameters["TestDuration"] = 120;
+            this.mockFixture.Parameters["WarmupTime"] = 30;
+            this.mockFixture.Parameters["Delaytime"] = 15;
+
+            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await networkingWorkloadExecutor.OnInitialize.Invoke(EventContext.None, CancellationToken.None);
+
+            int processExecuted = 0;
+            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            {
+                processExecuted++;
+                this.networkingWorkloadState.ToolState = NetworkingWorkloadToolState.Stopped;
+                var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.networkingWorkloadState);
+
+                this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                     .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+
+                return this.mockFixture.Process;
+            };
+
+            TestCPSClientExecutor component = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(120), component.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), component.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(15), component.DelayTime);
+
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.AreEqual(1, processExecuted);
+        }
+
         private void SetupNetworkingWorkloadState()
         {
             this.networkingWorkloadState = new NetworkingWorkloadState();
@@ -107,6 +140,40 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                  .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+        }
+
+        [Test]
+        public void CPSClientExecutorSupportsIntegerAndTimeSpanTimeFormats()
+        {
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 60;
+            this.mockFixture.Parameters["Delaytime"] = 30;
+
+            TestCPSClientExecutor executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";
+            this.mockFixture.Parameters["Delaytime"] = "00:00:30";
+
+            executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = 180;
+            executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.TestDuration;
+
+            this.mockFixture.Parameters["TestDuration"] = "00:03:00";
+            executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.TestDuration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         private class TestCPSClientExecutor : CPSClientExecutor

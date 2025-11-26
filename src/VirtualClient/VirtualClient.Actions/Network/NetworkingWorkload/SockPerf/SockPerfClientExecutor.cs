@@ -120,7 +120,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             return $"{this.TestMode} " +
                 $"-i {serverIPAddress} " +
                 $"-p {this.Port} {protocolParam} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"{(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")} " +
                 $"--full-rtt --msg-size {this.MessageSize} " +
                 $"--client_ip {clientIPAddress} " +

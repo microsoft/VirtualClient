@@ -86,13 +86,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the duration (in seconds) for running the NTttcp workload.
+        /// Parameter defines the duration for running the NTttcp workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -449,7 +449,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-p {this.Port} " +
                 $"-xml {this.ResultsPath} " +
@@ -466,7 +466,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-x {this.ResultsPath} " +
                 $"-p {this.Port} " +

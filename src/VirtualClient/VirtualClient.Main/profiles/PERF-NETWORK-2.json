@@ -10,15 +10,15 @@
         "EnableBusyPoll": true,
         "DisableFirewall": true,
         "CpsPort": 7201,
-        "CpsDuration": 300,
+        "CpsDuration": "00:05:00",
         "LattePort": 6100,
         "NTttcpPort": 5500,
-        "NTttcpDuration": 60,
+        "NTttcpDuration": "00:01:00",
         "SockPerfPort": 8201,
-        "SockPerfDuration": 60,
+        "SockPerfDuration": "00:01:00",
         "ProfilingEnabled": false,
         "ProfilingMode": "None",
-        "TestDuration": 60
+        "TestDuration": "00:01:00"
     },
     "Actions": [
         {
@@ -263,7 +263,7 @@
                 "PackageName": "networking",
                 "Connections": 16,
                 "TestDuration": "$.Parameters.CpsDuration",
-                "WarmupTime": 60,
+                "WarmupTime": "00:01:00",
                 "Port": "$.Parameters.CpsPort",
                 "ProfilingScenario": "CPS_T16",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",

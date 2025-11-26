@@ -67,27 +67,27 @@ namespace VirtualClient.Actions
         /// Parameter defines the test duration to use in the execution of the networking workload
         /// toolset tests.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(LatteClientExecutor2.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(LatteClientExecutor2.TestDuration), TimeSpan.FromSeconds(60));
             }
 
             set
             {
-                this.Parameters[nameof(LatteClientExecutor2.TestDuration)] = value;
+                this.Parameters[nameof(LatteClientExecutor2.TestDuration)] = value.ToString();
             }
         }
 
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(LatteClientExecutor2.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(LatteClientExecutor2.WarmupTime), TimeSpan.FromSeconds(8));
             }
         }
 

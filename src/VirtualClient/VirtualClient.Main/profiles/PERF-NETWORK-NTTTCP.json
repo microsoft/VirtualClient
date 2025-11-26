@@ -10,10 +10,10 @@
         "EnableBusyPoll": true,
         "DisableFirewall": true,
         "NTttcpPort": 5500,
-        "NTttcpDuration": 60,
+        "NTttcpDuration": "00:01:00",
         "ProfilingEnabled": false,
         "ProfilingMode": "None",
-        "TestDuration": 60
+        "TestDuration": "00:01:00"
     },
     "Actions": [
         {
