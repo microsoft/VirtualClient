@@ -258,6 +258,57 @@ namespace VirtualClient.Actions
             Mock<object> mockSender = new Mock<object>();
         }
 
+        [Test]
+        public void NetworkingWorkloadExecutorSupportsBackwardCompatibilityWithIntegerBasedTimeParameters()
+        {
+            // This test ensures backward compatibility: partners' profiles using integer-based time parameters
+            // (representing seconds) will continue to work after the conversion to TimeSpan-based parameters.
+
+            this.SetupTest(PlatformID.Unix, NetworkingWorkloadTool.NTttcp);
+
+            // Test 1: Integer format (legacy - seconds as integers)
+            this.mockFixture.Parameters["TestDuration"] = 300;      // 300 seconds (integer)
+            this.mockFixture.Parameters["WarmupTime"] = 60;         // 60 seconds (integer)
+            this.mockFixture.Parameters["DelayTime"] = 30;          // 30 seconds (integer)
+
+            TestNetworkingWorkloadExecutor executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // Verify integer values are correctly converted to TimeSpan
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration, 
+                "TestDuration should accept integer (300 seconds) and convert to TimeSpan");
+            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime, 
+                "WarmupTime should accept integer (60 seconds) and convert to TimeSpan");
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime, 
+                "DelayTime should accept integer (30 seconds) and convert to TimeSpan");
+
+            // Test 2: TimeSpan string format (new format)
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";   // 5 minutes (TimeSpan format)
+            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";     // 1 minute (TimeSpan format)
+            this.mockFixture.Parameters["DelayTime"] = "00:00:30";      // 30 seconds (TimeSpan format)
+
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // Verify TimeSpan string values work correctly
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration, 
+                "TestDuration should accept TimeSpan string format");
+            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime, 
+                "WarmupTime should accept TimeSpan string format");
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime, 
+                "DelayTime should accept TimeSpan string format");
+
+            // Test 3: Verify both formats produce equivalent results
+            this.mockFixture.Parameters["TestDuration"] = 180;  // 180 seconds (integer)
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.TestDuration;
+
+            this.mockFixture.Parameters["TestDuration"] = "00:03:00";  // 3 minutes (TimeSpan format)
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.TestDuration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration, 
+                "Integer-based (180) and TimeSpan-based ('00:03:00') parameters must produce identical TimeSpan values");
+        }
+
         public class TestNetworkingWorkloadExecutor : NetworkingWorkloadExecutor
         {
             private MockFixture mockFixture;

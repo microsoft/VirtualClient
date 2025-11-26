@@ -281,6 +281,43 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        public void DeathStarBenchClientExecutorSupportsBackwardCompatibilityWithIntegerBasedTimeParameters()
+        {
+            // This test ensures backward compatibility: partners' profiles using integer-based time parameters
+            // (representing seconds) will continue to work after the conversion to TimeSpan-based parameters.
+
+            // Test 1: Integer format (legacy - seconds as integers)
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = 300;  // 300 seconds (integer)
+
+            TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // Verify integer value is correctly converted to TimeSpan
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.Duration, 
+                "Duration should accept integer (300 seconds) and convert to TimeSpan");
+
+            // Test 2: TimeSpan string format (new format)
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "00:05:00";  // 5 minutes (TimeSpan format)
+
+            executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // Verify TimeSpan string value works correctly
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.Duration, 
+                "Duration should accept TimeSpan string format");
+
+            // Test 3: Verify both formats produce equivalent results
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = 180;  // 180 seconds (integer)
+            executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.Duration;
+
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "00:03:00";  // 3 minutes (TimeSpan format)
+            executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.Duration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration, 
+                "Integer-based (180) and TimeSpan-based ('00:03:00') parameters must produce identical TimeSpan values");
+        }
+
         private class TestDeathStarBenchClientExecutor : DeathStarBenchClientExecutor
         {
             public TestDeathStarBenchClientExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)

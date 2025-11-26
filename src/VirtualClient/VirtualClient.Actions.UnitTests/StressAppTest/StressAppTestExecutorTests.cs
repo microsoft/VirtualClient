@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
                 { nameof(StressAppTestExecutor.PackageName), "stressapptest" },
                 { nameof(StressAppTestExecutor.CommandLine), "" },
                 { nameof(StressAppTestExecutor.Scenario), "ApplyStress" },
-                { nameof(StressAppTestExecutor.TimeInSeconds), "00:01:00" },
+                { nameof(StressAppTestExecutor.Duration), "00:01:00" },
                 { nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy), false }
             };
 
@@ -111,6 +111,51 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix)]
+        public async Task StressAppTestExecutorExecutesAsExpectedWithIntegerBasedTimeParameters(PlatformID platform)
+        {
+            // This test verifies that the executor runs correctly when Duration is provided as an integer
+            // (legacy format), ensuring backward compatibility for partner teams' existing profiles.
+
+            this.SetupTest(platform);
+
+            // Override with integer-based time parameter
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 120;  // 120 seconds (integer)
+
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                // Verify the parameter is correctly converted to TimeSpan
+                Assert.AreEqual(TimeSpan.FromSeconds(120), executor.Duration);
+
+                bool commandExecuted = false;
+                string expectedCommand = $@"{this.mockPackage.Path}/linux-x64/stressapptest -s 120 -l stressapptestLogs";
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if ($"{exe} {arguments}".Contains(expectedCommand))
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                // Verify the executor runs successfully
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
         public void StressAppTestExecutorThrowsOnInvalidProfileDefinition(PlatformID platform)
         {
             this.SetupTest(platform);
@@ -129,7 +174,7 @@ namespace VirtualClient.Actions
             }
 
             this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "00:00:00";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:00:00";
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
@@ -171,6 +216,47 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
             }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        [TestCase(PlatformID.Win32NT)]
+        public void StressAppTestExecutorSupportsBackwardCompatibilityWithIntegerBasedTimeParameters(PlatformID platform)
+        {
+            // This test ensures backward compatibility: partners' profiles using integer-based time parameters
+            // (representing seconds) will continue to work after the conversion to TimeSpan-based parameters.
+
+            this.SetupTest(platform);
+
+            // Test 1: Integer format (legacy - seconds as integers)
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 300;  // 300 seconds (integer)
+
+            TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture);
+
+            // Verify integer value is correctly converted to TimeSpan
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.Duration, 
+                "Duration should accept integer (300 seconds) and convert to TimeSpan");
+
+            // Test 2: TimeSpan string format (new format)
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:05:00";  // 5 minutes (TimeSpan format)
+
+            executor = new TestStressAppTestExecutor(this.mockFixture);
+
+            // Verify TimeSpan string value works correctly
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.Duration, 
+                "Duration should accept TimeSpan string format");
+
+            // Test 3: Verify both formats produce equivalent results
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 180;  // 180 seconds (integer)
+            executor = new TestStressAppTestExecutor(this.mockFixture);
+            TimeSpan integerBasedDuration = executor.Duration;
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:03:00";  // 3 minutes (TimeSpan format)
+            executor = new TestStressAppTestExecutor(this.mockFixture);
+            TimeSpan timespanBasedDuration = executor.Duration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration, 
+                "Integer-based (180) and TimeSpan-based ('00:03:00') parameters must produce identical TimeSpan values");
         }
 
         private class TestStressAppTestExecutor : StressAppTestExecutor

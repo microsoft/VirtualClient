@@ -6,7 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
     },
     "Parameters": {
-        "TimeInSeconds": "00:01:00",
+        "Duration": "00:01:00",
         "UseCpuStressfulMemoryCopy": false
     },
     "Actions": [
@@ -15,7 +15,7 @@
             "Parameters": {
                 "Scenario": "ApplySystemStress",
                 "CommandLine": "",
-                "TimeInSeconds": "$.Parameters.TimeInSeconds",
+                "Duration": "$.Parameters.Duration",
                 "UseCpuStressfulMemoryCopy": "$.Parameters.UseCpuStressfulMemoryCopy",
                 "PackageName": "stressapptest"
             }
