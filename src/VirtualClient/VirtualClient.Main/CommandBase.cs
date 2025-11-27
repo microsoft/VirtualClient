@@ -169,7 +169,7 @@ namespace VirtualClient
         /// True if the output of processes executed should be logged to files in
         /// the logs directory.
         /// </summary>
-        public bool LogToFile { get; set; }
+        public bool? LogToFile { get; set; }
 
         /// <summary>
         /// Metadata properties (key/value pairs) supplied to the application.
@@ -536,6 +536,8 @@ namespace VirtualClient
             }
 
             IConfiguration configuration = Program.LoadAppSettings();
+            this.ApplyDefaultSettings(configuration);
+
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
@@ -905,6 +907,43 @@ namespace VirtualClient
         {
             ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(loggerParameters);
             loggingProviders.Add(summaryLoggerProvider);
+        }
+
+        private void ApplyDefaultSettings(IConfiguration configuration)
+        {
+            DefaultSettings settings = DefaultSettings.Create();
+            IConfigurationSection defaultSettings = configuration.GetSection("DefaultSettings");
+
+            if (defaultSettings?.Exists() == true)
+            {
+                settings = new DefaultSettings();
+                defaultSettings.Bind(settings);
+            }
+
+            if (string.IsNullOrWhiteSpace(this.LogDirectory))
+            {
+                this.LogDirectory = OptionFactory.ToFullPath(settings.LogDirectory);
+            }
+
+            if (this.LogToFile == null)
+            {
+                this.LogToFile = settings.LogToFile;
+            }
+
+            if (string.IsNullOrWhiteSpace(this.PackageDirectory))
+            {
+                this.PackageDirectory = OptionFactory.ToFullPath(settings.PackageDirectory);
+            }
+
+            if (string.IsNullOrWhiteSpace(this.StateDirectory))
+            {
+                this.StateDirectory = OptionFactory.ToFullPath(settings.StateDirectory);
+            }
+
+            if (string.IsNullOrWhiteSpace(this.TempDirectory))
+            {
+                this.TempDirectory = OptionFactory.ToFullPath(settings.TempDirectory);
+            }
         }
 
         private string EvaluatePathReplacements(string path)

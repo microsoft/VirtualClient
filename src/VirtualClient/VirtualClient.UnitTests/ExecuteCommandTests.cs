@@ -191,7 +191,7 @@ namespace VirtualClient.UnitTests
             }
         }
 
-        private class TestExecuteCommand : ExecuteCommand
+        private class TestExecuteCommand : DefaultCommand
         {
             public Action OnExecuteCommand { get; set; }
 
@@ -199,7 +199,7 @@ namespace VirtualClient.UnitTests
 
             public new static string NormalizeForPowerShell(string commandLine)
             {
-                return ExecuteCommand.NormalizeForPowerShell(commandLine);
+                return DefaultCommand.NormalizeForPowerShell(commandLine);
             }
 
             protected override Task<int> ExecuteCommandAsync(string[] args, CancellationTokenSource cancellationTokenSource)

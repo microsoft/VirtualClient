@@ -16,13 +16,13 @@ namespace VirtualClient.UnitTests
     {
         [Test]
         [TestCase(
-            "remote --profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --agent-ssh=user@10.1.2.3;pass",
+            "remote --profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --target=user@10.1.2.3;pass",
             "--profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00")]
         [TestCase(
-            "remote --profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --agent-ssh=user@10.1.2.3;pass --agent-ssh=user@10.1.2.4;pass",
+            "remote --profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --target=user@10.1.2.3;pass --target=user@10.1.2.4;pass",
             "--profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00")]
         [TestCase(
-            "remote --profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --package-dir=/any/packages --log-dir=/any/logs --state-dir=/any/state --temp-dir=/any/temp --agent-ssh=user@10.1.2.3;pass --agent-ssh=user@10.1.2.4;pass",
+            "remote --profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --package-dir=/any/packages --log-dir=/any/logs --state-dir=/any/state --temp-dir=/any/temp --target=user@10.1.2.3;pass --target=user@10.1.2.4;pass",
             "--profile=ANY-PROFILE.json --packages=anystore --timeout=01:00:00 --package-dir=/any/packages --log-dir=/any/logs --state-dir=/any/state --temp-dir=/any/temp")]
         public void ExecuteRemoteAgentCommandSuppliesTheExpectedCommandToExecuteOnTheTargetAgents_1(string originalCommand, string expectedTargetCommand)
         {
@@ -33,15 +33,26 @@ namespace VirtualClient.UnitTests
 
         [Test]
         [TestCase(
-            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --agent-ssh=user@10.1.2.3;pass",
+            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --target=user@10.1.2.3;pass",
             "\"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00")]
         [TestCase(
-            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --packages=anystore --timeout=01:00:00 --agent-ssh=user@10.1.2.3;pass --agent-ssh=user@10.1.2.4;pass",
+            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --packages=anystore --timeout=01:00:00 --target=user@10.1.2.3;pass --target=user@10.1.2.4;pass",
             "\"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --packages=anystore --timeout=01:00:00")]
         [TestCase(
-            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --packages=anystore --timeout=01:00:00 --package-dir=/any/packages --log-dir=/any/logs --state-dir=/any/state --temp-dir=/any/temp --agent-ssh=user@10.1.2.3;pass --agent-ssh=user@10.1.2.4;pass",
+            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --packages=anystore --timeout=01:00:00 --package-dir=/any/packages --log-dir=/any/logs --state-dir=/any/state --temp-dir=/any/temp --target=user@10.1.2.3;pass --target=user@10.1.2.4;pass",
             "\"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 --packages=anystore --timeout=01:00:00 --package-dir=/any/packages --log-dir=/any/logs --state-dir=/any/state --temp-dir=/any/temp")]
         public void ExecuteRemoteAgentCommandSuppliesTheExpectedCommandToExecuteOnTheTargetAgents_2(string originalCommand, string expectedTargetCommand)
+        {
+            var command = new TestExecuteRemoteAgentCommand();
+            string actualTargetCommand = command.GetTargetCommandArguments(originalCommand.Split(' '));
+            Assert.AreEqual(expectedTargetCommand, actualTargetCommand);
+        }
+
+        [Test]
+        [TestCase(
+            "remote \"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00 @./agents.rsp",
+            "\"./packages/custom_scripts.1.0.0/execute_workload.py --log-dir=/any/log/dir\" --packages=anystore --timeout=01:00:00")]
+        public void ExecuteRemoteAgentCommandRemotesResponseFileReferences(string originalCommand, string expectedTargetCommand)
         {
             var command = new TestExecuteRemoteAgentCommand();
             string actualTargetCommand = command.GetTargetCommandArguments(originalCommand.Split(' '));

@@ -22,7 +22,7 @@ namespace VirtualClient
     /// <summary>
     /// Command runs a system command as-is.
     /// </summary>
-    internal class ExecuteCommand : ExecuteProfileCommand
+    internal class DefaultCommand : ExecuteProfileCommand
     {
         /// <summary>
         /// When determining the name of the command, we want to exclude certain terms
@@ -52,7 +52,7 @@ namespace VirtualClient
         {
             get
             {
-                return ExecuteCommand.PowerShellExpression.IsMatch(this.Command);
+                return DefaultCommand.PowerShellExpression.IsMatch(this.Command);
             }
         }
 
@@ -90,12 +90,12 @@ namespace VirtualClient
         protected virtual Task<int> ExecuteCommandAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
             string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            string commandName = ExecuteCommand.GetCommandName(commandArguments);
+            string commandName = DefaultCommand.GetCommandName(commandArguments);
 
             string fullCommand = this.Command;
             if (this.IsPowerShell)
             {
-                fullCommand = ExecuteCommand.NormalizeForPowerShell(this.Command);
+                fullCommand = DefaultCommand.NormalizeForPowerShell(this.Command);
             }
 
             List<DependencyProfileReference> profiles = new List<DependencyProfileReference>
@@ -108,7 +108,6 @@ namespace VirtualClient
                 profiles.AddRange(this.Profiles);
             }
 
-            this.Iterations = ProfileTiming.OneIteration();
             this.Profiles = profiles;
             if (this.Parameters == null)
             {
@@ -116,7 +115,7 @@ namespace VirtualClient
             }
 
             this.Parameters["Command"] = fullCommand;
-            this.Parameters["Scenario"] = $"Execute-{commandName}";
+            this.Parameters["Scenario"] = $"Execute_{commandName}";
 
             return base.ExecuteAsync(args, cancellationTokenSource);
         }
@@ -147,7 +146,7 @@ namespace VirtualClient
                 }
 
                 // Find the first argument that is not a
-                if (!ExecuteCommand.CommandTerminalExpression.IsMatch(argument))
+                if (!DefaultCommand.CommandTerminalExpression.IsMatch(argument))
                 {
                     commandName = Path.GetFileNameWithoutExtension(argument.Trim());
                     break;
@@ -173,7 +172,7 @@ namespace VirtualClient
 
                 for (int i = 0; i < commandArgs.Count; i++)
                 {
-                    if (ExecuteCommand.PowerShellExpression.IsMatch(commandArgs[i]))
+                    if (DefaultCommand.PowerShellExpression.IsMatch(commandArgs[i]))
                     {
                         indexToInsert = i + 1;
                         break;

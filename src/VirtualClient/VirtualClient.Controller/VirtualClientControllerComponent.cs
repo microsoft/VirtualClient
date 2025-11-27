@@ -173,10 +173,10 @@ namespace VirtualClient.Controller
             // OptionFactory is defined in the VirtualClient.Main project and this is where the option names
             // are defined. Duplicating these here is be easy to break.
             string effectiveCommand = command;
-            Regex experimentIdExpression = new Regex("--e=|--experiment=|--experiment-id=|--experimentId=|--experimentid=");
-            Regex packageDirectoryExpression = new Regex("--pdir=|--package-dir=");
-            Regex logDirectoryExpression = new Regex("--ldir=|--log-dir=");
-            Regex logToFileExpression = new Regex("--ltf|--log-to-file");
+            Regex experimentIdExpression = new Regex("--experiment-id=");
+            Regex packageDirectoryExpression = new Regex("--package-dir=");
+            Regex logDirectoryExpression = new Regex("--log-dir=");
+            Regex logToFileExpression = new Regex("--log-to-file");
 
             if (!experimentIdExpression.IsMatch(effectiveCommand))
             {

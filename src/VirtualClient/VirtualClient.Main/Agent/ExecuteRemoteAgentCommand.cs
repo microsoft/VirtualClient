@@ -43,7 +43,7 @@ namespace VirtualClient
 
             this.Profiles = new List<DependencyProfileReference>
             {
-                new DependencyProfileReference("EXECUTE-COMMAND-ON-REMOTE.json")
+                new DependencyProfileReference("EXECUTE-ON-REMOTE.json")
             };
 
             // To avoid confusing situations, remote command execution DOES NOT support
@@ -69,19 +69,29 @@ namespace VirtualClient
         protected string GetTargetCommandArguments(string[] commandArguments)
         {
             List<string> targetCommandArguments = new List<string>();
-
             Option targetAgentOption = OptionFactory.CreateTargetAgentOption();
+            Option commandOption = OptionFactory.CreateCommandOption();
             Regex subCommandExpression = new Regex("remote");
 
             foreach (string argument in commandArguments)
             {
-                if (!string.IsNullOrWhiteSpace(this.Command) && argument == this.Command)
+                string effectiveArgument = argument.Trim();
+                if (effectiveArgument.StartsWith("@"))
                 {
-                    targetCommandArguments.Add($"\"{argument}\"");
+                    // Do not add response files. They are not supported for the controller during
+                    // remote execution as this would require the same response file to exist on the
+                    // target system. Additionally, the options within the response file could be confusing
+                    // (e.g. --target={ssh_target}).
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(this.Command) && string.Equals(argument, this.Command, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetCommandArguments.Add($"{commandOption.Aliases.Last()}=\"{argument}\"");
                 }
                 else if (!OptionFactory.ContainsOption(targetAgentOption, argument) && !subCommandExpression.IsMatch(argument))
                 {
-                    // Remove the remote-execute subcommand and SSH options.
+                    // Remove the 'remote' subcommand and '--target' options.
                     targetCommandArguments.Add(argument);
                 }
             }

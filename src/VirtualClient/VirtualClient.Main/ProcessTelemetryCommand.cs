@@ -26,7 +26,7 @@ namespace VirtualClient
     /// Command executes operations to upload metrics and events from files on the system
     /// to a telemetry endpoint.
     /// </summary>
-    internal class UploadTelemetryCommand : ExecuteProfileCommand
+    internal class ProcessTelemetryCommand : ExecuteProfileCommand
     {
         /// <summary>
         /// The data point file format (e.g. Csv, Json, Yaml).
