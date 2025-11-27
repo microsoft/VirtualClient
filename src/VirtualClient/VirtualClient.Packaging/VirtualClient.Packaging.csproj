@@ -6,6 +6,20 @@
 		<NoWarn>NU5100;NU5110;NU5111;NU5118;NU5128;NU5131</NoWarn>
 	</PropertyGroup>
 
+	<!--
+    Creates an empty placeholder file in the target output directory. This placeholder file
+	is used in conjunction with .nuspec definitions to enable the creation of empty directories
+	in NuGet packages.
+    -->
+	<Target Name="CreateEmptyPlaceholderFileInOutputDirectory" AfterTargets="Build">
+		<WriteLinesToFile
+			File="$(RepoPath)\out\temp\_._"
+		    Lines=""
+		    Overwrite="true"
+		    Encoding="UTF-8"
+		    />
+	</Target>
+
 	<Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 	<Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
 
@@ -31,7 +45,7 @@
 
 		<PropertyGroup>
 			<PackageOutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</PackageOutDir>
-			<NuspecProperties>BinDir=$(PackageOutDir)\bin;BinConfigDir=$(PackageOutDir)\bin\$(Configuration);Version=$(Version)</NuspecProperties>
+			<NuspecProperties>BinDir=$(PackageOutDir)\bin;BinConfigDir=$(PackageOutDir)\bin\$(Configuration);TempDir=$(PackageOutDir)\temp;Version=$(Version)</NuspecProperties>
 			<NuspecProperties>$(NuspecProperties);@(PackageVersions)</NuspecProperties>
 		</PropertyGroup>
 

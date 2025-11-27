@@ -179,7 +179,6 @@ namespace VirtualClient.Controller
 
             string agentInstallationPath = VirtualClientControllerComponent.GetDefaultRemoteAgentInstallationPath(targetPlatformSpecifics);
             string targetCommand = $"{agentName} {this.Command}";
-            targetCommand = this.AddDefaultCommandLineOptions(targetPlatformSpecifics, targetCommand, sourcePackageName);
 
             sshTarget.StandardOutput?.WriteLine();
             sshTarget.StandardOutput?.WriteLine($"[Execute on Target]");

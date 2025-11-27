@@ -140,7 +140,7 @@ namespace VirtualClient.Controller
         /// <param name="targetPlatformSpecifics">Provides the platform and CPU architecture for the target/remote system (e.g. Linux, Windows, X64, ARM64).</param>
         /// <param name="packagesFolder">The folder name for the packages allowing for different packages.</param>
         /// <returns>A path on the target system to which the remote packages exists or can be installed.</returns>
-        protected static string GetDefaultRemotePackagesInstallationPath(PlatformSpecifics targetPlatformSpecifics, string packagesFolder = "packages")
+        protected static string GetDefaultRemotePackagesPath(PlatformSpecifics targetPlatformSpecifics, string packagesFolder = "packages")
         {
             string defaultPath = null;
             string agentName = VirtualClientControllerComponent.AgentName;
@@ -161,44 +161,6 @@ namespace VirtualClient.Controller
             }
 
             return defaultPath;
-        }
-
-        /// <summary>
-        /// Adds default command line options to the command to provide to a target/remote system.
-        /// </summary>
-        protected string AddDefaultCommandLineOptions(PlatformSpecifics targetPlatformSpecifics, string command, string packagesFolder)
-        {
-            // TODO:
-            // This is NOT going to fly for long. This is a temporary workaround to the fact that the
-            // OptionFactory is defined in the VirtualClient.Main project and this is where the option names
-            // are defined. Duplicating these here is be easy to break.
-            string effectiveCommand = command;
-            Regex experimentIdExpression = new Regex("--e=|--experiment=|--experiment-id=|--experimentId=|--experimentid=");
-            Regex packageDirectoryExpression = new Regex("--pdir=|--package-dir=");
-            Regex logDirectoryExpression = new Regex("--ldir=|--log-dir=");
-            Regex logToFileExpression = new Regex("--ltf|--log-to-file");
-
-            if (!experimentIdExpression.IsMatch(effectiveCommand))
-            {
-                effectiveCommand += $" --experiment-id={this.ExperimentId}";
-            }
-
-            if (!packageDirectoryExpression.IsMatch(effectiveCommand))
-            {
-                effectiveCommand += $" --package-dir={VirtualClientControllerComponent.GetDefaultRemotePackagesInstallationPath(targetPlatformSpecifics, packagesFolder)}";
-            }
-
-            if (!logDirectoryExpression.IsMatch(command))
-            {
-                effectiveCommand += $" --log-dir={VirtualClientControllerComponent.GetDefaultRemoteLogsPath(targetPlatformSpecifics)}";
-            }
-
-            if (!logToFileExpression.IsMatch(effectiveCommand))
-            {
-                effectiveCommand += $" --log-to-file";
-            }
-
-            return effectiveCommand;
         }
 
         /// <summary>

@@ -12,12 +12,15 @@ namespace VirtualClient.UnitTests
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
     using NUnit.Framework;
     using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
-    public class ExecuteCommandTests : MockFixture
+    public class DefaultCommandTests : MockFixture
     {
         public void Setup(PlatformID platform)
         {
@@ -41,9 +44,9 @@ namespace VirtualClient.UnitTests
             @"pwsh.exe -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs\pwsh",
             @"pwsh.exe -NonInteractive -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs\pwsh")
             ]
-        public void ExecuteCommandNormalizesPwshCommandLinesCorrectly(string originalCommand, string expectedCommand)
+        public void DefaultCommandNormalizesPwshCommandLinesCorrectly(string originalCommand, string expectedCommand)
         {
-            string actualCommand = TestExecuteCommand.NormalizeForPowerShell(originalCommand);
+            string actualCommand = TestDefaultCommand.NormalizeForPowerShell(originalCommand);
             Assert.AreEqual(expectedCommand, actualCommand);
         }
 
@@ -64,18 +67,18 @@ namespace VirtualClient.UnitTests
           @"powershell.exe -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs",
           @"powershell.exe -NonInteractive -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs")
             ]
-        public void ExecuteCommandNormalizesPowerShellCommandLinesCorrectly(string originalCommand, string expectedCommand)
+        public void DefaultCommandNormalizesPowerShellCommandLinesCorrectly(string originalCommand, string expectedCommand)
         {
-            string actualCommand = TestExecuteCommand.NormalizeForPowerShell(originalCommand);
+            string actualCommand = TestDefaultCommand.NormalizeForPowerShell(originalCommand);
             Assert.AreEqual(expectedCommand, actualCommand);
         }
 
         [Test]
-        public async Task ExecuteCommandExecutesTheExpectedFlowWhenProvidedCommandLineArguments()
+        public async Task DefaultCommandExecutesTheExpectedFlowWhenProvidedCommandLineArguments()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                TestExecuteCommand command = new TestExecuteCommand
+                TestDefaultCommand command = new TestDefaultCommand
                 {
                     Command = "pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs",
                     ClientId = "AnyAgent",
@@ -100,11 +103,11 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
-        public async Task ExecuteCommandExecutesTheExpectedFlowWhenProvidedCommandLineArgumentsAsWellAsProfiles()
+        public async Task DefaultCommandExecutesTheExpectedFlowWhenProvidedCommandLineArgumentsAsWellAsProfiles()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                TestExecuteCommand command = new TestExecuteCommand
+                TestDefaultCommand command = new TestDefaultCommand
                 {
                     Command = "pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs",
                     ClientId = "AnyAgent",
@@ -133,11 +136,11 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
-        public async Task ExecuteCommandExecutesTheExpectedFlowWhenProvidedProfileArguments()
+        public async Task DefaultCommandExecutesTheExpectedFlowWhenProvidedProfileArguments()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                TestExecuteCommand command = new TestExecuteCommand
+                TestDefaultCommand command = new TestDefaultCommand
                 {
                     ClientId = "AnyAgent",
                     Timeout = ProfileTiming.OneIteration(),
@@ -168,12 +171,12 @@ namespace VirtualClient.UnitTests
         [TestCase("")]
         [TestCase(" ")]
         [TestCase("   ")]
-        public void ExecuteCommandThrowsIfTheLogicCannotDetermineTheCorrectFlow(string commandLine)
+        public void DefaultCommandThrowsIfTheLogicCannotDetermineTheCorrectFlow(string commandLine)
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 // No command line or profiles provided.
-                TestExecuteCommand command = new TestExecuteCommand
+                TestDefaultCommand command = new TestDefaultCommand
                 {
                     Command = commandLine,
                     ClientId = "AnyAgent",
@@ -183,7 +186,7 @@ namespace VirtualClient.UnitTests
                     InstallDependencies = false
                 };
 
-                NotSupportedException error = Assert.ThrowsAsync<NotSupportedException>(() => command.ExecuteAsync(Array.Empty<string>(), tokenSource));
+                NotSupportedException error = Assert.Throws<NotSupportedException>(() => command.Initialize(Array.Empty<string>(), this.PlatformSpecifics));
 
                 Assert.AreEqual(
                     "Command line usage is not supported. The intended command or profile execution intentions are unclear.", 
@@ -191,7 +194,7 @@ namespace VirtualClient.UnitTests
             }
         }
 
-        private class TestExecuteCommand : ExecuteCommand
+        private class TestDefaultCommand : DefaultCommand
         {
             public Action OnExecuteCommand { get; set; }
 
@@ -199,19 +202,32 @@ namespace VirtualClient.UnitTests
 
             public new static string NormalizeForPowerShell(string commandLine)
             {
-                return ExecuteCommand.NormalizeForPowerShell(commandLine);
+                return DefaultCommand.NormalizeForPowerShell(commandLine);
             }
 
-            protected override Task<int> ExecuteCommandAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteCommandAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
                 this.OnExecuteCommand?.Invoke();
                 return Task.FromResult(0);
             }
 
-            protected override Task<int> ExecuteProfilesAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteProfilesAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
                 this.OnExecuteProfiles?.Invoke();
                 return Task.FromResult(0);
+            }
+
+            public new void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+            {
+                base.Initialize(args, platformSpecifics);
+            }
+
+            protected override IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
+            {
+                IServiceCollection dependencies = new ServiceCollection();
+                dependencies.AddSingleton<ILogger>(NullLogger.Instance);
+
+                return dependencies;
             }
         }
     }

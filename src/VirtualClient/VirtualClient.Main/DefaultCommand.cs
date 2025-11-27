@@ -20,9 +20,9 @@ namespace VirtualClient
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Command runs a system command as-is.
+    /// The default/root command handler for the Virtual Client.
     /// </summary>
-    internal class ExecuteCommand : ExecuteProfileCommand
+    internal class DefaultCommand : ExecuteProfileCommand
     {
         /// <summary>
         /// When determining the name of the command, we want to exclude certain terms
@@ -52,7 +52,7 @@ namespace VirtualClient
         {
             get
             {
-                return ExecuteCommand.PowerShellExpression.IsMatch(this.Command);
+                return DefaultCommand.PowerShellExpression.IsMatch(this.Command);
             }
         }
 
@@ -60,18 +60,19 @@ namespace VirtualClient
         /// Executes the operations to reset the environment.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             int exitCode = 0;
-            if (!String.IsNullOrWhiteSpace(this.Command))
+            if (!string.IsNullOrWhiteSpace(this.Command))
             {
-                exitCode = await this.ExecuteCommandAsync(args, cancellationTokenSource);
+                exitCode = await this.ExecuteCommandAsync(args, dependencies, cancellationTokenSource);
             }
             else if (this.Profiles?.Any() == true)
             {
-                exitCode = await this.ExecuteProfilesAsync(args, cancellationTokenSource);
+                exitCode = await this.ExecuteProfilesAsync(args, dependencies, cancellationTokenSource);
             }
             else
             {
@@ -85,51 +86,63 @@ namespace VirtualClient
         /// Executes the flow for basic (1-off) commands (e.g. ipconfig /all).
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        protected virtual Task<int> ExecuteCommandAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected virtual Task<int> ExecuteCommandAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
-            string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            string commandName = ExecuteCommand.GetCommandName(commandArguments);
-
-            string fullCommand = this.Command;
-            if (this.IsPowerShell)
-            {
-                fullCommand = ExecuteCommand.NormalizeForPowerShell(this.Command);
-            }
-
-            List<DependencyProfileReference> profiles = new List<DependencyProfileReference>
-            {
-                new DependencyProfileReference("EXECUTE-COMMAND.json")
-            };
-
-            if (this.Profiles?.Any() == true)
-            {
-                profiles.AddRange(this.Profiles);
-            }
-
-            this.Iterations = ProfileTiming.OneIteration();
-            this.Profiles = profiles;
-            if (this.Parameters == null)
-            {
-                this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            }
-
-            this.Parameters["Command"] = fullCommand;
-            this.Parameters["Scenario"] = $"Execute-{commandName}";
-
-            return base.ExecuteAsync(args, cancellationTokenSource);
+            return base.ExecuteAsync(args, dependencies, cancellationTokenSource);
         }
 
         /// <summary>
         /// Executes the flow for basic (1-off) commands (e.g. ipconfig /all).
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        protected virtual Task<int> ExecuteProfilesAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected virtual Task<int> ExecuteProfilesAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
-            return base.ExecuteAsync(args, cancellationTokenSource);
+            return base.ExecuteAsync(args, dependencies, cancellationTokenSource);
+        }
+
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+        {
+            if (this.Profiles?.Any() != true && string.IsNullOrWhiteSpace(this.Command))
+            {
+                throw new NotSupportedException("Command line usage is not supported. The intended command or profile execution intentions are unclear.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.Command))
+            {
+                string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                string commandName = DefaultCommand.GetCommandName(commandArguments);
+
+                string fullCommand = this.Command;
+                if (this.IsPowerShell)
+                {
+                    fullCommand = DefaultCommand.NormalizeForPowerShell(this.Command);
+                }
+
+                List<DependencyProfileReference> profiles = new List<DependencyProfileReference>
+                {
+                    new DependencyProfileReference("EXECUTE-COMMAND.json")
+                };
+
+                if (this.Profiles?.Any() == true)
+                {
+                    profiles.AddRange(this.Profiles);
+                }
+
+                this.Profiles = profiles;
+                if (this.Parameters == null)
+                {
+                    this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+                }
+
+                this.Parameters["Command"] = fullCommand;
+                this.Parameters["Scenario"] = $"Execute_{commandName}";
+            }
         }
 
         /// <summary>
@@ -147,7 +160,7 @@ namespace VirtualClient
                 }
 
                 // Find the first argument that is not a
-                if (!ExecuteCommand.CommandTerminalExpression.IsMatch(argument))
+                if (!DefaultCommand.CommandTerminalExpression.IsMatch(argument))
                 {
                     commandName = Path.GetFileNameWithoutExtension(argument.Trim());
                     break;
@@ -173,7 +186,7 @@ namespace VirtualClient
 
                 for (int i = 0; i < commandArgs.Count; i++)
                 {
-                    if (ExecuteCommand.PowerShellExpression.IsMatch(commandArgs[i]))
+                    if (DefaultCommand.PowerShellExpression.IsMatch(commandArgs[i]))
                     {
                         indexToInsert = i + 1;
                         break;
@@ -189,21 +202,6 @@ namespace VirtualClient
             }
 
             return normalizedCommand;
-        }
-
-        /// <summary>
-        /// Initializes dependencies required by Virtual Client application operations.
-        /// </summary>
-        protected override IServiceCollection InitializeDependencies(string[] args)
-        {
-            if (this.LoggingLevel == null)
-            {
-                // Default log level is Debug/Verbose to ensure standard output + error
-                // for processes executed is output to console/screen.
-                this.LoggingLevel = LogLevel.Debug;
-            }
-
-            return base.InitializeDependencies(args);
         }
     }
 }

@@ -3,13 +3,14 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
-        <AssemblyName>VirtualClient</AssemblyName>
+        <AssemblyName>SdkAgent</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
         <RunAnalyzers>false</RunAnalyzers>
         <NoWarn>CA1416;NU5100;NU5118;NU5128;SA1118;NU5110;NU5111;IL2026;IL2104;IL2072</NoWarn>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
         <BuildPropertyOutput Condition="'$(RuntimeIdentifier)' != ''">true</BuildPropertyOutput>
+		<DefineConstants>$(DefineConstants);SDK_AGENT</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,13 +28,30 @@
         <ProjectReference Include="..\VirtualClient.Monitors\VirtualClient.Monitors.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="tools\" />
+	<!-- Link ALL files required to build the SDK package to this project -->
+	<ItemGroup>
+		<Compile Include="..\VirtualClient.Main\**\*.cs">
+			<Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</Compile>
 
-        <None Update="appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
+		<None Include="..\VirtualClient.Main\profiles\*.*">
+			<Link>profiles\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="..\VirtualClient.Main\profiles\agent\*.*">
+			<Link>profiles\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="..\VirtualClient.Main\tools\**\*.*">
+			<Link>tools\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="..\VirtualClient.Main\appsettings.json" Link="appsettings.json" />
+	</ItemGroup>
     
     <!--
     Sets the target publish directory. In practice, this should be the same as the output path as there
@@ -44,17 +62,6 @@
         <PropertyGroup>
             <PublishDir>$(OutputPath)</PublishDir>
         </PropertyGroup>
-    </Target>
-    
-    <!--
-    Copies the profiles into the target output directory.
-    -->
-    <Target Name="CopyProfilesToOutputDirectory" AfterTargets="Build">
-        <ItemGroup>
-            <ProfileFiles Include="profiles\*.*" />
-        </ItemGroup>
-
-        <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(Filename)%(Extension)')" />
     </Target>
     
     <!--
@@ -69,50 +76,11 @@
     </Target>
 
     <!--
-    Copies "built-in" toolsets into the target output directory. These contain toolsets that
-    we carry with a VC build so that they never need to be downloaded. In practice these are typically
-    toolsets that are used often by the platform runtime itself or across numerous workload or monitoring
-    components.
-    -->
-    <Target Name="CopyToolsToOutputDirectory" AfterTargets="Build">
-        <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-            <ToolsetFiles Include="tools\**\*.*" />
-        </ItemGroup>
-
-        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
-            <!-- ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" / -->
-        </ItemGroup>
-
-        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
-            <ToolsetFiles Include="tools\**\lshw\*.vcpkg" />
-        </ItemGroup>
-
-        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
-            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
-            <ToolsetFiles Include="tools\**\systemtools\*.vcpkg" />
-            <ToolsetFiles Include="tools\**\visualstudiocruntime\*.vcpkg" />
-            <ToolsetFiles Include="tools\**\wget\*.vcpkg" />
-        </ItemGroup>
-        
-        <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-            <ToolsetFiles Include="tools\**\$(RuntimeIdentifier)\**\*.*" />
-            <ToolsetFiles Include="tools\**\lspci\*.vcpkg" />
-            <ToolsetFiles Include="tools\**\systemtools\*.vcpkg" />
-            <ToolsetFiles Include="tools\**\visualstudiocruntime\*.vcpkg" />
-            <ToolsetFiles Include="tools\**\wget\*.vcpkg" />
-        </ItemGroup>
-
-        <Copy SourceFiles="@(ToolsetFiles)" DestinationFiles="@(ToolsetFiles->'$(OutputPath)tools\%(RecursiveDir)%(Filename)%(Extension)')" />
-    </Target>
-
-    <!--
     Creates the "packages" directory in the target output directory.
     -->
     <Target Name="CreatePackagesAndToolsOutputDirectory" AfterTargets="Build">
         <MakeDir Directories="$(OutputPath)packages" />
 		<MakeDir Directories="$(OutputPath)temp" />
-        <MakeDir Directories="$(OutputPath)tools" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

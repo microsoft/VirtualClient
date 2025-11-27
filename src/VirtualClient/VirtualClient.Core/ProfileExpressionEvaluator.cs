@@ -68,6 +68,12 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {StatePath}, {StateDir}
+        private static readonly Regex StatePathExpression = new Regex(
+            @"\{(?:StatePath|StateDir)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {ScriptPath:redis}, {ScriptDir:redis}
         private static readonly Regex ScriptPathExpression = new Regex(
             @"\{(?:ScriptPath|ScriptDir)\:([a-z0-9-_\. ]+)\}",
@@ -287,7 +293,7 @@ namespace VirtualClient
             }),
             // Expression: {ScriptPath|ScriptDir:xyz}
             // this.PlatformSpecifics.GetScriptPath("a","b");
-            // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
+            // Resolves to the path to the script folder location (e.g. /home/users/virtualclient/scripts/redis).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
@@ -320,8 +326,32 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
+            // Expression: {StatePath|StateDir}
+            // Resolves to the path to the state folder location (e.g. /home/users/virtualclient/state).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.StatePathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.StateDirectory);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
             // Expression: {TempPath|TempDir}
-            // Resolves to the path to the log folder location (e.g. /home/users/virtualclient/temp).
+            // Resolves to the path to the temp folder location (e.g. /home/users/virtualclient/temp).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;

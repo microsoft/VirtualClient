@@ -97,7 +97,7 @@ namespace VirtualClient.Controller
                 // We support different packages folders which can be defined on the command line
                 // (e.g. packages, packages-installers).
                 string sourcePackageName = Path.GetFileNameWithoutExtension(sourcePackagesPath);
-                string targetPackagesInstallationPath = VirtualClientControllerComponent.GetDefaultRemotePackagesInstallationPath(targetPlatformArchitecture, sourcePackageName);
+                string targetPackagesInstallationPath = VirtualClientControllerComponent.GetDefaultRemotePackagesPath(targetPlatformArchitecture, sourcePackageName);
 
                 telemetryContext.AddContext("sourcePackagesPath", sourcePackagesPath);
                 telemetryContext.AddContext("targetPackagesInstallationPath", targetPackagesInstallationPath);

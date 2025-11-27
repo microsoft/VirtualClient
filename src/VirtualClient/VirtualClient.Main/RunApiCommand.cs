@@ -40,12 +40,12 @@ namespace VirtualClient
         /// monitor either a local or remote instance.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
-            IServiceCollection dependencies = this.InitializeDependencies(args);
             ILogger logger = dependencies.GetService<ILogger>();
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             IApiManager apiManager = dependencies.GetService<IApiManager>();
@@ -97,41 +97,9 @@ namespace VirtualClient
             // Allow all background tasks to exit gracefully where possible.
             Task gracefulExitTimeoutTask = Task.Delay(TimeSpan.FromMinutes(1));
             
-            await Task.WhenAny(Task.WhenAll(apiServerHostingTask, apiHeartbeatTestTask), gracefulExitTimeoutTask)
-                .ConfigureAwait(false);
+            await Task.WhenAny(Task.WhenAll(apiServerHostingTask, apiHeartbeatTestTask), gracefulExitTimeoutTask);
 
             return 0;
-        }
-
-        /// <summary>
-        /// Initializes dependencies required by Virtual Client application operations.
-        /// </summary>
-        protected override IServiceCollection InitializeDependencies(string[] args)
-        {
-            IServiceCollection dependencies = base.InitializeDependencies(args);
-            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
-            ILogger logger = dependencies.GetService<ILogger>();
-
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
-                this.ClientId,
-                Guid.NewGuid().ToString(),
-                platformSpecifics);
-
-            systemManagement.SetLogger(logger);
-
-            IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
-
-            dependencies.AddSingleton<ISystemInfo>(systemManagement);
-            dependencies.AddSingleton<ISystemManagement>(systemManagement);
-            dependencies.AddSingleton<IApiManager>(apiManager);
-            dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
-            dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
-            dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
-            dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
-            dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
-            dependencies.AddSingleton<IStateManager>(systemManagement.StateManager);
-
-            return dependencies;
         }
 
         private static Task CreateApiServerHostingTask(IApiManager apiManager, IServiceCollection dependencies, int port, CancellationToken cancellationToken)

@@ -69,6 +69,7 @@ the system. The following table describes the set of well-known parameters that 
 | Platform                              | Represents the platform-architecture for the system on which the application is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64) |
 | PhysicalProcessorCount                | Represents the number of physical processors/cores on the system. |
 | ScriptDir:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
+| StateDir                              | Represents the path to the application state directory (e.g. /home/users/virtualclient/state). |
 | TempDir                               | Represents the path to the application temp directory (e.g. /home/users/virtualclient/temp). |
 | SystemMemoryBytes                     | Represents the total memory/RAM (in bytes) on the system. |
 | SystemMemoryKilobytes                 | Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes). |

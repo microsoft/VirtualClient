@@ -5,8 +5,7 @@
     },
     "Parameters": {
         "Command": null,
-        "SshTarget": null,
-        "SshPassword": null
+        "CopyLogs": false
     },
     "Actions": [
         {
@@ -14,9 +13,15 @@
             "Parameters": {
                 "Scenario": "ExecuteAgentOnTarget",
                 "Command": "$.Parameters.Command",
-                "SshTarget": "$.Parameters.SshTarget",
-                "SshPassword": "$.Parameters.SshPassword",
-                "Tags": "VC,SSH,Controller"
+                "Tags": "SDK,SSH,Controller"
+            }
+        },
+        {
+            "Type": "RemoteLogCopy",
+            "Parameters": {
+                "Scenario": "CopyLogsFromTarget",
+                "CopyLogs": "$.Parameters.CopyLogs",
+                "Tags": "SDK,SSH,Controller"
             }
         }
     ]

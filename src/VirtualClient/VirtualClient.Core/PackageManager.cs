@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.IO.Compression;
@@ -47,6 +46,11 @@ namespace VirtualClient
         /// The name of the built-in package containing the wget toolsets.
         /// </summary>
         public const string BuiltInWgetPackageName = "wget";
+
+        /// <summary>
+        /// The default package store URI for Virtual Client open-source usage.
+        /// </summary>
+        public const string DefaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
 
         /// <summary>
         /// Custom extension used for Virtual Client package descriptions.

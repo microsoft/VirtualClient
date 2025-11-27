@@ -19,6 +19,7 @@ namespace VirtualClient
     /// </summary>
     public static class CommandLineExtensions
     {
+        
         /// <summary>
         /// Adds the default settings/configuration to the command line builder.
         /// </summary>
@@ -58,51 +59,42 @@ namespace VirtualClient
                     throw new ArgumentException($"Invalid Usage. {string.Join(" ", parseResults.Errors.Select(e => e.Message))}");
                 }
 
-                // The System.CommandLine library does not do a good job of handling unsupported/unrecognized
-                // options provided by the user on the command line. Effectively, the parser just handles them
-                // even if they are NOT defined on the Command definition. This leads to confusing situations for users
-                // where they might have simply misspelled the option.
-                //
-                // Deeper Context:
-                // When the System.CommandLine library encounters an option on the command line that it does not recognize,
-                // it parses the option as a positional Argument vs. as an Option.
-                //
-                // e.g.
-                // Option = --profile
-                // Argument = PERF-CPU-OPENSSL.json
-                // Option = --timeout
-                // Argument = 01:00:00
-                // Argument = --unrecognized-option
-                // Argument = Value for the unrecognized option
-                List<string> unsupportedOptions = new List<string>();
-
                 if (parseResults.Tokens?.Any() == true)
                 {
+                    // The System.CommandLine library does not do a good job of handling unsupported/unrecognized
+                    // options provided by the user on the command line. Effectively, the parser just handles them
+                    // even if they are NOT defined on the Command definition. This leads to confusing situations for users
+                    // where they might have simply misspelled the option.
+                    //
+                    // Deeper Context:
+                    // When the System.CommandLine library encounters an option on the command line that it does not recognize,
+                    // it parses the option as a positional Argument vs. as an Option.
+                    //
+                    // e.g.
+                    // Option = --profile
+                    // Argument = PERF-CPU-OPENSSL.json
+                    // Option = --timeout
+                    // Argument = 01:00:00
+                    // Argument = --unrecognized-option
+                    // Argument = Value for the unrecognized option
+                    List<string> unsupportedOptions = new List<string>();
+                
                     // Scenario 2:
-                    // There are no options supported on the command line at all.
-                    ICommand command = parseResults.CommandResult.Command;
-                    IReadOnlyList<IOption> supportedOptions = command.Options;
-                    if (supportedOptions?.Any() != true)
-                    {
-                        IEnumerable<Token> userCommandLineOptions = parseResults.Tokens.Where(t => t.Type == TokenType.Option);
-                        if (userCommandLineOptions?.Any() == true)
-                        {
-
-                            unsupportedOptions.AddRange(userCommandLineOptions.Select(o => o.Value));
-                        }
-                    }
-
-                    // Scenario 3:
-                    // There are no options on the command line that are not valid for the command.
+                    // There are options on the command line that are not valid for the command. The command
+                    // line parsing will match supported options as 'Option' object instances and anything else
+                    // as 'Argument' instances. Any unmatched options will thus be represented as 'Argument' instances.
                     IEnumerable<Token> arguments = parseResults.Tokens.Where(t => t.Type == TokenType.Argument);
                     if (arguments?.Any() == true)
                     {
-                        Regex optionMatchExpression = new Regex("--[a-z]+", RegexOptions.IgnoreCase);
                         foreach (Token argument in arguments)
                         {
-                            if (optionMatchExpression.IsMatch(argument.Value?.Trim()))
+                            string argumentValue = argument.Value?.Trim();
+                            if (argumentValue != null)
                             {
-                                unsupportedOptions.Add(argument.Value);
+                                if (argumentValue.StartsWith("--"))
+                                {
+                                    unsupportedOptions.Add(argument.Value);
+                                }
                             }
                         }
                     }
