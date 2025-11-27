@@ -100,6 +100,75 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionStatePathReferencesOnUnixSystems()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string stateDirectory = this.mockFixture.GetStatePath();
+            string stateFilePath = this.mockFixture.GetStatePath("state.json");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{StatePath}", stateDirectory },
+                { "{StateDir}", stateDirectory },
+                { "--any-path={StatePath}/state.json", $"--any-path={stateFilePath}" },
+                { "--any-path={StateDir}/state.json", $"--any-path={stateFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionStatePathReferencesOnWindowsSystems()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+            string stateDirectory = this.mockFixture.GetStatePath();
+            string stateFilePath = this.mockFixture.GetStatePath("state.json");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{StatePath}", stateDirectory },
+                { "{StateDir}", stateDirectory },
+                { "--any-path={StatePath}/state.json", $"--any-path={stateFilePath}" },
+                { "--any-path={StateDir}/state.json", $"--any-path={stateFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorStatePathLocationReferenceExpressionsAreNotCaseSensitive()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string stateDirectory = this.mockFixture.GetStatePath();
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{statePath}", stateDirectory },
+                { "{statepath}", stateDirectory },
+                { "{statedir}", stateDirectory },
+                { "{STATEPATH}", stateDirectory },
+                { "{STATEDIR}", stateDirectory }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionTempPathReferencesOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Unix);

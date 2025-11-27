@@ -1,0 +1,18 @@
+{
+    "Description": "Copies logs from a remote system to the local system.",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": {
+    },
+    "Actions": [
+        {
+            "Type": "RemoteLogCopy",
+            "Parameters": {
+                "Scenario": "CopyLogsFromTarget",
+                "CopyLogs": true,
+                "Tags": "SDK,SSH,Controller"
+            }
+        }
+    ]
+}

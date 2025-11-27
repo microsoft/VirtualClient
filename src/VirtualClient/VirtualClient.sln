@@ -71,6 +71,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtualClient.Controller", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtualClient.Controller.UnitTests", "VirtualClient.Controller.UnitTests\VirtualClient.Controller.UnitTests.csproj", "{B23B27E8-E245-7173-C624-68ABAACF95B9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtualClient.SdkAgent.Main", "VirtualClient.SdkAgent.Main\VirtualClient.SdkAgent.Main.csproj", "{B310242C-F463-6616-4DC9-956A03A7FA78}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -411,6 +413,18 @@ Global
 		{B23B27E8-E245-7173-C624-68ABAACF95B9}.Release|ARM64.Build.0 = Release|ARM64
 		{B23B27E8-E245-7173-C624-68ABAACF95B9}.Release|x64.ActiveCfg = Release|x64
 		{B23B27E8-E245-7173-C624-68ABAACF95B9}.Release|x64.Build.0 = Release|x64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Debug|ARM64.Build.0 = Debug|ARM64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Debug|x64.ActiveCfg = Debug|x64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Debug|x64.Build.0 = Debug|x64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Release|ARM64.ActiveCfg = Release|ARM64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Release|ARM64.Build.0 = Release|ARM64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Release|x64.ActiveCfg = Release|x64
+		{B310242C-F463-6616-4DC9-956A03A7FA78}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

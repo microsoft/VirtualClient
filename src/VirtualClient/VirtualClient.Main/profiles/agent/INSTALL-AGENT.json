@@ -4,8 +4,6 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
     },
     "Parameters": {
-        "SshTarget": null,
-        "SshPassword": null
     },
     "Actions": [
         {
@@ -21,9 +19,7 @@
             "Type": "RemoteAgentInstallation",
             "Parameters": {
                 "Scenario": "InstallAgentOnTarget",
-                "SshTarget": "$.Parameters.SshTarget",
-                "SshPassword": "$.Parameters.SshPassword",
-                "Tags": "VC,SSH,Controller"
+                "Tags": "SDK,SSH,Controller"
             }
         }
     ]

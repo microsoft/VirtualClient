@@ -8,17 +8,15 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net.Http;
-    using System.Net;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
-    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -30,14 +28,14 @@ namespace VirtualClient
             true);
 
         private MockFixture mockFixture;
-        private TestRunProfileCommand command;
+        private TestExecuteProfileCommand command;
 
         [SetUp]
         public void SetupDefaults()
         {
             this.mockFixture = new MockFixture();
 
-            this.command = new TestRunProfileCommand
+            this.command = new TestExecuteProfileCommand
             {
                 ClientId = "AnyAgent",
                 Verbose = false,
@@ -50,7 +48,165 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsProfilesThatExistInTheDefaultProfilesLocation()
+        [TestCase(
+            @"pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs/pwsh",
+            @"pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs/pwsh")
+            ]
+        [TestCase(
+            @"pwsh -Command /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs/pwsh",
+            @"pwsh -NonInteractive -Command /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs/pwsh")
+            ]
+        [TestCase(
+            @"pwsh.exe C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs\pwsh",
+            @"pwsh.exe -NonInteractive C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs\pwsh")
+            ]
+        [TestCase(
+            @"pwsh.exe -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs\pwsh",
+            @"pwsh.exe -NonInteractive -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs\pwsh")
+            ]
+        public void ExecuteProfileCommandNormalizesPwshCommandLinesCorrectly(string originalCommand, string expectedCommand)
+        {
+            string actualCommand = TestExecuteProfileCommand.NormalizeForPowerShell(originalCommand);
+            Assert.AreEqual(expectedCommand, actualCommand);
+        }
+
+        [Test]
+        [TestCase(
+          @"powershell C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs",
+          @"powershell -NonInteractive C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs")
+            ]
+        [TestCase(
+          @"powershell -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs",
+          @"powershell -NonInteractive -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs")
+            ]
+        [TestCase(
+          @"powershell.exe C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs",
+          @"powershell.exe -NonInteractive C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs")
+            ]
+        [TestCase(
+          @"powershell.exe -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs",
+          @"powershell.exe -NonInteractive -Command C:\Scripts\Invoke-Script.ps1 -Name AnyScript -LogDirectory C:\Logs")
+            ]
+        public void ExecuteProfileCommandNormalizesPowerShellCommandLinesCorrectly(string originalCommand, string expectedCommand)
+        {
+            string actualCommand = TestExecuteProfileCommand.NormalizeForPowerShell(originalCommand);
+            Assert.AreEqual(expectedCommand, actualCommand);
+        }
+
+        [Test]
+        public async Task ExecuteProfileCommandExecutesTheExpectedFlowWhenProvidedCommandLineArguments()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                TestExecuteProfileCommand command = new TestExecuteProfileCommand
+                {
+                    Command = "pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs",
+                    ClientId = "AnyAgent",
+                    Timeout = ProfileTiming.OneIteration(),
+                    ExecutionSystem = "AnySystem",
+                    ExperimentId = Guid.NewGuid().ToString(),
+                    InstallDependencies = false
+                };
+
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool confirmed = false;
+                command.OnExecute = () => confirmed = true;
+
+                await command.ExecuteAsync(command.Command.Split(' '), tokenSource);
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task ExecuteProfileCommandExecutesTheExpectedFlowWhenProvidedCommandLineArgumentsAsWellAsProfiles()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                TestExecuteProfileCommand command = new TestExecuteProfileCommand
+                {
+                    Command = "pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs",
+                    ClientId = "AnyAgent",
+                    Timeout = ProfileTiming.OneIteration(),
+                    ExecutionSystem = "AnySystem",
+                    ExperimentId = Guid.NewGuid().ToString(),
+                    InstallDependencies = false,
+                    Profiles = new List<DependencyProfileReference>
+                    {
+                        new DependencyProfileReference("MONITORS-DEFAULT.json")
+                    }
+                };
+
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool confirmed = false;
+                command.OnExecute = () => confirmed = true;
+
+                await command.ExecuteAsync($"{command.Command} --profile=MONITORS-DEFAULT.json".Split(' '), tokenSource);
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task ExecuteProfileCommandExecutesTheExpectedFlowWhenProvidedProfileArguments()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                TestExecuteProfileCommand command = new TestExecuteProfileCommand
+                {
+                    ClientId = "AnyAgent",
+                    Timeout = ProfileTiming.OneIteration(),
+                    ExecutionSystem = "AnySystem",
+                    ExperimentId = Guid.NewGuid().ToString(),
+                    InstallDependencies = false,
+                    Profiles = new List<DependencyProfileReference>
+                    {
+                        new DependencyProfileReference("ANY-PROFILE.json")
+                    }
+                };
+
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool confirmed = false;
+                command.OnExecute = () => confirmed = true;
+
+                await command.ExecuteAsync("--profile=ANY-PROFILE.json --timeout=10".Split(' '), tokenSource);
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        [TestCase("")]
+        [TestCase(" ")]
+        [TestCase("   ")]
+        public void ExecuteProfileCommandThrowsIfTheLogicCannotDetermineTheCorrectFlow(string commandLine)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // No command line or profiles provided.
+                TestExecuteProfileCommand command = new TestExecuteProfileCommand
+                {
+                    Command = commandLine,
+                    ClientId = "AnyAgent",
+                    Timeout = ProfileTiming.OneIteration(),
+                    ExecutionSystem = "AnySystem",
+                    ExperimentId = Guid.NewGuid().ToString(),
+                    InstallDependencies = false
+                };
+
+                NotSupportedException error = Assert.Throws<NotSupportedException>(() => command.Initialize(Array.Empty<string>(), this.mockFixture.PlatformSpecifics));
+
+                Assert.AreEqual(
+                    "Command line usage is not supported. The intended command or profile execution intentions are unclear.",
+                    error.Message);
+            }
+        }
+
+        [Test]
+        public async Task ExecuteProfileCommandSupportsProfilesThatExistInTheDefaultProfilesLocation()
         {
             this.command.Profiles = new List<DependencyProfileReference>
             {
@@ -75,7 +231,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsProfilesThatExistInTheDefaultProfileDownloadsLocation()
+        public async Task ExecuteProfileCommandSupportsProfilesThatExistInTheDefaultProfileDownloadsLocation()
         {
             this.command.Profiles = new List<DependencyProfileReference>
             {
@@ -100,7 +256,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsProfilesThatExistInAnExtensionsLocation()
+        public async Task ExecuteProfileCommandSupportsProfilesThatExistInAnExtensionsLocation()
         {
             this.command.Profiles = new List<DependencyProfileReference>
             {
@@ -143,7 +299,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandCreatesTheExpectedProfile_DefaultScenario()
+        public async Task ExecuteProfileCommandCreatesTheExpectedProfile_DefaultScenario()
         {
             // Scenario:
             // In the default scenario, a workload profile is supplied that only contains
@@ -175,7 +331,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandAddsTheExpectedMetadataToProfile()
+        public async Task ExecuteProfileCommandAddsTheExpectedMetadataToProfile()
         {
             // Scenario:
             // In the default scenario, a workload profile is supplied that only contains
@@ -207,7 +363,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandAddsTheExpectedParametersToProfile()
+        public async Task ExecuteProfileCommandAddsTheExpectedParametersToProfile()
         {
             // Scenario:
             // In the default scenario, a workload profile is supplied that only contains
@@ -239,7 +395,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandCreatesTheExpectedProfile_DefaultMonitorProfileExplicitlyDefinedScenario()
+        public async Task ExecuteProfileCommandCreatesTheExpectedProfile_DefaultMonitorProfileExplicitlyDefinedScenario()
         {
             // Scenario:
             // In the default scenario, a workload profile is supplied that only contains
@@ -275,7 +431,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandCreatesTheExpectedProfile_ProfileWithActionsDependenciesAndMonitorsScenario()
+        public async Task ExecuteProfileCommandCreatesTheExpectedProfile_ProfileWithActionsDependenciesAndMonitorsScenario()
         {
             // Scenario:
             // In the default scenario, a workload profile is supplied that only contains
@@ -318,7 +474,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandCreatesTheExpectedProfile_ProfilesWithMonitorsOnlyScenario()
+        public async Task ExecuteProfileCommandCreatesTheExpectedProfile_ProfilesWithMonitorsOnlyScenario()
         {
             // Scenario:
             // In the default scenario, a workload profile is supplied that only contains
@@ -347,7 +503,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileNoConditionsMatch()
+        public async Task ExecuteProfileCommandSupportsParametersOnListInProfileNoConditionsMatch()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -374,7 +530,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileFirstConditionMatches()
+        public async Task ExecuteProfileCommandSupportsParametersOnListInProfileFirstConditionMatches()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -406,7 +562,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileSecondConditionMatches()
+        public async Task ExecuteProfileCommandSupportsParametersOnListInProfileSecondConditionMatches()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -438,7 +594,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileThirdConditionMatches()
+        public async Task ExecuteProfileCommandSupportsParametersOnListInProfileThirdConditionMatches()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -469,7 +625,7 @@ namespace VirtualClient
             Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
         }
 
-        private class TestRunProfileCommand : ExecuteProfileCommand
+        private class TestExecuteProfileCommand : ExecuteProfileCommand
         {
             public new PlatformExtensions Extensions
             {
@@ -486,9 +642,21 @@ namespace VirtualClient
 
             public Action<IServiceCollection, DependencyProfileReference, string> OnDownloadProfile { get; set; }
 
+            public Action OnExecute { get; set; }
+
+            public new static string NormalizeForPowerShell(string commandLine)
+            {
+                return ExecuteProfileCommand.NormalizeForPowerShell(commandLine);
+            }
+
             public new Task<IEnumerable<string>> EvaluateProfilesAsync(IServiceCollection dependencies, bool initialize = false, CancellationToken cancellationToken = default(CancellationToken))
             {
                 return base.EvaluateProfilesAsync(dependencies, initialize, cancellationToken);
+            }
+
+            public new void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+            {
+                base.Initialize(args, platformSpecifics);
             }
 
             public new Task<ExecutionProfile> InitializeProfilesAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
@@ -510,6 +678,20 @@ namespace VirtualClient
             {
                 this.OnDownloadProfile?.Invoke(dependencies, profile, profilePath);
                 return Task.CompletedTask;
+            }
+
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
+            {
+                this.OnExecute?.Invoke();
+                return Task.FromResult(0);
+            }
+
+            protected override IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
+            {
+                IServiceCollection dependencies = new ServiceCollection();
+                dependencies.AddSingleton<ILogger>(NullLogger.Instance);
+
+                return dependencies;
             }
         }
 

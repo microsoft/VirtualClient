@@ -48,6 +48,17 @@ namespace VirtualClient.TestExtensions
         /// </returns>
         public static X509Certificate2 CreateCertificate(this Fixture fixture, bool withPrivateKey = false)
         {
+            // IMPORTANT:
+            // The certificate that is used to support unit/functional testing scenarios is a self-signed
+            // certificate. Whereas it is a valid certificate, it cannot be used for any authentication or
+            // authorization. It is only useful for development/testing purposes.
+            //
+            // This certificate was created on a local developer system using the 'New-TestCertificate.ps1' 
+            // commandlet in the solution directory.
+            //
+            // e.g.
+            // PS> New-TestCertificate.ps1 -OutputPath 'C:\Users\User\Documents'
+
             X509Certificate2 certificate = null;
             string resourcesDirectory = Path.Combine(Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location), "Resources");
 

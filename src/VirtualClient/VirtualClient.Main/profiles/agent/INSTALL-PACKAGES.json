@@ -4,14 +4,12 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
     },
     "Parameters": {
-        "SshTarget": null,
-        "SshPassword": null
     },
     "Actions": [
         {
             "Type": "WaitExecutor",
             "Parameters": {
-                "Scenario": "Initialize",
+                "Scenario": "Wait",
                 "Duration": "00:00:01"
             }
         }
@@ -21,9 +19,7 @@
             "Type": "RemotePackagesInstallation",
             "Parameters": {
                 "Scenario": "InstallPackagesOnTarget",
-                "SshTarget": "$.Parameters.SshTarget",
-                "SshPassword": "$.Parameters.SshPassword",
-                "Tags": "VC,SSH,Controller"
+                "Tags": "SDK,SSH,Controller"
             }
         }
     ]

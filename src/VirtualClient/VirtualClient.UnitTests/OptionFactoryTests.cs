@@ -20,6 +20,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Options;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Configuration;
     using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Identity;
 
@@ -34,8 +35,6 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--profile=ANY-PROFILE.json --e=1234 --timeout=00:01:00")]
-        [TestCase("--profile=ANY-PROFILE.json --e 1234 --timeout=00:01:00")]
         [TestCase("--profile=ANY-PROFILE.json --experiment-id=1234 --timeout=00:01:00")]
         [TestCase("--profile=ANY-PROFILE.json --experiment-id 1234 --timeout=00:01:00")]
         public void ContainsOptionCorrectlyIdentifiesWhenAnOptionExistsInTheCommandLine(string commandLine)
@@ -46,9 +45,6 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
         [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
         public void ContainsOptionCorrectlyIdentifiesWhenAnOptionDoesNotExistInTheCommandLine(string commandLine)
         {
@@ -80,8 +76,6 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--profile=ANY-PROFILE.json --e=1234 --timeout=00:01:00")]
-        [TestCase("--profile=ANY-PROFILE.json --e 1234 --timeout=00:01:00")]
         [TestCase("--profile=ANY-PROFILE.json --experiment-id=1234 --timeout=00:01:00")]
         [TestCase("--profile=ANY-PROFILE.json --experiment-id 1234 --timeout=00:01:00")]
         public void ContainsOptionHandlesFullCommandLineEvaluations_1(string commandLine)
@@ -102,17 +96,18 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --ff")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 -f")]
         [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fail-fast")]
+        [TestCase("-f --profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("--fail-fast --profile=ANY-PROFILE.json --timeout=00:01:00")]
         public void ContainsOptionCorrectlyIdentifiesWhenAFlagExistsInTheCommandLine(string commandLine)
         {
             string[] args = commandLine.Split(" ");
             Option option = OptionFactory.CreateFailFastFlag();
-            Assert.IsTrue(OptionFactory.ContainsOption(option, args));
+            Assert.IsTrue(OptionFactory.ContainsOption(option, args), $"Expression evaluation failed: {commandLine}");
         }
 
         [Test]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
         [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
         public void ContainsOptionCorrectlyIdentifiesWhenAFlagDoesNotExistInTheCommandLine(string commandLine)
         {
@@ -122,19 +117,28 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fff")]
-        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --ff-other")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --f")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 ---f")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --f-other")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 -fail-fast")]
         [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fail-forward")]
         [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fail-fast-flagrantly")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 ---fail-fast")]
+        [TestCase("--profile=ANY-PROFILE.json --fail-forward --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --fail-fast-flagrantly --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json ---fail-fast --timeout=00:01:00")]
+        [TestCase("--f --profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("--fail-fast-flagrantly --profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("---fail-fast --profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("-fail-fast --profile=ANY-PROFILE.json --timeout=00:01:00")]
         public void ContainsOptionDoesNotMistakeOtherFlagsWithVerySimilarNames(string commandLine)
         {
             string[] args = commandLine.Split(" ");
             Option option = OptionFactory.CreateFailFastFlag();
-            Assert.IsFalse(OptionFactory.ContainsOption(option, args));
+            Assert.IsFalse(OptionFactory.ContainsOption(option, args), $"Expression evaluation failed: {commandLine}");
         }
 
         [Test]
-        [TestCase("--port")]
         [TestCase("--api-port")]
         public void ApiPortOptionSupportsExpectedAliases(string alias)
         {
@@ -236,7 +240,6 @@ namespace VirtualClient
         [Test]
         [TestCase("--agentId")]
         [TestCase("--client-id")]
-        [TestCase("--c")]
         public void ClientIdOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateClientIdOption();
@@ -245,23 +248,104 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--content-store")]
-        [TestCase("--content")]
-        [TestCase("--cs")]
-        public void ContentStoreOptionSupportsExpectedAliases(string alias)
+        [TestCase("-C")]
+        [TestCase("--command")]
+        public void CommandOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateContentStoreOption();
-            ParseResult result = option.Parse($"{alias}=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123");
+            Option option = OptionFactory.CreateCommandOption();
+            ParseResult result = option.Parse($"{alias}=/any/command.sh");
             Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]
-        [TestCase("--logger=console")]
-        [TestCase("--logger=console --logger=file")]
-        public void LoggerOptionSupportsMultipleLoggerInputs(string input)
+        [TestCase("/any/scripts/Invoke-Script.ps1")]
+        [TestCase("C:\\any\\scripts\\Invoke-Script.ps1")]
+        public void CommandOptionSupportsSimpleCommandLines(string expectedCommandLine)
         {
-            Option option = OptionFactory.CreateLoggerOption();
-            ParseResult result = option.Parse(input);
+            Option option = OptionFactory.CreateCommandOption();
+            ParseResult result = option.Parse($"--command={expectedCommandLine}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualCommandLine = result.Tokens.ElementAt(1).Value;
+            Assert.AreEqual(expectedCommandLine, actualCommandLine);
+        }
+
+        [Test]
+        [TestCase("/any/scripts/execute_something.sh first_arg second_arg")]
+        [TestCase("C:\\any\\scripts\\execute_something.cmd first_arg second_arg")]
+        [TestCase("/any/scripts/execute_something.sh --arg1 first_arg --arg2 second_arg -f")]
+        [TestCase("/any/scripts/execute_something.sh --arg1=first_arg --arg2=second_arg -f")]
+        [TestCase("C:\\any\\scripts\\execute_something.cmd --arg1 first_arg --arg2 second_arg -f")]
+        [TestCase("C:\\any\\scripts\\execute_something.cmd --arg1=first_arg --arg2=second_arg -f")]
+        public void CommandOptionSupportsMoreComplexCommandLines_Common_Scenarios(string expectedCommandLine)
+        {
+            Option option = OptionFactory.CreateCommandOption();
+            ParseResult result = option.Parse($"--command=\"{expectedCommandLine}\"");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualCommandLine = result.Tokens.ElementAt(1).Value;
+            Assert.AreEqual(expectedCommandLine, actualCommandLine);
+        }
+
+        [Test]
+        [TestCase("pwsh /any/scripts/Invoke-Script.ps1")]
+        [TestCase("pwsh C:\\any\\scripts\\Invoke-Script.ps1")]
+        [TestCase("pwsh C:\\any\\scripts\\Invoke-Script.ps1 -LogDirectory C:\\Any\\Logs")]
+        [TestCase("pwsh /any/scripts/Invoke-Script.ps1 -LogDirectory /any/logs")]
+        public void CommandOptionSupportsMoreComplexCommandLines_PowerShell_Scenarios(string expectedCommandLine)
+        {
+            Option option = OptionFactory.CreateCommandOption();
+            ParseResult result = option.Parse($"--command=\"{expectedCommandLine}\"");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualCommandLine = result.Tokens.ElementAt(1).Value;
+            Assert.AreEqual(expectedCommandLine, actualCommandLine);
+        }
+
+        [Test]
+        [TestCase("python /any/scripts/execute_script.py")]
+        [TestCase("python C:\\any\\scripts\\execute_script.py")]
+        [TestCase("python C:\\any\\scripts\\execute_script.py --log_dir C:\\Any\\Logs")]
+        [TestCase("python /any/scripts/execute_script.py --log_dir /any/logs")]
+        public void CommandOptionSupportsMoreComplexCommandLines_Python_Scenarios(string expectedCommandLine)
+        {
+            Option option = OptionFactory.CreateCommandOption();
+            ParseResult result = option.Parse($"--command=\"{expectedCommandLine}\"");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualCommandLine = result.Tokens.ElementAt(1).Value;
+            Assert.AreEqual(expectedCommandLine, actualCommandLine);
+        }
+
+        [Test]
+        [TestCase("python C:\\any\\scripts\\execute_script.py --log_dir &quot;C:\\Any\\Log Directory&quot;")]
+        [TestCase("python /any/scripts/execute_script.py --log_dir &quot;/any/log dir&quot;")]
+        public void CommandOptionSupportsMoreComplexCommandLines_Requiring_Html_Encoded_Quotation_Marks(string commandLine)
+        {
+            // System.CommandLine Quirk:
+            // The library parsing logic will strip the \" from the end of the command line
+            // vs. treating it as an explicit quotation mark to leave in place. There are no
+            // hooks in the library implementation to override this behavior.
+            //
+            // To workaround this we replace the quotes with the HTML encoding. Each option can
+            // then handle the HTML decoding as required.
+
+            Option option = OptionFactory.CreateCommandOption();
+            ParseResult result = option.Parse($"--command=\"{commandLine}\"");
+            Assert.IsFalse(result.Errors.Any());
+
+            string expectedCommandLine = commandLine.Replace("&quot;", "\"");
+            string actualCommandLine = result.Tokens.ElementAt(1).Value.Replace("&quot;", "\"");
+            Assert.AreEqual(expectedCommandLine, actualCommandLine);
+        }
+
+        [Test]
+        [TestCase("--content-store")]
+        [TestCase("--content")]
+        public void ContentStoreOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateContentStoreOption();
+            ParseResult result = option.Parse($"{alias}=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -371,7 +455,6 @@ namespace VirtualClient
         [Test]
         [TestCase("--content-path-template")]
         [TestCase("--content-path")]
-        [TestCase("--cp")]
         public void ContentPathTemplateOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateContentPathTemplateOption();
@@ -487,7 +570,6 @@ namespace VirtualClient
         [Test]
         [TestCase("--experiment-id")]
         [TestCase("--experimentId")]
-        [TestCase("--e")]
         public void ExperimentIdOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateExperimentIdOption();
@@ -498,7 +580,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--exit-wait")]
-        [TestCase("--wait")]
         public void ExitWaitOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateExitWaitOption();
@@ -517,8 +598,8 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("-f")]
         [TestCase("--fail-fast")]
-        [TestCase("--ff")]
         public void FailFastFlagSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateFailFastFlag();
@@ -527,6 +608,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("-i")]
         [TestCase("--intrinsic")]
         public void IntrinsicFlagSupportsExpectedAliases(string alias)
         {
@@ -537,7 +619,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--ip-address")]
-        [TestCase("--ip")]
         public void IPAddressOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateIPAddressOption();
@@ -560,7 +641,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--iterations")]
-        [TestCase("--i")]
         public void IterationsOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateIterationsOption();
@@ -587,7 +667,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--key-vault")]
-        [TestCase("--kv")]
         public void KeyVaultOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateKeyVaultOption();
@@ -618,7 +697,7 @@ namespace VirtualClient
         public void KeyVaultOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
         {
             Option option = OptionFactory.CreateKeyVaultOption();
-            ParseResult result = option.Parse($"--kv={argument}");
+            ParseResult result = option.Parse($"--key-vault={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -627,14 +706,13 @@ namespace VirtualClient
         public void KeyVaultOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
         {
             Option option = OptionFactory.CreateKeyVaultOption();
-            ParseResult result = option.Parse($"--kv={argument}");
+            ParseResult result = option.Parse($"--key-vault={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]
         [TestCase("--layout-path")]
         [TestCase("--layout")]
-        [TestCase("--lp")]
         public void LayoutPathOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateLayoutPathOption();
@@ -644,7 +722,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--log-dir")]
-        [TestCase("--ldir")]
         public void LogDirectoryOptionSupportsExpectedAliases(string alias)
         {
                 Option option = OptionFactory.CreateLogDirectoryOption();
@@ -676,7 +753,7 @@ namespace VirtualClient
             Option option = OptionFactory.CreateLogDirectoryOption();
             ParseResult result = option.Parse($"--log-dir={path}");
 
-            string expectedPath = Path.GetFullPath(path);
+            string expectedPath = path;
             string actualPath = result.ValueForOption("--log-dir")?.ToString();
 
             Assert.IsFalse(result.Errors.Any());
@@ -692,15 +769,24 @@ namespace VirtualClient
             Option option = OptionFactory.CreateLogDirectoryOption(defaultValue: path);
             ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
 
-            string expectedPath = Path.GetFullPath(path);
+            string expectedPath = path;
             string actualPath = result.ValueForOption("--log-dir")?.ToString();
 
             Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]
+        [TestCase("--logger=console")]
+        [TestCase("--logger=console --logger=file")]
+        public void LoggerOptionSupportsMultipleLoggerInputs(string input)
+        {
+            Option option = OptionFactory.CreateLoggerOption();
+            ParseResult result = option.Parse(input);
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCase("--log-level")]
-        [TestCase("--ll")]
         public void LogLevelOptionSupportsExpectedAliases(string alias)
         {
             foreach (LogLevel level in Enum.GetValues<LogLevel>())
@@ -737,7 +823,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--log-retention")]
-        [TestCase("--lr")]
         public void LogRetentionOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateLogRetentionOption();
@@ -747,7 +832,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--log-retention")]
-        [TestCase("--lr")]
         public void LogRetentionOptionSupportsBothIntegerMinutesAndTimeSpanFormats(string alias)
         {
             Option option = OptionFactory.CreateLogRetentionOption();
@@ -763,8 +847,8 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("-l")]
         [TestCase("--log-to-file")]
-        [TestCase("--ltf")]
         public void LogToFileFlagSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateLogToFileFlag();
@@ -784,7 +868,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--metadata")]
-        [TestCase("--mt")]
         public void MetadataOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateMetadataOption();
@@ -837,7 +920,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--monitor")]
-        [TestCase("--mon")]
         public void MonitorOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateMonitorFlag();
@@ -847,7 +929,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--name")]
-        [TestCase("--n")]
         public void NameOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateNameOption();
@@ -857,7 +938,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--package")]
-        [TestCase("--pkg")]
         public void PackageOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreatePackageOption();
@@ -867,7 +947,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--package-dir")]
-        [TestCase("--pdir")]
         public void PackageDirectoryOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreatePackageDirectoryOption();
@@ -924,7 +1003,6 @@ namespace VirtualClient
         [Test]
         [TestCase("--package-store")]
         [TestCase("--packages")]
-        [TestCase("--ps")]
         public void PackageStoreOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreatePackageStoreOption();
@@ -1061,7 +1139,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--parameters")]
-        [TestCase("--pm")]
         public void ParametersOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateParametersOption();
@@ -1114,7 +1191,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--profile")]
-        [TestCase("--p")]
         public void ProfileOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateProfileOption();
@@ -1201,10 +1277,10 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--package-store=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--package-store=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
                 Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--package-store=https://any.blob.store --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--package-store=https://any.blob.store" }, tokenSource);
+                commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--proxy-api=http://anyuri", "--package-store=https://any.blob.store" }, tokenSource);
                 Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --package-store=https://any.blob.store"));
             }
         }
@@ -1214,7 +1290,7 @@ namespace VirtualClient
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--proxy-api=http://anyuri" }, tokenSource);
                 ParseResult result = commandBuilder.Build().Parse("--proxy-api=http://anyuri");
             }
         }
@@ -1226,10 +1302,10 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--content-store=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--content-store=https://any.blob.store", "--proxy-api=http://anyuri" }, tokenSource);
                 Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--content-store=https://any.blob.store --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--content-store=https://any.blob.store" }, tokenSource);
+                commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--proxy-api=http://anyuri", "--content-store=https://any.blob.store" }, tokenSource);
                 Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --content-store=https://any.blob.store"));
             }
         }
@@ -1241,10 +1317,10 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--event-hub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--event-hub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
                 Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--event-hub=sb://any.servicebus.hub?miid=1234567 --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--event-hub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
+                commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--proxy-api=http://anyuri", "--event-hub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
                 Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --event-hub=sb://any.servicebus.hub?miid=1234567"));
             }
         }
@@ -1260,7 +1336,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--scenarios")]
-        [TestCase("--sc")]
         public void ScenariosOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateScenariosOption();
@@ -1281,7 +1356,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--seed")]
-        [TestCase("--sd")]
         public void SeedOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateSeedOption();
@@ -1291,7 +1365,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--state-dir")]
-        [TestCase("--sdir")]
         public void StateDirectoryOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateStateDirectoryOption();
@@ -1347,7 +1420,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--system")]
-        [TestCase("--s")]
         public void SystemOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateSystemOption();
@@ -1364,7 +1436,7 @@ namespace VirtualClient
         public void TargetAgentOptionSupportsExpectedSshConnectionValues(string value)
         {
             Option option = OptionFactory.CreateTargetAgentOption();
-            ParseResult result = option.Parse($"--agent-ssh={value}");
+            ParseResult result = option.Parse($"--target={value}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -1377,7 +1449,7 @@ namespace VirtualClient
         public void TargetAgentOptionHandlesSshConnectionsContainingDelimitersInTrickyLocations(string value)
         {
             Option option = OptionFactory.CreateTargetAgentOption();
-            ParseResult result = option.Parse($"--agent-ssh={value}");
+            ParseResult result = option.Parse($"--target={value}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -1390,13 +1462,12 @@ namespace VirtualClient
         public void TargetAgentOptionValidatesSshConnectionFormats(string invalidValue)
         {
             Option option = OptionFactory.CreateTargetAgentOption();
-            NotSupportedException error = Assert.Throws<NotSupportedException>(() => option.Parse($"--agent-ssh={invalidValue}"));
+            NotSupportedException error = Assert.Throws<NotSupportedException>(() => option.Parse($"--target={invalidValue}"));
             Assert.IsTrue(error.Message.StartsWith("Invalid target agent SSH definition."));
         }
 
         [Test]
-        [TestCase("--ssh")]
-        [TestCase("--agent-ssh")]
+        [TestCase("--target")]
         public void TargetAgentOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateTargetAgentOption();
@@ -1533,7 +1604,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--temp-dir")]
-        [TestCase("--tdir")]
         public void TempDirectoryOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateTempDirectoryOption();
@@ -1589,7 +1659,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--timeout")]
-        [TestCase("--t")]
         public void TimeoutOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateTimeoutOption();
@@ -1664,11 +1733,11 @@ namespace VirtualClient
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--profile=ANY.json", "--timeout=1440", "--iterations=3" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--profile=ANY.json", "--timeout=1440", "--iterations=3" }, tokenSource);
                 ArgumentException error = Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--profile=ANY.json --timeout=1440 --iterations=3"));
                 Assert.AreEqual("Invalid usage. The timeout option cannot be used at the same time as the profile iterations option.", error.Message);
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--profile=ANY.json --iterations=3 --timeout=1440" }, tokenSource);
+                commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--profile=ANY.json --iterations=3 --timeout=1440" }, tokenSource);
                 error = Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--iterations=3 --timeout=1440"));
                 Assert.AreEqual("Invalid usage. The profile iterations option cannot be used at the same time as the timeout option.", error.Message);
             }
@@ -1679,7 +1748,7 @@ namespace VirtualClient
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--profile=ANY.json", "--timeout=1440", "--dependencies" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--profile=ANY.json", "--timeout=1440", "--dependencies" }, tokenSource);
                 ArgumentException error = Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--profile=ANY.json --timeout=1440 --dependencies"));
                 Assert.AreEqual("Invalid usage. The timeout option cannot be used when a dependencies flag is provided.", error.Message);
             }
@@ -1690,7 +1759,7 @@ namespace VirtualClient
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--profile=ANY.json", "--iterations=3", "--dependencies" }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { "--profile=ANY.json", "--iterations=3", "--dependencies" }, tokenSource);
                 ArgumentException error = Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--profile=ANY.json --iterations=3 --dependencies"));
                 Assert.AreEqual("Invalid usage. The profile iterations option cannot be used when a dependencies flag is provided.", error.Message);
             }
@@ -1704,13 +1773,13 @@ namespace VirtualClient
                 string sasPart = "--packages=https://anystorageaccount.blob.core.windows.net/?sv=2020&ss=b&srt=c&sp=rwlacx&se=2Z&st=2021Z&spr=https";
                 string eventhubPart = "--eventhub=\"Endpoint=sb://xxx.servicebus.windows.net/;S=Az;SKey=EZ=\"";
                 string iterationPart = "--iterations=2";
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { }, tokenSource);
+                CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(new string[] { }, tokenSource);
                 ParseResult result = commandBuilder.Build().Parse($"{sasPart} {iterationPart} {eventhubPart}");
             }
         }
 
         [Test]
-        [TestCase("--debug")]
+        [TestCase("-v")]
         [TestCase("--verbose")]
         public void VerboseFlagSupportsExpectedAliases(string alias)
         {

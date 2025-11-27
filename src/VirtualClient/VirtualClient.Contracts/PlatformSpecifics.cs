@@ -9,10 +9,8 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using YamlDotNet.Core.Tokens;
 
     /// <summary>
     /// Defines platform-specific information and properties for dependencies and

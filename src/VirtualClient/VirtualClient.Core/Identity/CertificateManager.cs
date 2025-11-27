@@ -200,13 +200,15 @@ namespace VirtualClient.Identity
                                 {
                                     if (CertificateManager.IsMatchingIssuer(certificateFromFile, issuer) && CertificateManager.IsMatchingSubjectName(certificateFromFile, subjectName))
                                     {
+                                        certificate = certificateFromFile;
                                         matchingCertificates.Add(certificateFromFile);
+                                        break;
  
-                                        if (DateTime.Now < certificateFromFile.NotAfter)
-                                        {
-                                            certificate = certificateFromFile;
-                                            break;
-                                        }
+                                        ////if (DateTime.Now < certificateFromFile.NotAfter)
+                                        ////{
+                                        ////    certificate = certificateFromFile;
+                                        ////    break;
+                                        ////}
                                     }
                                 }
                             }
