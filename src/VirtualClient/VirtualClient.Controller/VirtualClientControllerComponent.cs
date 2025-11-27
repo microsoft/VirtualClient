@@ -9,7 +9,6 @@ namespace VirtualClient.Controller
     using System.IO.Abstractions;
     using System.Linq;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +25,6 @@ namespace VirtualClient.Controller
     /// </summary>
     public abstract class VirtualClientControllerComponent : VirtualClientComponent
     {
-        internal static readonly string AgentName = Path.GetFileNameWithoutExtension(VirtualClientRuntime.ExecutableName);
         private static readonly SemaphoreSlim AgentOutputLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
@@ -44,162 +42,6 @@ namespace VirtualClient.Controller
         /// Provides an interface to the local file system.
         /// </summary>
         protected IFileSystem FileSystem { get; }
-
-        /// <summary>
-        /// Returns the default installation path for the remote agent.
-        /// <br/>
-        /// <list type="bullet">
-        /// <item>
-        /// Default on Linux = $HOME/{AgentFolder}/{PlatformArchitecture}<br/>
-        /// (e.g. /home/user/Agent/linux-arm64).
-        /// </item>
-        /// <item>
-        /// Default on Windows = %USERPROFILE%\{AgentFolder}\{PlatformArchitecture}<br/>
-        /// (e.g. C:\Users\Agent\win-x64).
-        /// </item>
-        /// </list>
-        /// </summary>
-        /// <param name="targetPlatformSpecifics">Provides the platform and CPU architecture for the target/remote system (e.g. Linux, Windows, X64, ARM64).</param>
-        /// <returns>A path on the target system to which the remote agent exists or can be installed.</returns>
-        protected static string GetDefaultRemoteAgentInstallationPath(PlatformSpecifics targetPlatformSpecifics)
-        {
-            string defaultPath = null;
-            string agentName = VirtualClientControllerComponent.AgentName;
-
-            if (targetPlatformSpecifics.Platform == PlatformID.Unix)
-            {
-                defaultPath = $"$HOME/{agentName}/{targetPlatformSpecifics.PlatformArchitectureName}";
-            }
-            else if (targetPlatformSpecifics.Platform == PlatformID.Win32NT)
-            {
-                defaultPath = $"%USERPROFILE%\\{agentName}\\{targetPlatformSpecifics.PlatformArchitectureName}";
-            }
-
-            if (string.IsNullOrWhiteSpace(defaultPath))
-            {
-                throw new NotSupportedException(
-                    $"Unsupported platform '{targetPlatformSpecifics.PlatformArchitectureName}'. Supported platforms are Unix and Windows.");
-            }
-
-            return defaultPath;
-        }
-
-        /// <summary>
-        /// Returns the default path for logs/log files on the remote system.
-        /// <br/>
-        /// <list type="bullet">
-        /// <item>
-        /// Default on Linux = $HOME/{AgentFolder}/{PlatformArchitecture}/logs<br/>
-        /// (e.g. /home/user/Agent/linux-arm64/logs).
-        /// </item>
-        /// <item>
-        /// Default on Windows = %USERPROFILE%\{AgentFolder}\{PlatformArchitecture}\logs<br/>
-        /// (e.g. C:\Users\Agent\win-arm64\logs).
-        /// </item>
-        /// </list>
-        /// </summary>
-        /// <param name="targetPlatformSpecifics">Provides the platform and CPU architecture for the target/remote system (e.g. Linux, Windows, X64, ARM64).</param>
-        /// <returns>A path on the target system to which the remote packages exists or can be installed.</returns>
-        protected static string GetDefaultRemoteLogsPath(PlatformSpecifics targetPlatformSpecifics)
-        {
-            string defaultPath = null;
-            string agentName = VirtualClientControllerComponent.AgentName;
-
-            if (targetPlatformSpecifics.Platform == PlatformID.Unix)
-            {
-                defaultPath = $"$HOME/{agentName}/logs";
-            }
-            else if (targetPlatformSpecifics.Platform == PlatformID.Win32NT)
-            {
-                defaultPath = $"%USERPROFILE%\\{agentName}\\logs";
-            }
-
-            if (string.IsNullOrWhiteSpace(defaultPath))
-            {
-                throw new NotSupportedException(
-                    $"Unsupported platform '{targetPlatformSpecifics.PlatformArchitectureName}'. Supported platforms are Unix and Windows.");
-            }
-
-            return defaultPath;
-        }
-
-        /// <summary>
-        /// Returns the default installation path for packages on the remote system.
-        /// <br/>
-        /// <list type="bullet">
-        /// <item>
-        /// Default on Linux = $HOME/{AgentFolder}/packages<br/>
-        /// (e.g. /home/user/Agent/packages).
-        /// </item>
-        /// <item>
-        /// Default on Windows = %USERPROFILE%\{AgentFolder}\packages<br/>
-        /// (e.g. C:\Users\Agent\packages).
-        /// </item>
-        /// </list>
-        /// </summary>
-        /// <param name="targetPlatformSpecifics">Provides the platform and CPU architecture for the target/remote system (e.g. Linux, Windows, X64, ARM64).</param>
-        /// <param name="packagesFolder">The folder name for the packages allowing for different packages.</param>
-        /// <returns>A path on the target system to which the remote packages exists or can be installed.</returns>
-        protected static string GetDefaultRemotePackagesInstallationPath(PlatformSpecifics targetPlatformSpecifics, string packagesFolder = "packages")
-        {
-            string defaultPath = null;
-            string agentName = VirtualClientControllerComponent.AgentName;
-
-            if (targetPlatformSpecifics.Platform == PlatformID.Unix)
-            {
-                defaultPath = $"$HOME/{agentName}/{packagesFolder}";
-            }
-            else if (targetPlatformSpecifics.Platform == PlatformID.Win32NT)
-            {
-                defaultPath = $"%USERPROFILE%\\{agentName}\\{packagesFolder}";
-            }
-
-            if (string.IsNullOrWhiteSpace(defaultPath))
-            {
-                throw new NotSupportedException(
-                    $"Unsupported platform '{targetPlatformSpecifics.PlatformArchitectureName}'. Supported platforms are Unix and Windows.");
-            }
-
-            return defaultPath;
-        }
-
-        /// <summary>
-        /// Adds default command line options to the command to provide to a target/remote system.
-        /// </summary>
-        protected string AddDefaultCommandLineOptions(PlatformSpecifics targetPlatformSpecifics, string command, string packagesFolder)
-        {
-            // TODO:
-            // This is NOT going to fly for long. This is a temporary workaround to the fact that the
-            // OptionFactory is defined in the VirtualClient.Main project and this is where the option names
-            // are defined. Duplicating these here is be easy to break.
-            string effectiveCommand = command;
-            Regex experimentIdExpression = new Regex("--e=|--experiment=|--experiment-id=|--experimentId=|--experimentid=");
-            Regex packageDirectoryExpression = new Regex("--pdir=|--package-dir=");
-            Regex logDirectoryExpression = new Regex("--ldir=|--log-dir=");
-            Regex logToFileExpression = new Regex("--ltf|--log-to-file");
-
-            if (!experimentIdExpression.IsMatch(effectiveCommand))
-            {
-                effectiveCommand += $" --experiment-id={this.ExperimentId}";
-            }
-
-            if (!packageDirectoryExpression.IsMatch(effectiveCommand))
-            {
-                effectiveCommand += $" --package-dir={VirtualClientControllerComponent.GetDefaultRemotePackagesInstallationPath(targetPlatformSpecifics, packagesFolder)}";
-            }
-
-            if (!logDirectoryExpression.IsMatch(command))
-            {
-                effectiveCommand += $" --log-dir={VirtualClientControllerComponent.GetDefaultRemoteLogsPath(targetPlatformSpecifics)}";
-            }
-
-            if (!logToFileExpression.IsMatch(effectiveCommand))
-            {
-                effectiveCommand += $" --log-to-file";
-            }
-
-            return effectiveCommand;
-        }
 
         /// <summary>
         /// Copies a directory on the target system to the local system via the SSH client session.

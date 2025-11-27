@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -25,12 +26,16 @@ namespace VirtualClient
         /// Executes the file upload operations on the target directory.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
-            int exitCode = 0;
+            return base.ExecuteAsync(args, dependencies, cancellationTokenSource);
+        }
 
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+        {
             this.Timeout = ProfileTiming.OneIteration();
             this.Profiles = new List<DependencyProfileReference>
             {
@@ -48,10 +53,6 @@ namespace VirtualClient
             }
 
             this.Parameters["TargetDirectory"] = this.TargetDirectory;
-
-            exitCode = await base.ExecuteAsync(args, cancellationTokenSource);
-
-            return exitCode;
         }
     }
 }

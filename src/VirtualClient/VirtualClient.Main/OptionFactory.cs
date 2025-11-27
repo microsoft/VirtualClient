@@ -14,6 +14,7 @@ namespace VirtualClient
     using System.Net;
     using System.Text.RegularExpressions;
     using Microsoft.CodeAnalysis;
+    using Microsoft.Diagnostics.Utilities;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -21,14 +22,18 @@ namespace VirtualClient
     using VirtualClient.Identity;
 
     /// <summary>
-    /// Provides a factory for the creation of Command Options used by application command line operations.
+    /// Provides a factory for the creation of command line options for the application.
     /// </summary>
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Allow for longer description text.")]
-    public static class OptionFactory
+    public partial class OptionFactory
     {
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
         private static readonly IFileSystem defaultFileSystem = new FileSystem();
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
+
+        private OptionFactory()
+        {
+        }
 
         /// <summary>
         /// Checks to determine if the command line arguments contains the option provided.
@@ -44,19 +49,21 @@ namespace VirtualClient
             if (args?.Any() == true)
             {
                 // e.g.
-                // --profile -> p, profile
-                string optionAliases = string.Join("|", option.Aliases
-                    .Where(a => a.StartsWith("--"))
-                    .Select(a => a.Substring(2)));
+                // -f, --profile
+                var optionAliases = option.Aliases.Where(a => a.StartsWith("-"));
 
-                Regex matchExpression = new Regex($@"--(?:{optionAliases})(?:[=\s]{{1}})|--(?:{optionAliases})$");
-
-                foreach (string arg in args)
+                if (optionAliases?.Any() == true)
                 {
-                    if (!string.IsNullOrWhiteSpace(arg) && matchExpression.IsMatch(arg))
+                    string aliasExpression = string.Join("|", optionAliases);
+                    Regex optionExpression = new Regex($@"(?:^|\s)({aliasExpression})(?=$|\s|=)");
+
+                    foreach (string arg in args)
                     {
-                        hasOption = true;
-                        break;
+                        if (!string.IsNullOrWhiteSpace(arg) && optionExpression.IsMatch(arg))
+                        {
+                            hasOption = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -72,10 +79,8 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateApiPortOption(bool required = true, object defaultValue = null)
         {
-            // Note:
-            // Only the first 3 of these will display in help output (i.e. --help).
             Option<IDictionary<string, int>> option = new Option<IDictionary<string, int>>(
-                new string[] { "--port", "--api-port" },
+                new string[] { "--api-port" },
                 new ParseArgument<IDictionary<string, int>>(result =>
                 {
                     IDictionary<string, int> apiPorts = new Dictionary<string, int>();
@@ -125,11 +130,11 @@ namespace VirtualClient
         public static Option CreateCleanOption(bool required = true, object defaultValue = null)
         {
             Option<IList<string>> option = new Option<IList<string>>(
-                new string[] { "--clean" },
+                new string[] { "-c", "--clean" },
                 new ParseArgument<IList<string>>(result => OptionFactory.ParseDelimitedValues(result)))
             {
                 Name = "CleanTargets",
-                Description = "Indicates a clean/reset should be performed and defines the targets. Valid targets are: logs, state, packages, all. Multiple targets can be defined comma-delimited (e.g. logs,state,packages).",
+                Description = "Indicates a clean/reset should be performed and defines the targets. Valid targets are: logs, packages, state, temp, all. Multiple targets can be defined comma-delimited (e.g. logs,packages,state,temp).",
                 ArgumentHelpName = "targets",
                 AllowMultipleArgumentsPerToken = false,
                 Arity = new ArgumentArity(0, 10000)
@@ -178,7 +183,7 @@ namespace VirtualClient
             //
             // **IMPORTANT**
             // Note that the --agentId option will be deprecated in the future.
-            Option<string> option = new Option<string>(new string[] { "--c", "--client-id", "--agentId" })
+            Option<string> option = new Option<string>(new string[] { "--client-id", "--agentId" })
             {
                 Name = "ClientId",
                 Description = "A name/identifier to describe the instance of the application (the agent) that will be included with all " +
@@ -198,15 +203,29 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Argument<string> CreateCommandArgument(bool required = false, object defaultValue = null)
+        public static Option CreateCommandOption(bool required = false, object defaultValue = null)
         {
-            // Single command execution is also supported. Behind the scenes this uses a
-            // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
-            // while additionally having the full set of other options available for profile execution.
-            Argument<string> commandArgument = new Argument<string>("Command");
-            commandArgument.SetDefaultValue(defaultValue);
+            Option<string> option = new Option<string>(new string[] 
+                { "-C", "--command" },
 
-            return commandArgument;
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required (i.e. normalize = true).
+                parseArgument: result => OptionFactory.PostprocessArguments(result.Tokens?.FirstOrDefault().Value)?.FirstOrDefault())
+            {
+                Name = "Command",
+                Description = "Defines a command/command line to execute.",
+                ArgumentHelpName = "arguments",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
         }
 
         /// <summary>
@@ -217,9 +236,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateContentPathTemplateOption(bool required = true, object defaultValue = null)
         {
-            // Note:
-            // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--cp", "--content-path", "--content-path-template" })
+            Option<string> option = new Option<string>(new string[] { "--content-path", "--content-path-template" })
             {
                 Name = "ContentPathTemplate",
                 Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
@@ -250,7 +267,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--cs", "--content", "--content-store" },
+                new string[] { "--content", "--content-store" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,
@@ -367,7 +384,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateDependenciesFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--dependencies" })
+            Option<bool> option = new Option<bool>(new string[] { "-d", "--dependencies" })
             {
                 Name = "InstallDependencies",
                 Description = "Flag indicates that only the profile dependencies should be evaluated/installed (i.e. no actions or monitors).",
@@ -402,9 +419,6 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null)
         {
-            // Note:
-            // Only the first 3 of these will display in help output (i.e. --help).
-            //
             // **IMPORTANT**
             // Note that this option will be deprecated in the future.
             Option<string> option = new Option<string>(
@@ -428,10 +442,8 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateExitWaitOption(bool required = true, object defaultValue = null)
         {
-            // Note:
-            // Only the first 3 of these will display in help output (i.e. --help).
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--wait", "--exit-wait" },
+                new string[] { "--exit-wait" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "ExitWait",
@@ -458,7 +470,7 @@ namespace VirtualClient
             //
             // **IMPORTANT**
             // Note that the --experimentId option will be deprecated in the future.
-            Option<string> option = new Option<string>(new string[] { "--e", "--experiment-id", "--experimentId" })
+            Option<string> option = new Option<string>(new string[] { "--experiment-id", "--experimentId" })
             {
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
@@ -478,7 +490,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateFailFastFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--ff", "--fail-fast" })
+            Option<bool> option = new Option<bool>(new string[] { "-f", "--fail-fast" })
             {
                 Name = "FailFast",
                 Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",
@@ -498,7 +510,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateIntrinsicFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--intrinsic" })
+            Option<bool> option = new Option<bool>(new string[] { "-i", "--intrinsic" })
             {
                 Name = "Intrinsic",
                 Description = "Flag indicates the data is intrinsic to the current system.",
@@ -520,7 +532,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--ip", "--ip-address" })
+            Option<string> option = new Option<string>(new string[] { "--ip-address" })
             {
                 Name = "IPAddress",
                 Description = "The IP address of a remote/target application API instance to monitor.",
@@ -553,7 +565,7 @@ namespace VirtualClient
         public static Option CreateIterationsOption(bool required = false, object defaultValue = null)
         {
             Option<ProfileTiming> option = new Option<ProfileTiming>(
-                new string[] { "--i", "--iterations" },
+                new string[] { "--iterations" },
                 new ParseArgument<ProfileTiming>(arg => OptionFactory.ParseProfileIterations(arg)))
             {
                 Name = "Iterations",
@@ -585,7 +597,7 @@ namespace VirtualClient
         public static Option CreateKeyVaultOption(bool required = false, object defaultValue = null)
         {
             Option<string> option = new Option<string>(
-                new string[] { "--kv", "--key-vault" })
+                new string[] { "--key-vault" })
             {
                 Name = "KeyVault",
                 Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
@@ -607,7 +619,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--lp", "--layout", "--layout-path",  })
+            Option<string> option = new Option<string>(new string[] { "--layout", "--layout-path",  })
             {
                 Name = "LayoutPath",
                 Description = "The path to the environment layout .json file required for client/server operations. The contents of this " +
@@ -628,11 +640,10 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateLogDirectoryOption(bool required = true, object defaultValue = null)
+        /// <param name="validator">Custom validation to execute on the option value.</param>
+        public static Option CreateLogDirectoryOption(bool required = true, object defaultValue = null, ValidateSymbol<OptionResult> validator = null)
         {
-            Option<string> option = new Option<string>(
-                new string[] { "--ldir", "--log-dir" },
-                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
+            Option<string> option = new Option<string>(new string[] { "--log-dir" })
             {
                 Name = "LogDirectory",
                 Description = "Defines an alternate directory to which log files should be written.",
@@ -640,13 +651,7 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            string defaultPath = defaultValue?.ToString();
-            if (!string.IsNullOrWhiteSpace(defaultPath))
-            {
-                defaultPath = OptionFactory.ToFullPath(defaultPath);
-            }
-
-            OptionFactory.SetOptionRequirements(option, required, defaultPath);
+            OptionFactory.SetOptionRequirements(option, required, defaultValue, validator);
 
             return option;
         }
@@ -658,7 +663,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLoggerOption(bool required = true, object defaultValue = null)
         {
-            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "-l", "--logger" })
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "--logger" })
             {
                 Name = "Loggers",
                 Description = "Defines custom logger definitions.",
@@ -679,7 +684,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogLevelOption(bool required = true, object defaultValue = null)
         {
-            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--ll", "--log-level" })
+            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--log-level" })
             {
                 Name = "LoggingLevel",
                 Description = "Indicates the logging level for telemetry output (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).",
@@ -717,7 +722,7 @@ namespace VirtualClient
         public static Option CreateLogRetentionOption(bool required = true, object defaultValue = null)
         {
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--lr", "--log-retention" },
+                new string[] { "--log-retention" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "LogRetention",
@@ -741,7 +746,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogToFileFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--ltf", "--log-to-file" })
+            Option<bool> option = new Option<bool>(new string[] { "-l", "--log-to-file" })
             {
                 Name = "LogToFile",
                 Description = "Flag indicates that the output of processes should be logged to files in the logs directory.",
@@ -783,7 +788,7 @@ namespace VirtualClient
         public static Option CreateMetadataOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--mt", "--metadata" },
+                new string[] { "--metadata" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Metadata",
@@ -805,7 +810,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateMonitorFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--mon", "--monitor" })
+            Option<bool> option = new Option<bool>(new string[] { "-m", "--monitor" })
             {
                 Name = "Monitor",
                 Description = "Indicates the Virtual Client should monitor itself or another instance via the API for heartbeats (e.g. online, offline). " +
@@ -827,7 +832,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateNameOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--n", "--name" })
+            Option<string> option = new Option<string>(new string[] { "--name" })
             {
                 Name = "Name",
                 Description = "The logical name of a package as it should be registered on the system (e.g. anypackage.1.0.0.zip -> anypackage).",
@@ -847,7 +852,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateOutputDirectoryOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--path", "--output", "--output-path" })
+            Option<string> option = new Option<string>(new string[] { "--output-path" })
             {
                 Name = "OutputPath",
                 Description = "The directory to which file output should be written.",
@@ -869,7 +874,7 @@ namespace VirtualClient
         public static Option CreatePackageDirectoryOption(bool required = true, object defaultValue = null)
         {
             Option<string> option = new Option<string>(
-                new string[] { "--pdir", "--package-dir" },
+                new string[] { "--package-dir" },
                 new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "PackageDirectory",
@@ -896,7 +901,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreatePackageOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--pkg", "--package" })
+            Option<string> option = new Option<string>(new string[] { "--package" })
             {
                 Name = "Package",
                 Description = "The physical name of a package to bootstrap/install as it is defined in a package store (e.g. anypackage.1.0.0.zip).",
@@ -922,7 +927,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--ps", "--packages", "--package-store" },
+                new string[] { "--packages", "--package-store" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Packages,
@@ -949,7 +954,7 @@ namespace VirtualClient
         public static Option CreateParametersOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--pm", "--parameters" },
+                new string[] { "--parameters" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Parameters",
@@ -957,32 +962,6 @@ namespace VirtualClient
                     "(e.g. parameter1=true,,,parameter2=123).",
                 ArgumentHelpName = "p1=v1,,,p2=v2...",
                 AllowMultipleArgumentsPerToken = true
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the port on which the local self-hosted REST API service
-        /// should list for HTTP traffic.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreatePortOption(bool required = true, object defaultValue = null)
-        {
-            Option<IEnumerable<int>> option = new Option<IEnumerable<int>>(
-                new string[] { "--port" },
-                new ParseArgument<IEnumerable<int>>(result =>
-                {
-                    return OptionFactory.ParseDelimitedValues(result)?.Select(port => int.Parse(port.Trim()));
-                }))
-            {
-                Name = "Ports",
-                Description = "The port on which the local self-hosted REST API service should list for HTTP traffic. Client and server ports may be explicitly defined delimited by a comma (e.g. 4500,4501).",
-                ArgumentHelpName = "integer",
-                AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -1000,7 +979,7 @@ namespace VirtualClient
         public static Option CreateProfileOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
             Option<IEnumerable<DependencyProfileReference>> option = new Option<IEnumerable<DependencyProfileReference>>(
-                new string[] { "--p", "--profile" },
+                new string[] { "--profile" },
                 new ParseArgument<IEnumerable<DependencyProfileReference>>(result => OptionFactory.ParseProfiles(
                     result,
                     certificateManager ?? OptionFactory.defaultCertificateManager,
@@ -1075,7 +1054,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateRecursiveFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--recursive" })
+            Option<bool> option = new Option<bool>(new string[] { "-r", "--recursive" })
             {
                 Name = "Recursive",
                 Description = "Flag requests a recursive search.",
@@ -1096,7 +1075,7 @@ namespace VirtualClient
         public static Option CreateScenariosOption(bool required = false, object defaultValue = null)
         {
             Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(
-                new string[] { "--sc", "--scenarios" },
+                new string[] { "--scenarios" },
                 new ParseArgument<IEnumerable<string>>(result =>
                 {
                     IEnumerable<string> scenarios = null;
@@ -1130,7 +1109,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateSeedOption(bool required = true, object defaultValue = null)
         {
-            Option<int> option = new Option<int>(new string[] { "--sd", "--seed" })
+            Option<int> option = new Option<int>(new string[] { "--seed" })
             {
                 Name = "RandomizationSeed",
                 Description = "A seed that can be used to guarantee identical randomization bases for workloads that require it.",
@@ -1152,7 +1131,7 @@ namespace VirtualClient
         public static Option CreateStateDirectoryOption(bool required = true, object defaultValue = null)
         {
             Option<string> option = new Option<string>(
-                new string[] { "--sdir", "--state-dir" },
+                new string[] { "--state-dir" },
                 new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "StateDirectory",
@@ -1179,7 +1158,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateSystemOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--s", "--system" })
+            Option<string> option = new Option<string>(new string[] { "--system" })
             {
                 Name = "ExecutionSystem",
                 Description = "The execution system/environment platform (e.g. Azure).",
@@ -1199,11 +1178,11 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateTargetAgentOption(bool required = false, object defaultValue = null)
         {
-            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "--ssh", "--agent-ssh" })
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "--target" })
             {
                 Name = "TargetAgents",
                 Description = "The target agent/system SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).",
-                ArgumentHelpName = "target",
+                ArgumentHelpName = "agent",
                 AllowMultipleArgumentsPerToken = true
             };
 
@@ -1296,7 +1275,7 @@ namespace VirtualClient
         public static Option CreateTempDirectoryOption(bool required = true, object defaultValue = null)
         {
             Option<string> option = new Option<string>(
-                new string[] { "--tdir", "--temp-dir" },
+                new string[] { "--temp-dir" },
                 new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "TempDirectory",
@@ -1324,7 +1303,7 @@ namespace VirtualClient
         public static Option CreateTimeoutOption(bool required = true, object defaultValue = null)
         {
             Option<ProfileTiming> option = new Option<ProfileTiming>(
-                new string[] { "--t", "--timeout" },
+                new string[] { "--timeout" },
                 new ParseArgument<ProfileTiming>(arg => OptionFactory.ParseProfileTimeout(arg)))
             {
                 Name = "Timeout",
@@ -1359,7 +1338,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateVerboseFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--verbose", "--debug" })
+            Option<bool> option = new Option<bool>(new string[] { "-v", "--verbose" })
             {
                 Name = "Verbose",
                 Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
@@ -1390,9 +1369,94 @@ namespace VirtualClient
             return option;
         }
 
+        /// <summary>
+        /// Returns the set of valid aliases/usages for the option (e.g. -C, --command).
+        /// </summary>
+        /// <param name="option">The option definition.</param>
+        /// <returns>A set of 1 or more command line aliases/usages for the option.</returns>
+        public static IEnumerable<string> GetAliases(Option option)
+        {
+            return option.Aliases?.Where(a => a.StartsWith("-"));
+        }
+
+        /// <summary>
+        /// Performs any postprocessing changes to the arguments provided.
+        /// </summary>
+        /// <param name="args">Command line arguments supplied to the application.</param>
+        public static string[] PostprocessArguments(params string[] args)
+        {
+            string[] postprocessedArgs = new string[args.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i].Contains("&quot;"))
+                {
+                    // System.CommandLine Quirk:
+                    // The library parsing logic will strip the \" from the end of the command line
+                    // vs. treating it as an explicit quotation mark to leave in place. There are no
+                    // hooks in the library implementation to override this behavior.
+                    //
+                    // To workaround this we replace the quotes with the HTML encoding. Each option can
+                    // then handle the HTML decoding as required.
+                    postprocessedArgs[i] = args[i].Replace("&quot;", "\"");
+                    continue;
+                }
+
+                postprocessedArgs[i] = args[i];
+            }
+
+            return postprocessedArgs;
+        }
+
+        /// <summary>
+        /// Performs any preprocessing changes to the arguments provided.
+        /// </summary>
+        /// <param name="args">Command line arguments supplied to the application.</param>
+        public static string[] PreprocessArguments(params string[] args)
+        {
+            string[] preprocessedArgs = new string[args.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i].Contains("\""))
+                {
+                    // System.CommandLine Quirk:
+                    // The library parsing logic will strip the \" from the end of the command line
+                    // vs. treating it as an explicit quotation mark to leave in place. There are no
+                    // hooks in the library implementation to override this behavior.
+                    //
+                    // To workaround this we replace the quotes with the HTML encoding. Each option can
+                    // then handle the HTML decoding as required.
+                    preprocessedArgs[i] = args[i].Replace("\"", "&quot;");
+                    continue;
+                }
+
+                preprocessedArgs[i] = args[i];
+            }
+
+            return preprocessedArgs;
+        }
+
+        /// <summary>
+        /// Converts the path to a fully qualified path.
+        /// </summary>
+        /// <param name="path">A relative path to convert into a full path.</param>
+        public static string ToFullPath(string path)
+        {
+            string fullPath = path;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    // Convert relative path to full path.
+                    fullPath = Path.GetFullPath(path);
+                }
+            }
+
+            return fullPath;
+        }
+
         private static string GetValue(ArgumentResult result)
         {
-            return result.Tokens?.FirstOrDefault()?.Value?.Trim(OptionFactory.argumentTrimChars);
+            return GetValue(result?.Tokens?.FirstOrDefault());
         }
 
         private static string GetValue(Token token)
@@ -1723,21 +1787,6 @@ namespace VirtualClient
             {
                 throw new ArgumentException(errorMessage);
             }
-        }
-
-        private static string ToFullPath(string path)
-        {
-            string fullPath = path;
-            if (!string.IsNullOrWhiteSpace(path))
-            {
-                if (!Path.IsPathRooted(path))
-                {
-                    // Convert relative path to full path.
-                    fullPath = Path.GetFullPath(path);
-                }
-            }
-
-            return fullPath;
         }
     }
 }

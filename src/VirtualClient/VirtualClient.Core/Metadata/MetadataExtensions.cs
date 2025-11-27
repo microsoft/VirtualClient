@@ -10,6 +10,7 @@ namespace VirtualClient.Metadata
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics.Distributions;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;

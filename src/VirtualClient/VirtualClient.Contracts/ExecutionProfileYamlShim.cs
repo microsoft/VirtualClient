@@ -138,7 +138,13 @@ namespace VirtualClient.Contracts
         [YamlMember(Alias = "dependencies", Order = 50, ScalarStyle = ScalarStyle.Plain)]
         public List<ExecutionProfileElementYamlShim> Dependencies { get; set; }
 
-        internal static void StandardizeParameterReferences(IDictionary<string, IConvertible> parameters, bool jsonToYaml = false, bool yamlToJson = false)
+        /// <summary>
+        /// Converts parameter references to the appropriate format for JSON or YAML profiles.
+        /// </summary>
+        /// <param name="parameters">The parameter set to standardize.</param>
+        /// <param name="jsonToYaml">True if the parameters are to be converted into a format for YAML support.</param>
+        /// <param name="yamlToJson">True if the parameters are to be converted into a format for JSON support.</param>
+        public static void StandardizeParameterReferences(IDictionary<string, IConvertible> parameters, bool jsonToYaml = false, bool yamlToJson = false)
         {
             if (parameters?.Any() == true)
             {

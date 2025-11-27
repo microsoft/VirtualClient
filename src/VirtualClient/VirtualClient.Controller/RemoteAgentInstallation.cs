@@ -12,11 +12,8 @@ namespace VirtualClient.Controller
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
-    using VirtualClient.Logging;
     using PlatformArchitecture = VirtualClient.Contracts.PlatformSpecifics;
 
     /// <summary>
@@ -68,7 +65,7 @@ namespace VirtualClient.Controller
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        string targetInstallationPath = VirtualClientControllerComponent.GetDefaultRemoteAgentInstallationPath(targetPlatformSpecifics);
+                        string targetInstallationPath = AgentSpecifics.GetRemoteAgentInstallationPath(targetPlatformSpecifics);
 
                         telemetryContext.AddContext("agentPackagePath", agentPackagePath);
                         telemetryContext.AddContext("agentTargetInstallationPath", targetInstallationPath);

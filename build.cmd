@@ -11,6 +11,7 @@ set BUILD_LINUX_X64=false
 set BUILD_LINUX_ARM64=false
 set BUILD_WIN_X64=false
 set BUILD_WIN_ARM64=false
+set BUILD_SDK_AGENT=false
 set VC_SOLUTION_DIR=%SCRIPT_DIR%\src\VirtualClient
 
 if /i "%~1" == "/?" Goto :Usage
@@ -24,17 +25,28 @@ for %%a in (%*) do (
         set BUILD_LINUX_X64=true
         set BUILD_ALL=false
     )
+
     if /i "%%a" == "--linux-arm64" (
         set BUILD_LINUX_ARM64=true
         set BUILD_ALL=false
     )
+
     if /i "%%a" == "--win-x64" (
         set BUILD_WIN_X64=true
         set BUILD_ALL=false
     )
+
     if /i "%%a" == "--win-arm64" (
         set BUILD_WIN_ARM64=true
         set BUILD_ALL=false
+    )
+
+    if /i "%%a" == "+sdk-agent" (
+        set BUILD_SDK_AGENT=true
+    )
+
+    if /i "%%a" == "#sdk-agent" (
+        set BUILD_SDK_AGENT=true,only
     )
 )
 
@@ -84,35 +96,79 @@ if /i "%BUILD_ALL%" == "true" (
 )
 
 if /i "%BUILD_LINUX_X64%" == "true" (
-    echo:
-    echo [Build Virtual Client: linux-x64]
-    echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+
+    if /i not "%BUILD_SDK_AGENT%" == "true,only" (
+        echo:
+        echo [Build Virtual Client: linux-x64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+    )
+
+    if /i "%BUILD_SDK_AGENT:~0,4%" == "true" (
+        echo:
+        echo [Build SDK Agent: linux-x64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.SdkAgent.Main\VirtualClient.SdkAgent.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+    )
 )
 
 if /i "%BUILD_LINUX_ARM64%" == "true" (
-    echo:
-    echo [Build Virtual Client: linux-arm64]
-    echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+
+    if /i not "%BUILD_SDK_AGENT%" == "true,only" (
+        echo:
+        echo [Build Virtual Client: linux-arm64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+    )
+
+    if /i "%BUILD_SDK_AGENT:~0,4%" == "true" (
+        echo:
+        echo [Build SDK Agent: linux-arm64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.SdkAgent.Main\VirtualClient.SdkAgent.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+    )
 )
 
 if /i "%BUILD_WIN_X64%" == "true" (
-    echo:
-    echo [Build Virtual Client: win-x64]
-    echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+
+    if /i not "%BUILD_SDK_AGENT%" == "true,only" (
+        echo:
+        echo [Build Virtual Client: win-x64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+    )
+
+    if /i "%BUILD_SDK_AGENT:~0,4%" == "true" (
+        echo:
+        echo [Build SDK Agent: win-x64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.SdkAgent.Main\VirtualClient.SdkAgent.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+    )
 )
 
 if /i "%BUILD_WIN_ARM64%" == "true" (
-    echo:
-    echo [Build Virtual Client: win-arm64]
-    echo ---------------------------------------------------------------------- 
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+
+    if /i not "%BUILD_SDK_AGENT%" == "true,only" (
+        echo:
+        echo [Build Virtual Client: win-arm64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+    )
+
+    if /i "%BUILD_SDK_AGENT:~0,4%" == "true" (
+        echo:
+        echo [Build SDK Agent: win-arm64]
+        echo ----------------------------------------------------------------------
+        call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.SdkAgent.Main\VirtualClient.SdkAgent.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+        -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+    )
 )
 
 Goto :End
@@ -124,7 +180,7 @@ echo Builds the source code in the repo.
 echo:
 echo Usage:
 echo ---------------------
-echo build.cmd [--win-x64] [--win-arm64] [--linux-x64] [--linux-arm64] [--trim]
+echo build.cmd [--win-x64] [--win-arm64] [--linux-x64] [--linux-arm64] [+sdk-agent^|#sdk-agent] [--trim]
 echo:
 echo Examples:
 echo ---------------------
@@ -136,11 +192,18 @@ echo set VCBuildVersion=2.1.0
 echo set VCBuildConfiguration=Debug
 echo %SCRIPT_DIR%^> build.cmd
 echo:
-echo # Build only for Windows x64
+echo # Build only for Windows x64:
 echo %SCRIPT_DIR%^> build.cmd --win-x64
 echo:
-echo # Build for Linux ARM64 and Windows x64
+echo # Build for Linux ARM64 and Windows x64:
 echo %SCRIPT_DIR%^> build.cmd --linux-arm64 --win-x64
+echo:
+echo # Include SDK Agent builds:
+echo %SCRIPT_DIR%^> build.cmd +sdk-agent
+echo:
+echo # Build the SDK Agent only:
+echo %SCRIPT_DIR%^> build.cmd #sdk-agent
+echo:
 Goto :Finish
 
 :Error
@@ -158,6 +221,7 @@ set BUILD_LINUX_X64=
 set BUILD_LINUX_ARM64=
 set BUILD_WIN_X64=
 set BUILD_WIN_ARM64=
+set BUILD_SDK_AGENT=
 
 echo Build Stage Exit Code: %EXIT_CODE%
 

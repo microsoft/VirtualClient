@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -30,9 +31,10 @@ namespace VirtualClient
         /// Executes the dependency bootstrap/installation operations.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             string registerAsName = this.Name;
             if (String.IsNullOrWhiteSpace(registerAsName))
@@ -54,7 +56,7 @@ namespace VirtualClient
             this.Parameters["Package"] = this.Package;
             this.Parameters["RegisterAsName"] = registerAsName;
 
-            return base.ExecuteAsync(args, cancellationTokenSource);
+            return base.ExecuteAsync(args, dependencies, cancellationTokenSource);
         }
     }
 }

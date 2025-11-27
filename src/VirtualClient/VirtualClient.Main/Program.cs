@@ -7,26 +7,22 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
-    using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
+    using System.Data.Common;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
-    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
     using System.ServiceProcess;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Contracts;
-    using Microsoft.AspNetCore.Diagnostics;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Configuration;
     using VirtualClient.Logging;
 
     /// <summary>
@@ -34,11 +30,11 @@ namespace VirtualClient
     /// </summary>
     public sealed class Program
     {
+        internal static IEnumerable<Token> CommandLineTokens { get; private set; }
+
         internal static IConfiguration Configuration { get; private set; }
 
         internal static ILogger Logger { get; set; }
-
-        internal static DefaultSettings Settings { get; private set; }
 
         /// <summary>
         /// The application entry point/method.
@@ -51,6 +47,7 @@ namespace VirtualClient
 
             try
             {
+                var commandline = Environment.CommandLine;
                 VirtualClientRuntime.CommandLineArguments = args;
 
                 // We want to ensure that the platform on which we are running is actually supported.
@@ -67,17 +64,6 @@ namespace VirtualClient
                 // the loggers setup.
                 Program.InitializeStartupLogging(args);
                 Program.Configuration = Program.LoadAppSettings();
-                IConfigurationSection defaultSettings = Program.Configuration.GetSection("DefaultSettings");
-
-                if (defaultSettings?.Exists() == true)
-                {
-                    Program.Settings = new DefaultSettings();
-                    defaultSettings.Bind(Program.Settings);
-                }
-                else
-                {
-                    Program.Settings = DefaultSettings.Create();
-                }
 
                 using (CancellationTokenSource cancellationSource = VirtualClientRuntime.CancellationSource)
                 {
@@ -90,11 +76,10 @@ namespace VirtualClient
                             e.Cancel = true;
                         };
 
-                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
-                        ParseResult parseResult = commandBuilder.Build().Parse(args);
-                        parseResult.ThrowOnUsageError();
 
-                        Task<int> executionTask = parseResult.InvokeAsync();
+                        ParseResult parseResults = Program.ParseArguments(args, cancellationSource);
+                        Program.CommandLineTokens = parseResults.Tokens;
+                        Task<int> executionTask = parseResults.InvokeAsync();
 
                         // On Windows systems, this is required when running Virtual Client as a service.
                         // Certain notifications have to be sent to the Windows service control manager (SCM)
@@ -206,578 +191,24 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Sets up the application command line options.
+        /// Parses the command line arguments.
         /// </summary>
-        internal static CommandLineBuilder SetupCommandLine(string[] args, CancellationTokenSource cancellationTokenSource)
+        /// <param name="args">The command line arguments provided to the application.</param>
+        /// <param name="cancellationSource">Provides an application-wide cancellation token.</param>
+        /// <returns>The result of the command line parsing.</returns>
+        internal static ParseResult ParseArguments(string[] args, CancellationTokenSource cancellationSource)
         {
-            DefaultSettings settings = Program.Settings ?? DefaultSettings.Create();
-
-            RootCommand rootCommand = new RootCommand("Executes workload and monitoring profiles on the system.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(required: false),
-
-                // --api-port
-                OptionFactory.CreateApiPortOption(required: false),
-
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --content-store
-                OptionFactory.CreateContentStoreOption(required: false),
-
-                // --content-path
-                OptionFactory.CreateContentPathTemplateOption(required: false),
-                
-                // --dependencies
-                OptionFactory.CreateDependenciesFlag(required: false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --fail-fast
-                OptionFactory.CreateFailFastFlag(required: false),
-
-                // --iterations
-                OptionFactory.CreateIterationsOption(required: false),
-
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
-
-                // --layout-path
-                OptionFactory.CreateLayoutPathOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
-
-                // --logger
-                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --scenarios
-                OptionFactory.CreateScenariosOption(required: false),
-
-                // --seed
-                OptionFactory.CreateSeedOption(required: false, 777),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --agent-ssh
-                OptionFactory.CreateTargetAgentOption(required: false),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
-
-                // --timeout
-                OptionFactory.CreateTimeoutOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            // Single command execution is also supported. Behind the scenes this uses a
-            // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
-            // while additionally having the full set of other options available for profile execution.
-            rootCommand.AddArgument(OptionFactory.CreateCommandArgument(required: false, string.Empty));
-            rootCommand.TreatUnmatchedTokensAsErrors = false;
-            rootCommand.Handler = CommandHandler.Create<ExecuteCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command apiSubcommand = Program.CreateApiSubcommand(settings);
-            apiSubcommand.TreatUnmatchedTokensAsErrors = true;
-            apiSubcommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(apiSubcommand);
-
-            Command bootstrapSubcommand = Program.CreateBootstrapSubcommand(settings);
-            bootstrapSubcommand.TreatUnmatchedTokensAsErrors = true;
-            bootstrapSubcommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(bootstrapSubcommand);
-
-            Command cleanSubcommand = Program.CreateCleanSubcommand(settings);
-            cleanSubcommand.TreatUnmatchedTokensAsErrors = true;
-            cleanSubcommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(cleanSubcommand);
-
-            Command convertSubcommand = Program.CreateConvertSubcommand(settings);
-            convertSubcommand.TreatUnmatchedTokensAsErrors = true;
-            convertSubcommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(convertSubcommand);
-
-            Command remoteSubcommand = Program.CreateRemoteSubcommand(settings);
-            remoteSubcommand.TreatUnmatchedTokensAsErrors = true;
-            remoteSubcommand.Handler = CommandHandler.Create<ExecuteRemoteAgentCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(remoteSubcommand);
-
-            Command uploadFilesSubcommand = Program.CreateUploadFilesSubcommand(settings);
-            uploadFilesSubcommand.TreatUnmatchedTokensAsErrors = true;
-            uploadFilesSubcommand.Handler = CommandHandler.Create<UploadFilesCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(uploadFilesSubcommand);
-
-            Command uploadTelemetrySubcommand = Program.CreateUploadTelemetrySubcommand(settings);
-            uploadTelemetrySubcommand.TreatUnmatchedTokensAsErrors = true;
-            uploadTelemetrySubcommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(uploadTelemetrySubcommand);
-
-            return new CommandLineBuilder(rootCommand).WithDefaults();
-        }
-
-        private static Command CreateApiSubcommand(DefaultSettings settings)
-        {
-            Command apiCommand = new Command(
-                "api",
-                "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --api-port
-                OptionFactory.CreateApiPortOption(required: false),
-
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --ip-address
-                OptionFactory.CreateIPAddressOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
-
-                 // --logger
-                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
-
-                // --monitor
-                OptionFactory.CreateMonitorFlag(required: false, false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return apiCommand;
-        }
-
-        private static Command CreateBootstrapSubcommand(DefaultSettings settings)
-        {
-            Command bootstrapCommand = new Command(
-                "bootstrap",
-                "Bootstraps/installs a dependency package on the system.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --package
-                OptionFactory.CreatePackageOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --content-store
-                OptionFactory.CreateContentStoreOption(required: false),
-
-                // --content-path
-                OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --iterations (for integration only. not used/always = 1)
-                OptionFactory.CreateIterationsOption(required: false),
-
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
-
-                // --layout-path (for integration only. not used.)
-                OptionFactory.CreateLayoutPathOption(required: false),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --name
-                OptionFactory.CreateNameOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
-
-                 // --logger
-                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return bootstrapCommand;
-        }
-
-        private static Command CreateCleanSubcommand(DefaultSettings settings)
-        {
-            Command cleanCommand = new Command(
-                "clean",
-                "Resets the state of the Virtual Client for a 'first run' scenario.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
-
-                 // --logger
-                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
-
-                 // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return cleanCommand;
-        }
-
-        private static Command CreateConvertSubcommand(DefaultSettings settings)
-        {
-            Command convertCommand = new Command(
-                "convert",
-                "Converts execution profiles from JSON to YAML format and vice-versa.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(required: true),
-
-                // --output-path
-                OptionFactory.CreateOutputDirectoryOption(required: true)
-            };
-
-            return convertCommand;
-        }
-
-        private static Command CreateRemoteSubcommand(DefaultSettings settings)
-        {
-            Command remoteExecuteCommand = new Command(
-                "remote",
-                "Executes workload and monitoring profiles on a remote/target system through an SSH connection.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --agent-ssh
-                OptionFactory.CreateTargetAgentOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(required: false),
-
-                // --api-port
-                OptionFactory.CreateApiPortOption(required: false),
-
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --content-store
-                OptionFactory.CreateContentStoreOption(required: false),
-
-                // --content-path
-                OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --dependencies
-                OptionFactory.CreateDependenciesFlag(required: false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --fail-fast
-                OptionFactory.CreateFailFastFlag(required: false),
-
-                // --iterations
-                OptionFactory.CreateIterationsOption(required: false),
-
-                // --layout-path
-                OptionFactory.CreateLayoutPathOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
-
-                // --logger
-                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --scenarios
-                OptionFactory.CreateScenariosOption(required: false),
-
-                // --seed
-                OptionFactory.CreateSeedOption(required: false, 777),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
-
-                 // --timeout
-                OptionFactory.CreateTimeoutOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return remoteExecuteCommand;
-        }
-
-        private static Command CreateUploadFilesSubcommand(DefaultSettings settings)
-        {
-            Command uploadTelemetryCommand = new Command(
-               "upload-files",
-               "Uploads files from a directory on the system to a target content store.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --content-store
-                OptionFactory.CreateContentStoreOption(required: true),
-
-                // --directory
-                OptionFactory.CreateTargetDirectoryOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --content-path
-                OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
-
-                 // --logger
-                OptionFactory.CreateLoggerOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return uploadTelemetryCommand;
-        }
-
-        private static Command CreateUploadTelemetrySubcommand(DefaultSettings settings)
-        {
-            Command uploadTelemetryCommand = new Command(
-               "upload-telemetry",
-               "Uploads telemetry (e.g. events, metrics) from data point files on the system.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --format
-                OptionFactory.CreateDataFormatOption(required: true),
-
-                // --schema
-                OptionFactory.CreateDataSchemaOption(required: true),
-
-                // --logger
-                OptionFactory.CreateLoggerOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
-
-                // --intrinsic
-                OptionFactory.CreateIntrinsicFlag(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --match
-                OptionFactory.CreateMatchExpressionOption(required: false),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --recursive
-                OptionFactory.CreateRecursiveFlag(required: false, false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --directory
-                OptionFactory.CreateTargetDirectoryOption(required: false),
-
-                // --files
-                OptionFactory.CreateTargetFilesOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return uploadTelemetryCommand;
+#if !SDK_AGENT
+            CommandLineBuilder commandBuilder = CommandFactory.CreateCommandBuilder(args, cancellationSource);
+#else
+            CommandLineBuilder commandBuilder = CommandFactory.SdkAgent.CreateCommandBuilder(args, cancellationSource);
+#endif
+
+            string[] preprocessedArgs = OptionFactory.PreprocessArguments(args);
+            ParseResult parseResult = commandBuilder.Build().Parse(preprocessedArgs);
+            parseResult.ThrowOnUsageError();
+
+            return parseResult;
         }
 
         private static void InitializeStartupLogging(string[] args)

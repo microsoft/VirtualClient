@@ -10,11 +10,9 @@ namespace VirtualClient.Controller
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Logging;
 
     /// <summary>
     /// Component installs packages from the local system to the remote system in the 
@@ -97,7 +95,7 @@ namespace VirtualClient.Controller
                 // We support different packages folders which can be defined on the command line
                 // (e.g. packages, packages-installers).
                 string sourcePackageName = Path.GetFileNameWithoutExtension(sourcePackagesPath);
-                string targetPackagesInstallationPath = VirtualClientControllerComponent.GetDefaultRemotePackagesInstallationPath(targetPlatformArchitecture, sourcePackageName);
+                string targetPackagesInstallationPath = AgentSpecifics.GetRemotePackagesPath(targetPlatformArchitecture, sourcePackageName);
 
                 telemetryContext.AddContext("sourcePackagesPath", sourcePackagesPath);
                 telemetryContext.AddContext("targetPackagesInstallationPath", targetPackagesInstallationPath);

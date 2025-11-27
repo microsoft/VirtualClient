@@ -241,8 +241,13 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Common profile metadata property names.
     /// </summary>
-    public class ProfileMetadata
+    public class MetadataProperty
     {
+        /// <summary>
+        /// Metadata = ExperimentName
+        /// </summary>
+        public const string ExperimentName = nameof(ExperimentName);
+
         /// <summary>
         /// Metadata = SupportsIterations
         /// </summary>

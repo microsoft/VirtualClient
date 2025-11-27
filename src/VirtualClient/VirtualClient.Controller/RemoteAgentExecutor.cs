@@ -8,18 +8,13 @@ namespace VirtualClient.Controller
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.Options;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Renci.SshNet;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Logging;
 
     /// <summary>
     /// Component executes the Virtual Client command line on a target system.
@@ -82,10 +77,8 @@ namespace VirtualClient.Controller
                 Architecture targetArchitecture = platformArchitecture.Item2;
                 PlatformSpecifics targetPlatformSpecifics = new PlatformSpecifics(targetPlatform, targetArchitecture);
 
-                // The user CAN set an alternate packages path on the target system using the 'VC_LOGS_DIR' 
-                // environment variable.
                 string targetHost = sshTarget.ConnectionInfo.Host;
-                string targetLogsPath = VirtualClientControllerComponent.GetDefaultRemoteLogsPath(targetPlatformSpecifics);
+                string targetLogsPath = AgentSpecifics.GetRemoteLogsPath(targetPlatformSpecifics, targetHost, this.ExperimentId);
                 string localLogsPath = this.PlatformSpecifics.GetLogsPath(targetHost.ToLowerInvariant(), this.ExperimentId.ToLowerInvariant());
 
                 telemetryContext.AddContext("copyLogsFrom", targetLogsPath);
@@ -171,15 +164,14 @@ namespace VirtualClient.Controller
             // (e.g. packages, packages-installers).
             string sourcePackageName = Path.GetFileNameWithoutExtension(sourcePackagesPath);
 
-            string agentName = RemoteAgentExecutor.AgentName;
+            string agentName = AgentSpecifics.AgentName;
             if (targetPlatform == PlatformID.Unix)
             {
                 agentName = $"./{agentName}";
             }
 
-            string agentInstallationPath = VirtualClientControllerComponent.GetDefaultRemoteAgentInstallationPath(targetPlatformSpecifics);
+            string agentInstallationPath = AgentSpecifics.GetRemoteAgentInstallationPath(targetPlatformSpecifics);
             string targetCommand = $"{agentName} {this.Command}";
-            targetCommand = this.AddDefaultCommandLineOptions(targetPlatformSpecifics, targetCommand, sourcePackageName);
 
             sshTarget.StandardOutput?.WriteLine();
             sshTarget.StandardOutput?.WriteLine($"[Execute on Target]");

@@ -108,8 +108,15 @@ namespace VirtualClient
         /// <inheritdoc />
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            await this.SessionClient.ConnectAsync(cancellationToken);
-            await this.SessionScpClient.ConnectAsync(cancellationToken);
+            if (!this.SessionClient.IsConnected)
+            {
+                await this.SessionClient.ConnectAsync(cancellationToken);
+            }
+
+            if (!this.SessionScpClient.IsConnected)
+            {
+                await this.SessionScpClient.ConnectAsync(cancellationToken);
+            }
         }
 
         /// <inheritdoc />

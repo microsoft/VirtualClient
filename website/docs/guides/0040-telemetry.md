@@ -605,6 +605,9 @@ Metrics logged in a supported format (by any application) allow for telemetry/da
 scale data analysis scenarios (see the sections at the bottom of this document). It is also important to note that this same process can be used with other toolsets/automation for integration 
 into the same cloud data pipeline (e.g. log files generated from a Python script).
 
+Telemetry in data point files can be processed using out-of-box command line options. See the `process-telemetry` subcommand usage in the [command line documentation](./0010-command-line.md)
+for additional details and examples.
+
 **Example Data:**  
 ![Example OpenSSL Metrics](../../img/openssl_metrics_example.png)
 
@@ -876,6 +879,9 @@ The following example illustrates the schema requirements for the various suppor
 Events logged in a supported format (by any application) allow for telemetry/data to be uploaded to cloud resources such as Event Hubs for integration with larger 
 scale data analysis scenarios (see the sections at the bottom of this document). It is also important to note that this same process can be used with other toolsets/automation for integration 
 into the same cloud data pipeline (e.g. log files generated from a Python script).
+
+Telemetry in data point files can be processed using out-of-box command line options. See the `process-telemetry` subcommand usage in the [command line documentation](./0010-command-line.md)
+for additional details and examples.
 
 **Example Data:**  
 ![Example System Events](../../img/eventlog_events_example.png)

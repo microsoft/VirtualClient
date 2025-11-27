@@ -37,6 +37,12 @@ if exist %REPO_DIR%out\packages (
     call rmdir /Q /S %REPO_DIR%out\packages && echo Deleted: %REPO_DIR%out\packages || Goto :Error
 )
 
+if exist %REPO_DIR%out\temp (
+    echo:
+    echo [Clean: Temp^(temp^) Directories]
+    call rmdir /Q /S %REPO_DIR%out\temp && echo Deleted: %REPO_DIR%out\temp || Goto :Error
+)
+
 Goto :End
 
 

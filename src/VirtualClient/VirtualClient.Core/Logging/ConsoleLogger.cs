@@ -87,97 +87,100 @@ namespace VirtualClient.Logging
                     return;
                 }
 
-                string message = null;
-                bool includeCallstack = this.MinimumLogLevel <= LogLevel.Trace;
-
-                if (logLevel >= LogLevel.Warning)
+                lock (ConsoleLogger.SyncRoot)
                 {
-                    if (exception != null)
-                    {
-                        message = eventId.Name;
-                        ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, exception, this.DisableColors, this.IncludeTimestamps, includeCallstack);
-                    }
-                    else if (ConsoleLogger.TryParseEventContextFromState(state, out EventContext telemetryContext))
-                    {
-                        telemetryContext.Properties.TryGetValue("error", out object error);
-                        
-                        if (error != null)
-                        {
-                            JArray errors = JArray.FromObject(error);
-                            IEnumerable<string> errorMessages = errors.Select(token => token.SelectToken("errorMessage")?.Value<string>());
+                    string message = null;
+                    bool includeCallstack = this.MinimumLogLevel <= LogLevel.Trace;
 
-                            if (errorMessages?.Any() == true)
-                            {
-                                if (includeCallstack)
-                                {
-                                    if (telemetryContext.Properties.TryGetValue("errorCallstack", out object errorCallstack))
-                                    {
-                                        string effectiveCallstack = errorCallstack?.ToString();
-                                        if (!string.IsNullOrWhiteSpace(effectiveCallstack))
-                                        {
-                                            message =
-                                                $"{string.Join(' ', errorMessages)}" +
-                                                $"{Environment.NewLine}{Environment.NewLine}{effectiveCallstack}{Environment.NewLine}";
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    message = $"{string.Join(' ', errorMessages)}";
-                                }
-                            }
-                        }
-                        else
+                    if (logLevel >= LogLevel.Warning)
+                    {
+                        if (exception != null)
                         {
                             message = eventId.Name;
+                            ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, exception, this.DisableColors, this.IncludeTimestamps, includeCallstack);
                         }
-                    }
-                    else if (ConsoleLogger.TryParseExceptionFromState(state, out Exception exc))
-                    {
-                        message = exc.ToDisplayFriendlyString(withCallStack: includeCallstack);
-                    }
-
-                    if (!string.IsNullOrEmpty(message))
-                    {
-                        ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, null, this.DisableColors, this.IncludeTimestamps);
-                    }
-                }
-                else if (this.MinimumLogLevel <= LogLevel.Debug && ConsoleLogger.TryParseProcessDetailsFromState(state, out ProcessDetails processDetails))
-                {
-                    // TODO:
-                    // To avoid the output of process standard output + error twice, we are making the assumption that
-                    // a component.LogProcessDetailsAsync() method call is followed by a process.ThrowIfErrored() method call.
-                    // This is often the case so the assumption holds true largely at the moment. However, this is NOT a good design
-                    // choice and we will need to figure out a better design in the future.
-                    if (processDetails.ExitCode == 0)
-                    {
-                        // Standard Output
-                        if (!string.IsNullOrWhiteSpace(processDetails.StandardOutput))
+                        else if (ConsoleLogger.TryParseEventContextFromState(state, out EventContext telemetryContext))
                         {
-                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, string.Empty, null, this.DisableColors, false);
-                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, processDetails.StandardOutput, null, this.DisableColors, false);
-                        }
+                            telemetryContext.Properties.TryGetValue("error", out object error);
 
-                        // Standard Error
-                        if (!string.IsNullOrWhiteSpace(processDetails.StandardError))
+                            if (error != null)
+                            {
+                                JArray errors = JArray.FromObject(error);
+                                IEnumerable<string> errorMessages = errors.Select(token => token.SelectToken("errorMessage")?.Value<string>());
+
+                                if (errorMessages?.Any() == true)
+                                {
+                                    if (includeCallstack)
+                                    {
+                                        if (telemetryContext.Properties.TryGetValue("errorCallstack", out object errorCallstack))
+                                        {
+                                            string effectiveCallstack = errorCallstack?.ToString();
+                                            if (!string.IsNullOrWhiteSpace(effectiveCallstack))
+                                            {
+                                                message =
+                                                    $"{string.Join(' ', errorMessages)}" +
+                                                    $"{Environment.NewLine}{Environment.NewLine}{effectiveCallstack}{Environment.NewLine}";
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        message = $"{string.Join(' ', errorMessages)}";
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                message = eventId.Name;
+                            }
+                        }
+                        else if (ConsoleLogger.TryParseExceptionFromState(state, out Exception exc))
                         {
-                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, string.Empty, null, this.DisableColors, false);
-                            ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, processDetails.StandardError, null, this.DisableColors, false);
+                            message = exc.ToDisplayFriendlyString(withCallStack: includeCallstack);
+                        }
+
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, null, this.DisableColors, this.IncludeTimestamps);
                         }
                     }
-                }
-                else
-                {
-                    message = eventId.Name;
-
-                    if (message == null)
+                    else if (this.MinimumLogLevel <= LogLevel.Debug && ConsoleLogger.TryParseProcessDetailsFromState(state, out ProcessDetails processDetails))
                     {
-                        message = state?.ToString();
+                        // TODO:
+                        // To avoid the output of process standard output + error twice, we are making the assumption that
+                        // a component.LogProcessDetailsAsync() method call is followed by a process.ThrowIfErrored() method call.
+                        // This is often the case so the assumption holds true largely at the moment. However, this is NOT a good design
+                        // choice and we will need to figure out a better design in the future.
+                        if (processDetails.ExitCode == 0)
+                        {
+                            // Standard Output
+                            if (!string.IsNullOrWhiteSpace(processDetails.StandardOutput))
+                            {
+                                ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, string.Empty, null, this.DisableColors, false);
+                                ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, processDetails.StandardOutput, null, this.DisableColors, false);
+                            }
+
+                            // Standard Error
+                            if (!string.IsNullOrWhiteSpace(processDetails.StandardError))
+                            {
+                                ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, string.Empty, null, this.DisableColors, false);
+                                ConsoleLogger.WriteMessage(LogLevel.Trace, this.CategoryName, eventId.Id, processDetails.StandardError, null, this.DisableColors, false);
+                            }
+                        }
                     }
-
-                    if (!string.IsNullOrEmpty(message))
+                    else
                     {
-                        ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, null, this.DisableColors, this.IncludeTimestamps);
+                        message = eventId.Name;
+
+                        if (message == null)
+                        {
+                            message = state?.ToString();
+                        }
+
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            ConsoleLogger.WriteMessage(logLevel, this.CategoryName, eventId.Id, message, null, this.DisableColors, this.IncludeTimestamps);
+                        }
                     }
                 }
             }
@@ -337,52 +340,49 @@ namespace VirtualClient.Logging
 
         private static void WriteMessage(LogLevel logLevel, string logName, int eventId, string message, Exception exception, bool disableColors = false, bool includeTimestamp = false, bool includeCallstack = false)
         {
-            lock (ConsoleLogger.SyncRoot)
+            // Example output format of OOB ConsoleLogger:
+            //
+            // info: Microsoft.AspNetCore.Hosting.Internal.WebHost[1]
+            //       Request starting HTTP / 1.1 GET http://localhost:4500/api/todo/0
+            // info: Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker[1]
+            //       Executing action method TodoApi.Controllers.TodoController.GetById(TodoApi) with arguments(0) -ModelState is Valid
+            // info: TodoApi.Controllers.TodoController[1002]
+            //       Getting item 0
+
+            try
             {
-                // Example output format of OOB ConsoleLogger:
-                //
-                // info: Microsoft.AspNetCore.Hosting.Internal.WebHost[1]
-                //       Request starting HTTP / 1.1 GET http://localhost:4500/api/todo/0
-                // info: Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker[1]
-                //       Executing action method TodoApi.Controllers.TodoController.GetById(TodoApi) with arguments(0) -ModelState is Valid
-                // info: TodoApi.Controllers.TodoController[1002]
-                //       Getting item 0
-
-                try
+                if (!disableColors)
                 {
-                    if (!disableColors)
-                    {
-                        System.Console.ForegroundColor = ConsoleLogger.GetTextColor(logLevel);
-                    }
-
-                    string outputMessage = ConsoleLogger.GetMessage(
-                        message: message,
-                        logLevel: logLevel,
-                        eventId: eventId,
-                        logName: logName,
-                        exception: exception,
-                        includeTimestamp: includeTimestamp,
-                        includeCallstack: includeCallstack);
-
-                    switch (logLevel)
-                    {
-                        case LogLevel.Warning:
-                        case LogLevel.Error:
-                        case LogLevel.Critical:
-                            Console.Error.WriteLine(outputMessage);
-                            break;
-
-                        default:
-                            Console.WriteLine(outputMessage);
-                            break;
-                    }
+                    System.Console.ForegroundColor = ConsoleLogger.GetTextColor(logLevel);
                 }
-                finally
+
+                string outputMessage = ConsoleLogger.GetMessage(
+                    message: message,
+                    logLevel: logLevel,
+                    eventId: eventId,
+                    logName: logName,
+                    exception: exception,
+                    includeTimestamp: includeTimestamp,
+                    includeCallstack: includeCallstack);
+
+                switch (logLevel)
                 {
-                    if (!disableColors)
-                    {
-                        System.Console.ForegroundColor = ConsoleLogger.DefaultFontColor;
-                    }
+                    case LogLevel.Warning:
+                    case LogLevel.Error:
+                    case LogLevel.Critical:
+                        Console.Error.WriteLine(outputMessage);
+                        break;
+
+                    default:
+                        Console.WriteLine(outputMessage);
+                        break;
+                }
+            }
+            finally
+            {
+                if (!disableColors)
+                {
+                    System.Console.ForegroundColor = ConsoleLogger.DefaultFontColor;
                 }
             }
         }

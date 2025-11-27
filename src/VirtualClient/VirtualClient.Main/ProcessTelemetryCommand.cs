@@ -11,22 +11,19 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Logging;
-    using VirtualClient.Monitors;
 
     /// <summary>
     /// Command executes operations to upload metrics and events from files on the system
     /// to a telemetry endpoint.
     /// </summary>
-    internal class UploadTelemetryCommand : ExecuteProfileCommand
+    internal class ProcessTelemetryCommand : ExecuteProfileCommand
     {
         /// <summary>
         /// The data point file format (e.g. Csv, Json, Yaml).
@@ -80,9 +77,10 @@ namespace VirtualClient
         /// Executes the telemetry upload operations.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             this.Validate();
             int exitCode = 0;
@@ -120,7 +118,7 @@ namespace VirtualClient
                     this.Parameters["Intrinsic"] = this.Intrinsic;
                 }
 
-                exitCode = await base.ExecuteAsync(args, cancellationTokenSource);
+                exitCode = await base.ExecuteAsync(args, dependencies, cancellationTokenSource);
             }
             else
             {

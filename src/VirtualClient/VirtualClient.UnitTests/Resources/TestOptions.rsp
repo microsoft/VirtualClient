@@ -7,4 +7,4 @@
 --package-store=https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b
 --client-id=007
 --experiment-id=123456
---debug
+--verbose
