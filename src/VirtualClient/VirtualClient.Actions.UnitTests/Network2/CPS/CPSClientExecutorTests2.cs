@@ -51,9 +51,9 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["PackageName"] = "cps";
             this.mockFixture.Parameters["Port"] = 3001;
             this.mockFixture.Parameters["Connections"] = 256;
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 44;
-            this.mockFixture.Parameters["Delaytime"] = 30;
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:00:44";
+            this.mockFixture.Parameters["Delaytime"] = "00:00:30";
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
             string exampleResults = File.ReadAllText(Path.Combine(CPSClientExecutorTests2.ExamplesDirectory, "CPS_Example_Results_Server.txt"));
@@ -108,8 +108,8 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(stateItem.Definition.Properties["Type"], typeof(CPSServerExecutor2).Name);
                     Assert.AreEqual(stateItem.Definition.Properties["Connections"], 256);
                     Assert.AreEqual(stateItem.Definition.Properties["Port"], 3001);
-                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
-                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 44);
+                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], "00:05:00");
+                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], "00:00:44");
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
@@ -168,6 +168,90 @@ namespace VirtualClient.Actions
                 },
                 commandsExecuted);
             }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        public async Task CPSClientExecutor2ExecutesAsExpectedWithIntegerTimeParameters(PlatformID platformID, Architecture architecture)
+        {
+            int processExecuted = 0;
+            this.SetupTest(platformID, architecture);
+
+            this.mockFixture.Parameters["TestDuration"] = 180;
+            this.mockFixture.Parameters["WarmupTime"] = 45;
+            this.mockFixture.Parameters["Delaytime"] = 20;
+            this.mockFixture.Parameters["WarmupTime"] = 45;         // 45 seconds (integer)
+            this.mockFixture.Parameters["Delaytime"] = 20;          // 20 seconds (integer)
+
+            string expectedPath = this.mockFixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platformID, architecture).Path;
+            List<string> commandsExecuted = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            {
+                processExecuted++;
+                commandsExecuted.Add($"{file} {arguments}".Trim());
+                return this.mockFixture.Process;
+            };
+
+            TestCPSClientExecutor component = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(180), component.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(45), component.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(20), component.DelayTime);
+
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+            string exe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
+            if (platformID == PlatformID.Win32NT)
+            {
+                Assert.AreEqual(1, processExecuted);
+                Assert.IsTrue(commandsExecuted[0].Contains("-t 180"));
+                Assert.IsTrue(commandsExecuted[0].Contains("-wt 45"));
+                Assert.IsTrue(commandsExecuted[0].Contains("-ds 20"));
+            }
+            else
+            {
+                Assert.AreEqual(2, processExecuted);
+                Assert.IsTrue(commandsExecuted[1].Contains("-t 180"));
+                Assert.IsTrue(commandsExecuted[1].Contains("-wt 45"));
+                Assert.IsTrue(commandsExecuted[1].Contains("-ds 20"));
+            }
+        }
+
+        [Test]
+        public void CPSClientExecutor2SupportsIntegerAndTimeSpanTimeFormats()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 60;
+            this.mockFixture.Parameters["Delaytime"] = 30;
+
+            TestCPSClientExecutor executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";
+            this.mockFixture.Parameters["Delaytime"] = "00:00:30";
+
+            executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = 180;
+            executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.TestDuration;
+
+            this.mockFixture.Parameters["TestDuration"] = "00:03:00";
+            executor = new TestCPSClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.TestDuration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         private class TestCPSClientExecutor : CPSClientExecutor2
