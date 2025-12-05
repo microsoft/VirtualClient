@@ -33,22 +33,25 @@ namespace VirtualClient.Monitors
         }
 
         /// <inheritdoc/>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
             // logic will block without returning. Monitors are typically expected to be fire-and-forget.
 
-            switch (this.Platform)
+            return Task.Run(async () =>
             {
-                case PlatformID.Win32NT:
-                    // Do nothing on Windows for now. The binary we are using have error:
-                    // lspci: Cannot find any working access method.
-                    break;
+                switch (this.Platform)
+                {
+                    case PlatformID.Win32NT:
+                        // Do nothing on Windows for now. The binary we are using have error:
+                        // lspci: Cannot find any working access method.
+                        break;
 
-                case PlatformID.Unix:
-                    await this.ListPciAsync(telemetryContext, cancellationToken);
-                    break;
-            }
+                    case PlatformID.Unix:
+                        await this.ListPciAsync(telemetryContext, cancellationToken);
+                        break;
+                }
+            });
         }
 
         /// <inheritdoc/>

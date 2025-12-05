@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// DeathStarBench Executor
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64")]
+    [SupportedPlatforms("linux-x64")]
     public class DeathStarBenchExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -123,6 +123,11 @@ namespace VirtualClient.Actions
         /// Path to scripts.
         /// </summary>
         protected string ScriptsDirectory { get; set; }
+
+        /// <summary>
+        /// Path to Python executable in virtual environment.
+        /// </summary>
+        protected string PythonExecutablePath { get; set; }
 
         /// <summary>
         /// An interface that can be used to communicate with the underlying system.
@@ -546,16 +551,29 @@ namespace VirtualClient.Actions
             await this.SystemManager.MakeFileExecutableAsync(dockerComposeFilePath, this.Platform, cancellationToken)
                 .ConfigureAwait();
 
-            string pipUpgradeCommand = "python3 -m pip install -U pip";
+            string installVenvCommand = "apt install python3-venv -y";
+            await this.ExecuteCommandAsync(installVenvCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
+
+            // Create Python virtual environment to isolate dependencies
+            string venvPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "venv");
+            string createVenvCommand = $"python3 -m venv {venvPath}";
+            await this.ExecuteCommandAsync(createVenvCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
+
+            this.PythonExecutablePath = this.PlatformSpecifics.Combine(venvPath, "bin", "python3");
+            string venvPip = this.PlatformSpecifics.Combine(venvPath, "bin", "pip");
+
+            string pipUpgradeCommand = $"{venvPip} install -U pip";
             await this.ExecuteCommandAsync(pipUpgradeCommand, this.PackageDirectory, cancellationToken)
                 .ConfigureAwait();
 
-            string setupToolsUpgradeCommand = "python3 -m pip install -U setuptools";
+            string setupToolsUpgradeCommand = $"{venvPip} install -U setuptools";
             await this.ExecuteCommandAsync(setupToolsUpgradeCommand, this.PackageDirectory, cancellationToken)
                 .ConfigureAwait();
 
-            // python3-pip installs pip3 and not pip, better to leave it on python which version of pip to use
-            string pipInstallPackagesCommand = "-H python3 -m pip install aiohttp asyncio";
+            // Install required Python packages in virtual environment
+            string pipInstallPackagesCommand = $"{venvPip} install aiohttp asyncio";
             await this.ExecuteCommandAsync(pipInstallPackagesCommand, this.PackageDirectory, cancellationToken)
                 .ConfigureAwait();
 

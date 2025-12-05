@@ -14,7 +14,7 @@ namespace VirtualClient.Proxy
     /// <summary>
     /// A logger that uploads telemetry messages/events to a proxy API endpoint.
     /// </summary>
-    internal class ProxyLogger : ILogger
+    public class ProxyLogger : ILogger
     {
         private static AssemblyName sdkAssembly = Assembly.GetAssembly(typeof(EventContext)).GetName();
 

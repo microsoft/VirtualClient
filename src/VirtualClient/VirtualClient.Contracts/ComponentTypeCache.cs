@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
@@ -150,7 +151,7 @@ namespace VirtualClient.Contracts
                         IEnumerable<AliasAttribute> aliases = matchedType.Type.GetCustomAttributes<AliasAttribute>();
                         foreach (AliasAttribute attribute in aliases)
                         {
-                            if (attribute.Aliases.Contains(alias, StringComparer.OrdinalIgnoreCase))
+                            if (string.Equals(attribute.Alias, alias, StringComparison.OrdinalIgnoreCase))
                             {
                                 matchingAliasedTypes.Add(matchedType.Type);
                                 break;

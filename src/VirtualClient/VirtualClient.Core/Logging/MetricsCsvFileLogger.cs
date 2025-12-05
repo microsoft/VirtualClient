@@ -17,6 +17,7 @@ namespace VirtualClient.Logging
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
@@ -26,7 +27,6 @@ namespace VirtualClient.Logging
     {
         internal static readonly IEnumerable<MetricsCsvField> CsvFields;
 
-        private static readonly AssemblyName LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
         private static readonly AssemblyName ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
@@ -46,33 +46,37 @@ namespace VirtualClient.Logging
 
         static MetricsCsvFileLogger()
         {
-            MetricsCsvFileLogger.LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
             MetricsCsvFileLogger.ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
             MetricsCsvFileLogger.CsvFields = new List<MetricsCsvField>
             {
-                new MetricsCsvField("Timestamp", (ctx) => DateTime.UtcNow.ToString("o")),
+                new MetricsCsvField("Timestamp", (ctx) => ParseTimestamp(ctx, "timestamp")),
                 new MetricsCsvField("ExperimentId", "experimentId"),
-                new MetricsCsvField("ClientId", "agentId"),
-                new MetricsCsvField("Profile", "executionProfile"),
+                new MetricsCsvField("ExecutionSystem", "executionSystem"),
                 new MetricsCsvField("ProfileName", "executionProfileName"),
+                new MetricsCsvField("ClientId", "clientId"),
                 new MetricsCsvField("ToolName", "toolName"),
+                new MetricsCsvField("ToolVersion", "toolVersion"),
                 new MetricsCsvField("ScenarioName", "scenarioName"),
                 new MetricsCsvField("ScenarioStartTime", "scenarioStartTime"),
                 new MetricsCsvField("ScenarioEndTime", "scenarioEndTime"),
-                new MetricsCsvField("MetricCategorization", "metricCategorization"),
                 new MetricsCsvField("MetricName", "metricName"),
                 new MetricsCsvField("MetricValue", "metricValue"),
                 new MetricsCsvField("MetricUnit", "metricUnit"),
+                new MetricsCsvField("MetricCategorization", "metricCategorization"),
                 new MetricsCsvField("MetricDescription", "metricDescription"),
                 new MetricsCsvField("MetricRelativity", "metricRelativity"),
-                new MetricsCsvField("ExecutionSystem", "executionSystem"),
-                new MetricsCsvField("OperatingSystemPlatform", "operatingSystemPlatform"),
-                new MetricsCsvField("OperationId", (ctx) => ctx.ActivityId.ToString()),
-                new MetricsCsvField("OperationParentId", (ctx) => ctx.ParentActivityId.ToString()),
+                new MetricsCsvField("MetricVerbosity", "metricVerbosity"),
                 new MetricsCsvField("AppHost", propertyValue: Environment.MachineName),
                 new MetricsCsvField("AppName", propertyValue: MetricsCsvFileLogger.ExecutingAssembly.Name),
                 new MetricsCsvField("AppVersion", propertyValue: MetricsCsvFileLogger.ExecutingAssembly.Version.ToString()),
-                new MetricsCsvField("AppTelemetryVersion", propertyValue: MetricsCsvFileLogger.LoggingAssembly.Version.ToString()),
+                new MetricsCsvField("OperatingSystemPlatform", "operatingSystemPlatform"),
+                new MetricsCsvField("PlatformArchitecture", "platformArchitecture"),
+                new MetricsCsvField("SeverityLevel", (ctx) => ParseSeverity(ctx, "severityLevel")),
+                new MetricsCsvField("OperationId", (ctx) => ctx.ActivityId.ToString()),
+                new MetricsCsvField("OperationParentId", (ctx) => ctx.ParentActivityId.ToString()),
+                new MetricsCsvField("Metadata", (ctx) => ParseMetadata(ctx, MetadataContract.DefaultCategory)),
+                new MetricsCsvField("Metadata_Host", (ctx) => ParseMetadata(ctx, MetadataContract.HostCategory)),
+                new MetricsCsvField("ToolResults", "toolResults"),
                 new MetricsCsvField("Tags", "tags")
             };
         }
@@ -187,6 +191,101 @@ namespace VirtualClient.Logging
                     this.disposed = true;
                 }
             }
+        }
+
+        private static string ParseMetadata(EventContext ctx, string key)
+        {
+            string metadata = string.Empty;
+
+            try
+            {
+                if (ctx.Properties.ContainsKey(key))
+                {
+                    IDictionary<string, object> metadataSet = ctx.Properties[key] as IDictionary<string, object>;
+                    if (metadataSet != null)
+                    {
+                        List<string> convertibleValues = new List<string>();
+                        foreach (var entry in metadataSet)
+                        {
+                            // Metadata collections can contain objects that are more than simply
+                            // key/value pairs of simple primitive data types such as strings and integers.
+                            // We do not attempt to support the more advanced data types for the moment.
+                            if (entry.Value is IConvertible)
+                            {
+                                convertibleValues.Add($"{entry.Key}={entry.Value}");
+                            }
+                        }
+
+                        if (convertibleValues.Any())
+                        {
+                            metadata = string.Join(';', convertibleValues);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Best effort only.
+            }
+
+            return metadata;
+        }
+
+        private static string ParseSeverity(EventContext ctx, string key)
+        {
+            int severity = (int)LogLevel.Information;
+
+            try
+            {
+                if (ctx.Properties.ContainsKey(key))
+                {
+                    IConvertible value = ctx.Properties[key] as IConvertible;
+                    if (int.TryParse(value?.ToString(), out int level))
+                    {
+                        severity = (int)level;
+                    }
+                    else if (Enum.TryParse<LogLevel>(value?.ToString(), out LogLevel logLevel))
+                    {
+                        severity = (int)logLevel;
+                    }
+                }
+            }
+            catch
+            {
+                // Best effort only.
+            }
+
+            return severity.ToString();
+        }
+
+        private static string ParseTimestamp(EventContext ctx, string key)
+        {
+            string timestamp = null;
+
+            try
+            {
+                if (ctx.Properties.ContainsKey(key))
+                {
+                    IConvertible value = ctx.Properties[key] as IConvertible;
+                    if (value != null)
+                    {
+                        if (value is string)
+                        {
+                            timestamp = value.ToString();
+                        }
+                        else if (value is DateTime)
+                        {
+                            timestamp = ((DateTime)value).ToString("o");
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Best effort only.
+            }
+
+            return timestamp ?? DateTime.UtcNow.ToString("o");
         }
 
         private Task MonitorBufferAsync()

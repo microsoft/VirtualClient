@@ -2,7 +2,7 @@
 
 ExitCode=0
 SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE}"))"
-BUILD_CONFIGURATION=""
+BUILD_CONFIGURATION="Debug"
 
 Usage() {
     echo ""
@@ -50,15 +50,6 @@ for ((i=1; i<=$#; i++)); do
     fi
 done
 
-# The default build configuration is 'Release'.
-BUILD_CONFIGURATION="Release"
-
-# The default build configuration (e.g. Release) can be overridden 
-# by the 'VCBuildConfiguration' environment variable
-if [[ -v "VCBuildConfiguration" && -n "$VCBuildConfiguration" ]]; then
-    BUILD_CONFIGURATION=$VCBuildConfiguration
-fi
-
 echo ""
 echo "**********************************************************************"
 echo "Repo Root       : $SCRIPT_DIR"
@@ -71,7 +62,7 @@ echo "[Running Tests]"
 echo "--------------------------------------------------"
 
 for file in $(find "$(dirname "$0")/src" -type f -name "*Tests.csproj"); do
-    dotnet test -c $BUILD_CONFIGURATION "$file" --no-restore --no-build --filter "(Category=Unit)" --logger "console;verbosity=normal"
+    dotnet test -c Debug "$file" --no-restore --no-build --filter "(Category=Unit)" --logger "console;verbosity=normal"
     result=$?
     if [ $result -ne 0 ]; then
         Error

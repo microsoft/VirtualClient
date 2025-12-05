@@ -118,53 +118,9 @@ if [ $result -ne 0 ]; then
 fi
 
 echo ""
-echo "[Create NuGet Package] VirtualClient.linux-arm64.$PACKAGE_VERSION"
-echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
--p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.linux-arm64.nuspec"
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
-fi
-
-echo ""
-echo "[Create NuGet Package] VirtualClient.linux-x64.$PACKAGE_VERSION"
-echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
--p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.linux-x64.nuspec"
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
-fi
-
-echo ""
-echo "[Create NuGet Package] VirtualClient.win-arm64.$PACKAGE_VERSION"
-echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
--p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.win-arm64.nuspec"
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
-fi
-
-echo ""
-echo "[Create NuGet Package] VirtualClient.win-x64.$PACKAGE_VERSION"
-echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
--p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.win-x64.nuspec"
-
-result=$?
-if [ $result -ne 0 ]; then
-    Error
-fi
-
-echo ""
 echo "[Create NuGet Package] VirtualClient.Framework.$PACKAGE_VERSION"
 echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c Debug -v Detailed \
 -p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.Framework.nuspec"
 
 result=$?
@@ -175,8 +131,52 @@ fi
 echo ""
 echo "[Create NuGet Package] VirtualClient.TestFramework.$PACKAGE_VERSION"
 echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION \
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c Debug -v Detailed \
 -p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.TestFramework.nuspec"
+
+echo ""
+echo "[Create NuGet Package] VirtualClient.linux-arm64.$PACKAGE_VERSION"
+echo "----------------------------------------------------------"
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION -v Detailed \
+-p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.linux-arm64.nuspec"
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Create NuGet Package] VirtualClient.linux-x64.$PACKAGE_VERSION"
+echo "----------------------------------------------------------"
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION -v Detailed \
+-p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.linux-x64.nuspec"
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Create NuGet Package] VirtualClient.win-arm64.$PACKAGE_VERSION"
+echo "----------------------------------------------------------"
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION -v Detailed \
+-p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.win-arm64.nuspec"
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
+
+echo ""
+echo "[Create NuGet Package] VirtualClient.win-x64.$PACKAGE_VERSION"
+echo "----------------------------------------------------------"
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION -v Detailed \
+-p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.win-x64.nuspec"
+
+result=$?
+if [ $result -ne 0 ]; then
+    Error
+fi
 
 result=$?
 if [ $result -ne 0 ]; then

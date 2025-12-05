@@ -6,7 +6,6 @@ namespace VirtualClient
     using System;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Renci.SshNet;
@@ -34,6 +33,18 @@ namespace VirtualClient
         /// Defines the target host connection information.
         /// </summary>
         ConnectionInfo ConnectionInfo { get; }
+
+        /// <summary>
+        /// Allows the capture of standard error from the execution of the commands through 
+        /// the SSH client.
+        /// </summary>
+        TextWriter StandardError { get; set; }
+
+        /// <summary>
+        /// Allows the capture of standard output from the execution of the commands through 
+        /// the SSH client.
+        /// </summary>
+        TextWriter StandardOutput { get; set; }
 
         /// <summary>
         /// Establishes a connection to target host.

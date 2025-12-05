@@ -25,6 +25,7 @@ namespace VirtualClient
         public void Setup()
         {
             this.Setup(PlatformID.Unix);
+            this.Parameters[nameof(TestExecutor.LogToFile)] = true;
         }
 
         [Test]
@@ -69,12 +70,8 @@ namespace VirtualClient
 
             using (TestExecutor component = new TestExecutor(this))
             {
-                IEnumerable<string> toolsetResults = new List<string>
-                {
-                    "Any results from the execution of a toolset."
-                };
-
-                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, results: toolsetResults, logToTelemetry: true, logToFile: false, upload: false);
+                string toolsetResults = "Any results from the execution of a toolset.";
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: true, logToFile: false, upload: false, results: new KeyValuePair<string, string>("Results", toolsetResults));
 
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.ProcessDetails")?.Count() == 1, "Process details telemetry missing");
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.ProcessResults")?.Count() == 1, "Process results telemetry missing");
@@ -93,12 +90,8 @@ namespace VirtualClient
 
             using (TestExecutor component = new TestExecutor(this))
             {
-                IEnumerable<string> toolsetResults = new List<string>
-                {
-                    "Any results from the execution of a toolset."
-                };
-
-                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, toolName: "bash", results: toolsetResults, logToTelemetry: true, logToFile: false, upload: false);
+                string toolsetResults = "Any results from the execution of a toolset.";
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, toolName: "bash", logToTelemetry: true, logToFile: false, upload: false, results: new KeyValuePair<string, string>("Results", toolsetResults));
 
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.bash.ProcessDetails")?.Count() == 1, "Process details telemetry missing");
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.bash.ProcessResults")?.Count() == 1, "Process results telemetry missing");
@@ -121,7 +114,7 @@ namespace VirtualClient
                 // e.g.
                 // /home/user/virtualclient/logs/testexecutor/2025-07-20-193948162-anyscenario.log
                 string expectedLogDirectory = this.GetLogsPath(component.TypeName.ToLowerInvariant());
-                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{9}}-{component.Scenario}.log".ToLowerInvariant();
+                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{12}}-{component.Scenario}.log".ToLowerInvariant();
 
                 this.FileSystem
                     .Setup(fs => fs.Directory.CreateDirectory(expectedLogDirectory))
@@ -162,7 +155,7 @@ namespace VirtualClient
                 // e.g.
                 // /home/user/virtualclient/logs/bash/2025-07-20-193948162-anyscenario.log
                 string expectedLogDirectory = this.GetLogsPath("bash");
-                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{9}}-{component.Scenario}.log".ToLowerInvariant();
+                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{12}}-{component.Scenario}.log".ToLowerInvariant();
 
                 this.FileSystem
                     .Setup(fs => fs.Directory.CreateDirectory(expectedLogDirectory))
@@ -412,7 +405,7 @@ namespace VirtualClient
                 // e.g.
                 // /home/user/virtualclient/logs/workloads/bash.log
                 string expectedLogDirectory = this.GetLogsPath("workloads");
-                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{9}}-{component.Scenario.ToLowerInvariant()}.log";
+                string expectedLogFile = $@"[\\/][0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}-[0-9]{{12}}-{component.Scenario.ToLowerInvariant()}.log";
 
                 this.FileSystem
                     .Setup(fs => fs.Directory.CreateDirectory(expectedLogDirectory))
@@ -459,25 +452,25 @@ namespace VirtualClient
 
                 IDictionary<string, IConvertible> expectedMetadata = new SortedDictionary<string, IConvertible>
                 {
-                    { "Command", "bash -c \"execute_workload.sh --logdir=/home/user/logs\"" },
-                    { "WorkingDirectory", "/home/user/virtualclient" },
-                    { "ElapsedTime", @"[0-9]{2}\:[0-9]{2}\:[0-9]{2}" },
-                    { "StartTime", @"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]{3,}Z" },
-                    { "ExitTime", @"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]{3,}Z" },
-                    { "ExitCode", 0 },
-                    { "ExperimentId", component.ExperimentId },
-                    { "ClientId", component.AgentId },
-                    { "ComponentType", component.ComponentType },
-                    { "MachineName", Environment.MachineName },
-                    { "PlatformArchitecture", component.PlatformSpecifics.PlatformArchitectureName },
-                    { "OperatingSystemVersion", Environment.OSVersion.ToString() },
-                    { "OperatingSystemDescription", RuntimeInformation.OSDescription },
-                    { "Role", component.Roles?.FirstOrDefault() },
-                    { "Scenario", component.Scenario },
-                    { "TimeZone", TimeZoneInfo.Local.StandardName },
-                    { "ToolName", "execute_workload" },
-                    { "Metadata1", "Value1" },
-                    { "Metadata2", "Value2" }
+                    { "command", "bash -c \"execute_workload.sh --logdir=/home/user/logs\"" },
+                    { "workingDirectory", "/home/user/virtualclient" },
+                    { "elapsedTime", @"[0-9]{2}\:[0-9]{2}\:[0-9]{2}" },
+                    { "startTime", @"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]{3,}Z" },
+                    { "exitTime", @"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]{3,}Z" },
+                    { "exitCode", 0 },
+                    { "experimentId", component.ExperimentId },
+                    { "clientId", component.AgentId },
+                    { "componentType", component.ComponentType },
+                    { "machineName", Environment.MachineName },
+                    { "platformArchitecture", component.PlatformSpecifics.PlatformArchitectureName },
+                    { "operatingSystemVersion", Environment.OSVersion.ToString() },
+                    { "operatingSystemDescription", RuntimeInformation.OSDescription },
+                    { "role", component.Roles?.FirstOrDefault() },
+                    { "scenario", component.Scenario },
+                    { "timezone", TimeZoneInfo.Local.StandardName },
+                    { "toolName", "execute_workload" },
+                    { "metadata1", "Value1" },
+                    { "metadata2", "Value2" }
                 };
 
                 this.FileSystem

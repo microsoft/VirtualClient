@@ -86,13 +86,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the duration (in seconds) for running the NTttcp workload.
+        /// Parameter defines the duration for running the NTttcp workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -182,6 +182,19 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.Protocol));
+            }
+        }
+
+        /// <summary>
+        /// NoSyncEnabled is only for client/sender role.
+        /// The NoSyncEnabled indicates that synchronization is disabled for the client.
+        /// </summary>
+        public bool? NoSyncEnabled
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.NoSyncEnabled), out IConvertible noSyncEnabled);
+                return noSyncEnabled?.ToBoolean(CultureInfo.InvariantCulture);
             }
         }
 
@@ -327,7 +340,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 else
                                 {
                                     string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray());
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                     this.CaptureMetrics(
                                         results,
@@ -436,11 +449,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-p {this.Port} " +
                 $"-xml {this.ResultsPath} " +
                 $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
+                $"{(this.NoSyncEnabled == true ? "-ns" : string.Empty)} " +
                 $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
         }
 
@@ -452,7 +466,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-x {this.ResultsPath} " +
                 $"-p {this.Port} " +
@@ -461,6 +475,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"{((this.IsInServerRole && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
                 $"{((this.IsInClientRole && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
                 $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
+                $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
                 $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
         }
     }

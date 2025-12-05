@@ -268,7 +268,7 @@ namespace VirtualClient
         /// <summary>
         /// The content store was not defined on the command line.
         /// </summary>
-        ContentStoreNotDefined = 530,
+        ContentStoreNotDefined = 531,
 
         /// <summary>
         /// The Virtual Client API service failed to startup.
@@ -281,29 +281,19 @@ namespace VirtualClient
         Unauthorized = 540,
 
         /// <summary>
+        /// Certificate provided by user is either expired or not found.
+        /// </summary>
+        InvalidCertificate = 541,
+
+        /// <summary>
         /// The environment layout is null.
         /// </summary>
-        EnvironmentLayoutNotDefined = 550,
+        LayoutNotDefined = 550,
 
         /// <summary>
         /// Environment layout is not valid or is missing required information.
         /// </summary>
         LayoutInvalid = 551,
-
-        /// <summary>
-        /// IP address present on layout does not matches with the IPAddress of the machine.
-        /// </summary>
-        LayoutIPAddressDoesNotMatch = 552,
-
-        /// <summary>
-        /// The layout does not contain any instance whose name matches with agent id.
-        /// </summary>
-        EnvironmentLayoutClientInstancesNotFound = 553,
-
-        /// <summary>
-        /// The layout contains multiple instances whose name matches with agent id.
-        /// </summary>
-        EnvironmentLayoutClientInstanceDuplicates = 554,
 
         /// <summary>
         /// An extensions assembly is not valid for the current Virtual Client

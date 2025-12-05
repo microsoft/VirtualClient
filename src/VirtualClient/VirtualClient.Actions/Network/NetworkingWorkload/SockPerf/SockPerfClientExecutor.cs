@@ -75,7 +75,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     else
                                     {
                                         string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray());
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                         this.CaptureMetrics(
                                             results,
@@ -120,7 +120,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             return $"{this.TestMode} " +
                 $"-i {serverIPAddress} " +
                 $"-p {this.Port} {protocolParam} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"{(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")} " +
                 $"--full-rtt --msg-size {this.MessageSize} " +
                 $"--client_ip {clientIPAddress} " +

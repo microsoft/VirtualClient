@@ -113,57 +113,63 @@ namespace VirtualClient.Monitors
         /// <summary>
         /// Executes the monitoring operations.
         /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            try
+            // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
+            // logic will block without returning. Monitors are typically expected to be fire-and-forget.
+
+            return Task.Run(async () =>
             {
-                await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
-
-                long iterations = 0;
-                while (!cancellationToken.IsCancellationRequested)
+                try
                 {
-                    EventContext relatedContext = telemetryContext.Clone();
+                    await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
 
-                    try
+                    long iterations = 0;
+                    while (!cancellationToken.IsCancellationRequested)
                     {
-                        if (this.IsIterationComplete(iterations))
+                        EventContext relatedContext = telemetryContext.Clone();
+
+                        try
                         {
-                            break;
+                            if (this.IsIterationComplete(iterations))
+                            {
+                                break;
+                            }
+
+                            relatedContext
+                                .AddContext("logLevel", this.LogLevel)
+                                .AddContext("lastCheckPointTime", this.LastCheckPoint)
+                                .AddContext("iteration", iterations);
+
+                            await this.ProcessEventsAsync(this.LastCheckPoint, relatedContext, cancellationToken);
                         }
+                        catch (OperationCanceledException)
+                        {
+                            // Expected with Task.Delay on cancellations.
+                        }
+                        catch (Exception exc)
+                        {
+                            this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                        }
+                        finally
+                        {
+                            iterations++;
 
-                        relatedContext
-                            .AddContext("logLevel", this.LogLevel)
-                            .AddContext("lastCheckPointTime", this.LastCheckPoint)
-                            .AddContext("iteration", iterations);
-
-                        await this.ProcessEventsAsync(this.LastCheckPoint, relatedContext, cancellationToken);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // Expected with Task.Delay on cancellations.
-                    }
-                    catch (Exception exc)
-                    {
-                        this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                    }
-                    finally
-                    {
-                        iterations++;
-
-                        // MUST be in local time.
-                        this.LastCheckPoint = DateTime.Now;
-                        await this.WaitAsync(this.MonitorFrequency, cancellationToken);
+                            // MUST be in local time.
+                            this.LastCheckPoint = DateTime.Now;
+                            await this.WaitAsync(this.MonitorFrequency, cancellationToken);
+                        }
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                // Do nothing
-            }
-            catch (Exception exc)
-            {
-                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-            }
+                catch (OperationCanceledException)
+                {
+                    // Do nothing
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                }
+            });
         }
 
         /// <summary>

@@ -44,6 +44,7 @@ namespace VirtualClient
             switch (dependencyStore.StoreType)
             {
                 case DependencyStore.StoreTypeAzureStorageBlob:
+                case DependencyStore.StoreTypeAzureCDN:
                     DependencyBlobStore blobStore = dependencyStore as DependencyBlobStore;
                     if (blobStore != null)
                     {
@@ -110,18 +111,17 @@ namespace VirtualClient
         /// Creates a disk manager for the OS/system platform (e.g. Windows, Linux).
         /// </summary>
         /// <param name="platform">The OS/system platform.</param>
-        /// <param name="logger">A logger for capturing disk management telemetry.</param>
-        public static DiskManager CreateDiskManager(PlatformID platform, Microsoft.Extensions.Logging.ILogger logger = null)
+        public static DiskManager CreateDiskManager(PlatformID platform)
         {
             DiskManager manager = null;
             switch (platform)
             {
                 case PlatformID.Win32NT:
-                    manager = new WindowsDiskManager(new WindowsProcessManager(), logger);
+                    manager = new WindowsDiskManager(new WindowsProcessManager());
                     break;
 
                 case PlatformID.Unix:
-                    manager = new UnixDiskManager(new UnixProcessManager(), logger);
+                    manager = new UnixDiskManager(new UnixProcessManager());
                     break;
 
                 default:
@@ -596,8 +596,8 @@ namespace VirtualClient
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
-        /// <param name="logger">The logger to use for capturing telemetry.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -605,10 +605,16 @@ namespace VirtualClient
 
             PlatformID platform = platformSpecifics.Platform;
             ProcessManager processManager = ProcessManager.Create(platform);
-            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform, logger);
+            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform);
             IFileSystem fileSystem = new FileSystem();
             IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
-            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
+            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem);
+
+            if (isolated)
+            {
+                packageManager = new IsolatedPackageManager(packageManager);
+            }
+
             ISshClientFactory sshClientManager = new SshClientFactory();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
 

@@ -11,9 +11,40 @@
         <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
 
         <dependencies>
-            <group targetFramework=".net9.0">
+			<group targetFramework="net8.0">
+				<dependency id="Azure.Identity" version="$Azure_Identity_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Messaging.EventHubs" version="$Azure_Messaging_EventHubs_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Certificates" version="$Azure_Security_KeyVault_Certificates_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Keys" version="$Azure_Security_KeyVault_Keys_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Secrets" version="$Azure_Security_KeyVault_Secrets_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Storage.Blobs" version="$Azure_Storage_Blobs_Version$" exclude="Build,Analyzers" />
+				<dependency id="MathNet.Numerics.Signed" version="$MathNet_Numerics_Signed_Version$" exclude="Build,Analyzers" />
+				<dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="$Microsoft_CodeAnalysis_CSharp_Scripting_Version$" exclude="Build,Analyzers" />
+				<dependency id="Microsoft.Extensions.Configuration" version="$Microsoft_Extensions_Configuration_Version$" exclude="Build,Analyzers" />
+				<dependency id="Microsoft.Extensions.DependencyInjection" version="$Microsoft_Extensions_DependencyInjection_Version$" exclude="Build,Analyzers" />
+				<dependency id="Microsoft.Extensions.Logging" version="$Microsoft_Extensions_Logging_Version$" exclude="Build,Analyzers" />
+				<dependency id="Microsoft.Extensions.Http.Polly" version="$Microsoft_Extensions_Http_Polly_Version$" exclude="Build,Analyzers" />
+				<dependency id="MimeMapping" version="$MimeMapping_Version$" exclude="Build,Analyzers" />
+				<dependency id="Newtonsoft.Json" version="$Newtonsoft_Json_Version$" exclude="Build,Analyzers" />
+				<dependency id="Polly" version="$Polly_Version$" exclude="Build,Analyzers" />
+				<dependency id="Serilog.Extensions.Logging" version="$Serilog_Extensions_Logging_Version$" exclude="Build,Analyzers" />
+				<dependency id="Serilog.Sinks.File" version="$Serilog_Sinks_File_Version$" exclude="Build,Analyzers" />
+				<dependency id="SSH.NET" version="$SSH_NET_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.IO.FileSystem.Primitives" version="$System_IO_FileSystem_Primitives_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Net.Http" version="$System_Net_Http_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Net.NameResolution" version="$System_Net_NameResolution_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Private.Uri" version="$System_Private_Uri_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Text.RegularExpressions" version="$System_Text_RegularExpressions_Version$" exclude="Build,Analyzers" />
+				<dependency id="YamlDotNet" version="$YamlDotNet_Version$" exclude="Build,Analyzers" />
+			</group>
+            <group targetFramework="net9.0">
                 <dependency id="Azure.Identity" version="$Azure_Identity_Version$" exclude="Build,Analyzers" />
                 <dependency id="Azure.Messaging.EventHubs" version="$Azure_Messaging_EventHubs_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Certificates" version="$Azure_Security_KeyVault_Certificates_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Keys" version="$Azure_Security_KeyVault_Keys_Version$" exclude="Build,Analyzers" />
+				<dependency id="Azure.Security.KeyVault.Secrets" version="$Azure_Security_KeyVault_Secrets_Version$" exclude="Build,Analyzers" />
                 <dependency id="Azure.Storage.Blobs" version="$Azure_Storage_Blobs_Version$" exclude="Build,Analyzers" />
                 <dependency id="MathNet.Numerics.Signed" version="$MathNet_Numerics_Signed_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="$Microsoft_CodeAnalysis_CSharp_Scripting_Version$" exclude="Build,Analyzers" />
@@ -21,77 +52,75 @@
                 <dependency id="Microsoft.Extensions.DependencyInjection" version="$Microsoft_Extensions_DependencyInjection_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Logging" version="$Microsoft_Extensions_Logging_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Http.Polly" version="$Microsoft_Extensions_Http_Polly_Version$" exclude="Build,Analyzers" />
-				<dependency id="MimeMapping" version="$MimeMapping$" exclude="Build,Analyzers" />
+				<dependency id="MimeMapping" version="$MimeMapping_Version$" exclude="Build,Analyzers" />
                 <dependency id="Newtonsoft.Json" version="$Newtonsoft_Json_Version$" exclude="Build,Analyzers" />
                 <dependency id="Polly" version="$Polly_Version$" exclude="Build,Analyzers" />
                 <dependency id="Serilog.Extensions.Logging" version="$Serilog_Extensions_Logging_Version$" exclude="Build,Analyzers" />
                 <dependency id="Serilog.Sinks.File" version="$Serilog_Sinks_File_Version$" exclude="Build,Analyzers" />
-                <dependency id="Serilog.Sinks.RollingFile" version="$Serilog_Sinks_RollingFile_Version$" exclude="Build,Analyzers" />
                 <dependency id="SSH.NET" version="$SSH_NET_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.IO.FileSystem.Primitives" version="$System_IO_FileSystem_Primitives_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Net.Http" version="$System_Net_Http_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.Net.NameResolution" version="$System_Net_NameResolution_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Private.Uri" version="$System_Private_Uri_Version$" exclude="Build,Analyzers" />
+				<dependency id="System.Text.RegularExpressions" version="$System_Text_RegularExpressions_Version$" exclude="Build,Analyzers" />
                 <dependency id="YamlDotNet" version="$YamlDotNet_Version$" exclude="Build,Analyzers" />
             </group>
         </dependencies>
     </metadata>
 
     <files>
-        <!--
-        AnyCPU
+		<!--
+		.NET 8.0 Support
+		- 'refs' support SDK/Compile time referencing
+		- 'libs' support runtime time build includes (e.g. linux-arm64, linux-x64, win-arm64, win-x64)
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="ref\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="ref\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="ref\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="ref\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="ref\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="ref\net9.0" />
-        
-        <!-- 
-        win-x64
-        =============================================================================================
-        -->
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\win-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\win-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\win-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\win-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\win-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\win-x64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net8.0\VirtualClient.Contracts.dll" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net8.0\VirtualClient.Contracts.pdb" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net8.0\VirtualClient.Contracts.xml" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net8.0\VirtualClient.Core.dll" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net8.0\VirtualClient.Core.pdb" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net8.0\VirtualClient.Core.xml" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net8.0\VirtualClient.Common.dll" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net8.0\VirtualClient.Common.pdb" target="ref\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net8.0\VirtualClient.Common.xml" target="ref\net8.0" />
 
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net8.0\VirtualClient.Contracts.dll" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net8.0\VirtualClient.Contracts.pdb" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net8.0\VirtualClient.Contracts.xml" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net8.0\VirtualClient.Core.dll" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net8.0\VirtualClient.Core.pdb" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net8.0\VirtualClient.Core.xml" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net8.0\VirtualClient.Common.dll" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net8.0\VirtualClient.Common.pdb" target="lib\net8.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net8.0\VirtualClient.Common.xml" target="lib\net8.0" />
 
-        <!-- 
-        win-arm64
+		<!--
+		.NET 9.0 Support
+		- 'refs' support SDK/Compile time referencing
+		- 'libs' support runtime time build includes (e.g. linux-arm64, linux-x64, win-arm64, win-x64)
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\win-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\win-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\win-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\win-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\win-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\win-arm64\lib\net9.0" />
-
-        <!-- 
-        linux-x64
-        =============================================================================================
-        -->
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\linux-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\linux-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\linux-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\linux-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\linux-x64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\linux-x64\lib\net9.0" />
-
-        <!-- 
-        linux-arm64
-        =============================================================================================
-        -->
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="runtimes\linux-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="runtimes\linux-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="runtimes\linux-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="runtimes\linux-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="runtimes\linux-arm64\lib\net9.0" />
-        <file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="runtimes\linux-arm64\lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="ref\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="ref\net9.0" />
+		
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.dll" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.pdb" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Contracts\net9.0\VirtualClient.Contracts.xml" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.dll" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.pdb" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Core\net9.0\VirtualClient.Core.xml" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.dll" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.pdb" target="lib\net9.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.Common\net9.0\VirtualClient.Common.xml" target="lib\net9.0" />
     </files>
 </package>

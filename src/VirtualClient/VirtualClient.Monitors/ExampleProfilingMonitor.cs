@@ -61,31 +61,34 @@ namespace VirtualClient.Monitors
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
             // logic will block without returning. Monitors are typically expected to be fire-and-forget.
 
-            try
+            return Task.Run(async () =>
             {
-                if (this.ProfilingEnabled && this.ProfilingMode != ProfilingMode.None)
+                try
                 {
-                    if (this.ProfilingMode == ProfilingMode.OnDemand)
+                    if (this.ProfilingEnabled && this.ProfilingMode != ProfilingMode.None)
                     {
-                        await this.ExecuteProfilingOnDemandAsync(cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-                    else if (this.ProfilingMode == ProfilingMode.Interval)
-                    {
-                        await this.ExecuteProfilingOnIntervalAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        if (this.ProfilingMode == ProfilingMode.OnDemand)
+                        {
+                            await this.ExecuteProfilingOnDemandAsync(cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                        else if (this.ProfilingMode == ProfilingMode.Interval)
+                        {
+                            await this.ExecuteProfilingOnIntervalAsync(cancellationToken)
+                                .ConfigureAwait(false);
+                        }
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected when a Task.Delay is cancelled.
-            }
+                catch (OperationCanceledException)
+                {
+                    // Expected when a Task.Delay is cancelled.
+                }
+            });
         }
 
         private async Task ExecuteProfilingOnDemandAsync(CancellationToken cancellationToken)

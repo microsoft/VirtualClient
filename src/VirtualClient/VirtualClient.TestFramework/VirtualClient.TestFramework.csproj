@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <AssemblyName>VirtualClient.TestFramework</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <NoWarn>CA1063;CA2214;CS1591;SA1508</NoWarn>
@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="AutoFixture" Version="$(AutoFixture_PackageVersion)" />
-        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+        <PackageReference Include="AutoFixture" />
+        <PackageReference Include="Moq" />
     </ItemGroup>
 
     <ItemGroup>

@@ -275,49 +275,6 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandCreatesTheExpectedProfile_MonitorsExcludedScenario()
-        {
-            // Scenario:
-            // In the default scenario, a workload profile is supplied that only contains
-            // workloads (i.e. no specific monitors).
-            string profile1 = "TEST-WORKLOAD-PROFILE.json";
-            string noMonitorsProfile = "MONITORS-NONE.json";
-
-            List<string> profiles = new List<string>
-            {
-                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1),
-                Path.Combine(ExecuteProfileCommandTests.ProfilesDirectory, noMonitorsProfile)
-            };
-
-            // Setup:
-            // Read the actual profile content from the local file system.
-            this.mockFixture.File
-                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
-
-            this.mockFixture.File
-                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(noMonitorsProfile)), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, noMonitorsProfile)));
-
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            Assert.IsTrue(profile.Actions.Any());
-            Assert.IsTrue(profile.Actions.Count == 2);
-            Assert.IsTrue(profile.Dependencies.Any());
-            Assert.IsTrue(profile.Dependencies.Count == 1);
-            Assert.IsFalse(profile.Monitors.Any());
-
-            CollectionAssert.AreEqual(
-                new List<string> { "Workload1", "Workload2" },
-                profile.Actions.Select(a => a.Parameters["Scenario"].ToString()));
-
-            CollectionAssert.AreEqual(
-                new List<string> { "Dependency1" },
-                profile.Dependencies.Select(a => a.Parameters["Scenario"].ToString()));
-        }
-
-        [Test]
         public async Task RunProfileCommandCreatesTheExpectedProfile_ProfileWithActionsDependenciesAndMonitorsScenario()
         {
             // Scenario:

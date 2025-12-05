@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts
     /// </summary>
     public class FileContext
     {
-        private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-fffffK";
+        private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-ffffffK";
         private static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
         private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 

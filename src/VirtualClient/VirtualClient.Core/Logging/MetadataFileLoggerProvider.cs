@@ -4,34 +4,32 @@
 namespace VirtualClient.Logging
 {
     using System;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
     /// Provides methods for creating <see cref="ILogger"/> instances that can be used
-    /// to write metrics data to a CSV file.
+    /// to write metadata/marker files.
     /// </summary>
-    [Alias("Csv,File")]
-    public sealed class MetricsCsvFileLoggerProvider : ILoggerProvider
+    [Alias("marker")]
+    [Alias("metadata")]
+    public sealed class MetadataFileLoggerProvider : ILoggerProvider
     {
         private string filePath;
-        private long maxFileSize;
+        private IServiceCollection dependencies;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricsCsvFileLoggerProvider"/> class.
-        /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
-        /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
         /// </summary>
-        public MetricsCsvFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes)
+        public MetadataFileLoggerProvider(IServiceCollection dependencies, string filePath)
         {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
-            maximumFileSizeBytes.ThrowIfInvalid(nameof(maximumFileSizeBytes), (size) => size > 0);
+            dependencies.ThrowIfNull(nameof(dependencies));
 
-            this.filePath = csvFilePath;
-            this.maxFileSize = maximumFileSizeBytes;
+            this.filePath = filePath;
+            this.dependencies = dependencies;
         }
 
         /// <summary>
@@ -45,14 +43,7 @@ namespace VirtualClient.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            MetricsCsvFileLogger logger = new MetricsCsvFileLogger(this.filePath, this.maxFileSize);
-            VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
-            {
-                logger.Flush();
-                logger.Dispose();
-            }));
-
-            return logger;
+            return new MetadataFileLogger(this.dependencies, this.filePath);
         }
 
         /// <summary>

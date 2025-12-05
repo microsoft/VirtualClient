@@ -4,13 +4,12 @@
 namespace VirtualClient.Contracts
 {
     using System;
-    using System.Collections.Generic;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Defines one or more aliases for a given class for reflection support.
     /// </summary>
-    [AttributeUsage(validOn: AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class AliasAttribute : Attribute
     {
         /// <summary>
@@ -20,12 +19,12 @@ namespace VirtualClient.Contracts
         public AliasAttribute(string alias)
         {
             alias.ThrowIfNullOrEmpty(nameof(alias));
-            this.Aliases = alias.Split(',');
+            this.Alias = alias;
         }
 
         /// <summary>
         /// The aliases for the logger provider.
         /// </summary>
-        public IEnumerable<string> Aliases { get; }
+        public string Alias { get; }
     }
 }

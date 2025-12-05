@@ -1,0 +1,16 @@
+{
+    "Description": "Test Profile Executor (Metadata + Extensions)",
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "CommandLine": "--name=testName --engine=V8",
+                "LogToFile": true,
+                "LogFileName": "test.log",
+                "LogFolderName": "test",
+                "LogTimestamped": false,
+                "Tags": "Test,VC"
+            }
+        }
+    ]
+}

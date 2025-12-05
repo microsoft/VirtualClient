@@ -30,6 +30,10 @@ namespace VirtualClient.Common
              // of expressions to allow the handling of special cases (e.g. delimited key/value pair groups (e.g. Password=s@me,val;ue,,,Property1=Value1).
              new Regex("(?<=Password[=\x20]+\"*)(?:,{0,2}[\x21\x23-\x2B\x2D-\x7E]+,{0,2}[\x21\x23-\x2B\x2D-\x7E]+)+\"*", RegexOptions.IgnoreCase),
              new Regex("(?<=Pwd[=\x20]+\"*)(?:,{0,2}[\x21\x23-\x2B\x2D-\x7E]+,{0,2}[\x21\x23-\x2B\x2D-\x7E]+)+\"*", RegexOptions.IgnoreCase),
+
+             // Agent SSH connections allow for passwords
+             // (e.g. user@10.2.3.5;pass_;wor;d).
+             new Regex(@"[0-9a-z_\-\. ]+@[^;]+;([\x20-\x7E]+)", RegexOptions.IgnoreCase)
         };
 
         /// <summary>

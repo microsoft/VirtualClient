@@ -221,31 +221,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Evaluates each of the parameters provided to the component to replace
-        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
-        /// </summary>
-        /// <param name="component">The component whose parameters to evaluate.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
-        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken, bool force = false)
-        {
-            component.ThrowIfNull(nameof(component));
-
-            if (!component.ParametersEvaluated || force)
-            {
-                if (component.Parameters?.Any() == true)
-                {
-                    if (component.Dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
-                    {
-                        await evaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
-                    }
-                }
-
-                component.ParametersEvaluated = true;
-            }
-        }
-
-        /// <summary>
         /// Returns the client instance defined in the environment layout provided to the Virtual Client
         /// whose ID matches.
         /// </summary>
@@ -269,7 +244,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Client instance not found. A client instance does not exist in the environment layout " +
                     $"provided to the Virtual Client for agent ID '{desiredAgentId}'.",
-                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+                    ErrorReason.LayoutInvalid);
             }
 
             return instance;
@@ -299,7 +274,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Client instances not found. A set of client instances do not exist in the environment layout " +
                     $"provided to the Virtual Client for the role '{role}'.",
-                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+                    ErrorReason.LayoutInvalid);
             }
 
             return clientInstances;
@@ -511,7 +486,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     "The environment layout is not defined. An environment layout must be provided to the " +
                     "Virtual Client application on the command line.",
-                    ErrorReason.EnvironmentLayoutNotDefined);
+                    ErrorReason.LayoutNotDefined);
             }
         }
 
@@ -530,7 +505,7 @@ namespace VirtualClient.Contracts
                 throw new WorkloadException(
                     $"The IP address defined in the environment layout for this agent " +
                     $"instance '{ipAddress}' does not match with the IP addresses defined on the system.",
-                    ErrorReason.LayoutIPAddressDoesNotMatch);
+                    ErrorReason.LayoutInvalid);
             }
         }
 

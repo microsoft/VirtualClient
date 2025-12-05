@@ -98,6 +98,12 @@ namespace VirtualClient
         public Func<Tuple<PlatformID, Architecture>> OnGetTargetPlatformArchitecture { get; set; }
 
         /// <inheritdoc />
+        public TextWriter StandardError { get; set; }
+
+        /// <inheritdoc />
+        public TextWriter StandardOutput { get; set; }
+
+        /// <inheritdoc />
         public Task ConnectAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             this.OnConnect?.Invoke();

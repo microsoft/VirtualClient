@@ -5,15 +5,15 @@
          Static/Code Analysis Packages
       *********************************************************************** -->
     <ItemGroup>
-        <PackageReference Include="AsyncFixer" Version="1.6.0">
+        <PackageReference Include="AsyncFixer">
             <PrivateAssets>All</PrivateAssets>
             <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0">
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
             <PrivateAssets>All</PrivateAssets>
             <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
-        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+        <PackageReference Include="StyleCop.Analyzers">
             <PrivateAssets>All</PrivateAssets>
             <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>

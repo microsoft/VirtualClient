@@ -40,14 +40,8 @@ namespace VirtualClient.Logging
                 PlatformSpecifics platformSpecifics = VirtualClientRuntime.PlatformSpecifics
                    ?? new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
-                string experimentId = VirtualClientRuntime.ExperimentId;
                 string logsPath = platformSpecifics.GetLogsPath();
                 string summaryFileName = "summary.txt";
-
-                if (!string.IsNullOrWhiteSpace(experimentId))
-                {
-                    summaryFileName = $"{experimentId}-summary.txt";
-                }
 
                 effectiveFilePath = platformSpecifics.Combine(logsPath, summaryFileName);
             }
@@ -65,6 +59,7 @@ namespace VirtualClient.Logging
         /// <summary>
         /// Disposes of internal resources.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "No")]
         public void Dispose()
         {
             GC.SuppressFinalize(this);

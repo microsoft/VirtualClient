@@ -10,13 +10,12 @@ This guide covers the requirements, supported authentication methods, command-li
 
 - [Overview](#overview)
 - [Authentication Preliminaries](#authentication-preliminaries)
-  - [Certificates on Linux](#referencing-certificates-on-linux)
-  - [Certificates on Windows](#referencing-certificates-on-windows)
+  - [Certificates on Linux](#installing-certificates-on-linux)
+  - [Certificates on Windows](#installing-certificates-on-windows)
 - [Key Vault Integration](#key-vault-integration)
   - [Supported Reference Styles](#supported-reference-styles)
     - [URI-Style References](#uri-style-references)
     - [Connection String-Style References](#connection-string-style-references)
-- [Command-Line Options](#command-line-options)
 - [Usage Examples](#usage-examples)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
@@ -67,19 +66,19 @@ You can specify the Key Vault endpoint as a URI, optionally with authentication 
 - **Microsoft Entra ID/App with Certificate (by thumbprint):**
 
 ``` bash
---keyvault="https://myvault.vault.azure.net?cid={clientId}&tid={tenantId}&crtt={certificateThumbprint}"
+--key-vault="https://myvault.vault.azure.net?cid={clientId}&tid={tenantId}&crtt={certificateThumbprint}"
 ```
 
 - **Microsoft Entra ID/App with Certificate (by issuer and subject):**
 
 ``` bash
---keyvault="https://myvault.vault.azure.net?cid={clientId}&tid={tenantId}&crti={issuer}&crts={subject}"
+--key-vault="https://myvault.vault.azure.net?cid={clientId}&tid={tenantId}&crti={issuer}&crts={subject}"
 ```
 
 - **Managed Identity:**
 
 ``` bash
---keyvault="https://myvault.vault.azure.net?miid={managedIdentityClientId}"
+--key-vault="https://myvault.vault.azure.net?miid={managedIdentityClientId}"
 ```
 
 #### Connection String-Style References
@@ -89,32 +88,20 @@ You can also use a connection string format:
 - **Microsoft Entra ID/App with Certificate (by thumbprint):**
 
 ``` bash
---keyvault="EndpointUrl=https://myvault.vault.azure.net;ClientId={clientId};TenantId={tenantId};CertificateThumbprint={certificateThumbprint}"
+--key-vault="EndpointUrl=https://myvault.vault.azure.net;ClientId={clientId};TenantId={tenantId};CertificateThumbprint={certificateThumbprint}"
 ```
 
 - **Microsoft Entra ID/App with Certificate (by issuer and subject):**
 
 ``` bash
---keyvault="EndpointUrl=https://myvault.vault.azure.net;ClientId={clientId};TenantId={tenantId};CertificateIssuer={issuer};CertificateSubject={subject}"
+--key-vault="EndpointUrl=https://myvault.vault.azure.net;ClientId={clientId};TenantId={tenantId};CertificateIssuer={issuer};CertificateSubject={subject}"
 ```
 
 - **Managed Identity:**
 
 ``` bash
---keyvault="EndpointUrl=https://myvault.vault.azure.net;ManagedIdentityId={managedIdentityClientId}"
+--key-vault="EndpointUrl=https://myvault.vault.azure.net;ManagedIdentityId={managedIdentityClientId}"
 ```
-
----
-
-## Command-Line Options
-
-The following options are available for Key Vault integration:
-
-- `--kv`, `--keyvault`, `--key-vault`, `--keyVault`, `--key-Vault`
-- **Description:** Specifies the Azure Key Vault endpoint or connection string.
-- **Example:** `--keyvault="https://myvault.vault.azure.net"`
-
-Other options may be used depending on your authentication method (see above).
 
 ---
 
@@ -123,19 +110,19 @@ Other options may be used depending on your authentication method (see above).
 ### Retrieve a Secret Using Managed Identity
 
 ``` bash
-VirtualClient --keyvault="https://myvault.vault.azure.net?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6" --other-options
+VirtualClient --key-vault="https://myvault.vault.azure.net?miid=6d3c5db8-e14b-44b7-9887-d168b5f659f6"
 ```
 
 ### Retrieve a Secret Using Microsoft Entra ID and Certificate Thumbprint
 
 ``` bash
-VirtualClient --keyvault="EndpointUrl=https://myvault.vault.azure.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f" --other-options
+VirtualClient --key-vault="EndpointUrl=https://myvault.vault.azure.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateThumbprint=f5b114e61c6a81b40c1e7a5e4d11ac47da6e445f"
 ```
 
 ### Retrieve a Secret Using Microsoft Entra ID and Certificate Issuer/Subject
 
 ``` bash
-VirtualClient --keyvault="EndpointUrl=https://myvault.vault.azure.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com" --other-options
+VirtualClient --key-vault="EndpointUrl=https://myvault.vault.azure.net;ClientId=08331e3b-1458-4de2-b1d6-7007bc7221d5;TenantId=573b5dBbe-c477-4a10-8986-a7fe10e2d79B;CertificateIssuer=CN=ABC CA 01, DC=ABC, DC=COM;CertificateSubject=CN=any.domain.com"
 ```
 
 ---
