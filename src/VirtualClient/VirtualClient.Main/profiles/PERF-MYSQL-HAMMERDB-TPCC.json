@@ -1,5 +1,5 @@
 {
-    "Description": "HammerDB PostgrSQL TPCC Database Server Performance Workload",
+    "Description": "HammerDB MySQL TPCC Database Server Performance Workload",
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "04:00:00",
@@ -9,11 +9,11 @@
     "Parameters": {
         "DatabaseName": "hammerdb_tpcc",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
-        "Port": "5432",
+        "Port": "3306",
         "Duration": "00:20:00",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
         "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
-        "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
+        "InnodbBufferPoolSize": "{calculate({SystemMemoryBytes} * 80 / 100)}"
     },
     "Actions": [
         {
@@ -22,7 +22,7 @@
                 "Scenario": "ExecuteServer",
                 "PackageName": "hammerdb",
                 "Workload": "tpcc",
-                "SQLServer": "postgresql",
+                "SQLServer": "mysql",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
@@ -36,7 +36,7 @@
             "Parameters": {
                 "Scenario": "tpcc",
                 "Workload": "tpcc",
-                "SQLServer": "postgresql",
+                "SQLServer": "mysql",
                 "PackageName": "hammerdb",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
@@ -66,17 +66,18 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages": "python3"
+                "Packages": "python3,libmysqlclient-dev"
             }
         },
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "DownloadPostgreSQLPackage",
+                "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev3.zip",
-                "PackageName": "postgresql",
-                "Extract": true
+                "BlobName": "mysql.8.0.36.rev4.zip",
+                "PackageName": "mysql-server",
+                "Extract": true,
+                "Role": "Server"
             }
         },
         {
@@ -90,64 +91,72 @@
             }
         },
         {
-            "Type": "PostgreSQLServerInstallation",
+            "Type": "MySQLServerInstallation",
             "Parameters": {
-                "Scenario": "InstallPostgreSQLServer",
+                "Scenario": "InstallMySQLServer",
                 "Action": "InstallServer",
-                "PackageName": "postgresql"
+                "Benchmark": "TPCC",
+                "PackageName": "mysql-server",
+                "Role": "Server"
             }
         },
         {
-            "Type": "PostgreSQLServerConfiguration",
+            "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "ConfigurePostgreSQLServer",
+                "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
-                "PackageName": "postgresql",
-                "Role": "Server",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "Port": "$.Parameters.Port",
-                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
-            }
-        },
-        {
-            "Type": "HammerDBExecutor",
-            "Parameters": {
-                "Scenario": "CreatePostgreSQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "Workload": "tpcc",
-                "SQLServer": "postgresql",
-                "PackageName": "hammerdb",
-                "VirtualUsers": 1,
-                "WarehouseCount": 1,
-                "Port": "$.Parameters.Port",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "PostgreSQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributePostgreSQLDatabase",
-                "Action": "DistributeDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
+                "Benchmark": "TPCC",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "PackageName": "postgresql",
-                "Port": "$.Parameters.Port",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "SetMySQLGlobalVariables",
+                "Action": "SetGlobalVariables",
+                "Benchmark": "TPCC",
+                "InnodbBufferPoolSize": "$.Parameters.InnodbBufferPoolSize",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000;innodb_buffer_pool_size={InnodbBufferPoolSize};innodb_lock_wait_timeout=300;innodb_io_capacity=10000;innodb_io_capacity_max=10000;innodb_buffer_pool_dump_at_shutdown=OFF;innodb_change_buffering=0;table_open_cache=20000;",
+                "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "CreateMySQLDatabase",
+                "Action": "CreateDatabase",
+                "Benchmark": "TPCC",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
         {
             "Type": "HammerDBExecutor",
             "Parameters": {
-                "Scenario": "PopulatePostgreSQLDatabase",
+                "Scenario": "PopulateMySQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Workload": "tpcc",
-                "SQLServer": "postgresql",
+                "SQLServer": "mysql",
                 "PackageName": "hammerdb",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "DistributeMySQLDatabase",
+                "Action": "DistributeDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "mysql-server",
                 "Role": "Server"
             }
         },
