@@ -63,10 +63,10 @@ namespace VirtualClient.Core.UnitTests
                     });
 
                 this.tracker.Add(this.mockMetric1.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.FromSeconds(10), cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 
@@ -87,10 +87,10 @@ namespace VirtualClient.Core.UnitTests
 
                 this.tracker.Add(this.mockMetric1.Object);
                 this.tracker.Add(this.mockMetric2.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.FromSeconds(10), cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 
@@ -116,10 +116,10 @@ namespace VirtualClient.Core.UnitTests
 
                 this.tracker.Add(this.mockMetric1.Object);
                 this.tracker.Add(this.mockMetric2.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.FromSeconds(10), cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 
@@ -139,10 +139,10 @@ namespace VirtualClient.Core.UnitTests
                     .Throws(new Exception());
 
                 this.tracker.Add(this.mockMetric1.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.FromSeconds(10), cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 
@@ -172,10 +172,10 @@ namespace VirtualClient.Core.UnitTests
                     .Returns(new Metric("Any", 123));
 
                 this.tracker.Add(this.mockMetric1.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.FromSeconds(10), TimeSpan.Zero, cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 
@@ -196,10 +196,10 @@ namespace VirtualClient.Core.UnitTests
 
                 this.tracker.Add(this.mockMetric1.Object);
                 this.tracker.Add(this.mockMetric2.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.FromSeconds(10), TimeSpan.Zero, cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 
@@ -226,10 +226,10 @@ namespace VirtualClient.Core.UnitTests
 
                 this.tracker.Add(this.mockMetric1.Object);
                 this.tracker.Add(this.mockMetric2.Object);
-                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.FromSeconds(10), cancellationToken);
+                Task trackingTask = this.tracker.BeginTrackingAsync(TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
                 Task timeout = Task.Run(() =>
                 {
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    Task.Delay(100).GetAwaiter().GetResult();
                     tokenSource.Cancel();
                 });
 

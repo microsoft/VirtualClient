@@ -480,7 +480,7 @@ namespace VirtualClient.Contracts
             bool there = false;
             await this.mockLogger.Object.LogMessageAsync("AnyMessage", this.mockEventContext, async () =>
             {
-                await Task.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(10).ConfigureAwait(false);
                 there = true;
             });
 

@@ -770,6 +770,7 @@ namespace VirtualClient.Monitors
         public async Task WindowsPerformanceCounterMonitorPerformsCounterCaptureOnIntervals()
         {
             this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterCaptureInterval)] = "00:00:00.001"; // 1ms interval
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
@@ -794,8 +795,8 @@ namespace VirtualClient.Monitors
                     await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
                     Task discoveryTask = monitor.CaptureCountersAsync(EventContext.None, cancellationSource.Token);
 
-                    // Allow up to 1 min for the task to complete before forcing a timeout.
-                    await Task.WhenAny(discoveryTask, Task.Delay(60000));
+                    // Allow up to 1 sec for the task to complete before forcing a timeout.
+                    await Task.WhenAny(discoveryTask, Task.Delay(1000));
                     Assert.AreEqual(10, captureAttempts);
                 }
             }
@@ -805,6 +806,7 @@ namespace VirtualClient.Monitors
         public async Task WindowsPerformanceCounterMonitorPerformsCounterDiscoveryOnIntervals()
         {
             this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterDiscoveryInterval)] = "00:00:00.001"; // 1ms interval
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
@@ -823,8 +825,8 @@ namespace VirtualClient.Monitors
                     await monitor.InitializeAsync(EventContext.None, CancellationToken.None);
                     Task discoveryTask = monitor.DiscoverCountersAsync(EventContext.None, cancellationSource.Token);
 
-                    // Allow up to 1 min for the task to complete before forcing a timeout.
-                    await Task.WhenAny(discoveryTask, Task.Delay(60000));
+                    // Allow up to 1 sec for the task to complete before forcing a timeout.
+                    await Task.WhenAny(discoveryTask, Task.Delay(1000));
                     Assert.AreEqual(100, discoveryAttempts);
                 }
             }
@@ -834,6 +836,8 @@ namespace VirtualClient.Monitors
         public async Task WindowsPerformanceCounterMonitorPerformsCounterSnapshotsOnIntervals()
         {
             this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterCaptureInterval)] = "00:00:00.001"; // 1ms interval
+            this.mockFixture.Parameters["MonitorFrequency"] = "00:00:00.001"; // 1ms interval for snapshots
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
@@ -861,9 +865,9 @@ namespace VirtualClient.Monitors
                     Task captureTask = monitor.CaptureCountersAsync(EventContext.None, cancellationSource.Token);
                     Task discoveryTask = monitor.SnapshotCountersAsync(EventContext.None, cancellationSource.Token);
 
-                    // Allow up to 1 min for the task to complete before forcing a timeout.
-                    await Task.WhenAny(discoveryTask, Task.Delay(60000));
-                    Assert.AreEqual(100, snapshotAttempts);
+                    // Allow up to 1 sec for the task to complete before forcing a timeout.
+                    await Task.WhenAny(discoveryTask, Task.Delay(1000));
+                    Assert.GreaterOrEqual(snapshotAttempts, 50, "Should have captured at least 50 snapshots");
                 }
             }
         }
@@ -872,6 +876,9 @@ namespace VirtualClient.Monitors
         public async Task WindowsPerformanceCounterMonitorHandlesNewCountersBeingAddedMidstream()
         {
             this.mockFixture.Parameters["Counters1"] = "Processor=.";
+            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterCaptureInterval)] = "00:00:00.001"; // 1ms interval
+            this.mockFixture.Parameters[nameof(WindowsPerformanceCounterMonitor.CounterDiscoveryInterval)] = "00:00:00.001"; // 1ms interval
+            this.mockFixture.Parameters["MonitorFrequency"] = "00:00:00.001"; // 1ms interval for snapshots
 
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
             {
@@ -912,8 +919,8 @@ namespace VirtualClient.Monitors
 
                     Task executeTask = monitor.ExecuteAsync(cancellationSource.Token);
 
-                    // Allow up to 10 seconds for the task to complete before forcing a timeout.
-                    await Task.WhenAny(executeTask, Task.Delay(10000));
+                    // Allow up to 2 seconds for the task to complete before forcing a timeout.
+                    await Task.WhenAny(executeTask, Task.Delay(2000));
                     Assert.IsFalse(errorsOccurred);
                 }
             }

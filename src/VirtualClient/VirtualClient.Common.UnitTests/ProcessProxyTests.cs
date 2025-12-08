@@ -85,7 +85,6 @@ namespace VirtualClient.Common
             using (process = new ProcessProxy(new Process { StartInfo = startInfo }))
             {
                 await process.StartAndWaitAsync(CancellationToken.None);
-                await Task.Delay(500);
             }
 
             // This will throw if the object is disposed.
@@ -109,7 +108,6 @@ namespace VirtualClient.Common
             using (process = new ProcessProxy(new Process { StartInfo = startInfo }))
             {
                 await process.StartAndWaitAsync(CancellationToken.None);
-                await Task.Delay(500);
             }
 
             // This will throw if the object is disposed.

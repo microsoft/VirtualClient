@@ -46,15 +46,9 @@ namespace VirtualClient.Controller
                 component.OnExecute = (sshClient) =>
                 {
                     Interlocked.Increment(ref actualConcurrentExecutions);
-                    Task.Delay(10).GetAwaiter().GetResult();
                 };
 
-                await Task.WhenAny(
-                    // Execute the concurrent operations.
-                    Task.Run(async () => await component.ExecuteAsync(CancellationToken.None)),
-
-                    // Timeout at some point in the case of multi-threading implementation mistakes.
-                    Task.Run(async () => await Task.Delay(20000)));
+                await component.ExecuteAsync(CancellationToken.None);
 
                 Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
             }
@@ -82,12 +76,14 @@ namespace VirtualClient.Controller
                     throw new WorkloadException();
                 };
 
-                await Task.WhenAny(
-                    // Execute the concurrent operations.
-                    Task.Run(async () => await component.ExecuteAsync(CancellationToken.None)),
-
-                    // Timeout at some point in the case of multi-threading implementation mistakes.
-                    Task.Run(async () => await Task.Delay(20000)));
+                try
+                {
+                    await component.ExecuteAsync(CancellationToken.None);
+                }
+                catch (WorkloadException)
+                {
+                    // Expected - failures should still attempt all operations
+                }
 
                 Assert.AreEqual(concurrentExecutions, actualConcurrentExecutions);
             }

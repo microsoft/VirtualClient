@@ -247,7 +247,7 @@ namespace VirtualClient.Proxy
 
                 // Ensure we do not wait forever in the case a bug causes the message transmits to run in
                 // an endless loop.
-                Task timeoutTask = Task.Delay(20000);
+                Task timeoutTask = Task.Delay(5000);
                 Task transmitTask = this.testChannel.TransmitEventsAsync(CancellationToken.None);
                 await Task.WhenAny(transmitTask, timeoutTask).ConfigureAwait(false);
 
@@ -308,7 +308,7 @@ namespace VirtualClient.Proxy
 
                 // Ensure we do not wait forever in the case a bug causes the message transmits to run in
                 // an endless loop.
-                Task timeoutTask = Task.Delay(20000);
+                Task timeoutTask = Task.Delay(5000);
                 Task transmitTask = this.testChannel.TransmitEventsAsync(CancellationToken.None);
                 await Task.WhenAny(transmitTask, timeoutTask).ConfigureAwait(false);
 

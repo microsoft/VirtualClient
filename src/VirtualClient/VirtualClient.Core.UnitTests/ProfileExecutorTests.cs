@@ -185,7 +185,7 @@ namespace VirtualClient
                         {
                             monitor.OnExecute += (context, token) =>
                             {
-                                Task.Delay(1000).GetAwaiter().GetResult();
+                                Task.Delay(50).GetAwaiter().GetResult();
                                 monitorsRan.Add(monitor);
                             };
                         }
