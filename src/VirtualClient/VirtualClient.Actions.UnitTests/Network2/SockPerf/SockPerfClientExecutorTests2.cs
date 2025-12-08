@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
             this.Parameters["PackageName"] = "sockperf";
             this.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
             this.Parameters["TestMode"] = "mockMode";
-            this.Parameters["TestDuration"] = 300;
+            this.Parameters["TestDuration"] = "00:05:00";
             this.Parameters["MessageSize"] = 44;
             this.Parameters["MessagesPerSecond"] = "max";
             this.Parameters["ConfidenceLevel"] = "99";
@@ -87,7 +87,7 @@ namespace VirtualClient.Actions
                         Assert.AreEqual(stateItem.Definition.Properties["Type"], typeof(SockPerfServerExecutor2).Name);
                         Assert.AreEqual(stateItem.Definition.Properties["Protocol"], ProtocolType.Tcp.ToString());
                         Assert.AreEqual(stateItem.Definition.Properties["TestMode"], "mockMode");
-                        Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
+                        Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], "00:05:00");
                         Assert.AreEqual(stateItem.Definition.Properties["MessageSize"], 44);
                         sendInstructionsExecuted++;
                     }
