@@ -104,7 +104,7 @@ namespace VirtualClient.Common
             // Create a new list to avoid sharing the same collection reference
             if (this.Results?.Any() == true)
             {
-                clonedDetails.Results = new List<string>(this.Results);
+                clonedDetails.Results = new List<KeyValuePair<string, string>>(this.Results);
             }
 
             return clonedDetails;
