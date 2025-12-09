@@ -315,7 +315,7 @@ namespace VirtualClient.Actions
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "python3";
-            string arguments = $"{this.HammerDBPackagePath}/populate-database.py --createDBTCLPath {this.CreateDBTclName}";
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {this.CreateDBTclName}";
             
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
@@ -353,7 +353,7 @@ namespace VirtualClient.Actions
 
         private void GenerateCommandLineArguments()
         {
-            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
                     $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
