@@ -3,7 +3,9 @@
     "Parameters": {
         "Command": null,
         "Scenario": "ExecuteCommand",
-        "LogFolderName": null
+        "LogFileName": null,
+        "LogFolderName": null,
+        "LogTimestamped": true
     },
     "Actions": [
         {
@@ -11,7 +13,9 @@
             "Parameters": {
                 "Scenario": "$.Parameters.Scenario",
                 "Command": "$.Parameters.Command",
-                "LogFolderName": "$.Parameters.LogFolderName"
+                "LogFileName": "$.Parameters.LogFileName",
+                "LogFolderName": "$.Parameters.LogFolderName",
+                "LogTimestamped": "$.Parameters.LogTimestamped"
             }
         }
     ]

@@ -1,121 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <IsPackable>true</IsPackable>
-        <NoWarn>NU5100;NU5110;NU5111;NU5118;NU5128;NU5131</NoWarn>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<IsPackable>true</IsPackable>
+		<NoWarn>NU5100;NU5110;NU5111;NU5118;NU5128;NU5131</NoWarn>
+	</PropertyGroup>
 
-    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
-    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
+	<Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+	<Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
 
-    <!--
-    NuGet Integration: Properties that are passed into the .nuspec files in order to create NuGet packages.
-    
-    The packages that are labelled as 'Framework Package' are those that are required to build the 'VirtualClient.Framework' 
-    NuGet package.
-    
-    The packages that are labelled as 'Test Framework Package' are those that are required to build the 'VirtualClient.TestFramework' 
-    NuGet package.
-    -->
-    <PropertyGroup>
-        <!--
-        https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets 
-        -->
-        <PackageOutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</PackageOutDir>
-        <NuspecProperties>BinDir=$(PackageOutDir)\bin;BinConfigDir=$(PackageOutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(PackageOutDir)\tools;Version=$(Version)</NuspecProperties>
+	<!-- 
+	Generate the <NuspecProperties/> references to include the versions of all packages defined
+	in the Directory.Packages.props file. These versions may be then referenced in the individual
+	.nuspec files used to create the NuGet packages.
+	-->
+	<Target Name="BuildNuspecProperties" BeforeTargets="GenerateNuspec">
+		<XmlPeek XmlInputPath="$(RepoPath)\Directory.Packages.props" Query="/Project/ItemGroup/PackageVersion">
+			<Output TaskParameter="Result" ItemName="RawPackageVersions" />
+		</XmlPeek>
 
-        <!-- Framework Package = AutoFixture -->
-        <NuspecProperties>$(NuspecProperties);AutoFixture_Version=$(AutoFixture_PackageVersion)</NuspecProperties>
-        
-        <!-- Framework Package = Azure.Identity -->
-        <NuspecProperties>$(NuspecProperties);Azure_Identity_Version=$(Azure_Identity_PackageVersion)</NuspecProperties>
+		<ItemGroup>
+			<PackageInfo Include="$([System.Text.RegularExpressions.Regex]::Match(%(RawPackageVersions.Identity), 'Include=&quot;(?&lt;name&gt;.*?)&quot;').Groups[&quot;name&quot;].Value.Replace('.', '_'))">
+				<Version>$([System.Text.RegularExpressions.Regex]::Match(%(RawPackageVersions.Identity), 'Version=&quot;(?&lt;version&gt;.*?)&quot;').Groups[&quot;version&quot;].Value)</Version>
+			</PackageInfo>
+		</ItemGroup>
 
-        <!-- Framework Package = Azure.Messaging.EventHubs -->
-        <NuspecProperties>$(NuspecProperties);Azure_Messaging_EventHubs_Version=$(Azure_Messaging_EventHubs_PackageVersion)</NuspecProperties>
+		<ItemGroup>
+			<PackageVersions Include="%(PackageInfo.Identity)_Version=%(PackageInfo.Version)" />
+		</ItemGroup>
 
-		<!-- Framework Package = Azure.Security.KeyVault.Certificates -->
-		<NuspecProperties>$(NuspecProperties);Azure_Security_KeyVault_Certificates_Version=$(Azure_Security_KeyVault_Certificates_PackageVersion)</NuspecProperties>
+		<PropertyGroup>
+			<PackageOutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</PackageOutDir>
+			<NuspecProperties>BinDir=$(PackageOutDir)\bin;BinConfigDir=$(PackageOutDir)\bin\$(Configuration);Version=$(Version)</NuspecProperties>
+			<NuspecProperties>$(NuspecProperties);@(PackageVersions)</NuspecProperties>
+		</PropertyGroup>
 
-		<!-- Framework Package = Azure.Security.KeyVault.Keys -->
-		<NuspecProperties>$(NuspecProperties);Azure_Security_KeyVault_Keys_Version=$(Azure_Security_KeyVault_Keys_PackageVersion)</NuspecProperties>
-
-		<!-- Framework Package = Azure.Security.KeyVault.Secrets -->
-		<NuspecProperties>$(NuspecProperties);Azure_Security_KeyVault_Secrets_Version=$(Azure_Security_KeyVault_Secrets_PackageVersion)</NuspecProperties>
-		
-        <!-- Framework Package = Azure.Storage.Blobs -->
-        <NuspecProperties>$(NuspecProperties);Azure_Storage_Blobs_Version=$(Azure_Storage_Blobs_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = MathNet.Numerics.Signed -->
-        <NuspecProperties>$(NuspecProperties);MathNet_Numerics_Signed_Version=$(MathNet_Numerics_Signed_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Microsoft.AspNetCore.Hosting -->
-        <NuspecProperties>$(NuspecProperties);Microsoft_AspNetCore_Hosting_Version=$(Microsoft_AspNetCore_Hosting_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Microsoft.CodeAnalysis.CSharp.Scripting -->
-        <NuspecProperties>$(NuspecProperties);Microsoft_CodeAnalysis_CSharp_Scripting_Version=$(Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion)</NuspecProperties>
-        
-        <!-- Framework Package = Microsoft.Extensions.Configuration -->
-        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Configuration_Version=$(Microsoft_Extensions_Configuration_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Microsoft.Extensions.DependencyInjection -->
-        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_DependencyInjection_Version=$(Microsoft_Extensions_DependencyInjection_PackageVersion)</NuspecProperties>
-        
-        <!-- Framework Package = Microsoft.Extensions.Logging -->
-        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Logging_Version=$(Microsoft_Extensions_Logging_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Microsoft.Extensions.Http.Polly -->
-        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Http_Polly_Version=$(Microsoft_Extensions_Http_Polly_PackageVersion)</NuspecProperties>
-
-		<!-- Framework Package = MimeMapping -->
-		<NuspecProperties>$(NuspecProperties);MimeMapping=$(MimeMapping_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Newtonsoft.Json -->
-        <NuspecProperties>$(NuspecProperties);Newtonsoft_Json_Version=$(Newtonsoft_Json_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Polly -->
-        <NuspecProperties>$(NuspecProperties);Polly_Version=$(Polly_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Polly.Extensions.Http -->
-        <NuspecProperties>$(NuspecProperties);Polly_Extensions_Http_Version=$(Polly_Extensions_Http_PackageVersion)</NuspecProperties>
-
-        <!-- Test Framework Package = Moq -->
-        <NuspecProperties>$(NuspecProperties);Moq_Version=$(Moq_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Serilog.Extensions.Logging -->
-        <NuspecProperties>$(NuspecProperties);Serilog_Extensions_Logging_Version=$(Serilog_Extensions_Logging_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Serilog.Sinks.File -->
-        <NuspecProperties>$(NuspecProperties);Serilog_Sinks_File_Version=$(Serilog_Sinks_File_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = Serilog.Sinks.RollingFile -->
-        <NuspecProperties>$(NuspecProperties);Serilog_Sinks_RollingFile_Version=$(Serilog_Sinks_RollingFile_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = SSH.Net -->
-        <NuspecProperties>$(NuspecProperties);SSH_NET_Version=$(SSH_Net_PackageVersion)</NuspecProperties>
-        
-        <!-- Framework Package = System.Diagnostics.PerformanceCounter -->
-        <NuspecProperties>$(NuspecProperties);System_Diagnostics_PerformanceCounter_Version=$(System_Diagnostics_PerformanceCounter_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = System.IO.Abstractions -->
-        <NuspecProperties>$(NuspecProperties);System_IO_Abstractions_Version=$(System_IO_Abstractions_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = System.IO.FileSystem.Primitives -->
-        <NuspecProperties>$(NuspecProperties);System_IO_FileSystem_Primitives_Version=$(System_IO_FileSystem_Primitives_PackageVersion)</NuspecProperties>
-
-		<!-- Framework Package = System.Net.Http -->
-		<NuspecProperties>$(NuspecProperties);System_Net_Http_Version=$(System_Net_Http_PackageVersion)</NuspecProperties>
-		
-        <!-- Framework Package = System.Net.NameResolution -->
-        <NuspecProperties>$(NuspecProperties);System_Net_NameResolution_Version=$(System_Net_NameResolution_PackageVersion)</NuspecProperties>
-
-		<!-- Framework Package = System.Private.Uri -->
-		<NuspecProperties>$(NuspecProperties);System_Private_Uri_Version=$(System_Private_Uri_PackageVersion)</NuspecProperties>
-
-		<!-- Framework Package = System.Text.RegularExpressions -->
-		<NuspecProperties>$(NuspecProperties);System_Text_RegularExpressions_Version=$(System_Text_RegularExpressions_PackageVersion)</NuspecProperties>
-
-        <!-- Framework Package = YamlDotNet -->
-        <NuspecProperties>$(NuspecProperties);YamlDotNet_Version=$(YamlDotNet_PackageVersion)</NuspecProperties>
-    </PropertyGroup>
+		<Message Text="NuspecProperties = $(NuspecProperties)" Importance="high" />
+	</Target>
 </Project>

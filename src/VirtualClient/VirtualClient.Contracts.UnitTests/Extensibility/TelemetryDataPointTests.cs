@@ -23,7 +23,7 @@ namespace VirtualClient.Contracts.Extensibility
                 AppName = "PerfCheck",
                 AppVersion = "1.5.0",
                 ClientId = Guid.NewGuid().ToString(),
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 OperatingSystemPlatform = Environment.OSVersion.Platform.ToString(),
@@ -60,7 +60,7 @@ namespace VirtualClient.Contracts.Extensibility
                 AppName = "PerfCheck",
                 AppVersion = "1.5.0",
                 ClientId = Guid.NewGuid().ToString(),
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 OperatingSystemPlatform = Environment.OSVersion.Platform.ToString(),
@@ -128,7 +128,7 @@ namespace VirtualClient.Contracts.Extensibility
                 AppName = "PerfCheck",
                 AppVersion = "1.5.0",
                 ClientId = Guid.NewGuid().ToString(),
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 OperatingSystemPlatform = Environment.OSVersion.Platform.ToString(),
@@ -165,7 +165,7 @@ namespace VirtualClient.Contracts.Extensibility
                 AppName = "PerfCheck",
                 AppVersion = "1.5.0",
                 ClientId = Guid.NewGuid().ToString(),
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 OperatingSystemPlatform = Environment.OSVersion.Platform.ToString(),
@@ -236,6 +236,7 @@ namespace VirtualClient.Contracts.Extensibility
             Assert.IsTrue(error.Message.Contains("A client ID is required (clientId)."));
             Assert.IsTrue(error.Message.Contains("An experiment ID is required (experimentId)."));
             Assert.IsTrue(error.Message.Contains("The operating system platform is required (operatingSystemPlatform)."));
+            Assert.IsTrue(error.Message.Contains("A profile name is required (profileName)."));
 
             dataPoint.AppHost = "host01";
             dataPoint.AppName = "app01";
@@ -243,7 +244,7 @@ namespace VirtualClient.Contracts.Extensibility
             dataPoint.SeverityLevel = 1;
             dataPoint.Timestamp = DateTime.UtcNow;
             dataPoint.ClientId = "client01";
-            dataPoint.ExecutionProfile = "PRE-CHECK";
+            dataPoint.ProfileName = "PRE-CHECK";
             dataPoint.ExperimentId = Guid.NewGuid().ToString();
             dataPoint.OperatingSystemPlatform = PlatformID.Unix.ToString();
 

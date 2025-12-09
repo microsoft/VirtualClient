@@ -113,7 +113,7 @@ namespace VirtualClient.Dependencies
             // These properties MUST match with those set in the VC application startup
             // (e.g. VirtualClient.Main -> CommandBase.cs, ExecuteProfileCommand.cs -> SetGlobalTelemetryProperties).
             string platformArchitecture = dataPoint.PlatformArchitecture;
-            string profile = dataPoint.ExecutionProfile.Trim();
+            string profile = dataPoint.ProfileName.Trim();
             string profileName = null;
 
             Match profileNameMatch = Regex.Match(profile, $@"([^\(\)]+)\s*(\({platformArchitecture}\))$");
@@ -317,8 +317,8 @@ namespace VirtualClient.Dependencies
                             Enum.TryParse<LogLevel>(dataPoint.SeverityLevel.ToString(), out LogLevel metricSeverity);
 
                             this.Logger.LogMetric(
-                                dataPoint.Toolset,
-                                dataPoint.Scenario,
+                                dataPoint.ToolName,
+                                dataPoint.ScenarioName,
                                 dataPoint.ScenarioStartTime.Value,
                                 dataPoint.ScenarioEndTime.Value,
                                 dataPoint.MetricName,
@@ -331,8 +331,8 @@ namespace VirtualClient.Dependencies
                                 dataPoint.MetricRelativity.Value,
                                 dataPoint.MetricVerbosity,
                                 dataPoint.MetricDescription,
-                                dataPoint.ToolsetResults,
-                                dataPoint.ToolsetVersion,
+                                dataPoint.ToolResults,
+                                dataPoint.ToolVersion,
                                 null,
                                 metricSeverity);
                         }

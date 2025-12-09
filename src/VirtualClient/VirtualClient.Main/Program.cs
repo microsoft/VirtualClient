@@ -133,18 +133,26 @@ namespace VirtualClient
                 // Certificate-related issues.
                 exitCode = (int)ErrorReason.InvalidCertificate;
                 Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
             }
             catch (NotSupportedException exc)
             {
                 // Various usages that are not supported.
                 exitCode = (int)ErrorReason.NotSupported;
                 Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
             }
             catch (Exception exc)
             {
                 exitCode = 1;
                 Console.Error.WriteLine(exc.ToString(withCallStack: true, withErrorTypes: false));
                 Program.WriteCrashLog(exc);
+            }
+
+            if (exitCode != 0)
+            {
+                int statusCode = StatusCodeRegistry.GetStatusCode(exitCode);
+                Console.Error.WriteLine($"Status Code: Virtual Client = {statusCode}");
             }
 
             return exitCode;
@@ -223,7 +231,7 @@ namespace VirtualClient
                 // --content-store
                 OptionFactory.CreateContentStoreOption(required: false),
 
-                // --content-path-template
+                // --content-path
                 OptionFactory.CreateContentPathTemplateOption(required: false),
                 
                 // --dependencies
@@ -337,6 +345,11 @@ namespace VirtualClient
             remoteSubcommand.Handler = CommandHandler.Create<ExecuteRemoteAgentCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(remoteSubcommand);
 
+            Command uploadFilesSubcommand = Program.CreateUploadFilesSubcommand(settings);
+            uploadFilesSubcommand.TreatUnmatchedTokensAsErrors = true;
+            uploadFilesSubcommand.Handler = CommandHandler.Create<UploadFilesCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(uploadFilesSubcommand);
+
             Command uploadTelemetrySubcommand = Program.CreateUploadTelemetrySubcommand(settings);
             uploadTelemetrySubcommand.TreatUnmatchedTokensAsErrors = true;
             uploadTelemetrySubcommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
@@ -411,6 +424,12 @@ namespace VirtualClient
 
                 // --client-id
                 OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --content-store
+                OptionFactory.CreateContentStoreOption(required: false),
+
+                // --content-path
+                OptionFactory.CreateContentPathTemplateOption(required: false),
 
                 // --event-hub
                 OptionFactory.CreateEventHubStoreOption(required: false),
@@ -564,7 +583,7 @@ namespace VirtualClient
                 // --content-store
                 OptionFactory.CreateContentStoreOption(required: false),
 
-                // --content-path-template
+                // --content-path
                 OptionFactory.CreateContentPathTemplateOption(required: false),
 
                 // --dependencies
@@ -643,6 +662,62 @@ namespace VirtualClient
             return remoteExecuteCommand;
         }
 
+        private static Command CreateUploadFilesSubcommand(DefaultSettings settings)
+        {
+            Command uploadTelemetryCommand = new Command(
+               "upload-files",
+               "Uploads files from a directory on the system to a target content store.")
+            {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --content-store
+                OptionFactory.CreateContentStoreOption(required: true),
+
+                // --directory
+                OptionFactory.CreateTargetDirectoryOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --content-path
+                OptionFactory.CreateContentPathTemplateOption(required: false),
+
+                // --event-hub
+                OptionFactory.CreateEventHubStoreOption(required: false),
+
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
+
+                 // --logger
+                OptionFactory.CreateLoggerOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --system
+                OptionFactory.CreateSystemOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return uploadTelemetryCommand;
+        }
+
         private static Command CreateUploadTelemetrySubcommand(DefaultSettings settings)
         {
             Command uploadTelemetryCommand = new Command(
@@ -662,14 +737,8 @@ namespace VirtualClient
 
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
                 // --client-id
                 OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
 
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
@@ -680,23 +749,20 @@ namespace VirtualClient
                 // --intrinsic
                 OptionFactory.CreateIntrinsicFlag(required: false),
 
-                // --match
-                OptionFactory.CreateMatchExpressionOption(required: false),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
 
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
+                // --match
+                OptionFactory.CreateMatchExpressionOption(required: false),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
 
                 // --recursive
-                OptionFactory.CreateRecursiveFlag(required: false),
+                OptionFactory.CreateRecursiveFlag(required: false, false),
 
                 // --system
                 OptionFactory.CreateSystemOption(required: false),

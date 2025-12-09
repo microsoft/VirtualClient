@@ -8,17 +8,14 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Http.HttpResults;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Prime95 workload executor.
@@ -27,7 +24,6 @@ namespace VirtualClient.Actions
     public class Prime95Executor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
-        private IPackageManager packageManager;
         private ISystemManagement systemManagement;
         private List<int> successExitCodes;
 
@@ -40,7 +36,6 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
-            this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
 
             // The exit code on SafeKill is -1 which is not a part of the default success codes.
@@ -163,7 +158,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The path to the Prime95 workload package.
         /// </summary>
-        protected DependencyPath Prime95Package { get; private set; }
+        protected DependencyPath WorkloadPackage { get; private set; }
 
         /// <summary>
         /// Executes cleanup operations.
@@ -180,13 +175,19 @@ namespace VirtualClient.Actions
             {
                 foreach (IProcessProxy processProxy in runningProcesses)
                 {
-                    processProxy.SafeKill(this.Logger);
+                    try
+                    {
+                        processProxy.SafeKill();
+                    }
+                    catch (Exception exc)
+                    {
+                        // Best effort only but we want to log the issue for debugging/triage.
+                        this.Logger.LogMessage(
+                            $"{this.TypeName}.CleanupProcessError",
+                            LogLevel.Warning,
+                            telemetryContext.Clone().AddError(exc).AddContext("process", processName));
+                    }
                 }
-            }
-
-            if (this.fileSystem.File.Exists(this.ResultsFilePath))
-            {
-                await this.fileSystem.File.DeleteAsync(this.ResultsFilePath, RetryPolicies.FileDelete);
             }
         }
 
@@ -195,18 +196,16 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.EvaluateParametersAsync(cancellationToken);
-
-            this.Prime95Package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    this.ExecutablePath = this.Combine(this.Prime95Package.Path, "prime95.exe");
+                    this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, "prime95.exe");
                     break;
 
                 case PlatformID.Unix:
-                    this.ExecutablePath = this.Combine(this.Prime95Package.Path, "mprime");
+                    this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, "mprime");
                     break;
 
                 default:
@@ -227,8 +226,8 @@ namespace VirtualClient.Actions
                     ErrorReason.DependencyNotFound);
             }
 
-            this.SettingsFilePath = this.Combine(this.GetTempPath(), "prime.txt");
-            this.ResultsFilePath = this.Combine(this.GetTempPath(), FileContext.GetFileName("results.txt", DateTime.UtcNow));
+            this.SettingsFilePath = this.Combine(this.WorkloadPackage.Path, "prime.txt");
+            this.ResultsFilePath = this.Combine(this.WorkloadPackage.Path, "results.txt");
         }
 
         /// <summary>
@@ -262,6 +261,13 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
+            if (this.MaxTortureFFT <= 0)
+            {
+                throw new WorkloadException(
+                    $"Invalid '{nameof(this.MaxTortureFFT)}' parameter value. The maximum torture FFT value must be greater than zero.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
             if (this.MaxTortureFFT < this.MinTortureFFT)
             {
                 throw new WorkloadException(
@@ -285,9 +291,9 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.Prime95Package.Path))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.WorkloadPackage.Path))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
                         // Prime95 does not stop on it's own. It will run until you tell it to stop.
                         // We have to definitively stop the program.
@@ -296,36 +302,28 @@ namespace VirtualClient.Actions
                         if (process.Start())
                         {
                             await this.WaitAsync(explicitTimeout, cancellationToken);
-                            process.SafeKill(this.Logger);
+                            process.SafeKill();
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                string results = null;
+                                KeyValuePair<string, string> results = default;
 
-                                try
+                                if (this.fileSystem.File.Exists(this.ResultsFilePath))
                                 {
                                     await RetryPolicies.FileOperations.ExecuteAsync(async () =>
                                     {
-                                        if (this.fileSystem.File.Exists(this.ResultsFilePath))
-                                        {
-                                            results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
-                                        }
+                                        results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
                                     });
-                                    
-                                    if (string.IsNullOrWhiteSpace(results))
-                                    {
-                                        throw new WorkloadResultsException(
-                                            $"Prime95 results file not found at path '{this.ResultsFilePath}'.",
-                                            ErrorReason.WorkloadResultsNotFound);
-                                    }
-
-                                    // The exit code on SafeKill is -1 which is not a part of the default success codes.
-                                    process.ThrowIfWorkloadFailed(this.successExitCodes);
-                                    this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
                                 }
-                                finally
+
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results);
+
+                                // The exit code on SafeKill is -1 which is not a part of the default success codes.
+                                process.ThrowIfWorkloadFailed(this.successExitCodes);
+
+                                if (!string.IsNullOrWhiteSpace(results.Value))
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results?.AsArray());
+                                    this.CaptureMetrics(process, results.Value, telemetryContext, cancellationToken);
                                 }
                             }
                         }
@@ -362,13 +360,6 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.MetadataContract.AddForScenario(
-                    "Prime95",
-                    process.FullCommand(),
-                    toolVersion: this.Prime95Package.Version);
-
-                this.MetadataContract.Apply(telemetryContext);
-
                 Prime95MetricsParser parser = new Prime95MetricsParser(results);
                 IList<Metric> workloadMetrics = parser.Parse();
 

@@ -9,7 +9,7 @@ timestamp: 2025-07-23T20:34:48.6439102Z
 
 # Part B/C Fields (Custom Dimensions)
 clientId: linux-demo01-client-01
-executionProfile: METIS-CPU-CRYPTOGRAPHIC
+profileName: METIS-CPU-CRYPTOGRAPHIC
 executionSystem: Metis
 experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
 eventCode: 500
@@ -45,7 +45,7 @@ operationParentId: 8c3956be-54cd-456c-b784-06f41730f8fc
 severityLevel: 5
 timestamp: 2025-07-23T20:34:48.6439102Z
 clientId: linux-demo01-client-01
-executionProfile: METIS-CPU-CRYPTOGRAPHIC
+profileName: METIS-CPU-CRYPTOGRAPHIC
 executionSystem: Metis
 experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
 eventCode: 500

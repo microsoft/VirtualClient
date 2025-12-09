@@ -38,6 +38,8 @@ namespace VirtualClient.Contracts
             this.mockLogger = new Mock<ILogger>();
             this.mockEventContext = new EventContext(Guid.NewGuid());
 
+            this.mockFixture.Parameters[nameof(TestExecutor.LogToFile)] = true;
+
             // When there is a content manager, the application will also write a file
             // upload notification file (e.g. upload.json). We validate this separately.
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
@@ -268,7 +270,8 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(process.ToProcessDetails("anytoolset", expectedResults.AsArray()));
+            ProcessDetails processDetails = process.ToProcessDetails("anytoolset", new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults));
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(processDetails, processDetails.Results.ElementAt(0));
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             string expectedProcessInfo = new
@@ -277,6 +280,7 @@ namespace VirtualClient.Contracts
                 command = $"{expectedCommand} {expectedArguments}".Trim(),
                 workingDir = expectedWorkingDir ?? string.Empty,
                 exitCode = expectedExitCode,
+                filePath = $"{expectedWorkingDir}\\Results.txt",
                 results = expectedResults
             }.ToJson();
 
@@ -285,8 +289,26 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase(null, null)]
+        [TestCase("", "")]
+        [TestCase(" ", " ")]
+        [TestCase("p", "p")]
+        [TestCase("P", "p")]
+        [TestCase("MAC", "mac")]
         [TestCase("PropertyName", "propertyName")]
         [TestCase("propertyName", "propertyName")]
+        [TestCase("propertyname", "propertyname")]
+        [TestCase("IPAddress", "ipAddress")]
+        [TestCase("MACAddress", "macAddress")]
+        [TestCase("OperatingSystemPlatform", "operatingSystemPlatform")]
+        [TestCase("operatingSystemPlatform", "operatingSystemPlatform")]
+        [TestCase("Property_Name", "property_Name")]
+        [TestCase("property_Name", "property_Name")]
+        [TestCase("Operating_System_Platform", "operating_System_Platform")]
+        [TestCase("operating_System_Platform", "operating_System_Platform")]
+        [TestCase("MAC_Address", "mac_Address")]
+        [TestCase("_MAC_Address", "_mac_Address")]
+        [TestCase("__MAC__Address", "__mac__Address")]
         public void CamelCasedExtensionCreatesTheExpectedPropertyName(string propertyName, string expectedValue)
         {
             string actualValue = propertyName.CamelCased();
@@ -603,7 +625,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 19
+                It.Is<EventContext>(context => context.Properties.Count == 17
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenario")
@@ -618,9 +640,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetVersion")
-                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenario"].ToString() == expectedScenarioName
@@ -636,9 +655,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == string.Empty
-                    && context.Properties["toolset"].ToString() == expectedToolName
-                    && context.Properties["toolsetVersion"].ToString() == string.Empty
-                    && context.Properties["toolsetResults"].ToString() == string.Empty
+                    && context.Properties["toolResults"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"].ToString() == string.Empty),
                 null,
@@ -690,7 +707,7 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name.EndsWith("ScenarioResult")),
-                It.Is<EventContext>(context => context.Properties.Count == 19
+                It.Is<EventContext>(context => context.Properties.Count == 17
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
                     && context.Properties.ContainsKey("scenario")
@@ -705,9 +722,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetResults")
-                    && context.Properties.ContainsKey("toolsetVersion")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
@@ -721,12 +735,9 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
                     && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
-                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metadata_metrics"] == expectedMetadata as Object
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
-                    && context.Properties["toolsetResults"].ToString() == expectedToolResults
-                    && context.Properties["toolsetVersion"].ToString() == expectedToolVersion
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)),
                 null,
                 null));
@@ -771,9 +782,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetVersion")
-                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")),
                 null,
                 null));
@@ -818,9 +826,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("metricRelativity")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolset")
-                    && context.Properties.ContainsKey("toolsetVersion")
-                    && context.Properties.ContainsKey("toolsetResults")
                     && context.Properties.ContainsKey("tags")),
                 null,
                 null));
@@ -895,13 +900,11 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 13
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("toolset")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("toolsetVersion")
                     && context.Properties.ContainsKey("metricName")
                     && context.Properties.ContainsKey("metricValue")
                     && context.Properties.ContainsKey("metricUnit")
@@ -913,7 +916,6 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
-                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["scenario"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
@@ -959,10 +961,9 @@ namespace VirtualClient.Contracts
             this.mockLogger.Verify(logger => logger.Log(
                 LogLevel.Information,
                 It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metric && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 15
+                It.Is<EventContext>(context => context.Properties.Count == 13
                     && context.ActivityId == this.mockEventContext.ActivityId
                     && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("toolset")
                     && context.Properties.ContainsKey("toolName")
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("metricName")
@@ -974,10 +975,8 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
                     && context.Properties.ContainsKey("metadata_metrics")
-                    && context.Properties["toolset"].ToString() == expectedToolName
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
-                    && context.Properties["toolsetVersion"].ToString() == expectedToolVersion
                     && context.Properties["scenario"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
@@ -1053,6 +1052,7 @@ namespace VirtualClient.Contracts
                         command = $"{expectedCommand} {expectedArguments}".Trim(),
                         workingDir = expectedWorkingDir ?? string.Empty,
                         exitCode = expectedExitCode,
+                        filePath = $"{expectedWorkingDir}\\Results.txt",
                         results = expectedResults
                     }.ToJson();
 
@@ -1064,7 +1064,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, results: new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults))
                 .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1100,7 +1100,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
                 .ConfigureAwait(false);
         }
 
@@ -1200,6 +1200,7 @@ namespace VirtualClient.Contracts
                         command = $"{expectedCommand} {expectedArguments}".Trim(),
                         workingDir = expectedWorkingDir ?? string.Empty,
                         exitCode = expectedExitCode,
+                        filePath = $"{expectedWorkingDir}\\Results.txt",
                         results = expectedResults
                     }.ToJson();
 
@@ -1211,7 +1212,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: new List<string> { expectedResults }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, logToTelemetry: true, results: new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults))
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1248,7 +1249,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, results: new List<string> { "Any results" }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, logToTelemetry: true, results: new KeyValuePair<string, string>("Results", "Any Results"))
                .ConfigureAwait(false);
 
             Assert.IsTrue(processDetailsHandled);
@@ -1296,7 +1297,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { "Any results" }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, results: new KeyValuePair<string, string>("Results", "Any Results"))
                .ConfigureAwait(false);
 
             Assert.IsTrue(confirmed);
@@ -1578,8 +1579,8 @@ namespace VirtualClient.Contracts
 
                     expectedLogFileWritten = true;
                 });
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: false, logToFile: true)
+            
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true, results: new KeyValuePair<string, string>("Results", expectedResults))
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedLogFileWritten);

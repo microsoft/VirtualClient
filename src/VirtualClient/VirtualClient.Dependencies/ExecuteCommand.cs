@@ -22,6 +22,8 @@ namespace VirtualClient.Dependencies
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ExecuteCommand : VirtualClientComponent
     {
+        private ProcessManager processManager;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteCommand"/> class.
         /// </summary>
@@ -30,6 +32,8 @@ namespace VirtualClient.Dependencies
         public ExecuteCommand(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            this.processManager = dependencies.GetService<ProcessManager>();
+
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
                 this.MaxRetries,
                 (retries) => TimeSpan.FromSeconds(retries + 1));
@@ -140,13 +144,14 @@ namespace VirtualClient.Dependencies
                                             append: true);
                                     }
 
-                                    using (IProcessProxy process = await this.ExecuteCommandAsync(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory, telemetryContext, cancellationToken))
+                                    using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
                                     {
                                         this.AddEnvironmentVariables(process, environmentVariables);
+                                        await process.StartAndWaitAsync(cancellationToken);
 
                                         if (!cancellationToken.IsCancellationRequested)
                                         {
-                                            await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName);
+                                            await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, timestamped: this.LogTimestamped);
                                             process.ThrowIfComponentOperationFailed(this.ComponentType);
                                         }
                                     }

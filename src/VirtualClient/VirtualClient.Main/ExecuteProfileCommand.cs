@@ -164,12 +164,22 @@ namespace VirtualClient
                 Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)ErrorReason.NotSupported;
             }
-            catch (VirtualClientException exc)
+            catch (StartupException exc)
             {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)exc.Reason;
             }
-            catch
+            catch (VirtualClientException exc)
             {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                exitCode = (int)exc.Reason;
+            }
+            catch (Exception exc)
+            {
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = 1;
             }
             finally
@@ -304,7 +314,7 @@ namespace VirtualClient
                     // If the profile defined is not a full path to a profile located on the system, then we
                     // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
                     // parent directory itself or in any platform extensions locations.
-                    throw new DependencyException(
+                    throw new StartupException(
                         $"Profile not found. Profile does not exist at the path '{profileFullPath}' nor in any extensions location.",
                         ErrorReason.ProfileNotFound);
                 }
@@ -425,8 +435,9 @@ namespace VirtualClient
 
                     if (!systemManagement.FileSystem.File.Exists(layoutFullPath))
                     {
-                        throw new FileNotFoundException(
-                            $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.");
+                        throw new StartupException(
+                            $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.",
+                            ErrorReason.LayoutInvalid);
                     }
 
                     string layoutContent = await RetryPolicies.FileOperations

@@ -32,8 +32,7 @@ namespace VirtualClient
             this.systemManagement = DependencyFactory.CreateSystemManager(
                 Environment.MachineName,
                 Guid.NewGuid().ToString().ToLowerInvariant(),
-                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
-                NullLogger.Instance);
+                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture));
 
             Mock<IBlobManager> mockContentStore = new Mock<IBlobManager>();
             mockContentStore.Setup(store => store.StoreDescription).Returns(new DependencyBlobStore(DependencyStore.Content, "any_connection_string"));

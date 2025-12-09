@@ -92,9 +92,9 @@ namespace VirtualClient.Contracts.Extensibility
         /// The name of the scenario in which the metric was produced. This might be for example
         /// a specific usage of the toolset (e.g. different command line arguments).
         /// </summary>
-        [JsonProperty("scenario", Required = Required.Default)]
-        [YamlMember(Alias = "scenario", ScalarStyle = ScalarStyle.Plain)]
-        public string Scenario;
+        [JsonProperty("scenarioName", Required = Required.Default)]
+        [YamlMember(Alias = "scenarioName", ScalarStyle = ScalarStyle.Plain)]
+        public string ScenarioName;
 
         /// <summary>
         /// The time at which the scenario execution ended/completed. This date/time should
@@ -116,24 +116,24 @@ namespace VirtualClient.Contracts.Extensibility
         /// The toolset that produced the metric. Multiple toolsets can be defined separated by
         /// a semi-colon.
         /// </summary>
-        [JsonProperty("toolset", Required = Required.Default)]
-        [YamlMember(Alias = "toolset", ScalarStyle = ScalarStyle.Plain)]
-        public string Toolset;
+        [JsonProperty("toolName", Required = Required.Default)]
+        [YamlMember(Alias = "toolName", ScalarStyle = ScalarStyle.Plain)]
+        public string ToolName;
 
         /// <summary>
         /// The raw output from the toolset that produced the metric (and potentially from which
         /// the metric was parsed).
         /// </summary>
-        [JsonProperty("toolsetResults", Required = Required.Default)]
-        [YamlMember(Alias = "toolsetResults", ScalarStyle = ScalarStyle.Plain)]
-        public string ToolsetResults;
+        [JsonProperty("toolResults", Required = Required.Default)]
+        [YamlMember(Alias = "toolResults", ScalarStyle = ScalarStyle.Plain)]
+        public string ToolResults;
 
         /// <summary>
         /// The version of the toolset that produced the metric.
         /// </summary>
-        [JsonProperty("toolsetVersion", Required = Required.Default)]
-        [YamlMember(Alias = "toolsetVersion", ScalarStyle = ScalarStyle.Plain)]
-        public string ToolsetVersion;
+        [JsonProperty("toolVersion", Required = Required.Default)]
+        [YamlMember(Alias = "toolVersion", ScalarStyle = ScalarStyle.Plain)]
+        public string ToolVersion;
 
         /// <inheritdoc />
         protected override IList<string> GetValidationErrors()
@@ -156,9 +156,9 @@ namespace VirtualClient.Contracts.Extensibility
                 validationErrors.Add("The metric relativity is required (metricRelativity).");
             }
 
-            if (string.IsNullOrWhiteSpace(this.Scenario))
+            if (string.IsNullOrWhiteSpace(this.ScenarioName))
             {
-                validationErrors.Add("The scenario is required (scenario).");
+                validationErrors.Add("The scenario name is required (scenarioName).");
             }
 
             if (this.ScenarioEndTime == null)
@@ -171,9 +171,9 @@ namespace VirtualClient.Contracts.Extensibility
                 validationErrors.Add("The scenario start time/timestamp is required (scenarioStartTime).");
             }
 
-            if (string.IsNullOrWhiteSpace(this.Toolset))
+            if (string.IsNullOrWhiteSpace(this.ToolName))
             {
-                validationErrors.Add("The toolset name is required (toolset).");
+                validationErrors.Add("The tool name is required (toolName).");
             }
 
             return validationErrors;

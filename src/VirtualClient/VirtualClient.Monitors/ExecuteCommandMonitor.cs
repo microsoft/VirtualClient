@@ -24,6 +24,7 @@ namespace VirtualClient.Dependencies
     public class ExecuteCommandMonitor : VirtualClientIntervalBasedMonitor
     {
         private const int MaxOutputLength = 125000;
+        private ProcessManager processManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteCommandMonitor"/> class.
@@ -33,6 +34,8 @@ namespace VirtualClient.Dependencies
         public ExecuteCommandMonitor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            this.processManager = dependencies.GetService<ProcessManager>();
+
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
                 this.MaxRetries,
                 (retries) => TimeSpan.FromSeconds(retries + 1));
@@ -257,13 +260,14 @@ namespace VirtualClient.Dependencies
                                         append: true);
                                 }
 
-                                using (IProcessProxy process = await this.ExecuteCommandAsync(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory, telemetryContext, cancellationToken))
+                                using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
                                 {
                                     this.AddEnvironmentVariables(process, environmentVariables);
+                                    await process.StartAndWaitAsync(cancellationToken);
 
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, telemetrySplit: this.TelemetrySplit);
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, telemetrySplit: this.TelemetrySplit, timestamped: this.LogTimestamped);
                                         process.ThrowIfMonitorFailed();
                                         this.CaptureEventInformation(process, telemetryContext);
                                     }

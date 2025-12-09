@@ -9,7 +9,7 @@ timestamp: 2025-07-23T20:34:48.6439102Z
 
 # Part B/C Fields (Custom Dimensions)
 clientId: linux-demo01-client-01
-executionProfile: METIS-CPU-CRYPTOGRAPHIC
+profileName: METIS-CPU-CRYPTOGRAPHIC
 executionSystem: Metis
 experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
 metadata:
@@ -30,22 +30,22 @@ metricValue: 4530442.74
 metricVerbosity: 0
 operatingSystemPlatform: Unix
 platformArchitecture: linux-x64
-scenario: sha256
+scenarioName: sha256
 scenarioEndTime: 2025-07-23T20:34:48.6298225Z
 scenarioStartTime: 2025-07-23T20:24:48.6170306Z
 tags: CPU;OpenSSL;Cryptography
-toolset: OpenSSL
+toolName: OpenSSL
 
 # using a 'block scalar' to encapsulate a block of text that contains
 # reserved characters
-toolsetResults: |
+toolResults: |
   version: 3.0.0-beta3-dev
   built on: Fri Aug 13 03:16:55 2021 UTC
   options: bn(64,64) 
   compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
   CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
   sha256         4530442.74 15234880.42
-toolsetVersion: 3.0.0
+toolVersion: 3.0.0
 -----
 appHost: linux-demo01
 appName: PerfCheck
@@ -55,7 +55,7 @@ operationParentId: 8c3956be-54cd-456c-b784-06f41730f8fc
 severityLevel: 1
 timestamp: 2025-07-23T20:34:48.6439102Z
 clientId: linux-demo01-client-01
-executionProfile: METIS-CPU-CRYPTOGRAPHIC
+profileName: METIS-CPU-CRYPTOGRAPHIC
 executionSystem: Metis
 experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
 metadata:
@@ -76,19 +76,19 @@ metricValue: 15234880.42
 metricVerbosity: 0
 operatingSystemPlatform: Unix
 platformArchitecture: linux-x64
-scenario: sha256
+scenarioName: sha256
 scenarioEndTime: 2025-07-23T20:34:48.6298225Z
 scenarioStartTime: 2025-07-23T20:24:48.6170306Z
 tags: CPU;OpenSSL;Cryptography
-toolset: OpenSSL
-toolsetResults: |
+toolName: OpenSSL
+toolResults: |
   version: 3.0.0-beta3-dev
   built on: Fri Aug 13 03:16:55 2021 UTC
   options: bn(64,64) 
   compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
   CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
   sha256         4530442.74 15234880.42
-toolsetVersion: 3.0.0
+toolVersion: 3.0.0
 -----
 appHost: linux-demo01
 appName: PerfCheck
@@ -98,7 +98,7 @@ operationParentId: 8c3956be-54cd-456c-b784-06f41730f8fc
 severityLevel: 1
 timestamp: 2025-07-23T20:34:48.6439102Z
 clientId: linux-demo01-client-01
-executionProfile: METIS-CPU-CRYPTOGRAPHIC
+profileName: METIS-CPU-CRYPTOGRAPHIC
 executionSystem: Metis
 experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
 metadata:
@@ -119,22 +119,22 @@ metricValue: 4530442.74
 metricVerbosity: 0
 operatingSystemPlatform: Unix
 platformArchitecture: linux-x64
-scenario: sha256
+scenarioName: sha256
 scenarioEndTime: 2025-07-23T20:34:48.6298225Z
 scenarioStartTime: 2025-07-23T20:24:48.6170306Z
 tags: CPU;OpenSSL;Cryptography
-toolset: OpenSSL
+toolName: OpenSSL
 
 # using a 'block scalar' to encapsulate a block of text that contains
 # reserved characters
-toolsetResults: |
+toolResults: |
   version: 3.0.0-beta3-dev
   built on: Fri Aug 13 03:16:55 2021 UTC
   options: bn(64,64) 
   compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
   CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
   sha256         4530442.74 15234880.42
-toolsetVersion: 3.0.0
+toolVersion: 3.0.0
 -----
 appHost: linux-demo01
 appName: PerfCheck
@@ -144,7 +144,7 @@ operationParentId: 8c3956be-54cd-456c-b784-06f41730f8fc
 severityLevel: 1
 timestamp: 2025-07-23T20:34:48.6439102Z
 clientId: linux-demo01-client-01
-executionProfile: METIS-CPU-CRYPTOGRAPHIC
+profileName: METIS-CPU-CRYPTOGRAPHIC
 executionSystem: Metis
 experimentId: 6c83d269-2dff-4fb5-9924-375d84602c5b
 metadata:
@@ -165,16 +165,16 @@ metricValue: 15234880.42
 metricVerbosity: 0
 operatingSystemPlatform: Unix
 platformArchitecture: linux-x64
-scenario: sha256
+scenarioName: sha256
 scenarioEndTime: 2025-07-23T20:34:48.6298225Z
 scenarioStartTime: 2025-07-23T20:24:48.6170306Z
 tags: CPU;OpenSSL;Cryptography
-toolset: OpenSSL
-toolsetResults: |
+toolName: OpenSSL
+toolResults: |
   version: 3.0.0-beta3-dev
   built on: Fri Aug 13 03:16:55 2021 UTC
   options: bn(64,64) 
   compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
   CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
   sha256         4530442.74 15234880.42
-toolsetVersion: 3.0.0
+toolVersion: 3.0.0

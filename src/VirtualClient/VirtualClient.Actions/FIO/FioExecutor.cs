@@ -494,6 +494,11 @@ namespace VirtualClient.Actions
                 foreach (string file in testFiles)
                 {
                     string fileDirectory = Path.GetDirectoryName(file);
+                    if (string.IsNullOrEmpty(fileDirectory))
+                    {
+                        continue;
+                    }
+
                     string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(fileDirectory, "*verify.state");
                     if (verificationStateFiles?.Any() == true)
                     {

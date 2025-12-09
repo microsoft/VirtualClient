@@ -42,7 +42,7 @@ namespace VirtualClient.Common
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
             this.processDetails = new ProcessDetails();
-            this.processDetails.Results = new List<string>();
+            this.processDetails.Results = new List<KeyValuePair<string, string>>();
         }
 
         /// <inheritdoc />

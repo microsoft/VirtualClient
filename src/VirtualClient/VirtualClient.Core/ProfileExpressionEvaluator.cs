@@ -44,39 +44,51 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
-        // {PackagePath:redis}
-        private static readonly Regex PackagePathExpression = new Regex(
-            @"\{PackagePath\:([a-z0-9-_\. ]+)\}",
+        // {LogPath}, {LogDir}
+        private static readonly Regex LogPathExpression = new Regex(
+            @"\{(?:LogPath|LogDir)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
-        // {ScriptPath:redis}
-        private static readonly Regex ScriptPathExpression = new Regex(
-            @"\{ScriptPath\:([a-z0-9-_\. ]+)\}",
+        // {PackagePath:redis}, {PackageDir:redis}
+        private static readonly Regex PackagePathExpression = new Regex(
+            @"\{(?:PackagePath|PackageDir)\:([a-z0-9-_\. ]+)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {PackagePath/Platform:fio}
         private static readonly Regex PackagePathForPlatformExpression = new Regex(
-            @"\{PackagePath/Platform\:([a-z0-9-_\. ]+)\}",
+            @"\{(?:PackagePath|PackageDir)/Platform\:([a-z0-9-_\. ]+)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {TempPath}, {TempDir}
+        private static readonly Regex TempPathExpression = new Regex(
+            @"\{(?:TempPath|TempDir)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {ScriptPath:redis}, {ScriptDir:redis}
+        private static readonly Regex ScriptPathExpression = new Regex(
+            @"\{(?:ScriptPath|ScriptDir)\:([a-z0-9-_\. ]+)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {Platform}
         private static readonly Regex PlatformExpression = new Regex(
-            @"\{Platform\}",
+            @"\{(?:Platform|PlatformArchitecture)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {LogicalCoreCount}
         private static readonly Regex LogicalCoreCountExpression = new Regex(
-            @"\{LogicalCoreCount\}",
+            @"\{(?:LogicalCoreCount|LogicalProcessorCount)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {PhysicalCoreCount}
         private static readonly Regex PhysicalCoreCountExpression = new Regex(
-            @"\{PhysicalCoreCount\}",
+            @"\{(?:PhysicalCoreCount|PhysicalProcessorCount)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex ArchitectureExpression = new Regex(
@@ -118,32 +130,21 @@ namespace VirtualClient
         /// </summary>
         private static readonly IList<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>> Evaluators = new List<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>>
         {
-            // Expression: {ScriptPath:xyz}
-            // this.PlatformSpecifics.GetScriptPath("a","b");
-            // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
+            // Expression: {LogPath|LogDir}
+            // Resolves to the path to the log folder location (e.g. /home/users/virtualclient/logs).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ScriptPathExpression.Matches(expression);
+                MatchCollection matches = ProfileExpressionEvaluator.LogPathExpression.Matches(expression);
 
                 if (matches?.Any() == true)
                 {
                     isMatched = true;
-                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
                     foreach (Match match in matches)
                     {
-                        string scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value);
-
-                        if (scriptFolderPath == null)
-                        {
-                            throw new DependencyException(
-                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A scipt with the name '{match.Value}' does not " +
-                                $"exist on system or is not registered with Virtual Client.",
-                                ErrorReason.DependencyNotFound);
-                        }
-
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.LogsDirectory);
                     }
                 }
 
@@ -182,7 +183,7 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {Platform}
+            // Expression: {Platform|PlatformArchitecture}
             // Resolves to the current platform-architecture for the system (e.g. linux-arm64, linux-x64, win-arm64, win-x64).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
@@ -211,7 +212,7 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {PackagePath:xyz}
+            // Expression: {PackagePath|PackageDir:xyz}
             // Resolves to the path to the package folder location (e.g. /home/users/virtualclient/packages/redis).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
@@ -245,7 +246,7 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
-            // Expression: {PackagePath/Platform:xyz}
+            // Expression: {PackagePath|PackageDir/Platform:xyz}
             // Resolves to the path to the package platform-specific folder location (e.g. /home/users/virtualclient/packages/fio/linux-x64).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
@@ -283,6 +284,65 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
+            }),
+            // Expression: {ScriptPath|ScriptDir:xyz}
+            // this.PlatformSpecifics.GetScriptPath("a","b");
+            // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ScriptPathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    foreach (Match match in matches)
+                    {
+                        string scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value);
+
+                        if (scriptFolderPath == null)
+                        {
+                            throw new DependencyException(
+                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A scipt with the name '{match.Value}' does not " +
+                                $"exist on system or is not registered with Virtual Client.",
+                                ErrorReason.DependencyNotFound);
+                        }
+
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {TempPath|TempDir}
+            // Resolves to the path to the log folder location (e.g. /home/users/virtualclient/temp).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.TempPathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.TempDirectory);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
             }),
             // Expression: {ExperimentId}
             // Resolves to the runtime value of ExperimentId.
