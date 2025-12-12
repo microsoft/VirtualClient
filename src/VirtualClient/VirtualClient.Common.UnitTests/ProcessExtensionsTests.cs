@@ -5,6 +5,7 @@ namespace VirtualClient.Common
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
@@ -86,6 +87,8 @@ namespace VirtualClient.Common
             ProcessDetails process2 = process1.Clone();
 
             Assert.AreNotEqual(process1, process2);
+            Assert.AreNotEqual(process1.Results, process2.Results);
+
             Assert.AreEqual(process1.Id, process2.Id);
             Assert.AreEqual(process1.CommandLine, process2.CommandLine);
             Assert.AreEqual(process1.ExitTime, process2.ExitTime);
@@ -95,6 +98,7 @@ namespace VirtualClient.Common
             Assert.AreEqual(process1.StartTime, process2.StartTime);
             Assert.AreEqual(process1.ToolName, process2.ToolName);
             Assert.AreEqual(process1.WorkingDirectory, process2.WorkingDirectory);
+            Assert.AreEqual(process1.Results.Count(), process2.Results.Count());
         }
     }
 }
