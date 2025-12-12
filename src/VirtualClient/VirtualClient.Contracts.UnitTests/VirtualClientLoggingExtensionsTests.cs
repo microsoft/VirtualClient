@@ -2363,7 +2363,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsSplitTelemetryWhenCombinedOutputIsBelowMaxChars()
+        public async Task LogProcessDetailsSplitTelemetryWhenCombinedOutputIsAboveMaxChars()
         {
             // Scenario:
             // Splitting should occur ONLY when enableOutputSplit=true AND combined output > maxChars
