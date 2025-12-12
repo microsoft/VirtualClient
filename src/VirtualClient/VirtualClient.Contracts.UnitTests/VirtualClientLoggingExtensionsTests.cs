@@ -2320,51 +2320,6 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsDoesNotSplitTelemetryOutputWhenEnableOutputSplitIsFalse()
-        {
-            int maxCharlimit = 125000;
-
-            // Scenario:
-            // When enableOutputSplit is false, output should NOT be split even if it exceeds maxChars.
-            // The truncation behavior should apply instead.
-
-            string largeOutput = new string('A', maxCharlimit * 2);
-            string largeError = new string('B', maxCharlimit * 2);
-
-            InMemoryProcess process = new InMemoryProcess
-            {
-                ExitCode = 0,
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "AnyCommand.exe",
-                    Arguments = "--any=arguments"
-                },
-                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(largeOutput)),
-                StandardError = new Common.ConcurrentBuffer(new StringBuilder(largeError))
-            };
-
-            this.mockLogger
-                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
-                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
-                {
-                    if (eventId.Name.Contains("ProcessDetails"))
-                    {
-                        // Verify no chunk context is added
-                        Assert.IsFalse(state.Properties.ContainsKey("standardOutputChunkPart"));
-                        Assert.IsFalse(state.Properties.ContainsKey("standardErrorChunkPart"));
-                    }
-                });
-
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
-
-            // Should only log ONE event (no splitting)
-            this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Once);
-        }
-
-        [Test]
         public async Task LogProcessDetailsDoesNotSplitTelemetryWhenCombinedOutputIsBelowMaxChars()
         {
             // Scenario:
@@ -2394,8 +2349,8 @@ namespace VirtualClient.Contracts
                     if (eventId.Name.Contains("ProcessDetails"))
                     {
                         // Verify no chunk context is added
-                        Assert.IsFalse(state.Properties.ContainsKey("standardOutputChunkPart"));
-                        Assert.IsFalse(state.Properties.ContainsKey("standardErrorChunkPart"));
+                        Assert.IsFalse(state.Properties.ContainsKey("standardOutputPart"));
+                        Assert.IsFalse(state.Properties.ContainsKey("standardErrorPart"));
                     }
                 });
 
@@ -2408,7 +2363,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsSplitsTelemetryOutputOnlyWhenBothConditionsAreMet()
+        public async Task LogProcessDetailsSplitTelemetryWhenCombinedOutputIsBelowMaxChars()
         {
             // Scenario:
             // Splitting should occur ONLY when enableOutputSplit=true AND combined output > maxChars
@@ -2438,11 +2393,11 @@ namespace VirtualClient.Contracts
                 {
                     if (eventId.Name.Contains("ProcessDetails") && state is EventContext context)
                     {
-                        if (context.Properties.ContainsKey("standardOutputChunkPart"))
+                        if (context.Properties.ContainsKey("standardOutputPart"))
                         {
                             standardOutputEventCount++;
                         }
-                        else if (context.Properties.ContainsKey("standardErrorChunkPart"))
+                        else if (context.Properties.ContainsKey("standardErrorPart"))
                         {
                             standardErrorEventCount++;
                         }
@@ -2547,9 +2502,9 @@ namespace VirtualClient.Contracts
                 .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
                 .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
                 {
-                    if (state is EventContext context && context.Properties.ContainsKey("standardOutputChunkPart"))
+                    if (state is EventContext context && context.Properties.ContainsKey("standardOutputPart"))
                     {
-                        chunkParts.Add(Convert.ToInt32(context.Properties["standardOutputChunkPart"]));
+                        chunkParts.Add(Convert.ToInt32(context.Properties["standardOutputPart"]));
                     }
                 });
 
