@@ -1,0 +1,23 @@
+{
+  "Description": "Installs certificate from a Azure Key Vault.",
+  "Parameters": {
+    "AccessToken": "{access token}",
+    "KeyVaultUri": "https://yourkeyvault.vault.azure.net/",
+    "CertificateName": "cert-01-name",
+    "CertificatePassword": "",
+    "TenantId": ""
+  },
+  "Dependencies": [
+    {
+      "Type": "CertificateInstallation",
+      "Parameters": {
+        "Scenario": "InstallCertificate",
+        "AccessToken": "$.Parameters.AccessToken",
+        "TenantId": "$.Parameters.TenantId",
+        "KeyVaultUri": "$.Parameters.KeyVaultUri",
+        "CertificateName": "$.Parameters.CertificateName",
+        "CertificatePassword": "$.Parameters.CertificatePassword"
+      }
+    }
+  ]
+}

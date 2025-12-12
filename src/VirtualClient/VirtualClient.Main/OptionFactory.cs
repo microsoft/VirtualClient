@@ -599,6 +599,69 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines a certificate name to download from Azure keyvault.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCertNameOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--certName", "--cert-name", "--cert-Name" })
+            {
+                Name = "CertificateName",
+                Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
+                ArgumentHelpName = "CertificatesName",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an access token to authenticate with Azure key vault.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateAccessTokenOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--token", "--access-token" })
+            {
+                Name = "AccessToken",
+                Description = "An access token to authenticate with Azure key vault.",
+                ArgumentHelpName = "Access Token",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines that interactively authenticates to get token. 
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateGetAccessTokenOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--get-token" })
+            {
+                Name = "AccessToken",
+                Description = "An access token to authenticate with Azure key vault.",
+                ArgumentHelpName = "Access Token",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the path to the environment layout file.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
