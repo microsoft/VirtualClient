@@ -119,17 +119,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Parameter defines Telemetry Splitting (true/false). Default = false.
-        /// </summary>
-        public bool TelemetrySplit
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.TelemetrySplit), false);
-            }
-        }
-
-        /// <summary>
         /// A policy that defines how the component will retry when it experiences transient issues.
         /// </summary>
         public IAsyncPolicy RetryPolicy { get; set; }
@@ -267,7 +256,7 @@ namespace VirtualClient.Dependencies
 
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, telemetrySplit: this.TelemetrySplit, timestamped: this.LogTimestamped);
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, timestamped: this.LogTimestamped);
                                         process.ThrowIfMonitorFailed();
                                         this.CaptureEventInformation(process, telemetryContext);
                                     }
@@ -365,7 +354,7 @@ namespace VirtualClient.Dependencies
                 standardError = $"{standardError.Substring(0, MaxOutputLength)}...";
             }
 
-            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType) 
+            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType)
                 ? this.MonitorEventType
                 : "system.monitor";
 

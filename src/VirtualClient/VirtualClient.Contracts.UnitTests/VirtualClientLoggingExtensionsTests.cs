@@ -2358,7 +2358,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit,  telemetrySplit: false).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             // Should only log ONE event (no splitting)
             this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Once);
@@ -2401,7 +2401,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit, telemetrySplit: false).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             // Should only log ONE event (no splitting needed)
             this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Once);
@@ -2451,7 +2451,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit, telemetrySplit: true).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             // Verify splitting occurred
             Assert.AreEqual(2, standardOutputEventCount, "Should create 2 events for standard output chunks");
@@ -2512,7 +2512,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit, telemetrySplit: true).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             // Verify NO truncation occurred
             Assert.AreEqual(expectedOutput.Length, capturedStandardOutput.Length, "All standard output should be captured");
@@ -2555,7 +2555,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit, telemetrySplit: true).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             // Verify chunk parts are numbered sequentially starting from 1
             Assert.AreEqual(2, chunkParts.Count, "Should have 2 chunk parts");
@@ -2588,7 +2588,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit, telemetrySplit: true).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Exactly(2));
         }
@@ -2625,7 +2625,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Logger = this.mockLogger.Object;
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit, telemetrySplit: true).ConfigureAwait(false);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
 
             // Should split when even 1 char over the limit
             Assert.AreEqual(2, eventCount, "Should split when output exceeds maxChars by even 1 character");
