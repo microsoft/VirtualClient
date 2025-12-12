@@ -4,6 +4,7 @@
 namespace VirtualClient.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -81,7 +82,12 @@ namespace VirtualClient.Common
                 StandardError = Guid.NewGuid().ToString(),
                 StartTime = DateTime.MinValue,
                 ToolName = Guid.NewGuid().ToString(),
-                WorkingDirectory = Guid.NewGuid().ToString()
+                WorkingDirectory = Guid.NewGuid().ToString(),
+                Results = new[]
+                {
+                    new KeyValuePair<string, string>(Guid.NewGuid().ToString(), Guid.NewGuid().ToString()),
+                    new KeyValuePair<string, string>(Guid.NewGuid().ToString(), Guid.NewGuid().ToString())
+                }
             };
 
             ProcessDetails process2 = process1.Clone();
