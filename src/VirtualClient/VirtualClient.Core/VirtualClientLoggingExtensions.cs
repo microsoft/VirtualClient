@@ -154,7 +154,7 @@ namespace VirtualClient
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
-
+            
             try
             {
                 // Obscure sensitive data in the command line
@@ -172,10 +172,45 @@ namespace VirtualClient
                     !string.IsNullOrWhiteSpace(processDetails.ToolName) ? $"{componentType}.{processDetails.ToolName}" : componentType,
                     string.Empty);
 
-                logger.LogMessage(
-                    $"{eventNamePrefix}.ProcessDetails",
-                    LogLevel.Information,
-                    telemetryContext.Clone().AddProcessDetails(processDetails, maxChars: logToTelemetryMaxChars));
+                if (processDetails.StandardOutput.Length + processDetails.StandardError.Length > logToTelemetryMaxChars)
+                {                    
+                    // Handle splitting standard output and error if enabled and necessary
+                    List<string> standardOutputChunks = VirtualClientLoggingExtensions.SplitString(processDetails.StandardOutput, logToTelemetryMaxChars);
+                    List<string> standardErrorChunks = VirtualClientLoggingExtensions.SplitString(processDetails.StandardError, logToTelemetryMaxChars);
+
+                    for (int i = 0; i < standardOutputChunks.Count; i++)
+                    {
+                        ProcessDetails chunkedProcess = processDetails.Clone();
+                        chunkedProcess.StandardOutput = standardOutputChunks[i];
+                        chunkedProcess.StandardError = null; // Only include standard error in one of the events (to avoid duplication).
+                        EventContext context = telemetryContext.Clone()
+                            .AddContext("standardOutputPart", i + 1)
+                            .AddProcessDetails(chunkedProcess, maxChars: logToTelemetryMaxChars);
+
+                        logger.LogMessage($"{eventNamePrefix}.ProcessDetails", LogLevel.Information, context);
+
+                    }
+
+                    for (int j = 0; j < standardErrorChunks.Count; j++)
+                    {
+                        ProcessDetails chunkedProcess = processDetails.Clone();
+                        chunkedProcess.StandardOutput = null; // Only include standard output in one of the events (to avoid duplication).
+                        chunkedProcess.StandardError = standardErrorChunks[j];
+
+                        EventContext context = telemetryContext.Clone()
+                            .AddContext("standardErrorPart", j + 1)
+                            .AddProcessDetails(chunkedProcess, maxChars: logToTelemetryMaxChars);
+
+                        logger.LogMessage($"{eventNamePrefix}.ProcessDetails", LogLevel.Information, context);
+                    }
+                }
+                else
+                {
+                    logger.LogMessage(
+                        $"{eventNamePrefix}.ProcessDetails",
+                        LogLevel.Information,
+                        telemetryContext.Clone().AddProcessDetails(processDetails, maxChars: logToTelemetryMaxChars));
+                }
 
                 if (processDetails.Results?.Any() == true)
                 {
@@ -407,6 +442,27 @@ namespace VirtualClient
             }
 
             return effectiveLogFileName.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Splits a given string into a list of substrings, each with a maximum specified length.
+        /// Useful for processing or transmitting large strings in manageable chunks.
+        /// </summary>
+        /// <param name="inputString">The original string to be split. If null, it will be treated as an empty string.</param>
+        /// <param name="chunkSize">The maximum length of each chunk. Defaults to 125,000 characters.</param>
+        /// <returns>A list of substrings, each with a length up to the specified chunk size.</returns>
+        private static List<string> SplitString(string inputString, int chunkSize = 125000)
+        {
+            string finalString = inputString ?? string.Empty;
+
+            var result = new List<string>();
+            for (int i = 0; i < finalString.Length; i += chunkSize)
+            {
+                int length = Math.Min(chunkSize, finalString.Length - i);
+                result.Add(finalString.Substring(i, length));
+            }
+
+            return result;
         }
     }
 }
