@@ -14,6 +14,7 @@ namespace VirtualClient
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
@@ -1125,6 +1126,46 @@ namespace VirtualClient
             Option option = OptionFactory.CreateProfileOption();
             ParseResult result = option.Parse("--profile=Profile1 --profile=Profile2");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase(@"C:\Users\User\Profiles\ANY-PROFILE.json")]
+        [TestCase(@".\Profiles\ANY-PROFILE.json")]
+        [TestCase(@"..\Profiles\ANY-PROFILE.json")]
+        public void ProfileOptionSupportsLocalPathReferences_Windows_Style_Paths(string expectedReference)
+        {
+            Option option = OptionFactory.CreateProfileOption();
+            ParseResult result = option.Parse($@"--profile={expectedReference}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualReference = result.Tokens.First(t => t.Type == TokenType.Argument).Value;
+            Assert.AreEqual(expectedReference, actualReference);
+        }
+
+        [Test]
+        [TestCase(@"/home/user/profiles/ANY-PROFILE.json")]
+        [TestCase(@"./profiles/ANY-PROFILE.json")]
+        [TestCase(@"../profiles/ANY-PROFILE.json")]
+        public void ProfileOptionSupportsLocalFilePathReferences_Unix_Style_Paths(string expectedReference)
+        {
+            Option option = OptionFactory.CreateProfileOption();
+            ParseResult result = option.Parse($@"--profile={expectedReference}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualReference = result.Tokens.First(t => t.Type == TokenType.Argument).Value;
+            Assert.AreEqual(expectedReference, actualReference);
+        }
+
+        [Test]
+        [TestCase(@"https://anystorage/location/ANY-PROFILE.json")]
+        public void ProfileOptionSupportsUriReferences(string expectedReference)
+        {
+            Option option = OptionFactory.CreateProfileOption();
+            ParseResult result = option.Parse($@"--profile={expectedReference}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualReference = result.Tokens.First(t => t.Type == TokenType.Argument).Value;
+            Assert.AreEqual(expectedReference, actualReference);
         }
 
         [Test]
