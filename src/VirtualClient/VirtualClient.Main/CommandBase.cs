@@ -585,34 +585,26 @@ namespace VirtualClient
 
                 if (this.KeyVault != null)
                 {
-                    DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(DependencyStore.KeyVault, endpoint: this.KeyVault, this.CertificateManager ?? new CertificateManager());
+                    DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(
+                        DependencyStore.KeyVault, 
+                        endpoint: this.KeyVault, 
+                        this.CertificateManager ?? new CertificateManager());
+
                     keyVaultManager = DependencyFactory.CreateKeyVaultManager(keyVaultStore);
                 }
 
-                if (this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
+                if (this.PackageStore != null)
                 {
-                    DependencyBlobStore blobStore = this.PackageStore as DependencyBlobStore;
-                    IConvertible packageSource = null;
-                    this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
-
-                    ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
-                        .CreateLogger("Proxy");
-
-                    blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
-
-                    // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
-                    apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), blobStore.EndpointUri);
-                }
-                else if (this.PackageStore != null)
-                {
+                    ConsoleLogger.Default.LogMessage($"Package Store: {this.PackageStore}", LogLevel.Information, EventContext.None);
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
                 }
-
-                // Use default public package store if none is defined.
-                if (this.PackageStore == null)
+                else
                 {
-                    blobStores.Add(DependencyFactory.CreateBlobManager(
-                        EndpointUtility.CreateBlobStoreReference(DependencyStore.Packages, CommandBase.defaultPackageStoreUri, this.CertificateManager)));
+                    ConsoleLogger.Default.LogMessage($"Package Store: Default", LogLevel.Information, EventContext.None);
+                    blobStores.Add(DependencyFactory.CreateBlobManager(EndpointUtility.CreateBlobStoreReference(
+                        DependencyStore.Packages, 
+                        CommandBase.defaultPackageStoreUri, 
+                        this.CertificateManager)));
                 }
             }
 
