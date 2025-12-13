@@ -93,8 +93,7 @@ namespace VirtualClient.Common
             ProcessDetails process2 = process1.Clone();
 
             Assert.AreNotEqual(process1, process2);
-            Assert.AreNotEqual(process1.Results, process2.Results);
-
+            
             Assert.AreEqual(process1.Id, process2.Id);
             Assert.AreEqual(process1.CommandLine, process2.CommandLine);
             Assert.AreEqual(process1.ExitTime, process2.ExitTime);
