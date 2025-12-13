@@ -98,13 +98,14 @@ namespace VirtualClient.Common
                 StandardError = this.StandardError,
                 StartTime = this.StartTime,
                 ToolName = this.ToolName,
-                WorkingDirectory = this.WorkingDirectory
+                WorkingDirectory = this.WorkingDirectory,
+                Results = new List<KeyValuePair<string, string>>()
             };
 
-            // Create a new list to avoid sharing the same collection reference
-            if (this.Results?.Any() == true)
-            {
-                clonedDetails.Results = new List<KeyValuePair<string, string>>(this.Results);
+            // Always create a new collection instance when Results is non-null.
+            if (this.Results != null)
+            {                
+                clonedDetails.Results = this.Results.ToList();
             }
 
             return clonedDetails;
