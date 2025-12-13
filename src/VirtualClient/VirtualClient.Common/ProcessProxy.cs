@@ -8,8 +8,6 @@ namespace VirtualClient.Common
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common.Extensions;
@@ -338,13 +336,11 @@ namespace VirtualClient.Common
             {
                 if (timeout == null)
                 {
-                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                    this.exitTime = DateTime.UtcNow;
+                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken);
                 }
                 else
                 {
-                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value).ConfigureAwait(false);
-                    this.exitTime = DateTime.UtcNow;
+                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value);
                 }
             }
             catch (OperationCanceledException)
