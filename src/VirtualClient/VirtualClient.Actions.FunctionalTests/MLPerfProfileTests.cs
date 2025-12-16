@@ -39,7 +39,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-GPU-MLPERF.json")]
+        [TestCase("PERF-GPU-MLPERF-BERT.json", TestName = "MLPerfBertDependenciesAndReboot")]
+        [TestCase("PERF-GPU-MLPERF-3DUNET.json", TestName = "MLPerf3DUnetDependenciesAndReboot")]
         public async Task MLPerfWorkloadProfileExecutesTheExpectedDependenciesAndReboot(string profile)
         {
             List<string> expectedCommands = new List<string>
@@ -73,10 +74,11 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-GPU-MLPERF.json")]
-        public async Task MLPerfWorkloadProfileExecutesTheExpectedRemainingDependenciesAfterRebootAndExecuteWorkload(string profile)
+        [TestCase("PERF-GPU-MLPERF-BERT.json", "bert", TestName = "MLPerfBertExecutesAfterReboot")]
+        [TestCase("PERF-GPU-MLPERF-3DUNET.json", "3d-unet", TestName = "MLPerf3DUnetExecutesAfterReboot")]
+        public async Task MLPerfWorkloadProfileExecutesTheExpectedRemainingDependenciesAfterRebootAndExecuteWorkload(string profile, string models)
         {
-            IEnumerable<string> expectedCommands = this.GetExpectedCommands();
+            IEnumerable<string> expectedCommands = this.GetExpectedCommands(models);
 
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: true);
@@ -104,7 +106,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private IEnumerable<string> GetExpectedCommands()
+        private IEnumerable<string> GetExpectedCommands(string models = "bert,3d-unet")
         {
             string setupCommand = "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey "
             + "| sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \\\n  "
@@ -112,7 +114,7 @@ namespace VirtualClient.Actions
             + "   sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \\\n  "
             + "  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
             
-            return new List<string>
+            var allCommands = new List<string>
             {
                 $"sudo bash -c \"{setupCommand}\"",
                 $"sudo apt-get update",
@@ -120,19 +122,54 @@ namespace VirtualClient.Actions
                 $"sudo systemctl restart docker",
                 "sudo usermod -aG docker [a-z]+",
                 @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make clean""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make link_dirs""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_data BENCHMARKS=bert""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_model BENCHMARKS=bert""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make preprocess_data BENCHMARKS=bert""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_data BENCHMARKS=3d-unet""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_model BENCHMARKS=3d-unet""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make preprocess_data BENCHMARKS=3d-unet""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make build""",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast'",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast'",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=3d-unet --scenarios=Offline,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast'",
-                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=3d-unet --scenarios=Offline,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast'"
+                @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make link_dirs"""
             };
+
+            var modelsList = models.Split(',');
+            bool includeBert = modelsList.Contains("bert");
+            bool include3DUnet = modelsList.Contains("3d-unet");
+
+            if (includeBert)
+            {
+                allCommands.AddRange(new[]
+                {
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_data BENCHMARKS=bert""",
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_model BENCHMARKS=bert""",
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make preprocess_data BENCHMARKS=bert"""
+                });
+            }
+
+            if (include3DUnet)
+            {
+                allCommands.AddRange(new[]
+                {
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_data BENCHMARKS=3d-unet""",
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make download_model BENCHMARKS=3d-unet""",
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make preprocess_data BENCHMARKS=3d-unet"""
+                });
+            }
+
+            allCommands.Add(@"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make build""");
+
+            if (includeBert)
+            {
+                allCommands.AddRange(new[]
+                {
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast'",
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast'"
+                });
+            }
+
+            if (include3DUnet)
+            {
+                allCommands.AddRange(new[]
+                {
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=3d-unet --scenarios=Offline,SingleStream --config_ver=default --test_mode=PerformanceOnly --fast'",
+                    @"sudo docker exec -u [a-z]+ mlperf-inference-[a-z]+-x86_64 sudo bash -c ""export MLPERF_SCRATCH_PATH=(.*)/scratch && make run RUN_ARGS='--benchmarks=3d-unet --scenarios=Offline,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast'"
+                });
+            }
+
+            return allCommands;
         }
     }
 }

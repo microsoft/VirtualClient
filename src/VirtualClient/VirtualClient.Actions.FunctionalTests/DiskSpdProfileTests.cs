@@ -62,10 +62,154 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-IO-DISKSPD.json")]
+        [TestCase("PERF-IO-DISKSPD-RANDWRITE.json", TestName = "DiskSpdRandomWriteProfileExecutes")]
+        public async Task DiskSpdRandomWriteWorkloadProfileExecutes(string profile)
+        {
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                // Disk fill (2 disks)
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                // Random write tests
+                $"-c496G -b4K -r4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext",
+                $"-c496G -b1024K -r4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext"
+            };
+
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            this.mockFixture.SetupPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("diskspd", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_DiskSpd.txt"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-IO-DISKSPD-SEQWRITE.json", TestName = "DiskSpdSequentialWriteProfileExecutes")]
+        public async Task DiskSpdSequentialWriteWorkloadProfileExecutes(string profile)
+        {
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                // Disk fill (2 disks)
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                // Sequential write tests
+                $"-c496G -b4K -si4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext",
+                $"-c496G -b1024K -si4K -t[0-9]+ -o[0-9]+ -w100 -d300 -Suw -W15 -D -L -Rtext"
+            };
+
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            this.mockFixture.SetupPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("diskspd", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_DiskSpd.txt"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-IO-DISKSPD-RANDREAD.json", TestName = "DiskSpdRandomReadProfileExecutes")]
+        public async Task DiskSpdRandomReadWorkloadProfileExecutes(string profile)
+        {
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                // Disk fill (2 disks)
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                // Random read tests
+                $"-c496G -b4K -r4K -t[0-9]+ -o[0-9]+ -w0 -d300 -Suw -W15 -D -L -Rtext",
+                $"-c496G -b1024K -r4K -t[0-9]+ -o[0-9]+ -w0 -d300 -Suw -W15 -D -L -Rtext"
+            };
+
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            this.mockFixture.SetupPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("diskspd", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_DiskSpd.txt"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-IO-DISKSPD-SEQREAD.json", TestName = "DiskSpdSequentialReadProfileExecutes")]
+        public async Task DiskSpdSequentialReadWorkloadProfileExecutes(string profile)
+        {
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                // Disk fill (2 disks)
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                // Sequential read tests
+                $"-c496G -b4K -si4K -t[0-9]+ -o[0-9]+ -w0 -d300 -Suw -W15 -D -L -Rtext",
+                $"-c496G -b1024K -si4K -t[0-9]+ -o[0-9]+ -w0 -d300 -Suw -W15 -D -L -Rtext"
+            };
+
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            this.mockFixture.SetupPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("diskspd", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_DiskSpd.txt"));
+                }
+
+                return process; 
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-IO-DISKSPD-FUNCTIONAL.json", TestName = "DiskSpdFunctionalProfileExecutes")]
         public async Task DiskSpdWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile)
         {
-            IEnumerable<string> expectedCommands = DiskSpdProfileTests.GetDiskSpdStressProfileExpectedCommands();
+            IEnumerable<string> expectedCommands = DiskSpdProfileTests.GetDiskSpdStressProfileExpectedCommands(functional: true);
 
             // Setup the expectations for the workload
             // - Disks are formatted and ready
@@ -117,9 +261,9 @@ namespace VirtualClient.Actions
             }
         }
 
-        private static IEnumerable<string> GetDiskSpdStressProfileExpectedCommands()
+        private static IEnumerable<string> GetDiskSpdStressProfileExpectedCommands(bool functional = false)
         {
-            return new List<string>
+            var commands = new List<string>
             {
                 // Given the test setup created 2 remote disks, we will perform a disk fill on both individually
                 $"-c500G -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
@@ -155,6 +299,28 @@ namespace VirtualClient.Actions
                 $"-c496G -b16K -si4K -t[0-9]+ -o[0-9]+ -w0 -d300 -Suw -W15 -D -L -Rtext",
                 $"-c496G -b1024K -si4K -t[0-9]+ -o[0-9]+ -w0 -d300 -Suw -W15 -D -L -Rtext"
             };
+            
+            // For functional testing profile, return only the representative subset (6 actions total)
+            if (functional)
+            {
+                return new List<string>
+                {
+                    // Disk fill (2 disks)
+                    commands[0],
+                    commands[1],
+                    // Random write (small and large block)
+                    commands[2], // 4k
+                    commands[6], // 1024k
+                    // Sequential write (small block)
+                    commands[7], // 4k
+                    // Random read (small block)
+                    commands[12], // 4k
+                    // Sequential read (small block)
+                    commands[17] // 4k
+                };
+            }
+            
+            return commands;
         }
     }
 }

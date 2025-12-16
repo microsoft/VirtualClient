@@ -30,6 +30,7 @@
     <Target Name="CopyProfilesToOutputDirectory" AfterTargets="Build">
         <ItemGroup>
             <ProfileFiles Include="..\VirtualClient.Main\profiles\*.*" />
+            <ProfileFiles Include="profiles\**\*.*" />
         </ItemGroup>
 
         <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />

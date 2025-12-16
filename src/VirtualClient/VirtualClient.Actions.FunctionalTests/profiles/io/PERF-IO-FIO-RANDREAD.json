@@ -1,0 +1,108 @@
+{
+    "Description": "FIO Random Read I/O Test Profile",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "Purpose": "Focused test for random read operations"
+    },
+    "Parameters": {
+        "DiskFillSize": "500G",
+        "FileSize": "496G",
+        "DiskFilter": "BiggestSize",
+        "Duration": "00:05:00",
+        "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
+        "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+        "QueueDepth": "{calculate(512/{ThreadCount})}",
+        "ProcessModel": "SingleProcess"
+    },
+    "Actions": [
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "DiskFill",
+                "MetricScenario": "disk_fill",
+                "PackageName": "fio",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=disk_fill --size={DiskFillSize} --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={Engine} --direct=1 --overwrite=1 --thread",
+                "Engine": "$.Parameters.Engine",
+                "DiskFill": true,
+                "DiskFillSize": "$.Parameters.DiskFillSize",
+                "ProcessModel": "SingleProcessPerDisk",
+                "DeleteTestFilesOnFinish": false
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_4k_BlockSize",
+                "MetricScenario": "fio_randread_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "fio",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=fio_randread_{FileSize}_4k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randread --bs=4k --iodepth={QueueDepth} --ioengine={Engine} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "Engine": "$.Parameters.Engine",
+                "FileSize": "$.Parameters.FileSize",
+                "Duration": "$.Parameters.Duration",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,FIO,randread"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_1024k_BlockSize",
+                "MetricScenario": "fio_randread_{FileSize}_1024k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "fio",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=fio_randread_{FileSize}_1024k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randread --bs=1024k --iodepth={QueueDepth} --ioengine={Engine} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "Engine": "$.Parameters.Engine",
+                "FileSize": "$.Parameters.FileSize",
+                "Duration": "$.Parameters.Duration",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,FIO,randread"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "fio",
+                "Packages-Dnf": "fio,lshw,parted",
+                "Packages-Yum": "fio",
+                "Packages-Zypper": "fio"
+            }
+        },
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFIOPackage",
+                "SupportedPlatforms": "win-x64",
+                "BlobContainer": "packages",
+                "BlobName": "fio.3.30.0.zip",
+                "PackageName": "fio",
+                "Extract": true
+            }
+        }
+    ]
+}

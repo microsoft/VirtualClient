@@ -1,0 +1,86 @@
+{
+    "Description": "DiskSpd Random Write I/O Test Profile",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "win-x64,win-arm64",
+        "SupportedOperatingSystems": "Windows",
+        "Purpose": "Focused test for random write operations"
+    },
+    "Parameters": {
+        "DiskFillSize": "500G",
+        "FileSize": "496G",
+        "DiskFilter": "BiggestSize",
+        "Duration": "00:05:00",
+        "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+        "QueueDepth": "{calculate(512/{ThreadCount})}",
+        "ProcessModel": "SingleProcess"
+    },
+    "Actions": [
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "DiskFill",
+                "MetricScenario": "disk_fill",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-c{DiskFillSize} -b256K -si4K -t1 -o64 -w100 -Suw -W15 -D -L",
+                "DiskFill": true,
+                "DiskFillSize": "$.Parameters.DiskFillSize",
+                "ProcessModel": "SingleProcessPerDisk",
+                "DeleteTestFilesOnFinish": false
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_4k_BlockSize",
+                "MetricScenario": "diskspd_randwrite_{FileSize}_4k_d{ThreadCount}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "FileSize": "$.Parameters.FileSize",
+                "ProcessModel": "SingleProcess",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,DiskSpd,randwrite"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_1024k_BlockSize",
+                "MetricScenario": "diskspd_randwrite_{FileSize}_1024k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-c{FileSize} -b1024k -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "FileSize": "$.Parameters.FileSize",
+                "ProcessModel": "SingleProcess",
+                "DeleteTestFilesOnFinish": false,
+                "Tags": "IO,DiskSpd,randwrite"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallDiskSpdPackage",
+                "BlobContainer": "packages",
+                "BlobName": "diskspd.2.0.21.zip",
+                "PackageName": "diskspd",
+                "Extract": true
+            }
+        }
+    ]
+}
