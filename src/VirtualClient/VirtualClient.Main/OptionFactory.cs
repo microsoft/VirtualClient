@@ -641,27 +641,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines that interactively authenticates to get token. 
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateGetAccessTokenOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(
-                new string[] { "--get-token" })
-            {
-                Name = "AccessToken",
-                Description = "An access token to authenticate with Azure key vault.",
-                ArgumentHelpName = "Access Token",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
         /// Command line option defines the path to the environment layout file.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>

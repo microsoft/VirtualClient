@@ -330,6 +330,11 @@ namespace VirtualClient
             bootstrapSubcommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(bootstrapSubcommand);
 
+            Command getAccessTokenSubcommand = Program.CreateGetTokenSubCommand(settings);
+            getAccessTokenSubcommand.TreatUnmatchedTokensAsErrors = true;
+            getAccessTokenSubcommand.Handler = CommandHandler.Create<GetAccessTokenCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(getAccessTokenSubcommand);
+
             Command cleanSubcommand = Program.CreateCleanSubcommand(settings);
             cleanSubcommand.TreatUnmatchedTokensAsErrors = true;
             cleanSubcommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
@@ -404,6 +409,23 @@ namespace VirtualClient
             };
 
             return apiCommand;
+        }
+
+        private static Command CreateGetTokenSubCommand(DefaultSettings settings)
+        {
+            Command getAccessTokenCommand = new Command(
+                "get-token",
+                "Get access token for current user to authenticate with Azure Key Vault.")
+            {
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: false)
+            };
+
+            return getAccessTokenCommand;
         }
 
         private static Command CreateBootstrapSubcommand(DefaultSettings settings)

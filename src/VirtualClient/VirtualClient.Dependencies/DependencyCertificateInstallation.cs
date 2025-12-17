@@ -3,23 +3,22 @@
 
 namespace VirtualClient.Dependencies
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Polly;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Configuration;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// Provides functionality for downloading and installing dependency certificates from
@@ -139,12 +138,19 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
+            IFileSystem fileSystem = this.Dependencies.GetService<IFileSystem>();
+
+            DependencyPath existingPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
+                .ConfigureAwait(false);
+
+            /*
             MetadataContract.Persist(
                 $"package_{this.PackageName}",
                 this.BlobName,
                 MetadataContract.DependenciesCategory,
                 true);
-
+            
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             IFileSystem fileSystem = this.Dependencies.GetService<IFileSystem>();
 
@@ -203,6 +209,8 @@ namespace VirtualClient.Dependencies
 
                 telemetryContext.AddContext("packageLocation", packageLocation);
             }
+
+            */
         }
 
         /// <summary>
@@ -225,24 +233,23 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// Installs certificates required by the CRC SDK on the local system.
         /// </summary>
-        /// <param name="settings">Provides configuration settings to the installer operations.</param>
         /// <param name="dependencies">Provides dependencies required to download and install certificates.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async Task InstallCertificatesAsync(InstallerSettings settings, IServiceCollection dependencies, CancellationToken cancellationToken)
+        protected async Task InstallCertificatesAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
         {
-            this.WriteStandardOutput();
-            this.WriteStandardOutput($"[Downloading Certificates]");
-            this.WriteStandardOutput($"Certificate = {settings.InstallerCertificateName}");
+            Console.WriteLine();
+            Console.WriteLine($"[Downloading Certificates]");
+            // Console.WriteLine($"Certificate = {settings.InstallerCertificateName}");
 
             PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
             PlatformID platform = platformSpecifics.Platform;
 
-            X509Certificate2 certificate = await this.DownloadCertificateAsync(settings, platform, cancellationToken);
+            X509Certificate2 certificate = null; // await this.DownloadCertificateAsync(settings, platform, cancellationToken);
 
             try
             {
-                this.WriteStandardOutput();
-                this.WriteStandardOutput($"[Installing Certificates]");
+                Console.WriteLine();
+                Console.WriteLine($"[Installing Certificates]");
 
                 if (platform == PlatformID.Unix)
                 {
@@ -275,7 +282,7 @@ namespace VirtualClient.Dependencies
         {
             return Task.Run(() =>
             {
-                this.WriteStandardOutput($"Certificate Store = CurrentUser/Personal");
+                Console.WriteLine($"Certificate Store = CurrentUser/Personal");
                 using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadWrite))
                 {
                     store.Open(OpenFlags.ReadWrite);
@@ -320,7 +327,7 @@ namespace VirtualClient.Dependencies
                     certificateDirectory = $"/root/.dotnet/corefx/cryptography/x509stores/my";
                 }
 
-                this.WriteStandardOutput($"Certificate Store = {certificateDirectory}");
+                Console.WriteLine($"Certificate Store = {certificateDirectory}");
 
                 if (!fileSystem.Directory.Exists(certificateDirectory))
                 {
