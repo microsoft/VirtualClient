@@ -84,19 +84,23 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-IO-FIO.json")]
-        public async Task FioWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile)
+        [TestCase("PERF-IO-FIO-RANDWRITE.json", PlatformID.Win32NT, TestName = "FioRandomWriteProfileExecutesOnWindows")]
+        [TestCase("PERF-IO-FIO-RANDWRITE.json", PlatformID.Unix, TestName = "FioRandomWriteProfileExecutesOnUnix")]
+        public async Task FioRandomWriteWorkloadProfileExecutes(string profile, PlatformID platform)
         {
-            IEnumerable<string> expectedCommands = FioProfileTests.GetFioProfileExpectedCommands(PlatformID.Win32NT);
+            string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread ",
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread",
+                $"--name=fio_randwrite_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_randwrite_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based"
+            };
 
-            // Setup the expectations for the workload
-            // - Disks are formatted and ready
-            // - Workload package is installed and exists.
-            // - Workload binaries/executables exist on the file system.
-            // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.Setup(platform);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupPackage("fio", expectedFiles: $@"win-x64\fio.exe");
+            string expectedFiles = platform == PlatformID.Win32NT ? $@"win-x64\fio.exe" : $@"linux-x64/fio";
+            this.mockFixture.SetupPackage("fio", expectedFiles: expectedFiles);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -112,25 +116,28 @@ namespace VirtualClient.Actions
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }
 
         [Test]
-        [TestCase("PERF-IO-FIO.json")]
-        public async Task FioWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile)
+        [TestCase("PERF-IO-FIO-SEQWRITE.json", PlatformID.Win32NT, TestName = "FioSequentialWriteProfileExecutesOnWindows")]
+        [TestCase("PERF-IO-FIO-SEQWRITE.json", PlatformID.Unix, TestName = "FioSequentialWriteProfileExecutesOnUnix")]
+        public async Task FioSequentialWriteWorkloadProfileExecutes(string profile, PlatformID platform)
         {
-            IEnumerable<string> expectedCommands = FioProfileTests.GetFioProfileExpectedCommands(PlatformID.Unix);
+            string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread ",
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread",
+                $"--name=fio_write_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_write_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based"
+            };
 
-            // Setup the expectations for the workload
-            // - Disks are formatted and ready
-            // - Workload package is installed and exists.
-            // - Workload binaries/executables exist on the file system.
-            // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.mockFixture.Setup(platform);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupPackage("fio", expectedFiles: $@"linux-x64/fio");
+            string expectedFiles = platform == PlatformID.Win32NT ? $@"win-x64\fio.exe" : $@"linux-x64/fio";
+            this.mockFixture.SetupPackage("fio", expectedFiles: expectedFiles);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -146,57 +153,119 @@ namespace VirtualClient.Actions
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }
 
-        private static IEnumerable<string> GetFioProfileExpectedCommands(PlatformID platform)
+        [Test]
+        [TestCase("PERF-IO-FIO-RANDREAD.json", PlatformID.Win32NT, TestName = "FioRandomReadProfileExecutesOnWindows")]
+        [TestCase("PERF-IO-FIO-RANDREAD.json", PlatformID.Unix, TestName = "FioRandomReadProfileExecutesOnUnix")]
+        public async Task FioRandomReadWorkloadProfileExecutes(string profile, PlatformID platform)
         {
             string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";
-            return new List<string>
+            IEnumerable<string> expectedCommands = new List<string>
             {
-                // Given the test setup created 2 remote disks, we will perform a disk fill on both individually
                 $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread ",
                 $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread",
-
-                // After the disk fill, we execute the FIO commands.
-                // Random Write tests
-                $"--name=fio_randwrite_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randwrite_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randwrite_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randwrite_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randwrite_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randwrite --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-
-                // Sequential Write tests
-                $"--name=fio_write_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_write_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_write_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_write_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_write_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=write --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-
-                // Random Read tests
                 $"--name=fio_randread_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randread_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randread_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randread_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_randread_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-
-                // Sequential Read tests
-                $"--name=fio_read_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_read_496G_8k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=8k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_read_496G_12k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=12k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_read_496G_16k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=16k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-                $"--name=fio_read_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
-
-                // Disk Integrity Verification tests (random writes + sequential writes)
-                $"--name=fio_randwrite_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=4k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
-                $"--name=fio_randwrite_4G_16k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=16k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
-                $"--name=fio_randwrite_4G_1024k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=1024k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
-                $"--name=fio_write_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=4k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
-                $"--name=fio_write_4G_16k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=16k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
-                $"--name=fio_write_4G_1024k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=1024k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1"
+                $"--name=fio_randread_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=randread --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based"
             };
+
+            this.mockFixture.Setup(platform);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            string expectedFiles = platform == PlatformID.Win32NT ? $@"win-x64\fio.exe" : $@"linux-x64/fio";
+            this.mockFixture.SetupPackage("fio", expectedFiles: expectedFiles);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("--name=fio", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_FIO.json"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-IO-FIO-SEQREAD.json", PlatformID.Win32NT, TestName = "FioSequentialReadProfileExecutesOnWindows")]
+        [TestCase("PERF-IO-FIO-SEQREAD.json", PlatformID.Unix, TestName = "FioSequentialReadProfileExecutesOnUnix")]
+        public async Task FioSequentialReadWorkloadProfileExecutes(string profile, PlatformID platform)
+        {
+            string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread ",
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread",
+                $"--name=fio_read_496G_4k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=4k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based",
+                $"--name=fio_read_496G_1024k_d[0-9]+_th[0-9]+ --size=496G --numjobs=[0-9]+ --rw=read --bs=1024k --iodepth=[0-9]+ --ioengine={expectedIoEngine} --direct=1 --ramp_time=30 --runtime=300 --time_based"
+            };
+
+            this.mockFixture.Setup(platform);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            string expectedFiles = platform == PlatformID.Win32NT ? $@"win-x64\fio.exe" : $@"linux-x64/fio";
+            this.mockFixture.SetupPackage("fio", expectedFiles: expectedFiles);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("--name=fio", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_FIO.json"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-IO-FIO-INTEGRITY.json", PlatformID.Win32NT, TestName = "FioDataIntegrityProfileExecutesOnWindows")]
+        [TestCase("PERF-IO-FIO-INTEGRITY.json", PlatformID.Unix, TestName = "FioDataIntegrityProfileExecutesOnUnix")]
+        public async Task FioDataIntegrityWorkloadProfileExecutes(string profile, PlatformID platform)
+        {
+            string expectedIoEngine = platform == PlatformID.Win32NT ? "windowsaio" : "libaio";
+            IEnumerable<string> expectedCommands = new List<string>
+            {
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread ",
+                $"--name=disk_fill --size=500G --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --thread",
+                $"--name=fio_randwrite_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=randwrite --bs=4k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1",
+                $"--name=fio_write_4G_4k_d1_th1_verify --size=4G --numjobs=1 --rw=write --bs=4k --iodepth=1 --ioengine={expectedIoEngine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1"
+            };
+
+            this.mockFixture.Setup(platform);
+            this.mockFixture.SetupDisks(withUnformatted: false);
+            string expectedFiles = platform == PlatformID.Win32NT ? $@"win-x64\fio.exe" : $@"linux-x64/fio";
+            this.mockFixture.SetupPackage("fio", expectedFiles: expectedFiles);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("--name=fio", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_FIO.json"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
         }
     }
 }

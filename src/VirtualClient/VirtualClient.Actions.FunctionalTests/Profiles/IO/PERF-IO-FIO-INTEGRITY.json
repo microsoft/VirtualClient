@@ -1,0 +1,101 @@
+{
+    "Description": "FIO Data Integrity Test Profile",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "Purpose": "Focused test for data integrity verification"
+    },
+    "Parameters": {
+        "DiskFillSize": "500G",
+        "DataIntegrityFileSize": "4G",
+        "DiskFilter": "BiggestSize",
+        "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
+        "ProcessModel": "SingleProcess"
+    },
+    "Actions": [
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "DiskFill",
+                "MetricScenario": "disk_fill",
+                "PackageName": "fio",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=disk_fill --size={DiskFillSize} --numjobs=1 --rw=write --bs=256k --iodepth=64 --ioengine={Engine} --direct=1 --overwrite=1 --thread",
+                "Engine": "$.Parameters.Engine",
+                "DiskFill": true,
+                "DiskFillSize": "$.Parameters.DiskFillSize",
+                "ProcessModel": "SingleProcessPerDisk",
+                "DeleteTestFilesOnFinish": false
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "DataIntegrity_RandomWrite_4k_BlockSize",
+                "MetricScenario": "fio_randwrite_{FileSize}_4k_d1_th1_verify",
+                "PackageName": "fio",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=fio_randwrite_{FileSize}_4k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=randwrite --bs=4k --iodepth=1 --ioengine={Engine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
+                "TestFocus": "DataIntegrity",
+                "FileSize": "$.Parameters.DataIntegrityFileSize",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "DeleteTestFilesOnFinish": true,
+                "Tags": "IO,FIO,randwrite,data integrity"
+            }
+        },
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "DataIntegrity_SequentialWrite_4k_BlockSize",
+                "MetricScenario": "fio_write_{FileSize}_4k_d1_th1_verify",
+                "PackageName": "fio",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "--name=fio_write_{FileSize}_4k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=write --bs=4k --iodepth=1 --ioengine={Engine} --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
+                "Engine": "$.Parameters.Engine",
+                "TestFocus": "DataIntegrity",
+                "FileSize": "$.Parameters.DataIntegrityFileSize",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "DeleteTestFilesOnFinish": true,
+                "Tags": "IO,FIO,write,data integrity"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "fio",
+                "Packages-Dnf": "fio,lshw,parted",
+                "Packages-Yum": "fio",
+                "Packages-Zypper": "fio"
+            }
+        },
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFIOPackage",
+                "SupportedPlatforms": "win-x64",
+                "BlobContainer": "packages",
+                "BlobName": "fio.3.30.0.zip",
+                "PackageName": "fio",
+                "Extract": true
+            }
+        }
+    ]
+}
