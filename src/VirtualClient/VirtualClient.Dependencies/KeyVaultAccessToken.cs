@@ -10,6 +10,7 @@ namespace VirtualClient.Dependencies
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
     using Azure.Core;
     using Azure.Identity;
     using Microsoft.Extensions.DependencyInjection;
@@ -78,8 +79,7 @@ namespace VirtualClient.Dependencies
                     ? this.LogFolderName
                     : this.fileSystem.Directory.GetCurrentDirectory();
 
-                this.AccessTokenPath = this.fileSystem.Path.GetFullPath(
-                    this.fileSystem.Path.Combine(directory, this.LogFileName));
+                this.AccessTokenPath = this.Combine(directory, this.LogFileName);
 
                 if (this.fileSystem.File.Exists(this.AccessTokenPath))
                 {
@@ -103,15 +103,7 @@ namespace VirtualClient.Dependencies
             string accessToken = null;
             if (!cancellationToken.IsCancellationRequested)
             {
-                string[] installerTenantResourceScopes = new string[]
-                {
-                    new Uri(baseUri: new Uri(this.KeyVaultUri), relativeUri: ".default").ToString(),
-                    // Example of a specific scope:
-                    // "api://56e7ee83-1cf6-4048-a664-c2a08955f825/user_impersonation"
-                };
-
-                TokenRequestContext requestContext = new TokenRequestContext(scopes: installerTenantResourceScopes);
-
+                TokenRequestContext requestContext = this.GetTokenRequestContext();
                 try
                 {
                     // Attempt an interactive (browser-based) authentication first. On most Windows environments
@@ -124,8 +116,8 @@ namespace VirtualClient.Dependencies
                             TenantId = this.TenantId
                         });
 
-                    AccessToken response = await credential.GetTokenAsync(requestContext, cancellationToken);
-                    accessToken = response.Token;
+                    accessToken = await this.AcquireInteractiveTokenAsync(credential, requestContext, cancellationToken);
+
                 }
                 catch (AuthenticationFailedException exc) when (exc.Message.Contains("Unable to open a web page"))
                 {
@@ -150,8 +142,7 @@ namespace VirtualClient.Dependencies
                         }
                     });
 
-                    AccessToken token = await credential.GetTokenAsync(requestContext, cancellationToken);
-                    accessToken = token.Token;
+                    accessToken = await this.AcquireDeviceCodeTokenAsync(credential, requestContext, cancellationToken);
                 }
 
                 if (string.IsNullOrWhiteSpace(accessToken))
@@ -170,6 +161,8 @@ namespace VirtualClient.Dependencies
                         byte[] bytedata = Encoding.Default.GetBytes(accessToken);
                         fileStream.Write(bytedata, 0, bytedata.Length);
                         await fileStream.FlushAsync().ConfigureAwait(false);
+                        fileStream.Close();
+                        fileStream.Dispose();
                         this.Logger.LogTraceMessage($"Access token saved to file: {this.AccessTokenPath}");
                     }
                 }
@@ -177,6 +170,54 @@ namespace VirtualClient.Dependencies
                 Console.WriteLine("[Access Token]:");
                 Console.WriteLine(accessToken);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="credential"></param>
+        /// <param name="requestContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected virtual async Task<string> AcquireInteractiveTokenAsync(
+            TokenCredential credential, 
+            TokenRequestContext requestContext, 
+            CancellationToken cancellationToken)
+        {
+            AccessToken response = await credential.GetTokenAsync(requestContext, cancellationToken);
+            return response.Token;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="credential"></param>
+        /// <param name="requestContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected virtual async Task<string> AcquireDeviceCodeTokenAsync(
+            TokenCredential credential,
+            TokenRequestContext requestContext,
+            CancellationToken cancellationToken)
+        {
+            AccessToken response = await credential.GetTokenAsync(requestContext, cancellationToken);
+            return response.Token;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected virtual TokenRequestContext GetTokenRequestContext()
+        {
+            string[] installerTenantResourceScopes = new string[]
+            {
+                new Uri(baseUri: new Uri(this.KeyVaultUri), relativeUri: ".default").ToString(),
+                // Example of a specific scope:
+                // "api://56e7ee83-1cf6-4048-a664-c2a08955f825/user_impersonation"
+            };
+
+            return new TokenRequestContext(scopes: installerTenantResourceScopes);
         }
     }
 }
