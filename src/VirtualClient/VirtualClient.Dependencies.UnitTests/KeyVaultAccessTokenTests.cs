@@ -13,7 +13,6 @@ namespace VirtualClient.Dependencies
     using Azure.Identity;
     using Moq;
     using NUnit.Framework;
-    using Polly;
     using VirtualClient.Common.Telemetry;
 
     [TestFixture]
@@ -132,9 +131,9 @@ namespace VirtualClient.Dependencies
                 .Callback((string path, FileMode mode, FileAccess access, FileShare share) =>
                 {
                     Assert.AreEqual(expectedPath, path);
-                    Assert.IsTrue(mode == FileMode.Create);
-                    Assert.IsTrue(access == FileAccess.ReadWrite);
-                    Assert.IsTrue(share == FileShare.ReadWrite);
+                    Assert.AreEqual(FileMode.Create, mode);
+                    Assert.AreEqual(FileAccess.ReadWrite, access);
+                    Assert.AreEqual(FileShare.ReadWrite, share);
                 });
 
             mockFileStream
@@ -142,9 +141,9 @@ namespace VirtualClient.Dependencies
                 .Callback((byte[] data, int offset, int count) =>
                 {
                     byte[] byteData = Encoding.Default.GetBytes(tokenContent);
-                    Assert.AreEqual(offset, 0);
-                    Assert.AreEqual(count, byteData.Length);
-                    Assert.AreEqual(data, byteData);
+                    Assert.AreEqual(0, offset);
+                    Assert.AreEqual(byteData.Length, count);
+                    CollectionAssert.AreEqual(byteData, data);
                 });
 
             using (TestKeyVaultAccessToken component = new TestKeyVaultAccessToken(this.mockFixture.Dependencies, this.CreateDefaultParameters()))
@@ -220,7 +219,7 @@ namespace VirtualClient.Dependencies
         [TestCase(PlatformID.Win32NT, "     ")]
         [TestCase(PlatformID.Unix, "validToken")]
         [TestCase(PlatformID.Win32NT, "validToken")]
-        public void ExecuteAsyncWillCheckIfValidTokenIsGenerated(PlatformID platform, string token)
+        public void ExecuteAsyncThrowsErrorIfTokenIsNullOrWhitespace(PlatformID platform, string token)
         {
             this.mockFixture.Setup(platform);
 
@@ -234,7 +233,7 @@ namespace VirtualClient.Dependencies
                 }
                 else
                 {
-                    Assert.DoesNotThrowAsync(() => component.ExecuteAsync(CancellationToken.None), string.Empty);
+                    Assert.DoesNotThrowAsync(() => component.ExecuteAsync(CancellationToken.None));
                 }
             }
         }

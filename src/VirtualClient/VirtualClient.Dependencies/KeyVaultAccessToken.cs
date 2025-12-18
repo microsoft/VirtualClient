@@ -10,7 +10,6 @@ namespace VirtualClient.Dependencies
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
     using Azure.Core;
     using Azure.Identity;
     using Microsoft.Extensions.DependencyInjection;
@@ -19,8 +18,8 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Virtual Client component that acquires an access token for an Azure Key Vault
-    /// using interactive browser or device-code authentication.
+    /// Virtual Client component that acquires an Azure access token for the specified Key Vault
+    /// using interactive browser authentication with a device-code fallback.
     /// </summary>
     public class KeyVaultAccessToken : VirtualClientComponent
     {
@@ -39,7 +38,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The Azure tenant ID used when requesting an access token for the Key Vault.
+        /// Gets the Azure tenant ID used to acquire an access token.
         /// </summary>
         protected string TenantId
         {
@@ -50,7 +49,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The Azure Key Vault URI for which an access token will be requested.
+        /// Gets the Azure Key Vault URI for which the access token will be requested.
         /// Example: https://anyvault.vault.azure.net/
         /// </summary>
         protected string KeyVaultUri
@@ -62,14 +61,15 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The full file path where the acquired access token will be written,
-        /// when configured via <see cref="VirtualClientComponent.LogFileName"/> / <see cref="VirtualClientComponent.LogFolderName"/>.
+        /// Gets or sets the full file path where the acquired access token will be written when file logging is enabled.
+        /// This is resolved during <see cref="InitializeAsync(EventContext, CancellationToken)"/> when
+        /// <see cref="VirtualClientComponent.LogFileName"/> is provided.
         /// </summary>
         protected string AccessTokenPath { get; set; }
 
         /// <summary>
-        /// Initializes the component for execution, including resolving the access token
-        /// output path and removing any existing token file if configured.
+        /// Resolves the access token output file path
+        /// and removes any existing token file so the current run produces a fresh token output.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -90,10 +90,9 @@ namespace VirtualClient.Dependencies
 
         /// <summary>
         /// Acquires an access token for the configured Key Vault URI using Azure Identity.
-        /// Attempts interactive browser authentication first and falls back to
-        /// device-code authentication when a browser is not available.
-        /// The access token can optionally be written to a file and is always
-        /// written to the console output.
+        /// The component attempts interactive browser authentication first and falls back to
+        /// device-code authentication when a browser is not available (e.g. headless Linux).
+        /// The token is always written to standard output. Token is also written to a file if AccessTokenPath is resolved.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -117,7 +116,6 @@ namespace VirtualClient.Dependencies
                         });
 
                     accessToken = await this.AcquireInteractiveTokenAsync(credential, requestContext, cancellationToken);
-
                 }
                 catch (AuthenticationFailedException exc) when (exc.Message.Contains("Unable to open a web page"))
                 {
@@ -161,8 +159,6 @@ namespace VirtualClient.Dependencies
                         byte[] bytedata = Encoding.Default.GetBytes(accessToken);
                         fileStream.Write(bytedata, 0, bytedata.Length);
                         await fileStream.FlushAsync().ConfigureAwait(false);
-                        fileStream.Close();
-                        fileStream.Dispose();
                         this.Logger.LogTraceMessage($"Access token saved to file: {this.AccessTokenPath}");
                     }
                 }
@@ -173,15 +169,15 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// 
+        /// Acquires an access token using interactive browser authentication.
         /// </summary>
-        /// <param name="credential"></param>
-        /// <param name="requestContext"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="credential">The interactive browser credential to use.</param>
+        /// <param name="requestContext">The request context containing the required scopes.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>The access token string.</returns>
         protected virtual async Task<string> AcquireInteractiveTokenAsync(
-            TokenCredential credential, 
-            TokenRequestContext requestContext, 
+            TokenCredential credential,
+            TokenRequestContext requestContext,
             CancellationToken cancellationToken)
         {
             AccessToken response = await credential.GetTokenAsync(requestContext, cancellationToken);
@@ -189,12 +185,13 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// 
+        /// Acquires an access token using device-code authentication.
+        /// This is used as a fallback when interactive browser authentication is unavailable.
         /// </summary>
-        /// <param name="credential"></param>
-        /// <param name="requestContext"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="credential">The device code credential to use.</param>
+        /// <param name="requestContext">The request context containing the required scopes.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>The access token string.</returns>
         protected virtual async Task<string> AcquireDeviceCodeTokenAsync(
             TokenCredential credential,
             TokenRequestContext requestContext,
@@ -205,9 +202,10 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// 
+        /// Creates the <see cref="TokenRequestContext"/> used to request an access token for the target Key Vault resource.
+        /// Uses the Key Vault resource scope: "{KeyVaultUri}/.default".
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The token request context containing the required scopes.</returns>
         protected virtual TokenRequestContext GetTokenRequestContext()
         {
             string[] installerTenantResourceScopes = new string[]
