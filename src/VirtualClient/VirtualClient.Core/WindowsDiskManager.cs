@@ -352,11 +352,17 @@ namespace VirtualClient
                                     this.Logger.LogTraceMessage(process.StandardOutput.ToString(), context);
                                     await Task.Delay(this.WaitTime * waitModifier).ConfigureAwait(false);
 
+                                    // Capture the list disk output to parse disk sizes
+                                    string listDiskOutput = process.StandardOutput.ToString();
+
                                     IEnumerable<int> diskIndexes = WindowsDiskManager.ParseDiskIndexes(process.StandardOutput);
                                     if (diskIndexes?.Any() != true)
                                     {
                                         throw new ProcessException("DiskPart 'list disk' command did not return any disks.", ErrorReason.DiskInformationNotAvailable);
                                     }
+                                    
+                                    // Parse disk sizes from the list disk output
+                                    IDictionary<int, string> diskSizes = WindowsDiskManager.ParseDiskSizes(listDiskOutput);
                                     
                                     foreach (int diskIndex in diskIndexes)
                                     {
@@ -383,6 +389,12 @@ namespace VirtualClient
                                         List<DiskVolume> diskVolumes = new List<DiskVolume>();
                                         IDictionary<string, IConvertible> diskProperties = WindowsDiskManager.ParseDiskProperties(process.StandardOutput);
                                         diskProperties[Disk.WindowsDiskProperties.Index] = diskIndex;
+
+                                        // Add the size property from the list disk output
+                                        if (diskSizes.TryGetValue(diskIndex, out string diskSize))
+                                        {
+                                            diskProperties[Disk.WindowsDiskProperties.Size] = diskSize;
+                                        }
 
                                         if (!process.StandardOutput.ToString().Contains("There are no volumes", StringComparison.OrdinalIgnoreCase))
                                         {
@@ -514,6 +526,42 @@ namespace VirtualClient
             }
 
             return diskIndexes;
+        }
+
+        /// <summary>
+        /// Parses the disk sizes from the output of the DiskPart 'list disk' command.
+        /// </summary>
+        /// <param name="diskPartOutput">The output of the DiskPart command.</param>
+        /// <returns>A dictionary mapping disk index to disk size string.</returns>
+        protected static IDictionary<int, string> ParseDiskSizes(string diskPartOutput)
+        {
+            diskPartOutput.ThrowIfNullOrWhiteSpace(nameof(diskPartOutput));
+
+            IDictionary<int, string> diskSizes = new Dictionary<int, string>();
+
+            // Example output:
+            //   Disk ###  Status         Size     Free     Dyn  Gpt
+            //   --------  -------------  -------  -------  ---  ---
+            //   Disk 0    Online          127 GB      0 B
+            //   Disk 1    Online         1024 GB      0 B        *
+            //   Disk 2    Online         1024 GB  1024 GB
+
+            string normalizedOutput = diskPartOutput.Replace("DISKPART>", string.Empty, StringComparison.OrdinalIgnoreCase);
+            string[] lines = normalizedOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string line in lines)
+            {
+                // Match lines that start with "Disk" followed by a number
+                Match diskMatch = Regex.Match(line, @"^\s*Disk\s+(\d+)\s+(\S+)\s+([\d\s]+\s*[KMGT]?B)", RegexOptions.IgnoreCase);
+                if (diskMatch.Success)
+                {
+                    int diskIndex = int.Parse(diskMatch.Groups[1].Value);
+                    string diskSize = diskMatch.Groups[3].Value.Trim();
+                    diskSizes[diskIndex] = diskSize;
+                }
+            }
+
+            return diskSizes;
         }
 
         /// <summary>

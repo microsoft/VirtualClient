@@ -468,6 +468,30 @@ namespace VirtualClient
         }
 
         [Test]
+        public void WindowsDiskManagerParsesDiskSizesFromListDiskResultsCorrectly_AzureVMScenario()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine(" Disk 0    Online          127 GB  1024 KB          ")
+                .AppendLine(" Disk 1    Online           32 GB      0 B          ")
+                .AppendLine(" Disk 2    Online         1024 GB      0 B          ")
+                .AppendLine(" Disk 3    Online         1024 GB      0 B          ")
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(4, diskSizes.Count);
+            Assert.AreEqual("127 GB", diskSizes[0]);
+            Assert.AreEqual("32 GB", diskSizes[1]);
+            Assert.AreEqual("1024 GB", diskSizes[2]);
+            Assert.AreEqual("1024 GB", diskSizes[3]);
+        }
+
+        [Test]
         public void WindowsDiskManagerParsesDiskPartListPartitionResultsCorrectly_AzureVMScenario()
         {
             ConcurrentBuffer listPartitionResults = new ConcurrentBuffer()
@@ -1498,6 +1522,11 @@ namespace VirtualClient
             public new static IEnumerable<int> ParseDiskIndexes(ConcurrentBuffer diskPartOutput)
             {
                 return WindowsDiskManager.ParseDiskIndexes(diskPartOutput);
+            }
+
+            public new static IDictionary<int, string> ParseDiskSizes(string diskPartOutput)
+            {
+                return WindowsDiskManager.ParseDiskSizes(diskPartOutput);
             }
 
             public new static IDictionary<string, IConvertible> ParseDiskProperties(ConcurrentBuffer diskPartOutput)
