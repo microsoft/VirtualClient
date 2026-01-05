@@ -39,8 +39,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected override string GetCommandLineArguments()
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"-s -r {this.Connections} {serverIPAddress},{this.Port} -i {this.DisplayInterval} -wt {this.WarmupTime} -t {this.TestDuration} " +
-                $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)} ";
+            return $"-s -r {this.Connections} {serverIPAddress},{this.Port} -i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
+                $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)} ";
         }
     }
 }

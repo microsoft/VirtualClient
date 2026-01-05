@@ -170,6 +170,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="processDetails">The process whose details will be captured.</param>
+        /// <param name="results">The results to include with the telemetry events.</param>
         /// <param name="name">The property name to use for the process telemetry.</param>
         /// <param name="maxChars">
         /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
@@ -177,7 +178,7 @@ namespace VirtualClient.Contracts
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
+        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, KeyValuePair<string, string> results, string name = null, int maxChars = 125000)
         {
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -189,67 +190,71 @@ namespace VirtualClient.Contracts
 
             try
             {
-                int? finalId = null;
-                int? finalExitCode = null;
-                string finalResults = null;
+                if (!string.IsNullOrWhiteSpace(results.Key))
+                {
+                    int? finalId = null;
+                    int? finalExitCode = null;
+                    string finalResults = null;
 
-                try
-                {
-                    finalId = processDetails.Id;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalExitCode = processDetails.ExitCode;
-                }
-                catch
-                {
-                }
-
-                string fullCommand = $"{processDetails.CommandLine}".Trim();
-                if (!string.IsNullOrWhiteSpace(fullCommand))
-                {
-                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
-                }
-
-                if (processDetails.Results?.Any() == true)
-                {
-                    finalResults = string.Join($"{Environment.NewLine}{Environment.NewLine}", processDetails.Results);
-                }
-
-                // Note that 'totalOutputChars' represents the total # of characters in both the
-                // standard output and error.
-                if (finalResults != null && finalResults.Length > maxChars)
-                {
-                    // e.g.
-                    // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
-                    // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
-                    // 
-                    // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
-                    // The total will be 125,000 chars, right at the max.
-                    int substringLength = finalResults.Length - (finalResults.Length - maxChars);
-                    if (substringLength > 0)
+                    try
                     {
-                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
-                        finalResults = finalResults.Substring(0, finalResults.Length - (finalResults.Length - maxChars));
+                        finalId = processDetails.Id;
                     }
-                    else
+                    catch
                     {
-                        finalResults = string.Empty;
                     }
-                }
 
-                telemetryContext.Properties[name ?? "process"] = new
-                {
-                    id = finalId,
-                    command = fullCommand ?? string.Empty,
-                    workingDir = processDetails.WorkingDirectory ?? string.Empty,
-                    exitCode = finalExitCode,
-                    results = finalResults
-                };
+                    try
+                    {
+                        finalExitCode = processDetails.ExitCode;
+                    }
+                    catch
+                    {
+                    }
+
+                    string fullCommand = $"{processDetails.CommandLine}".Trim();
+                    if (!string.IsNullOrWhiteSpace(fullCommand))
+                    {
+                        fullCommand = SensitiveData.ObscureSecrets(fullCommand);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(results.Value))
+                    {
+                        finalResults = results.Value;
+                    }
+
+                    // Note that 'totalOutputChars' represents the total # of characters in both the
+                    // standard output and error.
+                    if (finalResults != null && finalResults.Length > maxChars)
+                    {
+                        // e.g.
+                        // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
+                        // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
+                        // 
+                        // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
+                        // The total will be 125,000 chars, right at the max.
+                        int substringLength = finalResults.Length - (finalResults.Length - maxChars);
+                        if (substringLength > 0)
+                        {
+                            // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                            finalResults = finalResults.Substring(0, finalResults.Length - (finalResults.Length - maxChars));
+                        }
+                        else
+                        {
+                            finalResults = string.Empty;
+                        }
+                    }
+
+                    telemetryContext.Properties[name ?? "process"] = new
+                    {
+                        id = finalId,
+                        command = fullCommand ?? string.Empty,
+                        workingDir = processDetails.WorkingDirectory ?? string.Empty,
+                        exitCode = finalExitCode,
+                        filePath = results.Key,
+                        results = finalResults
+                    };
+                }
             }
             catch
             {

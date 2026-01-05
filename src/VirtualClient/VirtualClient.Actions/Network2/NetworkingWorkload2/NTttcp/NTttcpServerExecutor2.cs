@@ -80,13 +80,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Get test run duration value in seconds.
+        /// Get test run duration value.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -145,16 +145,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(this.WarmupTime), TimeSpan.FromSeconds(8));
             }
 
             set
             {
-                this.Parameters[nameof(this.WarmupTime)] = value;
+                this.Parameters[nameof(this.WarmupTime)] = value.ToString();
             }
         }
 
@@ -331,7 +331,7 @@ namespace VirtualClient.Actions
                         // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
                         // Update based on if we want to get it from client
 
-                        TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
+                        TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime.TotalSeconds + (this.TestDuration.TotalSeconds * 2));
 
                         string commandArguments = this.GetCommandLineArguments();
 

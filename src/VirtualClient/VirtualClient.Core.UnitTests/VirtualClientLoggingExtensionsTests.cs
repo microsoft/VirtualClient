@@ -70,12 +70,8 @@ namespace VirtualClient
 
             using (TestExecutor component = new TestExecutor(this))
             {
-                IEnumerable<string> toolsetResults = new List<string>
-                {
-                    "Any results from the execution of a toolset."
-                };
-
-                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, results: toolsetResults, logToTelemetry: true, logToFile: false, upload: false);
+                string toolsetResults = "Any results from the execution of a toolset.";
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: true, logToFile: false, upload: false, results: new KeyValuePair<string, string>("Results", toolsetResults));
 
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.ProcessDetails")?.Count() == 1, "Process details telemetry missing");
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.ProcessResults")?.Count() == 1, "Process results telemetry missing");
@@ -94,12 +90,8 @@ namespace VirtualClient
 
             using (TestExecutor component = new TestExecutor(this))
             {
-                IEnumerable<string> toolsetResults = new List<string>
-                {
-                    "Any results from the execution of a toolset."
-                };
-
-                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, toolName: "bash", results: toolsetResults, logToTelemetry: true, logToFile: false, upload: false);
+                string toolsetResults = "Any results from the execution of a toolset.";
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, toolName: "bash", logToTelemetry: true, logToFile: false, upload: false, results: new KeyValuePair<string, string>("Results", toolsetResults));
 
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.bash.ProcessDetails")?.Count() == 1, "Process details telemetry missing");
                 Assert.IsTrue(this.Logger.MessagesLogged("TestExecutor.bash.ProcessResults")?.Count() == 1, "Process results telemetry missing");

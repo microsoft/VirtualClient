@@ -688,7 +688,7 @@ namespace VirtualClient.Contracts
             this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
 
             DependencyException error = Assert.Throws<DependencyException>(() => component.ThrowIfLayoutNotDefined());
-            Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, error.Reason);
+            Assert.AreEqual(ErrorReason.LayoutNotDefined, error.Reason);
         }
 
         [Test]
@@ -700,7 +700,7 @@ namespace VirtualClient.Contracts
 
             // Matching client instance does not exist by agent ID
             DependencyException error = Assert.Throws<DependencyException>(() => component.GetLayoutClientInstance("NonExistentAgentID"));
-            Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, error.Reason);
+            Assert.AreEqual(ErrorReason.LayoutInvalid, error.Reason);
         }
 
         [Test]
@@ -712,7 +712,7 @@ namespace VirtualClient.Contracts
 
             // Matching client instance(s) not found by role
             DependencyException error = Assert.Throws<DependencyException>(() => component.GetLayoutClientInstances("NonExistentAgentRole"));
-            Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, error.Reason);
+            Assert.AreEqual(ErrorReason.LayoutInvalid, error.Reason);
         }
 
         [Test]

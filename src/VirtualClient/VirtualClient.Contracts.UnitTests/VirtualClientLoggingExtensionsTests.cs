@@ -270,7 +270,8 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(process.ToProcessDetails("anytoolset", expectedResults.AsArray()));
+            ProcessDetails processDetails = process.ToProcessDetails("anytoolset", new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults));
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(processDetails, processDetails.Results.ElementAt(0));
             Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
 
             string expectedProcessInfo = new
@@ -279,6 +280,7 @@ namespace VirtualClient.Contracts
                 command = $"{expectedCommand} {expectedArguments}".Trim(),
                 workingDir = expectedWorkingDir ?? string.Empty,
                 exitCode = expectedExitCode,
+                filePath = $"{expectedWorkingDir}\\Results.txt",
                 results = expectedResults
             }.ToJson();
 
@@ -1013,7 +1015,7 @@ namespace VirtualClient.Contracts
                 StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
                 StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
             };
-            
+
             string expectedResults = "Any results output by the process.";
             bool expectedProcessDetailsCaptured = false;
             bool expectedProcessResultsCaptured = false;
@@ -1050,6 +1052,7 @@ namespace VirtualClient.Contracts
                         command = $"{expectedCommand} {expectedArguments}".Trim(),
                         workingDir = expectedWorkingDir ?? string.Empty,
                         exitCode = expectedExitCode,
+                        filePath = $"{expectedWorkingDir}\\Results.txt",
                         results = expectedResults
                     }.ToJson();
 
@@ -1061,7 +1064,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, results: new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults))
                 .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1097,7 +1100,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
                 .ConfigureAwait(false);
         }
 
@@ -1168,7 +1171,7 @@ namespace VirtualClient.Contracts
             {
                 Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
                 Assert.IsInstanceOf<EventContext>(state);
-                
+
 
                 if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessDetails")
                 {
@@ -1197,6 +1200,7 @@ namespace VirtualClient.Contracts
                         command = $"{expectedCommand} {expectedArguments}".Trim(),
                         workingDir = expectedWorkingDir ?? string.Empty,
                         exitCode = expectedExitCode,
+                        filePath = $"{expectedWorkingDir}\\Results.txt",
                         results = expectedResults
                     }.ToJson();
 
@@ -1208,7 +1212,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: new List<string> { expectedResults }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, logToTelemetry: true, results: new KeyValuePair<string, string>($"{expectedWorkingDir}\\Results.txt", expectedResults))
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1245,7 +1249,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, results: new List<string> { "Any results" }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, logToTelemetry: true, results: new KeyValuePair<string, string>("Results", "Any Results"))
                .ConfigureAwait(false);
 
             Assert.IsTrue(processDetailsHandled);
@@ -1293,7 +1297,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { "Any results" }, logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, results: new KeyValuePair<string, string>("Results", "Any Results"))
                .ConfigureAwait(false);
 
             Assert.IsTrue(confirmed);
@@ -1515,7 +1519,7 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
 
-            
+
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
@@ -1576,7 +1580,7 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
             
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: false, logToFile: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true, results: new KeyValuePair<string, string>("Results", expectedResults))
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedLogFileWritten);
@@ -1587,7 +1591,7 @@ namespace VirtualClient.Contracts
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
- 
+
             string expectedLogPath = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
 
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
@@ -2098,7 +2102,7 @@ namespace VirtualClient.Contracts
             };
 
             this.mockLogger.Object.LogSystemEvent(
-                expectedEventType, 
+                expectedEventType,
                 expectedEventSource,
                 expectedEventId,
                 expectedEventLevel,
@@ -2313,6 +2317,273 @@ namespace VirtualClient.Contracts
             {
                 Assert.AreEqual(originalValues[entry.Key], entry.Value.ToString());
             }
+        }
+
+        [Test]
+        public async Task LogProcessDetailsDoesNotSplitTelemetryWhenCombinedOutputIsBelowMaxChars()
+        {
+            // Scenario:
+            // When enableOutputSplit is true BUT combined output is below maxChars, no splitting should occur.
+
+            int maxCharlimit = 125000;
+            string smallOutput = new string('A', maxCharlimit /3 );
+            string smallError = new string('B', maxCharlimit / 5);
+            // Total = 100,000 which is below 125,000
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(smallOutput)),
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder(smallError))
+            };
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    if (eventId.Name.Contains("ProcessDetails"))
+                    {
+                        // Verify no chunk context is added
+                        Assert.IsFalse(state.Properties.ContainsKey("standardOutputPart"));
+                        Assert.IsFalse(state.Properties.ContainsKey("standardErrorPart"));
+                    }
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Logger = this.mockLogger.Object;
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
+
+            // Should only log ONE event (no splitting needed)
+            this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Once);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsSplitTelemetryWhenCombinedOutputIsAboveMaxChars()
+        {
+            // Scenario:
+            // Splitting should occur ONLY when enableOutputSplit=true AND combined output > maxChars
+
+            int maxCharlimit = 125000;
+            string largeOutput = new string('A', maxCharlimit * 2 ); // Requires 2 chunks at 125K each
+            string largeError = new string('B', maxCharlimit * 5);  // Requires 5 chunk
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(largeOutput)),
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder(largeError))
+            };
+
+            int standardOutputEventCount = 0;
+            int standardErrorEventCount = 0;
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    if (eventId.Name.Contains("ProcessDetails") && state is EventContext context)
+                    {
+                        if (context.Properties.ContainsKey("standardOutputPart"))
+                        {
+                            standardOutputEventCount++;
+                        }
+                        else if (context.Properties.ContainsKey("standardErrorPart"))
+                        {
+                            standardErrorEventCount++;
+                        }
+                    }
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Logger = this.mockLogger.Object;
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
+
+            // Verify splitting occurred
+            Assert.AreEqual(2, standardOutputEventCount, "Should create 2 events for standard output chunks");
+            Assert.AreEqual(5, standardErrorEventCount, "Should create 1 event for standard error chunk");
+
+            this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Exactly(7));
+        }
+
+        [Test]
+        public async Task LogProcessDetailsSplitTelemetryCapturesAllDataWithoutTruncation()
+        {
+            // Scenario:
+            // When splitting occurs, verify ALL data is captured without any truncation.
+
+            int maxCharlimit = 125000;
+            string expectedOutput = new string('X', maxCharlimit * 3);
+            string expectedError = new string('Y', maxCharlimit * 9);
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(expectedOutput)),
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder(expectedError))
+            };
+
+            StringBuilder capturedStandardOutput = new StringBuilder();
+            StringBuilder capturedStandardError = new StringBuilder();
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    if (eventId.Name.Contains("ProcessDetails") && state is EventContext context)
+                    {
+                        if (context.Properties.TryGetValue("process", out object processContext))
+                        {
+                            var processObj = JObject.FromObject(processContext);
+                            string stdOut = processObj["standardOutput"]?.ToString();
+                            string stdErr = processObj["standardError"]?.ToString();
+
+                            if (!string.IsNullOrEmpty(stdOut))
+                            {
+                                capturedStandardOutput.Append(stdOut);
+                            }
+
+                            if (!string.IsNullOrEmpty(stdErr))
+                            {
+                                capturedStandardError.Append(stdErr);
+                            }
+                        }
+                    }
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Logger = this.mockLogger.Object;
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
+
+            // Verify NO truncation occurred
+            Assert.AreEqual(expectedOutput.Length, capturedStandardOutput.Length, "All standard output should be captured");
+            Assert.AreEqual(expectedError.Length, capturedStandardError.Length, "All standard error should be captured");
+            Assert.AreEqual(expectedOutput, capturedStandardOutput.ToString(), "Standard output content should match exactly");
+            Assert.AreEqual(expectedError, capturedStandardError.ToString(), "Standard error content should match exactly");
+            this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Exactly(12));
+        }
+
+        [Test]
+        public async Task LogProcessDetailsSplitTelemetryIncludesChunkPartNumberInContext()
+        {
+            // Scenario:
+            // Verify that split events include chunk part numbers for tracking.
+
+            int maxCharlimit = 125000;
+            string largeOutput = new string('A', 250000); // Will create 2 chunks
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(largeOutput))
+            };
+
+            List<int> chunkParts = new List<int>();
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    if (state is EventContext context && context.Properties.ContainsKey("standardOutputPart"))
+                    {
+                        chunkParts.Add(Convert.ToInt32(context.Properties["standardOutputPart"]));
+                    }
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Logger = this.mockLogger.Object;
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
+
+            // Verify chunk parts are numbered sequentially starting from 1
+            Assert.AreEqual(2, chunkParts.Count, "Should have 2 chunk parts");
+            Assert.AreEqual(1, chunkParts[0], "First chunk should be numbered 1");
+            Assert.AreEqual(2, chunkParts[1], "Second chunk should be numbered 2");
+            this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Exactly(2));
+        }
+
+        [Test]
+        public async Task LogProcessDetailsSplitsStandardOutputAndErrorSeparately()
+        {
+            // Scenario:
+            // When standard output and standard error equals maxChars exactly, split output and error separately.
+            int maxCharlimit = 125000;
+            string output = new string('A', maxCharlimit); // Exactly at the limit
+            string error = new string('B', maxCharlimit); // Exactly at the limit
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(output)),
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder(output))
+            };
+
+            this.mockLogger.Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null));
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Logger = this.mockLogger.Object;
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
+
+            this.mockLogger.Verify(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null), Times.Exactly(2));
+        }
+
+        [Test]
+        public async Task LogProcessDetailsSplitTelemetryHandlesBoundaryConditionOneCharOverMaxChars()
+        {
+            // Scenario:
+            // When combined output is just 1 char over maxChars, splitting should occur.
+            int maxCharlimit = 125000;
+            string output = new string('A', maxCharlimit + 1); // One character over the limit
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(output))
+            };
+
+            int eventCount = 0;
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    if (eventId.Name.Contains("ProcessDetails"))
+                    {
+                        eventCount++;
+                    }
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Logger = this.mockLogger.Object;
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true, logToTelemetryMaxChars: maxCharlimit).ConfigureAwait(false);
+
+            // Should split when even 1 char over the limit
+            Assert.AreEqual(2, eventCount, "Should split when output exceeds maxChars by even 1 character");
         }
 
         private static Tuple<string, string> GetAccessTokenPair()
