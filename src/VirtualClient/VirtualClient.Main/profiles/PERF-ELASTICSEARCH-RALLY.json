@@ -1,0 +1,103 @@
+{
+    "Description": "Elasticsearch Rally Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "24:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DiskFilter": "osdisk:false&biggestsize",
+        "DistributionVersion": "8.0.0",
+        "Port": "9200",
+        "RallyTestMode": false
+    },
+    "Actions": [
+        {
+            "Type": "ElasticsearchRallyServerExecutor",
+            "Parameters": {
+                "Scenario": "SetupElasticsearchRallyCluster",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Role": "Server",
+                "PackageName": "elasticsearchrally"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteGeoNamesBenchmark",
+                "TrackName": "geonames",
+                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecutePMCBenchmark",
+                "TrackName": "pmc",
+                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteGeopointBenchmark",
+                "TrackName": "geopoint",
+                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteHTTPLogsBenchmark",
+                "TrackName": "http_logs",
+                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3,python3-pip,python3-venv,pipx,git,pbzip2",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}
