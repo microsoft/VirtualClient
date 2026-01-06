@@ -761,7 +761,7 @@ namespace VirtualClient
                 if (!string.IsNullOrWhiteSpace(driveLetter))
                 {
                     // The drive letter is the preferred access path over a mount point.
-                    mountPoints.Insert(0, $"{driveLetter.ToString().Trim()}:\\");
+                    mountPoints.Insert(0, $"{driveLetter}:\\");
                 }
             }
 
