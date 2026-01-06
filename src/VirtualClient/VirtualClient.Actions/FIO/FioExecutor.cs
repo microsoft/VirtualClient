@@ -286,8 +286,7 @@ namespace VirtualClient.Actions
                 jobFileContent.AppendLine($"[{jobName}]");
 
                 string fileName = platformSpecifics.Combine(disk.GetPreferredAccessPath(platformSpecifics.Platform), testFileName);
-                string sanitizedFileName = platformSpecifics.Platform == PlatformID.Win32NT ? fileName.Replace(":", "\\:") : fileName;
-                jobFileContent.AppendLine($"filename={sanitizedFileName}");
+                jobFileContent.AppendLine($"filename={fileName}");
             }
 
             return jobFileContent.ToString();
@@ -714,7 +713,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected virtual string GetTestDevicePath(Disk disk)
         {
-            return this.Combine(disk.GetPreferredAccessPath(this.Platform), this.FileName);
+            string devicePath = this.Combine(disk.GetPreferredAccessPath(this.Platform), this.FileName);
+            return this.SanitizeFilePath(devicePath);
         }
 
         /// <summary>
@@ -887,7 +887,7 @@ namespace VirtualClient.Actions
             List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
 
             string[] testFiles = disks.Select(disk => this.GetTestDevicePath(disk)).ToArray();
-            string fioArguments = $"{commandArguments} {string.Join(" ", testFiles.Select(file => $"--filename={this.SanitizeFilePath(file)}"))}".Trim();
+            string fioArguments = $"{commandArguments} {string.Join(" ", testFiles.Select(file => $"--filename={file}"))}".Trim();
 
             IProcessProxy fioProcess = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
 
@@ -987,7 +987,7 @@ namespace VirtualClient.Actions
             List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>(disks.Select(disk =>
             {
                 string testFile = this.GetTestDevicePath(disk);
-                string fioArguments = $"{commandArguments} --filename={this.SanitizeFilePath(testFile)}".Trim();
+                string fioArguments = $"{commandArguments} --filename={testFile}".Trim();
 
                 IProcessProxy fioProcess = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
 
