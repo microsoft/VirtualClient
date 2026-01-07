@@ -492,6 +492,169 @@ namespace VirtualClient
         }
 
         [Test]
+        public void WindowsDiskManagerParsesDiskSizesWithMultipleDigitDiskIndices()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine(" Disk 0    Online          127 GB  1024 KB          ")
+                .AppendLine(" Disk 10   Online         1024 GB      0 B        *")
+                .AppendLine(" Disk 127  Online         2048 GB   512 GB          ")
+                .AppendLine(" Disk 255  Offline          10 TB      0 B          ")
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(4, diskSizes.Count);
+            Assert.AreEqual("127 GB", diskSizes[0]);
+            Assert.AreEqual("1024 GB", diskSizes[10]);
+            Assert.AreEqual("2048 GB", diskSizes[127]);
+            Assert.AreEqual("10 TB", diskSizes[255]);
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesWithVariousSizeUnits()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine(" Disk 0    Online         1024 KB      0 B          ")
+                .AppendLine(" Disk 1    Online          512 MB      0 B          ")
+                .AppendLine(" Disk 2    Online          256 GB      0 B          ")
+                .AppendLine(" Disk 3    Online            5 TB      0 B          ")
+                .AppendLine(" Disk 4    Online            2 PB      0 B          ")
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(5, diskSizes.Count);
+            Assert.AreEqual("1024 KB", diskSizes[0]);
+            Assert.AreEqual("512 MB", diskSizes[1]);
+            Assert.AreEqual("256 GB", diskSizes[2]);
+            Assert.AreEqual("5 TB", diskSizes[3]);
+            Assert.AreEqual("2 PB", diskSizes[4]);
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesWithDifferentStatuses()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine(" Disk 0    Online          127 GB      0 B          ")
+                .AppendLine(" Disk 1    Offline        1024 GB      0 B          ")
+                .AppendLine(" Disk 2    No Media          0 B      0 B          ")
+                .AppendLine(" Disk 3    Errors          512 GB      0 B          ")
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(4, diskSizes.Count);
+            Assert.AreEqual("127 GB", diskSizes[0]);
+            Assert.AreEqual("1024 GB", diskSizes[1]);
+            Assert.AreEqual("0 B", diskSizes[2]);
+            Assert.AreEqual("512 GB", diskSizes[3]);
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesWithVaryingWhitespace()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine("  Disk 0   Online          127 GB  1024 KB          ")  // Extra leading space
+                .AppendLine(" Disk 1     Online           32 GB      0 B          ")  // Extra space after index
+                .AppendLine("Disk 2    Online         1024 GB      0 B          ")    // No leading space
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(3, diskSizes.Count);
+            Assert.AreEqual("127 GB", diskSizes[0]);
+            Assert.AreEqual("32 GB", diskSizes[1]);
+            Assert.AreEqual("1024 GB", diskSizes[2]);
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesIgnoresHeaderAndSeparatorLines()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine(" Disk 0    Online          127 GB  1024 KB          ")
+                .AppendLine("           ")  // Empty line
+                .AppendLine(" Disk 1    Online         1024 GB      0 B          ")
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(2, diskSizes.Count);
+            Assert.AreEqual("127 GB", diskSizes[0]);
+            Assert.AreEqual("1024 GB", diskSizes[1]);
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesHandlesEmptyInput()
+        {
+            Assert.Throws<ArgumentException>(() => TestWindowsDiskManager.ParseDiskSizes(string.Empty));
+            Assert.Throws<ArgumentException>(() => TestWindowsDiskManager.ParseDiskSizes("   "));
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesHandlesNoValidDisks()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsEmpty(diskSizes);
+        }
+
+        [Test]
+        public void WindowsDiskManagerParsesDiskSizesWithGptAndDynFlags()
+        {
+            string listDiskResults = new StringBuilder()
+                .AppendLine("           ")
+                .AppendLine(" Disk ###  Status         Size     Free     Dyn  Gpt")
+                .AppendLine(" --------  -------------  -------  -------  ---  ---")
+                .AppendLine(" Disk 0    Online          127 GB      0 B             ")
+                .AppendLine(" Disk 1    Online         1024 GB      0 B        *    ")  // GPT flag
+                .AppendLine(" Disk 2    Online         2048 GB      0 B   *         ")  // Dyn flag
+                .AppendLine(" Disk 3    Online          512 GB      0 B   *    *    ")  // Both flags
+                .ToString();
+
+            IDictionary<int, string> diskSizes = TestWindowsDiskManager.ParseDiskSizes(listDiskResults);
+
+            Assert.IsNotNull(diskSizes);
+            Assert.IsNotEmpty(diskSizes);
+            Assert.AreEqual(4, diskSizes.Count);
+            Assert.AreEqual("127 GB", diskSizes[0]);
+            Assert.AreEqual("1024 GB", diskSizes[1]);
+            Assert.AreEqual("2048 GB", diskSizes[2]);
+            Assert.AreEqual("512 GB", diskSizes[3]);
+        }
+
+        [Test]
         public void WindowsDiskManagerParsesDiskPartListPartitionResultsCorrectly_AzureVMScenario()
         {
             ConcurrentBuffer listPartitionResults = new ConcurrentBuffer()

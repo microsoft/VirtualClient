@@ -545,14 +545,22 @@ namespace VirtualClient
             //   Disk 0    Online          127 GB      0 B
             //   Disk 1    Online         1024 GB      0 B        *
             //   Disk 2    Online         1024 GB  1024 GB
+            //   Disk 10   Online          512 GB      0 B        *
+            //   Disk 127  Offline          10 TB   1024 GB
 
             string normalizedOutput = diskPartOutput.Replace("DISKPART>", string.Empty, StringComparison.OrdinalIgnoreCase);
             string[] lines = normalizedOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string line in lines)
             {
-                // Match lines that start with "Disk" followed by a number
-                Match diskMatch = Regex.Match(line, @"^\s*Disk\s+(\d+)\s+(\S+)\s+([\d\s]+\s*[KMGT]?B)", RegexOptions.IgnoreCase);
+                // Match lines that start with optional whitespace, "Disk", followed by one or more digits
+                // Then capture status (may contain spaces like "No Media"), then capture size
+                // This regex is more robust:
+                // - \s* allows any leading whitespace
+                // - \d+ captures multi-digit disk indices (0-255)
+                // - .+? captures status (non-greedy) including multi-word statuses like "No Media"
+                // - ([\d\s]+\s*[KMGTP]?B) captures sizes with various formats including KB, MB, GB, TB, PB
+                Match diskMatch = Regex.Match(line, @"^\s*Disk\s+(\d+)\s+(.+?)\s+([\d\s]+\s*[KMGTP]?B)", RegexOptions.IgnoreCase);
                 if (diskMatch.Success)
                 {
                     int diskIndex = int.Parse(diskMatch.Groups[1].Value);
