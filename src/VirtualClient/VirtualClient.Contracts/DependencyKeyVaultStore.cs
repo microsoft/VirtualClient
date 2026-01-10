@@ -16,26 +16,30 @@ namespace VirtualClient
         /// Initializes an instance of the <see cref="DependencyKeyVaultStore"/> class.
         /// </summary>
         /// <param name="storeName">The name of the KeyVault store (e.g. KeyVault).</param>
+        /// <param name="tenantId">The Microsoft Entra tenant/directory ID.</param>
         /// <param name="endpointUri">The URI/SAS for the target Key Vault.</param>
-        public DependencyKeyVaultStore(string storeName, Uri endpointUri)
+        public DependencyKeyVaultStore(string storeName, string tenantId, Uri endpointUri)
             : base(storeName, DependencyStore.StoreTypeAzureKeyVault)
         {
             endpointUri.ThrowIfNull(nameof(endpointUri));
             this.EndpointUri = endpointUri;
             this.KeyVaultNameSpace = endpointUri.Host;
+            this.TenantId = tenantId;
         }
 
         /// <summary>
         /// Initializes an instance of the <see cref="DependencyKeyVaultStore"/> class.
         /// </summary>
         /// <param name="storeName">The name of the KeyVault store (e.g. KeyVault).</param>
+        /// <param name="tenantId">The Microsoft Entra tenant/directory ID.</param>
         /// <param name="endpointUri">The URI/SAS for the target Key Vault.</param>
         /// <param name="credentials">An identity token credential to use for authentication against the Key Vault.</param>
-        public DependencyKeyVaultStore(string storeName, Uri endpointUri, TokenCredential credentials)
-            : this(storeName, endpointUri)
+        public DependencyKeyVaultStore(string storeName, string tenantId, Uri endpointUri, TokenCredential credentials)
+            : this(storeName, tenantId, endpointUri)
         {
             credentials.ThrowIfNull(nameof(credentials));
             this.Credentials = credentials;
+            this.TenantId = tenantId;
         }
 
         /// <summary>
@@ -47,6 +51,11 @@ namespace VirtualClient
         /// The Key Vault namespace.
         /// </summary>
         public string KeyVaultNameSpace { get; }
+
+        /// <summary>
+        /// The Key Vault tenant ID.
+        /// </summary>
+        public string TenantId { get; }
 
         /// <summary>
         /// An identity token credential to use for authentication against the Key vault. 
