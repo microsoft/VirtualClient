@@ -399,6 +399,39 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Tries to parse the Microsoft Entra reference information from the provided uri. If the uri does not contain the correctly formatted client ID
+        /// and tenant ID information the method will return false, and keep the two out parameters as null.
+        /// Ex. https://anystore.blob.core.windows.net?cid={clientId};tid={tenantId}
+        /// </summary>
+        /// <param name="uri">The uri to attempt to parse the values from.</param>
+        /// <param name="tenantId">The tenant ID from the Microsoft Entra reference.</param>
+        /// <returns>True/False if the method was able to successfully parse both the client ID and the tenant ID from the Microsoft Entra reference.</returns>
+        public static bool TryParseMicrosoftEntraReference(Uri uri, out string tenantId)
+        {
+            string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
+
+            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value?.ToString(),
+                StringComparer.OrdinalIgnoreCase);
+
+            bool parametersDefined = false;
+            tenantId = null;
+
+            if (queryParameters?.Any() == true)
+            {
+                if (queryParameters.TryGetValue(UriParameter.TenantId, out string microsoftEntraTenantId)
+                    && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
+                {
+                    tenantId = microsoftEntraTenantId;
+                    parametersDefined = true;
+                }
+            }
+
+            return parametersDefined;
+        }
+
+        /// <summary>
         /// Returns the endpoint by verifying package uri checks.
         /// if the endpoint is a package uri without http or https protocols then append the protocol else return the endpoint value.
         /// </summary>
@@ -1285,6 +1318,24 @@ namespace VirtualClient
                     && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
                 {
                     clientId = microsoftEntraClientId;
+                    tenantId = microsoftEntraTenantId;
+                    parametersDefined = true;
+                }
+            }
+
+            return parametersDefined;
+        }
+
+        private static bool TryGetMicrosoftEntraReferenceForUri(IDictionary<string, string> uriParameters, out string tenantId)
+        {
+            bool parametersDefined = false;
+            tenantId = null;
+
+            if (uriParameters?.Any() == true)
+            {
+                if (uriParameters.TryGetValue(UriParameter.TenantId, out string microsoftEntraTenantId)
+                    && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
+                {
                     tenantId = microsoftEntraTenantId;
                     parametersDefined = true;
                 }

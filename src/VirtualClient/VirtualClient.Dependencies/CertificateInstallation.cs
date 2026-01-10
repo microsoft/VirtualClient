@@ -20,7 +20,9 @@
     /// </summary>
     public class CertificateInstallation : VirtualClientComponent
     {
+        private ISystemManagement systemManagement;
         private IFileSystem fileSystem;
+        private ProcessManager processManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CertificateInstallation"/> class.
@@ -30,8 +32,9 @@
         public CertificateInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.fileSystem = this.Dependencies.GetService<IFileSystem>();
-            this.fileSystem.ThrowIfNull(nameof(this.fileSystem));
+            this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.fileSystem = this.systemManagement.FileSystem;
+            this.processManager = this.systemManagement.ProcessManager;
         }
 
         /// <summary>
@@ -176,8 +179,8 @@
                 //
                 // User  = read, write, execute
                 // Group = read, write, execute
-                // Other = read, write, execute
-                using (IProcessProxy process = processManager.CreateProcess("chmod", $"-R 777 {certificateDirectory}"))
+                // Other = read, write, execute+
+                using (IProcessProxy process = this.processManager.CreateProcess("chmod", $"-R 777 {certificateDirectory}"))
                 {
                     await process.StartAndWaitAsync(cancellationToken);
                     process.ThrowIfErrored<DependencyException>();
@@ -217,18 +220,13 @@
                 string keyVaultUri = string.IsNullOrWhiteSpace(this.KeyVaultUri) 
                     ? ((DependencyKeyVaultStore)keyVaultManager.StoreDescription).EndpointUri.ToString()
                     : this.KeyVaultUri;
-                
-                string tenantId = string.IsNullOrWhiteSpace(this.TenantId) 
-                    ? ((DependencyKeyVaultStore)keyVaultManager.StoreDescription).TenantId 
-                    : this.TenantId;
 
                 keyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
-                tenantId.ThrowIfNullOrWhiteSpace(nameof(this.TenantId));
 
                 string token_ = await this.fileSystem.File.ReadAllTextAsync(accessTokenPath, cancellationToken).ConfigureAwait(false);
                 AccessTokenCredential tokenCredential = new AccessTokenCredential(token_);
 
-                DependencyKeyVaultStore dependencyKeyVault = new DependencyKeyVaultStore(DependencyStore.KeyVault, this.TenantId, new Uri(this.KeyVaultUri), tokenCredential);
+                DependencyKeyVaultStore dependencyKeyVault = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri(this.KeyVaultUri), tokenCredential);
                 return new KeyVaultManager(dependencyKeyVault);
             }
             else

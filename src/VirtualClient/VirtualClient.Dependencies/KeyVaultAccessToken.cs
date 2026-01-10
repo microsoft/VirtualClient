@@ -38,27 +38,15 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Gets the Azure tenant ID used to acquire an access token.
-        /// </summary>
-        protected string TenantId
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.TenantId));
-            }
-        }
-
-        /// <summary>
         /// Gets the Azure Key Vault URI for which the access token will be requested.
         /// Example: https://anyvault.vault.azure.net/
         /// </summary>
-        protected string KeyVaultUri
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
-            }
-        }
+        protected Uri KeyVaultUri { get; set; }
+
+        /// <summary>
+        /// Gets the Azure tenant ID used to acquire an access token.
+        /// </summary>
+        protected string TenantId { get; set; }
 
         /// <summary>
         /// Gets or sets the full file path where the acquired access token will be written when file logging is enabled.
@@ -96,7 +84,16 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
+            this.KeyVaultUri = new Uri(this.Parameters.GetValue<string>(nameof(this.KeyVaultUri)));
+            this.KeyVaultUri.ThrowIfNull(nameof(this.KeyVaultUri));
+
+            this.TenantId = this.Parameters.GetValue<string>(nameof(this.TenantId));
+            if (string.IsNullOrWhiteSpace(this.TenantId))
+            {
+                EndpointUtility.TryParseMicrosoftEntraReference(this.KeyVaultUri, out string tenant);
+                this.TenantId = tenant;
+            }
+
             this.TenantId.ThrowIfNullOrWhiteSpace(nameof(this.TenantId));
 
             string accessToken = null;
@@ -210,7 +207,7 @@ namespace VirtualClient.Dependencies
         {
             string[] installerTenantResourceScopes = new string[]
             {
-                new Uri(baseUri: new Uri(this.KeyVaultUri), relativeUri: ".default").ToString(),
+                new Uri(baseUri: this.KeyVaultUri, relativeUri: ".default").ToString(),
                 // Example of a specific scope:
                 // "api://56e7ee83-1cf6-4048-a664-c2a08955f825/user_impersonation"
             };

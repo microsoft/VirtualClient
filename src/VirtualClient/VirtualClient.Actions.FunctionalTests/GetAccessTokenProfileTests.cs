@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase("GET-ACCESS-TOKEN.json", PlatformID.Unix)]
         [TestCase("GET-ACCESS-TOKEN.json", PlatformID.Win32NT)]
-        public async Task GetAccessTokenProfileParametersAreAvailable(string profile, PlatformID platform)
+        public void GetAccessTokenProfileParametersAreAvailable(string profile, PlatformID platform)
         {
             this.dependencyFixture.Setup(platform);
 
