@@ -52,7 +52,8 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(ElasticsearchRallyClientExecutor.DiskFilter), "osdisk:false&biggestsize" },
-                { nameof(ElasticsearchRallyClientExecutor.DistributionVersion), "8.0.0" },
+                { nameof(ElasticsearchRallyClientExecutor.ElasticsearchVersion), "9.2.3" },
+                { nameof(ElasticsearchRallyClientExecutor.RallyVersion), "2.12.0" },
                 { nameof(ElasticsearchRallyClientExecutor.Port), "9200" },
                 { nameof(ElasticsearchRallyClientExecutor.RallyTestMode), true },
                 { nameof(ElasticsearchRallyClientExecutor.Scenario), "ExecuteGeoNamesBenchmark" },

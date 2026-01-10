@@ -2,14 +2,17 @@
     "Description": "Elasticsearch Rally Workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "24:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "Debian,Ubuntu"
+        "SupportedPlatforms": "win-x64,win-arm64,linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu,Windows"
     },
     "Parameters": {
         "DiskFilter": "osdisk:false&biggestsize",
-        "DistributionVersion": "8.0.0",
+        "ElasticsearchVersion": "9.2.3",
+        "RallyVersion": "2.12.0",
         "Port": "9200",
-        "RallyTestMode": false
+        "RallyTestMode": false,
+        "UseWgetForElasticsearhDownloadOnLinux": false,
+        "UseWebRequestForElasticsearchDownloadOnWindows": false
     },
     "Actions": [
         {
@@ -17,9 +20,12 @@
             "Parameters": {
                 "Scenario": "SetupElasticsearchRallyCluster",
                 "Port": "$.Parameters.Port",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "UseWgetForElasticsearhDownloadOnLinux": "$.Parameters.UseWgetForElasticsearhDownloadOnLinux",
+                "UseWebRequestForElasticsearchDownloadOnWindows": "$.Parameters.UseWebRequestForElasticsearchDownloadOnWindows",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Role": "Server",
-                "PackageName": "elasticsearchrally"
+                "PackageName": "elasticsearchrally",
+                "Role": "Server"
             }
         },
         {
@@ -27,7 +33,8 @@
             "Parameters": {
                 "Scenario": "ExecuteGeoNamesBenchmark",
                 "TrackName": "geonames",
-                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
                 "Port": "$.Parameters.Port",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "RallyTestMode": "$.Parameters.RallyTestMode",
@@ -39,7 +46,8 @@
             "Parameters": {
                 "Scenario": "ExecutePMCBenchmark",
                 "TrackName": "pmc",
-                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
                 "Port": "$.Parameters.Port",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "RallyTestMode": "$.Parameters.RallyTestMode",
@@ -51,7 +59,8 @@
             "Parameters": {
                 "Scenario": "ExecuteGeopointBenchmark",
                 "TrackName": "geopoint",
-                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
                 "Port": "$.Parameters.Port",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "RallyTestMode": "$.Parameters.RallyTestMode",
@@ -63,7 +72,8 @@
             "Parameters": {
                 "Scenario": "ExecuteHTTPLogsBenchmark",
                 "TrackName": "http_logs",
-                "DistributionVersion": "$.Parameters.DistributionVersion",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
                 "Port": "$.Parameters.Port",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "RallyTestMode": "$.Parameters.RallyTestMode",

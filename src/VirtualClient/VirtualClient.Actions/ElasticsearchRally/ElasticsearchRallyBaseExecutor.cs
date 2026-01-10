@@ -6,6 +6,7 @@ namespace CRC.VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -34,6 +35,17 @@ namespace CRC.VirtualClient.Actions
                 ClientRole.Client,
                 ClientRole.Server
             };
+        }
+
+        /// <summary>
+        /// The Elasticsearch Distribution Version.
+        /// </summary>
+        public string ElasticsearchVersion
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyServerExecutor.ElasticsearchVersion), "9.2.3");
+            }
         }
 
         /// <summary>
@@ -78,7 +90,7 @@ namespace CRC.VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-                
+
                 ClientInstance instance = this.GetLayoutClientInstance();
                 string layoutIPAddress = instance.IPAddress;
 
@@ -112,7 +124,7 @@ namespace CRC.VirtualClient.Actions
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
-        protected async Task<string> GetDataDirectoryAsync(CancellationToken cancellationToken)
+        protected virtual async Task<string> GetDataDirectoryAsync(CancellationToken cancellationToken)
         {
             string diskPath = string.Empty;
 
@@ -148,7 +160,66 @@ namespace CRC.VirtualClient.Actions
         /// <returns>true if a file exists at the specified path; otherwise, false.</returns>
         protected virtual bool CheckFileExists(string path)
         {
-            return System.IO.File.Exists(path);
+            return File.Exists(path);
+        }
+
+        /// <summary>
+        /// Determines whether the specified directory exists.
+        /// </summary>
+        /// <param name="path">The path to the directory to check.</param>
+        /// <returns>true if the directory exists; otherwise, false.</returns>
+        protected virtual bool CheckDirectoryExists(string path)
+        {
+            return Directory.Exists(path);
+        }
+
+        /// <summary>
+        /// Copies a file from the source path to the destination path.
+        /// </summary>
+        /// <param name="sourcePath">The path of the file to copy.</param>
+        /// <param name="destinationPath">The destination path where the file should be copied.</param>
+        /// <param name="overwrite">Whether to overwrite the file if it already exists at the destination.</param>
+        protected virtual void FileCopy(string sourcePath, string destinationPath, bool overwrite)
+        {
+            File.Copy(sourcePath, destinationPath, overwrite);
+        }
+
+        /// <summary>
+        /// Runs a windows script command.
+        /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="key">Task identifier</param>
+        /// <param name="script"></param>
+        /// <param name="throwOnError"></param>
+        /// <returns></returns>
+        protected bool RunCommandWindowsScript(EventContext telemetryContext, string key, string script, bool throwOnError = false)
+        {
+            bool ok = this.RunCommand("powershell.exe", BuildWindowsScript(script), out string output, out string error);
+
+            this.HandleTelemetry(telemetryContext, key, script, throwOnError, ok, output, error);
+
+            return ok;
+        }
+
+        /// <summary>
+        /// Runs a windows script command without waiting for it to complete.
+        /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="key">Task identifier</param>
+        /// <param name="script"></param>
+        protected virtual void RunCommandWindowsScriptDetached(EventContext telemetryContext, string key, string script)
+        {
+            telemetryContext.AddContext($"{this.TypeName}.{key}Command", $"cmd.exe {script}");
+            this.Logger.LogMessage($"{this.TypeName}.{key}", telemetryContext);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = script,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+                UseShellExecute = false
+            });
         }
 
         /// <summary>
@@ -247,6 +318,11 @@ namespace CRC.VirtualClient.Actions
                 error = p.StandardError.ReadToEnd().Trim();
                 return p.ExitCode == 0;
             }
+        }
+
+        private static string BuildWindowsScript(string script)
+        {
+            return $"-NoProfile -ExecutionPolicy Bypass -Command \"{script}\"";
         }
 
         private static string BuildBashScript(string script)

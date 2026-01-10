@@ -32,13 +32,14 @@ namespace CRC.VirtualClient.Actions
         }
 
         /// <summary>
-        /// The Elasticsearch Distribution Version.
+        /// The Rally Distribution Version.
+        /// If not specified, the Rally latest version will be used.
         /// </summary>
-        public string DistributionVersion
+        public string RallyVersion
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.DistributionVersion), "8.0.0");
+                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.RallyVersion));
             }
         }
 
@@ -92,7 +93,7 @@ namespace CRC.VirtualClient.Actions
                 }
 
                 string user = this.PlatformSpecifics.GetLoggedInUser();
-                int port = this.Port;                
+                int port = this.Port;
                 string trackName = this.TrackName;
                 string dataDirectory = await this.GetDataDirectoryAsync(cancellationToken);
 
@@ -108,7 +109,7 @@ namespace CRC.VirtualClient.Actions
                         trackName,
                         rallySharedStoragePath,
                         rallyUserHomePath,
-                        telemetryContext.Clone(), 
+                        telemetryContext.Clone(),
                         cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
@@ -151,13 +152,13 @@ namespace CRC.VirtualClient.Actions
         /// <param name="telemetryContext">The context for telemetry and logging associated with this operation.</param>
         /// <param name="targetHost">The DNS name or IP address of the server to check for availability. Cannot be null or empty.</param>
         /// <param name="port">The network port number on the target server to check. Must be a valid TCP port number.</param>
-        /// <param name="timeout">The amount of time in milliseconds to wait before performing the availability check. Default is 30000 ms.</param>
+        /// <param name="timeout">The amount of time in milliseconds to wait before performing the availability check. Default is 60000 ms.</param>
         /// <returns>true if the server at the specified host and port is available; otherwise, false.</returns>
         protected virtual bool CheckServerAvailable(
             EventContext telemetryContext,
             string targetHost,
             int port,
-            int timeout = 30000)
+            int timeout = 60000)
         {
             Thread.Sleep(timeout); // wait for server to be available
 
@@ -171,7 +172,7 @@ namespace CRC.VirtualClient.Actions
             string trackName,
             string rallySharedStoragePath,
             string rallyUserHomePath,
-            EventContext telemetryContext, 
+            EventContext telemetryContext,
             CancellationToken cancellationToken)
         {
             // install es rally
@@ -181,7 +182,13 @@ namespace CRC.VirtualClient.Actions
             // using pipx to install esrally, prepare the environment and avoid dependency conflicts
             this.RunCommandAsRoot(telemetryContext, "RallySetPixPathRoot", $"pipx ensurepath", true);
 
-            this.RunCommandAsRoot(telemetryContext, "RallyInstall", $"pipx install esrally", true);
+            string esRallyInstallCommand = "pipx install esrally";
+            if (!string.IsNullOrEmpty(this.RallyVersion))
+            {
+                esRallyInstallCommand = $"{esRallyInstallCommand}=={this.RallyVersion}";
+            }
+
+            this.RunCommandAsRoot(telemetryContext, "RallyInstall", esRallyInstallCommand, true);
 
             this.RunCommandAsRoot(telemetryContext, "RallyMakeSharedStorage", $"mkdir -p {rallySharedStoragePath}");
 
@@ -200,15 +207,18 @@ namespace CRC.VirtualClient.Actions
             int tries = 0;
             while (!this.CheckServerAvailable(telemetryContext, targetHost, port))
             {
-                if (tries++ > 10)
+                int limit = 20;
+                if (tries++ >= limit)
                 {
                     throw new WorkloadException(
-                        $"ElasticSearch Rally Client could not reach the server at {targetHost} after multiple attempts.",
+                        $"Elasticsearch Rally Client could not reach the server at {targetHost} after {limit} attempts.",
                         ErrorReason.WorkloadFailed);
                 }
 
-                this.Logger.LogTraceMessage($"ElasticSearch Rally Client waiting for server {targetHost} to be available...");
+                this.Logger.LogMessage($"{this.TypeName}.ElasticsearchServerConnectionAttempt-{tries}-of-{limit}", telemetryContext);
             }
+
+            this.Logger.LogMessage($"{this.TypeName}.ElasticsearchServerIsReady", telemetryContext);
         }
 
         private void RunRallyClient(
@@ -218,7 +228,7 @@ namespace CRC.VirtualClient.Actions
             string trackName,
             string rallySharedStoragePath,
             string rallyUserHomePath,
-            EventContext telemetryContext, 
+            EventContext telemetryContext,
             CancellationToken cancellationToken)
         {
             DateTime start = DateTime.Now;
@@ -228,7 +238,6 @@ namespace CRC.VirtualClient.Actions
             string rallyCommand = string.Concat(
                 "race ",
                 $"--track={trackName} ",
-                $"--distribution-version={this.DistributionVersion} ",
                 $"--target-hosts={targetHost} ",
                 $"--race-id={raceId} ",
                 $"--target-hosts={targetHost}:{port} ",
@@ -248,7 +257,7 @@ namespace CRC.VirtualClient.Actions
             this.RunESRallyCommand(telemetryContext, user, rallyUserHomePath, rallySharedStoragePath, "RallyListRaces", "list races");
 
             // race.json is undocumented and not present in esrally 2.5.0 and later versions by default, so we cannot depend on it.
-            string resultsPath = $"{rallySharedStoragePath}/.rally/benchmarks/races/{raceId}/race.json";            
+            string resultsPath = $"{rallySharedStoragePath}/.rally/benchmarks/races/{raceId}/race.json";
             telemetryContext.AddContext("RallyResultsJsonPath", resultsPath);
             telemetryContext.AddContext("RallyReportCsvPath", reportPath);
 
@@ -332,7 +341,8 @@ namespace CRC.VirtualClient.Actions
                         reportContents,
                         new Dictionary<string, IConvertible>
                         {
-                            ["elasticsearchVersion"] = this.DistributionVersion,
+                            ["elasticsearchVersion"] = this.ElasticsearchVersion,
+                            ["rallyVersion"] = this.RallyVersion ?? "latest",
                             ["rallyTrack"] = this.TrackName,
                             ["raceId"] = raceId,
                         });
@@ -357,7 +367,7 @@ namespace CRC.VirtualClient.Actions
                 {
                     throw new WorkloadException(
                         $"Capture metrics failed.",
-                        exc, 
+                        exc,
                         ErrorReason.InvalidResults);
                 }
             }
