@@ -406,7 +406,7 @@ namespace VirtualClient
         /// <param name="uri">The uri to attempt to parse the values from.</param>
         /// <param name="tenantId">The tenant ID from the Microsoft Entra reference.</param>
         /// <returns>True/False if the method was able to successfully parse both the client ID and the tenant ID from the Microsoft Entra reference.</returns>
-        public static bool TryParseMicrosoftEntraReference(Uri uri, out string tenantId)
+        public static bool TryParseMicrosoftEntraTenantIdReference(Uri uri, out string tenantId)
         {
             string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
 
@@ -415,20 +415,7 @@ namespace VirtualClient
                 entry => entry.Value?.ToString(),
                 StringComparer.OrdinalIgnoreCase);
 
-            bool parametersDefined = false;
-            tenantId = null;
-
-            if (queryParameters?.Any() == true)
-            {
-                if (queryParameters.TryGetValue(UriParameter.TenantId, out string microsoftEntraTenantId)
-                    && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
-                {
-                    tenantId = microsoftEntraTenantId;
-                    parametersDefined = true;
-                }
-            }
-
-            return parametersDefined;
+            return TryGetMicrosoftEntraTenantId(queryParameters, out tenantId);
         }
 
         /// <summary>
@@ -1326,7 +1313,7 @@ namespace VirtualClient
             return parametersDefined;
         }
 
-        private static bool TryGetMicrosoftEntraReferenceForUri(IDictionary<string, string> uriParameters, out string tenantId)
+        private static bool TryGetMicrosoftEntraTenantId(IDictionary<string, string> uriParameters, out string tenantId)
         {
             bool parametersDefined = false;
             tenantId = null;

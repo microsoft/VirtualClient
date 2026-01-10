@@ -90,7 +90,7 @@ namespace VirtualClient.Dependencies
             this.TenantId = this.Parameters.GetValue<string>(nameof(this.TenantId));
             if (string.IsNullOrWhiteSpace(this.TenantId))
             {
-                EndpointUtility.TryParseMicrosoftEntraReference(this.KeyVaultUri, out string tenant);
+                EndpointUtility.TryParseMicrosoftEntraTenantIdReference(this.KeyVaultUri, out string tenant);
                 this.TenantId = tenant;
             }
 
