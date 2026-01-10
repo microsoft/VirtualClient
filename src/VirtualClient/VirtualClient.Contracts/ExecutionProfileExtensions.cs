@@ -58,7 +58,7 @@ namespace VirtualClient.Contracts
 
                     // Parameters in ParametersOn sections take priority over the profile's default parameters.
                     IDictionary<string, IConvertible> conditionalParameters = new Dictionary<string, IConvertible>(parametersSection, StringComparer.OrdinalIgnoreCase);
-                    conditionalParameters.AddRange(profileParameters);
+                    conditionalParameters.AddRange(profileParameters, true);
 
                     await evaluator.EvaluateAsync(dependencies, conditionalParameters);
 
@@ -70,8 +70,8 @@ namespace VirtualClient.Contracts
 
                     if (conditionMatches)
                     {
-                        profile.Parameters.Clear();
-                        profile.Parameters.AddRange(conditionalParameters);
+                        IDictionary<string, IConvertible> conditionalParameterSet = new Dictionary<string, IConvertible>(parametersSection, StringComparer.OrdinalIgnoreCase);
+                        profile.Parameters.AddRange(conditionalParameterSet, true);
                         break;
                     }
                 }

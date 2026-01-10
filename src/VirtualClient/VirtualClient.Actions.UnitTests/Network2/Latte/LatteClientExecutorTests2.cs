@@ -41,8 +41,8 @@ namespace VirtualClient.Actions
                 .Returns(true);
 
             this.mockFixture.Parameters["PackageName"] = "latte";
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 300;
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:05:00";
             this.mockFixture.Parameters["Protocol"] = "Tcp";
 
             string exampleResults = File.ReadAllText(Path.Combine(LatteClientExecutorTests2.ExamplesDirectory, "Latte_Results_Example.txt"));
@@ -93,8 +93,8 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(stateItem.Definition.Properties["Scenario"], "AnyScenario");
                     Assert.AreEqual(stateItem.Definition.Properties["Type"], typeof(LatteServerExecutor2).Name);
                     Assert.AreEqual(stateItem.Definition.Properties["Protocol"], ProtocolType.Tcp.ToString());
-                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
-                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 300);
+                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], "00:05:00");
+                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], "00:05:00");
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 

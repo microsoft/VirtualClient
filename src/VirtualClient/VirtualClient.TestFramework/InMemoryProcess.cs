@@ -45,7 +45,7 @@ namespace VirtualClient
                 Arguments = "--argument1=123 --argument2=value"
             };
             this.processDetails = new ProcessDetails();
-            this.processDetails.Results = new List<string>();
+            this.processDetails.Results = new List<KeyValuePair<string, string>>();
 
             this.OnHasExited = () => true;
         }

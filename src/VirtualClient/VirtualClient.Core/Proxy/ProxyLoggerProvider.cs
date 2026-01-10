@@ -3,10 +3,16 @@
 
 namespace VirtualClient.Proxy
 {
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
-    internal class ProxyLoggerProvider : ILoggerProvider
+    /// <summary>
+    /// An implementation of the <see cref="ILoggerProvider"/> interface for logging via
+    /// a Proxy API endpoint.
+    /// </summary>
+    [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "Nothing to dispose.")]
+    public class ProxyLoggerProvider : ILoggerProvider
     {
         private ProxyTelemetryChannel telemetryChannel;
         private string source;
