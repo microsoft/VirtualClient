@@ -128,7 +128,7 @@ namespace VirtualClient.Common.Telemetry
         }
 
         /// <summary>
-        /// Returns the user identitiy persisted.
+        /// Returns the user identity persisted.
         /// </summary>
         /// <returns>
         /// The user identity persisted.

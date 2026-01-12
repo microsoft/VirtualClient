@@ -16,7 +16,7 @@ The following stores are supported by the Virtual Client. The stores must be Azu
   # The blob container does not require authentication (i.e. blob-anonymous read access)
   VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore="https://any.blob.core.windows.net"
 
-  # The blob continer requires authentication (e.g. a SAS token)
+  # The blob container requires authentication (e.g. a SAS token)
   VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
   ```
 
@@ -31,7 +31,7 @@ The following stores are supported by the Virtual Client. The stores must be Azu
   # The blob container does not require authentication (i.e. blob-anonymous read access)
   VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore="https://any.blob.core.windows.net"
 
-  # The blob continer requires authentication (e.g. a SAS token)
+  # The blob container requires authentication (e.g. a SAS token)
   VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
   ```
 

@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// It is common to use local member variables or properties to keep track of the names of 
-        /// workload binaries/executables. Dependending upon the OS platform (Linux vs. Windows) we are on
+        /// workload binaries/executables. Depending upon the OS platform (Linux vs. Windows) we are on
         /// the names of the binaries might be different.
         /// </summary>
         protected string WorkloadExecutablePath { get; set; }

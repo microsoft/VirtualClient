@@ -31,7 +31,7 @@ namespace VirtualClient.Monitors
         public List<PciDeviceCapability> Capabilities { get; set; } = new List<PciDeviceCapability> { };
 
         /// <summary>
-        /// Data contract for capabiilities in lspci output.
+        /// Data contract for capabilities in lspci output.
         /// -------------------------------Example---------------------------------
         /// Capabilities: [80] MSI-X: Enable- Count=1 Masked-
         ///     Vector table: BAR=0 offset=00002000

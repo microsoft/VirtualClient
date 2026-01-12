@@ -15,7 +15,7 @@ namespace VirtualClient.Common.Rest
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Collection of HttpCotent methods.
+    /// Collection of HttpContent methods.
     /// </summary>
     public static class RequestResponseExtensions
     {

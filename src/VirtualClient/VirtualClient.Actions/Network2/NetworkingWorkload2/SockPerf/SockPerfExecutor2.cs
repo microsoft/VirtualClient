@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
         protected string Role { get; set; }
 
         /// <summary>
-        /// Intialize SockPerf.
+        /// Initialize SockPerf.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

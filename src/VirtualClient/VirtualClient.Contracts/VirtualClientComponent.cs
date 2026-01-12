@@ -700,7 +700,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// When overriden in a derived class, executes the component logic.
+        /// When overridden in a derived class, executes the component logic.
         /// </summary>
         public async Task ExecuteAsync(CancellationToken cancellationToken)
         {
@@ -839,7 +839,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// When overriden in a derived class, executes the component logic.
+        /// When overridden in a derived class, executes the component logic.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>

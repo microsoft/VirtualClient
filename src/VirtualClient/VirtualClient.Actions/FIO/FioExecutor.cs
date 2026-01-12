@@ -435,7 +435,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Applies the configuration specificed to the parameters of the profile
+        /// Applies the configuration specified to the parameters of the profile
         /// workload action.
         /// </summary>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
@@ -544,11 +544,11 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns the name of the test files seperated by whitespace given a mount point.
+        /// Returns the name of the test files separated by whitespace given a mount point.
         /// </summary>
         /// <param name="mountPoint">A mount point to the disk under test.</param>
         /// <returns>
-        /// The full path to the test files seperated by whitespace.
+        /// The full path to the test files separated by whitespace.
         /// </returns>
         protected virtual string GetTestFiles(string mountPoint)
         {
@@ -957,7 +957,7 @@ namespace VirtualClient.Actions
             string[] testFiles = disks.Select(disk => this.GetTestDevicePath(disk)).ToArray();
 
             // e.g.
-            // The command line defines the specifics of each indvidual job. The job file defines each job-per-disk.
+            // The command line defines the specifics of each individual job. The job file defines each job-per-disk.
             //
             // --size={FileSize} --numjobs=16 --rw=randwrite --bs=4k --iodepth=32 --ioengine=libaio --direct=1 --ramp_time=30 --runtime=600 --time_based 
             // --overwrite=1 --thread --group_reporting --output-format=json /home/user/virtualclient.1.0.0/content/linux-arm64/temp/2d2218cd-4862-458e-bc91-c332a6d6aae9.fio

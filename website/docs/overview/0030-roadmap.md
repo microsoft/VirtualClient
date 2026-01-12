@@ -18,7 +18,7 @@ workload onboardings etc...
     - SPECjbb
     - SPECpower
     - Geekbench5
-    - Other MSFT proprietory workloads that we are reviewing
+    - Other MSFT proprietary workloads that we are reviewing
 - Workloads in development
     - MySQL
     - OMbench
@@ -38,7 +38,7 @@ workload onboardings etc...
 - Add documentation for the dependencies already supported.
   - Nvidia GPU driver and CUDA installation
   - Compiler Installation
-  - Docker insallation
+  - Docker installation
   - etc.
 
 - Onboard new dependencies

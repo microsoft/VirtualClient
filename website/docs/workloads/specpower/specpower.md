@@ -1,5 +1,5 @@
 # SPECpower
-SPEC Power is a workload created and licensed by the Standard Performance Evalution Corporation and is an industry standard benchmark
+SPEC Power is a workload created and licensed by the Standard Performance Evaluation Corporation and is an industry standard benchmark
 toolset for measuring power/energy consumption on a system.
 
 * [SPEC Power Documentation](https://www.spec.org/power_ssj2008/#:~:text=The%20SPEC%20Power%20benchmark%20is%20the%20first%20industry-standard,a%20toolset%20for%20use%20in%20improving%20server%20efficiency.)

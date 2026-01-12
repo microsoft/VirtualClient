@@ -60,7 +60,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Allos overwrite to Coremark process thread count. 
+        /// Allows overwrite to Coremark process thread count.
         /// </summary>
         public int ThreadCount
         {

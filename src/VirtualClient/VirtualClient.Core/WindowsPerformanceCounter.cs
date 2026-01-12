@@ -26,7 +26,7 @@ namespace VirtualClient
         private bool disposed;
 
         /// <summary>
-        /// Intialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
+        /// Initialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
         /// </summary>
         /// <param name="counter">The performance counter category.</param>
         /// <param name="captureStrategy">The capture strategy to use over time while capturing performance values.</param>
@@ -54,7 +54,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Intialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
+        /// Initialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
         /// </summary>
         /// <param name="counterCategory">The performance counter category.</param>
         /// <param name="counterName">The performance counter name.</param>
@@ -102,7 +102,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Intialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
+        /// Initialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
         /// </summary>
         /// <param name="counterCategory">The performance counter category.</param>
         /// <param name="counterName">The performance counter name.</param>

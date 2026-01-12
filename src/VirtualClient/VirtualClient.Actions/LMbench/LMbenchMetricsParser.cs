@@ -96,7 +96,7 @@ namespace VirtualClient.Actions
             this.Preprocess();
             this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, LMbenchMetricsParser.LMbenchSectionDelimiter);
 
-            // LMbench sometimes skipp those four measurements if it can't figure out the OS. Those tables are made optional.
+            // LMbench sometimes skip those four measurements if it can't figure out the OS. Those tables are made optional.
             this.ParseProcessorTimes();
             this.ParseBasicInt();
             this.ParseBasicFloat();
@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
 
             this.ParseContextSwitching();
             this.ParseCommunicationLatency();
-            this.ParseCommnunicationBandwidth();
+            this.ParseCommunicationBandwidth();
             this.ParseFileVMLatency();
             this.ParseMemoryLatency();
 
@@ -480,7 +480,7 @@ namespace VirtualClient.Actions
             this.FileVmLatency.ReplaceEmptyCell(replacement: null);
         }
 
-        private void ParseCommnunicationBandwidth()
+        private void ParseCommunicationBandwidth()
         {
             string tableName = "*Local* Communication bandwidths in MB/s - bigger is better";
             IList<string> columnNames = new List<string>

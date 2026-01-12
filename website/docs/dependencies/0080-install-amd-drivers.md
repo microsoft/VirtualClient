@@ -43,4 +43,4 @@ The following section describes the parameters used by the individual component 
 Note: Virtual Client is only tested with MI200x systems using installation file - https://repo.radeon.com/amdgpu-install/5.5/ubuntu/focal/amdgpu-install_5.5.50500-1_all.deb.
 
 ## Supported Linux Distros
-* Ubunutu
+* Ubuntu

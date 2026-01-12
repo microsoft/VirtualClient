@@ -85,7 +85,7 @@ namespace VirtualClient.Actions
             string mockResultDir = this.mockFixture.Combine(this.mockSpecViewExeDir, "results_19991231T235959");
             string mockHistoryResultsDir = this.mockFixture.Combine(this.mockSpecViewExeDir, "hist_" + Path.GetFileName(mockResultDir));
 
-            // Set up the mock directory to return the mock result dir when the test executor tries to find a dir that starts wth "results_"
+            // Set up the mock directory to return the mock result dir when the test executor tries to find a dir that starts with "results_"
             mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewExeDir, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
 
             // Set up the mock directory to increment resultRenamed by 1 when the test executor tries to rename the result directory

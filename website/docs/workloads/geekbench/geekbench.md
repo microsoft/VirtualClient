@@ -232,7 +232,7 @@ GeekBench6 runs a corresponding single-core and multi-core version for each of t
 | PDF Rendering         | Parses and renders a PDF using the PDFium library                                                                                            |
 | Photo Library         | Runs image classification to categorize and tag photos based on the objects they contain													   |
 | Clang                 | Compiles a C source file using AArch64 as the target architecture                                                                            |
-| Text Processing       | Loads files, parses them with regex, stores metadata in SQLite databse, and exports content to different format							   |
+| Text Processing       | Loads files, parses them with regex, stores metadata in SQLite database, and exports content to different format							   |
 | Asset Compression     | Compresses 3D textural and geometric assets using a variety of popular compression codecs (ASTC, BC7, DXT5)								   |
 | Object Detection      | Uses CNN to detect and classify objects in photo and then highlights them in photo														   |
 | Background Blur       | Separates background from foreground in a video stream and blurs the background															   |

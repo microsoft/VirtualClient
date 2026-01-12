@@ -28,8 +28,8 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Delimitered environment varaible
-        /// Example: Varaible1=A;Variable2=B
+        /// Delimitered environment variable
+        /// Example: Variable1=A;Variable2=B
         /// </summary>
         public string EnvironmentVariables
         {

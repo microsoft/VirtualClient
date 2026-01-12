@@ -200,7 +200,7 @@ The json output will include a valid/invalid output, and either the latency or t
 - **make run RUN_ARGS='--benchmarks=bert --scenarios=Offline,Server,SingleStream --config_ver=default --test_mode=AccuracyOnly --fast**: Run accuracy mode which focuses on
 the accuracy of the model's predictions. In this example, the command will run the bert benchmark, with Offline, Server, and Single Stream scenarios, using the default config version,
 in accuracy only mode, and with fewer iterations for faster turnaround time.  
-The json output will inculde a pass/fail output, and the accuracy score. For example this is the json output for the Offline scenario:
+The json output will include a pass/fail output, and the accuracy score. For example this is the json output for the Offline scenario:
 ```
 {
     "accuracy": [

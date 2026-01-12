@@ -72,7 +72,7 @@ namespace VirtualClient.Dependencies
                             break;
 
                         default:
-                            // different distro installation to be addded.
+                            // different distro installation to be added.
                             throw new WorkloadException(
                                 $"Nvidia Container Toolkit Installation is not supported by Virtual Client on the current Linux distro '{distroInfo.LinuxDistribution}'",
                                 ErrorReason.LinuxDistributionNotSupported);

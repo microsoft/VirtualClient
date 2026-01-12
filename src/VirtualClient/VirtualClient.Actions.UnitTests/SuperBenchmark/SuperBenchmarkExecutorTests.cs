@@ -54,7 +54,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SuperBenchmarkStateIsSerializeable()
+        public void SuperBenchmarkStateIsSerializable()
         {
             State state = new State(new Dictionary<string, IConvertible>
             {

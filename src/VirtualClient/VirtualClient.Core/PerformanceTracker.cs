@@ -101,7 +101,7 @@ namespace VirtualClient
                     {
                         // This type of exception will happen if the cancellation token is cancelled
                         // in the Task.Delay() call above. We don't want to surface this as an exception
-                        // becuase it is entirely expected.
+                        // because it is entirely expected.
                     }
                     catch (Exception exc)
                     {
@@ -147,7 +147,7 @@ namespace VirtualClient
                     {
                         // This type of exception will happen if the cancellation token is cancelled
                         // in the Task.Delay() call above. We don't want to surface this as an exception
-                        // becuase it is entirely expected.
+                        // because it is entirely expected.
                     }
                     catch (Exception exc)
                     {

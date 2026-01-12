@@ -164,7 +164,7 @@ namespace VirtualClient.Dependencies
                             break;
 
                         default:
-                            // different distro installation to be addded.
+                            // different distro installation to be added.
                             throw new WorkloadException(
                                 $"CUDA and Nvidia GPU driver installation is not supported by Virtual Client on the current Linux distro '{linuxDistributionInfo.LinuxDistribution}'.",
                                 ErrorReason.LinuxDistributionNotSupported);

@@ -108,7 +108,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task DeathStarBenchClientExecutorIntializeLocalAPIClientOnSingleVMSetup()
+        public async Task DeathStarBenchClientExecutorInitializeLocalAPIClientOnSingleVMSetup()
         {
             this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
             using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task DeathStarBenchClientExecutorIntializeServerAPIClientOnMultiVMSetup()
+        public async Task DeathStarBenchClientExecutorInitializeServerAPIClientOnMultiVMSetup()
         {
             using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -139,7 +139,7 @@ namespace VirtualClient.Actions
         public async Task DeathStarBenchClientExecutorExecutesExpectedCommands_SocialNetworkScenario_MultiVM()
         {
             string serviceName = "socialnetwork";
-            string binaryPath = this.mockFixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "wrk2");
+            string binaryPath = this.mockFixture.PlatformSpecifics.Combine("linux-x64", serviceName.ToLower(), "work2");
             this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
 
             List<string> expectedCommands = new List<string>

@@ -86,7 +86,7 @@ Executes all child components **in parallel**, and **repeats** this execution fo
 | MinimumIterations  | Minimum number of times each child component should run            | >= 0                    | 0           |
 
 ### Example
-Here, the child components will start execution parallely, and each component will run at least three times due to the `MinimumIterations` parameter. They will complete after 10 minutes if each component has completed the run three times, or else it will wait for three runs of each component. Thus, the MinimumIterations parameter supersedes the Duration parameter if the latter is not met. 
+Here, the child components will start execution parallelly, and each component will run at least three times due to the `MinimumIterations` parameter. They will complete after 10 minutes if each component has completed the run three times, or else it will wait for three runs of each component. Thus, the MinimumIterations parameter supersedes the Duration parameter if the latter is not met. 
 
 Note that By default, the MinimumIterations parameter is set to 0, meaning that the components will run until the Duration is met. If you want to ensure that each component runs at least once, you can set MinimumIterations to 1 or more.
 

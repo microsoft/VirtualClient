@@ -15,9 +15,9 @@ namespace VirtualClient.Contracts
         public const string Amps = "amps";
 
         /// <summary>
-        /// Celcius
+        /// Celsius
         /// </summary>
-        public const string Celcius = "celcius";
+        public const string Celsius = "celsius";
 
         /// <summary>
         /// Petabytes

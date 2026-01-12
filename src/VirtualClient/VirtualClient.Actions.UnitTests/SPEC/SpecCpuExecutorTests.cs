@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
         private DependencyPath mockPackage;
 
         [Test]
-        public void SpecCpuStateIsSerializeable()
+        public void SpecCpuStateIsSerializable()
         {
             State state = new State(new Dictionary<string, IConvertible>
             {

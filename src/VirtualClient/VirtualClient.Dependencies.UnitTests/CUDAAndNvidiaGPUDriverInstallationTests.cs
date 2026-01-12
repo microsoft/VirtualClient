@@ -129,7 +129,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyExecutesCorrectInsatllerCommandOnWindows()
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyExecutesCorrectInstallerCommandOnWindows()
         {
             this.SetupDefaultMockBehavior(PlatformID.Win32NT);
             this.fixture.Parameters["packageName"] = "NvidiaDrivers";

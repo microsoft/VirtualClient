@@ -291,7 +291,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void VirtualClientComponentReturnsTheExpectedClientInstancseFromTheEnvironmentLayoutByRole()
+        public void VirtualClientComponentReturnsTheExpectedClientInstanceFromTheEnvironmentLayoutByRole()
         {
             ClientInstance expectedInstance = this.mockFixture.Layout.Clients.ElementAt(1);
             VirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);

@@ -28,7 +28,7 @@ The following sections describes some of the aspects of good options for workloa
 
 * #### Is Easy to Integrate with Other Systems
   Good workloads are generally easy to use thus making it easy to integrate into the larger execution system. This reduces the overhead required for
-  teams to onboard new and valueable test scenarios.
+  teams to onboard new and valuable test scenarios.
 
 ## Additional Considerations
 The following section offers a few other recommendations when selecting a workload for easy integrated into the Virtual Client.
