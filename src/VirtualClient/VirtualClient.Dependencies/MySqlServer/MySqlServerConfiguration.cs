@@ -325,11 +325,11 @@ namespace VirtualClient.Dependencies.MySqlServer
                         this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
                     }
                     
-                    diskPaths += $"{mysqlPath}:";
+                    diskPaths += $"{mysqlPath};";
                 }
             }
 
-            return diskPaths.TrimEnd(':');
+            return diskPaths.TrimEnd(';');
         }
         
         private async Task<string> GetMySQLInMemoryCapacityAsync(CancellationToken cancellationToken)

@@ -341,7 +341,8 @@ namespace VirtualClient.Actions
                 this.HammerDBScenarioArguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
-                cancellationToken))
+                cancellationToken,
+                runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
