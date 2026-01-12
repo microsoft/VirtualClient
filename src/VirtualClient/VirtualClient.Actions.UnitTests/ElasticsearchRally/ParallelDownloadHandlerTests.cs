@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.Net;
     using System.Net.Http;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using CRC.VirtualClient.Actions;
@@ -30,7 +31,10 @@ namespace VirtualClient.Actions
             this.Setup(PlatformID.Unix);
 
             this.testUrl = "https://example.com/testfile.zip";
-            this.testDestinationPath = this.Combine(this.GetPackagePath(), "testfile.zip");
+            
+            string tempPath = Path.GetTempPath();
+
+            this.testDestinationPath = this.Combine(tempPath, "testfile.zip");
 
             this.mockHttpMessageHandler = new Mock<HttpMessageHandler>();
 
