@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.ProcessAffinity;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -385,12 +386,10 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    string command = "bash";
+                    string command = "bash -c";
                     string workingDirectory = this.RedisPackagePath;
-                    List<string> commands = new List<string>();
 
                     relatedContext.AddContext("command", command);
-                    relatedContext.AddContext("commandArguments", commands);
                     relatedContext.AddContext("workingDir", workingDirectory);
 
                     for (int i = 0; i < this.ServerInstances; i++)
@@ -399,16 +398,7 @@ namespace VirtualClient.Actions
                         // will warm them up and then exit. We keep a reference to the server processes/tasks
                         // so that they remain running until the class is disposed.
                         int port = this.Port + i;
-                        string commandArguments = null;
-
-                        if (this.BindToCores)
-                        {
-                            commandArguments = $"-c \"numactl -C {i} {this.RedisExecutablePath}";
-                        }
-                        else
-                        {
-                            commandArguments = $"-c \"{this.RedisExecutablePath}";
-                        }
+                        string commandArguments = this.RedisExecutablePath;
 
                         if (this.IsTLSEnabled)
                         {
@@ -419,13 +409,12 @@ namespace VirtualClient.Actions
                             commandArguments += $" --port {port}";
                         }
 
-                        commandArguments += $" {this.CommandLine}\"";
+                        commandArguments += $" {this.CommandLine}";
 
                         // We cannot use a Task.Run here. The Task is queued on the threadpool but does not get running
                         // until our counter 'i' is at the end. This will cause all server instances to use the same port
                         // and to try to bind to the same core.
-                        commands.Add(commandArguments);
-                        this.serverProcesses.Add(this.StartServerInstanceAsync(port, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
+                        this.serverProcesses.Add(this.StartServerInstanceAsync(port, i, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
                     }
                 }
                 catch (OperationCanceledException)
@@ -435,14 +424,43 @@ namespace VirtualClient.Actions
             });
         }
 
-        private Task StartServerInstanceAsync(int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task StartServerInstanceAsync(int port, int coreIndex, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
             {
                 try
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    IProcessProxy process = null;
+                    // LINUX with affinity: Wrap command with numactl
+                    if (this.BindToCores && this.Platform == PlatformID.Unix)
+                    {  
+                        ProcessAffinityConfiguration affinityConfig = ProcessAffinityConfiguration.Create(this.Platform, new[] { coreIndex });
+                        command = "bash -c" + command;
+                        process = this.SystemManagement.ProcessManager.CreateElevatedProcessWithAffinity(
+                            this.Platform,
+                            command,
+                            commandArguments,
+                            workingDirectory,
+                            affinityConfig);
+                    }
+                    else
                     {
+                        // No CPU affinity binding - standard elevated process
+                        process = this.SystemManagement.ProcessManager.CreateElevatedProcess(
+                            this.Platform,
+                            command,
+                            commandArguments,
+                            workingDirectory);
+                    }
+
+                    using (process)
+                    {
+                        // Start the process
+                        process.Start();
+
+                        // Wait for process to exit
+                        await process.WaitForExitAsync(cancellationToken);
+
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             ConsoleLogger.Default.LogMessage($"Redis server process exited (port = {port})...", telemetryContext);
