@@ -36,6 +36,16 @@ namespace VirtualClient.Actions
         public void GeekBench5ParserVerifyMetricsSingleCore()
         {
             string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench5Example.txt");
+            this.rawText = File.ReadAllText("C:\\Users\\bryan\\Downloads\\virtualclient.2.1.3201.1956\\content\\linux-x64\\logs\\geekbench6\\2026-01-12-195804648912-executegeekbench6benchmark.log");
+
+           this.testParser = new GeekBenchMetricsParser(this.rawText);
+            IList<Metric> metrics = this.testParser.Parse();
+        }
+
+        [Test]
+        public void GeekBench5ParserVerifyMetricsSingleCore_Test()
+        {
+            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench5Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();

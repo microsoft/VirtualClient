@@ -162,6 +162,67 @@ namespace VirtualClient
         /// Uses pkill on Linux systems to kill the associated process and/or its child/dependent processes.
         /// </summary>
         /// <param name="processManager">Provides functionality for creating processes.</param>
+        /// <param name="processId">The ID of the process to kill.</param>
+        /// <param name="logger">The logger to use to write trace information.</param>
+        /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
+        public static void SafeKill(this ProcessManager processManager, int processId, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
+        {
+            try
+            {
+                if (processId > 0)
+                {
+                    if (processManager.Platform == PlatformID.Unix)
+                    {
+                        using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
+                        {
+                            kill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
+                                .GetAwaiter().GetResult();
+
+                            // 0 = Success
+                            // 1 = Process not found
+                            if (kill.ExitCode != 0 && kill.ExitCode != 1)
+                            {
+                                kill.ThrowErrored<WorkloadException>(
+                                    $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
+                                    $"{kill.StandardOutput} {kill.StandardError}".Trim(),
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
+                        }
+                    }
+                    else if (processManager.Platform == PlatformID.Win32NT)
+                    {
+                        using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
+                        {
+                            taskkill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
+                                .GetAwaiter().GetResult();
+
+                            // 0 = Success
+                            // 1 = Process not found
+                            if (taskkill.ExitCode != 0 && taskkill.ExitCode != 128)
+                            {
+                                taskkill.ThrowErrored<WorkloadException>(
+                                    $"Windows taskkill attempt failed with exit code {taskkill.ExitCode} for process (id={processId}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
+                                    $"{taskkill.StandardOutput} {taskkill.StandardError}".Trim(),
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                EventContext errorContext = EventContext.Persisted();
+                errorContext.AddContext(nameof(processId), processId);
+                errorContext.AddError(exc);
+
+                logger?.LogMessage($"ProcessKillFailed", LogLevel.Warning, errorContext);
+            }
+        }
+
+        /// <summary>
+        /// Uses pkill on Linux systems to kill the associated process and/or its child/dependent processes.
+        /// </summary>
+        /// <param name="processManager">Provides functionality for creating processes.</param>
         /// <param name="process">The process to kill.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
         /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
