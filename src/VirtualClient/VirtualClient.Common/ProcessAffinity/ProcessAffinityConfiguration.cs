@@ -38,7 +38,7 @@ namespace VirtualClient.Common.ProcessAffinity
         /// <summary>
         /// Creates a platform-specific <see cref="ProcessAffinityConfiguration"/> instance.
         /// </summary>
-        /// <param name="platform">The target platform (Windows or Linux).</param>
+        /// <param name="platform">The target platform.</param>
         /// <param name="cores">The list of core indices to bind to.</param>
         /// <returns>A platform-specific affinity configuration instance.</returns>
         public static ProcessAffinityConfiguration Create(PlatformID platform, IEnumerable<int> cores)
@@ -47,7 +47,6 @@ namespace VirtualClient.Common.ProcessAffinity
 
             return platform switch
             {
-                PlatformID.Win32NT => new WindowsProcessAffinityConfiguration(cores),
                 PlatformID.Unix => new LinuxProcessAffinityConfiguration(cores),
                 _ => throw new NotSupportedException($"CPU affinity configuration is not supported on platform '{platform}'.")
             };
@@ -56,7 +55,7 @@ namespace VirtualClient.Common.ProcessAffinity
         /// <summary>
         /// Creates a platform-specific <see cref="ProcessAffinityConfiguration"/> instance from a core list string.
         /// </summary>
-        /// <param name="platform">The target platform (Windows or Linux).</param>
+        /// <param name="platform">The target platform.</param>
         /// <param name="coreList">A comma-separated list of core indices (e.g., "0,1,2,3" or "0-3").</param>
         /// <returns>A platform-specific affinity configuration instance.</returns>
         public static ProcessAffinityConfiguration Create(PlatformID platform, string coreList)
