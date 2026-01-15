@@ -67,7 +67,39 @@
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
+                return this.Parameters.GetValue<string>(nameof(this.CertificateName));
+            }
+        }
+
+        /// <summary>
+        /// Gets the access token used to authenticate with Azure services.
+        /// </summary>
+        protected string AccessToken { get; set; }
+
+        /// <summary>
+        /// Gets the path to the file where the access token is saved.
+        /// </summary>
+        protected string AccessTokenPath 
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.AccessTokenPath));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.AccessToken = this.Parameters.GetValue<string>(nameof(this.AccessToken), string.Empty);
+
+            if (string.IsNullOrWhiteSpace(this.AccessToken) && !string.IsNullOrWhiteSpace(this.AccessTokenPath))
+            {
+                this.AccessToken = await this.fileSystem.File.ReadAllTextAsync(this.AccessTokenPath);
             }
         }
 
@@ -83,8 +115,8 @@
 
             try
             {
-                IKeyVaultManager keyVault = await this.GetKeyVaultManager(cancellationToken);
-                X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.CertificateName, cancellationToken);
+                IKeyVaultManager keyVault = this.GetKeyVaultManager(cancellationToken);
+                X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.Platform, this.CertificateName, cancellationToken);
 
                 if (this.Platform == PlatformID.Win32NT)
                 {
@@ -199,7 +231,7 @@
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task<IKeyVaultManager> GetKeyVaultManager(CancellationToken cancellationToken)
+        protected IKeyVaultManager GetKeyVaultManager(CancellationToken cancellationToken)
         {
             IKeyVaultManager keyVaultManager = this.Dependencies.GetService<IKeyVaultManager>();
             keyVaultManager.ThrowIfNull(nameof(keyVaultManager));
@@ -209,22 +241,11 @@
             {
                 return keyVaultManager;
             }
-            else if (!string.IsNullOrWhiteSpace(this.LogFileName))
+            else if (!string.IsNullOrWhiteSpace(this.AccessToken))
             {
-                string directory = !string.IsNullOrWhiteSpace(this.LogFolderName)
-                    ? this.LogFolderName
-                    : this.fileSystem.Directory.GetCurrentDirectory();
+                this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
 
-                string accessTokenPath = this.Combine(directory, this.LogFileName);
-
-                string keyVaultUri = string.IsNullOrWhiteSpace(this.KeyVaultUri) 
-                    ? ((DependencyKeyVaultStore)keyVaultManager.StoreDescription).EndpointUri.ToString()
-                    : this.KeyVaultUri;
-
-                keyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
-
-                string token_ = await this.fileSystem.File.ReadAllTextAsync(accessTokenPath, cancellationToken).ConfigureAwait(false);
-                AccessTokenCredential tokenCredential = new AccessTokenCredential(token_);
+                AccessTokenCredential tokenCredential = new AccessTokenCredential(this.AccessToken);
 
                 DependencyKeyVaultStore dependencyKeyVault = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri(this.KeyVaultUri), tokenCredential);
                 return new KeyVaultManager(dependencyKeyVault);
