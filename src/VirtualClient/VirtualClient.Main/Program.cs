@@ -325,6 +325,11 @@ namespace VirtualClient
             apiSubcommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(apiSubcommand);
 
+            Command getAccessTokenSubcommand = Program.CreateGetTokenSubCommand(settings);
+            getAccessTokenSubcommand.TreatUnmatchedTokensAsErrors = true;
+            getAccessTokenSubcommand.Handler = CommandHandler.Create<GetAccessTokenCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(getAccessTokenSubcommand);
+
             Command bootstrapSubcommand = Program.CreateBootstrapSubcommand(settings);
             bootstrapSubcommand.TreatUnmatchedTokensAsErrors = true;
             bootstrapSubcommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
@@ -404,6 +409,36 @@ namespace VirtualClient
             };
 
             return apiCommand;
+        }
+
+        private static Command CreateGetTokenSubCommand(DefaultSettings settings)
+        {
+            Command getAccessTokenCommand = new Command(
+                "get-token",
+                "Get access token for current user to authenticate with Azure Key Vault.")
+            {
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: false),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return getAccessTokenCommand;
         }
 
         private static Command CreateBootstrapSubcommand(DefaultSettings settings)
