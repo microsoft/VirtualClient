@@ -115,7 +115,7 @@
 
             try
             {
-                IKeyVaultManager keyVault = this.GetKeyVaultManager(cancellationToken);
+                IKeyVaultManager keyVault = this.GetKeyVaultManager();
                 X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.Platform, this.CertificateName, cancellationToken);
 
                 if (this.Platform == PlatformID.Win32NT)
@@ -227,16 +227,13 @@
         }
 
         /// <summary>
-        /// 
+        /// Gets the Key Vault manager to use to retrieve certificates from Key Vault.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        protected IKeyVaultManager GetKeyVaultManager(CancellationToken cancellationToken)
+        protected IKeyVaultManager GetKeyVaultManager()
         {
             IKeyVaultManager keyVaultManager = this.Dependencies.GetService<IKeyVaultManager>();
             keyVaultManager.ThrowIfNull(nameof(keyVaultManager));
 
-            // need better if condition.
             if (keyVaultManager.StoreDescription != null)
             {
                 return keyVaultManager;

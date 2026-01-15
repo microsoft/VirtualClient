@@ -65,7 +65,6 @@ namespace VirtualClient
         /// <param name="certName">The name of the certificate to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
-        /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
         /// A <see cref="X509Certificate2"/> containing the certificate.
@@ -78,7 +77,6 @@ namespace VirtualClient
             string certName,
             CancellationToken cancellationToken,
             string keyVaultUri = null,
-            bool retrieveWithPrivateKey = false,
             IAsyncPolicy retryPolicy = null);
     }
 }

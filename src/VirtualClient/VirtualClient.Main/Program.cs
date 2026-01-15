@@ -419,10 +419,23 @@ namespace VirtualClient
             {
                 // OPTIONAL
                 // -------------------------------------------------------------------
-                OptionFactory.CreateParametersOption(required: false),
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
                 // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false)
+                OptionFactory.CreateKeyVaultOption(required: false),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
             return getAccessTokenCommand;
