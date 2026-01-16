@@ -4,7 +4,7 @@ and system builders. The software feeds the the processor a barrage of integer a
 consistently verified with the goal of testing the stability of the CPU and L1/L2/L3 processor caches. Additionally, it utilizes all of the cores
 on the system to ensure a consistently high stress test environment.
 
-Prime95 is designed to run indefinately on a system till any error is encountered. The workload is onboarded to the Virtual Client with the goal
+Prime95 is designed to run indefinitely on a system till any error is encountered. The workload is onboarded to the Virtual Client with the goal
 of supporting a dual-purpose: to test the performance/timing of the CPU in computing the calculations while also placing it under stress.
 
 * [Prime95 Documentation](https://www.mersenne.org/download/)
@@ -47,7 +47,7 @@ The following list describes the measurements captured by the workload running a
 The following metrics are examples of those captured by the Virtual Client when running the Prime95 workload.
 
 :::info
-*Note that if the failed test count is greater than 0, it denotes an overall Prime95 test failure and some harware error. The test time is the time 
+*Note that if the failed test count is greater than 0, it denotes an overall Prime95 test failure and some hardware error. The test time is the time 
 for which the system was stressed with torture test. A higher the test time without error typically indicates more confidence in Prime95 results.*
 :::
 

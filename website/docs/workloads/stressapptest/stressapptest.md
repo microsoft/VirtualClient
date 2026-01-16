@@ -28,7 +28,7 @@ if the physical components overheat.
 The following metrics are examples of those captured by the Virtual Client when running the StressAppTest workload.
 
 :::info
-*Note that if the hardwareErrorCount is greater than 0, it denotes an overall StressAppTest failure and some harware error, possibly in the DIMM.
+*Note that if the hardwareErrorCount is greater than 0, it denotes an overall StressAppTest failure and some hardware error, possibly in the DIMM.
 The DIMM Slot and other details, as captured by StressAppTest, is added as a "Tag" of the hardwareErrorCount metric, for ease of debugging.*
 :::
 

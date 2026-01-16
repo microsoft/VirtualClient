@@ -17,7 +17,7 @@ namespace VirtualClient.Logging
     public sealed class EventHubTelemetryLoggerProvider : ILoggerProvider
     {
         private EventHubTelemetryChannel telemetryChannel;
-        private LogLevel minumumLogLevel;
+        private LogLevel minimumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventHubTelemetryLoggerProvider"/> class.
@@ -30,7 +30,7 @@ namespace VirtualClient.Logging
         {
             channel.ThrowIfNull(nameof(channel));
             this.telemetryChannel = channel;
-            this.minumumLogLevel = level;
+            this.minimumLogLevel = level;
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace VirtualClient.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            return new EventHubTelemetryLogger(this.telemetryChannel, this.minumumLogLevel);
+            return new EventHubTelemetryLogger(this.telemetryChannel, this.minimumLogLevel);
         }
 
         /// <summary>

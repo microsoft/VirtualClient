@@ -134,7 +134,7 @@ namespace VirtualClient.Actions
             }
             catch
             {
-                throw new Exception($"Error occured at starting server in {this.ServiceName}");
+                throw new Exception($"Error occurred at starting server in {this.ServiceName}");
             }
         }
 

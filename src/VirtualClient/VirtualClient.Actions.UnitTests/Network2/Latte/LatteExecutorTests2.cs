@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task LatteExecutorIntializeServerAPIClientAndLocalAPIClientOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
+        public async Task LatteExecutorInitializeServerAPIClientAndLocalAPIClientOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupTest(platformID, architecture, role);
             using (TestLatteExecutor executor = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))

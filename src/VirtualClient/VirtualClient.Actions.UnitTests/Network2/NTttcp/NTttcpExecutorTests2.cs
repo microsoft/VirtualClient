@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Win(PlatformID platformID, Architecture architecture, string role)
+        public async Task NTttcpExecutorInitializeServerAPIClientForClientRoleOnMultiVMSetup_Win(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupTest(platformID, architecture, role);
             using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -213,7 +213,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
-        public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Unix(PlatformID platformID, Architecture architecture, string role)
+        public async Task NTttcpExecutorInitializeServerAPIClientForClientRoleOnMultiVMSetup_Unix(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupTest(platformID, architecture, role);
             using (TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))

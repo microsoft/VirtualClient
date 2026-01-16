@@ -367,7 +367,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Returns true if the command parts can be determined and outputs the parts.
         /// </summary>
-        /// <param name="fullCommand">The full comamnd and arguments (e.g. sudo lshw -c disk).</param>
+        /// <param name="fullCommand">The full command and arguments (e.g. sudo lshw -c disk).</param>
         /// <param name="command">The command to execute.</param>
         /// <param name="commandArguments">The arguments to pass to the command.</param>
         public static bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments)
@@ -546,7 +546,7 @@ namespace VirtualClient.Contracts
             List<string> allPaths = filePaths.Select(p => this.StandardizePath(p)).ToList();
 
             // Iterate through first string from 0 to min length of all strings
-            // Take while all path share charaters at index.
+            // Take while all path share characters at index.
             string commonPrefix = new string(
                 allPaths.First().Substring(0, allPaths.Min(s => s.Length))
                 .TakeWhile((c, i) => allPaths.All(p => p[i] == c)).ToArray());

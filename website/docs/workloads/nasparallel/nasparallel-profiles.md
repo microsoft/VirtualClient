@@ -77,12 +77,12 @@ For different benchmarks with NAS Parallel we have various recommendation on num
 ```
 
 ## SSH Requirements
-OpenMPI sends messages over port 22 - as well as expects to send messages without having to supply a key or passsword. A secure and safe way is to register an SSH identity with the
+OpenMPI sends messages over port 22 - as well as expects to send messages without having to supply a key or password. A secure and safe way is to register an SSH identity with the
 client machine. Here is an example [blog post](https://linuxize.com/post/how-to-setup-passwordless-ssh-login/) on how to do this. Although the basic steps are:
 - On client, store a private-public key pair under ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
 - On server, append the id_rsa.pub generated under ~/.ssh/authorized_keys
 - On client, store server fingprints in ~/.ssh/known_hosts 
-- Last when running the profile, supply the username whos .ssh directory contains all of the files just created/edited. 
+- Last when running the profile, supply the username whose .ssh directory contains all of the files just created/edited.
 
 ## PERF-HPC-NASPARALLELBENCH.json
 Runs a set of HPC workloads using NAS Parallel Benchmarks to the parallel computing performance. This profile is designed to test both single and 

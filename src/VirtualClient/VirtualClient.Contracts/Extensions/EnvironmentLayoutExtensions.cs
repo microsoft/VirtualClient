@@ -13,7 +13,7 @@ namespace VirtualClient.Contracts
     public static class EnvironmentLayoutExtensions
     {
         /// <summary>
-        /// Returns the client instance from the layout that matches with the local sytem (i.e. matching IP address)
+        /// Returns the client instance from the layout that matches with the local system (i.e. matching IP address)
         /// or null if one is not found.
         /// </summary>
         /// <param name="clientId">The ID of the Virtual Client agent/instance.</param>

@@ -31,7 +31,7 @@ Runs the Stress-ng workload in short but constant bursts to assess the performan
 
   | Parameter | Purpose | Default Value | Note |
   |-----------|---------|---------------|------|
-  | CommandLine | The CommandLine Arguments to be provided to StressNg | "--timeout 60" | "The commandline parameter --yaml is programatically added, do not add it in profile. By default, --metrics flag is ON, --cpu is set to ProcessorCount and the default timeout is 60 seconds." |
+  | CommandLine | The CommandLine Arguments to be provided to StressNg | "--timeout 60" | "The commandline parameter --yaml is programmatically added, do not add it in profile. By default, --metrics flag is ON, --cpu is set to ProcessorCount and the default timeout is 60 seconds." |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

@@ -11,7 +11,7 @@ parameter (see below) by default.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-FIO.json) 
 
-Additonally this profile is designed to auto-scale to the number of cores on the system on which it runs. It uses a simple algorithm to determine 2 key
+Additionally this profile is designed to auto-scale to the number of cores on the system on which it runs. It uses a simple algorithm to determine 2 key
 aspects of the workload execution.
 
 * Total number of jobs/threads = \<# of logical cores> / 2  
@@ -231,7 +231,7 @@ Therefore, they are performed on different disks
   | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
   | ProcessModel              |  Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). |
   | Scenario                  | Scenario use to define the given action of profile  |
-  | Tags                      | Tags usefull for telemetry data |
+  | Tags                      | Tags useful for telemetry data |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

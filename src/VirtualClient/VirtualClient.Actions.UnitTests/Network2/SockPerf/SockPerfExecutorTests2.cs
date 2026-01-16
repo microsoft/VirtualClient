@@ -122,7 +122,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
-        public async Task SockPerfExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
+        public async Task SockPerfExecutorInitializeServerAPIClientForClientRoleOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupTest(platformID, architecture, role);
             using (TestSockPerfExecutor executor = new TestSockPerfExecutor(this.Dependencies, this.Parameters))

@@ -54,7 +54,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The argument for Mininum FFTSize defined in the profile.
+        /// The argument for Minimum FFTSize defined in the profile.
         /// <list type="bullet">
         /// <item>
         /// <term>Smallest FFT values</term>

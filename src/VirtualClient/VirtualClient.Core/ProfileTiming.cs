@@ -12,7 +12,7 @@ namespace VirtualClient
     /// Represents different types of runtime timeout concepts in the Virtual Client.
     /// <list type="bullet">
     /// <item>
-    /// <description>No Timeout - User does not supply a timeout at all on the command line. The application will run until explicity terminated.</description>
+    /// <description>No Timeout - User does not supply a timeout at all on the command line. The application will run until explicitly terminated.</description>
     /// </item>
     /// <item>
     /// <description>Explicit Timeout - User supplies a timeout on the command line (e.g. --timeout=1440). The application will exit at that specific time.</description>

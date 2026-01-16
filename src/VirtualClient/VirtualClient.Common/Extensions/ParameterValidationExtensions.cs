@@ -66,7 +66,7 @@ namespace VirtualClient.Common.Extensions
         /// <summary>
         /// Throws an exception if the validator returns false for an object.
         /// </summary>
-        /// <typeparam name="T">The type of object being valudated.</typeparam>
+        /// <typeparam name="T">The type of object being validated.</typeparam>
         /// <param name="toValidate">The object to validate.</param>
         /// <param name="parameterName">Name of the parameter.</param>
         /// <param name="validator">

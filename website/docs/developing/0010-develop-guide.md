@@ -90,7 +90,7 @@ important thing is to keep things as simple as possible.
   distinct workload executors, monitors and dependencies exist in Virtual Client with the list constantly growing.
 
 * **Functionality that is shared by all components should be part of the 'Core' project**  
-  There are dependencies that are required by most components in the Virtual Client. The implmentations of these hold a high quality bar
+  There are dependencies that are required by most components in the Virtual Client. The implementations of these hold a high quality bar
   because they are so fundamental to the operations of the Virtual Client application as a whole. Most of the necessary dependencies have been
   implemented. However if a new dependency is required in Virtual Client that is to be shared across all providers, it should be implemented
   in the 'Core' project. Note that something is not "common" because it might be in the future. A component is common when it is used by many
@@ -236,7 +236,7 @@ exist within the Virtual Client platform/core codebase. It is helpful to underst
   This project contains "Fundamental" workload/test executor implementations. The components within this project can be seen referenced in the
   'Actions' section of related workload profiles.
 
-  This project also contains classes/implementations of various results/raw text parsers that are used in conjuction with workload/test executors
+  This project also contains classes/implementations of various results/raw text parsers that are used in conjunction with workload/test executors
   to read important information/data (e.g. metrics) from the output of workloads. The parsing of results is complex enough to
   keep the implementation separate from the workload executors and to ensure reusability for different implementations of a related
   workload executor.
@@ -254,7 +254,7 @@ exist within the Virtual Client platform/core codebase. It is helpful to underst
   This project contains "Fundamental" background monitor implementations. The components within this project can be seen referenced in the
   'Monitors' section of related monitoring profiles.
 
-  This project also contains classes/implementations of various results/raw text parsers that are used in conjuction with monitors
+  This project also contains classes/implementations of various results/raw text parsers that are used in conjunction with monitors
   to read important information/data (e.g. metrics) from the output of monitors. The parsing of results is complex enough to
   keep the implementation separate from the monitors and to ensure reusability for different implementations of a related
   monitor.
@@ -397,7 +397,7 @@ exhaustive list but does illustrate things that are "fundamental" to development
   The C# programming language (as of version 6.0) has great support for asynchronous programming. Asynchronous programming allows for the application to be
   far more efficient in the usage of system primitive resources for I/O-bound or CPU-bound operations. The Virtual Client runtime platform itself MUST run as
   efficiently as possible. This is especially the case when it is running a resource-sensitive benchmark, workload or test. This is because the resources that the
-  Virtual Client itself uses in order to operate as a runtime platform on the system affect the resources available t othe workload and can cause "noise" in the
+  Virtual Client itself uses in order to operate as a runtime platform on the system affect the resources available t other workload and can cause "noise" in the
   data that is emitted. For example, were the Virtual Client itself to use too many CPU/process resources/cycles when running a workload that is designed to
   benchmark the performance of the CPU/processor, the performance results of the benchmark could be skewed to be less accurate.
 
@@ -517,7 +517,7 @@ exhaustive list but does illustrate things that are "fundamental" to development
 
   ``` csharp
   // For example:
-  // It is usefult to capture context-specific information related to a process being executed 
+  // It is useful to capture context-specific information related to a process being executed 
   // (the command, arguments, exit codes, standard output, standard error etc...)
   EventContext relatedContext = telemetryContext.Clone()
       .AddContext("command", workload.Command)
@@ -592,7 +592,7 @@ The following methods are executed in the order specified for each and every com
 method is required to be implemented. The other methods are optional and may be overridden in the new component to meet the needs of the developer implementation.
 
 * **IsSupported**  
-  Method is executed to determin whether or not the component should be executed on the system. Reasons why a component might not be valid/supported
+  Method is executed to determine whether or not the component should be executed on the system. Reasons why a component might not be valid/supported
   for a given system include:
   * The component or its dependencies cannot run on the current platform/architecture (e.g. win-arm64, linux-arm64).
   * The component or its dependencies cannot run on the current distro of the operating system (e.g. Ubuntu, Redhat).
@@ -675,13 +675,13 @@ logging is routed correctly. There are 3 different categories of telemetry in th
       // 1) A "Start" event is written capturing a timestamp at the beginning of the logic block operations
       //   (e.g. AnyComponent.PerformOperationStart).
       //
-      // 2) A "Stop" event is written capturing a timestamp at the end of the logic block operations (e.g. AnyComponent.PerformOpertionStop). 
-      //    This event will contain a propery 'durationMs' in the telemetry message context/custom dimensions that defines the length of
+      // 2) A "Stop" event is written capturing a timestamp at the end of the logic block operations (e.g. AnyComponent.PerformOperationStop). 
+      //    This event will contain a property 'durationMs' in the telemetry message context/custom dimensions that defines the length of
       //    time in milliseconds the logic took. This can be helpful when analyzing the performance of logic later on
       //    without needing to perform date/time math.
       //
       // 3) Any exceptions/errors that are throw will be automatically captured and the error messages + callstack will be added to
-      //    an "Error" message (e.g. AnyComponent.PerformOpertionError).
+      //    an "Error" message (e.g. AnyComponent.PerformOperationError).
       //
       // All of this functionality is wrapped up in the extension method which allows for consistency in telemetry event names and
       // error handling while significantly reducing "noise" in the code related to telemetry logic.

@@ -623,10 +623,10 @@
 	</section>
 	<warnings>
 		<warning name="testhaderrors" type="warning" >This test contained errors.</warning>
-		<warning name="wmierror" type="warning" >An error occured collecting server information data. Check that WMI is available.</warning>
+		<warning name="wmierror" type="warning" >An error occurred collecting server information data. Check that WMI is available.</warning>
 		<warning name="badvalue" type="warning" >An error was encountered querying remote server information. This value may be wrong.</warning>
-		<warning name="countererror" type="warning" >An error occured during the collection of this counter.</warning>
-		<warning name="perfmonerror" type="warning" >An error occured during the collection of performance counters.</warning>
+		<warning name="countererror" type="warning" >An error occurred during the collection of this counter.</warning>
+		<warning name="perfmonerror" type="warning" >An error occurred during the collection of performance counters.</warning>
 		<warning name="lowcachehits" type="warning" >HTTP.sys cache hits number is low: either warmed up during cold test or didn't warm up enough during normal test.</warning>
 	</warnings>
 	<titles>

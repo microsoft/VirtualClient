@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The Memtier benchmark will return an exit code of 130 when it is interupted while
+        /// The Memtier benchmark will return an exit code of 130 when it is interrupted while
         /// trying to write to standard output. This happens when Ctrl-C is used for example.
         /// We handle this error for this reason.
         /// </summary>

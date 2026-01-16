@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task CtsTrafficClientExecutorIntializesTheExpectedAPIClients_MultiVM_Environment()
+        public async Task CtsTrafficClientExecutorInitializesTheExpectedAPIClients_MultiVM_Environment()
         {
             this.SetupTest();
             using (var executor = new TestCtsTrafficExecutor(this.Dependencies, this.Parameters))

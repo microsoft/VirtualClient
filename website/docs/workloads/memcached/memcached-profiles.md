@@ -79,7 +79,7 @@ Runs the Memtier workload against to generate various network traffic patterns a
   | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
   | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.. | true |
   | Duration                  | Optional. Defines the length of time to execute the Memtier benchmark operations against the Memcached server for each scenario in the profile. | 2 mins |
-  | ServerMaxConnections      | Optional. The Maxium number of connections the Memcached server will allow. This allows the user to adjust alongside the number of client instances for higher scale situations.  |  |
+  | ServerMaxConnections      | Optional. The Maximum number of connections the Memcached server will allow. This allows the user to adjust alongside the number of client instances for higher scale situations.  |  |
   | ServerPort                | Optional. The initial port on which the Memcached server will listen for traffic. | 6379 |
 
 * **Component Parameters**  

@@ -85,7 +85,7 @@ namespace VirtualClient.Dependencies
                 if (this.PlatformSpecifics.CpuArchitecture != Architecture.X64 && this.PlatformSpecifics.CpuArchitecture != Architecture.Arm64)
                 {
                     throw new WorkloadException(
-                            $"DCGMI Installtion is not supported on the current platform {this.Platform} through VC." +
+                            $"DCGMI Installation is not supported on the current platform {this.Platform} through VC." +
                             $"Supported Platforms-Architecture include:" +
                             $"{PlatformID.Unix}-{Architecture.X64}," + $"{PlatformID.Unix}-{Architecture.Arm64}",
                             ErrorReason.PlatformNotSupported);
@@ -94,7 +94,7 @@ namespace VirtualClient.Dependencies
             else
             {
                 throw new WorkloadException(
-                            $"DCGMI Installtion is not supported on the current platform {this.Platform} through VC." +
+                            $"DCGMI Installation is not supported on the current platform {this.Platform} through VC." +
                             $"Supported Platforms-Architecture include:" +
                             $"{PlatformID.Unix}-{Architecture.X64}," + $"{PlatformID.Unix}-{Architecture.Arm64}",
                             ErrorReason.PlatformNotSupported);

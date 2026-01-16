@@ -32,7 +32,7 @@ namespace VirtualClient.Logging
         private static AssemblyName executingAssembly = Assembly.GetEntryAssembly().GetName();
         private JsonSerializerSettings jsonSerializationSettings;
         private EventHubTelemetryChannel underlyingTelemetryChannel;
-        private LogLevel minumumLogLevel;
+        private LogLevel minimumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventHubTelemetryLogger"/> class.
@@ -43,7 +43,7 @@ namespace VirtualClient.Logging
         {
             channel.ThrowIfNull(nameof(channel));
             this.underlyingTelemetryChannel = channel;
-            this.minumumLogLevel = level;
+            this.minimumLogLevel = level;
 
             this.jsonSerializationSettings = new JsonSerializerSettings
             {
@@ -99,7 +99,7 @@ namespace VirtualClient.Logging
         /// <inheritdoc />
         public bool IsEnabled(LogLevel logLevel)
         {
-            return logLevel >= this.minumumLogLevel;
+            return logLevel >= this.minimumLogLevel;
         }
 
         /// <inheritdoc/>

@@ -5,7 +5,7 @@ It has been designed to be efficient on a wide range of modern high-performance 
 
 This toolset was compiled from the official website and modified so that it is easier to integrate into VirtualClient.
 
-* [LAPACK Offical Website](http://www.netlib.org/lapack/)
+* [LAPACK Official Website](http://www.netlib.org/lapack/)
 * [LAPACK Github](https://github.com/Reference-LAPACK/lapack)
 * [LAPACK Installation Guide](http://www.netlib.org/lapack/lawnspdf/lawn41.pdf)
 

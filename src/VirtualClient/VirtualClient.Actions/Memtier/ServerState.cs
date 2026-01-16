@@ -50,7 +50,7 @@ namespace VirtualClient.Actions.Memtier
                     // e.g.
                     // 6379:0,,,6380:1,,,6381:2
                     //
-                    // For some servers, a signle instance may be bound to all logical processors
+                    // For some servers, a single instance may be bound to all logical processors
                     // 
                     // e.g.
                     // 6379:0,1,2,3,4,5,6,7

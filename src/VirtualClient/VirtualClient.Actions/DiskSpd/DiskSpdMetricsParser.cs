@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
         private static readonly Regex DiskSpdSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// Separate the column values by '|' and trim surrouding spaces..
+        /// Separate the column values by '|' and trim surrounding spaces..
         /// </summary>
         private static readonly Regex DiskSpdDataTableDelimiter = new Regex(@"( )*(\|)( )*", RegexOptions.ExplicitCapture);
 

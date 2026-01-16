@@ -122,7 +122,7 @@ namespace VirtualClient.Actions
         protected IAsyncPolicy ProcessStartRetryPolicy { get; set; }
 
         /// <summary>
-        /// Intialize CPS.
+        /// Initialize CPS.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

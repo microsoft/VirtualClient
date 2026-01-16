@@ -258,7 +258,7 @@ namespace VirtualClient.Actions
         /// </summary>
         private string GenerateCommandArgument(string scene, string deviceType)
         {
-            // --verbosity 3 gives detailed error messsage if Blender fails to run
+            // --verbosity 3 gives detailed error message if Blender fails to run
             return $"benchmark --blender-version {this.BlenderVersion} --device-type {deviceType} {scene} --json --verbosity 3";
         }
     }

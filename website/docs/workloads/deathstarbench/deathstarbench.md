@@ -18,7 +18,7 @@ This toolset was compiled from the github repo to integrate into VirtualClient.
 * [DeathStarBench Research paper](https://gy1005.github.io/publication/2019.asplos.deathstarbench/2019.asplos.deathstarbench.pdf?msclkid=1b5071f9d01a11ec8f1946ebedfa484d)
 
 ## What is Being Measured?
-DeathStarBench is designed to anlayze network communication latencies and throughput between client and server systems. It produces different percentile latencies for network 
+DeathStarBench is designed to analyze network communication latencies and throughput between client and server systems. It produces different percentile latencies for network 
 communication and also data transfer/sec for each HTTP request.
 
 ### Workload Metrics

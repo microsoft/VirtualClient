@@ -199,10 +199,10 @@ or AMD [rocblas-bench](https://github.com/ROCmSoftwarePlatform/rocBLAS/tree/deve
 
   | Name                                   | Unit             | Description                                                 |
   |----------------------------------------|------------------|-------------------------------------------------------------|
-  | nccl-bw/$\{operation}_$\{msg_size}_time  | time (us)        | NCCL operation lantency with given message size.            |
+  | nccl-bw/$\{operation}_$\{msg_size}_time  | time (us)        | NCCL operation latency with given message size.            |
   | nccl-bw/$\{operation}_$\{msg_size}_algbw | bandwidth (GB/s) | NCCL operation algorithm bandwidth with given message size. |
   | nccl-bw/$\{operation}_$\{msg_size}_busbw | bandwidth (GB/s) | NCCL operation bus bandwidth with given message size.       |
-  | rccl-bw/$\{operation}_$\{msg_size}_time  | time (us)        | RCCL operation lantency with given message size.            |
+  | rccl-bw/$\{operation}_$\{msg_size}_time  | time (us)        | RCCL operation latency with given message size.            |
   | rccl-bw/$\{operation}_$\{msg_size}_algbw | bandwidth (GB/s) | RCCL operation algorithm bandwidth with given message size. |
   | rccl-bw/$\{operation}_$\{msg_size}_busbw | bandwidth (GB/s) | RCCL operation bus bandwidth with given message size.       |
 
@@ -211,10 +211,10 @@ or AMD [rocblas-bench](https://github.com/ROCmSoftwarePlatform/rocBLAS/tree/deve
 
   | Metrics                                         | Unit      | Description                                                                           |
   |-------------------------------------------------|-----------|---------------------------------------------------------------------------------------|
-  | tcp-connectivity/$\{hostname/ip}_successed_count | count     | successed times of tcp connections between current node and other nodes               |
+  | tcp-connectivity/$\{hostname/ip}_succeeded_count | count     | succeeded times of tcp connections between current node and other nodes               |
   | tcp-connectivity/$\{hostname/ip}_failed_count    | count     | failed times of tcp connections between current node and other nodes                  |
   | tcp-connectivity/$\{hostname/ip}_success_rate    |           | success rate (successed/total) of tcp connection between current node and other nodes |
-  | tcp-connectivity/$\{hostname/ip}_time_min        | time (ms) | mininum latency of tcp connections between current node and other nodes               |
+  | tcp-connectivity/$\{hostname/ip}_time_min        | time (ms) | minimum latency of tcp connections between current node and other nodes               |
   | tcp-connectivity/$\{hostname/ip}_time_max        | time (ms) | maximum latency of tcp connections between current node and other nodes               |
   | tcp-connectivity/$\{hostname/ip}_time_avg        | time (ms) | average latency of tcp connections between current node and other nodes               |
 

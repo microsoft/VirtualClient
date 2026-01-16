@@ -134,7 +134,7 @@ namespace VirtualClient.Actions
                 throw new WorkloadException(
                     $"Unexpected profile definition.The action in the profile does not contain the " +
                     $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
-                    $"--yaml or -Y parameter. That is being appended programatically",
+                    $"--yaml or -Y parameter. That is being appended programmatically",
                     ErrorReason.InvalidProfileDefinition);
             }
         }

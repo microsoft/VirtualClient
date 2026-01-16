@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// Intialize Latte.
+        /// Initialize Latte.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

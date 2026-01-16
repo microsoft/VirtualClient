@@ -286,7 +286,7 @@ namespace VirtualClient.Actions
         /// <exception cref="WorkloadException"></exception>
         protected string GetContainerName()
         {
-            // Update this function to accomodate other architectures
+            // Update this function to accommodate other architectures
             if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64)
             {
                 return $"mlperf-inference-{this.Username}-x86_64";

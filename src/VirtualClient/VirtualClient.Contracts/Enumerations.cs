@@ -200,7 +200,7 @@ namespace VirtualClient
         /// The environment that the Virtual Client is executing on
         /// does not have sufficient resources to run.
         /// </summary>
-        EnvironmentIsInsufficent = 508,
+        EnvironmentIsInsufficient = 508,
 
         /// <summary>
         /// One or more instructions provided are invalid/incorrect.
@@ -524,7 +524,7 @@ namespace VirtualClient
     public enum LinuxDistribution
     {
         /// <summary>
-        /// Unkwown distribution.
+        /// Unknown distribution.
         /// </summary>
         Unknown,
 

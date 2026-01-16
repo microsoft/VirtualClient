@@ -23,7 +23,7 @@ test controller systems.
 the following are required in order to use the Virtual Client as a test controller.
 
 * The test controller system MUST have internet access in order to support download of dependencies.
-* Target systems MUST be network-accessible from the test controller system (e.g. same LAN). It is also recommeded that the target systems have some amount of direct internet connectivity in order to make system setup/configuration easier. See the ```Considerations``` section above.
+* Target systems MUST be network-accessible from the test controller system (e.g. same LAN). It is also recommended that the target systems have some amount of direct internet connectivity in order to make system setup/configuration easier. See the ```Considerations``` section above.
 * SSH support MUST be installed/enabled on each target system. The support is native to Linux but requires a feature to be installed on Windows.
 
   [Get started with OpenSSH for Windows](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui&pivots=windows-server-2025)

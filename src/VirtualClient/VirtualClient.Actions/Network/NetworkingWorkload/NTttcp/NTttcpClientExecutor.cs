@@ -9,7 +9,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// NTttcp(Test Bandwith and Throughput) Tool Client Executor. 
+    /// NTttcp(Test Bandwidth and Throughput) Tool Client Executor.
     /// </summary>
     public class NTttcpClientExecutor : NTttcpExecutor
     {

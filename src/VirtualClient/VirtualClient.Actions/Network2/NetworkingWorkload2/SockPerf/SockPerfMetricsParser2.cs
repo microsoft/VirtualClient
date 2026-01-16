@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     {
         private static readonly Regex ObservatiosnExpression = new Regex(@"^sockperf.* (\d+) observations.*", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly int HeaderCount = 20;
-        private static readonly string Seperator = "------------------------------";
+        private static readonly string Separator = "------------------------------";
         private static readonly string ObservationsHeader = "packet, txTime(sec), rxTime(sec), rtt(usec)";
 
         private double confidenceLevel;
@@ -84,7 +84,7 @@ namespace VirtualClient.Actions
 
                     headerCount--;
 
-                    if (headerCount == 0 && line.Trim() != Seperator)
+                    if (headerCount == 0 && line.Trim() != Separator)
                     {
                         throw new WorkloadResultsException(
                             "Results parsing operation failed. The Sockperf parser failed to parse the complete header.",
@@ -97,7 +97,7 @@ namespace VirtualClient.Actions
                     {
                         continue;
                     }
-                    else if (line.Trim() == Seperator)
+                    else if (line.Trim() == Separator)
                     {
                         break;
                     }

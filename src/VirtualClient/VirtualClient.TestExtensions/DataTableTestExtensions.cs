@@ -67,7 +67,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Data table with formated column width.
+        /// Data table with formatted column width.
         /// </summary>
         /// <param name="dataTable">Input data table.</param>
         public static void PrintDataTableFormatted(this DataTable dataTable)

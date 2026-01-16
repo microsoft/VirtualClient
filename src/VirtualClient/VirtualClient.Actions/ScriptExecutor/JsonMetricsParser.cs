@@ -86,7 +86,7 @@ namespace VirtualClient.Actions
                     catch (Exception exc)
                     {
                         throw new WorkloadResultsException(
-                            "Invalid JSON metrics content formatting. Failed to deserialze the Array JSON Contents into Metrics format.", exc, ErrorReason.InvalidResults);
+                            "Invalid JSON metrics content formatting. Failed to deserialize the Array JSON Contents into Metrics format.", exc, ErrorReason.InvalidResults);
                     }
 
                     if (metrics.Any(m => string.IsNullOrWhiteSpace(m.Name)))

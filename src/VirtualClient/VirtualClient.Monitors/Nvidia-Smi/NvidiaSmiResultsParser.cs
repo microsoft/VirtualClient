@@ -22,8 +22,8 @@ namespace VirtualClient.Monitors
         {
              { "%_utilization", ("utilization.gpu [%]", null, "The current percentage utilization of the GPU.", MetricRelativity.Undefined) },
              { "%_memory_utilization", ("utilization.memory [%]", null, "The current percentage of memory utilization for the GPU.", MetricRelativity.Undefined) },
-             { "temperature", ("temperature.gpu", MetricUnit.Celcius, "The current temperature reading (in celcius) for the GPU.", MetricRelativity.LowerIsBetter) },
-             { "memory_temperature", ("temperature.memory", MetricUnit.Celcius, "The current temperature reading (in celcius) for the GPU memory components.", MetricRelativity.LowerIsBetter) },
+             { "temperature", ("temperature.gpu", MetricUnit.Celsius, "The current temperature reading (in celsius) for the GPU.", MetricRelativity.LowerIsBetter) },
+             { "memory_temperature", ("temperature.memory", MetricUnit.Celsius, "The current temperature reading (in celsius) for the GPU memory components.", MetricRelativity.LowerIsBetter) },
              { "power_draw_average", ("power.draw.average [W]", MetricUnit.Watts, "The current power draw (in watts) for the GPU", MetricRelativity.LowerIsBetter) },
              { "graphics_clock_speed", ("clocks.current.graphics [MHz]", MetricUnit.Megahertz, "The current clock speed for GPU graphics instruction processing.", MetricRelativity.Undefined) },
              { "streaming_multiprocessor_clock_speed", ("clocks.current.sm [MHz]", MetricUnit.Megahertz, "The current clock speed for GPU streaming multiprocessor instruction processing.", MetricRelativity.Undefined) },

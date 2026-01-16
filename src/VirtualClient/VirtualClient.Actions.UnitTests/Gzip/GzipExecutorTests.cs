@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void GzipStateIsSerializeable()
+        public void GzipStateIsSerializable()
         {
             State state = new State(new Dictionary<string, IConvertible>
             {

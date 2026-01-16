@@ -47,7 +47,7 @@ in a single place or to use C# extension methods to do the same.
   closely mimics certain "real-life" environment/system behavior.
 
 ## Test Setup Mechanics
-Each of the tests in the Virtual Client codebase (unit as well as functional) uses one or more of the testing fixtures noted above. This simplifes the process of testing code
+Each of the tests in the Virtual Client codebase (unit as well as functional) uses one or more of the testing fixtures noted above. This simplifies the process of testing code
 by instilling repeatable patterns and reducing redundancy/duplication in setup requirements. The ultimate goals are as follows:
 
 * Remove code from individual tests and test methods that is used purely to setup mock/fake behaviors.

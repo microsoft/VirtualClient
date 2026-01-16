@@ -7,6 +7,6 @@
 ## Workload Metrics
 This workload captures the fps and aggregate scores from the TimeSpy GPU and CPU tests.
 ## Packaging and Setup
-Users are expected to provide their own binaries and lisences for this workload. This package is not hosted on the VC blob store.
+Users are expected to provide their own binaries and licences for this workload. This package is not hosted on the VC blob store.
 
 

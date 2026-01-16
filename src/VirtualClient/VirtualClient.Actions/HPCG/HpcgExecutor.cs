@@ -214,8 +214,8 @@ namespace VirtualClient.Actions
                 long totalMemoryKiloBytes = memoryInfo.TotalMemory;
 
                 // The standard of the HPCG size is to set it to consume 25% of the total memory.
-                // The memory the benchmark uses is propotional to the 3rd-power of the size.
-                // In another word, the size is propotional to the cubic root of total memory.
+                // The memory the benchmark uses is proportional to the 3rd-power of the size.
+                // In another word, the size is proportional to the cubic root of total memory.
                 // 200 * 200 * 200 = 8M size cost about 104GB of memory. Each size cost  3.4KB
                 // 160 * 160 * 160 = 4M size cost about 52GB of memory. Each size cost  3.4KB
                 // The size needs to be dividable by 8. So it needs the /8 inside toint() and *8 outside.

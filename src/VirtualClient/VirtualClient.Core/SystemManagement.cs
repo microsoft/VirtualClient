@@ -223,7 +223,7 @@ namespace VirtualClient
         /// <summary>
         /// Overwrite the default of 260 char in windows file path length to 32,767.
         /// https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
-        /// Does not throw if doesn't have priviledge
+        /// Does not throw if doesn't have privilege
         /// </summary>
         public void EnableLongPathInWindows()
         {
@@ -241,7 +241,7 @@ namespace VirtualClient
                 }
                 catch
                 {
-                    // Does not throw if missing admin priviledge
+                    // Does not throw if missing admin privilege
                 }
                 
             }

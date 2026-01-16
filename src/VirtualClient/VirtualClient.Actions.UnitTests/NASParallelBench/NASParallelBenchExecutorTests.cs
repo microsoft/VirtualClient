@@ -91,7 +91,7 @@ namespace VirtualClient.Actions
             }
         }
         [Test]
-        public async Task NASParallelBenchExecutorCreatesExpectedStateOnSuccessfullBuild()
+        public async Task NASParallelBenchExecutorCreatesExpectedStateOnSuccessfulBuild()
         {
             this.SetupTest(PlatformID.Unix);
 

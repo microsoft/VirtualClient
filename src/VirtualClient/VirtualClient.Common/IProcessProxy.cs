@@ -53,19 +53,19 @@ namespace VirtualClient.Common
         bool HasExited { get; }
 
         /// <summary>
-        /// True/false whether standard error from the underlying proces should
+        /// True/false whether standard error from the underlying process should
         /// be redirected. Note that this MUST be set before the process is started.
         /// </summary>
         bool RedirectStandardError { get; set; }
 
         /// <summary>
-        /// True/false whether standard output from the underlying proces should
+        /// True/false whether standard output from the underlying process should
         /// be redirected. Note that this MUST be set before the process is started.
         /// </summary>
         bool RedirectStandardInput { get; set; }
 
         /// <summary>
-        /// True/false whether standard output from the underlying proces should
+        /// True/false whether standard output from the underlying process should
         /// be redirected. Note that this MUST be set before the process is started.
         /// </summary>
         bool RedirectStandardOutput { get; set; }

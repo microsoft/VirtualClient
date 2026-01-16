@@ -562,7 +562,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Intialize Networking workload.
+        /// Initialize Networking workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -903,7 +903,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Execute the tool on client side,Following the steps below:
         /// 1. Poll for the server to be online.
-        /// 2. Send Notification to server to start instance of the specificed tool.
+        /// 2. Send Notification to server to start instance of the specified tool.
         /// 3. Execute client side of the tool.
         /// </summary>
         private Task ExecuteClientToolAsync(NetworkingWorkloadTool toolName, EventContext telemetryContext, CancellationToken cancellationToken)

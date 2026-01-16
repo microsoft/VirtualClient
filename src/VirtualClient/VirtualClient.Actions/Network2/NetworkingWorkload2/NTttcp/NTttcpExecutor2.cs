@@ -134,7 +134,7 @@ namespace VirtualClient.Actions
         protected string Role { get; set; }
 
         /// <summary>
-        /// Intialize NTttcp.
+        /// Initialize NTttcp.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

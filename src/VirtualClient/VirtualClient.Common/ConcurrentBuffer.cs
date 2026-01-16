@@ -18,7 +18,7 @@ namespace VirtualClient.Common
         private StringBuilder underlyingStringBuilder;
 
         /// <summary>
-        /// Intializes a new instance of the <see cref="ConcurrentBuffer"/> class.
+        /// Initializes a new instance of the <see cref="ConcurrentBuffer"/> class.
         /// </summary>
         public ConcurrentBuffer()
         {
@@ -26,7 +26,7 @@ namespace VirtualClient.Common
         }
 
         /// <summary>
-        /// Intializes a new instance of the <see cref="ConcurrentBuffer"/> class.
+        /// Initializes a new instance of the <see cref="ConcurrentBuffer"/> class.
         /// </summary>
         public ConcurrentBuffer(StringBuilder stringBuilder)
         {

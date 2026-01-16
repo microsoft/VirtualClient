@@ -17,7 +17,7 @@ of exceptions that are raised/thrown based on the data type of the exception as 
 
 ``` csharp
 // Custom exception classes in the Virtual Client platform/core derive from the base VirtualClientException class. Each of the
-// platform/core exception classes implement the same constructors for consisteny. The 'ErrorReason' provided is an important distinction.
+// platform/core exception classes implement the same constructors for consistency. The 'ErrorReason' provided is an important distinction.
 public class WorkloadException : VirtualClientException
 {
     public WorkloadException()

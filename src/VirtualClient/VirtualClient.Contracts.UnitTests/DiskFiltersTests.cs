@@ -107,7 +107,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersCanFilterOnBiggestDisksOnLinuxForDisksWithoutVolumePartititions()
+        public void DiskFiltersCanFilterOnBiggestDisksOnLinuxForDisksWithoutVolumePartitions()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, false);
             this.disks.ElementAt(0).Properties["size"] = 3 * 1024 * 1024;
@@ -139,7 +139,7 @@ namespace VirtualClient.Contracts
 
         [Test]
         [Ignore("We can support this in the future if we add a 'Size' property to the Disk object for Windows (e.g. DiskPart -> list disks).")]
-        public void DiskFiltersCanFilterOnBiggestDisksOnWindowsForDisksWithoutVolumePartititions()
+        public void DiskFiltersCanFilterOnBiggestDisksOnWindowsForDisksWithoutVolumePartitions()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, false);
             this.disks.ElementAt(0).Properties["Size"] = 3 * 1024 * 1024;

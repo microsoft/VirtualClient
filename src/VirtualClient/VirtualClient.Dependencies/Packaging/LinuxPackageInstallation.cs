@@ -215,12 +215,12 @@ namespace VirtualClient.Dependencies
 
                     case LinuxDistribution.Flatcar:
                         throw new DependencyException(
-                            $"You are on Linux distrubution {this.linuxDistroInfo.LinuxDistribution.ToString()}, which does not have a package manager.",
+                            $"You are on Linux distribution {this.linuxDistroInfo.LinuxDistribution.ToString()}, which does not have a package manager.",
                             ErrorReason.LinuxDistributionNotSupported);
 
                     default:
                         throw new DependencyException(
-                            $"You are on Linux distrubution {this.linuxDistroInfo.LinuxDistribution.ToString()}, which has not been onboarded to VirtualClient.",
+                            $"You are on Linux distribution {this.linuxDistroInfo.LinuxDistribution.ToString()}, which has not been onboarded to VirtualClient.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
 

@@ -93,7 +93,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The AMD GPU driver installtion file for Linux
+        /// The AMD GPU driver installation file for Linux
         /// </summary>
         public string LinuxInstallationFile
         {

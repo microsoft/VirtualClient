@@ -2,7 +2,7 @@
 The following sections cover how to build a Docker image that will contain the Virtual Client.
 
 ## Installing Docker on your Windows Dev machine
-To run Docker on your presumeably Windows Dev Machine, you need to install both Docker and WSL. Reboots might be required.
+To run Docker on your presumably Windows Dev Machine, you need to install both Docker and WSL. Reboots might be required.
 1. [Docker desktop for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
 2. [Install Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps)
 

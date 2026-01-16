@@ -124,7 +124,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Data table with formated column width.
+        /// Data table with formatted column width.
         /// </summary>
         /// <param name="dataTable">Input data table.</param>
         private static void LogConsole(DataTable dataTable)

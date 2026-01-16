@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task CoreMarkExecutorExcutesAllowsThreadOverWrite()
+        public async Task CoreMarkExecutorExecutesAllowsThreadOverWrite()
         {
             this.SetupTest(PlatformID.Unix);
             this.Parameters = new Dictionary<string, IConvertible>()

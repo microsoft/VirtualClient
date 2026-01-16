@@ -4,7 +4,7 @@
 namespace VirtualClient.Contracts
 {
     /// <summary>
-    /// Contract class for describing Linux Distribution infomation.
+    /// Contract class for describing Linux Distribution information.
     /// </summary>
     public class LinuxDistributionInfo
     {

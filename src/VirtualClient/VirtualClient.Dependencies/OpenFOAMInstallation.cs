@@ -83,7 +83,7 @@ namespace VirtualClient.Dependencies
             else
             {
                 throw new DependencyException(
-                    $"Linux distrubution {linuxDistroInfo.LinuxDistribution.ToString()} is not supported with OpenFOAM.",
+                    $"Linux distribution {linuxDistroInfo.LinuxDistribution.ToString()} is not supported with OpenFOAM.",
                     ErrorReason.LinuxDistributionNotSupported);
             }
         }

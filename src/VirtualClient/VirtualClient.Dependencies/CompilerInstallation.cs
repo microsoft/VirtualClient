@@ -71,7 +71,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// List of pacakges separated by comma that needs to be installed with cygwin (e.g. make,gcc-fortran,python3).
+        /// List of packages separated by comma that needs to be installed with cygwin (e.g. make,gcc-fortran,python3).
         /// </summary>
         public string CygwinPackages
         {
@@ -110,7 +110,7 @@ namespace VirtualClient.Dependencies
                         }
 
                         // Ensure gcc, cc, and gfrotran versions match
-                        bool compilerVersionsMatch = await this.ConfirmCompilerVerionsMatchAsync(telemetryContext, cancellationToken);
+                        bool compilerVersionsMatch = await this.ConfirmCompilerVersionsMatchAsync(telemetryContext, cancellationToken);
                         if (!compilerVersionsMatch)
                         {
                             throw new DependencyException("gcc, cc, and gfortran compiler versions do not match", ErrorReason.DependencyInstallationFailed);
@@ -182,7 +182,7 @@ namespace VirtualClient.Dependencies
             return (confirmedCompilers == compilersToCheck.Count);
         }
 
-        private async Task<bool> ConfirmCompilerVerionsMatchAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<bool> ConfirmCompilerVersionsMatchAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string gccVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", telemetryContext, cancellationToken);
             string ccVersion = await this.GetInstalledCompilerDumpVersionAsync("cc", telemetryContext, cancellationToken);

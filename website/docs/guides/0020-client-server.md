@@ -120,7 +120,7 @@ the system must be modified to allow for it. This means that any client/server w
 On Windows systems, the workload should be ran under an account with access to modify the firewall settings or with 'Administrative' privileges. Similarly, on Linux systems, 
 the workload should be ran under an account with access to modify the firewall settings or with `sudo`.
 
-The port in wich the REST API uses can be changed if needed. For example, it is possible that some other application running on the system is already using the default
+The port in which the REST API uses can be changed if needed. For example, it is possible that some other application running on the system is already using the default
 port. The following examples illustrate how to use a different port:
 
 * [Command Line Options](./0010-command-line.md)

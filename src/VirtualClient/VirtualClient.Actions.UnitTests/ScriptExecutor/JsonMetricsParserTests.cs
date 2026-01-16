@@ -60,7 +60,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void JsonMetricsParserThrowsIfTheJsonArrayResultsHaveMisingMetricName()
+        public void JsonMetricsParserThrowsIfTheJsonArrayResultsHaveMissingMetricName()
         {
             string rawText = "[\r\n\t{\r\n\t\t\"Value\": 0,\r\n\t\t\"Unit\": \"unit3\",\r\n\t\t\"MetaData\": {\r\n\t\t\t\"metadata1\": \"m5\",\r\n\t\t\t\"metadata2\": \"m6\"\r\n\t\t}\r\n\t},\r\n\t{\r\n\t\t\"Name\": \"metric4\",\r\n\t\t\"Value\": 1.0,\r\n\t\t\"MetaData\": {\r\n\t\t\t\"metadata1\": \"m7\"\r\n\t\t}\r\n\t}\r\n]";
 

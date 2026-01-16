@@ -37,7 +37,7 @@ namespace VirtualClient.Common.Telemetry
         Guid GetParentActivityId();
 
         /// <summary>
-        /// Returns the user identitiy persisted.
+        /// Returns the user identity persisted.
         /// </summary>
         /// <returns>
         /// The user identity persisted.
