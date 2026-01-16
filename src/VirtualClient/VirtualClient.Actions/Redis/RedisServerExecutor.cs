@@ -435,7 +435,6 @@ namespace VirtualClient.Actions
                     if (this.BindToCores && this.Platform == PlatformID.Unix)
                     {  
                         ProcessAffinityConfiguration affinityConfig = ProcessAffinityConfiguration.Create(this.Platform, new[] { coreIndex });
-                        command = "bash -c" + command;
                         process = this.SystemManagement.ProcessManager.CreateElevatedProcessWithAffinity(
                             this.Platform,
                             command,
