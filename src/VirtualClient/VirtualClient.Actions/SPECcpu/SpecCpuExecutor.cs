@@ -65,6 +65,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// List of benchmarks to run.
+        /// </summary>
+        public string Benchmarks
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SpecCpuExecutor.Benchmarks), out IConvertible benchmarks);
+                return benchmarks?.ToString();
+            }
+        }
+
+        /// <summary>
         /// The whether SPECcpu runs base tuning or base+peak tuning.
         /// </summary>
         public bool RunPeak
@@ -332,10 +344,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true, results: results);
 
-                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
+                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results.Value);
                     IList<Metric> metrics = parser.Parse();
                     metrics.LogConsole(this.Scenario, "SPECcpu");
 
@@ -396,7 +408,7 @@ namespace VirtualClient.Actions
             // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
             bool reportable = (this.Platform == PlatformID.Unix) && (this.Iterations == 2 || this.Iterations == 3);
             cmd = reportable ? $"{cmd} --reportable" : $"{cmd} --noreportable";
-            cmd = $"{cmd} {this.SpecProfile}";
+            cmd = $"{cmd} {this.Benchmarks}";
             return cmd;
         }
 

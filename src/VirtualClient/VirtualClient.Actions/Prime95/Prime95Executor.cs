@@ -293,34 +293,42 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.WorkloadPackage.Path))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-
-                        // Prime95 does not stop on it's own. It will run until you tell it to stop.
-                        // We have to definitively stop the program.
                         DateTime explicitTimeout = DateTime.UtcNow.Add(this.Duration);
 
                         if (process.Start())
                         {
-                            await this.WaitAsync(explicitTimeout, cancellationToken);
-                            process.SafeKill();
-
-                            if (!cancellationToken.IsCancellationRequested)
+                            try
                             {
-                                string results = null;
-                                if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                                await this.WaitAsync(explicitTimeout, cancellationToken);
+
+                                if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
+                                    KeyValuePair<string, string> results = default;
+
+                                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                                    {
+                                        await RetryPolicies.FileOperations.ExecuteAsync(async () =>
+                                        {
+                                            results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
+                                        });
+                                    }
+
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results);
+
+                                    // The exit code on SafeKill is -1 which is not a part of the default success codes.
+                                    process.ThrowIfWorkloadFailed(this.successExitCodes);
+
+                                    if (!string.IsNullOrWhiteSpace(results.Value))
+                                    {
+                                        this.CaptureMetrics(process, results.Value, telemetryContext, cancellationToken);
+                                    }
                                 }
-
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results?.AsArray());
-
-                                // The exit code on SafeKill is -1 which is not a part of the default success codes.
-                                process.ThrowIfWorkloadFailed(this.successExitCodes);
-
-                                if (!string.IsNullOrWhiteSpace(results))
-                                {
-                                    this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
-                                }
+                            }
+                            finally
+                            {
+                                // Prime95 does not stop on it's own. It will run until you tell it to stop.
+                                // We have to definitively stop the program.
+                                process.SafeKill(this.Logger);
                             }
                         }
                     }

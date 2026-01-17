@@ -16,6 +16,17 @@ namespace VirtualClient.Common.Extensions
         private static readonly string[] CommonDelimiters = new string[] { ",", ";" };
 
         /// <summary>
+        /// Extensions adds a key/value pair entry to the collection.
+        /// </summary>
+        /// <param name="collection">The collection to which the key/value pair entry will be added.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value of the key.</param>
+        public static void Add<TKey, TValue>(this ICollection<KeyValuePair<TKey, TValue>> collection, TKey key, TValue value)
+        {
+            collection.Add(new KeyValuePair<TKey, TValue>(key, value));
+        }
+
+        /// <summary>
         /// Extension merges a set of new entries with the existing set of dictionary entries based upon
         /// the individual entry keys.
         /// </summary>
