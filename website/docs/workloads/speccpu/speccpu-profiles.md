@@ -59,7 +59,7 @@ for evaluating the performance of the CPU for processing calculations.
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-* * **Notes**
+* **Notes**  
   On Windows, only the following benchmarks are supported: 503.bwaves_r, 508.namd_r, 510.parest_r, 519.lbm_r, 544.nab_r, 549.fotonik3d_r, 554.roms_r.
 
   ``` csharp
@@ -113,7 +113,7 @@ for evaluating the performance of the CPU for processing calculations.
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
-* **Notes**
+* **Notes**  
   On Windows, only the following benchmarks are supported: 603.bwaves_s, 619.lbm_s, 644.nab_s, 654.roms_s.
 
   ``` bash
@@ -164,7 +164,7 @@ for evaluating the performance of the CPU for processing calculations.
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
-* **Notes**
+* **Notes**  
   On Windows, only the following benchmarks are supported: 505.mcf_r, 525.x264_r, 541.leela_r, 548.exchange2_r, 557.xz_r.
 
   ``` bash
@@ -215,7 +215,7 @@ for evaluating the performance of the CPU for processing calculations.
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
-* **Notes**
+* **Notes**  
   On Windows, only the following benchmarks are supported: 641.leela_s.
 
   ``` bash
