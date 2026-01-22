@@ -491,7 +491,7 @@ namespace VirtualClient.Actions
         protected Task DeleteTestVerificationFilesAsync(IAsyncPolicy retryPolicy = null)
         {
             List<string> filesToDelete = new List<string>();
-            string[] verificationStateFiles = this.FileSystem.Directory.GetFiles("*verify.state");
+            string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(this.FileSystem.Directory.GetCurrentDirectory(), "*verify.state");
             if (verificationStateFiles?.Any() == true)
             {
                 filesToDelete.AddRange(verificationStateFiles);
@@ -723,7 +723,6 @@ namespace VirtualClient.Actions
                 await this.Logger.LogMessageAsync($"{nameof(FioExecutor)}.ExecuteProcess", relatedContext, async () =>
                 {
                     await workload.Process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "FIO", logToFile: true);
