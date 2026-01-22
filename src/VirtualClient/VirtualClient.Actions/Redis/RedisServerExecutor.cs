@@ -398,18 +398,22 @@ namespace VirtualClient.Actions
                         // will warm them up and then exit. We keep a reference to the server processes/tasks
                         // so that they remain running until the class is disposed.
                         int port = this.Port + i;
-                        string commandArguments = this.RedisExecutablePath;
+                        string redisCommand = this.RedisExecutablePath;
 
                         if (this.IsTLSEnabled)
                         {
-                            commandArguments += $" --tls-port {port} --port 0 --tls-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}   --tls-key-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --tls-ca-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")}";
+                            redisCommand += $" --tls-port {port} --port 0 --tls-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}   --tls-key-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --tls-ca-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")}";
                         }
                         else
                         {
-                            commandArguments += $" --port {port}";
+                            redisCommand += $" --port {port}";
                         }
 
-                        commandArguments += $" {this.CommandLine}";
+                        redisCommand += $" {this.CommandLine}";
+
+                        // When binding to cores, CreateElevatedProcessWithAffinity wraps the command with numactl.
+                        // When not binding to cores, we need to wrap the redis command in quotes for bash -c.
+                        string commandArguments = this.BindToCores ? redisCommand : $"\"{redisCommand}\"";
 
                         // We cannot use a Task.Run here. The Task is queued on the threadpool but does not get running
                         // until our counter 'i' is at the end. This will cause all server instances to use the same port
