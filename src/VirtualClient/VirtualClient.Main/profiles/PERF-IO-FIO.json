@@ -6,11 +6,11 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "DiskFillSize": "500G",
-        "FileSize": "496G",
+        "DiskFillSize": "100G",
+        "FileSize": "96G",
         "DataIntegrityFileSize": "4G",
         "DiskFilter": "BiggestSize",
-        "Duration": "00:05:00",
+        "Duration": "00:01:00",
         "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
         "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
         "QueueDepth": "{calculate(512/{ThreadCount})}",
@@ -39,7 +39,7 @@
                 "MetricScenario": "fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}",
                 "PackageName": "fio",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth} --ioengine={Engine} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "CommandLine": "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth} --ioengine={Engine} --direct=1 --ramp_time=1 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "Engine": "$.Parameters.Engine",
