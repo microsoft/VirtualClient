@@ -1,5 +1,5 @@
 {
-    "Description": "HammerDB PostgrSQL TPCC Database Server Performance Workload",
+    "Description": "HammerDB PostgreSQL TPCH Database Server Performance Workload",
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "04:00:00",
@@ -7,12 +7,12 @@
         "SupportedOperatingSystems": "Debian,Ubuntu"
     },
     "Parameters": {
-        "DatabaseName": "hammerdb_tpcc",
+        "DatabaseName": "hammerdb_tpch",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Port": "5432",
         "Duration": "00:20:00",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
-        "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
+        "ScaleFactor": "10",
         "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
     },
     "Actions": [
@@ -21,12 +21,12 @@
             "Parameters": {
                 "Scenario": "ExecuteServer",
                 "PackageName": "hammerdb",
-                "Workload": "tpcc",
+                "Workload": "tpch",
                 "SQLServer": "postgresql",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
-                "WarehouseCount": "$.Parameters.WarehouseCount",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Server"
             }
@@ -34,14 +34,14 @@
         {
             "Type": "HammerDBClientExecutor",
             "Parameters": {
-                "Scenario": "tpcc",
-                "Workload": "tpcc",
+                "Scenario": "tpch",
+                "Workload": "tpch",
                 "SQLServer": "postgresql",
                 "PackageName": "hammerdb",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
-                "WarehouseCount": "$.Parameters.WarehouseCount",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
             }
@@ -114,11 +114,11 @@
             "Parameters": {
                 "Scenario": "CreatePostgreSQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "Workload": "tpcc",
+                "Workload": "tpch",
                 "SQLServer": "postgresql",
                 "PackageName": "hammerdb",
                 "VirtualUsers": 1,
-                "WarehouseCount": 1,
+                "ScaleFactor": 1,
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Server"
@@ -141,11 +141,11 @@
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "Workload": "tpcc",
+                "Workload": "tpch",
                 "SQLServer": "postgresql",
                 "PackageName": "hammerdb",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
-                "WarehouseCount": "$.Parameters.WarehouseCount",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Server"
