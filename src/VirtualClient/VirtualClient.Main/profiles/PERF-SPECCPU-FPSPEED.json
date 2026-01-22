@@ -6,12 +6,12 @@
         "RecommendedMinimumExecutionTime": "(4-cores)=02:00:00,(16-cores)=06:00:00,(64-cores)=12:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
-        "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24"
+        "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24",
+        "Limitations": "The following benchmarks don't work on Windows: 607, 621, 627, 628, 638, 649"
     },
     "Parameters": {
         "CompilerVersion": "",
         "Iterations": 2,
-        "SpecProfile": "fpspeed",
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
@@ -24,7 +24,8 @@
             "Parameters": {
                 "Scenario": "ExecuteSPECBenchmark",
                 "Iterations": "$.Parameters.Iterations",
-                "SpecProfile": "$.Parameters.SpecProfile",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"fpspeed\" : \"603 619 644 654\")}",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
                 "Threads": "$.Parameters.Threads",
@@ -39,7 +40,8 @@
             "Type": "ChocolateyInstallation",
             "Parameters": {
                 "Scenario": "InstallChocolatey",
-                "PackageName": "chocolatey"
+                "PackageName": "chocolatey",
+                "SupportedPlatforms": "win-x64,win-arm64"
             }
         },
         {
@@ -47,7 +49,8 @@
             "Parameters": {
                 "Scenario": "InstallCompiler",
                 "PackageName": "chocolatey",
-                "Packages": "cygwin"
+                "Packages": "cygwin",
+                "SupportedPlatforms": "win-x64,win-arm64"
             }
         },
         {
@@ -55,7 +58,7 @@
             "Parameters": {
                 "Scenario": "InstallCompiler",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
-                "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
+                "CygwinPackages": "gcc-g++,gcc-fortran,gcc-core,libiconv-devel"
             }
         },
         {

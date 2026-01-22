@@ -164,6 +164,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "fprate" },
+                { nameof(SpecCpuExecutor.Benchmarks), "fprate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), false },
             };
@@ -200,6 +201,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
+                { nameof(SpecCpuExecutor.Benchmarks), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true }
             };
@@ -238,6 +240,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
+                { nameof(SpecCpuExecutor.Benchmarks), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.Iterations), 1 },
                 { nameof(SpecCpuExecutor.RunPeak), true }
@@ -280,6 +283,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "fprate" },
+                { nameof(SpecCpuExecutor.Benchmarks), "fprate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), false },
             };
@@ -317,6 +321,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
+                { nameof(SpecCpuExecutor.Benchmarks), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true }
             };
@@ -374,6 +379,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
+                { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
                 { nameof(SpecCpuExecutor.Threads), 8 },
@@ -405,6 +411,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SpecCpuExecutor.SpecProfile), "intrate" },
+                { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
                 { nameof(SpecCpuExecutor.Threads), 8 },
