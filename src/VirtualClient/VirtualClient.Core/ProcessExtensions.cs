@@ -13,6 +13,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.ProcessAffinity;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -66,6 +67,91 @@ namespace VirtualClient
             }
 
             return process;
+        }
+
+        /// <summary>
+        /// Creates a process with CPU affinity binding to specific cores.
+        /// LINUX ONLY: Uses numactl to bind process to specific cores.
+        /// </summary>
+        /// <param name="processManager">The process manager used to create the process.</param>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="affinityConfig">The CPU affinity configuration specifying which cores to bind to.</param>
+        /// <returns>A process proxy with CPU affinity applied via numactl wrapper.</returns>
+        public static IProcessProxy CreateProcessWithAffinity(this ProcessManager processManager, string command, string arguments, string workingDir, ProcessAffinityConfiguration affinityConfig)
+        {
+            processManager.ThrowIfNull(nameof(processManager));
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+            affinityConfig.ThrowIfNull(nameof(affinityConfig));
+
+            if (processManager.Platform != PlatformID.Unix)
+            {
+                throw new NotSupportedException(
+                    $"CreateProcessWithAffinity is only supported on Linux. For Windows, use: " +
+                    $"CreateProcess() + process.Start() + process.ApplyAffinity(windowsConfig).");
+            }
+
+            LinuxProcessAffinityConfiguration linuxConfig = affinityConfig as LinuxProcessAffinityConfiguration;
+            if (linuxConfig == null)
+            {
+                throw new ArgumentException(
+                    $"Invalid affinity configuration type. Expected '{nameof(LinuxProcessAffinityConfiguration)}' for Linux platform.",
+                    nameof(affinityConfig));
+            }
+
+            string fullCommand = linuxConfig.GetCommandWithAffinity(command, arguments);
+
+            return processManager.CreateProcess(fullCommand, workingDir: workingDir);
+        }
+
+        /// <summary>
+        /// Creates a process with CPU affinity binding to specific cores and applies elevated privileges if needed.
+        /// LINUX ONLY: Combines sudo elevation with numactl core binding.
+        /// </summary>
+        /// <param name="processManager">The process manager used to create the process.</param>
+        /// <param name="platform">The OS platform.</param>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="affinityConfig">The CPU affinity configuration specifying which cores to bind to.</param>
+        /// <param name="username">The username to use for running the command (Linux only).</param>
+        /// <returns>A process proxy with CPU affinity and elevated privileges applied.</returns>
+        public static IProcessProxy CreateElevatedProcessWithAffinity(this ProcessManager processManager, PlatformID platform, string command, string arguments, string workingDir, ProcessAffinityConfiguration affinityConfig, string username = null)
+        {
+            processManager.ThrowIfNull(nameof(processManager));
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+            affinityConfig.ThrowIfNull(nameof(affinityConfig));
+
+            if (platform != PlatformID.Unix)
+            {
+                throw new NotSupportedException(
+                    $"CreateElevatedProcessWithAffinity is only supported on Linux. For Windows, use: " +
+                    $"CreateElevatedProcess() + process.Start() + process.ApplyAffinity(windowsConfig).");
+            }
+
+            LinuxProcessAffinityConfiguration linuxConfig = affinityConfig as LinuxProcessAffinityConfiguration;
+            if (linuxConfig == null)
+            {
+                throw new ArgumentException(
+                    $"Invalid affinity configuration type. Expected '{nameof(LinuxProcessAffinityConfiguration)}' for Linux platform.",
+                    nameof(affinityConfig));
+            }
+            
+            string fullCommand = linuxConfig.GetCommandWithAffinity(command, arguments);
+            
+            if (!string.Equals(command, "sudo") && !PlatformSpecifics.RunningInContainer)
+            {
+                string effectiveCommandArguments = string.IsNullOrWhiteSpace(username)
+                    ? $"{fullCommand}"
+                    : $"-u {username} {fullCommand}";
+
+                return processManager.CreateProcess("sudo", effectiveCommandArguments, workingDir);
+            }
+            else
+            {
+                return processManager.CreateProcess(fullCommand, workingDir: workingDir);
+            }
         }
 
         /// <summary>
@@ -162,52 +248,49 @@ namespace VirtualClient
         /// Uses pkill on Linux systems to kill the associated process and/or its child/dependent processes.
         /// </summary>
         /// <param name="processManager">Provides functionality for creating processes.</param>
-        /// <param name="process">The process to kill.</param>
+        /// <param name="processId">The ID of the process to kill.</param>
         /// <param name="logger">The logger to use to write trace information.</param>
         /// <param name="confirmationWaitTime">Max duration to wait for exit. Default = 10 seconds. Use TimeSpan.Zero for no wait.</param>
-        public static void SafeKill(this ProcessManager processManager, IProcessProxy process, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
+        public static void SafeKill(this ProcessManager processManager, int processId, ILogger logger = null, TimeSpan? confirmationWaitTime = null)
         {
-            string processName = null;
-            int processId = -1;
-
             try
             {
-                processName = SafeGet<string>(() => process.Name);
-                processId = SafeGet<int>(() => process.Id);
-
-                if (processManager.Platform == PlatformID.Unix)
+                if (processId > 0)
                 {
-                    using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
+                    if (processManager.Platform == PlatformID.Unix)
                     {
-                        kill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
-                            .GetAwaiter().GetResult();
-
-                        // 0 = Success
-                        // 1 = Process not found
-                        if (kill.ExitCode != 0 && kill.ExitCode != 1)
+                        using (IProcessProxy kill = processManager.CreateProcess("kill", $"-9 {processId}"))
                         {
-                            kill.ThrowErrored<WorkloadException>(
-                                $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, name={processName}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
-                                $"{kill.StandardOutput} {kill.StandardError}".Trim(),
-                                ErrorReason.WorkloadUnexpectedAnomaly);
+                            kill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
+                                .GetAwaiter().GetResult();
+
+                            // 0 = Success
+                            // 1 = Process not found
+                            if (kill.ExitCode != 0 && kill.ExitCode != 1)
+                            {
+                                kill.ThrowErrored<WorkloadException>(
+                                    $"Unix kill -9 attempt failed with exit code {kill.ExitCode} for process (id={processId}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
+                                    $"{kill.StandardOutput} {kill.StandardError}".Trim(),
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
                         }
                     }
-                }
-                else if (processManager.Platform == PlatformID.Win32NT)
-                {
-                    using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
+                    else if (processManager.Platform == PlatformID.Win32NT)
                     {
-                        taskkill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
-                            .GetAwaiter().GetResult();
-
-                        // 0 = Success
-                        // 1 = Process not found
-                        if (taskkill.ExitCode != 0 && taskkill.ExitCode != 128)
+                        using (IProcessProxy taskkill = processManager.CreateProcess("taskkill", $"/F /PID {processId}"))
                         {
-                            taskkill.ThrowErrored<WorkloadException>(
-                                $"Windows taskkill attempt failed with exit code {taskkill.ExitCode} for process (id={processId}, name={processName}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
-                                $"{taskkill.StandardOutput} {taskkill.StandardError}".Trim(),
-                                ErrorReason.WorkloadUnexpectedAnomaly);
+                            taskkill.StartAndWaitAsync(CancellationToken.None, confirmationWaitTime)
+                                .GetAwaiter().GetResult();
+
+                            // 0 = Success
+                            // 1 = Process not found
+                            if (taskkill.ExitCode != 0 && taskkill.ExitCode != 128)
+                            {
+                                taskkill.ThrowErrored<WorkloadException>(
+                                    $"Windows taskkill attempt failed with exit code {taskkill.ExitCode} for process (id={processId}, timeout={confirmationWaitTime?.ToString() ?? "none"}). " +
+                                    $"{taskkill.StandardOutput} {taskkill.StandardError}".Trim(),
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
                         }
                     }
                 }
@@ -215,10 +298,10 @@ namespace VirtualClient
             catch (Exception exc)
             {
                 EventContext errorContext = EventContext.Persisted();
-                errorContext.AddProcessDetails(process.ToProcessDetails(processName));
+                errorContext.AddContext(nameof(processId), processId);
                 errorContext.AddError(exc);
 
-                logger?.LogMessage($"ProcessKillFailed.{processName}", LogLevel.Warning, errorContext);
+                logger?.LogMessage($"ProcessKillFailed", LogLevel.Warning, errorContext);
             }
         }
 

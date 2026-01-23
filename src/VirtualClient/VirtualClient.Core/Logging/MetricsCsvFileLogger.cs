@@ -160,10 +160,11 @@ namespace VirtualClient.Logging
                             this.flushTask = this.MonitorBufferAsync();
                         }
                     }
-                    catch
+                    catch (Exception exc)
                     {
                         // Best effort. We do not want to crash the application on failures to access
                         // the CSV file.
+                        Console.WriteLine(exc.Message);
                     }
                 }
             }
@@ -305,10 +306,11 @@ namespace VirtualClient.Logging
                         await Task.Delay(300);
                         await this.FlushBufferAsync();
                     }
-                    catch
+                    catch (Exception exc)
                     {
                         // Best effort. We do not want to crash the application on failures to access
                         // the CSV file.
+                        Console.WriteLine(exc.Message);
                     }
                 }
             });
