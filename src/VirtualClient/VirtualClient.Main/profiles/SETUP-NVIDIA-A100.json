@@ -1,13 +1,12 @@
 {
-    "Description": "AMD GPU Driver Installation Dependency",
+    "Description": "NVIDIA A100 GPU Driver Installation Dependency",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:10:00",
-        "SupportedPlatforms": "win-x64, linux-x64",
-        "SupportedOperatingSystems": "Windows, Linux",
-        "SupportedGpuModelOnWindows": "mi25,v620",
-        "SupportedLinuxGpuModel": "all",
-        "SupportedLinuxDistros": "Ubuntu",
-        "SpecialRequirements": "This is AMD GPU Driver dependency. It can only be installed on the system having an AMD GPU card/chip."
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Linux",
+        "SupportedLinuxGpuModel": "NVIDIA A100",
+        "SupportedLinuxDistros": "Ubuntu20",
+        "SpecialRequirements": "This is an NVIDIA GPU Driver dependency. It can only be installed on the system having an NVIDIA A100 GPU card/chip."
     },
     "Parameters": {
         "ConfigurationFile": "default.yaml",
