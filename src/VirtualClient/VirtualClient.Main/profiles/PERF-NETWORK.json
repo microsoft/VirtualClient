@@ -5,21 +5,23 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows,AwsLinux"
     },
-    "Parameters": {
-        "ConfigureNetwork": true,
-        "EnableBusyPoll": true,
-        "DisableFirewall": true,
-        "CpsPort": 7201,
-        "CpsDuration": "00:05:00",
-        "LattePort": 6100,
-        "NTttcpPort": 5500,
-        "NTttcpDuration": "00:01:00",
-        "SockPerfPort": 8201,
-        "SockPerfDuration": "00:01:00",
-        "ProfilingEnabled": false,
-        "ProfilingMode": "None",
-        "TestDuration": "00:01:00"
-    },
+  "Parameters": {
+    "ConfigureNetwork": true,
+    "EnableBusyPoll": true,
+    "DisableFirewall": true,
+    "CpsPort": 7201,
+    "CpsDuration": "00:05:00",
+    "NcpsPort": 9800,
+    "NcpsDuration": "00:05:00",
+    "LattePort": 6100,
+    "NTttcpPort": 5500,
+    "NTttcpDuration": "00:01:00",
+    "SockPerfPort": 8201,
+    "SockPerfDuration": "00:01:00",
+    "ProfilingEnabled": false,
+    "ProfilingMode": "None",
+    "TestDuration": "00:01:00"
+  },
     "Actions": [
         {
             "Type": "NetworkingWorkloadExecutor",
@@ -235,19 +237,34 @@
             }
         },
         {
-            "Type": "NetworkingWorkloadExecutor",
-            "Parameters": {
-                "Scenario": "CPS_T16",
-                "ToolName": "CPS",
-                "PackageName": "Networking",
-                "Connections": 16,
-                "TestDuration": "$.Parameters.CpsDuration",
-                "WarmupTime": "00:01:00",
-                "Port": "$.Parameters.CpsPort",
-                "ProfilingScenario": "CPS_T16",
-                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
-            }
+          "Type": "NetworkingWorkloadExecutor",
+          "Parameters": {
+            "Scenario": "CPS_T16",
+            "ToolName": "CPS",
+            "PackageName": "Networking",
+            "Connections": 16,
+            "TestDuration": "$.Parameters.CpsDuration",
+            "WarmupTime": "00:01:00",
+            "Port": "$.Parameters.CpsPort",
+            "ProfilingScenario": "CPS_T16",
+            "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+            "ProfilingMode": "$.Parameters.ProfilingMode"
+          }
+        },
+        {
+          "Type": "NetworkingWorkloadExecutor",
+          "Parameters": {
+            "Scenario": "NCPS_T16",
+            "ToolName": "NCPS",
+            "PackageName": "Networking",
+            "Connections": 16,
+            "TestDuration": "$.Parameters.NcpsDuration",
+            "WarmupTime": "00:01:00",
+            "Port": "$.Parameters.NcpsPort",
+            "ProfilingScenario": "NCPS_T16",
+            "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+            "ProfilingMode": "$.Parameters.ProfilingMode"
+          }
         },
         {
             "Type": "NetworkingWorkloadExecutor",

@@ -39,11 +39,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected override string GetCommandLineArguments()
         {
             // Build the command line based on NCPS recipe
-            // ncps -s
             string command = $"-s " +
                 $"-r {this.ThreadCount} " +
                 $"-bp {this.Port} " +
-                $"-np {this.PortCount} ";
+                $"-np {this.PortCount} " +
+                $"-i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
+                $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)}";
 
             if (!string.IsNullOrWhiteSpace(this.DataTransferMode) && 
                 (this.DataTransferMode.Equals("s", StringComparison.OrdinalIgnoreCase) || 

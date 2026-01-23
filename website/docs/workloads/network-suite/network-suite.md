@@ -1,11 +1,14 @@
 # Network Suite
-The Networking workload suite is a set of 4 workloads that are the recommended benchmarks for the Azure Networking team. The workloads are each designed to test network performance
+The Networking workload suite is a set of 5 workloads that are the recommended benchmarks for the Azure Networking team. The workloads are each designed to test network performance
 and reliability.
 
 The workloads that are a part of the suite include:
 
 * **CPS**  
   This workload that is used to measure network socket connection establishment efficiencies and reliability between a client and a server.
+
+* **NCPS**  
+  This workload (New Connections Per Second) is an enhanced version of CPS that provides more granular connection establishment metrics, throughput measurements, and advanced statistical analysis between a client and a server.
 
 * **[Latte](https://github.com/microsoft/latte)**  
   This workload that is used to measure network communications latencies between a client and a server. This workload runs on Windows systems only.
@@ -21,6 +24,9 @@ The following performance analysis scenarios are covered as part of the network 
 
 * CPS
   * Network connection establishment reliability and speed on both Unix/Linux and Windows systems.
+
+* NCPS
+  * Enhanced network connection establishment performance with detailed metrics on both Unix/Linux and Windows systems.
 
 * NTttcp
   * Network throughput and bandwidth with TCP communications on both Unix/Linux and Windows systems.

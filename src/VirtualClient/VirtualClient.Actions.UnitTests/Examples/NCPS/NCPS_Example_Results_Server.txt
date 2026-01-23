@@ -10,12 +10,12 @@
     9.003        2   1598        0        0  55323.0  55327.0   55328.0   55322.0  1143   54181    9149    1142   261028 
    10.003        0   1600        0        0  56011.0  56013.0   56012.0   56012.0  1197   54848    9935    1163   237388
 
-=== CMDLINE: ./ncps -c 10.1.0.5 -wt 5 -t 15
- 
-=== VERSION 1.0
+=== CMDLINE: ./ncps -s -r 16 -bp 9800 -np 16 -t 300
 
-###RXGBPS 0.45
-###TXGBPS 0.45
+=== VERSION 1.4
+
+###RXGBPS 0.24
+###TXGBPS 0.24
  
 === Time (ms) to Nth connection establishment for first 556947 connections:
 ===       N   T(ms)     CPS

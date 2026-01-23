@@ -35,8 +35,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             Assert.IsTrue(metrics.Count == 30);  // 28 + 2 throughput metrics
             
             // Throughput metrics (new in NCPS)
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "RxGbps" && m.Value == 0.45));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "TxGbps" && m.Value == 0.45));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "RxGbps" && m.Value == 0.24));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "TxGbps" && m.Value == 0.24));
             
             // CPS metrics
             Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Cps" && m.Value == 55683));
@@ -113,14 +113,14 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
             string results = @"
-###ENDCPS 12345
+                        ###ENDCPS 12345
 
-###CPS,100000:1000
+                        ###CPS,100000:1000
 
-###SYNRTT,25:100,Median:200,Mean:150,75:300,90:400,95:500,99:600,99.9:700,99.99:800
+                        ###SYNRTT,25:100,Median:200,Mean:150,75:300,90:400,95:500,99:600,99.9:700,99.99:800
 
-###REXMIT,rtconnpercentage:1.5,rtperconn:1.2
-";
+                        ###REXMIT,rtconnpercentage:1.5,rtperconn:1.2
+                        ";
 
             NCPSMetricsParser parser = new NCPSMetricsParser(results, 90, 5);
             IList<Metric> metrics = parser.Parse();
