@@ -113,24 +113,33 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
             string results = @"
-                        ###ENDCPS 12345
+###ENDCPS 12345
 
-                        ###CPS,100000:1000
+###SYNRTT,25:100,Median:200,Mean:150,75:300,90:400,95:500,99:600,99.9:700,99.99:800
 
-                        ###SYNRTT,25:100,Median:200,Mean:150,75:300,90:400,95:500,99:600,99.9:700,99.99:800
-
-                        ###REXMIT,rtconnpercentage:1.5,rtperconn:1.2
-                        ";
+###REXMIT,rtconnpercentage:1.5,rtperconn:1.2
+";
 
             NCPSMetricsParser parser = new NCPSMetricsParser(results, 90, 5);
             IList<Metric> metrics = parser.Parse();
 
             Assert.IsNotEmpty(metrics);
             
+            // Should have CPS, RTT (9 metrics), and Retransmit (2 metrics) = 12 total metrics
+            Assert.AreEqual(12, metrics.Count);
+            
             // Should have CPS, RTT, and Retransmit metrics, but no throughput metrics
             Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Cps"));
             Assert.IsNull(metrics.FirstOrDefault(m => m.Name == "RxGbps"));
             Assert.IsNull(metrics.FirstOrDefault(m => m.Name == "TxGbps"));
+            
+            // Verify specific RTT metrics
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "SynRttMean"));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "SynRttMedian"));
+            
+            // Verify retransmit metrics
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "RexmitConnPercentage"));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "RexmitPerConn"));
         }
 
         [Test]
