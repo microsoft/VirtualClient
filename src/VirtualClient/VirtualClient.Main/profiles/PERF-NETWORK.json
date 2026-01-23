@@ -341,7 +341,7 @@
             "Parameters": {
                 "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
-                "BlobName": "networking.3.1.0.zip",
+                "BlobName": "networking.3.1.1.zip",
                 "PackageName": "networking",
                 "Extract": true
             }
