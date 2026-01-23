@@ -14,7 +14,7 @@ echo '{"data-root": "/mnt/docker"}' | sudo tee /etc/docker/daemon.json
 sudo systemctl start docker
 # Command to install sb dependencies.
 python3 -m pip install .
-# Command to build sb
+# Command to build sb.
 make postinstall 
 # This command initiates /dev/nvidiactl and /dev/nvidia-uvm directories, which sb checks before running.
 sudo docker run --rm --gpus all nvidia/cuda:11.0.3-base nvidia-smi 
