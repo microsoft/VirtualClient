@@ -44,11 +44,9 @@ namespace VirtualClient.Logging
         public ILogger CreateLogger(string categoryName)
         {
             MetricsCsvFileLogger logger = new MetricsCsvFileLogger(this.filePath, this.maxFileSize);
-            VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
-            {
-                logger.Flush();
-                logger.Dispose();
-            }));
+
+            VirtualClientRuntime.DataChannels.Add(logger);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => logger.Dispose()));
 
             return logger;
         }
