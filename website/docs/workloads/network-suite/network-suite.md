@@ -27,6 +27,7 @@ The following performance analysis scenarios are covered as part of the network 
 
 * NCPS
   * Enhanced network connection establishment performance with detailed metrics on both Unix/Linux and Windows systems.
+  * Connection throughput with RX/TX bandwidth measurements in Gbps.
 
 * NTttcp
   * Network throughput and bandwidth with TCP communications on both Unix/Linux and Windows systems.
@@ -97,6 +98,69 @@ For the Latte and SockPerf workloads, the client measurements are the only ones 
 | CPS Server | SynRttP99 | 47377.0 | 72409.0 | 56250.68727915194 |  |
 | CPS Server | SynRttP99_9 | 74810.0 | 367477.0 | 86169.82155477032 |  |
 | CPS Server | SynRttP99_99 | 91533.0 | 627165.0 | 114658.16077738516 |  |
+
+| Scenario | Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
+|----------|-------------|---------------------|---------------------|---------------------|------|
+| NCPS Client | RxGbps | 0.5 | 0.75 | 0.65 | Gbps |
+| NCPS Client | TxGbps | 0.5 | 0.75 | 0.65 | Gbps |
+| NCPS Client | Cps | 15000.0 | 32000.0 | 24416.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_Min | 24152.0 | 32069.0 | 25389.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_Max | 24152.0 | 32069.0 | 32069.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_Med | 24152.0 | 32069.0 | 27500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_Avg | 24152.0 | 32069.0 | 27840.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P25 | 24152.0 | 32069.0 | 26500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P50 | 24152.0 | 32069.0 | 27500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P75 | 24152.0 | 32069.0 | 28500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P90 | 24152.0 | 32069.0 | 29500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P99 | 24152.0 | 32069.0 | 31000.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P99_9 | 24152.0 | 32069.0 | 31500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P99_99 | 24152.0 | 32069.0 | 31800.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_P99_999 | 24152.0 | 32069.0 | 31900.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_Mad | 500.0 | 1500.0 | 1000.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_StandardErrorMean | 100.0 | 300.0 | 200.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_LowerCI | 24000.0 | 31500.0 | 27500.0 | connections/sec |
+| NCPS Client | ConnectsPerSec_UpperCI | 25000.0 | 32500.0 | 28200.0 | connections/sec |
+| NCPS Client | RexmitConnPercentage | 0.0 | 5.0 | 3.2825 | % |
+| NCPS Client | RexmitPerConn | 0.0 | 2.0 | 1.1436 | retransmits/connection |
+| NCPS Client | SynRttMean | 5000.0 | 25000.0 | 18737.0 | microseconds |
+| NCPS Client | SynRttMedian | 2000.0 | 10000.0 | 6221.0 | microseconds |
+| NCPS Client | SynRttP25 | 1000.0 | 5000.0 | 3424.0 | microseconds |
+| NCPS Client | SynRttP75 | 5000.0 | 15000.0 | 10893.0 | microseconds |
+| NCPS Client | SynRttP90 | 10000.0 | 25000.0 | 17628.0 | microseconds |
+| NCPS Client | SynRttP95 | 15000.0 | 35000.0 | 24607.0 | microseconds |
+| NCPS Client | SynRttP99 | 30000.0 | 75000.0 | 54222.0 | microseconds |
+| NCPS Client | SynRttP99_9 | 1000000.0 | 3000000.0 | 2027000.0 | microseconds |
+| NCPS Client | SynRttP99_99 | 2000000.0 | 5000000.0 | 4057000.0 | microseconds |
+| NCPS Server | RxGbps | 0.5 | 0.75 | 0.65 | Gbps |
+| NCPS Server | TxGbps | 0.5 | 0.75 | 0.65 | Gbps |
+| NCPS Server | Cps | 15000.0 | 32000.0 | 24416.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_Min | 24152.0 | 32069.0 | 25389.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_Max | 24152.0 | 32069.0 | 32069.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_Med | 24152.0 | 32069.0 | 27500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_Avg | 24152.0 | 32069.0 | 27840.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P25 | 24152.0 | 32069.0 | 26500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P50 | 24152.0 | 32069.0 | 27500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P75 | 24152.0 | 32069.0 | 28500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P90 | 24152.0 | 32069.0 | 29500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P99 | 24152.0 | 32069.0 | 31000.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P99_9 | 24152.0 | 32069.0 | 31500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P99_99 | 24152.0 | 32069.0 | 31800.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_P99_999 | 24152.0 | 32069.0 | 31900.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_Mad | 500.0 | 1500.0 | 1000.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_StandardErrorMean | 100.0 | 300.0 | 200.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_LowerCI | 24000.0 | 31500.0 | 27500.0 | connections/sec |
+| NCPS Server | ConnectsPerSec_UpperCI | 25000.0 | 32500.0 | 28200.0 | connections/sec |
+| NCPS Server | RexmitConnPercentage | 0.0 | 3.0 | 1.5 | % |
+| NCPS Server | RexmitPerConn | 0.0 | 1.5 | 1.0 | retransmits/connection |
+| NCPS Server | SynRttMean | 3000.0 | 20000.0 | 12000.0 | microseconds |
+| NCPS Server | SynRttMedian | 1500.0 | 8000.0 | 4500.0 | microseconds |
+| NCPS Server | SynRttP25 | 800.0 | 4000.0 | 2200.0 | microseconds |
+| NCPS Server | SynRttP75 | 4000.0 | 12000.0 | 8000.0 | microseconds |
+| NCPS Server | SynRttP90 | 8000.0 | 20000.0 | 14000.0 | microseconds |
+| NCPS Server | SynRttP95 | 12000.0 | 28000.0 | 20000.0 | microseconds |
+| NCPS Server | SynRttP99 | 25000.0 | 60000.0 | 45000.0 | microseconds |
+| NCPS Server | SynRttP99_9 | 800000.0 | 2500000.0 | 1500000.0 | microseconds |
+| NCPS Server | SynRttP99_99 | 1500000.0 | 4000000.0 | 3000000.0 | microseconds |
 
 | Scenario  | Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
 |-----------|-------------|---------------------|---------------------|---------------------|------|
