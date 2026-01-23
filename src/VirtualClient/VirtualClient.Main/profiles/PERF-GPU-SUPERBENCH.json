@@ -25,40 +25,5 @@
                 "ContainerVersion": "superbench/superbench:v0.9.0-cuda12.1"
             }
         }
-    ],
-    "Dependencies": [
-        {
-            "Type": "NvidiaCudaInstallation",
-            "Parameters": {
-                "Scenario": "InstallNvidiaCuda",
-                "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
-                "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
-                "Username": "$.Parameters.Username",
-                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
-            }
-        },
-        {
-            "Type": "DockerInstallation",
-            "Parameters": {
-                "Scenario": "InstallDocker"
-            }
-        },
-        {
-            "Type": "NvidiaContainerToolkitInstallation",
-            "Parameters": {
-                "Scenario": "InstallNvidiaContainerToolkit"
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages": "sshpass,python3-pip",
-                "Packages-Apt": "nvidia-common",
-                "Packages-Dnf": "nvidia-driver",
-                "Packages-Yum": "nvidia-driver",
-                "Packages-Zypper": ""
-            }
-        }
     ]
 }
