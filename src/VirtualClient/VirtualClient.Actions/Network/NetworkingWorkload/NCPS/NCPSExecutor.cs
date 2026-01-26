@@ -271,52 +271,52 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <inheritdoc/>
         protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("command", this.ExecutablePath)
                 .AddContext("commandArguments", commandArguments);
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
+                IProcessProxy process = null;
+
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
-                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        try
                         {
-                            try
-                            {
-                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
-                                await this.LogProcessDetailsAsync(process, relatedContext, "NCPS");
-                                process.ThrowIfWorkloadFailed();
+                            process = await this.ExecuteCommandAsync(
+                                this.ExecutablePath,
+                                commandArguments,
+                                this.PlatformSpecifics.CurrentDirectory,
+                                relatedContext,
+                                cancellationToken);
 
-                                this.CaptureMetrics(
-                                    process.StandardOutput.ToString(),
-                                    process.FullCommand(),
-                                    process.StartTime,
-                                    process.ExitTime,
-                                    relatedContext);
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                // Expected when the client signals a cancellation.
-                            }
-                            catch (TimeoutException exc)
-                            {
-                                // We give this a best effort but do not want it to prevent the next workload
-                                // from executing.
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill(this.Logger);
+                            await this.LogProcessDetailsAsync(process, relatedContext, "NCPS");
+                            process.ThrowIfWorkloadFailed();
 
-                                throw new WorkloadException($"NCPS workload did not exit within the timeout period defined (timeout={timeout}).", exc, ErrorReason.WorkloadFailed);
-                            }
-                            catch (Exception exc)
-                            {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                throw new WorkloadException($"NCPS workload failed to start successfully", exc, ErrorReason.WorkloadFailed);
-                            }
+                            this.CaptureMetrics(
+                                process.StandardOutput.ToString(),
+                                process.FullCommand(),
+                                process.StartTime,
+                                process.ExitTime,
+                                relatedContext);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Expected when the client signals a cancellation.
+                        }
+                        catch (TimeoutException exc)
+                        {
+                            // We give this a best effort but do not want it to prevent the next workload
+                            // from executing.
+                            this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
+                            throw new WorkloadException($"NCPS workload did not exit within the timeout period defined (timeout={timeout}).", exc, ErrorReason.WorkloadFailed);
+                        }
+                        catch (Exception exc)
+                        {
+                            this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
+                            throw new WorkloadException($"NCPS workload failed to start successfully", exc, ErrorReason.WorkloadFailed);
                         }
                     });
                 }
