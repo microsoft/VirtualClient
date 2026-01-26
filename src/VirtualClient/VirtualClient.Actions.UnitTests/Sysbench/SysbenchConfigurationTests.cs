@@ -214,7 +214,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchConfigurationThrowsErrorWhenDatabasePopulated()
+        public void SysbenchConfigurationThrowsErrorWhenDatabasePopulated()
         {
             this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
             {
