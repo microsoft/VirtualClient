@@ -16,7 +16,6 @@ namespace VirtualClient.Actions
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -42,6 +41,18 @@ namespace VirtualClient.Actions
             };
 
             this.stateManager = this.SystemManager.StateManager;
+        }
+
+        /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public string Action
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
+                return action?.ToString();
+            }
         }
 
         /// <summary>
@@ -196,7 +207,7 @@ namespace VirtualClient.Actions
             HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
                ?? new HammerDBState();
 
-            if (state.DatabaseCreated != 2)
+            if (!state.DatabasePopulated)
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.{this.Scenario}", telemetryContext.Clone(), async () =>
                 {
@@ -205,8 +216,12 @@ namespace VirtualClient.Actions
                         await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-                state.DatabaseCreated++;
-                await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
+
+                if (this.Action == ConfigurationAction.PopulateTables)
+                {
+                    state.DatabasePopulated = true;
+                    await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
+                }
             }
         }
 
@@ -318,9 +333,20 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string warehouseCount = this.WarehouseCount;
+            string virtualUsers = this.VirtualUsers;
+
+            // For CreateTables action, we set warehouse count and virtual users to 1
+            // Then will run populate again to fill up the tables in entirety.
+            if (this.Action == ConfigurationAction.CreateTables)
+            {
+                warehouseCount = "1";
+                virtualUsers = "1";
+            }
+
             string command = $"python3";
             string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+                    $" --virtualUsers {virtualUsers} --warehouseCount {warehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
@@ -406,18 +432,34 @@ namespace VirtualClient.Actions
                 }
             }
 
-            public int DatabaseCreated
+            public bool DatabasePopulated
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(HammerDBState.DatabaseCreated), 0);
+                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabasePopulated), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(HammerDBState.DatabaseCreated)] = value;
+                    this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
                 }
             }
+        }
+
+        /// <summary>
+        /// Supported HammerDB Configuration actions.
+        /// </summary>
+        internal class ConfigurationAction
+        {
+            /// <summary>
+            /// Initializes the tables on the database.
+            /// </summary>
+            public const string CreateTables = nameof(CreateTables);
+
+            /// <summary>
+            /// Populates Database on server.
+            /// </summary>
+            public const string PopulateTables = nameof(PopulateTables);
         }
     }
 }

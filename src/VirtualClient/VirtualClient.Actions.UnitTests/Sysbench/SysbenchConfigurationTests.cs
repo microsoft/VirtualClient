@@ -49,6 +49,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SysbenchConfiguration.DatabaseSystem), "MySQL" },
+                { nameof(SysbenchConfiguration.Action), "PopulateTables" },
                 { nameof(SysbenchConfiguration.Benchmark), "OLTP" },
                 { nameof(SysbenchConfiguration.DatabaseName), "sbtest" },
                 { nameof(SysbenchConfiguration.PackageName), "sysbench" },
@@ -77,7 +78,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\"",
             };
 
             int commandNumber = 0;
@@ -122,7 +123,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\"",
             };
 
             int commandNumber = 0;
@@ -173,7 +174,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\"",
             };
 
             int commandNumber = 0;
@@ -213,7 +214,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchConfigurationSkipsDatabasePopulationWhenInitialized()
+        public async Task SysbenchConfigurationThrowsErrorWhenDatabasePopulated()
         {
             this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
             {
@@ -258,7 +259,8 @@ namespace VirtualClient.Actions
 
             using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => SysbenchExecutor.ExecuteAsync(CancellationToken.None));
+                Assert.IsTrue(error.Reason == ErrorReason.NotSupported);
             }
         }
 
@@ -274,7 +276,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 100 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -330,7 +332,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 40 --warehouses 1000 --threadCount 16 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -386,7 +388,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -444,7 +446,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --tableCount 40 --warehouses 1000 --threadCount 16 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
             };
 
             int commandNumber = 0;

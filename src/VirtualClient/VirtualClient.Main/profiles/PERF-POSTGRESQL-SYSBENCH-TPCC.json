@@ -117,11 +117,11 @@
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulatePostgreSQLDatabase",
+                "Scenario": "PreparePostgreSQLDatabase",
+                "Action": "CreateTables",
                 "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "WarehouseCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
                 "Role": "Server"
@@ -143,6 +143,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
+                "Action": "PopulateTables",
                 "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",

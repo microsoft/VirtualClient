@@ -109,13 +109,12 @@
         {
             "Type": "HammerDBExecutor",
             "Parameters": {
-                "Scenario": "CreatePostgreSQLDatabase",
+                "Scenario": "CreatePostgreSQLTables",
+                "Action": "CreateTables",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Workload": "tpcc",
                 "SQLServer": "postgresql",
                 "PackageName": "hammerdb",
-                "VirtualUsers": 1,
-                "WarehouseCount": 1,
                 "Port": "$.Parameters.Port",
                 "Role": "Server"
             }
@@ -135,7 +134,8 @@
         {
             "Type": "HammerDBExecutor",
             "Parameters": {
-                "Scenario": "PopulatePostgreSQLDatabase",
+                "Scenario": "PopulatePostgreSQLTables",
+                "Action": "PopulateTables",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Workload": "tpcc",
                 "SQLServer": "postgresql",
