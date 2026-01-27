@@ -408,7 +408,7 @@ namespace VirtualClient.Actions
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
             // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
-            bool reportable = (suites.Contains(this.Benchmarks.ToLower())) && (this.Iterations == 2 || this.Iterations == 3);
+            bool reportable = (this.Platform == PlatformID.Unix && suites.Contains(this.Benchmarks.ToLower())) && (this.Iterations == 2 || this.Iterations == 3);
             cmd = reportable ? $"{cmd} --reportable" : $"{cmd} --noreportable";
             cmd = $"{cmd} {this.Benchmarks}";
             return cmd;
