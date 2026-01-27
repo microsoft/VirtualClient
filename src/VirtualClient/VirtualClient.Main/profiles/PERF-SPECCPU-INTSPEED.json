@@ -15,6 +15,7 @@
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
+        "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intspeed\" : \"641\")}",
         "BaseOptimizingFlags": "-g -O3 -march=native -frecord-gcc-switches",
         "PeakOptimizingFlags": "-g -Ofast -march=native -flto -frecord-gcc-switches"
     },
@@ -25,7 +26,7 @@
                 "Scenario": "ExecuteSPECBenchmark",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intspeed",
-                "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intspeed\" : \"641\")}",
+                "Benchmarks": "$.Parameters.Benchmarks",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
                 "Threads": "$.Parameters.Threads",
