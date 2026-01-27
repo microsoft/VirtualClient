@@ -17,6 +17,12 @@
     },
     "Dependencies": [
         {
+            "Type": "DockerInstallation",
+            "Parameters": {
+                "Scenario": "InstallDocker"
+            }
+        },
+        {
             "Type": "NvidiaCudaInstallation",
             "Parameters": {
                 "Scenario": "InstallNvidiaCuda",
