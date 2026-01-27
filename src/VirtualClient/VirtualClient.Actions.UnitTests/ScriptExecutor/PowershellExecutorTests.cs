@@ -18,9 +18,9 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class PowershellExecutorTests
+    public class PowerShellExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PowershellExecutorTests), "Examples", "ScriptExecutor");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PowerShellExecutorTests), "Examples", "ScriptExecutor");
 
         private MockFixture fixture;
         private DependencyPath mockPackage;
@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
-            this.exampleResults = File.ReadAllText(Path.Combine(PowershellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
+            this.exampleResults = File.ReadAllText(Path.Combine(PowerShellExecutorTests.ExamplesDirectory, "validJsonExample.json"));
 
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>()))
                 .Returns(true);
@@ -127,43 +127,43 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(PowershellExecutor.PackageName), "workloadPackage" },
-                { nameof(PowershellExecutor.Scenario), "GenericScriptWorkload" },
-                { nameof(PowershellExecutor.CommandLine), "parameter1 parameter2" },
-                { nameof(PowershellExecutor.ScriptPath), "genericScript.ps1" },
-                { nameof(PowershellExecutor.LogPaths), "*.log;*.txt;*.json" },
-                { nameof(PowershellExecutor.ToolName), "GenericTool" },
-                { nameof(PowershellExecutor.UsePwsh), false }
+                { nameof(PowerShellExecutor.PackageName), "workloadPackage" },
+                { nameof(PowerShellExecutor.Scenario), "GenericScriptWorkload" },
+                { nameof(PowerShellExecutor.CommandLine), "parameter1 parameter2" },
+                { nameof(PowerShellExecutor.ScriptPath), "genericScript.ps1" },
+                { nameof(PowerShellExecutor.LogPaths), "*.log;*.txt;*.json" },
+                { nameof(PowerShellExecutor.ToolName), "GenericTool" }
             };
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", true, false, "powershell")]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", false, false, "powershell")]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", true, true, "pwsh")]
-        [TestCase(PlatformID.Win32NT, @"\win-x64", @"genericScript.ps1", false, true, "pwsh")]
+        [TestCase(@"genericScript.ps1", "powershell")]
+        [TestCase(@"genericScript.ps1", "powershell")]
+        [TestCase(@"genericScript.ps1", "powershell")]
+        [TestCase(@"genericScript.ps1", "powershell.exe")]
+        [TestCase(@"genericScript.ps1", "PowerShell.exe")]
+        [TestCase(@"genericScript.ps1", @"C:\Any\Custom\Location\powershell.exe")]
+        [TestCase(@"genericScript.ps1", "pwsh")]
+        [TestCase(@"genericScript.ps1", "pwsh.exe")]
+        [TestCase(@"genericScript.ps1", @"C:\Any\Custom\Location\pwsh.exe")]
         [Platform(Exclude = "Unix,Linux,MacOsX")]
-        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands(PlatformID platform, string platformSpecificPath, string command, bool runElevated, bool usePwsh, string executorType)
+        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands_Windows_Scenarios(string command, string executable)
         {
-            this.SetupTest(platform);
-            this.fixture.Parameters[nameof(PowershellExecutor.RunElevated)] = runElevated;
-            this.fixture.Parameters[nameof(PowershellExecutor.ScriptPath)] = command;
-            this.fixture.Parameters[nameof(PowershellExecutor.UsePwsh)] = usePwsh;
+            this.SetupTest(PlatformID.Win32NT);
+            this.fixture.Parameters[nameof(PowerShellExecutor.ScriptPath)] = command;
+            this.fixture.Parameters[nameof(PowerShellExecutor.Executable)] = executable;
 
-            string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}\\{command} parameter1 parameter2";
+            string fullCommand = $"{this.mockPackage.Path}\\win-x64\\{command} parameter1 parameter2";
 
-            using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
+            using (TestPowerShellExecutor executor = new TestPowerShellExecutor(this.fixture))
             {
                 bool commandExecuted = false;
-
-                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
-                    .ConfigureAwait(false);
-
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
                 string workingDirectory = executor.ExecutableDirectory;
 
-                string expectedCommand = $"{executorType} -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
+                string expectedCommand = $"{executable} -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if(expectedCommand == $"{exe} {arguments}")
@@ -184,8 +184,7 @@ namespace VirtualClient.Actions
                     };
                 };
 
-                await executor.ExecuteAsync(CancellationToken.None)
-                    .ConfigureAwait(false);
+                await executor.ExecuteAsync(CancellationToken.None);
 
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.IsTrue(commandExecuted);
@@ -193,14 +192,59 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, @"\win-x64\")]
-        public void PowershellExecutorDoesNotThrowWhenTheWorkloadDoesNotProduceValidMetricsFile(PlatformID platform, string platformSpecificPath)
+        [TestCase("genericScript.ps1", "pwsh")]
+        [TestCase("genericScript.ps1", @"/home/any/custom/location/pwsh")]
+        [TestCase("genericScript.ps1", "sudo pwsh")]
+        public async Task PowershellExecutorExecutesTheCorrectWorkloadCommands_Unix_Scenarios(string command, string executable)
         {
-            this.SetupTest(platform);
-            this.fixture.File.Setup(fe => fe.Exists($"{this.mockPackage.Path}{platformSpecificPath}test-metrics.json"))
+            this.SetupTest(PlatformID.Unix);
+            this.fixture.Parameters[nameof(PowerShellExecutor.ScriptPath)] = command;
+            this.fixture.Parameters[nameof(PowerShellExecutor.Executable)] = executable;
+
+            string fullCommand = $"{this.mockPackage.Path}/linux-x64/{command} parameter1 parameter2";
+
+            using (TestPowerShellExecutor executor = new TestPowerShellExecutor(this.fixture))
+            {
+                bool commandExecuted = false;
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                string workingDirectory = executor.ExecutableDirectory;
+
+                string expectedCommand = $"{executable} -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (expectedCommand == $"{exe} {arguments}")
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        public void PowershellExecutorDoesNotThrowWhenTheWorkloadDoesNotProduceValidMetricsFile()
+        {
+            this.SetupTest(PlatformID.Win32NT);
+            this.fixture.File.Setup(fe => fe.Exists($@"{this.mockPackage.Path}\win-x64\test-metrics.json"))
                 .Returns(false);
 
-            using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
+            using (TestPowerShellExecutor executor = new TestPowerShellExecutor(this.fixture))
             {
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
@@ -208,11 +252,27 @@ namespace VirtualClient.Actions
             }            
         }
 
-        private class TestPowershellExecutor : PowershellExecutor
+        private class TestPowerShellExecutor : PowerShellExecutor
         {
-            public TestPowershellExecutor(MockFixture fixture)
+            public TestPowerShellExecutor(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)
             {
+            }
+
+            public new string ExecutablePath
+            {
+                get
+                {
+                    return base.ExecutablePath;
+                }
+            }
+
+            public new string ExecutableDirectory
+            {
+                get
+                {
+                    return base.ExecutableDirectory;
+                }
             }
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

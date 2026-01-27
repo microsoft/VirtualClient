@@ -42,7 +42,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Socket Performance Tool.
         /// </summary>
-        SockPerf
+        SockPerf,
+
+        /// <summary>
+        /// NCPS Tool.
+        /// </summary>
+        NCPS
     }
 
     /// <summary>

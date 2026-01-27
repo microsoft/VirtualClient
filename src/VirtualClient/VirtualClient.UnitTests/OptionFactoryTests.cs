@@ -15,7 +15,9 @@ namespace VirtualClient
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts.Extensibility;
