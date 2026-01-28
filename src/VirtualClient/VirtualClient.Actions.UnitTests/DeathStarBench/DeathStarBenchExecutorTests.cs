@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task DeathStarBenchExecutorInstallsDepedenciesAsExpected()
+        public async Task DeathStarBenchExecutorInstallsDependenciesAsExpected()
         {
             this.SetupTest(PlatformID.Unix);
 

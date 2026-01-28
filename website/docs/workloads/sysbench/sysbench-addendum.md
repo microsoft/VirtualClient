@@ -58,7 +58,7 @@ the database on one or multiple disks, Sysbench will go ahead and place the tabl
 
 * **Threads**  
   The Sysbench workload generator prepares a list of statements to run on MySQL. MySQL can only accept so many prepared statements. We already max out this variable in a 
-  scenario in the MySQLConfiguation dependency, but even when setting the max_prepared_stmt_count to a large number, Sysbench can throw a 'too many connections' error. This has shown 
+  scenario in the MySQLConfiguration dependency, but even when setting the max_prepared_stmt_count to a large number, Sysbench can throw a 'too many connections' error. This has shown 
   to be the case even on VMs with high core counts and equipped with the ability for high thread counts. User caution is advised for thread counts > 176; the VC team has only successfully 
   seen Sysbench run with thread counts less than that number.
 
@@ -81,3 +81,4 @@ sysbench oltp_common --tables=10 --table-size=100 --mysql-db=sbtest --mysql-host
 # running the oltp_write_only workload
 sysbench oltp_write_only --threads=10 --tables=10 --table-size=100 --mysql-db=sbtest --mysql-host=1.2.3.4 --time=600 run
 ```
+

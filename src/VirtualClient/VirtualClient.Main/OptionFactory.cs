@@ -1589,7 +1589,7 @@ namespace VirtualClient
             if (iterations <= 0)
             {
                 throw new ArgumentException(
-                    $"Invalid iteartion value '{iterations}' provided for the iterations option. " +
+                    $"Invalid iteration value '{iterations}' provided for the iterations option. " +
                     $"The iterations parameter must be greater than zero.");
             }
 

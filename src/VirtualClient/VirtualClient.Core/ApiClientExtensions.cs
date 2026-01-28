@@ -32,7 +32,7 @@ namespace VirtualClient
         /// </summary>
         /// <typeparam name="T">The data type of the object to which the response content will be deserialized.</typeparam>
         /// <param name="response">Http response message.</param>
-        /// <returns>Json serailized object from content.</returns>
+        /// <returns>Json serialized object from content.</returns>
         public static async Task<T> FromContentAsync<T>(this HttpResponseMessage response)
         {
             string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);

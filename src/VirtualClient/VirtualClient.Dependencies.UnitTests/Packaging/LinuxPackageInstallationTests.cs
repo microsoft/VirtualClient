@@ -35,7 +35,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task LinuxPackageInstallationInstantiateCorrectAptInstalltionUbuntuSimpleCase()
+        public async Task LinuxPackageInstallationInstantiateCorrectAptInstallationUbuntuSimpleCase()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -108,7 +108,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task LinuxPackageInstallationInstantiateCorrectAptInstalltionUbuntuComplexCase()
+        public async Task LinuxPackageInstallationInstantiateCorrectAptInstallationUbuntuComplexCase()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -141,7 +141,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task LinuxPackageInstallationInstantiateCorrectDnfInstalltionMarinerComplexCase()
+        public async Task LinuxPackageInstallationInstantiateCorrectDnfInstallationMarinerComplexCase()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -177,7 +177,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task LinuxPackageInstallationInstantiateCorrectDnfInstalltionAwsLinuxComplexCase()
+        public async Task LinuxPackageInstallationInstantiateCorrectDnfInstallationAwsLinuxComplexCase()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {

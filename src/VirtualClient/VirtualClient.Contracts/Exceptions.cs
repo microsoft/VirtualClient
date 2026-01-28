@@ -544,7 +544,7 @@ namespace VirtualClient
     }
 
     /// <summary>
-    /// Represents the base exception for errors that occurr in relation to the
+    /// Represents the base exception for errors that occur in relation to the
     /// experiment schema.
     /// </summary>
     [Serializable]

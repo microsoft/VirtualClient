@@ -85,8 +85,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu0_%_utilization", 1);
             MetricAssert.Exists(metrics, "gpu0_%_memory_utilization", 2);
-            MetricAssert.Exists(metrics, "gpu0_temperature", 26, "celcius");
-            MetricAssert.Exists(metrics, "gpu0_memory_temperature", 35, "celcius");
+            MetricAssert.Exists(metrics, "gpu0_temperature", 26, "celsius");
+            MetricAssert.Exists(metrics, "gpu0_memory_temperature", 35, "celsius");
             MetricAssert.Exists(metrics, "gpu0_power_draw_average", 70.89, "watts");
             MetricAssert.Exists(metrics, "gpu0_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu0_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -129,7 +129,7 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu0_%_utilization", 2);
             MetricAssert.Exists(metrics, "gpu0_%_memory_utilization", 3);
-            MetricAssert.Exists(metrics, "gpu0_temperature", 26, "celcius");
+            MetricAssert.Exists(metrics, "gpu0_temperature", 26, "celsius");
             MetricAssert.Exists(metrics, "gpu0_graphics_clock_speed", 300, "megahertz");
             MetricAssert.Exists(metrics, "gpu0_streaming_multiprocessor_clock_speed", 300, "megahertz");
             MetricAssert.Exists(metrics, "gpu0_video_clock_speed", 540, "megahertz");
@@ -171,8 +171,8 @@ namespace VirtualClient.Monitors.UnitTests
             Assert.AreEqual(248, metrics.Count);
             MetricAssert.Exists(metrics, "gpu0_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu0_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu0_temperature", 26, "celcius");
-            MetricAssert.Exists(metrics, "gpu0_memory_temperature", 35, "celcius");
+            MetricAssert.Exists(metrics, "gpu0_temperature", 26, "celsius");
+            MetricAssert.Exists(metrics, "gpu0_memory_temperature", 35, "celsius");
             MetricAssert.Exists(metrics, "gpu0_power_draw_average", 70.89, "watts");
             MetricAssert.Exists(metrics, "gpu0_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu0_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -203,8 +203,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu1_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu1_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu1_temperature", 26, "celcius");
-            MetricAssert.Exists(metrics, "gpu1_memory_temperature", 34, "celcius");
+            MetricAssert.Exists(metrics, "gpu1_temperature", 26, "celsius");
+            MetricAssert.Exists(metrics, "gpu1_memory_temperature", 34, "celsius");
             MetricAssert.Exists(metrics, "gpu1_power_draw_average", 71.71, "watts");
             MetricAssert.Exists(metrics, "gpu1_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu1_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -235,8 +235,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu2_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu2_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu2_temperature", 25, "celcius");
-            MetricAssert.Exists(metrics, "gpu2_memory_temperature", 33, "celcius");
+            MetricAssert.Exists(metrics, "gpu2_temperature", 25, "celsius");
+            MetricAssert.Exists(metrics, "gpu2_memory_temperature", 33, "celsius");
             MetricAssert.Exists(metrics, "gpu2_power_draw_average", 70.78, "watts");
             MetricAssert.Exists(metrics, "gpu2_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu2_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -267,8 +267,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu3_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu3_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu3_temperature", 25, "celcius");
-            MetricAssert.Exists(metrics, "gpu3_memory_temperature", 33, "celcius");
+            MetricAssert.Exists(metrics, "gpu3_temperature", 25, "celsius");
+            MetricAssert.Exists(metrics, "gpu3_memory_temperature", 33, "celsius");
             MetricAssert.Exists(metrics, "gpu3_power_draw_average", 72.17, "watts");
             MetricAssert.Exists(metrics, "gpu3_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu3_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -299,8 +299,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu4_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu4_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu4_temperature", 26, "celcius");
-            MetricAssert.Exists(metrics, "gpu4_memory_temperature", 35, "celcius");
+            MetricAssert.Exists(metrics, "gpu4_temperature", 26, "celsius");
+            MetricAssert.Exists(metrics, "gpu4_memory_temperature", 35, "celsius");
             MetricAssert.Exists(metrics, "gpu4_power_draw_average", 70.89, "watts");
             MetricAssert.Exists(metrics, "gpu4_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu4_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -331,8 +331,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu5_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu5_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu5_temperature", 26, "celcius");
-            MetricAssert.Exists(metrics, "gpu5_memory_temperature", 34, "celcius");
+            MetricAssert.Exists(metrics, "gpu5_temperature", 26, "celsius");
+            MetricAssert.Exists(metrics, "gpu5_memory_temperature", 34, "celsius");
             MetricAssert.Exists(metrics, "gpu5_power_draw_average", 71.71, "watts");
             MetricAssert.Exists(metrics, "gpu5_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu5_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -363,8 +363,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu6_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu6_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu6_temperature", 25, "celcius");
-            MetricAssert.Exists(metrics, "gpu6_memory_temperature", 33, "celcius");
+            MetricAssert.Exists(metrics, "gpu6_temperature", 25, "celsius");
+            MetricAssert.Exists(metrics, "gpu6_memory_temperature", 33, "celsius");
             MetricAssert.Exists(metrics, "gpu6_power_draw_average", 70.78, "watts");
             MetricAssert.Exists(metrics, "gpu6_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu6_streaming_multiprocessor_clock_speed", 345, "megahertz");
@@ -395,8 +395,8 @@ namespace VirtualClient.Monitors.UnitTests
 
             MetricAssert.Exists(metrics, "gpu7_%_utilization", 0);
             MetricAssert.Exists(metrics, "gpu7_%_memory_utilization", 0);
-            MetricAssert.Exists(metrics, "gpu7_temperature", 25, "celcius");
-            MetricAssert.Exists(metrics, "gpu7_memory_temperature", 33, "celcius");
+            MetricAssert.Exists(metrics, "gpu7_temperature", 25, "celsius");
+            MetricAssert.Exists(metrics, "gpu7_memory_temperature", 33, "celsius");
             MetricAssert.Exists(metrics, "gpu7_power_draw_average", 72.17, "watts");
             MetricAssert.Exists(metrics, "gpu7_graphics_clock_speed", 345, "megahertz");
             MetricAssert.Exists(metrics, "gpu7_streaming_multiprocessor_clock_speed", 345, "megahertz");

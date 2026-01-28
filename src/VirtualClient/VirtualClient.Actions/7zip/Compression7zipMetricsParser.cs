@@ -64,7 +64,7 @@ namespace VirtualClient.Actions
             metrics.Add(new Metric(
                 "Compression_Ratio", 
                 (Convert.ToDouble(this.SizeAndTime.Rows[2].ItemArray[2]) / Convert.ToDouble(this.SizeAndTime.Rows[0].ItemArray[2])) * 100, 
-                "precentage",
+                "percentage",
                 relativity: MetricRelativity.LowerIsBetter, 
                 verbosity: 2));
 

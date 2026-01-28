@@ -152,9 +152,9 @@ namespace VirtualClient.Actions
                 ["Type"] = typeof(LatteServerExecutor2).Name
             });
 
-            foreach (var paramter in this.Parameters)
+            foreach (var parameter in this.Parameters)
             {
-                resetInstructions.Properties.Add(paramter);
+                resetInstructions.Properties.Add(parameter);
             }
 
             Item<Instructions> instructions = new Item<Instructions>(
@@ -204,9 +204,9 @@ namespace VirtualClient.Actions
                     ["Type"] = typeof(LatteServerExecutor2).Name
                 });
 
-                foreach (var paramter in this.Parameters)
+                foreach (var parameter in this.Parameters)
                 {
-                    startInstructions.Properties.Add(paramter);
+                    startInstructions.Properties.Add(parameter);
                 }
 
                 Item<Instructions> instructions = new Item<Instructions>(

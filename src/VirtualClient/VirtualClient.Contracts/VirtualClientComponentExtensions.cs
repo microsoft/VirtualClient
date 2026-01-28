@@ -475,7 +475,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Verifies an enviroment layout is defined and throws an exception if not.
+        /// Verifies an environment layout is defined and throws an exception if not.
         /// </summary>
         public static void ThrowIfLayoutNotDefined(this VirtualClientComponent component)
         {

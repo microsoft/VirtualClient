@@ -518,7 +518,7 @@ namespace VirtualClient.Contracts
         [TestCase(@"/packages/a/b/c/d", @"/packages/a/b/c", @"/packages/a/b", @"/packages/a/")]
         [TestCase(@"/packages2/a/b/c/d", @"/packages/a/b/c", @"/packages/a/b", @"/")]
         [TestCase(@"/vc/packages2/a\b/c/d", @"/vc\packages2/a/b/c", @"\vc/packages/a/b", @"/vc/")]
-        public void PlatformGetCommmonDirectoryCorrectlyOnLinuxSystems(string path1, string path2, string path3, string expectedPath)
+        public void PlatformGetCommonDirectoryCorrectlyOnLinuxSystems(string path1, string path2, string path3, string expectedPath)
         {
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
             string actualPath = platformSpecifics.GetCommonDirectory(new string[] { path1, path2, path3 });
@@ -531,7 +531,7 @@ namespace VirtualClient.Contracts
         [TestCase(@"A:\a\a.txt", @"A:\a\b\b.pdf", @"A:\a\b\c\c.jpg", @"A:\a\")]
         [TestCase(@"A:\a\a.txt", @"A:\a\b\b.pdf", @"AA:\a\b\c\c.jpg", @"")]
         [TestCase(@"A:\a\a.txt", @"B:\a\b.pdf", @"A:\a\c.jpg", @"")]
-        public void PlatformGetCommmonDirectoryCorrectlyOnWindowsSystems(string path1, string path2, string path3, string expectedPath)
+        public void PlatformGetCommonDirectoryCorrectlyOnWindowsSystems(string path1, string path2, string path3, string expectedPath)
         {
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
             string actualPath = platformSpecifics.GetCommonDirectory(new string[] { path1, path2, path3 });

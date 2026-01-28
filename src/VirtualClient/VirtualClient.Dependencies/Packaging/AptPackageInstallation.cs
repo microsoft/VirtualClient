@@ -107,7 +107,7 @@ namespace VirtualClient.Dependencies
             List<string> packages = this.Packages.Split(',', ';', StringSplitOptions.RemoveEmptyEntries).ToList();
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
 
-            // Apt installtion only applies to Linux.
+            // Apt installation only applies to Linux.
             if (this.Platform != PlatformID.Unix || packages == null || !packages.Any())
             {
                 return;

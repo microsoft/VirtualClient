@@ -88,7 +88,7 @@ namespace VirtualClient.Dependencies
 
             List<string> packages = this.Packages.Split(',', ';', StringSplitOptions.RemoveEmptyEntries).ToList();
 
-            // Choco installtion only applies to Windows.
+            // Choco installation only applies to Windows.
             if (this.Platform != PlatformID.Win32NT || packages == null || !packages.Any())
             {
                 return;
@@ -132,7 +132,7 @@ namespace VirtualClient.Dependencies
                 this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(programFilesPath, package, "bin"), append: true);
             }
 
-            // choco list doesn't work well enough and is going thorugh a rename/deprecating
+            // choco list doesn't work well enough and is going through a rename/deprecating
             // https://docs.chocolatey.org/en-us/choco/commands/list
             // Need to add the list/verify function once chocolatey releases 2.0
             this.Logger.LogTraceMessage($"VirtualClient installed choco package(s): '[{string.Join(' ', packages)}]'.", EventContext.Persisted());

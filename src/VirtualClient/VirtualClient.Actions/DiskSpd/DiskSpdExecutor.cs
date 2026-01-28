@@ -243,7 +243,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Applies the configuration specificed to the parameters of the profile
+        /// Applies the configuration specified to the parameters of the profile
         /// workload action.
         /// </summary>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
@@ -515,11 +515,11 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns the name of the test files seperated by whitespace given a mount point.
+        /// Returns the name of the test files separated by whitespace given a mount point.
         /// </summary>
         /// <param name="mountPoint">A mount point to the disk under test.</param>
         /// <returns>
-        /// The full path to the test files seperated by whitespace.
+        /// The full path to the test files separated by whitespace.
         /// </returns>
         protected virtual string GetTestFiles(string mountPoint)
         {

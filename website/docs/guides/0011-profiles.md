@@ -4,7 +4,7 @@ of as recipes for how to utilize resources and to work the system. Profiles are 
 Actions, Monitors and Dependencies.
 
 Although a profile may contain any number of these sections, none of the sections are absolutely required. This allows users flexibility when creating profiles for
-reusability. For example, it is common for the Virtual Client team to have profiles specific to running workloads on the system separat from profiles specific to running
+reusability. For example, it is common for the Virtual Client team to have profiles specific to running workloads on the system separate from profiles specific to running
 monitors on the system. This allows a user to run a set of monitors with any number of different sets of workloads. In the examples below, the profiles that start with the
 term 'PERF' are ones that are designed to run workloads on the system. Profiles that start with the term 'MONITORS' are designed to run different sets of monitors on the 
 system in the background while the workloads are running.
@@ -32,7 +32,7 @@ properties that one might find in a profile.
 The section 'Parameters' within the profile defines a set of 1 or more parameters (typically with default values) that can be used to override the default values in the components that
 are part of the 'Actions', 'Monitors' or 'Dependencies' sections. In general, Virtual Client profiles are not meant to be overly general purpose. They represent tested and vetted recipes
 for how to utilize resources and work a given system. Whereas any number of parameters can be defined in the 'Parameters' section, it is common practice to allow overrides to a minimum
-set. This helps to ensure the purpose and consistency of the profile operations on the system cannnot diverge too far from the original intentions.
+set. This helps to ensure the purpose and consistency of the profile operations on the system cannot diverge too far from the original intentions.
 
 ```
 "Parameters": {

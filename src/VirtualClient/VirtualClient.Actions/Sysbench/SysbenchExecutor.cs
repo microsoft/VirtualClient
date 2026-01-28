@@ -177,7 +177,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The specifed action that controls the execution of the dependency.
+        /// The specified action that controls the execution of the dependency.
         /// </summary>
         public string Action
         {
@@ -237,7 +237,7 @@ namespace VirtualClient.Actions
             CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
             int coreCount = cpuInfo.LogicalProcessorCount;
 
-            // record count calcuated for default use is 10^n where n = core count
+            // record count calculated for default use is 10^n where n = core count
             // for the in memory scenario, it is n+2
 
             int recordCountExponent = (databaseScenario != SysbenchScenario.InMemory)
@@ -390,7 +390,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Add metrics to telemtry.
+        /// Add metrics to telemetry.
         /// </summary>
         /// <param name="arguments"></param>
         /// <param name="process"></param>

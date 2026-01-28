@@ -22,19 +22,19 @@ namespace VirtualClient.Actions
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
-        private DependencyPath mockPerformanceLibariesPackage;
+        private DependencyPath mockPerformanceLibrariesPackage;
         private string exampleResults;
 
         private void SetupTest(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.mockFixture = new MockFixture();
             this.mockPackage = new DependencyPath("HPL", this.mockFixture.GetPackagePath("hplinpack"));
-            this.mockPerformanceLibariesPackage = new DependencyPath("hplperformancelibraries", this.mockFixture.GetPackagePath("hplperformancelibraries"));
+            this.mockPerformanceLibrariesPackage = new DependencyPath("hplperformancelibraries", this.mockFixture.GetPackagePath("hplperformancelibraries"));
 
 
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.SetupPackage(this.mockPackage);
-            this.mockFixture.SetupPackage(this.mockPerformanceLibariesPackage);
+            this.mockFixture.SetupPackage(this.mockPerformanceLibrariesPackage);
 
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);

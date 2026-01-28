@@ -45,7 +45,7 @@ GPU components for which the MLPerf workload is designed to test.
 
 Source: [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks/bert/implementations/pytorch-22.09)
 
-Additional details on whether a system is supported or not can be found in the documetation here, 
+Additional details on whether a system is supported or not can be found in the documentation here, 
 for each benchmark check it's respective implementation folder :
 https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks
 https://github.com/mlcommons/inference_results_v4.1/tree/master/closed/NVIDIA

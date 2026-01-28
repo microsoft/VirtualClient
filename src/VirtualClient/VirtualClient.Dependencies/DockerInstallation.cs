@@ -88,9 +88,9 @@ namespace VirtualClient.Dependencies
                         break;
 
                     default:
-                        // different distro installation to be addded.
+                        // different distro installation to be added.
                         throw new WorkloadException(
-                            $"Docker Installtion is not supported on the current Linux distro - {distroInfo.LinuxDistribution.ToString()}.  through VC " +
+                            $"Docker Installation is not supported on the current Linux distro - {distroInfo.LinuxDistribution.ToString()}.  through VC " +
                             $" Supported distros include:" +
                             $" Ubuntu ",
                             ErrorReason.LinuxDistributionNotSupported);
@@ -100,7 +100,7 @@ namespace VirtualClient.Dependencies
             {
                 // docker installation for windows to be added.
                 throw new WorkloadException(
-                    $"Docker Installtion is not supported on the current platform {this.Platform} through VC." +
+                    $"Docker Installation is not supported on the current platform {this.Platform} through VC." +
                     $"Supported Platforms include:" +
                     $" Unix ",
                     ErrorReason.PlatformNotSupported);

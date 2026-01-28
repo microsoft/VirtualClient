@@ -34,7 +34,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task CoreMarkProExecutorExcutesAsExpectedInLinux()
+        public async Task CoreMarkProExecutorExecutesAsExpectedInLinux()
         {
             this.SetupTest(PlatformID.Unix);
             this.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
@@ -52,7 +52,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task CoreMarkProExecutorExcutesAsExpectedInWindows()
+        public async Task CoreMarkProExecutorExecutesAsExpectedInWindows()
         {
             this.SetupTest(PlatformID.Win32NT);
             this.ProcessManager.OnCreateProcess = (cmd, args, wd) =>

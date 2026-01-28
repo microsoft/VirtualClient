@@ -1,5 +1,5 @@
 # Usage: Testing Disks
-VC automates disk formating and run storage workloads on the target systems. We documented the rules and the mechanism we used to identify disks to run workloads on.
+VC automates disk formatting and run storage workloads on the target systems. We documented the rules and the mechanism we used to identify disks to run workloads on.
 
 ## Disk Mount Points
 On certain systems, Virtual Client may need to create mount points on each of the disks in order to have both permissions and a path to

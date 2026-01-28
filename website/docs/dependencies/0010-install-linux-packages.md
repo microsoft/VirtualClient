@@ -44,7 +44,7 @@ different Linux distros are as follows:
 
 - Packages with the same name across all distros.
 - Packages with specific names depending upon the distro.
-- Packages with specific names dependending upon the package manager.
+- Packages with specific names depending upon the package manager.
 
 ## Example: Packages that have the same name across distros
 This is the simplest case. The package is well-known and all package managers use the same name for the package.

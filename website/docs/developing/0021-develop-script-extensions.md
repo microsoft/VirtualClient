@@ -257,7 +257,7 @@ script-based extensions development process. The following illustrates an exampl
 
 * **Include Documentation in the Package**  
   Each hardware program comes with special considerations. Documentation related to the specific program should be included in either the root
-  directory for the package (e.g. README.md) or in a `docs` subdirectory within the package. Any non-automated setup requirments should be clearly
+  directory for the package (e.g. README.md) or in a `docs` subdirectory within the package. Any non-automated setup requirements should be clearly
   documented.
 
   ``` bash

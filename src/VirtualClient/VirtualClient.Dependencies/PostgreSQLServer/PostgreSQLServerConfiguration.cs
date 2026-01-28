@@ -45,7 +45,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The specifed action that controls the execution of the dependency.
+        /// The specified action that controls the execution of the dependency.
         /// </summary>
         public string Action
         {
@@ -56,7 +56,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The specifed action that controls the execution of the dependency.
+        /// The specified action that controls the execution of the dependency.
         /// </summary>
         public bool SkipInitialize
         {

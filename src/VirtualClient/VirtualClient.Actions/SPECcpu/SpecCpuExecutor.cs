@@ -89,7 +89,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Base optimizing flags.
-        /// Recommand Default:-g -O3 -march=native
+        /// Recommend Default:-g -O3 -march=native
         /// </summary>
         public string BaseOptimizingFlags
         {
@@ -101,7 +101,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Iterations.
-        /// Recommand Default: 2
+        /// Recommend Default: 2
         /// </summary>
         public int Iterations
         {
@@ -113,7 +113,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Peak optimizing flags.
-        /// Recommand Default:-g -Ofast -march=native -flto
+        /// Recommend Default:-g -Ofast -march=native -flto
         /// </summary>
         public string PeakOptimizingFlags
         {
@@ -231,7 +231,7 @@ namespace VirtualClient.Actions
                     return "vc-win-arm64.cfg";
 
                 default:
-                    throw new NotSupportedException($"Current CPU architechture '{this.CpuArchitecture.ToString()}' is not supported for SPECcpu.");
+                    throw new NotSupportedException($"Current CPU architecture '{this.CpuArchitecture.ToString()}' is not supported for SPECcpu.");
             }
         }
 

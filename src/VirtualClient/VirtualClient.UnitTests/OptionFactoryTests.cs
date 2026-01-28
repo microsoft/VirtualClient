@@ -267,7 +267,7 @@ namespace VirtualClient
 
         [Test]
         [TestCaseSource(nameof(GetExampleStorageAccountConnectionStrings))]
-        public void ContentStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
+        public void ContentStoreOptionSupportsValidStorageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreateContentStoreOption();
             ParseResult result = option.Parse($"--content-store={connectionToken}");
@@ -934,7 +934,7 @@ namespace VirtualClient
 
         [Test]
         [TestCaseSource(nameof(GetExampleStorageAccountConnectionStrings))]
-        public void PackageStoreOptionSupportsValidStoageAccountConnectionStrings(string connectionToken)
+        public void PackageStoreOptionSupportsValidStorageAccountConnectionStrings(string connectionToken)
         {
             Option option = OptionFactory.CreatePackageStoreOption();
             ParseResult result = option.Parse($"--package-store={connectionToken}");

@@ -20,7 +20,7 @@ namespace VirtualClient.Logging
     public sealed class SerilogFileLoggerProvider : ILoggerProvider, IDisposable
     {
         private LoggerConfiguration configuration;
-        private LogLevel minumumLogLevel;
+        private LogLevel minimumLogLevel;
         private IList<IDisposable> disposables;
         private bool disposed;
 
@@ -36,7 +36,7 @@ namespace VirtualClient.Logging
         {
             configuration.ThrowIfNull(nameof(configuration));
             this.configuration = configuration;
-            this.minumumLogLevel = level;
+            this.minimumLogLevel = level;
             this.disposables = new List<IDisposable>();
         }
 
@@ -53,7 +53,7 @@ namespace VirtualClient.Logging
         {
             Serilog.Core.Logger logger = this.configuration.CreateLogger();
             this.disposables.Add(logger);
-            return new SerilogFileLogger(logger, this.minumumLogLevel);
+            return new SerilogFileLogger(logger, this.minimumLogLevel);
         }
 
         /// <summary>

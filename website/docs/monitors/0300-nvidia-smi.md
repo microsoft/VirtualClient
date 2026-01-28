@@ -26,7 +26,7 @@ The following section describes the various counters/metrics that are available 
 |-------------|-------------|
 | utilization.gpu | GPU Utilization percentage. |
 | utilization.memory | GPU Memory Utilization percentage. |
-| temperature.gpu | GPU temperature in celsuis. |
+| temperature.gpu | GPU temperature in celsius. |
 | temperature.memory | GPU memory temperature in celsuis. |
 | power.draw.average | Average GPU Power Draw in Watts. |
 | clocks.gr | GPU Graphics Clock in MHz. |

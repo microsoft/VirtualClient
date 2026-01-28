@@ -389,7 +389,7 @@ namespace VirtualClient.Actions
             public int SendSocketBuffer { get; set; }
 
             /// <summary>
-            /// The recieve socket buffer option.
+            /// The receive socket buffer option.
             /// </summary>
             [XmlElement("recv_socket_buff")]
             public int ReceiveSocketBuffer { get; set; }

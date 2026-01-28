@@ -305,7 +305,7 @@ namespace VirtualClient
                         if (scriptFolderPath == null)
                         {
                             throw new DependencyException(
-                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A scipt with the name '{match.Value}' does not " +
+                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A script with the name '{match.Value}' does not " +
                                 $"exist on system or is not registered with Virtual Client.",
                                 ErrorReason.DependencyNotFound);
                         }
@@ -578,12 +578,12 @@ namespace VirtualClient
             ////// Expression: {calculate(512 > 2)}
             ////// Expression: {calculate(512 != {LogicalCoreCount})}
             ////// **IMPORTANT**
-            ////// This expression evaluation MUST come last after arthematic caluculation evaluators.
+            ////// This expression evaluation MUST come last after arthematic calculation evaluators.
             ////new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             ////{
             ////    bool isMatched = false;
             ////    string evaluatedExpression = expression;
-            ////    MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisionExpression.Matches(expression);
+            ////    MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisonExpression.Matches(expression);
 
             ////    if (matches?.Any() == true)
             ////    {
@@ -606,7 +606,7 @@ namespace VirtualClient
             ////// Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
             ////// Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
             ////// **IMPORTANT**
-            ////// This expression evaluation MUST come last after arthematic/logical/comparative caluculation evaluators.
+            ////// This expression evaluation MUST come last after arthematic/logical/comparative calculation evaluators.
             ////new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             ////{
             ////    bool isMatched = false;
@@ -647,7 +647,7 @@ namespace VirtualClient
             // Expression: {calculate(1.00:00:00 + 00:00:10)}
             //
             // **IMPORTANT**
-            // This expression evaluation MUST come last after ALL other expression evaluators, before numerical arithmentic calculations.
+            // This expression evaluation MUST come last after ALL other expression evaluators, before numerical arithmetic calculations.
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;

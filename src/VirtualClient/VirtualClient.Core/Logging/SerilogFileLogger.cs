@@ -31,7 +31,7 @@ namespace VirtualClient.Logging
         };
 
         private Logger logger;
-        private LogLevel minumumLogLevel;
+        private LogLevel minimumLogLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerilogFileLogger"/> class.
@@ -41,7 +41,7 @@ namespace VirtualClient.Logging
         public SerilogFileLogger(Logger logger, LogLevel level)
         {
             this.logger = logger;
-            this.minumumLogLevel = level;
+            this.minimumLogLevel = level;
         }
 
         /// <inheritdoc />
@@ -53,7 +53,7 @@ namespace VirtualClient.Logging
         /// <inheritdoc />
         public bool IsEnabled(LogLevel logLevel)
         {
-            return logLevel >= this.minumumLogLevel;
+            return logLevel >= this.minimumLogLevel;
         }
 
         /// <inheritdoc />

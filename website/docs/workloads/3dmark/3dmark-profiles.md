@@ -12,7 +12,7 @@ Runs the stock 3DMark TimeSpy Workloads.
   * win-x64
 
 * **Supports Disconnected Scenarios**  
-  * Yes. Internet connection only required for lisence key validation.
+  * Yes. Internet connection only required for licence key validation.
 
 * **Dependencies**  
   An NVIDIA or AMD GPU driver installation is required for this workload.
@@ -25,7 +25,7 @@ Runs the stock 3DMark TimeSpy Workloads.
 
   | Parameter                 | Purpose                                                           | Default Value |
   |---------------------------|-------------------------------------------------------------------|---------------|
-  | LisenceKey           | Required. The [3DMark](https://benchmarks.ul.com/3dmark?_ga=2.106445760.293481338.1681124251-1769566625.1681124251#windows) lisence key| None|
+  | LicenceKey           | Required. The [3DMark](https://benchmarks.ul.com/3dmark?_ga=2.106445760.293481338.1681124251-1769566625.1681124251#windows) licence key| None|
 
 * **Profile Runtimes**  
   The Timespy workload takes about 5-10 minutes to run depending on the performance of the target system.

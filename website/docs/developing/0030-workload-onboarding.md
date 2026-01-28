@@ -39,7 +39,7 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
 ```
 
 ## Step 4: Update Package Manager and Unit Tests
-* Update PackageManager.cs of project VirtualClient.Core to incluide the details of all the packages required to be downloaded.
+* Update PackageManager.cs of project VirtualClient.Core to include the details of all the packages required to be downloaded.
 * Update PackageManagerTests.cs of project VirtualClient.Core.UnitTests to include the unit tests of the changes.
 
 ## Step 5: Profile Creation
@@ -62,7 +62,7 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
 
 ## Step 7: Dependencies Creation
 * In case, Workload requires one time set-up on VM then that can be added as a dependency in the VC.
-* Add \<Depency_Name>.cs(IISInstallation.cs) file in VirtualClient.Dependencies project.
+* Add \<Dependency_Name>.cs(IISInstallation.cs) file in VirtualClient.Dependencies project.
 * Add its unit tests in project VirtualClient.Dependencies.UnitTests project.
 * This dependency can be added in profile file created for workload in VirtualClient.Main.
 
