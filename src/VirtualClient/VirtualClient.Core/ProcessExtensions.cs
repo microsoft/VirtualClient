@@ -13,6 +13,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.ProcessAffinity;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -66,6 +67,91 @@ namespace VirtualClient
             }
 
             return process;
+        }
+
+        /// <summary>
+        /// Creates a process with CPU affinity binding to specific cores.
+        /// LINUX ONLY: Uses numactl to bind process to specific cores.
+        /// </summary>
+        /// <param name="processManager">The process manager used to create the process.</param>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="affinityConfig">The CPU affinity configuration specifying which cores to bind to.</param>
+        /// <returns>A process proxy with CPU affinity applied via numactl wrapper.</returns>
+        public static IProcessProxy CreateProcessWithAffinity(this ProcessManager processManager, string command, string arguments, string workingDir, ProcessAffinityConfiguration affinityConfig)
+        {
+            processManager.ThrowIfNull(nameof(processManager));
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+            affinityConfig.ThrowIfNull(nameof(affinityConfig));
+
+            if (processManager.Platform != PlatformID.Unix)
+            {
+                throw new NotSupportedException(
+                    $"CreateProcessWithAffinity is only supported on Linux. For Windows, use: " +
+                    $"CreateProcess() + process.Start() + process.ApplyAffinity(windowsConfig).");
+            }
+
+            LinuxProcessAffinityConfiguration linuxConfig = affinityConfig as LinuxProcessAffinityConfiguration;
+            if (linuxConfig == null)
+            {
+                throw new ArgumentException(
+                    $"Invalid affinity configuration type. Expected '{nameof(LinuxProcessAffinityConfiguration)}' for Linux platform.",
+                    nameof(affinityConfig));
+            }
+
+            string fullCommand = linuxConfig.GetCommandWithAffinity(command, arguments);
+
+            return processManager.CreateProcess(fullCommand, workingDir: workingDir);
+        }
+
+        /// <summary>
+        /// Creates a process with CPU affinity binding to specific cores and applies elevated privileges if needed.
+        /// LINUX ONLY: Combines sudo elevation with numactl core binding.
+        /// </summary>
+        /// <param name="processManager">The process manager used to create the process.</param>
+        /// <param name="platform">The OS platform.</param>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="affinityConfig">The CPU affinity configuration specifying which cores to bind to.</param>
+        /// <param name="username">The username to use for running the command (Linux only).</param>
+        /// <returns>A process proxy with CPU affinity and elevated privileges applied.</returns>
+        public static IProcessProxy CreateElevatedProcessWithAffinity(this ProcessManager processManager, PlatformID platform, string command, string arguments, string workingDir, ProcessAffinityConfiguration affinityConfig, string username = null)
+        {
+            processManager.ThrowIfNull(nameof(processManager));
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+            affinityConfig.ThrowIfNull(nameof(affinityConfig));
+
+            if (platform != PlatformID.Unix)
+            {
+                throw new NotSupportedException(
+                    $"CreateElevatedProcessWithAffinity is only supported on Linux. For Windows, use: " +
+                    $"CreateElevatedProcess() + process.Start() + process.ApplyAffinity(windowsConfig).");
+            }
+
+            LinuxProcessAffinityConfiguration linuxConfig = affinityConfig as LinuxProcessAffinityConfiguration;
+            if (linuxConfig == null)
+            {
+                throw new ArgumentException(
+                    $"Invalid affinity configuration type. Expected '{nameof(LinuxProcessAffinityConfiguration)}' for Linux platform.",
+                    nameof(affinityConfig));
+            }
+            
+            string fullCommand = linuxConfig.GetCommandWithAffinity(command, arguments);
+            
+            if (!string.Equals(command, "sudo") && !PlatformSpecifics.RunningInContainer)
+            {
+                string effectiveCommandArguments = string.IsNullOrWhiteSpace(username)
+                    ? $"{fullCommand}"
+                    : $"-u {username} {fullCommand}";
+
+                return processManager.CreateProcess("sudo", effectiveCommandArguments, workingDir);
+            }
+            else
+            {
+                return processManager.CreateProcess(fullCommand, workingDir: workingDir);
+            }
         }
 
         /// <summary>

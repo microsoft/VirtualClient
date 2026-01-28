@@ -246,11 +246,11 @@ namespace VirtualClient.Contracts
         /// local file system.
         /// </summary>
         /// <param name="path">The path to evaluate.</param>
-        /// <returns>True if the path is a fully qualified path (e.g. C:\Users\any\path, home/user/any/path). False if not.</returns>
+        /// <returns>True if the path is a fully qualified path (e.g. C:\Users\any\path, /home/user/any/path). False if not.</returns>
         public static bool IsFullyQualifiedPath(string path)
         {
             path.ThrowIfNull(nameof(path));
-            return Regex.IsMatch(path, "[A-Z]+:\\\\|^/", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(path.Trim(), @"^[A-Z]{1}:[\\\\/]|^\/", RegexOptions.IgnoreCase);
         }
 
         /// <summary>
