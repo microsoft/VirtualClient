@@ -176,6 +176,12 @@ namespace VirtualClient
         public Func<bool> OnStart { get; set; }
 
         /// <summary>
+        /// Delegate allows user/test to define the logic to execute when
+        /// CPU affinity is applied (Windows).
+        /// </summary>
+        public Action<IntPtr> OnApplyAffinity { get; set; }
+
+        /// <summary>
         /// Closes the fake process.
         /// </summary>
         /// <returns></returns>
