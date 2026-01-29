@@ -155,6 +155,20 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Applies Windows CPU affinity to a running process.
+        /// This should be called after the process has started.
+        /// </summary>
+        /// <param name="process">The process to apply affinity to.</param>
+        /// <param name="affinityConfig">The Windows-specific CPU affinity configuration.</param>
+        public static void ApplyAffinity(this IProcessProxy process, WindowsProcessAffinityConfiguration affinityConfig)
+        {
+            process.ThrowIfNull(nameof(process));
+            affinityConfig.ThrowIfNull(nameof(affinityConfig));
+
+            affinityConfig.ApplyAffinity(process);
+        }
+
+        /// <summary>
         /// Returns the full command including arguments executed within the process.
         /// </summary>
         public static string FullCommand(this IProcessProxy process)
