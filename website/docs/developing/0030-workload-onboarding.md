@@ -60,20 +60,20 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
     * [Redis Workload Executor](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Redis)
     * [Memcached Workload Executor](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Memcached)
 
-### CPU Core Affinity (Optional)
-For workloads where CPU core pinning is preferred, Virtual Client provides CPU affinity support.
-
-**Core Specification Formats:**
-* Individual cores: `"0,2,4,6"`
-* Core ranges: `"0-7"` or `"0-3,8-11"`
-* Supports up to 64 cores on Windows (single processor group)
-
-**Platform Differences:**
-* **Linux:** Uses `numactl` - affinity set before the process starts (zero timing window)
-* **Windows:** Uses `Process.ProcessorAffinity` - affinity set immediately after starting the process (~1ms window).
-
-**Reference Implementation:**
-* [Example Workload with Affinity Executor](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Examples/ExampleWorkloadWithAffinityExecutor.cs)
+  * **CPU Core Affinity (Optional)**  
+    For workloads where CPU core pinning is preferred, Virtual Client provides CPU affinity support.
+    
+    **Core Specification Formats:**
+    * Individual cores: `"0,2,4,6"`
+    * Core ranges: `"0-7"` or `"0-3,8-11"`
+    * Supports up to 64 cores on Windows (single processor group)
+    
+    **Platform Differences:**
+    * **Linux:** Uses `numactl` - affinity set before the process starts (zero timing window)
+    * **Windows:** Uses `Process.ProcessorAffinity` - affinity set immediately after starting the process (~1ms window).
+    
+    **Reference Implementation:**
+    * [Example Workload with Affinity Executor](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Examples/ExampleWorkloadWithAffinityExecutor.cs)
 
 ## Step 7: Dependencies Creation
 * In case, Workload requires one time set-up on VM then that can be added as a dependency in the VC.

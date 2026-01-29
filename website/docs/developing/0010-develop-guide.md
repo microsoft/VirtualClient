@@ -345,16 +345,15 @@ The Virtual Client runtime platform execute operating system processes often as 
 there are times when processes need to be launched with elevated privileges. The responsibility for creating and managing processes within the runtime is encapsulated in the
 following interfaces/classes.
 
+  * ProcessManager
+  * UnixProcessManager
+  * WindowsProcessManager
+  * IProcessProxy
+  * ProcessProxy
 
-* ProcessManager
-* UnixProcessManager
-* WindowsProcessManager
-* IProcessProxy
-* ProcessProxy
-
-**CPU Affinity Support**  
-Virtual Client supports binding workload processes to specific CPU cores to enable core isolation testing. For detailed guidance on implementing
-CPU affinity in workload executors, see the [Workload Onboarding Process](./0030-workload-onboarding.md#cpu-core-affinity-optional) documentation.
+  **CPU Affinity Support**  
+  Virtual Client supports binding workload processes to specific CPU cores to enable core isolation testing. For detailed guidance on implementing
+  CPU affinity in workload executors, see the [Workload Onboarding Process](./0030-workload-onboarding.md#cpu-core-affinity-optional) documentation.
 
 * **State Management**  
   Certain scenarios require the ability to preserve state information in between operations. For example, there are operations that make configuration settings changes to the
