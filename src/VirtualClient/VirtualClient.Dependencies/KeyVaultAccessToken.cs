@@ -41,7 +41,7 @@ namespace VirtualClient.Dependencies
         /// Gets the Azure Key Vault URI for which the access token will be requested.
         /// Example: https://anyvault.vault.azure.net/
         /// </summary>
-        protected Uri KeyVaultUri { get; set; }
+        protected string KeyVaultUri { get; set; }
 
         /// <summary>
         /// Gets the Azure tenant ID used to acquire an access token.
@@ -84,13 +84,13 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.KeyVaultUri = new Uri(this.Parameters.GetValue<string>(nameof(this.KeyVaultUri)));
-            this.KeyVaultUri.ThrowIfNull(nameof(this.KeyVaultUri));
+            this.KeyVaultUri = this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
+            this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
 
             this.TenantId = this.Parameters.GetValue<string>(nameof(this.TenantId));
             if (string.IsNullOrWhiteSpace(this.TenantId))
             {
-                EndpointUtility.TryParseMicrosoftEntraTenantIdReference(this.KeyVaultUri, out string tenant);
+                EndpointUtility.TryParseMicrosoftEntraTenantIdReference(new Uri(this.KeyVaultUri), out string tenant);
                 this.TenantId = tenant;
             }
 
@@ -207,7 +207,7 @@ namespace VirtualClient.Dependencies
         {
             string[] installerTenantResourceScopes = new string[]
             {
-                new Uri(baseUri: this.KeyVaultUri, relativeUri: ".default").ToString(),
+                new Uri(new Uri(this.KeyVaultUri), ".default").ToString(),
                 // Example of a specific scope:
                 // "api://56e7ee83-1cf6-4048-a664-c2a08955f825/user_impersonation"
             };
