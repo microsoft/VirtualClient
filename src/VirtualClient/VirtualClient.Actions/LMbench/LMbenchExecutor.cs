@@ -93,7 +93,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-               return this.Parameters.GetValue<string>(nameof(this.BinaryName), null);
+               return this.Parameters.GetValue<string>(nameof(this.BinaryName), string.Empty);
             }
         }
 
@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.BinaryCommandLine), null);
+                return this.Parameters.GetValue<string>(nameof(this.BinaryCommandLine), string.Empty);
             }
         }
 
@@ -143,7 +143,7 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.BuildSourceCodeAsync(telemetryContext, cancellationToken);
-            if (this.BinaryName == null)
+            if (string.IsNullOrEmpty(this.BinaryName))
             {
                 await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
             }
