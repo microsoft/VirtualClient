@@ -815,6 +815,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.ProfilingScenario = serverInstructions.ProfilingScenario;
                                     this.ProfilingPeriod = serverInstructions.ProfilingPeriod;
                                     this.ProfilingWarmUpPeriod = serverInstructions.ProfilingWarmUpPeriod;
+                                    this.ProfileIteration = serverInstructions.ProfileIteration;
                                     this.NoSyncEnabled = serverInstructions.NoSyncEnabled;
 
                                     if (serverInstructions.Metadata?.Any() == true)
@@ -984,6 +985,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.ProfilingScenario,
                             this.ProfilingPeriod.ToString(),
                             this.ProfilingWarmUpPeriod.ToString(),
+                            this.ProfileIteration,
                             this.NoSyncEnabled,
                             requestId);
 
