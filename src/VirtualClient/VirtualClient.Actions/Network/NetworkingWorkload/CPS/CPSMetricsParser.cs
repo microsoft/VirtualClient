@@ -85,7 +85,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             metrics.Add(new Metric("ConnectsPerSec_Min", connectsPerSec.Min(), relativity: MetricRelativity.HigherIsBetter));
             metrics.Add(new Metric("ConnectsPerSec_Max", connectsPerSec.Max(), relativity: MetricRelativity.HigherIsBetter));
             metrics.Add(new Metric("ConnectsPerSec_Med", connectsPerSec.Median(), relativity: MetricRelativity.HigherIsBetter));
-            metrics.Add(new Metric("ConnectsPerSec_Avg", connectsPerSec.Average(), relativity: MetricRelativity.HigherIsBetter, MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 0));
+            metrics.Add(new Metric("ConnectsPerSec_Avg", connectsPerSec.Average(), relativity: MetricRelativity.HigherIsBetter, unit: MetricUnit.TransactionsPerSec));
             metrics.Add(new Metric("ConnectsPerSec_P25", connectsPerSec.Percentile(25), relativity: MetricRelativity.HigherIsBetter));
             metrics.Add(new Metric("ConnectsPerSec_P50", connectsPerSec.Percentile(50), relativity: MetricRelativity.HigherIsBetter));
             metrics.Add(new Metric("ConnectsPerSec_P75", connectsPerSec.Percentile(75), relativity: MetricRelativity.HigherIsBetter));
