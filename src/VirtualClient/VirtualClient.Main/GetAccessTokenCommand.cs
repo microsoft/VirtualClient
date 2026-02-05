@@ -16,6 +16,11 @@ namespace VirtualClient
     internal class GetAccessTokenCommand : ExecuteProfileCommand
     {
         /// <summary>
+        /// Key vault initialization is not required for getting an access token.
+        /// </summary>
+        protected override bool ShouldInitializeKeyVault => false;
+
+        /// <summary>
         /// Executes the access token acquisition operations using the configured profile.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
@@ -34,6 +39,8 @@ namespace VirtualClient
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
+            this.Parameters["KeyVaultUri"] = this.KeyVault;    
+            
             return base.ExecuteAsync(args, cancellationTokenSource);
         }
     }

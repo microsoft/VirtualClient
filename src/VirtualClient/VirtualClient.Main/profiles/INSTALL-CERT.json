@@ -1,0 +1,21 @@
+{
+  "Description": "Installs dependencies from a package store.",
+  "Parameters": {
+    "KeyVaultUri": "Undefined",
+    "TenantId": "Undefined",
+    "CertificateName": "Undefined",
+    "AccessTokenPath": "AccessToken.txt"
+  },
+  "Dependencies": [
+    { 
+      "Type": "CertificateInstallation",
+      "Parameters": {
+        "Scenario": "InstallCertificate",
+        "TenantId": "$.Parameters.TenantId",
+        "KeyVaultUri": "$.Parameters.KeyVaultUri",
+        "CertificateName": "$.Parameters.CertificateName",
+        "AccessTokenPath": "$.Parameters.AccessTokenPath"
+      }
+    }
+  ]
+}

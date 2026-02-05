@@ -325,7 +325,7 @@ namespace VirtualClient
             apiSubcommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(apiSubcommand);
 
-            Command getAccessTokenSubcommand = Program.CreateGetTokenSubCommand(settings);
+            Command getAccessTokenSubcommand = Program.CreateGetTokenSubcommand(settings);
             getAccessTokenSubcommand.TreatUnmatchedTokensAsErrors = true;
             getAccessTokenSubcommand.Handler = CommandHandler.Create<GetAccessTokenCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(getAccessTokenSubcommand);
@@ -359,6 +359,11 @@ namespace VirtualClient
             uploadTelemetrySubcommand.TreatUnmatchedTokensAsErrors = true;
             uploadTelemetrySubcommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(uploadTelemetrySubcommand);
+
+            Command installCertSubcommand = Program.CreateInstallCertSubcommand(settings);
+            installCertSubcommand.TreatUnmatchedTokensAsErrors = true;
+            installCertSubcommand.Handler = CommandHandler.Create<InstallCertCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(installCertSubcommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
@@ -411,12 +416,17 @@ namespace VirtualClient
             return apiCommand;
         }
 
-        private static Command CreateGetTokenSubCommand(DefaultSettings settings)
+        private static Command CreateGetTokenSubcommand(DefaultSettings settings)
         {
             Command getAccessTokenCommand = new Command(
                 "get-token",
                 "Get access token for current user to authenticate with Azure Key Vault.")
             {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: true),
+
                 // OPTIONAL
                 // -------------------------------------------------------------------
                 // --clean
@@ -428,16 +438,13 @@ namespace VirtualClient
                 // --experiment-id
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
-
                 // --parameters
                 OptionFactory.CreateParametersOption(required: false),
 
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false)
             };
-
+                        
             return getAccessTokenCommand;
         }
 
@@ -477,9 +484,6 @@ namespace VirtualClient
 
                 // --iterations (for integration only. not used/always = 1)
                 OptionFactory.CreateIterationsOption(required: false),
-
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
 
                 // --layout-path (for integration only. not used.)
                 OptionFactory.CreateLayoutPathOption(required: false),
@@ -813,6 +817,101 @@ namespace VirtualClient
             };
 
             return uploadTelemetryCommand;
+        }
+
+        private static Command CreateInstallCertSubcommand(DefaultSettings settings)
+        {
+            Command installCertCommand = new Command(
+              "install-cert",
+              "Installs a certificate from a package or directly from Azure Key Vault to the local machine store.")
+            {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --cert-name
+                OptionFactory.CreateCertNameOption(required: true),
+
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --token
+                OptionFactory.CreateTokenOption(required: false),
+
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --content-store
+                OptionFactory.CreateContentStoreOption(required: false),
+
+                // --content-path
+                OptionFactory.CreateContentPathTemplateOption(required: false),
+
+                // --event-hub
+                OptionFactory.CreateEventHubStoreOption(required: false),
+
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --iterations (for integration only. not used/always = 1)
+                OptionFactory.CreateIterationsOption(required: false),
+
+                // --layout-path (for integration only. not used.)
+                OptionFactory.CreateLayoutPathOption(required: false),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
+
+                // --name
+                OptionFactory.CreateNameOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
+
+                 // --logger
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
+
+                // --package-dir
+                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --package-store
+                OptionFactory.CreatePackageStoreOption(required: false),
+
+                // --proxy-api
+                OptionFactory.CreateProxyApiOption(required: false),
+
+                // --system
+                OptionFactory.CreateSystemOption(required: false),
+
+                // --state-dir
+                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
+
+                // --temp-dir
+                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return installCertCommand;
         }
 
         private static void InitializeStartupLogging(string[] args)
