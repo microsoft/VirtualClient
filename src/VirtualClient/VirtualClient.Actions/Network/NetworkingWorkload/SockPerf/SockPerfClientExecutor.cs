@@ -63,7 +63,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                                await process.StartAndWaitAsync(cancellationToken, timeout);
+                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {

@@ -139,6 +139,104 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        [Platform("Win")]
+        [TestCase(@"C:\Users\User\Profiles\ANY-PROFILE.json")]
+        [TestCase(@".\Profiles\ANY-PROFILE.json")]
+        [TestCase(@"..\Profiles\ANY-PROFILE.json")]
+        public async Task VirtualClientSupportsLocalPathReferencesForProfiles_Windows_Style_Paths(string pathReference)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string[] args = new string[]
+                {
+                    $"--profile={pathReference}"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    string expectedFullPath = Path.GetFullPath(pathReference);
+
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.IsTrue(cmd.Profiles.ElementAt(0).IsFullPath);
+                    Assert.AreEqual(expectedFullPath, cmd.Profiles.ElementAt(0).ProfileName);
+
+                    return Task.FromResult(1);
+                });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+            }
+        }
+
+        [Test]
+        [Platform("Unix")]
+        [TestCase(@"/home/user/profiles/ANY-PROFILE.json")]
+        [TestCase(@"./profiles/ANY-PROFILE.json")]
+        [TestCase(@"../profiles/ANY-PROFILE.json")]
+        public async Task VirtualClientSupportsLocalPathReferencesForProfiles_Unix_Style_Paths(string pathReference)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string[] args = new string[]
+                {
+                    $"--profile={pathReference}"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    string expectedFullPath = Path.GetFullPath(pathReference);
+
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.IsTrue(cmd.Profiles.ElementAt(0).IsFullPath);
+                    Assert.AreEqual(expectedFullPath, cmd.Profiles.ElementAt(0).ProfileName);
+
+                    return Task.FromResult(1);
+                });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+            }
+        }
+
+        [Test]
+        [TestCase(@"http://anystorage/location/ANY-PROFILE.json")]
+        [TestCase(@"https://anystorage/location/ANY-PROFILE.json")]
+        public async Task VirtualClientSupportsUriPathReferencesForProfiles(string pathReference)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string[] args = new string[]
+                {
+                    $"--profile={pathReference}"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.AreEqual("ANY-PROFILE.json", cmd.Profiles.ElementAt(0).ProfileName);
+                    Assert.AreEqual(pathReference, cmd.Profiles.ElementAt(0).ProfileUri.ToString());
+
+                    return Task.FromResult(1);
+                });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+            }
+        }
+
         [TestCase("--not-a-valid-option", "Option is not supported")]
         [TestCase("--packag", "Option is simply misspelled")]
         public void VirtualClientThrowsWhenAnUnrecognizedOptionIsSuppliedOnTheCommandLine(string option, string value)
