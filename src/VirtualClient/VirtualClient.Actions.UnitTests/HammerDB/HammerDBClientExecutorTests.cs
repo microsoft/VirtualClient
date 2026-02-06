@@ -44,22 +44,20 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultBehavior(platform, architecture);
 
-            string tempPackagePath;
-
-            if (platform == PlatformID.Win32NT)
-            {
-                tempPackagePath = this.mockPackagePath.Replace(@"\", @"\\");
-            }
-            else
-            {
-                tempPackagePath = this.mockPackagePath;
-            }
-
             string[] expectedCommands =
             {
-                $"python3 {tempPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+",
-                $"python3 {tempPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl"
-        };
+                $"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1",
+                $"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl"
+            };
+
+            if (this.fixture.Platform == PlatformID.Win32NT)
+            {
+                for (int i = 0; i < expectedCommands.Length; i++)
+                {
+                    expectedCommands[i] = expectedCommands[i].Replace(@"\", @"\\");
+                }
+            }
+
             int commandNumber = 0;
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
@@ -107,6 +105,7 @@ namespace VirtualClient.Actions
                 { nameof(HammerDBClientExecutor.SQLServer), "postgresql" },
                 { nameof(HammerDBClientExecutor.VirtualUsers), "1"},
                 { nameof(HammerDBClientExecutor.WarehouseCount), "1"},
+                { nameof(HammerDBClientExecutor.Duration), "00:01:00" },
                 { "ServerIpAddress", "localhost"},
                 { nameof(HammerDBClientExecutor.PackageName), "hammerdb" },
             };
