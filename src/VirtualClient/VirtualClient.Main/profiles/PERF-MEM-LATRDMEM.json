@@ -1,0 +1,125 @@
+{
+    "Description": "LMbench Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "(4-cores)=04:00:00,(16-cores)=10:00:00,(64-cores)=16:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu",
+        "Notes_Runtime": "The benchmark takes approximately 6 to 8 minutes per 1 GB of RAM targeted. The default profile uses 25% of the total RAM."
+    },
+    "Parameters": {
+        "CompilerName": "gcc",
+        "CompilerVersion": "10",
+        "CompilerFlags": "CPPFLAGS=\"-I /usr/include/tirpc\""
+    },
+    "Actions": [
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_8B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 8"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_16B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 16"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_32B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 32"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_64B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 64"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_128B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 128"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_256B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 256"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_512B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 512"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "LatMemRd_Array_4096MB_Stride_1024B",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName":  "lat_mem_rd",
+                "BinaryCommandLine":  "4096 1024"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "libtirpc-dev",
+                "Packages-Yum": "libtirpc-devel",
+                "Packages-Dnf": "libtirpc-devel"
+            }
+        },
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "CompilerName": "$.Parameters.CompilerName",
+                "CompilerVersion": "$.Parameters.CompilerVersion"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLMbenchPackages",
+                "BlobContainer": "packages",
+                "BlobName": "lmbench.3.0-r1324.zip",
+                "PackageName": "lmbench",
+                "Extract": true
+            }
+        }
+    ]
+}

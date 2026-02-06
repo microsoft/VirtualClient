@@ -1,5 +1,5 @@
 # Network Workload Suite Profiles
-The following profiles run customer-representative or benchmarking scenarios using the suite of network workloads (CPS, NTttcp, Latte and SockPerf).
+The following profiles run customer-representative or benchmarking scenarios using the suite of network workloads (CPS, NCPS, NTttcp, Latte and SockPerf).
 
 * [Workload Details](./network-suite.md)  
 * [Client/Server Workloads](../../guides/0020-client-server.md)
@@ -100,6 +100,7 @@ sysctl -w net.core.busy_read=50
   The following scenarios are covered by this workload profile.
 
   * CPS. Connection establishment speed and reliability, 16 concurrent connections.
+  * NCPS. Connection establishment speed and reliability, 16 concurrent connections.
   * NTttcp. Network communications throughput and bandwidth with the following scenarios.
     * TCP protocol, 4K network buffer, 1 thread
     * TCP protocol, 64K network buffer, 1 thread
@@ -132,6 +133,8 @@ sysctl -w net.core.busy_read=50
   | DisableFirewall           | Optional. True to disable the firewall on Linux systems. False to make no changes. This setting depends upon 'ConfigureNetwork' = true.  | True        |
   | CpsDuration               | Optional. The amount of time (in seconds) to run the CPS workload. | 300 secs |
   | CpsPort                   | Optional. The starting port on which connections will be established between client and server when running the CPS workload. The CPS workload will use connections on additional ports starting with this port for each of the number of connections (e.g. 16) defined in the component/action. | 7201 |
+  | NcpsDuration              | Optional. The amount of time (in seconds) to run the NCPS workload. | 300 secs |
+  | NcpsPort                  | Optional. The starting port on which connections will be established between client and server when running the NCPS workload. The NCPS workload will use connections on additional ports starting with this port for each of the number of connections (e.g. 16) defined in the component/action. | 9800 |
   | LattePort                 | Optional. The starting port on which connections will be established between client and server when running the Latte workload. The Latte workload will use connections on additional ports starting with this port. | 6100 |
   | NTttcpDuration            | Optional. The amount of time (in seconds) to run the NTttcp workload. | 60 secs |
   | NTttcpPort                | Optional. The starting port on which connections will be established between client and server when running the NTttcp workload. The NTttcp workload will use connections on additional ports starting with this port. | 5500 |

@@ -15,6 +15,7 @@
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
+        "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"fpspeed\" : \"603 619 644 654\")}",
         "BaseOptimizingFlags": "-g -O3 -march=native -frecord-gcc-switches",
         "PeakOptimizingFlags": "-g -Ofast -march=native -flto -frecord-gcc-switches"
     },
@@ -25,7 +26,7 @@
                 "Scenario": "ExecuteSPECBenchmark",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
-                "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"fpspeed\" : \"603 619 644 654\")}",
+                "Benchmarks": "$.Parameters.Benchmarks",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
                 "Threads": "$.Parameters.Threads",

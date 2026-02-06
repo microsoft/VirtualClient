@@ -34,7 +34,7 @@ namespace VirtualClient
         [TestCase(null, null)]
         [TestCase("  ", null)]
         [TestCase("/", null)]
-        [TestCase("/home", null)]
+        [TestCase("/home", "/")]
         [TestCase("/home/path", "/home")]
         [TestCase("/home/path/", "/home")]
         [TestCase("/home/path/file1.log", "/home/path")]
@@ -107,6 +107,46 @@ namespace VirtualClient
             string content = null;
             Assert.DoesNotThrow(() => content = response2.Content.ReadAsStringAsync().Result);
             Assert.IsNotNull(content);
+        }
+
+        [Test]
+        [TestCase(null, null)]
+        [TestCase("  ", null)]
+        [TestCase("C:", null)]
+        [TestCase(@"C:\", null)]
+        [TestCase(@"C:\path", @"C:\")]
+        [TestCase(@"C:\any\path", @"C:\any")]
+        [TestCase(@"C:\any/path", @"C:\any")]
+        [TestCase(@"C:\any\path\file1.log", @"C:\any\path")]
+        [TestCase(@"any\path\file1.log", @"any\path")]
+        [TestCase(@"\any\path\file1.log", @"\any\path")]
+        [TestCase(@"~\any\path\file1.log", @"~\any\path")]
+        public void MockFixtureSetsUpExpectedBehaviorForDirectoryGetDirectoryName_WindowsStylePaths(string path, string expectedDirectoryName)
+        {
+            MockFixture mockFixture = new MockFixture();
+            mockFixture.Setup(System.PlatformID.Win32NT);
+
+            string actualDirectoryName = mockFixture.FileSystem.Object.Path.GetDirectoryName(path);
+            Assert.AreEqual(expectedDirectoryName, actualDirectoryName);
+        }
+
+        [Test]
+        [TestCase(null, null)]
+        [TestCase("  ", null)]
+        [TestCase("/", null)]
+        [TestCase("/home", "/")]
+        [TestCase("/home/path", "/home")]
+        [TestCase("/home/path/", "/home")]
+        [TestCase("/home/path/file1.log", "/home/path")]
+        [TestCase("~/path/file1.log", "~/path")]
+        [TestCase(@"/home\path\file1.log", @"/home\path")]
+        public void MockFixtureSetsUpExpectedBehaviorForDirectoryGetDirectoryName_UnixStylePaths(string path, string expectedDirectoryName)
+        {
+            MockFixture mockFixture = new MockFixture();
+            mockFixture.Setup(System.PlatformID.Unix);
+
+            string actualDirectoryName = mockFixture.FileSystem.Object.Path.GetDirectoryName(path);
+            Assert.AreEqual(expectedDirectoryName, actualDirectoryName);
         }
     }
 }

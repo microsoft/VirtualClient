@@ -611,6 +611,9 @@ namespace VirtualClient.Actions.NetworkPerformance
                 case "cps":
                     isSupported = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
                     break;
+                case "ncps":
+                    isSupported = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
+                    break;
 
                 case "latte":
                     isSupported = this.Platform == PlatformID.Win32NT;
@@ -668,6 +671,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                         action = new CPSClientExecutor(this);
                         break;
 
+                    case NetworkingWorkloadTool.NCPS:
+                        action = new NCPSClientExecutor(this);
+                        break;
+
                     case NetworkingWorkloadTool.NTttcp:
                         action = new NTttcpClientExecutor(this);
                         break;
@@ -690,6 +697,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     case NetworkingWorkloadTool.CPS:
                         action = new CPSServerExecutor(this);
+                        break;
+
+                    case NetworkingWorkloadTool.NCPS:
+                        action = new NCPSServerExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.NTttcp:
@@ -867,6 +878,11 @@ namespace VirtualClient.Actions.NetworkPerformance
             if (string.Equals(this.ToolName, NetworkingWorkloadTool.CPS.ToString(), ignoreCase))
             {
                 await this.ExecuteClientToolAsync(NetworkingWorkloadTool.CPS, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else if (string.Equals(this.ToolName, NetworkingWorkloadTool.NCPS.ToString(), ignoreCase))
+            {
+                await this.ExecuteClientToolAsync(NetworkingWorkloadTool.NCPS, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
             }
             else if (string.Equals(this.ToolName, NetworkingWorkloadTool.Latte.ToString(), ignoreCase))
