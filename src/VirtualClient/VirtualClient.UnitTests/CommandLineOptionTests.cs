@@ -608,6 +608,45 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        [TestCase("--agentId", "AgentID")]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--c", "AgentID")]
+        [TestCase("--clean", null)]
+        [TestCase("--clean", "logs")]
+        [TestCase("--clean", "logs,packages,state,temp")]
+        [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2")]
+        [TestCase("--key-vault", "testingKV")]
+        [TestCase("--parameters", "helloWorld=123,,,TenantId=789203498")]
+        [TestCase("--pm", "testing")]
+        [TestCase("--verbose", null)]
+        public void VirtualClientGetTokenCommandSupportsOnlyExpectedOptions(string option, string value)
+        {            
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "get-token"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    Assert.IsFalse(result.Errors.Any());
+                    result.ThrowOnUsageError();
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
         private class TestExecuteCommand : ExecuteCommand
         {
             public Action OnExecuteCommand { get; set; }
