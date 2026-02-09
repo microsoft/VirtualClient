@@ -199,6 +199,50 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Commandline for linux client side.
+        /// </summary>
+        public string CommandLineLinuxClient
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+            }
+        }
+
+        /// <summary>
+        /// Commandline for linux server side.
+        /// </summary>
+        public string CommandLineLinuxServer
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+            }
+        }
+
+        /// <summary>
+        /// Commandline for windows client side.
+        /// </summary>
+        public string CommandLineWindowsClient
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+            }
+        }
+
+        /// <summary>
+        /// Commandline for windows server side.
+        /// </summary>
+        public string CommandLineWindowsServer
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsServer));
+            }
+        }
+
+        /// <summary>
         /// The retry policy to apply to the startup of the NTttcp workload to handle
         /// transient issues.
         /// </summary>
