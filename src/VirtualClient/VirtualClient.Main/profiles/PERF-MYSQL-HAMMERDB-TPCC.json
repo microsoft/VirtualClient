@@ -137,13 +137,13 @@
         {
             "Type": "HammerDBExecutor",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
+                "Scenario": "CreateMySQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Workload": "tpcc",
                 "SQLServer": "mysql",
                 "PackageName": "hammerdb",
-                "VirtualUsers": "$.Parameters.VirtualUsers",
-                "WarehouseCount": "$.Parameters.WarehouseCount",
+                "VirtualUsers": 1,
+                "WarehouseCount": 1,
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Server"
@@ -157,6 +157,21 @@
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "PackageName": "mysql-server",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "HammerDBExecutor",
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Workload": "tpcc",
+                "SQLServer": "mysql",
+                "PackageName": "hammerdb",
+                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "WarehouseCount": "$.Parameters.WarehouseCount",
+                "Port": "$.Parameters.Port",
+                "Duration": "$.Parameters.Duration",
                 "Role": "Server"
             }
         },
