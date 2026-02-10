@@ -355,7 +355,7 @@ namespace VirtualClient.Actions
         private void GenerateCommandLineArguments()
         {
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName}";
+                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
             {
