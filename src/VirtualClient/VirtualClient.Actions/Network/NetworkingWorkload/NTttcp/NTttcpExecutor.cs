@@ -485,10 +485,10 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
         }
 
-        private string GetWindowsSpecificCommandLine()
+        private void IntializeWindowsServerCommandline()
         {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            //string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+            //string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{(this.IsInClientRole ? "-s" : "-r")} " +
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
