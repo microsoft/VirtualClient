@@ -99,6 +99,8 @@ namespace VirtualClient.Actions
             this.fixture.Parameters["PackageName"] = "hammerdb";
             this.fixture.Parameters["Port"] = 5432;
             this.fixture.Parameters["DatabaseName"] = "hammerdbtest";
+            this.fixture.Parameters["Duration"] = "00:01:00";
+            this.fixture.Parameters["Workload"] = "TPCC";
         }
 
         private class TestHammerDBServerExecutor : HammerDBServerExecutor

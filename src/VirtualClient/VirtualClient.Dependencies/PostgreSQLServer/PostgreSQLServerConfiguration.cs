@@ -15,7 +15,6 @@ namespace VirtualClient.Dependencies
     using Newtonsoft.Json;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Dependencies.MySqlServer;
@@ -267,7 +266,15 @@ namespace VirtualClient.Dependencies
 
                 foreach (Disk disk in disksToTest)
                 {
-                    diskPaths += $"{this.Combine(disk.GetPreferredAccessPath(this.Platform), "postgresql")};";
+                    string postgresqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "postgresql");
+
+                    // Create the directory if it doesn't exist
+                    if (!this.SystemManager.FileSystem.Directory.Exists(postgresqlPath))
+                    {
+                        this.SystemManager.FileSystem.Directory.CreateDirectory(postgresqlPath);
+                    }
+
+                    diskPaths += $"{postgresqlPath};";
                 }
             }
 

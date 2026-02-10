@@ -16,7 +16,6 @@ namespace VirtualClient.Actions
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -26,6 +25,7 @@ namespace VirtualClient.Actions
     public class HammerDBExecutor : VirtualClientComponent
     {
         private readonly IStateManager stateManager;
+        private static readonly List<int> Factors = new List<int> { 1, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000 };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBExecutor"/> class.
@@ -125,14 +125,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of threads.
+        /// Workload duration.
         /// </summary>
-        public int? Threads
+        public TimeSpan Duration
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Threads), out IConvertible threads);
-                return threads?.ToInt32(CultureInfo.InvariantCulture);
+                return this.Parameters.GetTimeSpanValue(nameof(this.Duration));
             }
         }
 
@@ -145,6 +144,19 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Workload), out IConvertible workload);
                 return workload?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The scale factor option passed to HammerDB (TPCH only).
+        /// 1 = 1GB, 10 = 10GB, etc.
+        /// </summary>
+        public string ScaleFactor
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.ScaleFactor), out IConvertible scaleFactor);
+                return scaleFactor?.ToString();
             }
         }
 
@@ -180,6 +192,11 @@ namespace VirtualClient.Actions
         /// The file path where Hammer DB package is downloaded.
         /// </summary>
         protected string HammerDBPackagePath { get; set; }
+
+        /// <summary>
+        /// The true HammerDB scenario arguments used to prepare the database.
+        /// </summary>
+        protected string HammerDBScenarioArguments { get; set; }
 
         /// <summary>
         /// An interface that can be used to communicate with the underlying system.
@@ -298,9 +315,8 @@ namespace VirtualClient.Actions
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "python3";
-
-            string arguments = $"{this.HammerDBPackagePath}/populate-database.py --createDBTCLPath {this.CreateDBTclName}";
-
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {this.CreateDBTclName}";
+            
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
                 arguments,
@@ -318,16 +334,15 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = $"python3";
-            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+            this.GenerateCommandLineArguments();
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
-                arguments,
+                $"python3",
+                this.HammerDBScenarioArguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
-                cancellationToken))
+                cancellationToken,
+                runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -335,6 +350,31 @@ namespace VirtualClient.Actions
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
+        }
+
+        private void GenerateCommandLineArguments()
+        {
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+
+            if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
+            {
+                arguments += $" --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
+            }
+            else if (this.Workload.Equals("tpch", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!Factors.Contains(Convert.ToInt32(this.ScaleFactor)))
+                {
+                    throw new WorkloadException(
+                        $"The scale factor '{this.ScaleFactor}' is not supported. Supported scale factors include: " +
+                        $"{string.Join(", ", Factors)}",
+                        ErrorReason.InvalidProfileDefinition);
+                }
+
+                arguments += $" --scaleFactor {this.ScaleFactor} --duration {Math.Round(this.Duration.TotalMinutes / 1.25)}";
+            }
+
+            this.HammerDBScenarioArguments = arguments;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)

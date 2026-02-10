@@ -1,0 +1,93 @@
+HammerDB CLI v4.12
+Copyright (C) 2003-2024 Steve Shaw
+Type "help" for a list of commands
+Initialized Jobs on-disk database /tmp/hammer.DB using existing tables (94,208 bytes)
+SETTING CONFIGURATION
+Database set to MySQL
+Benchmark set to TPC-C for MySQL
+Value 127.0.0.1 for connection:mysql_host is the same as existing value 127.0.0.1, no change made
+Value 3306 for connection:mysql_port is the same as existing value 3306, no change made
+Value /var/run/mysqld/mysqld.sock for connection:mysql_socket is the same as existing value /var/run/mysqld/mysqld.sock, no change made
+Value root for tpcc:mysql_user is the same as existing value root, no change made
+Value hammerdb_tpcc for tpcc:mysql_dbase is the same as existing value hammerdb_tpcc, no change made
+Value timed for tpcc:mysql_driver is the same as existing value timed, no change made
+Value 2 for tpcc:mysql_rampup is the same as existing value 2, no change made
+Value 5 for tpcc:mysql_duration is the same as existing value 5, no change made
+Value true for tpcc:mysql_allwarehouse is the same as existing value true, no change made
+Value true for tpcc:mysql_timeprofile is the same as existing value true, no change made
+Dictionary Settings for MySQL
+connection {
+ mysql_host               = 127.0.0.1
+ mysql_port               = 3306
+ mysql_socket             = /var/run/mysqld/mysqld.sock
+ mysql_ssl                = false
+ mysql_ssl_two_way        = false
+ mysql_ssl_linux_capath   = /etc/mysql/certs
+ mysql_ssl_windows_capath = C:\mysql\certs
+ mysql_ssl_ca             = ca-cert.pem
+ mysql_ssl_cert           = client-cert.pem
+ mysql_ssl_key            = client-key.pem
+ mysql_ssl_cipher         = server
+ mysql_oceanbase_port     = 2881
+}
+tpcc       {
+ mysql_count_ware       = 1
+ mysql_num_vu           = 1
+ mysql_user             = root
+ mysql_pass             = mysql
+ mysql_dbase            = hammerdb_tpcc
+ mysql_storage_engine   = innodb
+ mysql_partition        = false
+ mysql_prepared         = false
+ mysql_history_pk       = false
+ mysql_no_stored_procs  = false
+ mysql_total_iterations = 10000000
+ mysql_raiseerror       = false
+ mysql_keyandthink      = false
+ mysql_driver           = timed
+ mysql_rampup           = 2
+ mysql_duration         = 5
+ mysql_allwarehouse     = true
+ mysql_timeprofile      = true
+ mysql_async_scale      = false
+ mysql_async_client     = 10
+ mysql_async_verbose    = false
+ mysql_async_delay      = 1000
+ mysql_connect_pool     = false
+}
+Script loaded, Type "print script" to view
+SEQUENCE STARTED
+1 VU TEST
+Vuser 1 created MONITOR - WAIT IDLE
+Vuser 2 created - WAIT IDLE
+2 Virtual Users Created with Monitor VU
+Vuser 1:RUNNING
+Vuser 1:Initializing xtprof time profiler
+Vuser 1:Ssl_cipher
+Vuser 1:DBVersion:8.0.44
+Vuser 1:Beginning rampup time of 2 minutes
+Vuser 2:RUNNING
+Vuser 2:Initializing xtprof time profiler
+Vuser 2:Ssl_cipher
+Vuser 2:Assigned 1 WIDs = 1 based on VU count 1, Warehouses = 1 out of 1
+Vuser 2:Processing 10000000 transactions with output suppressed...
+Vuser 1:Rampup 1 minutes complete ...
+Vuser 1:Rampup 2 minutes complete ...
+Vuser 1:Rampup complete, Taking start Transaction Count.
+Vuser 1:Timing test period of 5 in minutes
+Vuser 1:1 ...,
+Vuser 1:2 ...,
+Vuser 1:3 ...,
+Vuser 1:4 ...,
+Vuser 1:5 ...,
+Vuser 1:Test complete, Taking end Transaction Count.
+Vuser 1:1 Active Virtual Users configured
+Vuser 1:TEST RESULT : System achieved 11 NOPM from 25 MySQL TPM
+Vuser 1:Gathering timing data from Active Virtual Users...
+Vuser 2:FINISHED SUCCESS
+Vuser 1:Calculating timings...
+Vuser 1:Writing timing data to /tmp/hdbxtprofile.log
+Vuser 1:FINISHED SUCCESS
+ALL VIRTUAL USERS COMPLETE
+vudestroy success
+TEST SEQUENCE COMPLETE
