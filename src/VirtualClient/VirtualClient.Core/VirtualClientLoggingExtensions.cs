@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -294,6 +295,7 @@ namespace VirtualClient
                         fileSystem.Directory.CreateDirectory(logDirectory).Create();
                     }
 
+                    fileSystem.Path.GetDirectoryName(logFolderName);
                     string logFilePath = specifics.Combine(logDirectory, standardizedLogFileName);
 
                     // Examples:
