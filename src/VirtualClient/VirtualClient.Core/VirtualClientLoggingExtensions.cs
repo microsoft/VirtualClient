@@ -409,7 +409,7 @@ namespace VirtualClient
 
                     if (upload && component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
-                        string effectiveToolName = component.GetLogDirectory(processDetails.ToolName);
+                        string effectiveToolName = component.GetLogDirectoryName(processDetails.ToolName);
 
                         FileContext fileContext = new FileContext(
                             fileSystem.FileInfo.New(logFilePath),
