@@ -33,14 +33,29 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Filters the set of metrics down to those whose names match or contain the filter terms
-        /// provided (case-insensitive).
+        /// Filters the set of metrics down to those that match the filter criteria provided.
+        /// Supports both verbosity-based filtering and regex-based name filtering (case-insensitive).
         /// </summary>
         /// <param name="metrics">The set of metrics to filter down.</param>
-        /// <param name="filterTerms">A set of terms to match against the metric names.</param>
+        /// <param name="filterTerms">
+        /// A set of filter terms. Can include:
+        /// - Verbosity filters: "verbosity:N" where N is 1-5 (filters metrics with verbosity less than or equal to N)
+        /// - Name filters: Any regex pattern to match against metric names (case-insensitive)
+        /// - Exclusion filters: Prefix with "-" to exclude matching metrics (e.g., "-h000*")
+        /// </param>
         /// <returns>
-        /// A set of metrics whose names match or contain the filter terms (case-insensitive).
+        /// A filtered set of metrics matching the criteria.
         /// </returns>
+        /// <remarks>
+        /// Verbosity levels (only 1, 3, and 5 are currently used; 2 and 4 are reserved):
+        /// - 1 (Standard/Critical): Most important metrics - bandwidth, throughput, IOPS, key latency percentiles (p50, p99)
+        /// - 2 (Reserved): Reserved for future expansion
+        /// - 3 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
+        /// - 4 (Reserved): Reserved for future expansion
+        /// - 5 (Verbose): All diagnostic/internal metrics - histogram buckets, standard deviations, byte counts, I/O counts
+        /// 
+        /// Filters are composable - verbosity filtering is applied first, then name-based filtering.
+        /// </remarks>
         public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<string> filterTerms)
         {
             metrics.ThrowIfNull(nameof(metrics));
@@ -49,32 +64,39 @@ namespace VirtualClient.Contracts
 
             if (filterTerms?.Any() == true)
             {
-                string verbosityFilter = filterTerms.Where(f => f.Contains("verbosity", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                if (!string.IsNullOrEmpty(verbosityFilter)) 
+                // Step 1: Handle verbosity filtering first
+                string verbosityFilter = filterTerms.FirstOrDefault(f => f.Contains("verbosity", StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrEmpty(verbosityFilter))
                 {
-                    switch (verbosityFilter.ToLower())
+                    // Extract the verbosity level from the filter (e.g., "verbosity:3" -> 3)
+                    string[] parts = verbosityFilter.Split(':'); 
+                    if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int maxVerbosity) && maxVerbosity >= 1 && maxVerbosity <= 5)
                     {
-                        case "verbosity:0":
-                            filteredMetrics = filteredMetrics.Where(m => ((int)m.Verbosity) <= 0);
-                            break;
-                        case "verbosity:1":
-                            filteredMetrics = filteredMetrics.Where(m => ((int)m.Verbosity) <= 1);
-                            break;
-                        case "verbosity:2":
-                            filteredMetrics = filteredMetrics.Where(m => ((int)m.Verbosity) <= 2);
-                            break;
-
-                        default:
-                            filteredMetrics = Enumerable.Empty<Metric>();
-                            break;
+                        // Filter metrics to include only those with verbosity <= maxVerbosity
+                        filteredMetrics = filteredMetrics.Where(m => m.Verbosity <= maxVerbosity);
+                    }
+                    else
+                    {
+                        // Invalid verbosity format or out of range - return empty set
+                        filteredMetrics = Enumerable.Empty<Metric>();
                     }
 
+                    // Remove verbosity filter from remaining filters
                     filterTerms = filterTerms.Where(f => !f.Contains("verbosity", StringComparison.OrdinalIgnoreCase));
                 }
 
+                // Step 2: Handle exclusion filters (prefix with "-")
+                var exclusionFilters = filterTerms.Where(f => f.StartsWith("-")).Select(f => f.Substring(1)).ToList();
+                if (exclusionFilters.Any())
+                {
+                    filteredMetrics = filteredMetrics.Where(m => !exclusionFilters.Contains(m.Name, MetricFilterComparer.Instance));
+                    filterTerms = filterTerms.Where(f => !f.StartsWith("-"));
+                }
+
+                // Step 3: Handle inclusion/regex name filtering
                 if (filterTerms?.Any() == true)
                 {
-                    filteredMetrics = metrics.Where(m => filterTerms.Contains(m.Name, MetricFilterComparer.Instance)).ToList();
+                    filteredMetrics = filteredMetrics.Where(m => filterTerms.Contains(m.Name, MetricFilterComparer.Instance));
                 }
             }
 
@@ -102,7 +124,7 @@ namespace VirtualClient.Contracts
                 table.Columns.Add("Value", typeof(double));
                 table.Columns.Add("Unit", typeof(string));
 
-                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == 0).ToList() : metrics;
+                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == 1).ToList() : metrics;
 
                 foreach (Metric metric in metricsToPrint)
                 {

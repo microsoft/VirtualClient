@@ -140,8 +140,18 @@ namespace VirtualClient.Contracts
         public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
-        /// Metric verbosity to descript importance of metric. Default to 1, which means standard.
-        /// Verbosity 0: Critical. Verbosity 1: Standard. Verbosity 2: Informational.
+        /// Metric verbosity to describe importance/priority of the metric.
+        /// 
+        /// Verbosity Levels (only 1, 3, and 5 are currently used):
+        /// - 1 (Standard/Critical): Most important metrics for decision making - bandwidth, throughput, IOPS, key latency percentiles (p50, p99)
+        /// - 2 (Reserved): Reserved for future expansion
+        /// - 3 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
+        /// - 4 (Reserved): Reserved for future expansion
+        /// - 5 (Verbose): All diagnostic/internal metrics - histogram buckets, standard deviations, byte counts, I/O counts
+        /// 
+        /// Currently, only levels 1, 3, and 5 are actively used. Levels 2 and 4 are reserved for future use.
+        /// 
+        /// Default = 1 (Standard).
         /// </summary>
         public int Verbosity { get; set; } = 1;
 

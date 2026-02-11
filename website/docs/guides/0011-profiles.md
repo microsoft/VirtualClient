@@ -382,6 +382,104 @@ e.g.
 ]
 ```
 
+## Metric Filtering
+The Virtual Client supports filtering of metrics emitted by workloads and monitors using the `MetricFilters` parameter. This allows users to control which metrics are captured and 
+logged, reducing telemetry volume and focusing on metrics of interest. Metric filtering supports three filtering strategies: **verbosity-based filtering**, **regex-based inclusion 
+filtering**, and **exclusion filtering**.
+
+### Verbosity-Based Filtering
+Metrics in the Virtual Client are assigned a verbosity level that indicates their importance for decision making:
+
+| Verbosity Level | Description | Example Metrics |
+|-----------------|-------------|-----------------|
+| 1 (Standard/Critical) | Most important metrics for decision making | bandwidth, throughput, IOPS, p50, p99 |
+| 2 (Reserved) | Reserved for future expansion | N/A |
+| 3 (Detailed) | Additional detailed metrics | p70, p90, p95, p99.9 |
+| 4 (Reserved) | Reserved for future expansion | N/A |
+| 5 (Verbose) | All diagnostic/internal metrics | histogram buckets, standard deviations, byte counts, I/O counts |
+
+To filter metrics by verbosity level, use the `verbosity:N` filter format, where N is a value between 1 and 5. This will include all metrics with a verbosity level less than or equal to N.
+
+``` json
+"Actions": [
+    {
+        "Type": "FioExecutor",
+        "Parameters": {
+            "Scenario": "RandomWrite_4k_BlockSize",
+            "PackageName": "fio",
+            "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
+            "MetricFilters": "verbosity:1"
+        }
+    }
+]
+```
+
+### Regex-Based Inclusion Filtering
+Metrics can be filtered using regular expression patterns (case-insensitive). Multiple filter terms can be combined, and a metric will be included if it matches any of the patterns.
+
+``` json
+"Actions": [
+    {
+        "Type": "FioExecutor",
+        "Parameters": {
+            "Scenario": "RandomWrite_4k_BlockSize",
+            "PackageName": "fio",
+            "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
+            "MetricFilters": "bandwidth,iops,_p99"
+        }
+    }
+]
+```
+
+The filter above will include metrics whose names contain "bandwidth", "iops", or "_p99". More complex regex patterns are also supported:
+
+``` json
+"MetricFilters": "(read|write)_(bandwidth|iops)"
+```
+
+### Exclusion Filtering
+Metrics can be explicitly excluded by prefixing the filter term with a minus sign (`-`). This is useful for removing verbose or diagnostic metrics that are not needed.
+
+``` json
+"Actions": [
+    {
+        "Type": "RedisServerExecutor",
+        "Parameters": {
+            "Scenario": "Server",
+            "PackageName": "redis",
+            "CommandLine": "--protected-mode no",
+            "MetricFilters": "-h000*,-h001*"
+        }
+    }
+]
+```
+
+### Combining Filter Types
+Multiple filter types can be combined. Verbosity filtering is applied first, followed by exclusion filters, and then inclusion filters.
+
+``` json
+"Actions": [
+    {
+        "Type": "FioExecutor",
+        "Parameters": {
+            "Scenario": "RandomWrite_4k_BlockSize",
+            "PackageName": "fio",
+            "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
+            "MetricFilters": "verbosity:3,-histogram*,bandwidth|iops|latency"
+        }
+    }
+]
+```
+
+The example above will:
+1. Include only metrics with verbosity ? 3
+2. Exclude metrics matching the pattern "histogram*"
+3. From the remaining metrics, include only those matching "bandwidth", "iops", or "latency"
+
+### Default Behavior
+When the `MetricFilters` parameter is not specified, all metrics emitted by the workload or monitor are captured and logged. This ensures backward compatibility with existing 
+profiles and allows users to see all available metrics during initial testing before applying filters to reduce telemetry volume.
+
 ## Actions
 The section 'Actions' within the profile defines a set of 1 or more toolsets to execute on the system. The term 'workload' is often used synonymously with 'Actions' to 
 describe the software that is the focus of the work Virtual Client will perform on the system. For example, the section might include an action responsible for executing

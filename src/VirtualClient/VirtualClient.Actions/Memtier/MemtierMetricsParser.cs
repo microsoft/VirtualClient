@@ -308,93 +308,103 @@ namespace VirtualClient.Actions
         {
             return new Dictionary<string, MetricAggregate>
             {
-                // e.g.
-                // Throughput-Req/sec
-                // GET_Throughput-Req/sec
-                // GET_Throughput-Req/sec
-                // Latency-Avg
-                // Latency-Avg (Gets)
-                // Latency-Avg (Sets)
+                // Level 1 - Critical: Throughput
                 {
                     "Ops/sec",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Throughput" : $"{metricNamePrefix}-Throughput",
                         metricUnit: MetricUnit.RequestsPerSec,
                         relativity: MetricRelativity.HigherIsBetter,
-                        verbosity: 0,
+                        verbosity: 1,  // Level 1 - Most important
                         description: "Total number of requests/operations per second during the period of time.")
                 },
+                // Level 1 - Standard: Hits/Misses
                 {
                     "Hits/sec",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Hits/sec" : $"{metricNamePrefix}-Hits/sec",
+                        metricUnit: MetricUnit.RequestsPerSec,
                         relativity: MetricRelativity.HigherIsBetter,
+                        verbosity: 1,
                         description: "Total number of cache hits per second during the period of time.")
                 },
                 {
                     "Misses/sec",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Misses/sec" : $"{metricNamePrefix}-Misses/sec",
+                        metricUnit: MetricUnit.RequestsPerSec,
                         relativity: MetricRelativity.LowerIsBetter,
-                        description: "Total number of cache misses per second during a period of time. This is an indication of data evictions due to reaching memory limits.")
+                        verbosity: 1,
+                        description: "Total number of cache misses per second during a period of time.")
                 },
+                // Level 1 - Standard: Average latency
                 {
                     "AvgLatency",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Latency-Avg" : $"{metricNamePrefix}-Latency-Avg",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
+                        verbosity: 1,
                         description: "Average latency for requests/operations during the period of time.")
                 },
+                // Level 1 - Critical: P50 latency
                 {
                     "p50Latency",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Latency-P50" : $"{metricNamePrefix}-Latency-P50",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
-                        verbosity: 0,
+                        verbosity: 1,
                         description: "The latency for 50% of all requests was at or under this value.")
                 },
+                // Level 3 - Detailed: P90 latency
                 {
                     "p90Latency",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Latency-P90" : $"{metricNamePrefix}-Latency-P90",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
+                        verbosity: 3,
                         description: "The latency for 90% of all requests was at or under this value.")
                 },
+                // Level 3 - Detailed: P95 latency
                 {
                     "p95Latency",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Latency-P95" : $"{metricNamePrefix}-Latency-P95",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
+                        verbosity: 3,
                         description: "The latency for 95% of all requests was at or under this value.")
                 },
+                // Level 1 - Critical: P99 latency
                 {
                     "p99Latency",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Latency-P99" : $"{metricNamePrefix}-Latency-P99",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
-                        verbosity: 0,
+                        verbosity: 1,
                         description: "The latency for 99% of all requests was at or under this value.")
                 },
+                // Level 3 - Detailed: P99.9 latency
                 {
                     "p99.9Latency",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Latency-P99.9" : $"{metricNamePrefix}-Latency-P99.9",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
+                        verbosity: 3,
                         description: "The latency for 99.9% of all requests was at or under this value.")
                 },
+                // Level 1 - Critical: Bandwidth
                 {
                     "KB/sec",
                     new MetricAggregate(
                         metricNamePrefix == null ? "Bandwidth" : $"{metricNamePrefix}-Bandwidth",
                         metricUnit: MetricUnit.KilobytesPerSecond,
                         relativity: MetricRelativity.HigherIsBetter,
-                        verbosity: 0,
+                        verbosity: 1,
                         description: "Total amount of data transferred per second during the period of time.")
                 }
             };
