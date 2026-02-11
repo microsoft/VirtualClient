@@ -33,18 +33,16 @@ namespace VirtualClient
         /// </summary>
         /// <param name="component">The component requesting the logging.</param>
         /// <param name="toolName">The name of the toolset running in the process.</param>
-        public static string GetLogFolderName(this VirtualClientComponent component, string toolName = null)
+        public static string GetLogDirectory(this VirtualClientComponent component, string toolName = null)
         {
             string[] possibleLogFolderNames = new string[]
             {
-                toolName,
-                component.LogFolderName,
-                component.TypeName
             };
 
             string logFolderName = VirtualClientLoggingExtensions.GetSafeFileName(possibleLogFolderNames.First(name => !string.IsNullOrWhiteSpace(name)), false);
+            string logDirectory = component.PlatformSpecifics.GetLogsPath(logFolderName.ToLowerInvariant().RemoveWhitespace());
 
-            return logFolderName;
+            return logDirectory;
         }
 
         /// <summary>
@@ -279,8 +277,7 @@ namespace VirtualClient
                         component.TypeName
                     };
 
-                    string logFolderName = component.GetLogFolderName(processDetails.ToolName);
-                    string logDirectory = component.PlatformSpecifics.GetLogsPath(logFolderName.ToLowerInvariant().RemoveWhitespace());
+                    string logDirectory = component.GetLogDirectory(processDetails.ToolName);
                     string standardizedLogFileName = VirtualClientLoggingExtensions.GetSafeFileName(possibleLogFileNames.First(name => !string.IsNullOrWhiteSpace(name)), timestamped);
 
                     if (string.IsNullOrWhiteSpace(Path.GetExtension(standardizedLogFileName)))
@@ -295,7 +292,6 @@ namespace VirtualClient
                         fileSystem.Directory.CreateDirectory(logDirectory).Create();
                     }
 
-                    fileSystem.Path.GetDirectoryName(logFolderName);
                     string logFilePath = specifics.Combine(logDirectory, standardizedLogFileName);
 
                     // Examples:
@@ -399,7 +395,7 @@ namespace VirtualClient
 
                     if (upload && component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
-                        string effectiveToolName = logFolderName;
+                        string effectiveToolName = fileSystem.Path.GetFileName(logDirectory);
 
                         FileContext fileContext = new FileContext(
                             fileSystem.FileInfo.New(logFilePath),
