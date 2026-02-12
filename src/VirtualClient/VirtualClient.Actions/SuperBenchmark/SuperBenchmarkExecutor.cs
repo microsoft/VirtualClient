@@ -7,14 +7,12 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -122,6 +120,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Path to hold all docker container data.
+        /// </summary>
+        public string DockerContainerPath
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SuperBenchmarkExecutor.DockerContainerPath), out IConvertible dockerContainerPath);
+                return dockerContainerPath?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Executes the SuperBenchmark workload.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -173,7 +183,14 @@ namespace VirtualClient.Actions
                         true);
                 }
 
-                await this.ExecuteSbCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
+                string initializeArgs = $"initialize.sh {this.Username}";
+
+                if (!string.IsNullOrEmpty(this.DockerContainerPath))
+                {
+                    initializeArgs = $"initialize.sh {this.Username} {this.DockerContainerPath}";
+                }
+
+                await this.ExecuteSbCommandAsync("bash", initializeArgs, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
                 await this.ExecuteSbCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
 
                 state.SuperBenchmarkInitialized = true;

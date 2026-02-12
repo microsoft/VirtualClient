@@ -1441,6 +1441,22 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_7()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "Benchmarks" , "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intrate\" : \"505 525 541 548 557\")}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("505 525 541 548 557", parameters["Benchmarks"]);
+        }
+
+
+        [Test]
 
         public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_1()
         {

@@ -1594,38 +1594,31 @@ namespace VirtualClient
 
             foreach (Token argument in parsedResult.Tokens)
             {
-                string profileReference = OptionFactory.GetValue(argument);
+                string profileReference = OptionFactory.GetValue(argument)?.Trim();
 
                 if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
                 {
                     profiles.Add(new DependencyProfileReference(profileReference));
                 }
-                else if (!Uri.TryCreate(profileReference, UriKind.Absolute, out Uri profileUri)
-                    && !EndpointUtility.IsCustomConnectionString(profileReference)
-                    && !EndpointUtility.IsStorageAccountConnectionString(profileReference))
+                else if (Uri.TryCreate(profileReference, UriKind.Absolute, out Uri profileUri)
+                    || EndpointUtility.IsCustomConnectionString(profileReference)
+                    || EndpointUtility.IsStorageAccountConnectionString(profileReference))
                 {
-                    if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
+                    profiles.Add(EndpointUtility.CreateProfileReference(profileReference, certificateManager));
+                }
+                else
+                {
+                    string directoryName = Path.GetDirectoryName(profileReference);
+                    if (string.IsNullOrWhiteSpace(directoryName))
                     {
                         profiles.Add(new DependencyProfileReference(profileReference));
                     }
                     else
                     {
-                        string directoryName = Path.GetDirectoryName(profileReference);
-                        if (string.IsNullOrWhiteSpace(directoryName))
-                        {
-                            profiles.Add(new DependencyProfileReference(profileReference));
-                        }
-                        else
-                        {
-                            string fullPath = Path.GetFullPath(profileReference);
-                            profiles.Add(new DependencyProfileReference(fullPath));
-                        }
-                    } 
-                }
-                else
-                {
-                    profiles.Add(EndpointUtility.CreateProfileReference(profileReference, certificateManager));
-                }
+                        string fullPath = Path.GetFullPath(profileReference);
+                        profiles.Add(new DependencyProfileReference(fullPath));
+                    }
+                } 
             }
 
             return profiles;

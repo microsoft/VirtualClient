@@ -65,6 +65,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// List of benchmarks to run.
+        /// </summary>
+        public string Benchmarks
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SpecCpuExecutor.Benchmarks), out IConvertible benchmarks);
+                return benchmarks?.ToString();
+            }
+        }
+
+        /// <summary>
         /// The whether SPECcpu runs base tuning or base+peak tuning.
         /// </summary>
         public bool RunPeak
@@ -387,6 +399,8 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
+            List<string> suites = new List<string> { "intrate", "intspeed", "fprate", "fpspeed" };
+
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
 
@@ -394,9 +408,9 @@ namespace VirtualClient.Actions
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
             // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
-            bool reportable = (this.Platform == PlatformID.Unix) && (this.Iterations == 2 || this.Iterations == 3);
+            bool reportable = (this.Platform == PlatformID.Unix && suites.Contains(this.Benchmarks.ToLower())) && (this.Iterations == 2 || this.Iterations == 3);
             cmd = reportable ? $"{cmd} --reportable" : $"{cmd} --noreportable";
-            cmd = $"{cmd} {this.SpecProfile}";
+            cmd = $"{cmd} {this.Benchmarks}";
             return cmd;
         }
 

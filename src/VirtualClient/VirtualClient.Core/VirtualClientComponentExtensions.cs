@@ -125,9 +125,11 @@ namespace VirtualClient
                 }
             }
 
+            string safeArguments = SensitiveData.ObscureSecrets(commandArguments);
+
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
-                .AddContext(nameof(commandArguments), commandArguments)
+                .AddContext(nameof(commandArguments), safeArguments)
                 .AddContext(nameof(workingDirectory), workingDirectory)
                 .AddContext(nameof(runElevated), runElevated);
 
@@ -146,11 +148,10 @@ namespace VirtualClient
                 }
 
                 component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
-                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+                component.Logger.LogTraceMessage($"Executing: {command} {safeArguments}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                await process.StartAndWaitAsync(cancellationToken);
             }
 
             return process;
