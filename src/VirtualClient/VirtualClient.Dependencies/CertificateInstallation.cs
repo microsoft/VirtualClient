@@ -38,21 +38,10 @@
         }
 
         /// <summary>
-        /// Gets the Azure tenant ID used to acquire an access token.
-        /// </summary>
-        protected string TenantId
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.TenantId));
-            }
-        }
-
-        /// <summary>
         /// Gets the Azure Key Vault URI for which the access token will be requested.
         /// Example: https://anyvault.vault.azure.net/
         /// </summary>
-        protected string KeyVaultUri
+        public string KeyVaultUri
         {
             get
             {
@@ -63,7 +52,7 @@
         /// <summary>
         /// The name of the certificate to be retrieved
         /// </summary>
-        protected string CertificateName
+        public string CertificateName
         {
             get
             {
@@ -72,20 +61,20 @@
         }
 
         /// <summary>
-        /// Gets the access token used to authenticate with Azure services.
-        /// </summary>
-        protected string AccessToken { get; set; }
-
-        /// <summary>
         /// Gets the path to the file where the access token is saved.
         /// </summary>
-        protected string AccessTokenPath 
+        public string AccessTokenPath 
         {
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.AccessTokenPath));
             }
         }
+
+        /// <summary>
+        /// Gets the access token used to authenticate with Azure services.
+        /// </summary>
+        public string AccessToken { get; set; }
 
         /// <summary>
         /// 
@@ -208,10 +197,6 @@
 
                 // Permissions 777 (-rwxrwxrwx)
                 // https://linuxhandbook.com/linux-file-permissions/
-                //
-                // User  = read, write, execute
-                // Group = read, write, execute
-                // Other = read, write, execute+
                 using (IProcessProxy process = this.processManager.CreateProcess("chmod", $"-R 777 {certificateDirectory}"))
                 {
                     await process.StartAndWaitAsync(cancellationToken);
@@ -240,7 +225,7 @@
             }
             else if (!string.IsNullOrWhiteSpace(this.AccessToken))
             {
-                this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
+                this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri), "The KeyVaultUri parameter is required when authenticating with Key Vault using an access token.");
 
                 AccessTokenCredential tokenCredential = new AccessTokenCredential(this.AccessToken);
 

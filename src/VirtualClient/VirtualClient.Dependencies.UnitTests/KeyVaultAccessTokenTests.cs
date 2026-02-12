@@ -164,7 +164,7 @@ namespace VirtualClient.Dependencies
             this.mockFixture.Setup(platform);
 
             using (TestKeyVaultAccessToken component = new TestKeyVaultAccessToken(this.mockFixture.Dependencies, this.CreateDefaultParameters()))
-            {
+            {                
                 TokenRequestContext ctx = component.GetTokenRequestContextInternal();
 
                 Assert.IsNotNull(ctx);
@@ -288,6 +288,11 @@ namespace VirtualClient.Dependencies
 
             public TokenRequestContext GetTokenRequestContextInternal()
             {
+                if (this.Parameters.ContainsKey(nameof(this.KeyVaultUri)))
+                {
+                    this.KeyVaultUri = this.Parameters[nameof(this.KeyVaultUri)].ToString();
+                }
+
                 return this.GetTokenRequestContext();
             }
 

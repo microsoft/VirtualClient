@@ -618,8 +618,6 @@ namespace VirtualClient
         [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2")]
-        [TestCase("--key-vault", "testingKV")]
         [TestCase("--parameters", "helloWorld=123,,,TenantId=789203498")]
         [TestCase("--pm", "testing")]
         [TestCase("--verbose", null)]
@@ -629,7 +627,8 @@ namespace VirtualClient
             {
                 List<string> arguments = new List<string>()
                 {
-                    "get-token"
+                    "get-token",
+                    "--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2"
                 };
 
                 arguments.Add(option);

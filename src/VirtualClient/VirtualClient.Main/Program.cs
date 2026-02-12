@@ -819,6 +819,7 @@ namespace VirtualClient
             return uploadTelemetryCommand;
         }
 
+        /// Combine this with the bootstrap command
         private static Command CreateInstallCertSubcommand(DefaultSettings settings)
         {
             Command installCertCommand = new Command(
