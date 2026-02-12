@@ -115,13 +115,20 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase(PlatformID.Unix)]
-        [TestCase(PlatformID.Win32NT)]
-        public async Task KeyVaultManagerReturnsExpectedCertificate(PlatformID platform)
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task KeyVaultManagerReturnsExpectedCertificate(bool retrieveWithPrivateKey)
         {
-            var result = await this.keyVaultManager.GetCertificateAsync(platform, "mycert", CancellationToken.None, "https://myvault.vault.azure.net/");
+            var result = await this.keyVaultManager.GetCertificateAsync("mycert", CancellationToken.None, "https://myvault.vault.azure.net/", retrieveWithPrivateKey);
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.HasPrivateKey);
+            if (retrieveWithPrivateKey)
+            {
+                Assert.IsTrue(result.HasPrivateKey);
+            }
+            else
+            {
+                Assert.IsFalse(result.HasPrivateKey);
+            }
         }
 
         [Test]

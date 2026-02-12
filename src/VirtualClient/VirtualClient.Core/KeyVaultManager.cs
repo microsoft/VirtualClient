@@ -189,10 +189,10 @@ namespace VirtualClient
         /// <summary>
         /// Retrieves a certificate from the Azure Key Vault.
         /// </summary>
-        /// <param name="platform">The operating system platform.</param>
         /// <param name="certName">The name of the certificate to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
         /// A <see cref="X509Certificate2"/> containing the certificate 
@@ -201,12 +201,13 @@ namespace VirtualClient
         /// Thrown if the certificate is not found, access is denied, or another error occurs.
         /// </exception>
         public async Task<X509Certificate2> GetCertificateAsync(
-            PlatformID platform,
             string certName,
             CancellationToken cancellationToken,
             string keyVaultUri = null,
+            bool retrieveWithPrivateKey = false,
             IAsyncPolicy retryPolicy = null)
         {
+            this.ValidateKeyVaultStore();
             this.StoreDescription.ThrowIfNull(nameof(this.StoreDescription));
             certName.ThrowIfNullOrWhiteSpace(nameof(certName), "The certificate name cannot be null or empty.");
 
@@ -215,47 +216,37 @@ namespace VirtualClient
                 ? new Uri(keyVaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
+            CertificateClient client = this.CreateCertificateClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
+
             try
             {
-                KeyVaultSecret keyVaultSecret = await (retryPolicy ?? KeyVaultManager.DefaultRetryPolicy).ExecuteAsync(async () =>
+                return await (retryPolicy ?? KeyVaultManager.DefaultRetryPolicy).ExecuteAsync(async () =>
                 {
-                    SecretClient secretsClient = new SecretClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
-                    Response<KeyVaultSecret> response = await secretsClient.GetSecretAsync(certName, version: null, cancellationToken);
+                    // Get the full certificate with private key (PFX) if requested
+                    if (retrieveWithPrivateKey)
+                    {
+                        X509Certificate2 privateKeyCert = await client
+                            .DownloadCertificateAsync(certName, cancellationToken: cancellationToken)
+                            .ConfigureAwait(false);
 
-                    return response.Value;
-                }).ConfigureAwait(false);
+                        if (privateKeyCert is null || !privateKeyCert.HasPrivateKey)
+                        {
+                            throw new DependencyException("Failed to retrieve certificate content with private key.");
+                        }
 
-                byte[] privateKeyBytes = Convert.FromBase64String(keyVaultSecret.Value);
-                X509Certificate2 certificate = null;
-
-                var keyStorageFlags = X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet;
-
+                        return privateKeyCert;
+                    }
+                    else
+                    {
+                        // If private key not needed, load cert from PublicBytes
+                        KeyVaultCertificateWithPolicy cert = await client.GetCertificateAsync(certName, cancellationToken: cancellationToken);
 #if NET9_0_OR_GREATER
-                if (platform == PlatformID.Unix)
-                {
-                    certificate = X509CertificateLoader.LoadPkcs12(privateKeyBytes, null, X509KeyStorageFlags.PersistKeySet);
-                }
-                else if (platform == PlatformID.Win32NT)
-                {
-                    certificate = X509CertificateLoader.LoadPkcs12(privateKeyBytes, null, keyStorageFlags);
-                }
+                        return X509CertificateLoader.LoadCertificate(cert.Cer);
 #elif NET8_0_OR_GREATER
-                if (platform == PlatformID.Unix)
-                {
-                    certificate = new X509Certificate2(privateKeyBytes, (string)null, X509KeyStorageFlags.PersistKeySet);
-                }
-                else if (platform == PlatformID.Win32NT)
-                {
-                    certificate = new X509Certificate2(privateKeyBytes, (string)null, keyStorageFlags);
-                }
+                        return new X509Certificate2(cert.Cer);
 #endif
-
-                if (certificate is null || !certificate.HasPrivateKey)
-                {
-                    throw new DependencyException("Failed to retrieve certificate content with private key.");
-                }
-
-                return certificate;
+                    }
+                }).ConfigureAwait(false);
             }
             catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Forbidden)
             {

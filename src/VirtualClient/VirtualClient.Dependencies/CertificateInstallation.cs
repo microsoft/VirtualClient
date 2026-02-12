@@ -72,6 +72,17 @@
         }
 
         /// <summary>
+        /// Flag to decode whether to retrieve certificate with private key
+        /// </summary>
+        public bool WithPrivateKey
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.WithPrivateKey), true);
+            }
+        }
+
+        /// <summary>
         /// Gets the access token used to authenticate with Azure services.
         /// </summary>
         public string AccessToken { get; set; }
@@ -105,7 +116,7 @@
             try
             {
                 IKeyVaultManager keyVault = this.GetKeyVaultManager();
-                X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.Platform, this.CertificateName, cancellationToken);
+                X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.CertificateName, cancellationToken, null, this.WithPrivateKey);
 
                 if (this.Platform == PlatformID.Win32NT)
                 {

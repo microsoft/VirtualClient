@@ -1,6 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
 namespace VirtualClient.Dependencies
 {
     using System;
@@ -124,12 +121,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task GetKeyVaultManager_DefaultsToPredefinedKVManager_ThenCreatesNewOneWithToken()
-        {
-            // todo: nirjan to fill
-        }
-
-        [Test]
         public void ExecuteAsync_ThrowsWhenCertificateNameIsNull()
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
@@ -163,7 +154,12 @@ namespace VirtualClient.Dependencies
             using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.KeyVaultManager
-                    .Setup(m => m.GetCertificateAsync(It.IsAny<PlatformID>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<IAsyncPolicy>()))
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(), 
+                        It.IsAny<CancellationToken>(), 
+                        It.IsAny<string>(), 
+                        It.IsAny<bool>(), 
+                        It.IsAny<IAsyncPolicy>()))
                     .ReturnsAsync(this.testCertificate);
 
                 component.OnInstallCertificateOnWindows = (cert, token) =>
@@ -178,10 +174,10 @@ namespace VirtualClient.Dependencies
 
             Assert.IsTrue(windowsInstallCalled);
             this.mockFixture.KeyVaultManager.Verify(m => m.GetCertificateAsync(
-                PlatformID.Win32NT,
                 "testCert",
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<IAsyncPolicy>()), Times.Once);
         }
 
@@ -200,7 +196,12 @@ namespace VirtualClient.Dependencies
             using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.KeyVaultManager
-                    .Setup(m => m.GetCertificateAsync(It.IsAny<PlatformID>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>(), It.IsAny<IAsyncPolicy>()))
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(), 
+                        It.IsAny<CancellationToken>(), 
+                        It.IsAny<string>(), 
+                        It.IsAny<bool>(), 
+                        It.IsAny<IAsyncPolicy>()))
                     .ReturnsAsync(this.testCertificate);
 
                 component.OnInstallCertificateOnUnix = (cert, token) =>
@@ -215,10 +216,10 @@ namespace VirtualClient.Dependencies
 
             Assert.IsTrue(unixInstallCalled);
             this.mockFixture.KeyVaultManager.Verify(m => m.GetCertificateAsync(
-                PlatformID.Unix,
                 "testCert",
                 It.IsAny<CancellationToken>(),
                 It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<IAsyncPolicy>()), Times.Once);
         }
 
@@ -234,10 +235,10 @@ namespace VirtualClient.Dependencies
 
             this.mockFixture.KeyVaultManager
                 .Setup(m => m.GetCertificateAsync(
-                    It.IsAny<PlatformID>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IAsyncPolicy>()))
                 .ThrowsAsync(new InvalidOperationException("KeyVault error"));
 

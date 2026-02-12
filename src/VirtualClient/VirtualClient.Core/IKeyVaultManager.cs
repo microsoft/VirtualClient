@@ -61,10 +61,10 @@ namespace VirtualClient
         /// <summary>
         /// Retrieves a certificate from the Azure Key Vault.
         /// </summary>
-        /// <param name="platform">The operating system platform (e.g. Windows, Linux).</param>
         /// <param name="certName">The name of the certificate to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
+        /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
         /// A <see cref="X509Certificate2"/> containing the certificate.
@@ -73,10 +73,10 @@ namespace VirtualClient
         /// Thrown if the certificate is not found, access is denied, or another error occurs.
         /// </exception>
         Task<X509Certificate2> GetCertificateAsync(
-            PlatformID platform,
             string certName,
             CancellationToken cancellationToken,
             string keyVaultUri = null,
+            bool retrieveWithPrivateKey = false,
             IAsyncPolicy retryPolicy = null);
     }
 }
