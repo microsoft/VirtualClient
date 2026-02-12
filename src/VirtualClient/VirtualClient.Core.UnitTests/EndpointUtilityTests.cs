@@ -860,7 +860,7 @@ namespace VirtualClient
         [TestCase("https://anycontentstorage.blob.core.windows.net?cid=123456&tid=654321")]
         [TestCase("https://anypackagestorage.blob.core.windows.net?tid=654321")]
         [TestCase("https://anynamespace.servicebus.windows.net?cid=123456&tid=654321")]
-        [TestCase("https://my-keyvault.vault.azure.net/;tid=654321")]
+        [TestCase("https://my-keyvault.vault.azure.net/?;tid=654321")]
         public void TryParseMicrosoftEntraTenantIdReference_Uri_WorksAsExpected(string input)
         {
             // Arrange
