@@ -9,7 +9,7 @@
     "Parameters": {
         "CompilerName": "gcc",
         "CompilerVersion": "13",
-        "CompilerFlags": "CPPFLAGS=\"-I /usr/include/tirpc\""
+        "CompilerFlags": "CPPFLAGS=\" -O2 -Wall -march=native -I /usr/include/tirpc\""
     },
     "Actions": [
         {
