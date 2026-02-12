@@ -8,7 +8,7 @@
     },
     "Parameters": {
         "CompilerName": "gcc",
-        "CompilerVersion": "10",
+        "CompilerVersion": "13",
         "CompilerFlags": "CPPFLAGS=\"-I /usr/include/tirpc\""
     },
     "Actions": [
