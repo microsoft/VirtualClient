@@ -16,7 +16,7 @@
         /// Creates a new instance of the <see cref="AccessTokenCredential"/> class.
         /// </summary>
         /// <param name="token">
-        /// The credential provider that will be used to get access tokens.
+        /// The access token string to use for authentication.
         /// </param>
         public AccessTokenCredential(string token)
         {
