@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Net.Http;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -70,8 +71,14 @@ namespace VirtualClient
         public MockFixture()
         {
             this.experimentId = Guid.NewGuid().ToString();
+            this.Tracking = new FixtureTracking();
             this.Setup(Environment.OSVersion.Platform, Architecture.X64, useUnixStylePathsOnly: false);
         }
+
+        /// <summary>
+        /// Centralized tracking for all mock interactions during testing.
+        /// </summary>
+        public FixtureTracking Tracking { get; private set; }
 
         /// <summary>
         /// A platform specific instance for the current OS and CPU architecture on which the
@@ -624,6 +631,164 @@ namespace VirtualClient
                 this.ContentBlobManager.Object,
                 this.PackagesBlobManager.Object
             });
+
+            // Clear tracking on setup
+            this.Tracking.Clear();
+
+            return this;
+        }
+
+        /// <summary>
+        /// Enables automatic process tracking for test verification.
+        /// This method sets up tracking to automatically capture all processes created during test execution.
+        /// </summary>
+        /// <param name="reset">If true, clears existing tracked processes before enabling tracking.</param>
+        /// <param name="captureOutput">If true, captures stdout/stderr for each process.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture TrackProcesses(bool reset = true, bool captureOutput = true)
+        {
+            if (reset)
+            {
+                this.Tracking.Processes.Clear();
+                this.Tracking.Commands.Clear();
+            }
+
+            // Wrap the ProcessManager's OnCreateProcess to add automatic tracking
+            var existingHandler = this.ProcessManager.OnCreateProcess;
+
+            this.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                // Call the existing handler if it exists, otherwise use default process
+                InMemoryProcess process;
+                
+                if (existingHandler != null)
+                {
+                    process = existingHandler(command, arguments, workingDir) as InMemoryProcess;
+                }
+                else
+                {
+                    process = this.Process;
+                }
+
+                // Ensure we have a valid process
+                if (process == null)
+                {
+                    process = new InMemoryProcess
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = command,
+                            Arguments = arguments,
+                            WorkingDirectory = workingDir
+                        },
+                        OnHasExited = () => true,
+                        OnStart = () => true,
+                        ExitCode = 0
+                    };
+                }
+
+                // Automatically track the process
+                this.Tracking.Processes.Add(process);
+
+                // Track detailed command info
+                var commandInfo = new CommandExecutionInfo
+                {
+                    FullCommand = $"{command} {arguments}".Trim(),
+                    FileName = command,
+                    Arguments = arguments,
+                    WorkingDirectory = workingDir,
+                    ExecutedAt = DateTime.UtcNow,
+                    ProcessId = process.Id
+                };
+
+                this.Tracking.Commands.Add(commandInfo);
+
+                // Optionally capture output when process completes
+                if (captureOutput)
+                {
+                    var originalOnHasExited = process.OnHasExited;
+                    process.OnHasExited = () =>
+                    {
+                        bool result = originalOnHasExited();
+                        commandInfo.ExitCode = process.ExitCode;
+                        commandInfo.StandardOutput = process.StandardOutput?.ToString();
+                        commandInfo.StandardError = process.StandardError?.ToString();
+                        return result;
+                    };
+                }
+
+                return process;
+            };
+
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up process output injection for specific command patterns.
+        /// This allows you to inject stdout/stderr into processes that match a pattern without manually checking in OnCreateProcess.
+        /// </summary>
+        /// <param name="commandPattern">Regex pattern to match commands (e.g., "redis-server.*--version")</param>
+        /// <param name="standardOutput">Output to inject into matching processes</param>
+        /// <param name="standardError">Error output to inject (optional)</param>
+        /// <param name="exitCode">Exit code for matching processes (default: 0)</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture SetupProcessOutput(string commandPattern, string standardOutput, string standardError = null, int exitCode = 0)
+        {
+            // Store the existing handler
+            var existingHandler = this.ProcessManager.OnCreateProcess;
+
+            this.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                string fullCommand = $"{command} {arguments}".Trim();
+                
+                // Check if this command matches the pattern
+                bool matches = false;
+                try
+                {
+                    matches = Regex.IsMatch(fullCommand, commandPattern, RegexOptions.IgnoreCase);
+                }
+                catch
+                {
+                    matches = fullCommand.Contains(commandPattern, StringComparison.OrdinalIgnoreCase);
+                }
+
+                // If it matches, set up the output
+                if (matches)
+                {
+                    var process = new InMemoryProcess
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = command,
+                            Arguments = arguments,
+                            WorkingDirectory = workingDir
+                        },
+                        OnHasExited = () => true,
+                        OnStart = () => true,
+                        ExitCode = exitCode
+                    };
+
+                    if (!string.IsNullOrEmpty(standardOutput))
+                    {
+                        process.StandardOutput = new ConcurrentBuffer(new StringBuilder(standardOutput));
+                    }
+
+                    if (!string.IsNullOrEmpty(standardError))
+                    {
+                        process.StandardError = new ConcurrentBuffer(new StringBuilder(standardError));
+                    }
+
+                    return process;
+                }
+
+                // Otherwise, call the existing handler or return default process
+                if (existingHandler != null)
+                {
+                    return existingHandler(command, arguments, workingDir);
+                }
+
+                return this.Process;
+            };
 
             return this;
         }
