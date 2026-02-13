@@ -310,7 +310,10 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
+                OptionFactory.CreateVerboseFlag(required: false, false),
+                
+                // --token
+                OptionFactory.CreateTokenOption(required: false)
             };
 
             // Single command execution is also supported. Behind the scenes this uses a
@@ -359,11 +362,6 @@ namespace VirtualClient
             uploadTelemetrySubcommand.TreatUnmatchedTokensAsErrors = true;
             uploadTelemetrySubcommand.Handler = CommandHandler.Create<UploadTelemetryCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(uploadTelemetrySubcommand);
-
-            Command installCertSubcommand = Program.CreateInstallCertSubcommand(settings);
-            installCertSubcommand.TreatUnmatchedTokensAsErrors = true;
-            installCertSubcommand.Handler = CommandHandler.Create<InstallCertCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-            rootCommand.Add(installCertSubcommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
@@ -450,17 +448,30 @@ namespace VirtualClient
 
         private static Command CreateBootstrapSubcommand(DefaultSettings settings)
         {
+            // --package
+            Option pkgOption = OptionFactory.CreatePackageOption(required: false);
+
+            // --cert-name
+            Option certNameOption = OptionFactory.CreateCertificateNameOption(required: false);
+
+            // --key-vault
+            Option kvOption = OptionFactory.CreateKeyVaultOption(required: false);
+
             Command bootstrapCommand = new Command(
                 "bootstrap",
                 "Bootstraps/installs a dependency package on the system.")
             {
                 // REQUIRED
                 // -------------------------------------------------------------------
-                // --package
-                OptionFactory.CreatePackageOption(required: true),
 
                 // OPTIONAL
                 // -------------------------------------------------------------------
+
+                pkgOption, certNameOption, kvOption,
+
+                // --token
+                OptionFactory.CreateTokenOption(required: false),
+
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
@@ -533,6 +544,34 @@ namespace VirtualClient
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false)
             };
+
+            bootstrapCommand.AddValidator(result =>
+            {
+                string packageName = result.FindResultFor(pkgOption)?.GetValueOrDefault<string>();
+                string certNameValue = result.FindResultFor(certNameOption)?.GetValueOrDefault<string>();
+                string keyVaultValue = result.FindResultFor(kvOption)?.GetValueOrDefault<string>();
+
+                bool packageProvided = !string.IsNullOrWhiteSpace(packageName);
+                bool certificateNameProvided = !string.IsNullOrWhiteSpace(certNameValue);
+                bool keyVaultProvided = !string.IsNullOrWhiteSpace(keyVaultValue);
+
+                // Must choose atleast one operation.
+                if (!packageProvided && !certificateNameProvided)
+                {
+                    result.ErrorMessage = "At least one operation must be specified for the bootstrap command." +
+                    "Use --package to install a package or --cert-name to install a certificate.";
+                    return result.ErrorMessage;
+                }
+
+                // Certificate installation requires both --cert-name and --key-vault.
+                if (certificateNameProvided && !keyVaultProvided)
+                {
+                    result.ErrorMessage = "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).";
+                    return result.ErrorMessage;
+                }
+
+                return null;
+            });
 
             return bootstrapCommand;
         }
@@ -817,102 +856,6 @@ namespace VirtualClient
             };
 
             return uploadTelemetryCommand;
-        }
-
-        /// Combine this with the bootstrap command
-        private static Command CreateInstallCertSubcommand(DefaultSettings settings)
-        {
-            Command installCertCommand = new Command(
-              "install-cert",
-              "Installs a certificate from a package or directly from Azure Key Vault to the local machine store.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --cert-name
-                OptionFactory.CreateCertNameOption(required: true),
-
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --token
-                OptionFactory.CreateTokenOption(required: false),
-
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --content-store
-                OptionFactory.CreateContentStoreOption(required: false),
-
-                // --content-path
-                OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --iterations (for integration only. not used/always = 1)
-                OptionFactory.CreateIterationsOption(required: false),
-
-                // --layout-path (for integration only. not used.)
-                OptionFactory.CreateLayoutPathOption(required: false),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --name
-                OptionFactory.CreateNameOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
-
-                 // --logger
-                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false, settings.StateDirectory),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false, settings.TempDirectory),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-
-            return installCertCommand;
         }
 
         private static void InitializeStartupLogging(string[] args)

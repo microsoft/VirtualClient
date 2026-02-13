@@ -51,9 +51,9 @@ namespace VirtualClient
         /// <summary>
         /// Executes the bootstrap command.
         /// Supports:
-        /// - Package installation only (--package)
-        /// - Certificate installation only (--cert-name)
-        /// - Certificate then package installation (--cert-name --package)
+        /// - Package installation from remote store (requires --packages, optionally --package for specific package name)
+        /// - Certificate installation (requires --cert-name and --key-vault)
+        /// - Both certificate and package installation (--cert-name --key-vault --packages)
         /// </summary>
         public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
@@ -97,7 +97,7 @@ namespace VirtualClient
             if (string.IsNullOrWhiteSpace(this.PackageName) && string.IsNullOrWhiteSpace(this.CertificateName))
             {
                 throw new ArgumentException(
-                    "At least one operation must be specified. Use --package for package installation " +
+                    "At least one operation must be specified. Use --packages for package installation from remote store " +
                     "or --cert-name for certificate installation.");
             }
 
@@ -105,7 +105,7 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(this.CertificateName) && string.IsNullOrWhiteSpace(this.KeyVault))
             {
                 throw new ArgumentException(
-                    "The Key Vault URI must be provided (--key-vault) when installing certificates.");
+                    "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).");
             }
         }
 

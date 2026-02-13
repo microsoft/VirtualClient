@@ -599,44 +599,40 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines an access token for the Virtual Client to authenticate requests.
+        /// Command line option defines the authentication token for Key Vault to authenticate requests.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateTokenOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(
-                new string[] { "--token" })
+            Option<string> option = new Option<string>(new string[] { "--token", "--access-token" })
             {
                 Name = "AccessToken",
-                Description = "An access token for the Virtual Client to authenticate with Key Vault.",
-                ArgumentHelpName = "<token>",
+                Description = "Authentication token for Azure Key Vault access. When not provided, uses default Azure credential authentication (Azure CLI, Managed Identity, etc.).",
+                ArgumentHelpName = "token",
                 AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
             return option;
         }
 
         /// <summary>
-        /// Command line option defines the name of the certificate to install.
+        /// Command line option defines the certificate name to retrieve from Key Vault.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateCertNameOption(bool required = false, object defaultValue = null)
+        public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(
-                new string[] {"--cert-name" })
+            Option<string> option = new Option<string>(new string[] { "--certname", "--certificate-name", "--cert-name" })
             {
                 Name = "CertificateName",
-                Description = "The name of the certificate to install.",
+                Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
                 ArgumentHelpName = "name",
                 AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
             return option;
         }
 
@@ -1429,44 +1425,6 @@ namespace VirtualClient
 
             OptionFactory.SetOptionRequirements(option, required);
 
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the authentication token for Key Vault access.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateAccessTokenOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--token", "--access-token" })
-            {
-                Name = "AccessToken",
-                Description = "Authentication token for Azure Key Vault access. When not provided, uses default Azure credential authentication (Azure CLI, Managed Identity, etc.).",
-                ArgumentHelpName = "token",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the certificate name to retrieve from Key Vault.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--certname", "--certificate-name" })
-            {
-                Name = "CertificateName",
-                Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
-                ArgumentHelpName = "name",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
             return option;
         }
 
