@@ -4,8 +4,6 @@
 namespace VirtualClient
 {
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Serilog.Core;
     using System;
     using System.Collections.Generic;
     using System.IO;
