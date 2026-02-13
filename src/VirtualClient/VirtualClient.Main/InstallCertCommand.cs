@@ -75,7 +75,7 @@ namespace VirtualClient
 
             if (string.IsNullOrWhiteSpace(this.CertificateName))
             {
-                throw new ArgumentException("The certificate name must be provided (--certname).");
+                throw new ArgumentException("The certificate name must be provided (--cert-name).");
             }
         }
     }
