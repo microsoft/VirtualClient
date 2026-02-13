@@ -245,7 +245,8 @@
             }
             else
             {
-                throw new InvalidOperationException($"The Key Vault manager has not been properly initialized. The '{nameof(this.LogFileName)}' parameter must be provided to read the access token from file.");
+                throw new InvalidOperationException($"The Key Vault manager has not been properly initialized. " +
+                    $"Either valid --KeyVault or --Token or --TokenPath must be passed in order to set up authentication with Key Vault.");
             }
         }
     }

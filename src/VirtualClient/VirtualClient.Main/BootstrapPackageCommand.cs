@@ -3,19 +3,41 @@
 
 namespace VirtualClient
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Serilog.Core;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Command executes the operations to bootstrap/install dependencies on the system
-    /// prior to running a Virtual Client profile.
+    /// Command executes bootstrap operations including package installation and certificate installation.
     /// </summary>
     internal class BootstrapPackageCommand : ExecuteProfileCommand
     {
+        /// <summary>
+        /// When true, Key Vault will be initialized. This is only needed when using default Azure authentication
+        /// (no access token provided).
+        /// </summary>
+        protected override bool ShouldInitializeKeyVault => string.IsNullOrWhiteSpace(this.AccessToken);
+
+        /// <summary>
+        /// The name of the certificate to install from Key Vault.
+        /// Optional - if not provided, only package installation will occur.
+        /// </summary>
+        public string CertificateName { get; set; }
+
+        /// <summary>
+        /// Optional access token for Key Vault authentication when installing certificates.
+        /// When not provided, uses default Azure credential authentication (Azure CLI, Managed Identity, etc.).
+        /// </summary>
+        public string AccessToken { get; set; }
+
         /// <summary>
         /// The name (logical name) to use when registering the package.
         /// </summary>
@@ -24,21 +46,19 @@ namespace VirtualClient
         /// <summary>
         /// The name of the package (in storage) to bootstrap/install.
         /// </summary>
-        public string Package { get; set; }
+        public string PackageName { get; set; }
 
         /// <summary>
-        /// Executes the dependency bootstrap/installation operations.
+        /// Executes the bootstrap command.
+        /// Supports:
+        /// - Package installation only (--package)
+        /// - Certificate installation only (--cert-name)
+        /// - Certificate then package installation (--cert-name --package)
         /// </summary>
-        /// <param name="args">The arguments provided to the application on the command line.</param>
-        /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
-        /// <returns>The exit code for the command operations.</returns>
         public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
-            string registerAsName = this.Name;
-            if (String.IsNullOrWhiteSpace(registerAsName))
-            {
-                registerAsName = Path.GetFileNameWithoutExtension(this.Package);
-            }
+            // Validate that at least one operation is requested
+            this.ValidateParameters();
 
             this.Timeout = ProfileTiming.OneIteration();
             this.Profiles = new List<DependencyProfileReference>
@@ -46,15 +66,72 @@ namespace VirtualClient
                 new DependencyProfileReference("BOOTSTRAP-DEPENDENCIES.json")
             };
 
+            var scenariosToExecute = new List<string>();
+
+            // Scenario 1: Certificate installation only OR Certificate + Package installation
+            if (!string.IsNullOrWhiteSpace(this.CertificateName))
+            {
+                scenariosToExecute.Add("InstallCertificate");
+                this.SetupCertificateInstallation();
+            }
+
+            // Scenario 2: Package installation (can be standalone or after certificate)
+            if (!string.IsNullOrWhiteSpace(this.PackageName))
+            {
+                scenariosToExecute.Add("InstallDependencies");
+                this.SetupPackageInstallation();
+            }
+
+            this.Scenarios = scenariosToExecute;
+            return base.ExecuteAsync(args, cancellationTokenSource);
+        }
+
+        private void ValidateParameters()
+        {
             if (this.Parameters == null)
             {
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            this.Parameters["Package"] = this.Package;
-            this.Parameters["RegisterAsName"] = registerAsName;
+            // At least one operation must be specified
+            if (string.IsNullOrWhiteSpace(this.PackageName) && string.IsNullOrWhiteSpace(this.CertificateName))
+            {
+                throw new ArgumentException(
+                    "At least one operation must be specified. Use --package for package installation " +
+                    "or --cert-name for certificate installation.");
+            }
 
-            return base.ExecuteAsync(args, cancellationTokenSource);
+            // If certificate installation is requested, KeyVault URI is required
+            if (!string.IsNullOrWhiteSpace(this.CertificateName) && string.IsNullOrWhiteSpace(this.KeyVault))
+            {
+                throw new ArgumentException(
+                    "The Key Vault URI must be provided (--key-vault) when installing certificates.");
+            }
+        }
+
+        private void SetupCertificateInstallation()
+        {
+            // Set certificate-related parameters
+            this.Parameters["KeyVaultUri"] = this.KeyVault;
+            this.Parameters["CertificateName"] = this.CertificateName;
+
+            if (!string.IsNullOrWhiteSpace(this.AccessToken))
+            {
+                // Token-based authentication - no Key Vault initialization needed
+                this.Parameters["AccessToken"] = this.AccessToken;
+            }
+        }
+
+        private void SetupPackageInstallation()
+        {
+            string registerAsName = this.Name;
+            if (String.IsNullOrWhiteSpace(registerAsName))
+            {
+                registerAsName = Path.GetFileNameWithoutExtension(this.PackageName);
+            }
+
+            this.Parameters["Package"] = this.PackageName;
+            this.Parameters["RegisterAsName"] = registerAsName;
         }
     }
 }

@@ -940,7 +940,7 @@ namespace VirtualClient
         {
             Option<string> option = new Option<string>(new string[] { "--pkg", "--package" })
             {
-                Name = "Package",
+                Name = "PackageName",
                 Description = "The physical name of a package to bootstrap/install as it is defined in a package store (e.g. anypackage.1.0.0.zip).",
                 ArgumentHelpName = "name",
                 AllowMultipleArgumentsPerToken = false
