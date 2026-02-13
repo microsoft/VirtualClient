@@ -14,8 +14,8 @@
     using VirtualClient.Identity;
 
     /// <summary>
-    /// Virtual Client component that acquires an Azure access token for the specified Key Vault
-    /// using interactive browser authentication with a device-code fallback.
+    /// Virtual Client component that installs certificates from Azure Key Vault
+    /// into the appropriate certificate store for the operating system.
     /// </summary>
     public class CertificateInstallation : VirtualClientComponent
     {
