@@ -87,11 +87,8 @@
         public string AccessToken { get; set; }
 
         /// <summary>
-        /// 
+        /// Initializes the component by resolving the access token from parameters or, if necessary, from a file.
         /// </summary>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.AccessToken = this.Parameters.GetValue<string>(nameof(this.AccessToken), string.Empty);

@@ -555,7 +555,7 @@ namespace VirtualClient
                 bool certificateNameProvided = !string.IsNullOrWhiteSpace(certNameValue);
                 bool keyVaultProvided = !string.IsNullOrWhiteSpace(keyVaultValue);
 
-                // Must choose atleast one operation.
+                // Must choose at least one operation.
                 if (!packageProvided && !certificateNameProvided)
                 {
                     result.ErrorMessage = "At least one operation must be specified for the bootstrap command." +
