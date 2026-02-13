@@ -86,7 +86,7 @@ namespace VirtualClient
             return base.ExecuteAsync(args, cancellationTokenSource);
         }
 
-        private void ValidateParameters()
+        protected void ValidateParameters()
         {
             if (this.Parameters == null)
             {
@@ -109,7 +109,7 @@ namespace VirtualClient
             }
         }
 
-        private void SetupCertificateInstallation()
+        protected void SetupCertificateInstallation()
         {
             // Set certificate-related parameters
             this.Parameters["KeyVaultUri"] = this.KeyVault;
@@ -122,7 +122,7 @@ namespace VirtualClient
             }
         }
 
-        private void SetupPackageInstallation()
+        protected void SetupPackageInstallation()
         {
             string registerAsName = this.Name;
             if (String.IsNullOrWhiteSpace(registerAsName))
