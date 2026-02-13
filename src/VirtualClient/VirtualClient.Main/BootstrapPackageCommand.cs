@@ -95,7 +95,7 @@ namespace VirtualClient
             if (string.IsNullOrWhiteSpace(this.PackageName) && string.IsNullOrWhiteSpace(this.CertificateName))
             {
                 throw new ArgumentException(
-                    "At least one operation must be specified. Use --packages for package installation from remote store " +
+                    "At least one operation must be specified. Use --package for package installation from remote store " +
                     "or --cert-name for certificate installation.");
             }
 
