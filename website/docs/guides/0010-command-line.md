@@ -425,7 +425,7 @@ The following tables describe the various subcommands that are supported by the 
   | -?, -h, --help                                | No       |               | Show help information. |
   | --version                                     | No       |               | Show application version information. |
 
-* Note: VC will extract key vault uri and tenant ID to authenticate and retrieve a token for the current user. 
+* Note: The tenant ID must be included in the Key Vault URI as a query parameter (e.g., `?tid=<tenant-id>`). VC will parse the URI to authenticate and retrieve a token for the current user. 
 
 ```
 Examples: 
