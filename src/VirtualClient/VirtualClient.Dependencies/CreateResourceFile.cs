@@ -54,7 +54,8 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.FileName), "resource_access.rsp");
+                string value = this.Parameters.GetValue<string>(nameof(this.FileName), string.Empty);
+                return string.IsNullOrWhiteSpace(value) ? "resource_access.rsp" : value;
             }
         }
 
@@ -65,26 +66,22 @@ namespace VirtualClient.Dependencies
         /// <param name="cancellationToken">Token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            string a = this.FileName;
 
-            // Preserve relative-path behavior, but allow callers to pass an absolute path too.
-            string filePath = Path.IsPathRooted(this.FileName)
-                ? this.FileName
-                : this.Combine(Environment.CurrentDirectory, this.FileName);
+            cancellationToken.ThrowIfCancellationRequested();
 
             string[] optionValues = this.Parameters
                 .Where(p => p.Key.StartsWith("Option", StringComparison.OrdinalIgnoreCase))
                 .Select(x => x.Value.ToString().Trim())
                 .ToArray();
 
-            telemetryContext.AddContext(nameof(filePath), filePath);
             telemetryContext.AddContext(nameof(optionValues), optionValues);
 
             if (optionValues.Length > 0)
             {
-                if (this.fileSystem.File.Exists(filePath))
+                if (this.fileSystem.File.Exists(this.FileName))
                 {
-                    this.fileSystem.File.Delete(filePath);
+                    this.fileSystem.File.Delete(this.FileName);
                 }
 
                 string content = string.Join(' ', optionValues);
@@ -93,7 +90,7 @@ namespace VirtualClient.Dependencies
                 byte[] bytes = Encoding.UTF8.GetBytes(content);
 
                 await using (FileSystemStream fileStream = this.fileSystem.FileStream.New(
-                    filePath,
+                    this.FileName,
                     FileMode.Create,
                     FileAccess.ReadWrite,
                     FileShare.ReadWrite))

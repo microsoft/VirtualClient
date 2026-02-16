@@ -76,7 +76,7 @@ namespace VirtualClient.Dependencies.UnitTests
         public async Task ExecuteAsyncCreatesResponseFileAsExpected(string inputFilePath)
         {
             string expectedFilePath = string.IsNullOrWhiteSpace(inputFilePath)
-                ? this.mockFixture.Combine(Environment.CurrentDirectory, "resource_access.rsp")
+                ? "resource_access.rsp"
                 : inputFilePath;
 
             this.mockFixture.Parameters["FileName"] = inputFilePath;
