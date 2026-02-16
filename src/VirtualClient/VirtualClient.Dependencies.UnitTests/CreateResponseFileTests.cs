@@ -11,18 +11,12 @@ namespace VirtualClient.Dependencies.UnitTests
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.Options;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Moq;
     using NUnit.Framework;
-    using Org.BouncyCastle.Utilities;
-    using Polly.Retry;
-    using Renci.SshNet.Security;
     using VirtualClient;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using static System.Net.WebRequestMethods;
 
     [TestFixture]
     [Category("Unit")]
