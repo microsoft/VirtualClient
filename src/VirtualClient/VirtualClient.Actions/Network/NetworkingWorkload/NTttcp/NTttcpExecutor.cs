@@ -207,6 +207,11 @@ namespace VirtualClient.Actions.NetworkPerformance
             {
                 return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
             }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineLinuxClient)] = value;
+            }
         }
 
         /// <summary>
@@ -216,7 +221,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxServer));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineLinuxServer)] = value;
             }
         }
 
@@ -227,7 +237,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsClient));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineWindowsClient)] = value;
             }
         }
 
@@ -239,6 +254,11 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsServer));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineWindowsServer)] = value;
             }
         }
 
@@ -487,19 +507,273 @@ namespace VirtualClient.Actions.NetworkPerformance
 
         private void IntializeWindowsServerCommandline()
         {
-            //string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
-            //string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
-                $"-m {this.ThreadCount},*,{serverIPAddress} " +
-                $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
-                $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration.TotalSeconds} " +
-                $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
-                $"-p {this.Port} " +
-                $"-xml {this.ResultsPath} " +
-                $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
-                $"{(this.NoSyncEnabled == true ? "-ns" : string.Empty)} " +
-                $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            if (!this.CommandLineWindowsServer.Contains("-r") && !this.CommandLineWindowsServer.Contains("-s"))
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + " -r";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-t") && this.TestDuration != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -t {this.TestDuration.TotalSeconds}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-l") && this.BufferSizeServer != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -l {this.BufferSizeServer}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-p"))
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-xml") && this.ResultsPath != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -xml {this.ResultsPath}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-u") && this.Protocol != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"{(this.Protocol.ToLowerInvariant() == "udp" ? " -u" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-ns") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"{(this.NoSyncEnabled == true ? " -ns" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-m"))
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"-m {this.ThreadCount},*,{serverIPAddress} ";
+            }
+        }
+
+        private void IntializeWindowsClientCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+
+            if (!this.CommandLineWindowsClient.Contains("-r") && !this.CommandLineWindowsClient.Contains("-s"))
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + " -s";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-t") && this.TestDuration != null)
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $" -t {this.TestDuration.TotalSeconds}";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-l") && this.BufferSizeServer != null)
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $" -l {this.BufferSizeClient}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-p"))
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-xml") && this.ResultsPath != null)
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $" -xml {this.ResultsPath}";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-u") && this.Protocol != null)
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $"{(this.Protocol.ToLowerInvariant() == "udp" ? " -u" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-ns") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $"{(this.NoSyncEnabled == true ? " -ns" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-m"))
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $"-m {this.ThreadCount},*,{serverIPAddress} ";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-nic"))
+            {
+                this.CommandLineWindowsClient = this.CommandLineWindowsClient + $"-nic {clientIPAddress}";
+            }
+        }
+
+        private void IntializeWindowsServerCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            if (!this.CommandLineWindowsServer.Contains("-r") && !this.CommandLineWindowsServer.Contains("-s"))
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + " -r";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-t") && this.TestDuration != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -t {this.TestDuration.TotalSeconds}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-l") && this.BufferSizeServer != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -l {this.BufferSizeServer}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-p"))
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-xml") && this.ResultsPath != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -xml {this.ResultsPath}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-u") && this.Protocol != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"{(this.Protocol.ToLowerInvariant() == "udp" ? " -u" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-ns") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"{(this.NoSyncEnabled == true ? " -ns" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-m"))
+            {
+                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"-m {this.ThreadCount},*,{serverIPAddress} ";
+            }
+        }
+
+        private void IntializeLinuxClientCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+
+            if (!this.CommandLineLinuxClient.Contains("-r") && !this.CommandLineLinuxClient.Contains("-s"))
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + " -s";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-t") && this.TestDuration != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $" -t {this.TestDuration.TotalSeconds}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-l") && this.BufferSizeClient != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $" -l {this.BufferSizeClient}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-p"))
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-xml") && this.ResultsPath != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $" -xml {this.ResultsPath}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-u") && this.Protocol != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(this.Protocol.ToLowerInvariant() == "udp" ? " -u" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-ns") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(this.NoSyncEnabled == true ? " -ns" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-m"))
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $" -m {this.ThreadCount},*,{serverIPAddress} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-L"))
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(this.SenderLastClient == true ? " -L" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-n"))
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(( this.ThreadsPerServerPort != null) ? $" -n {this.ThreadsPerServerPort}" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-l"))
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(( this.ConnectionsPerThread != null) ? $" -l {this.ConnectionsPerThread}" : string.Empty)} "
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-N") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("--show-dev-interrupts") && this.DevInterruptsDifferentiator != null)
+            {
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
+            }
+        }
+
+        private void IntializeLinuxServerCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+
+            if (!this.CommandLineLinuxClient.Contains("-r") && !this.CommandLineLinuxServer.Contains("-s"))
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + " -r";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-t") && this.TestDuration != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $" -t {this.TestDuration.TotalSeconds}";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-l") && this.BufferSizeClient != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $" -l {this.BufferSizeServer}";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-p"))
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-xml") && this.ResultsPath != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $" -xml {this.ResultsPath}";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-u") && this.Protocol != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $"{(this.Protocol.ToLowerInvariant() == "udp" ? " -u" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-ns") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $"{(this.NoSyncEnabled == true ? " -ns" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-m"))
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $" -m {this.ThreadCount},*,{serverIPAddress} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-M"))
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $"{((this.ReceiverMultiClientMode == true) ? " -M" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-N") && this.NoSyncEnabled != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("--show-dev-interrupts") && this.DevInterruptsDifferentiator != null)
+            {
+                this.CommandLineLinuxServer = this.CommandLineLinuxServer + $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
+            }
         }
 
         private string GetLinuxSpecificCommandLine()
