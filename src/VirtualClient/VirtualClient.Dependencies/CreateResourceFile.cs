@@ -26,9 +26,10 @@ namespace VirtualClient.Dependencies
     /// <para/>
     /// Options are provided via parameters whose keys start with <c>Option</c> (case-insensitive), for example:
     /// <c>Option1=--System="Testing"</c>
-    /// <c>Option2=--KeyVaultUri="https://crc-partner-vault.vault.azure.net"</c>
+    /// <c>Option2=--KeyVaultUri="https://testing123-vault.vault.azure.net"</c>
     /// <para/>
     /// The file is written to <see cref="Environment.CurrentDirectory"/> unless <see cref="FileName"/> is an absolute path.
+    /// Doc: https://natemcmaster.github.io/CommandLineUtils/docs/response-file-parsing.html?tabs=using-attributes
     /// </remarks>
     public class CreateResponseFile : VirtualClientComponent
     {

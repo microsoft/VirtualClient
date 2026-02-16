@@ -80,7 +80,7 @@ namespace VirtualClient.Dependencies.UnitTests
                 : inputFilePath;
 
             this.mockFixture.Parameters["FileName"] = inputFilePath;
-            this.mockFixture.Parameters["Option2"] = "--KeyVaultUri=\"https://testing-ut-vault.vault.azure.net\"";
+            this.mockFixture.Parameters["Option2"] = "--KeyVaultUri=\"https://testing123-vault.vault.azure.net\"";
             this.mockFixture.Parameters["Option1"] = "--System=\"Testing\"";
 
             string expectedContent = string.Join(Environment.NewLine, this.mockFixture.Parameters
