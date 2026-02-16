@@ -84,7 +84,7 @@ namespace VirtualClient.Dependencies
                     this.fileSystem.File.Delete(this.FileName);
                 }
 
-                string content = string.Join(' ', optionValues);
+                string content = string.Join(Environment.NewLine, optionValues);
                 telemetryContext.AddContext(nameof(content), content);
 
                 byte[] bytes = Encoding.UTF8.GetBytes(content);
