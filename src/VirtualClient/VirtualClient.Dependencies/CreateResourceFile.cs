@@ -72,29 +72,35 @@ namespace VirtualClient.Dependencies
                 ? this.FileName
                 : this.Combine(Environment.CurrentDirectory, this.FileName);
 
-            // Ensure stable ordering of options (Option1, Option2, ...). Response file order can matter.
-            string[] optionKeys = this.Parameters.Keys
-                .Where(k => k.StartsWith("Option", StringComparison.OrdinalIgnoreCase))
+            string[] optionValues = this.Parameters
+                .Where(p => p.Key.StartsWith("Option", StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Value.ToString().Trim())
                 .ToArray();
 
-            string content = string.Join(' ', optionKeys.Select(k => this.Parameters[k]).ToString().Trim());
+            telemetryContext.AddContext(nameof(filePath), filePath);
+            telemetryContext.AddContext(nameof(optionValues), optionValues);
 
-            // If all options were null/empty, do not create the file.
-            if (string.IsNullOrWhiteSpace(content))
+            if (optionValues.Length > 0)
             {
-                return;
-            }
+                if (this.fileSystem.File.Exists(filePath))
+                {
+                    this.fileSystem.File.Delete(filePath);
+                }
 
-            byte[] bytes = Encoding.UTF8.GetBytes(content);
+                string content = string.Join(' ', optionValues);
+                telemetryContext.AddContext(nameof(content), content);
 
-            await using (FileSystemStream fileStream = this.fileSystem.FileStream.New(
-                filePath,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.Read))
-            {
-                await fileStream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
-                await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                byte[] bytes = Encoding.UTF8.GetBytes(content);
+
+                await using (FileSystemStream fileStream = this.fileSystem.FileStream.New(
+                    filePath,
+                    FileMode.Create,
+                    FileAccess.ReadWrite,
+                    FileShare.ReadWrite))
+                {
+                    await fileStream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+                    await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
         }
     }

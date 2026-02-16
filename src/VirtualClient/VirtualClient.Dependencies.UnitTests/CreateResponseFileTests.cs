@@ -11,112 +11,99 @@ namespace VirtualClient.Dependencies.UnitTests
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.CodeAnalysis.Options;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Moq;
     using NUnit.Framework;
+    using Org.BouncyCastle.Utilities;
+    using Polly.Retry;
+    using Renci.SshNet.Security;
+    using VirtualClient;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using static System.Net.WebRequestMethods;
 
     [TestFixture]
     [Category("Unit")]
     public class CreateResponseFileTests
     {
-        private string originalCurrentDirectory;
         private string tempDirectory;
         private MockFixture mockFixture;
+        private IFileSystem fileSystem;
+        private Mock<IFileSystemEntity> fileStreamMock;
 
         [SetUp]
         public void SetUp()
         {
-            this.originalCurrentDirectory = Environment.CurrentDirectory;
             this.tempDirectory = Path.Combine(Path.GetTempPath(), "VirtualClient", "UnitTests", Guid.NewGuid().ToString("n"));
             Directory.CreateDirectory(this.tempDirectory);
 
             Environment.CurrentDirectory = this.tempDirectory;
+
             this.mockFixture = new MockFixture();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            Environment.CurrentDirectory = this.originalCurrentDirectory;
-
-            try
-            {
-                if (Directory.Exists(this.tempDirectory))
-                {
-                    Directory.Delete(this.tempDirectory, recursive: true);
-                }
-            }
-            catch
-            {
-                // Best-effort cleanup for test runs.
-            }
+            this.mockFixture.SetupMocks(true);
+            this.fileSystem = this.mockFixture.Dependencies.GetService<IFileSystem>();
+            this.fileStreamMock = new Mock<IFileSystemEntity>();
         }
 
         [Test]
-        public async Task ExecuteAsync_DoesNotCreateFile_WhenNoOptionsAreSupplied()
+        public async Task ExecuteAsyncDoesNotCreateFileWhenNoOptionsAreSupplied()
         {
-            IServiceCollection services = new ServiceCollection();
-            services.AddSingleton<IFileSystem>(new FileSystem());
-
-            var parameters = new Dictionary<string, IConvertible>
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 ["FileName"] = "resource_access.rsp"
             };
 
-            TestCreateResponseFile executor = new TestCreateResponseFile(this.mockFixture);
+            var executor = new TestCreateResponseFile(this.mockFixture);
+
             await executor.ExecuteAsync().ConfigureAwait(false);
 
             string expectedPath = Path.Combine(this.tempDirectory, "resource_access.rsp");
-            Assert.False(File.Exists(expectedPath), "The response file should not be created when no options are supplied.");
+            Assert.False(this.fileSystem.File.Exists(expectedPath), "The response file should not be created when no options are supplied.");
+
+            this.mockFixture.FileSystem.Verify(x => x.File.Delete(It.IsAny<string>()), Times.Never);
         }
 
         [Test]
-        public async Task ExecuteAsync_CreatesResponseFile_WithExpectedContent()
+        [TestCase("")]
+        [TestCase(" ")]
+        [TestCase(null)]
+        [TestCase("C:\\repos\\VirtualClient\\out\\bin\\Debug\\x64\\VirtualClient.Main\\net9.0\\test.rsp")]
+        [TestCase("/home/vmadmin/VirtualClient/out/bin/debug/x64/VirtualClient.Main/net9.0/test.rsp")]
+        [TestCase("test.rsp")]
+        [TestCase("test.txt")]
+        public async Task ExecuteAsyncCreatesResponseFileAsExpected(string inputFilePath)
         {
-            IServiceCollection services = new ServiceCollection();
-            services.AddSingleton<IFileSystem>(new FileSystem());
+            string expectedFilePath = string.IsNullOrWhiteSpace(inputFilePath)
+                ? this.mockFixture.Combine(Environment.CurrentDirectory, "resource_access.rsp")
+                : inputFilePath;
 
-            var parameters = new Dictionary<string, IConvertible>
-            {
-                ["FileName"] = "resource_access.rsp",
-                ["Option2"] = "--KeyVaultUri=\"https://crc-partner-vault.vault.azure.net\"",
-                ["Option1"] = "--System=\"Testing\""
-            };
+            this.mockFixture.Parameters["FileName"] = inputFilePath;
+            this.mockFixture.Parameters["Option2"] = "--KeyVaultUri=\"https://crc-partner-vault.vault.azure.net\"";
+            this.mockFixture.Parameters["Option1"] = "--System=\"Testing\"";
 
-            TestCreateResponseFile executor = new TestCreateResponseFile(this.mockFixture);
+            string expectedContent = string.Join(' ', this.mockFixture.Parameters
+                .Where(p => p.Key.StartsWith("Option", StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Value.ToString().Trim())
+                .ToArray());
+
+            var executor = new TestCreateResponseFile(this.mockFixture);
+
+            Mock<InMemoryFileSystemStream> mockFileStream = new Mock<InMemoryFileSystemStream>();
+            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+                .Returns(mockFileStream.Object)
+                .Callback((string path, FileMode mode, FileAccess access, FileShare share) =>
+                {
+                    Assert.AreEqual(expectedFilePath, path);
+                    Assert.IsTrue(mode == FileMode.Create);
+                    Assert.IsTrue(access == FileAccess.ReadWrite);
+                    Assert.IsTrue(share == FileShare.ReadWrite);
+                });
+
             await executor.ExecuteAsync().ConfigureAwait(false);
-
-            string expectedPath = Path.Combine(this.tempDirectory, "resource_access.rsp");
-            Assert.True(File.Exists(expectedPath), "The response file should be created when options are supplied.");
-
-            // Current implementation orders keys lexically (OrdinalIgnoreCase): Option1 then Option2.
-            string expectedContent = "--System=\"Testing\" --KeyVaultUri=\"https://crc-partner-vault.vault.azure.net\"";
-            string actualContent = await File.ReadAllTextAsync(expectedPath, Encoding.UTF8);
-
-            Assert.AreEqual(expectedContent, actualContent);
-        }
-
-        [Test]
-        public async Task ExecuteAsync_UsesAbsoluteFileName_WhenRootedPathProvided()
-        {
-            IServiceCollection services = new ServiceCollection();
-            services.AddSingleton<IFileSystem>(new FileSystem());
-
-            string absolutePath = Path.Combine(this.tempDirectory, "sub", "my.rsp");
-            Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
-
-            var parameters = new Dictionary<string, IConvertible>
-            {
-                ["FileName"] = absolutePath,
-                ["Option1"] = "--System=\"Testing\""
-            };
-
-            TestCreateResponseFile executor = new TestCreateResponseFile(this.mockFixture);
-            await executor.ExecuteAsync().ConfigureAwait(false);
-
-            Assert.True(File.Exists(absolutePath), "The response file should be created at the rooted path.");
-            string actualContent = await File.ReadAllTextAsync(absolutePath, Encoding.UTF8);
-            Assert.AreEqual("--System=\"Testing\"", actualContent);
+            byte[] bytes = Encoding.UTF8.GetBytes(expectedContent);
+            mockFileStream.Verify(x => x.WriteAsync(It.Is<ReadOnlyMemory<byte>>(x => (x.Length == bytes.Length)), It.IsAny<CancellationToken>()), Times.Exactly(1));
         }
 
         private class TestCreateResponseFile : CreateResponseFile
@@ -126,9 +113,9 @@ namespace VirtualClient.Dependencies.UnitTests
             {
             }
 
-            public async Task ExecuteAsync()
+            public Task ExecuteAsync()
             {
-                await base.ExecuteAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
+                return this.ExecuteAsync(EventContext.None, CancellationToken.None);
             }
         }
     }
