@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -90,6 +92,8 @@ namespace VirtualClient.Actions
         [Test]
         public async Task RedisMemtierServerExecutorExecutesExpectedProcessWhenBindingToCores()
         {
+            // OLD APPROACH: Manual command tracking with List<string>
+            // This demonstrates the traditional way of tracking commands in tests
             using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 List<string> expectedCommands = new List<string>()
@@ -110,12 +114,49 @@ namespace VirtualClient.Actions
                         );
                         return this.memoryProcess;
                     }
+
                     expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
                 Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        [Category("POC")]
+        public async Task RedisMemtierServerExecutorExecutesExpectedProcessWhenBindingToCores_WithTracking()
+        {
+            // NEW APPROACH: Automatic tracking with fluent assertions
+            
+            // ? STEP 1: Enable automatic tracking + setup version check output (chainable!)
+            this.fixture
+                .TrackProcesses()
+                .SetupProcessOutput(
+                    "redis-server.*--version",
+                    "Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123");
+
+            using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                // ? STEP 2: Execute (no manual tracking needed!)
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                // ? STEP 3: Assert with fluent, self-documenting assertions
+                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                    // Verify chmod command
+                    $@"sudo chmod \+x ""{Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server""",
+                    
+                    // Verify redis-server startup with numactl binding
+                    $@"sudo bash -c ""numactl -C 0 {Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes"""
+                );
+
+                // ? OPTIONAL: Additional verification types
+                this.fixture.Tracking.AssertCommandExecutedTimes("chmod", 1);
+                this.fixture.Tracking.AssertCommandExecutedTimes("numactl", 1);
+
+                // ? DEBUGGING: Detailed summary available on demand
+                // TestContext.WriteLine(this.fixture.Tracking.GetDetailedSummary());
             }
         }
 
