@@ -41,11 +41,14 @@ namespace VirtualClient.Actions
                 {
                     var values = line.Split(' ');
                     string strideSize = section.Key.Split('=')[1];
-                    var metadata = new Dictionary<string, IConvertible>();
-                    metadata.Add("StrideSizeBytes", strideSize);
-                    metadata.Add("ArraySizeInMiB", values[0]);
                     long arraySizeInBytes = this.RoundOffToNearest512Multiple(double.Parse(values[0]) * 1024 * 1024) * 512;
-                    metrics.Add(new Metric($"Latency_StrideBytes_{strideSize}_Array_{this.MetricNameSuffix(arraySizeInBytes)}", double.Parse(values[1]), "ns", MetricRelativity.LowerIsBetter, null, $"Latency for memory read operation for Array size in MB {values[0]} & stride size {strideSize} in nano seconds", metadata));
+                    var metadata = new Dictionary<string, IConvertible>();
+
+                    metadata.Add("StrideSizeInBytes", strideSize);
+                    metadata.Add("ArraySize", this.ArraySizeWithUnit(arraySizeInBytes));
+                    metadata.Add("ArraySizeInBytes", arraySizeInBytes);
+                    
+                    metrics.Add(new Metric($"Latency", double.Parse(values[1]), "ns", MetricRelativity.LowerIsBetter, null, $"Latency for memory read operation for Array size in MB {values[0]} & stride size {strideSize} in nano seconds", metadata));
                 }
             }
 
@@ -65,7 +68,7 @@ namespace VirtualClient.Actions
             return (long)Math.Round(number / 512.0);
         }
 
-        private string MetricNameSuffix(double bytes)
+        private string ArraySizeWithUnit(double bytes)
         {
             if (bytes >= 1024 * 1024)
             {
@@ -79,7 +82,6 @@ namespace VirtualClient.Actions
             {
                 return $"{bytes}_B";
             }
-
         }
     }
 }

@@ -170,7 +170,16 @@ namespace VirtualClient.Actions
                         await this.LogProcessDetailsAsync(executeBinary, telemetryContext);
                         executeBinary.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                         LatMemRdMetricsParser latMemRdMetricsParser = new LatMemRdMetricsParser($"{executeBinary.StandardOutput.ToString()}{executeBinary.StandardError.ToString()}");
-                        this.CaptureMetrics(executeBinary, latMemRdMetricsParser, telemetryContext, this.BinaryName);
+                        IList<Metric> metrics = latMemRdMetricsParser.Parse();
+
+                        foreach (Metric metric in metrics)
+                        {
+                            IConvertible arraySize = null, strideSizeInBytes = null;
+                            metric.Metadata.TryGetValue("ArraySize", out arraySize);
+                            metric.Metadata.TryGetValue("StrideSizeInBytes", out strideSizeInBytes);
+                            string scenario = $"StrideSize_{strideSizeInBytes}_B_ArraySize_{arraySize}";
+                            this.CaptureMetric(metric, executeBinary, telemetryContext, $"LMBench\\{this.BinaryName}", scenario);
+                        }
                     }
                 }
             }
@@ -238,7 +247,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private void CaptureMetrics(IProcessProxy process, MetricsParser metricsParser, EventContext telemetryContext, string scenario)
+        private void CaptureMetric(Metric metric, IProcessProxy process, EventContext telemetryContext, string toolName, string scenarioName)
         {
             this.MetadataContract.AddForScenario(
                 "LMbench",
@@ -247,18 +256,18 @@ namespace VirtualClient.Actions
 
             this.MetadataContract.Apply(telemetryContext);
 
-            IList<Metric> metrics = metricsParser.Parse();
-
-            this.Logger.LogMetrics(
-                toolName: "LMbench",
-                scenarioName: scenario,
-                process.StartTime,
-                process.ExitTime,
-                metrics,
-                metricCategorization: null,
-                scenarioArguments: process.FullCommand(),
-                this.Tags,
-                telemetryContext);
+            this.Logger.LogMetric(
+                    toolName: toolName,
+                    scenarioName: scenarioName,
+                    process.StartTime,
+                    process.ExitTime,
+                    metric.Name,
+                    metric.Value,
+                    metric.Unit,
+                    metricCategorization: null,
+                    scenarioArguments: process.FullCommand(),
+                    this.Tags,
+                    telemetryContext);
         }
 
         private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -326,7 +335,16 @@ namespace VirtualClient.Actions
                     // The use of the original telemetry context created at the top
                     // is purposeful.
                     LMbenchMetricsParser lmbenchMetricsParser = new LMbenchMetricsParser(process.StandardOutput.ToString());
-                    this.CaptureMetrics(process, lmbenchMetricsParser, relatedContext, "Memory Benchmark");
+                    IList<Metric> metrics = lmbenchMetricsParser.Parse();
+
+                    foreach (Metric metric in metrics)
+                    {
+                        IConvertible arraySize = null, strideSizeInBytes = null;
+                        metric.Metadata.TryGetValue("ArraySize", out arraySize);
+                        metric.Metadata.TryGetValue("StrideSizepInBytes", out strideSizeInBytes);
+                        string scenario = this.Scenario;
+                        this.CaptureMetric(metric, process, telemetryContext, $"LMBench", scenario);
+                    }
                 }
             });
         }

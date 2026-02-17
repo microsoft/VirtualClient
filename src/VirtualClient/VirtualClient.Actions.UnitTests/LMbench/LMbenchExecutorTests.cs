@@ -35,7 +35,8 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LMbenchExecutor.PackageName), "lmbench" },
-                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" }
+                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" },
+                { nameof(LMbenchExecutor.Scenario), "Scenario" }
             };
 
             this.ProcessManager.OnProcessCreated = (process) =>
