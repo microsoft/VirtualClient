@@ -248,6 +248,11 @@ namespace VirtualClient
         public Mock<ISystemManagement> SystemManagement { get; set; }
 
         /// <summary>
+        /// A mock Key Vault Manager
+        /// </summary>
+        public Mock<IKeyVaultManager> KeyVaultManager { get; set; }
+
+        /// <summary>
         /// A mock profile timing/timeout definition.
         /// </summary>
         public ProfileTiming Timing { get; set; }
@@ -471,6 +476,7 @@ namespace VirtualClient
                     return mockFile.Object;
                 });
 
+            this.KeyVaultManager = new Mock<IKeyVaultManager>(mockBehavior);
             this.FileSystem.Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
                 .Returns<string>(path => MockFixture.GetDirectoryName(path));
 
@@ -601,6 +607,9 @@ namespace VirtualClient
                         new NetworkInterfaceInfo("Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)", "Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)"),
                     }));
 
+            this.KeyVaultManager.Setup(kv => kv.StoreDescription)
+                .Returns(new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://testvault.vault.azure.net/")));
+
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
@@ -619,6 +628,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<EnvironmentLayout>((p) => this.Layout);
             this.Dependencies.AddSingleton<IApiClientManager>((p) => this.ApiClientManager.Object);
             this.Dependencies.AddSingleton<ProfileTiming>((p) => this.Timing);
+            this.Dependencies.AddSingleton<IKeyVaultManager>((p) => this.KeyVaultManager.Object);
             this.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(new List<IBlobManager>
             {
                 this.ContentBlobManager.Object,

@@ -15,7 +15,6 @@ namespace VirtualClient
     using Azure.Security.KeyVault.Secrets;
     using Polly;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides methods for retrieving secrets, keys, and certificates from an Azure Key Vault.

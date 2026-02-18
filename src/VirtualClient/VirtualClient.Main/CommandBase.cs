@@ -586,7 +586,7 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
                 }
 
-                if (this.KeyVault != null)
+                if (this.KeyVault != null && this.ShouldInitializeKeyVault)
                 {
                     DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(DependencyStore.KeyVault, endpoint: this.KeyVault, this.CertificateManager ?? new CertificateManager());
                     keyVaultManager = DependencyFactory.CreateKeyVaultManager(keyVaultStore);
@@ -953,5 +953,11 @@ namespace VirtualClient
 
             return FileContext.ResolvePathTemplate(path, this.pathReplacements);
         }
+
+        /// <summary>
+        /// Determines whether the Key Vault manager should be initialized during dependency setup.
+        /// Can be overridden by derived commands that need to skip Key Vault initialization.
+        /// </summary>
+        protected virtual bool ShouldInitializeKeyVault => true;
     }
 }

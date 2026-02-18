@@ -310,7 +310,10 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
+                OptionFactory.CreateVerboseFlag(required: false, false),
+                
+                // --token
+                OptionFactory.CreateTokenOption(required: false)
             };
 
             // Single command execution is also supported. Behind the scenes this uses a
@@ -324,6 +327,11 @@ namespace VirtualClient
             apiSubcommand.TreatUnmatchedTokensAsErrors = true;
             apiSubcommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(apiSubcommand);
+
+            Command getAccessTokenSubcommand = Program.CreateGetTokenSubcommand(settings);
+            getAccessTokenSubcommand.TreatUnmatchedTokensAsErrors = true;
+            getAccessTokenSubcommand.Handler = CommandHandler.Create<GetAccessTokenCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            rootCommand.Add(getAccessTokenSubcommand);
 
             Command bootstrapSubcommand = Program.CreateBootstrapSubcommand(settings);
             bootstrapSubcommand.TreatUnmatchedTokensAsErrors = true;
@@ -406,19 +414,64 @@ namespace VirtualClient
             return apiCommand;
         }
 
+        private static Command CreateGetTokenSubcommand(DefaultSettings settings)
+        {
+            Command getAccessTokenCommand = new Command(
+                "get-token",
+                "Get access token for current user to authenticate with Azure Key Vault.")
+            {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --key-vault
+                OptionFactory.CreateKeyVaultOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+                        
+            return getAccessTokenCommand;
+        }
+
         private static Command CreateBootstrapSubcommand(DefaultSettings settings)
         {
+            // --package
+            Option pkgOption = OptionFactory.CreatePackageOption(required: false);
+
+            // --cert-name
+            Option certNameOption = OptionFactory.CreateCertificateNameOption(required: false);
+
+            // --key-vault
+            Option kvOption = OptionFactory.CreateKeyVaultOption(required: false);
+
             Command bootstrapCommand = new Command(
                 "bootstrap",
                 "Bootstraps/installs a dependency package on the system.")
             {
                 // REQUIRED
                 // -------------------------------------------------------------------
-                // --package
-                OptionFactory.CreatePackageOption(required: true),
 
                 // OPTIONAL
                 // -------------------------------------------------------------------
+
+                pkgOption, certNameOption, kvOption,
+
+                // --token
+                OptionFactory.CreateTokenOption(required: false),
+
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
@@ -442,9 +495,6 @@ namespace VirtualClient
 
                 // --iterations (for integration only. not used/always = 1)
                 OptionFactory.CreateIterationsOption(required: false),
-
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
 
                 // --layout-path (for integration only. not used.)
                 OptionFactory.CreateLayoutPathOption(required: false),
@@ -494,6 +544,34 @@ namespace VirtualClient
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false)
             };
+
+            bootstrapCommand.AddValidator(result =>
+            {
+                string packageName = result.FindResultFor(pkgOption)?.GetValueOrDefault<string>();
+                string certNameValue = result.FindResultFor(certNameOption)?.GetValueOrDefault<string>();
+                string keyVaultValue = result.FindResultFor(kvOption)?.GetValueOrDefault<string>();
+
+                bool packageProvided = !string.IsNullOrWhiteSpace(packageName);
+                bool certificateNameProvided = !string.IsNullOrWhiteSpace(certNameValue);
+                bool keyVaultProvided = !string.IsNullOrWhiteSpace(keyVaultValue);
+
+                // Must choose at least one operation.
+                if (!packageProvided && !certificateNameProvided)
+                {
+                    result.ErrorMessage = "At least one operation must be specified for the bootstrap command." +
+                    "Use --package to install a package or --cert-name to install a certificate.";
+                    return result.ErrorMessage;
+                }
+
+                // Certificate installation requires both --cert-name and --key-vault.
+                if (certificateNameProvided && !keyVaultProvided)
+                {
+                    result.ErrorMessage = "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).";
+                    return result.ErrorMessage;
+                }
+
+                return null;
+            });
 
             return bootstrapCommand;
         }

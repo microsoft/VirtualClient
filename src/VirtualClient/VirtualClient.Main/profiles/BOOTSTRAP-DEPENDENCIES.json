@@ -1,19 +1,31 @@
 {
-    "Description": "Installs dependencies from a package store.",
-    "Parameters": {
-        "Package": "Undefined",
-        "RegisterAsName": "Undefined"
+  "Description": "Installs dependencies from a package store.",
+  "Parameters": {
+    "KeyVaultUri": null,
+    "CertificateName": null,
+    "AccessToken": null,
+    "Package": "Undefined",
+    "RegisterAsName": "Undefined"
+  },
+  "Actions": [
+    {
+      "Type": "CertificateInstallation",
+      "Parameters": {
+        "Scenario": "InstallCertificate",
+        "KeyVaultUri": "$.Parameters.KeyVaultUri",
+        "CertificateName": "$.Parameters.CertificateName",
+        "AccessToken": "$.Parameters.AccessToken"
+      }
     },
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallDependencies",
-                "BlobContainer": "packages",
-                "BlobName": "$.Parameters.Package",
-                "PackageName": "$.Parameters.RegisterAsName",
-                "Extract": true
-            }
-        }
-    ]
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallDependencies",
+        "BlobContainer": "packages",
+        "BlobName": "$.Parameters.Package",
+        "PackageName": "$.Parameters.RegisterAsName",
+        "Extract": true
+      }
+    }
+  ]
 }

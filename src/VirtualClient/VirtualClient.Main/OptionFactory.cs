@@ -595,6 +595,44 @@ namespace VirtualClient
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
+            return option; 
+        }
+
+        /// <summary>
+        /// Command line option defines the authentication token for Key Vault to authenticate requests.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTokenOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--token", "--access-token" })
+            {
+                Name = "AccessToken",
+                Description = "Authentication token for Azure Key Vault access. When not provided, uses default Azure credential authentication (Azure CLI, Managed Identity, etc.).",
+                ArgumentHelpName = "token",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the certificate name to retrieve from Key Vault.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--certname", "--certificate-name", "--cert-name" })
+            {
+                Name = "CertificateName",
+                Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
+                ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
             return option;
         }
 
@@ -898,7 +936,7 @@ namespace VirtualClient
         {
             Option<string> option = new Option<string>(new string[] { "--pkg", "--package" })
             {
-                Name = "Package",
+                Name = "PackageName",
                 Description = "The physical name of a package to bootstrap/install as it is defined in a package store (e.g. anypackage.1.0.0.zip).",
                 ArgumentHelpName = "name",
                 AllowMultipleArgumentsPerToken = false
@@ -1604,7 +1642,6 @@ namespace VirtualClient
             // --timeout=1440
             // --timeout=1440,deterministic
             // --timeout=1440,deterministic*
-            // 
             // --timeout=01:00:00
             // --timeout=01:00:00,deterministic
             // --timeout=01:00:00,deterministic*

@@ -1,0 +1,19 @@
+{
+  "Description": "Get access token for the user that can be used to authenticate.",
+  "Parameters": {
+    "KeyVaultUri": null,
+    "TenantId": null,
+    "LogFileName": "AccessToken.txt"
+  },
+  "Dependencies": [
+    {
+      "Type": "KeyVaultAccessToken",
+      "Parameters": {
+        "Scenario": "GetKVAccessToken",
+        "TenantId": "$.Parameters.TenantId",
+        "KeyVaultUri": "$.Parameters.KeyVaultUri",
+        "LogFileName": "$.Parameters.LogFileName"
+      }
+    }
+  ]
+}
