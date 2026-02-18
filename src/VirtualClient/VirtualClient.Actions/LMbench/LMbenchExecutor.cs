@@ -177,7 +177,7 @@ namespace VirtualClient.Actions
                             IConvertible arraySize = null, strideSizeInBytes = null;
                             metric.Metadata.TryGetValue("ArraySize", out arraySize);
                             metric.Metadata.TryGetValue("StrideSizeInBytes", out strideSizeInBytes);
-                            string scenario = $"StrideSize_{strideSizeInBytes}_B_ArraySize_{arraySize}";
+                            string scenario = $"StrideSize_{strideSizeInBytes ?? string.Empty}_B_ArraySize_{arraySize ?? string.Empty}";
                             this.CaptureMetric(metric, executeBinary, telemetryContext, $"LMBench\\{this.BinaryName}", scenario);
                         }
                     }
@@ -339,10 +339,7 @@ namespace VirtualClient.Actions
 
                     foreach (Metric metric in metrics)
                     {
-                        IConvertible arraySize = null, strideSizeInBytes = null;
-                        metric.Metadata.TryGetValue("ArraySize", out arraySize);
-                        metric.Metadata.TryGetValue("StrideSizepInBytes", out strideSizeInBytes);
-                        string scenario = this.Scenario;
+                        string scenario = "Memory Benchmark";
                         this.CaptureMetric(metric, process, telemetryContext, $"LMBench", scenario);
                     }
                 }
