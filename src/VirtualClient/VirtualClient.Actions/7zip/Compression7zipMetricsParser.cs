@@ -66,7 +66,7 @@ namespace VirtualClient.Actions
                 (Convert.ToDouble(this.SizeAndTime.Rows[2].ItemArray[2]) / Convert.ToDouble(this.SizeAndTime.Rows[0].ItemArray[2])) * 100, 
                 "precentage",
                 relativity: MetricRelativity.LowerIsBetter, 
-                verbosity: 2));
+                verbosity: 5));
 
             double compressionTime = 0;
 
@@ -75,7 +75,7 @@ namespace VirtualClient.Actions
                 compressionTime += Convert.ToDouble(this.SizeAndTime.Rows[i].ItemArray[2]);
             }
 
-            metrics.Add(new Metric("Compression_Time", compressionTime, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 0));
+            metrics.Add(new Metric("Compression_Time", compressionTime, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 1));
 
             return metrics;
         }

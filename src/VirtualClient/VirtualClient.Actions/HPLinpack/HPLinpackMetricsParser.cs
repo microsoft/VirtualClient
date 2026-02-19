@@ -81,8 +81,8 @@ namespace VirtualClient.Actions
                              { $"Q_W{st[0]}", st[4] },
                          };
 
-                    this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", MetricRelativity.Undefined, metadata: metadata, verbosity: 2));
-                    this.metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[6]), "Gflops", metadata: metadata, relativity: MetricRelativity.HigherIsBetter, verbosity: 0));
+                    this.metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", MetricRelativity.Undefined, metadata: metadata, verbosity: 5));
+                    this.metrics.Add(new Metric($"GFlops", Convert.ToDouble(st[6]), "Gflops", metadata: metadata, relativity: MetricRelativity.HigherIsBetter, verbosity: 1));
                 }
             }
 

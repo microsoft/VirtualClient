@@ -51,14 +51,14 @@ namespace VirtualClient.Actions
             NTttcpMetric throughputMetric = this.result.Throughput.First(t => t.Units.Equals("mbps"));
             IList<Metric> metricList = new List<Metric>()
             {
-                new Metric("TotalBytesMB", this.result.TotalBytesMB.Value, this.result.TotalBytesMB.Units, MetricRelativity.HigherIsBetter, verbosity: 2),
-                new Metric("AvgBytesPerCompl", this.result.AverageBytesPerCompletion.Value, this.result.AverageBytesPerCompletion.Units, MetricRelativity.Undefined, verbosity: 2),
-                new Metric("AvgFrameSize", this.result.AverageFrameSize.Value, this.result.AverageFrameSize.Units, MetricRelativity.Undefined, verbosity: 2),
-                new Metric("ThroughputMbps", throughputMetric.Value, throughputMetric.Units, MetricRelativity.HigherIsBetter, verbosity: 0),
-                new Metric("AvgPacketsPerInterrupt", this.result.AveragePacketsPerInterrupt.Value, this.result.AveragePacketsPerInterrupt.Units, MetricRelativity.Undefined, verbosity: 2),
-                new Metric("InterruptsPerSec", this.result.Interrupts.Value, this.result.Interrupts.Units, MetricRelativity.Undefined),
-                new Metric("PacketsRetransmitted", this.result.PacketsRetransmitted, MetricUnit.Count, MetricRelativity.LowerIsBetter, verbosity: 2),
-                new Metric("Errors", this.result.Errors, MetricUnit.Count, MetricRelativity.LowerIsBetter),
+                new Metric("TotalBytesMB", this.result.TotalBytesMB.Value, this.result.TotalBytesMB.Units, MetricRelativity.HigherIsBetter, verbosity: 5),
+                new Metric("AvgBytesPerCompl", this.result.AverageBytesPerCompletion.Value, this.result.AverageBytesPerCompletion.Units, MetricRelativity.Undefined, verbosity: 5),
+                new Metric("AvgFrameSize", this.result.AverageFrameSize.Value, this.result.AverageFrameSize.Units, MetricRelativity.Undefined, verbosity: 5),
+                new Metric("ThroughputMbps", throughputMetric.Value, throughputMetric.Units, MetricRelativity.HigherIsBetter, verbosity: 1),
+                new Metric("AvgPacketsPerInterrupt", this.result.AveragePacketsPerInterrupt.Value, this.result.AveragePacketsPerInterrupt.Units, MetricRelativity.Undefined, verbosity: 5),
+                new Metric("InterruptsPerSec", this.result.Interrupts.Value, this.result.Interrupts.Units, MetricRelativity.Undefined, verbosity: 3),
+                new Metric("PacketsRetransmitted", this.result.PacketsRetransmitted, MetricUnit.Count, MetricRelativity.LowerIsBetter, verbosity: 5),
+                new Metric("Errors", this.result.Errors, MetricUnit.Count, MetricRelativity.LowerIsBetter, verbosity: 3),
             };
 
             if (this.result.TcpAverageRtt != null)
