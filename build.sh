@@ -7,11 +7,11 @@ BUILD_VERSION=""
 SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE[0]}"))"
 
 # Runtime build flags
+BUILD_ALL=true
 BUILD_LINUX_X64=false
 BUILD_LINUX_ARM64=false
 BUILD_WIN_X64=false
 BUILD_WIN_ARM64=false
-ANY_RUNTIME_SELECTED=false
 
 Usage() {
     echo ""
@@ -65,19 +65,19 @@ while [[ $# -gt 0 ]]; do
             ;;
         "--linux-x64")
             BUILD_LINUX_X64=true
-            ANY_RUNTIME_SELECTED=true
+            BUILD_ALL=false
             ;;
         "--linux-arm64")
             BUILD_LINUX_ARM64=true
-            ANY_RUNTIME_SELECTED=true
+            BUILD_ALL=false
             ;;
         "--win-x64")
             BUILD_WIN_X64=true
-            ANY_RUNTIME_SELECTED=true
+            BUILD_ALL=false
             ;;
         "--win-arm64")
             BUILD_WIN_ARM64=true
-            ANY_RUNTIME_SELECTED=true
+            BUILD_ALL=false
             ;;
         *)
             echo "Unknown option: $1"
@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set defaults if no runtime is explicitly selected
-if [[ "$ANY_RUNTIME_SELECTED" == false ]]; then
+if [[ "BUILD_ALL" == true ]]; then
     BUILD_LINUX_X64=true
     BUILD_LINUX_ARM64=true
     BUILD_WIN_X64=true
@@ -120,7 +120,12 @@ echo "**********************************************************************"
 echo ""
 echo "[Build Solution]"
 echo "----------------------------------------------------------------------"
-dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c $BUILD_CONFIGURATION \
+echo ""
+echo "!!!"
+echo "!!! Note that the solution is be built with 'Debug' configuration in order to support a better debugging experience for extensions development."
+echo "!!!"
+echo ""
+dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c Debug -v Detailed \
 -p:AssemblyVersion=$BUILD_VERSION || Error
 
 # Runtime-specific builds
@@ -128,7 +133,7 @@ if [[ "$BUILD_LINUX_X64" == true ]]; then
     echo ""
     echo "[Build Virtual Client: linux-x64]"
     echo "----------------------------------------------------------------------"
-    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION --self-contained \
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
     -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $BUILD_FLAGS || Error
 fi
 
@@ -136,7 +141,7 @@ if [[ "$BUILD_LINUX_ARM64" == true ]]; then
     echo ""
     echo "[Build Virtual Client: linux-arm64]"
     echo "----------------------------------------------------------------------"
-    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION --self-contained \
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
     -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $BUILD_FLAGS || Error
 fi
 
@@ -144,7 +149,7 @@ if [[ "$BUILD_WIN_X64" == true ]]; then
     echo ""
     echo "[Build Virtual Client: win-x64]"
     echo "----------------------------------------------------------------------"
-    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION --self-contained \
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
     -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS || Error
 fi
 
@@ -152,7 +157,7 @@ if [[ "$BUILD_WIN_ARM64" == true ]]; then
     echo ""
     echo "[Build Virtual Client: win-arm64]"
     echo "----------------------------------------------------------------------"
-    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION --self-contained \
+    dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
     -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS || Error
 fi
 

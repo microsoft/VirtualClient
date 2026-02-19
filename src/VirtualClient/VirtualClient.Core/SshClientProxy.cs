@@ -21,7 +21,7 @@ namespace VirtualClient
     /// </summary>
     public class SshClientProxy : ISshClientProxy
     {
-        private static readonly Regex SshTargetExpression = new Regex(@"([0-9a-z_\-\. ]+)@([0-9a-z_\-\.]+)", RegexOptions.IgnoreCase);
+        private static readonly Regex SshTargetExpression = new Regex(@"([0-9a-z_\-\. ]+)@([^;]+);([\x20-\x7E]+)", RegexOptions.IgnoreCase);
         private static readonly Regex FileDoesNotExistExpression = new Regex("no such|not found|cannot find", RegexOptions.IgnoreCase);
 
         private bool disposed;
@@ -59,6 +59,18 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// When defined, allows the capture of standard error from the execution of the commands through 
+        /// the SSH session.
+        /// </summary>
+        public TextWriter StandardError { get; set; }
+
+        /// <summary>
+        /// When defined, allows the capture of standard output from the execution of the commands through 
+        /// the SSH session.
+        /// </summary>
+        public TextWriter StandardOutput { get; set; }
+
+        /// <summary>
         /// The underlying SSH client.
         /// </summary>
         internal SshClient SessionClient { get; }
@@ -74,17 +86,20 @@ namespace VirtualClient
         /// <param name="sshTarget">The SSH target information (e.g. user01@192.168.1.15).</param>
         /// <param name="host">The host name/IP address (e.g. 192.168.1.15) for the SSH session.</param>
         /// <param name="username">The username to use for the SSH session.</param>
+        /// <param name="password">The password to use for the SSH session.</param>
         /// <returns>True if the host and username information can be determined from the SSH target value.</returns>
-        public static bool TryGetSshTargetInformation(string sshTarget, out string host, out string username)
+        public static bool TryGetSshTargetInformation(string sshTarget, out string host, out string username, out string password)
         {
             host = null;
             username = null;
+            password = null;
             Match targetMatch = SshClientProxy.SshTargetExpression.Match(sshTarget);
 
             if (targetMatch.Success)
             {
                 username = targetMatch.Groups[1].Value.Trim();
                 host = targetMatch.Groups[2].Value.Trim();
+                password = targetMatch.Groups[3].Value.Trim();
             }
 
             return host != null;
@@ -389,6 +404,16 @@ namespace VirtualClient
             try
             {
                 result = await this.ExecuteCommandOnRemoteSystemAsync(command, cancellationToken, outputReceived);
+
+                if (result != null && this.StandardError != null && result.StandardError != null)
+                {
+                    await this.StandardError.WriteAsync(result.StandardError);
+                }
+
+                if (result != null && this.StandardOutput != null && result.StandardOutput != null)
+                {
+                    await this.StandardOutput.WriteAsync(result.StandardOutput);
+                }
             }
             catch (OperationCanceledException)
             {

@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Manages the execution runtime of the FIO workload.
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-x64")]
     public class FioExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -70,18 +70,6 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetTimeSpanValue(nameof(this.CoolDownPeriod), TimeSpan.FromSeconds(0));
-            }
-        }
-
-        /// <summary>
-        /// Defines the job files specified in the profile.
-        /// </summary>
-        public string JobFiles
-        {
-            get
-            {
-                return this.Parameters.ContainsKey(nameof(this.JobFiles)) ? 
-                    this.Parameters.GetValue<string>(nameof(this.JobFiles)) : null;
             }
         }
 
@@ -320,11 +308,6 @@ namespace VirtualClient.Actions
                         return;
                     }
 
-                    if (!string.IsNullOrEmpty(this.JobFiles))
-                    {
-                        this.CommandLine = this.GetCommandForJobFilesAsync(cancellationToken);
-                    }
-
                     // Apply parameters to the FIO command line options.
                     await this.EvaluateParametersAsync(telemetryContext);
 
@@ -386,7 +369,10 @@ namespace VirtualClient.Actions
 
                     foreach (DiskWorkloadProcess workload in this.WorkloadProcesses)
                     {
-                        await this.DeleteTestVerificationFilesAsync(workload.TestFiles);
+                        if (workload.CommandArguments.Contains("do_verify=1"))
+                        {
+                            await this.DeleteTestVerificationFilesAsync();
+                        }
 
                         if (this.DeleteTestFilesOnFinish)
                         {
@@ -501,22 +487,14 @@ namespace VirtualClient.Actions
         /// Override allows FIO to handle the delete of additional files used in data integrity verification
         /// tests (e.g. *-verify.state files).
         /// </summary>
-        /// <param name="testFiles">The test files to delete.</param>
         /// <param name="retryPolicy">A retry policy to apply to file deletions to handle transient issues.</param>
-        protected Task DeleteTestVerificationFilesAsync(IEnumerable<string> testFiles, IAsyncPolicy retryPolicy = null)
+        protected Task DeleteTestVerificationFilesAsync(IAsyncPolicy retryPolicy = null)
         {
             List<string> filesToDelete = new List<string>();
-            if (testFiles?.Any() == true)
+            string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(this.FileSystem.Directory.GetCurrentDirectory(), "*verify.state");
+            if (verificationStateFiles?.Any() == true)
             {
-                foreach (string file in testFiles)
-                {
-                    string fileDirectory = Path.GetDirectoryName(file);
-                    string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(fileDirectory, "*verify.state");
-                    if (verificationStateFiles?.Any() == true)
-                    {
-                        filesToDelete.AddRange(verificationStateFiles);
-                    }
-                }
+                filesToDelete.AddRange(verificationStateFiles);
             }
 
             return this.DeleteTestFilesAsync(filesToDelete, retryPolicy);
@@ -745,7 +723,6 @@ namespace VirtualClient.Actions
                 await this.Logger.LogMessageAsync($"{nameof(FioExecutor)}.ExecuteProcess", relatedContext, async () =>
                 {
                     await workload.Process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "FIO", logToFile: true);
@@ -863,18 +840,11 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override void Validate()
         {
-            if (string.IsNullOrWhiteSpace(this.CommandLine) && string.IsNullOrWhiteSpace(this.JobFiles))
+            if (string.IsNullOrWhiteSpace(this.CommandLine))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
-                    $"required '{nameof(FioExecutor.CommandLine)}' or '{nameof(FioExecutor.JobFiles)}' arguments defined.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (!string.IsNullOrWhiteSpace(this.CommandLine) && !string.IsNullOrWhiteSpace(this.JobFiles))
-            {
-                throw new WorkloadException(
-                    "Unexpected profile definition. Only one of JobFiles or CommandLine can be defined.",
+                    $"required '{nameof(FioExecutor.CommandLine)}' argument defined.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -886,7 +856,7 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.DiskFill && string.IsNullOrWhiteSpace(this.JobFiles) && string.IsNullOrWhiteSpace(this.DiskFillSize))
+            if (this.DiskFill && string.IsNullOrWhiteSpace(this.DiskFillSize))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
@@ -1022,55 +992,11 @@ namespace VirtualClient.Actions
             return processes;
         }
 
-        private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
-        {
-            string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
-
-            foreach (string key in this.Parameters.Keys)
-            {
-                string value = this.Parameters.GetValue<string>(key);
-                if (!string.IsNullOrEmpty(value))
-                {
-                    text = Regex.Replace(text, @$"\${{{key.ToLower()}}}", value);
-                }
-            }
-
-            this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
-        }
-
         private string FilterWarnings(string fioOutput)
         {
             string modifiedOutput = Regex.Replace(fioOutput, @"^fio:.*$", string.Empty, RegexOptions.Multiline).Trim();
 
             return modifiedOutput;
-        }
-
-        private string GetCommandForJobFilesAsync(CancellationToken cancellationToken)
-        {
-            string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
-            string updatedJobFileFolder = Path.Combine(jobFileFolder, "updated");
-
-            if (!this.SystemManagement.FileSystem.Directory.Exists(updatedJobFileFolder))
-            {
-                this.SystemManagement.FileSystem.Directory.CreateDirectory(updatedJobFileFolder);
-            }
-
-            string command = string.Empty;
-            string[] templateJobFilePaths = this.JobFiles.Split(new char[] { ';', ',' });
-
-            foreach (string templateJobFilePath in templateJobFilePaths)
-            {
-                // Create/update new job file at runtime.
-                string templateJobFileName = Path.GetFileName(templateJobFilePath);
-                string updatedJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, "updated", templateJobFileName);
-                this.CreateOrUpdateJobFile(templateJobFilePath, updatedJobFilePath);
-
-                // Update command to include the new job file.
-                command += $"{updatedJobFilePath} ";
-            }
-
-            command = $"{command.Trim()} --output-format=json";
-            return command;
         }
 
         private string RemoveOption(string commandLine, string option)

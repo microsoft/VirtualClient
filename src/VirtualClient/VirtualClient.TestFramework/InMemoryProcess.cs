@@ -35,6 +35,7 @@ namespace VirtualClient
         /// </summary>
         public InMemoryProcess(Stream standardInput)
         {
+            this.ExitCode = 0;
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
             this.StandardInput = new StreamWriter(standardInput);
@@ -44,7 +45,9 @@ namespace VirtualClient
                 Arguments = "--argument1=123 --argument2=value"
             };
             this.processDetails = new ProcessDetails();
-            this.processDetails.Results = new List<string>();
+            this.processDetails.Results = new List<KeyValuePair<string, string>>();
+
+            this.OnHasExited = () => true;
         }
 
         /// <summary>

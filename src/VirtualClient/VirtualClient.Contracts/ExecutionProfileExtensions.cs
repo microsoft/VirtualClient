@@ -6,7 +6,11 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Extension methods for <see cref="ExecutionProfile"/>
@@ -26,6 +30,54 @@ namespace VirtualClient.Contracts
             elements.AddRange(profile.Monitors);
 
             ExecutionProfileExtensions.InlineElements(elements, profile.Parameters);
+        }
+
+        /// <summary>
+        /// Processes conditional parameter sets in the profile's ParametersOn sections.
+        /// </summary>
+        /// <param name="profile">The execution profile to process.</param>
+        /// <param name="dependencies">The service dependencies.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        public static async Task EvaluateConditionalParametersAsync(this ExecutionProfile profile, IServiceCollection dependencies)
+        {
+            if (profile.ParametersOn?.Any() == true)
+            {
+                const string conditionKey = "Condition";
+                var evaluator = dependencies.GetService<IExpressionEvaluator>();
+
+                IDictionary<string, IConvertible> profileParameters = new Dictionary<string, IConvertible>(profile.Parameters, StringComparer.OrdinalIgnoreCase);
+                await evaluator.EvaluateAsync(dependencies, profileParameters);
+
+                foreach (var parametersSection in profile.ParametersOn)
+                {
+                    if (!parametersSection.TryGetValue(conditionKey, out IConvertible condition))
+                    {
+                        throw new SchemaException(
+                            $"Invalid '{nameof(profile.ParametersOn)}' configuration. A '{conditionKey}' must be defined in each '{nameof(profile.ParametersOn)}' section.");
+                    }
+
+                    // Parameters in ParametersOn sections take priority over the profile's default parameters.
+                    IDictionary<string, IConvertible> conditionalParameters = new Dictionary<string, IConvertible>(parametersSection, StringComparer.OrdinalIgnoreCase);
+                    conditionalParameters.AddRange(profileParameters, true);
+
+                    await evaluator.EvaluateAsync(dependencies, conditionalParameters);
+
+                    if (!bool.TryParse(conditionalParameters[conditionKey].ToString(), out bool conditionMatches))
+                    {
+                        throw new SchemaException(
+                            $"Invalid '{nameof(profile.ParametersOn)}' configuration. A '{conditionKey}' must always evaluate to true or false.");
+                    }
+
+                    if (conditionMatches)
+                    {
+                        IDictionary<string, IConvertible> conditionalParameterSet = new Dictionary<string, IConvertible>(parametersSection, StringComparer.OrdinalIgnoreCase);
+                        profile.Parameters.AddRange(conditionalParameterSet, true);
+                        break;
+                    }
+                }
+
+                profile.ParametersOn.Clear();
+            }
         }
 
         /// <summary>

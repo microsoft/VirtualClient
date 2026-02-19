@@ -29,7 +29,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Ambiguous environment layout scenario. There is more than one client instance defined in the environment layout " +
                     $"provided to the Virtual Client for agent/client ID '{clientId}'.",
-                    ErrorReason.EnvironmentLayoutClientInstanceDuplicates);
+                    ErrorReason.LayoutInvalid);
             }
 
             return clientInstances?.FirstOrDefault();

@@ -127,35 +127,35 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the duration (in seconds) for running the CPS workload.
+        /// Parameter defines the duration for running the CPS workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
         /// <summary>
-        /// gets test warmup time values in seconds.
+        /// gets test warmup time values.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get 
             {
-                return this.Parameters.GetValue<int>(nameof(this.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(this.WarmupTime), TimeSpan.FromSeconds(8));
             }
         }
 
         /// <summary>
-        /// gets test delay time values in seconds.
+        /// gets test delay time values.
         /// </summary>
-        public int DelayTime
+        public TimeSpan DelayTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.DelayTime), 0);
+                return this.Parameters.GetTimeSpanValue(nameof(this.DelayTime), TimeSpan.Zero);
             }
         }
 
@@ -226,7 +226,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
 
             // Validating CPS parameters
-            if (this.TestDuration <= 0)
+            if (this.TestDuration <= TimeSpan.Zero)
             {
                 throw new WorkloadException("Test duration cannot be equal or less than zero for CPS workload", ErrorReason.InstructionsNotValid);
             }
@@ -273,8 +273,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
-                                await process.StartAndWaitAsync(cancellationToken, timeout);
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
+                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
                                 await this.LogProcessDetailsAsync(process, relatedContext, "CPS");
                                 process.ThrowIfWorkloadFailed();
 
@@ -294,7 +294,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
 
                                 throw new WorkloadException($"CPS workload did not exit within the timeout period defined (timeout={timeout}).", exc, ErrorReason.WorkloadFailed);
                             }
@@ -325,7 +325,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                MetricsParser parser = new CPSMetricsParser(results, this.ConfidenceLevel, this.WarmupTime);
+                MetricsParser parser = new CPSMetricsParser(results, this.ConfidenceLevel, this.WarmupTime.TotalSeconds);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(

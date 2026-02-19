@@ -93,7 +93,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
             string expectedBlobPath = string.Join('/', (new string[] { expectedAgentId, expectedToolName, expectedRole, expectedScenario })
                 .Where(i => i != null))
                 .ToLowerInvariant();
@@ -139,7 +139,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
             string expectedBlobPath = string.Join('/', (new string[]
             {
                 expectedAgentId,
@@ -186,7 +186,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
             string expectedBlobPath = string.Join('/', (new string[]
             {
                 expectedAgentId,
@@ -272,7 +272,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -339,7 +339,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -394,7 +394,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             string expectedContainer = "customcontainer";
@@ -463,7 +463,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -517,7 +517,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -582,7 +582,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             string contentPathTemplate = "customcontainer/{experimentDefinitionId}/{experimentName}/{experimentId},{revision}/{toolkitCommand|scenario}";
 
@@ -637,7 +637,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // A parameter "toolkitCommand" does not exist. The template should use the "scenario" parameter instead.
             string contentPathTemplate = "customcontainer/{experimentDefinitionId}/{experimentName}/{experimentId},{revision}/{toolkitCommand|scenario}";
@@ -691,7 +691,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // A parameter "toolkitCommand" does not exist. The factory should just remove the parameter in the
             // final blob path.

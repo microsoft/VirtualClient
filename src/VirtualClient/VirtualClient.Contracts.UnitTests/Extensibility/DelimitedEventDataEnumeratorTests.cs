@@ -49,6 +49,34 @@ namespace VirtualClient.Contracts.Extensibility
         }
 
         [Test]
+        public void DelimitedEventDataEnumeratorParsesExpectedEventsFromFilesInQuotedCsvFormat()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            // Scenario:
+            // This test is designed to evaluate parsing logic from an actual file containing
+            // delimited CSV metrics where both the columns and the fields are surrounded with quotation
+            // marks.
+            //
+            // e.g.
+            // "Timestamp","ExperimentID","ExecutionSystem","ProfileName","ClientID","SeverityLevel"
+            // "2025-07-23T20:34:48.6439102Z","6c83d269-2dff-4fb5-9924-375d84602c5b","Metis","METIS-CPU-CRYPTOGRAPHIC","linux-demo01-client-01","1"
+
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "csv_with_quotes.events"));
+
+            using (var enumerator = new DelimitedEventDataEnumerator(csvContent, DataFormat.Csv))
+            {
+                List<EventDataPoint> dataPoints = new List<EventDataPoint>();
+                while (enumerator.MoveNext())
+                {
+                    dataPoints.Add(enumerator.Current);
+                }
+
+                AssertExpectedMetricsParsed(dataPoints);
+            }
+        }
+
+        [Test]
         public void DelimitedEventDataEnumeratorParsesExpectedEventsFromFilesInJsonFormat()
         {
             this.SetupTest(PlatformID.Unix);
@@ -302,7 +330,7 @@ namespace VirtualClient.Contracts.Extensibility
                 // Part B + C properties
                 Assert.AreEqual("linux-demo01-client-01", dataPoint.ClientId);
                 Assert.AreEqual("6c83d269-2dff-4fb5-9924-375d84602c5b", dataPoint.ExperimentId);
-                Assert.AreEqual("METIS-CPU-CRYPTOGRAPHIC", dataPoint.ExecutionProfile);
+                Assert.AreEqual("METIS-CPU-CRYPTOGRAPHIC", dataPoint.ProfileName);
                 Assert.AreEqual(500, dataPoint.EventCode);
                 Assert.AreEqual("Critical system event", dataPoint.EventDescription);
                 Assert.AreEqual("eventlog.journalctl", dataPoint.EventId);

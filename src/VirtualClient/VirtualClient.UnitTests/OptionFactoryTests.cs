@@ -14,7 +14,10 @@ namespace VirtualClient
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts.Extensibility;
@@ -28,6 +31,106 @@ namespace VirtualClient
         public void SetupFixture()
         {
             Environment.CurrentDirectory = MockFixture.GetDirectory(typeof(OptionFactoryTests));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --e=1234 --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --e 1234 --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id=1234 --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id 1234 --timeout=00:01:00")]
+        public void ContainsOptionCorrectlyIdentifiesWhenAnOptionExistsInTheCommandLine(string commandLine)
+        {
+            string[] args = commandLine.Split(" ");
+            Option option = OptionFactory.CreateExperimentIdOption();
+            Assert.IsTrue(OptionFactory.ContainsOption(option, args));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
+        public void ContainsOptionCorrectlyIdentifiesWhenAnOptionDoesNotExistInTheCommandLine(string commandLine)
+        {
+            string[] args = commandLine.Split(" ");
+            Option option = OptionFactory.CreateExperimentIdOption();
+            Assert.IsFalse(OptionFactory.ContainsOption(option, args));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --ex=do_not_confuse --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --extra do_not_confuse --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id-other=do_not_confuse --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id-other do_not_confuse --timeout=00:01:00")]
+        public void ContainsOptionDoesNotMistakeOtherOptionsWithVerySimilarNames(string commandLine)
+        {
+            string[] args = commandLine.Split(" ");
+            Option option = OptionFactory.CreateExperimentIdOption();
+            Assert.IsFalse(OptionFactory.ContainsOption(option, args));
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase(" ")]
+        [TestCase("    ")]
+        public void ContainsOptionHandlesEmptyCommandLines(string commandLine)
+        {
+            Option option = OptionFactory.CreateExperimentIdOption();
+            Assert.IsFalse(OptionFactory.ContainsOption(option, commandLine));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --e=1234 --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --e 1234 --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id=1234 --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id 1234 --timeout=00:01:00")]
+        public void ContainsOptionHandlesFullCommandLineEvaluations_1(string commandLine)
+        {
+            Option option = OptionFactory.CreateExperimentIdOption();
+            Assert.IsTrue(OptionFactory.ContainsOption(option, commandLine));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --ex=do_not_confuse --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --extra do_not_confuse --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id-other=do_not_confuse --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --experiment-id-other do_not_confuse --timeout=00:01:00")]
+        public void ContainsOptionHandlesFullCommandLineEvaluations_2(string commandLine)
+        {
+            Option option = OptionFactory.CreateExperimentIdOption();
+            Assert.IsFalse(OptionFactory.ContainsOption(option, commandLine));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --ff")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fail-fast")]
+        public void ContainsOptionCorrectlyIdentifiesWhenAFlagExistsInTheCommandLine(string commandLine)
+        {
+            string[] args = commandLine.Split(" ");
+            Option option = OptionFactory.CreateFailFastFlag();
+            Assert.IsTrue(OptionFactory.ContainsOption(option, args));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00")]
+        public void ContainsOptionCorrectlyIdentifiesWhenAFlagDoesNotExistInTheCommandLine(string commandLine)
+        {
+            string[] args = commandLine.Split(" ");
+            Option option = OptionFactory.CreateFailFastFlag();
+            Assert.IsFalse(OptionFactory.ContainsOption(option, args));
+        }
+
+        [Test]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fff")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --ff-other")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fail-forward")]
+        [TestCase("--profile=ANY-PROFILE.json --timeout=00:01:00 --fail-fast-flagrantly")]
+        public void ContainsOptionDoesNotMistakeOtherFlagsWithVerySimilarNames(string commandLine)
+        {
+            string[] args = commandLine.Split(" ");
+            Option option = OptionFactory.CreateFailFastFlag();
+            Assert.IsFalse(OptionFactory.ContainsOption(option, args));
         }
 
         [Test]
@@ -105,17 +208,21 @@ namespace VirtualClient
             Assert.IsFalse(result.Errors.Any());
             Assert.AreEqual("state", result.Tokens[1].Value);
 
+            result = option.Parse($"{alias}=temp");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual("temp", result.Tokens[1].Value);
+
             result = option.Parse($"{alias}=all");
             Assert.IsFalse(result.Errors.Any());
             Assert.AreEqual("all", result.Tokens[1].Value);
 
-            result = option.Parse($"{alias}=logs,packages,state");
+            result = option.Parse($"{alias}=logs,packages,state,temp");
             Assert.IsFalse(result.Errors.Any());
-            Assert.AreEqual("logs,packages,state", result.Tokens[1].Value);
+            Assert.AreEqual("logs,packages,state,temp", result.Tokens[1].Value);
 
-            result = option.Parse($"{alias}=logs;packages;state");
+            result = option.Parse($"{alias}=logs;packages;state;temp");
             Assert.IsFalse(result.Errors.Any());
-            Assert.AreEqual("logs;packages;state", result.Tokens[1].Value);
+            Assert.AreEqual("logs;packages;state;temp", result.Tokens[1].Value);
         }
 
         [Test]
@@ -127,13 +234,8 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--agent-id")]
         [TestCase("--agentId")]
-        [TestCase("--agentid")]
         [TestCase("--client-id")]
-        [TestCase("--clientId")]
-        [TestCase("--clientid")]
-        [TestCase("--client")]
         [TestCase("--c")]
         public void ClientIdOptionSupportsExpectedAliases(string alias)
         {
@@ -144,8 +246,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--content-store")]
-        [TestCase("--contentStore")]
-        [TestCase("--contentstore")]
         [TestCase("--content")]
         [TestCase("--cs")]
         public void ContentStoreOptionSupportsExpectedAliases(string alias)
@@ -229,7 +329,7 @@ namespace VirtualClient
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--contentStore={argument}");
+            ParseResult result = option.Parse($"--content-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -257,7 +357,7 @@ namespace VirtualClient
                 .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
 
             Option option = OptionFactory.CreateContentStoreOption(certificateManager: mockCertManager.Object);
-            ParseResult result = option.Parse($"--contentStore={argument}");
+            ParseResult result = option.Parse($"--content-store={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -265,16 +365,12 @@ namespace VirtualClient
         public void ContentStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreateContentStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--contentStore=NotAValidConnectionStringOrSasTokenUri"));
+            Assert.Throws<SchemaException>(() => option.Parse($"--content-store=NotAValidConnectionStringOrSasTokenUri"));
         }
 
         [Test]
         [TestCase("--content-path-template")]
         [TestCase("--content-path")]
-        [TestCase("--contentPathTemplate")]
-        [TestCase("--contentpathtemplate")]
-        [TestCase("--contentPath")]
-        [TestCase("--contentpath")]
         [TestCase("--cp")]
         public void ContentPathTemplateOptionSupportsExpectedAliases(string alias)
         {
@@ -353,11 +449,7 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--event-hub")]
-        [TestCase("--eventHub")]
-        [TestCase("--eventhub")]
-        [TestCase("--eventhubconnectionstring")]
         [TestCase("--eventHubConnectionString")]
-        [TestCase("--eh")]
         public void EventHubConnectionStringOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateEventHubStoreOption();
@@ -395,8 +487,6 @@ namespace VirtualClient
         [Test]
         [TestCase("--experiment-id")]
         [TestCase("--experimentId")]
-        [TestCase("--experimentid")]
-        [TestCase("--experiment")]
         [TestCase("--e")]
         public void ExperimentIdOptionSupportsExpectedAliases(string alias)
         {
@@ -408,7 +498,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--exit-wait")]
-        [TestCase("--flush-wait")]
         [TestCase("--wait")]
         public void ExitWaitOptionSupportsExpectedAliases(string alias)
         {
@@ -498,9 +587,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--key-vault")]
-        [TestCase("--key-Vault")]
-        [TestCase("--keyvault")]
-        [TestCase("--keyVault")]
         [TestCase("--kv")]
         public void KeyVaultOptionSupportsExpectedAliases(string alias)
         {
@@ -547,8 +633,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--layout-path")]
-        [TestCase("--layoutPath")]
-        [TestCase("--layoutpath")]
         [TestCase("--layout")]
         [TestCase("--lp")]
         public void LayoutPathOptionSupportsExpectedAliases(string alias)
@@ -596,6 +680,21 @@ namespace VirtualClient
             string actualPath = result.ValueForOption("--log-dir")?.ToString();
 
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void LogDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateLogDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--log-dir")?.ToString();
+
             Assert.AreEqual(expectedPath, actualPath);
         }
 
@@ -808,9 +907,22 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void PackageDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreatePackageDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--package-dir")?.ToString();
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase("--package-store")]
-        [TestCase("--packageStore")]
-        [TestCase("--packagestore")]
         [TestCase("--packages")]
         [TestCase("--ps")]
         public void PackageStoreOptionSupportsExpectedAliases(string alias)
@@ -1019,6 +1131,46 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(@"C:\Users\User\Profiles\ANY-PROFILE.json")]
+        [TestCase(@".\Profiles\ANY-PROFILE.json")]
+        [TestCase(@"..\Profiles\ANY-PROFILE.json")]
+        public void ProfileOptionSupportsLocalPathReferences_Windows_Style_Paths(string expectedReference)
+        {
+            Option option = OptionFactory.CreateProfileOption();
+            ParseResult result = option.Parse($@"--profile={expectedReference}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualReference = result.Tokens.First(t => t.Type == TokenType.Argument).Value;
+            Assert.AreEqual(expectedReference, actualReference);
+        }
+
+        [Test]
+        [TestCase(@"/home/user/profiles/ANY-PROFILE.json")]
+        [TestCase(@"./profiles/ANY-PROFILE.json")]
+        [TestCase(@"../profiles/ANY-PROFILE.json")]
+        public void ProfileOptionSupportsLocalFilePathReferences_Unix_Style_Paths(string expectedReference)
+        {
+            Option option = OptionFactory.CreateProfileOption();
+            ParseResult result = option.Parse($@"--profile={expectedReference}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualReference = result.Tokens.First(t => t.Type == TokenType.Argument).Value;
+            Assert.AreEqual(expectedReference, actualReference);
+        }
+
+        [Test]
+        [TestCase(@"https://anystorage/location/ANY-PROFILE.json")]
+        public void ProfileOptionSupportsUriReferences(string expectedReference)
+        {
+            Option option = OptionFactory.CreateProfileOption();
+            ParseResult result = option.Parse($@"--profile={expectedReference}");
+            Assert.IsFalse(result.Errors.Any());
+
+            string actualReference = result.Tokens.First(t => t.Type == TokenType.Argument).Value;
+            Assert.AreEqual(expectedReference, actualReference);
+        }
+
+        [Test]
         [TestCase("--proxy-api")]
         [TestCase("--proxy")]
         public void ProxyApiOptionSupportsExpectedAliases(string alias)
@@ -1089,11 +1241,11 @@ namespace VirtualClient
             {
                 Option option = OptionFactory.CreateProxyApiOption();
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--eventHub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--eventHub=sb://any.servicebus.hub?miid=1234567 --proxy-api=http://anyuri"));
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(new string[] { "--event-hub=sb://any.servicebus.hub?miid=1234567", "--proxy-api=http://anyuri" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--event-hub=sb://any.servicebus.hub?miid=1234567 --proxy-api=http://anyuri"));
 
-                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--eventHub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
-                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --eventHub=sb://any.servicebus.hub?miid=1234567"));
+                commandBuilder = Program.SetupCommandLine(new string[] { "--proxy-api=http://anyuri", "--event-hub=sb://any.servicebus.hub?miid=1234567" }, tokenSource);
+                Assert.Throws<ArgumentException>(() => commandBuilder.Build().Parse("--proxy-api=http://anyuri --event-hub=sb://any.servicebus.hub?miid=1234567"));
             }
         }
 
@@ -1179,12 +1331,76 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void StateDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateStateDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--state-dir")?.ToString();
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         [TestCase("--system")]
         [TestCase("--s")]
         public void SystemOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateSystemOption();
             ParseResult result = option.Parse($"{alias}=Profile");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass")]
+        [TestCase("user@machine_name;pass")]
+        [TestCase("user@2001:0db8:85a3:0000:0000:8a2e:0370:7334;pass")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass")]
+        [TestCase("user@2001:db8:85a3::8a2e:370:7334;pass")]
+        public void TargetAgentOptionSupportsExpectedSshConnectionValues(string value)
+        {
+            Option option = OptionFactory.CreateTargetAgentOption();
+            ParseResult result = option.Parse($"--agent-ssh={value}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass_;w0r;d")]
+        [TestCase("user@10.2.3.5;pass__w@rd")]
+        [TestCase("user@machine@somewhere;pass")]
+        [TestCase("user@machine@somewhere;pass;_w@rd")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass;_w@rd")]
+        public void TargetAgentOptionHandlesSshConnectionsContainingDelimitersInTrickyLocations(string value)
+        {
+            Option option = OptionFactory.CreateTargetAgentOption();
+            ParseResult result = option.Parse($"--agent-ssh={value}");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        [TestCase("user@")]
+        [TestCase("@10.2.3.4;pass")]
+        [TestCase("user@10.2.3.4")]
+        [TestCase("user;pass")]
+        [TestCase("user;10.2.3.4;pass")]
+        public void TargetAgentOptionValidatesSshConnectionFormats(string invalidValue)
+        {
+            Option option = OptionFactory.CreateTargetAgentOption();
+            NotSupportedException error = Assert.Throws<NotSupportedException>(() => option.Parse($"--agent-ssh={invalidValue}"));
+            Assert.IsTrue(error.Message.StartsWith("Invalid target agent SSH definition."));
+        }
+
+        [Test]
+        [TestCase("--ssh")]
+        [TestCase("--agent-ssh")]
+        public void TargetAgentOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateTargetAgentOption();
+            ParseResult result = option.Parse($"{alias}=user@10.2.3.4;pass");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -1225,6 +1441,21 @@ namespace VirtualClient
             string actualPath = result.ValueForOption("--directory")?.ToString();
 
             Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TargetDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateTargetDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--directory")?.ToString();
+
             Assert.AreEqual(expectedPath, actualPath);
         }
 
@@ -1298,6 +1529,62 @@ namespace VirtualClient
 
             Assert.IsFalse(result.Errors.Any());
             CollectionAssert.AreEqual(new string[] { expectedPath1, expectedPath2 }, actualPaths);
+        }
+
+        [Test]
+        [TestCase("--temp-dir")]
+        [TestCase("--tdir")]
+        public void TempDirectoryOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateTempDirectoryOption();
+            ParseResult result = option.Parse($"{alias}=\\Any\\Directory\\Path");
+
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void TempDirectoryOptionSupportsFullPaths()
+        {
+            string path = OperatingSystem.IsWindows() ? "C:\\Any\\Directory\\Path" : "/home/any/directory/path";
+            Option option = OptionFactory.CreateTempDirectoryOption();
+            ParseResult result = option.Parse($"--temp-dir={path}");
+
+            string expectedPath = path;
+            string actualPath = result.ValueForOption("--temp-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TempDirectoryOptionSupportsRelativePaths(string path)
+        {
+            Option option = OptionFactory.CreateTempDirectoryOption();
+            ParseResult result = option.Parse($"--temp-dir={path}");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--temp-dir")?.ToString();
+
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(".\\Any\\Directory\\Path")]
+        [TestCase("..\\Any\\Directory\\Path")]
+        [TestCase("..\\..\\Any\\Directory\\Path")]
+        public void TempDirectoryOptionSupportsRelativePathsInDefaultValues(string path)
+        {
+            Option option = OptionFactory.CreateTempDirectoryOption(defaultValue: path);
+            ParseResult result = option.Parse($"--profile=ANY-PROFILE.json");
+
+            string expectedPath = Path.GetFullPath(path);
+            string actualPath = result.ValueForOption("--temp-dir")?.ToString();
+
+            Assert.AreEqual(expectedPath, actualPath);
         }
 
         [Test]

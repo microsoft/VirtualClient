@@ -31,8 +31,6 @@ namespace VirtualClient
     /// </summary>
     public static class DependencyFactory
     {
-        private static List<IFlushableChannel> telemetryChannels = new List<IFlushableChannel>();
-
         /// <summary>
         /// Creates an <see cref="IBlobManager"/> instance that can be used to download blobs/files from a store or
         /// upload blobs/files to a store.
@@ -44,6 +42,7 @@ namespace VirtualClient
             switch (dependencyStore.StoreType)
             {
                 case DependencyStore.StoreTypeAzureStorageBlob:
+                case DependencyStore.StoreTypeAzureCDN:
                     DependencyBlobStore blobStore = dependencyStore as DependencyBlobStore;
                     if (blobStore != null)
                     {
@@ -110,18 +109,17 @@ namespace VirtualClient
         /// Creates a disk manager for the OS/system platform (e.g. Windows, Linux).
         /// </summary>
         /// <param name="platform">The OS/system platform.</param>
-        /// <param name="logger">A logger for capturing disk management telemetry.</param>
-        public static DiskManager CreateDiskManager(PlatformID platform, Microsoft.Extensions.Logging.ILogger logger = null)
+        public static DiskManager CreateDiskManager(PlatformID platform)
         {
             DiskManager manager = null;
             switch (platform)
             {
                 case PlatformID.Win32NT:
-                    manager = new WindowsDiskManager(new WindowsProcessManager(), logger);
+                    manager = new WindowsDiskManager(new WindowsProcessManager());
                     break;
 
                 case PlatformID.Unix:
-                    manager = new UnixDiskManager(new UnixProcessManager(), logger);
+                    manager = new UnixDiskManager(new UnixProcessManager());
                     break;
 
                 default:
@@ -152,7 +150,7 @@ namespace VirtualClient
 
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
-            DependencyFactory.telemetryChannels.Add(channel);
+            VirtualClientRuntime.DataChannels.Add(channel);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
@@ -249,6 +247,29 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates logger providers for writing telemetry to local CSV files.
+        /// </summary>
+        /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
+        public static IEnumerable<ILoggerProvider> CreateCsvFileLoggerProviders(string logFileDirectory)
+        {
+            logFileDirectory.ThrowIfNullOrWhiteSpace(nameof(logFileDirectory));
+
+            // 20MB
+            // General Sizing:
+            // Around 34,400 metric records will fit inside of a single CSV file at 20MB.
+            const long maxFileSizeBytes = 20000000;
+
+            List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
+
+            string metricsCsvFilePath = Path.Combine(logFileDirectory, "metrics.csv");
+            ILoggerProvider metricsCsvProvider = new MetricsCsvFileLoggerProvider(metricsCsvFilePath, maxFileSizeBytes);
+            loggerProviders.Add(metricsCsvProvider);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvProvider.Dispose()));
+
+            return loggerProviders;
+        }
+
+        /// <summary>
         /// Creates logger providers for writing telemetry to local log files.
         /// </summary>
         /// <param name="logFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\traces.log).</param>
@@ -296,30 +317,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Creates logger providers for writing telemetry to local CSV files.
-        /// </summary>
-        /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
-        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
-        {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
-
-            // 20MB
-            // General Sizing:
-            // Around 34,400 metric records will fit inside of a single CSV file at 20MB.
-            const long maxFileSizeBytes = 20000000;
-
-            ILoggerProvider loggerProvider = null;
-
-            if (!string.IsNullOrWhiteSpace(csvFilePath))
-            {
-                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
-            }
-
-            return loggerProvider;
-        }
-
-        /// <summary>
         /// Creates logger providers for writing telemetry to local log files.
         /// </summary>
         /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
@@ -356,24 +353,17 @@ namespace VirtualClient
 
                 // Metrics/Results
                 ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
-                    Path.Combine(logFileDirectory, settings.MetricsFileName), 
-                    TimeSpan.FromSeconds(3), 
+                    Path.Combine(logFileDirectory, settings.MetricsFileName),
+                    TimeSpan.FromSeconds(3),
                     LogLevel.Trace,
                     new SerilogJsonTextFormatter(propertiesToExcludeForMetrics)).HandleMetrics();
 
                 loggerProviders.Add(metricsLoggerProvider);
 
-                // Metrics/Results in CSV Format
-                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(
-                    Path.Combine(logFileDirectory, 
-                    settings.MetricsCsvFileName)).HandleMetrics();
-
-                loggerProviders.Add(metricsCsvLoggerProvider);
-
                 // System Events
                 ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
-                    Path.Combine(logFileDirectory, settings.EventsFileName), 
-                    TimeSpan.FromSeconds(5), 
+                    Path.Combine(logFileDirectory, settings.EventsFileName),
+                    TimeSpan.FromSeconds(5),
                     LogLevel.Trace,
                     new SerilogJsonTextFormatter(propertiesToExcludeForEvents)).HandleSystemEvents();
 
@@ -593,7 +583,7 @@ namespace VirtualClient
                 };
             }
 
-            DependencyFactory.telemetryChannels.Add(channel);
+            VirtualClientRuntime.DataChannels.Add(channel);
 
             return channel;
         }
@@ -604,8 +594,8 @@ namespace VirtualClient
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
-        /// <param name="logger">The logger to use for capturing telemetry.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -613,10 +603,16 @@ namespace VirtualClient
 
             PlatformID platform = platformSpecifics.Platform;
             ProcessManager processManager = ProcessManager.Create(platform);
-            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform, logger);
+            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform);
             IFileSystem fileSystem = new FileSystem();
             IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
-            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
+            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem);
+
+            if (isolated)
+            {
+                packageManager = new IsolatedPackageManager(packageManager);
+            }
+
             ISshClientFactory sshClientManager = new SshClientFactory();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
 
@@ -700,17 +696,6 @@ namespace VirtualClient
             }
 
             return new VirtualClientProxyApiClient(builder.Build(), proxyApiUri);
-        }
-
-        /// <summary>
-        /// Flushes buffered telemetry from all channels.
-        /// </summary>
-        /// <param name="timeout">The absolute timeout to flush the telemetry from each individual channel.</param>
-        /// <returns>
-        /// </returns>
-        public static void FlushTelemetry(TimeSpan? timeout = null)
-        {
-            Parallel.ForEach(DependencyFactory.telemetryChannels, channel => channel.Flush(timeout));
         }
 
         /// <summary>

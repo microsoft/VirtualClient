@@ -137,7 +137,7 @@ namespace VirtualClient.Metadata
                                 { "type", "Memory" },
                                 { "vendor", chipInfo.Manufacturer },
                                 { "description", $"{chipInfo.Manufacturer} {chipInfo.PartNumber}" },
-                                { "bytes", chipInfo.Capacity },
+                                { "bytes", chipInfo.CapacityBytes },
                                 { "speed", chipInfo.Speed },
                                 { "partNumber", chipInfo.PartNumber }
                             });

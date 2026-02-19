@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -106,24 +107,20 @@ namespace VirtualClient.Actions
             {
                 case "win-x64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe");
-                    this.SupportingExecutables.Add("geekbench_x86_64.exe");
                     break;
 
                 case "win-arm64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64.exe");
-                    this.SupportingExecutables.Add("geekbench_aarch64.exe");
                     break;
 
                 case "linux-x64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64");
-                    this.SupportingExecutables.Add("geekbench_x86_64");
                     await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
                     break;
 
                 case "linux-arm64":
                     this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64");
-                    this.SupportingExecutables.Add("geekbench_aarch64");
                     await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
                     break;
@@ -165,13 +162,20 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock {email} {licenseKey}"))
                     {
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
+                        try
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
+                            await process.StartAndWaitAsync(cancellationToken, withExitConfirmation: true);
 
-                            process.ThrowIfDependencyInstallationFailed();
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName);
+                                process.ThrowIfDependencyInstallationFailed();
+                            }
+                        }
+                        finally
+                        {
+                            process.Close();
+                            process.SafeKill(this.Logger, TimeSpan.FromSeconds(30));
                         }
                     }
                 }
@@ -183,13 +187,6 @@ namespace VirtualClient.Actions
                         telemetryContext.Clone().AddError(exc));
 
                     throw;
-                }
-                finally
-                {
-                    // GeekBench runs a secondary process on both Windows and Linux systems. When we
-                    // kill the parent process, it does not kill the processes the parent spun off. This
-                    // ensures that all of the process are stopped/killed.
-                    this.processManager.Kill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             }
         }
@@ -215,6 +212,7 @@ namespace VirtualClient.Actions
                 // using workload name as testName
                 GeekBenchMetricsParser geekbenchMetricsParser = new GeekBenchMetricsParser(standardOutput);
                 IList<Metric> metrics = geekbenchMetricsParser.Parse();
+
                 foreach (Metric metric in metrics)
                 {
                     this.Logger.LogMetric(
@@ -261,22 +259,23 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.processManager.CreateProcess(pathToExe, commandLineArguments))
                     {
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
+                        try
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
+                            await process.StartAndWaitAsync(cancellationToken, withExitConfirmation: true);
 
-                            process.ThrowIfWorkloadFailed();
-
-                            if (process.StandardError.Length > 0)
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                process.ThrowOnStandardError<WorkloadException>(
-                                    errorReason: ErrorReason.WorkloadFailed);
-                            }
+                                await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName);
+                                process.ThrowIfWorkloadFailed();
 
-                            string standardOutput = process.StandardOutput.ToString();
-                            this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
+                                string standardOutput = process.StandardOutput.ToString();
+                                this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
+                            }
+                        }
+                        finally
+                        {
+                            process.Close();
+                            process.SafeKill(this.Logger, TimeSpan.FromSeconds(30));
                         }
                     }
                 }
@@ -288,13 +287,6 @@ namespace VirtualClient.Actions
                         telemetryContext.Clone().AddError(exc));
 
                     throw;
-                }
-                finally
-                {
-                    // GeekBench runs a secondary process on both Windows and Linux systems. When we
-                    // kill the parent process, it does not kill the processes the parent spun off. This
-                    // ensures that all of the process are stopped/killed.
-                    this.processManager.Kill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             });
         }

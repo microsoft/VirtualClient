@@ -9,19 +9,20 @@
         <RunAnalyzers>false</RunAnalyzers>
         <NoWarn>CA1416;NU5100;NU5118;NU5128;SA1118;NU5110;NU5111;IL2026;IL2104;IL2072</NoWarn>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-        <BuildPropertyOutput>true</BuildPropertyOutput>
+        <BuildPropertyOutput Condition="'$(RuntimeIdentifier)' != ''">true</BuildPropertyOutput>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="$(System_ServiceProcess_ServiceController_PackageVersion)" />
+        <PackageReference Include="System.CommandLine" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />
         <ProjectReference Include="..\VirtualClient.Api\VirtualClient.Api.csproj" />
         <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Controller\VirtualClient.Controller.csproj" />
         <ProjectReference Include="..\VirtualClient.Dependencies\VirtualClient.Dependencies.csproj" />
         <ProjectReference Include="..\VirtualClient.Monitors\VirtualClient.Monitors.csproj" />
     </ItemGroup>
@@ -50,7 +51,7 @@
     -->
     <Target Name="CopyProfilesToOutputDirectory" AfterTargets="Build">
         <ItemGroup>
-            <ProfileFiles Include="profiles\*.*" />
+            <ProfileFiles Include="profiles\**\*.*" />
         </ItemGroup>
 
         <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />

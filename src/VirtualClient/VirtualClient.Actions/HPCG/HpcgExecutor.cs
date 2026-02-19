@@ -140,9 +140,9 @@ namespace VirtualClient.Actions
                 {
                     foreach (string file in outputFiles)
                     {
-                        string results = await this.LoadResultsAsync(file, cancellationToken);
+                        KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: results.AsArray(), logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", logToFile: true, results: results);
 
                         this.MetadataContract.AddForScenario(
                             "HPCG",
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions
 
                         this.MetadataContract.Apply(telemetryContext);
 
-                        HpcgMetricsParser parser = new HpcgMetricsParser(results);
+                        HpcgMetricsParser parser = new HpcgMetricsParser(results.Value);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(

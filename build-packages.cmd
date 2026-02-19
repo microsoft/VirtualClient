@@ -83,40 +83,42 @@ REM the requisite NuGet package assets file exist in the local 'obj' folder, we 
 call dotnet restore %PACKAGES_PROJECT% --force
 
 echo:
-echo [Create NuGet Package] VirtualClient.linux-arm64.%PACKAGE_VERSION%
-echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-arm64.nuspec && echo: || Goto :Error
-
-echo:
-echo [Create NuGet Package] VirtualClient.linux-x64.%PACKAGE_VERSION%
-echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-x64.nuspec && echo: || Goto :Error
-
-echo:
-echo [Create NuGet Package] VirtualClient.win-arm64.%PACKAGE_VERSION%
-echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-arm64.nuspec && echo: || Goto :Error
-
-echo:
-echo [Create NuGet Package] VirtualClient.win-x64.%PACKAGE_VERSION%
-echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-x64.nuspec && echo: || Goto :Error
-
-echo:
 echo [Create NuGet Package] VirtualClient.Framework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
+REM We package the AnyCPU .dlls with Debug configuration to support extensions debugging for
+REM external users and partner teams.
+call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Debug -v Detailed ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.Framework.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.TestFramework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% ^
+call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Debug -v Detailed ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.TestFramework.nuspec && echo: || Goto :Error
+
+echo:
+echo [Create NuGet Package] VirtualClient.linux-arm64.%PACKAGE_VERSION%
+echo ----------------------------------------------------------
+call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
+-p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-arm64.nuspec && echo: || Goto :Error
+
+echo:
+echo [Create NuGet Package] VirtualClient.linux-x64.%PACKAGE_VERSION%
+echo ----------------------------------------------------------
+call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
+-p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-x64.nuspec && echo: || Goto :Error
+
+echo:
+echo [Create NuGet Package] VirtualClient.win-arm64.%PACKAGE_VERSION%
+echo ----------------------------------------------------------
+call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
+-p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-arm64.nuspec && echo: || Goto :Error
+
+echo:
+echo [Create NuGet Package] VirtualClient.win-x64.%PACKAGE_VERSION%
+echo ----------------------------------------------------------
+call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
+-p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-x64.nuspec && echo: || Goto :Error
 
 Goto :End
 

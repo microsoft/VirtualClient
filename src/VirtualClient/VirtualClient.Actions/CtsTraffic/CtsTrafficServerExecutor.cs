@@ -134,7 +134,7 @@ namespace VirtualClient.Actions
 
                     process = processManager.CreateProcess(command, commandArguments, workingDirectory);
 
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                     this.Logger.LogTraceMessage($"Executing: {command} {commandArguments}".Trim(), relatedContext);
 
                     if (!process.Start())

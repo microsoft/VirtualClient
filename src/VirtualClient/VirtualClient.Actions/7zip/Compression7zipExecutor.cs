@@ -170,7 +170,7 @@ namespace VirtualClient.Actions
                     DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken)
                             .ConfigureAwait(false);
 

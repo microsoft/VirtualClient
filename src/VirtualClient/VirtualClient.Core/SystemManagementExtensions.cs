@@ -4,23 +4,14 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Generic;
     using System.IO.Abstractions;
-    using System.Linq;
-    using System.Net.NetworkInformation;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Win32;
-    using Newtonsoft.Json.Linq;
-    using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Logging;
 
     /// <summary>
     /// Extension methods for <see cref="ISystemManagement"/> instances.
@@ -246,6 +237,29 @@ namespace VirtualClient
                     }
 
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Sets the logger for the <see cref="ISystemManagement"/> instance and underlying dependencies.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="logger">The logger to set.</param>
+        public static void SetLogger(this ISystemManagement systemManagement, ILogger logger)
+        {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+            logger.ThrowIfNull(nameof(logger));
+
+            DiskManager diskManager = systemManagement.DiskManager as DiskManager;
+            if (diskManager != null)
+            {
+                diskManager.Logger = logger;
+            }
+
+            PackageManager packageManager = systemManagement.PackageManager as PackageManager;
+            if (packageManager != null)
+            {
+                packageManager.Logger = logger;
             }
         }
     }

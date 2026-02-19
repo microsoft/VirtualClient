@@ -9,158 +9,12 @@
     <PropertyGroup>
         <ModuleName>$([MSBuild]::MakeRelative($([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props)), $(MSBuildThisFileDirectory)).TrimEnd('\'))</ModuleName>
         <ModulePath>$(MSBuildThisFileDirectory)</ModulePath>
+		<PackagePreReleaseSuffix></PackagePreReleaseSuffix>
         <Platforms>AnyCPU;x64;ARM64</Platforms>
-        <NoWarn>$(NoWarn),CS8632</NoWarn>
-    </PropertyGroup>
+        <NoWarn>$(NoWarn);CS8632;NU5182</NoWarn>
 
-    <PropertyGroup>
-        <!--
-        The following properties define versions of NuGet dependency packages that are used across the solution projects. By 
-        putting these here it helps to consolidate the work required to upversion dependencies across the common base. We intend to use
-        the same versions of a specific package across the board as a general rule. 
-        -->
-
-        <!-- Asp.Versioning.Mvc -->
-        <Asp_Versioning_Mvc_PackageVersion>8.1.0</Asp_Versioning_Mvc_PackageVersion>
-
-        <!-- AutoFixture -->
-        <AutoFixture_PackageVersion>4.18.1</AutoFixture_PackageVersion>
-
-        <!-- Azure.Identity -->
-        <Azure_Identity_PackageVersion>1.13.2</Azure_Identity_PackageVersion>
-
-        <!-- Azure.Messaging.EventHubs -->
-        <Azure_Messaging_EventHubs_PackageVersion>5.11.5</Azure_Messaging_EventHubs_PackageVersion>
-      
-        <!-- Azure.Security.KeyVault.Certificates -->
-        <Azure_Security_KeyVault_Certificates_PackageVersion>4.7.0</Azure_Security_KeyVault_Certificates_PackageVersion>
-      
-        <!-- Azure.Security.KeyVault.Keys -->
-        <Azure_Security_KeyVault_Keys_PackageVersion>4.7.0</Azure_Security_KeyVault_Keys_PackageVersion>
-      
-        <!-- Azure.Security.KeyVault.Secrets -->
-        <Azure_Security_KeyVault_Secrets_PackageVersion>4.7.0</Azure_Security_KeyVault_Secrets_PackageVersion>
-
-        <!-- Azure.Storage.Blobs -->
-        <Azure_Storage_Blobs_PackageVersion>12.18.0</Azure_Storage_Blobs_PackageVersion>
-
-        <!-- MathNet.Numerics.Signed -->
-        <MathNet_Numerics_Signed_PackageVersion>5.0.0</MathNet_Numerics_Signed_PackageVersion>
-
-        <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson -->
-        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>9.0.3</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
-
-        <!-- Microsoft.CodeAnalysis.Common -->
-        <Microsoft_CodeAnalysis_Common_PackageVersion>4.7.0</Microsoft_CodeAnalysis_Common_PackageVersion>
-        
-        <!-- Microsoft.CodeAnalysis.CSharp.Scripting -->
-        <Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>4.7.0</Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>
-        
-        <!-- Microsoft.Diagnostics.Tracing.TraceEvent -->
-        <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>3.1.5</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
-
-        <!-- Microsoft.Extensions.Configuration -->
-        <Microsoft_Extensions_Configuration_PackageVersion>9.0.3</Microsoft_Extensions_Configuration_PackageVersion>
-
-        <!-- Microsoft.Extensions.Configuration.Json -->
-        <Microsoft_Extensions_Configuration_Json_PackageVersion>9.0.3</Microsoft_Extensions_Configuration_Json_PackageVersion>
-
-        <!-- Microsoft.Extensions.DependencyInjection -->
-        <Microsoft_Extensions_DependencyInjection_PackageVersion>9.0.3</Microsoft_Extensions_DependencyInjection_PackageVersion>
-
-        <!-- Microsoft.Extensions.Logging -->
-        <Microsoft_Extensions_Logging_PackageVersion>9.0.3</Microsoft_Extensions_Logging_PackageVersion>
-
-        <!-- Microsoft.Extensions.Logging.Console -->
-        <Microsoft_Extensions_Logging_Console_PackageVersion>9.0.3</Microsoft_Extensions_Logging_Console_PackageVersion>
-
-        <!-- Microsoft.NET.Test.Sdk -->
-        <Microsoft_NET_Test_Sdk_PackageVersion>17.11.1</Microsoft_NET_Test_Sdk_PackageVersion>
-
-        <!-- Microsoft.Extensions.Http.Polly -->
-        <Microsoft_Extensions_Http_Polly_PackageVersion>9.0.3</Microsoft_Extensions_Http_Polly_PackageVersion>
-
-        <!-- Microsoft.Windows.Compatibility -->
-        <Microsoft_Windows_Compatibility_PackageVersion>9.0.3</Microsoft_Windows_Compatibility_PackageVersion>
-
-		<!-- MimeMapping -->
-		<MimeMapping_PackageVersion>3.1.0</MimeMapping_PackageVersion>
-
-        <!-- Moq -->
-        <Moq_PackageVersion>4.18.2</Moq_PackageVersion>
-
-        <!-- Newtonsoft.Json -->
-        <Newtonsoft_Json_PackageVersion>13.0.1</Newtonsoft_Json_PackageVersion>
-
-        <!-- NUnit -->
-        <NUnit_PackageVersion>3.13.2</NUnit_PackageVersion>
-
-        <!-- NUnit3TestAdapter -->
-        <NUnit3TestAdapter_PackageVersion>4.6.0</NUnit3TestAdapter_PackageVersion>
-
-        <!-- Polly -->
-        <Polly_PackageVersion>8.5.0</Polly_PackageVersion>
-
-        <!-- Polly.Extensions.Http -->
-        <Polly_Extensions_Http_PackageVersion>3.0.0</Polly_Extensions_Http_PackageVersion>
-
-        <!-- Serilog.Extensions.Logging -->
-        <Serilog_Extensions_Logging_PackageVersion>7.0.0</Serilog_Extensions_Logging_PackageVersion>
-
-        <!-- Serilog.Sinks.File -->
-        <Serilog_Sinks_File_PackageVersion>5.0.0</Serilog_Sinks_File_PackageVersion>
-
-        <!-- Serilog.Sinks.RollingFile -->
-        <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
-
-        <!-- SSH.Net -->
-        <SSH_Net_PackageVersion>2024.2.0</SSH_Net_PackageVersion>
-
-        <!-- System.CommandLine -->
-        <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>
-
-        <!-- System.Diagnostics.Debug -->
-        <System_Diagnostics_Debug_PackageVersion>4.3.0</System_Diagnostics_Debug_PackageVersion>
-
-        <!-- System.Diagnostics.EventLog -->
-        <System_Diagnostics_EventLog_PackageVersion>9.0.3</System_Diagnostics_EventLog_PackageVersion>
-
-        <!-- System.Diagnostics.PerformanceCounter -->
-        <System_Diagnostics_PerformanceCounter_PackageVersion>9.0.3</System_Diagnostics_PerformanceCounter_PackageVersion>
-
-        <!-- System.IO.Abstractions -->
-        <System_IO_Abstractions_PackageVersion>22.0.14</System_IO_Abstractions_PackageVersion>
-
-        <!-- System.IO.FileSystem.AccessControl -->
-        <System_IO_FileSystem_AccessControl_PackageVersion>5.0.0</System_IO_FileSystem_AccessControl_PackageVersion>
-
-        <!-- System.IO.FileSystem.Primitives -->
-        <System_IO_FileSystem_Primitives_PackageVersion>4.3.0</System_IO_FileSystem_Primitives_PackageVersion>
-
-        <!-- System.Net.Http -->
-        <System_Net_Http_PackageVersion>4.3.4</System_Net_Http_PackageVersion>
-
-        <!-- System.Net.NameResolution -->
-        <System_Net_NameResolution_PackageVersion>4.3.0</System_Net_NameResolution_PackageVersion>
-
-        <!-- System.Reflection.Metadata -->
-        <System_Reflection_Metadata_PackageVersion>9.0.3</System_Reflection_Metadata_PackageVersion>
-
-        <!-- System.Private.Uri -->
-        <System_Private_Uri_PackageVersion>4.3.2</System_Private_Uri_PackageVersion>
-
-        <!-- System.Text.RegularExpressions -->
-        <System_Text_RegularExpressions_PackageVersion>4.3.1</System_Text_RegularExpressions_PackageVersion>
-
-        <!-- System.Security.Principal.Windows -->
-        <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
-
-        <!-- System.ServiceProcess.ServiceController -->
-        <System_ServiceProcess_ServiceController_PackageVersion>9.0.3</System_ServiceProcess_ServiceController_PackageVersion>
-
-        <!-- YamlDotNet -->
-        <YamlDotNet_PackageVersion>15.1.1</YamlDotNet_PackageVersion>
-
+		<!-- Use the Directory.Packages.props file in the root of the repo to define NuGet package versions. -->
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     </PropertyGroup>
 
     <!--
@@ -175,21 +29,38 @@
     should be set to 1.0.0.0. This helps to simplify the debugging experience for developers
     who are creating extensions to the Virtual Client by avoiding errors/warnings surfaced by
     the Visual Studio debugger around mismatched versions of common .dlls.
-    
+	
+	Default build/assembly versions are defined in the VERSION file in the root of
+	the repo. This version can be overridden on the command line by setting the
+	'VCBuildVersion' environment variable before building.
+	
+	e.g.
+	set VCBuildVersion=2.1.0
+	build.cmd
     *****************************************************************************
     -->
-    <PropertyGroup>
-        <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
-        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">1.0.0.0</AssemblyVersion>
-        <AssemblyInformationalVersion>$(AssemblyVersion)</AssemblyInformationalVersion>
-        <FileVersion>$(AssemblyVersion)</FileVersion>
-        <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
-        <Product>Virtual Client Framework</Product>
-        <Product Condition="'$(OutputType)' == 'Exe'">Virtual Client Platform</Product>
-        <ProductName>Virtual Client</ProductName>
-        <ProductVersion>$(AssemblyVersion)</ProductVersion>
-    </PropertyGroup>
+	<Target Name="SetDefaultVersion" BeforeTargets="BeforeBuild" Condition="'$(AssemblyVersion)' == ''">
+		<ReadLinesFromFile File="$(RepoPath)\VERSION">
+			<Output TaskParameter="Lines" PropertyName="VersionFileValue" />
+		</ReadLinesFromFile>
+
+		<PropertyGroup>
+			<AssemblyVersion>$(VersionFileValue)</AssemblyVersion>
+		</PropertyGroup>
+	</Target>
+
+	<Target Name="SetFileVersionInformation" AfterTargets="SetDefaultVersion">
+
+		<PropertyGroup>
+			<AssemblyInformationalVersion>$(AssemblyVersion)</AssemblyInformationalVersion>
+			<FileVersion>$(AssemblyVersion)</FileVersion>
+			<InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+			<Product>Virtual Client Framework</Product>
+			<Product Condition="'$(OutputType)' == 'Exe'">Virtual Client Platform</Product>
+			<ProductName>Virtual Client</ProductName>
+			<ProductVersion>$(AssemblyVersion)</ProductVersion>
+		</PropertyGroup>
+	</Target>
 
     <!--
     *****************************************************************************

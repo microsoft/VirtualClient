@@ -10,6 +10,7 @@ namespace VirtualClient.Dependencies
     using System.Threading.Tasks;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -126,6 +127,55 @@ namespace VirtualClient.Dependencies
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
                     expectedCommands.Remove(process.FullCommand());
+                };
+
+                await command.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        [TestCase(
+            "dos2unix install-packages.sh&&dos2unix install-python.sh&&dos2unix install-pwsh.sh&&dos2unix install-docker.sh",
+            "dos2unix install-packages.sh;dos2unix install-python.sh;dos2unix install-pwsh.sh;dos2unix install-docker.sh")]
+        public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems_Bug_2(string fullCommand, string expectedCommandExecuted)
+        {
+            // Bug Scenario:
+            // Relative paths used to reference scripts in a specific working directory using a globally installed
+            // Linux toolset (e.g. dos2unix) should be left as-is. However, when a working directory is defined, that directory should
+            // be added to the PATH environment variable.
+            //
+            // e.g.
+            // (given working directory /microsoft-labs/VirtualClient/content/linux-arm64/packages/system_setup.1.0.0/linux-arm64)
+            //
+            // Should Be:
+            // the working 
+
+            this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
+
+            this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath/Platform:system_setup}";
+
+            this.mockFixture.PackageManager.OnGetPackage("system_setup")
+                .ReturnsAsync(new DependencyPath("system_setup", "/microsoft-labs/VirtualClient/content/linux-arm64/packages/system_setup.1.0.0"));
+
+            string expectedWorkingDirectory = "/microsoft-labs/VirtualClient/content/linux-arm64/packages/system_setup.1.0.0/linux-arm64";
+
+            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            {
+                command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
+                List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
+
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    expectedCommands.Remove(process.FullCommand());
+
+                    // Expect:
+                    // The working directory of the process should be set.
+                    Assert.AreEqual(expectedWorkingDirectory, process.StartInfo.WorkingDirectory);
+
+                    // Expect:
+                    // The working directory should be added to the PATH environment variable.
+                    Assert.IsTrue(this.mockFixture.PlatformSpecifics.EnvironmentVariables[EnvironmentVariable.PATH].Contains(expectedWorkingDirectory));
                 };
 
                 await command.ExecuteAsync(CancellationToken.None);
@@ -517,6 +567,92 @@ namespace VirtualClient.Dependencies
 
                 Assert.AreEqual($"{platformSpecificPath}/configure&&{platformSpecificPath}/make", command.Parameters[nameof(ExecuteCommand.Command)]);
                 Assert.AreEqual(platformSpecificPath, command.Parameters[nameof(ExecuteCommand.WorkingDirectory)]);
+            }
+        }
+
+        [Test]
+        public async Task ExecuteCommandHandlesDotNetAnomaliesWhenWorkingDirectoriesAreDefined_1()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            string command = "anyscript.sh";
+            string workingDirectory = "/home/user/scripts";
+            string expectedCommand = command;
+            string expectedWorkingDirectory = workingDirectory;
+
+            using (var component = new TestExecuteCommand(this.mockFixture))
+            {
+                component.Parameters[nameof(TestExecuteCommand.Command)] = command;
+                component.Parameters[nameof(TestExecuteCommand.WorkingDirectory)] = workingDirectory;
+
+                bool confirmed = false;
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    Assert.AreEqual(expectedCommand, process.FullCommand());
+                    Assert.AreEqual(expectedWorkingDirectory, process.StartInfo.WorkingDirectory);
+
+                    // The working directory is added to the process PATH environment variable
+                    // to avoid issues with .NET implementations.
+                    //
+                    // Context:
+                    // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
+                    // referencing a binary and setting the working directory.
+                    //
+                    // System.ComponentModel.Win32Exception:
+                    // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
+                    // The system cannot find the file specified.
+                    //
+                    // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
+                    // for this is to add the working directory to the PATH environment variable.
+                    Assert.IsTrue(component.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.PATH).Contains(workingDirectory));
+                    confirmed = true;
+                };
+
+                await component.ExecuteAsync(CancellationToken.None);
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task ExecuteCommandMonitorDotNetAnomaliesWhenWorkingDirectoriesAreDefined_2()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            string command = "\"anyscript.sh\"";
+            string workingDirectory = "/home/user/scripts";
+            string expectedCommand = $"\"anyscript.sh\"";
+            string expectedWorkingDirectory = workingDirectory;
+
+            using (var component = new TestExecuteCommand(this.mockFixture))
+            {
+                component.Parameters[nameof(TestExecuteCommand.Command)] = command;
+                component.Parameters[nameof(TestExecuteCommand.WorkingDirectory)] = workingDirectory;
+
+                bool confirmed = false;
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    Assert.AreEqual(expectedCommand, process.FullCommand());
+                    Assert.AreEqual(expectedWorkingDirectory, process.StartInfo.WorkingDirectory);
+
+                    // The working directory is added to the process PATH environment variable
+                    // to avoid issues with .NET implementations.
+                    //
+                    // Context:
+                    // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
+                    // referencing a binary and setting the working directory.
+                    //
+                    // System.ComponentModel.Win32Exception:
+                    // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
+                    // The system cannot find the file specified.
+                    //
+                    // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
+                    // for this is to add the working directory to the PATH environment variable.
+                    Assert.IsTrue(component.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.PATH).Contains(workingDirectory));
+                    confirmed = true;
+                };
+
+                await component.ExecuteAsync(CancellationToken.None);
+                Assert.IsTrue(confirmed);
             }
         }
 

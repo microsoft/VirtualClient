@@ -41,8 +41,8 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters["PackageName"] = "networking";
             this.mockFixture.Parameters["Connections"] = "256";
-            this.mockFixture.Parameters["TestDuration"] = "300";
-            this.mockFixture.Parameters["WarmupTime"] = "300";
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:05:00";
             this.mockFixture.Parameters["Protocol"] = "TCP";
             this.mockFixture.Parameters["ThreadCount"] = "1";
             this.mockFixture.Parameters["BufferSizeClient"] = "4k";
@@ -74,7 +74,10 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task NTttcpExecutorClientExecutesAsExpected()
+        [TestCase(null)]
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task NTttcpExecutorClientExecutesAsExpected(bool? noSyncEnabled)
         {
             this.SetupTest();
 
@@ -118,12 +121,69 @@ namespace VirtualClient.Actions
                 return process;
             };
 
+            if (noSyncEnabled.HasValue)
+            {
+                this.mockFixture.Parameters["NoSyncEnabled"] = noSyncEnabled.Value;
+            }
+
             TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
             //Process 1: Ntttcp, Process 2: Sysctl
             Assert.AreEqual(2, processExecuted);
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task NTttcpExecutorClientExecutesAsExpectedInWindows(bool? noSyncEnabled)
+        {
+            this.SetupTest();
+
+            NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await networkingWorkloadExecutor.OnInitialize.Invoke(EventContext.None, CancellationToken.None);
+
+            int processExecuted = 0;
+            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            {
+                InMemoryProcess process = new InMemoryProcess()
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo()
+                    {
+                        FileName = file,
+                        Arguments = arguments,
+                    },
+                    OnHasExited = () => true,
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    StandardOutput = new VirtualClient.Common.ConcurrentBuffer()
+                };
+
+                processExecuted++;
+                this.networkingWorkloadState.ToolState = NetworkingWorkloadToolState.Stopped;
+                var expectedStateItem = new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), this.networkingWorkloadState);
+
+                this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                     .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
+
+                return process;
+            };
+
+            if (noSyncEnabled.HasValue)
+            {
+                this.mockFixture.Parameters["NoSyncEnabled"] = noSyncEnabled.Value;
+            }
+
+            this.mockFixture.SystemManagement.SetupGet(sm => sm.Platform).Returns(PlatformID.Win32NT);
+
+            TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+            //Process 1: Ntttcp, Process 2: Sysctl
+            Assert.AreEqual(1, processExecuted);
         }
 
         [Test]

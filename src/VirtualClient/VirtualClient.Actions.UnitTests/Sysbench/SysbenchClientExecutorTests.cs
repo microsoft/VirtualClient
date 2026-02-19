@@ -100,8 +100,6 @@ namespace VirtualClient.Actions
                     commandExecuted = true;
                 }
 
-                Assert.IsTrue(commandExecuted);
-
                 InMemoryProcess process = new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -124,6 +122,8 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.IsTrue(commandExecuted);
         }
 
         [Test]
@@ -146,8 +146,6 @@ namespace VirtualClient.Actions
                     commandExecuted = true;
                 }
 
-                Assert.IsTrue(commandExecuted);
-
                 InMemoryProcess process = new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -170,6 +168,8 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.IsTrue(commandExecuted);
         }
 
         [Test]
@@ -189,8 +189,6 @@ namespace VirtualClient.Actions
                     commandExecuted = true;
                 }
 
-                Assert.IsTrue(commandExecuted);
-
                 InMemoryProcess process = new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -213,6 +211,8 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.IsTrue(commandExecuted);
         }
 
         [Test]
@@ -231,8 +231,6 @@ namespace VirtualClient.Actions
                 {
                     commandExecuted = true;
                 }
-
-                Assert.IsTrue(commandExecuted);
 
                 InMemoryProcess process = new InMemoryProcess
                 {
@@ -256,6 +254,8 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
+
+            Assert.IsTrue(commandExecuted);
         }
 
         [Test]
@@ -274,8 +274,6 @@ namespace VirtualClient.Actions
                 {
                     commandExecuted = true;
                 }
-
-                Assert.IsTrue(commandExecuted);
 
                 InMemoryProcess process = new InMemoryProcess
                 {
@@ -299,6 +297,8 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.IsTrue(commandExecuted);
         }
 
         [Test]

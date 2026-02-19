@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
@@ -16,7 +15,6 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
-    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -43,21 +41,22 @@ namespace VirtualClient
         /// The path to the directory where the test binaries (.dlls) exist. This can be used to mimic the "runtime/working" directory
         /// of the Virtual Client for the purpose of testing dependencies expected to exist in that directory.
         /// </summary>
-        public static readonly string TestAssemblyDirectory = Path.GetDirectoryName(MockFixture.TestAssembly.Location);
+        public static readonly string TestAssemblyDirectory = System.IO.Path.GetDirectoryName(MockFixture.TestAssembly.Location);
 
         /// <summary>
         /// The path to the directory where test example files can be found. Note that this requires the
         /// test project to copy the files to a directory called 'Examples'.
         /// </summary>
-        public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
+        public static readonly string ExamplesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "Examples");
 
         /// <summary>
         /// The path to the directory where test test resource/example files can be found. Note that this requires the
         /// test project to copy the files to a directory called 'TestResources'.
         /// </summary>
-        public static readonly string TestResourcesDirectory = Path.Combine(TestAssemblyDirectory, "TestResources");
+        public static readonly string TestResourcesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "TestResources");
 
         private static readonly char[] PathDividers = new char[] { '\\', '/' };
+        private static readonly Regex UnixTopLevelFolderExpression = new Regex(@"^(\/[^\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex WindowsVolumeExpression = new Regex(@"^([a-z]\:[\\/])(.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private string experimentId;
 
@@ -274,11 +273,11 @@ namespace VirtualClient
         {
             if (pathSegments?.Any() != true)
             {
-                return MockFixture.CurrentPlatform.Combine(Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location));
+                return MockFixture.CurrentPlatform.Combine(System.IO.Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location));
             }
             else
             {
-                return MockFixture.CurrentPlatform.Combine(new string[] { Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location) }.Union(pathSegments).ToArray());
+                return MockFixture.CurrentPlatform.Combine(new string[] { System.IO.Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location) }.Union(pathSegments).ToArray());
             }
         }
 
@@ -293,6 +292,19 @@ namespace VirtualClient
         /// <returns>The directory name for the path.</returns>
         public static string GetDirectoryName(string path)
         {
+            // Matching .NET Behaviors:
+            // Path.GetDirectoryName(null) = null
+            // Path.GetDirectoryName(string.Empty) = null
+            // Path.GetDirectoryName("C:\") = null
+            // Path.GetDirectoryName("C:\Any") = C:\
+            // Path.GetDirectoryName("C:\Any\Folder") = C:\Any
+            // Path.GetDirectoryName("C:\Any\Folder\ToFile.log") = C:\Any\Folder
+            //
+            // Path.GetDirectoryName("/") = null
+            // Path.GetDirectoryName("/home") = /
+            // Path.GetDirectoryName("/home/any") = /home
+            // Path.GetDirectoryName("/home/any/ToFile.log") = /home/any
+
             string directoryName = null;
             if (!string.IsNullOrWhiteSpace(path))
             {
@@ -305,9 +317,18 @@ namespace VirtualClient
                     // Paths with more than 1 segment.
                     //
                     // e.g.
+                    // /home         -> /
                     // /home/path    -> /home
                     // C:\Users\Path -> C:\Users
                     directoryName = effectivePath.Substring(0, lastIndexOfPathDivider);
+                }
+                else if (MockFixture.UnixTopLevelFolderExpression.IsMatch(path))
+                {
+                    // Top-level folder on Linux.
+                    //
+                    // e.g.
+                    // /home -> /
+                    directoryName = "/";
                 }
                 else
                 {
@@ -374,6 +395,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid state file path.
+        /// </summary>
+        public string GetStatePath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetStatePath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid default temp path.
         /// </summary>
         public string GetTempPath(params string[] pathSegments)
@@ -433,7 +462,7 @@ namespace VirtualClient
                 {
                     Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
 
-                    mockFile.Setup(file => file.Name).Returns(Path.GetFileName(path));
+                    mockFile.Setup(file => file.Name).Returns(System.IO.Path.GetFileName(path));
                     mockFile.Setup(file => file.CreationTime).Returns(DateTime.Now);
                     mockFile.Setup(file => file.CreationTimeUtc).Returns(DateTime.UtcNow);
                     mockFile.Setup(file => file.Length).Returns(12345);
@@ -441,6 +470,9 @@ namespace VirtualClient
 
                     return mockFile.Object;
                 });
+
+            this.FileSystem.Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns<string>(path => MockFixture.GetDirectoryName(path));
 
             this.DiskManager = new Mock<IDiskManager>(mockBehavior);
             this.Logger = new InMemoryLogger();

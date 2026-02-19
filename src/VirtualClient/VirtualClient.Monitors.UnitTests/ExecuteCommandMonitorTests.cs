@@ -12,6 +12,7 @@ namespace VirtualClient.Monitors
     using NUnit.Framework;
     using Polly;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using VirtualClient.Dependencies;
 
     [TestFixture]
@@ -156,13 +157,13 @@ namespace VirtualClient.Monitors
         }
 
         [Test]
-        public async Task ExecuteCommandMonitorHandlesAnomaliesWhenWorkingDirectoriesAreDefined_1()
+        public async Task ExecuteCommandMonitorHandlesDotNetAnomaliesWhenWorkingDirectoriesAreDefined_1()
         {
             this.SetupDefaults(PlatformID.Unix);
 
             string command = "anyscript.sh";
             string workingDirectory = "/home/user/scripts";
-            string expectedCommand = this.Combine(workingDirectory, command);
+            string expectedCommand = command;
             string expectedWorkingDirectory = workingDirectory;
 
             using (TestExecuteCommandMonitor monitor = new TestExecuteCommandMonitor(this))
@@ -175,6 +176,21 @@ namespace VirtualClient.Monitors
                 {
                     Assert.AreEqual(expectedCommand, process.FullCommand());
                     Assert.AreEqual(expectedWorkingDirectory, process.StartInfo.WorkingDirectory);
+
+                    // The working directory is added to the process PATH environment variable
+                    // to avoid issues with .NET implementations.
+                    //
+                    // Context:
+                    // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
+                    // referencing a binary and setting the working directory.
+                    //
+                    // System.ComponentModel.Win32Exception:
+                    // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
+                    // The system cannot find the file specified.
+                    //
+                    // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
+                    // for this is to add the working directory to the PATH environment variable.
+                    Assert.IsTrue(monitor.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.PATH).Contains(workingDirectory));
                     confirmed = true;
                 };
 
@@ -184,13 +200,13 @@ namespace VirtualClient.Monitors
         }
 
         [Test]
-        public async Task ExecuteCommandMonitorHandlesAnomaliesWhenWorkingDirectoriesAreDefined_2()
+        public async Task ExecuteCommandMonitorHandlesDotNetAnomaliesWhenWorkingDirectoriesAreDefined_2()
         {
             this.SetupDefaults(PlatformID.Unix);
 
             string command = "\"anyscript.sh\"";
             string workingDirectory = "/home/user/scripts";
-            string expectedCommand = $"\"{this.Combine(workingDirectory, "anyscript.sh")}\"";
+            string expectedCommand = $"\"anyscript.sh\"";
             string expectedWorkingDirectory = workingDirectory;
 
             using (TestExecuteCommandMonitor monitor = new TestExecuteCommandMonitor(this))
@@ -203,6 +219,21 @@ namespace VirtualClient.Monitors
                 {
                     Assert.AreEqual(expectedCommand, process.FullCommand());
                     Assert.AreEqual(expectedWorkingDirectory, process.StartInfo.WorkingDirectory);
+
+                    // The working directory is added to the process PATH environment variable
+                    // to avoid issues with .NET implementations.
+                    //
+                    // Context:
+                    // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
+                    // referencing a binary and setting the working directory.
+                    //
+                    // System.ComponentModel.Win32Exception:
+                    // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
+                    // The system cannot find the file specified.
+                    //
+                    // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
+                    // for this is to add the working directory to the PATH environment variable.
+                    Assert.IsTrue(monitor.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.PATH).Contains(workingDirectory));
                     confirmed = true;
                 };
 
@@ -223,12 +254,8 @@ namespace VirtualClient.Monitors
                     "bash -c \"anyscript.sh --arg1=123 --arg2=456 --flag\""
                 },
                 {
-                    "sudo bash -c \"anyscript.sh --arg1=123 --arg2=456 --flag\"",
-                    "sudo bash -c \"anyscript.sh --arg1=123 --arg2=456 --flag\""
-                },
-                {
-                    $@"sudo bash -c "".\packages\scripts.1.0.0\anyscript.sh --arg1=123 --arg2=456 --flag""",
-                    $@"sudo bash -c ""{Path.GetFullPath($@".\packages\scripts.1.0.0\anyscript.sh")} --arg1=123 --arg2=456 --flag"""
+                    $@"sudo bash -c "".\anyscript.sh --arg1=123 --arg2=456 --flag""",
+                    $@"sudo bash -c "".\anyscript.sh --arg1=123 --arg2=456 --flag"""
                 }
             };
 

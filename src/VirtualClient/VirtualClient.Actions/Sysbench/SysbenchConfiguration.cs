@@ -75,7 +75,11 @@ namespace VirtualClient.Actions
 
         private async Task PrepareOLTPMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string sysbenchLoggingArguments = this.BuildSysbenchLoggingOLTPBasicArguments();
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+
+            string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount}";
             this.sysbenchPrepareArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
             string serverIp = "localhost";

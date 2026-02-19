@@ -7,9 +7,11 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -21,6 +23,8 @@ namespace VirtualClient
         /// Application level lock object.
         /// </summary>
         public static readonly object LockObject = new object();
+
+        private static readonly IList<IFlushableChannel> FlushableDataChannels = new List<IFlushableChannel>();
 
         /// <summary>
         /// Event is fired anytime special instructions are received by a component within a Virtual
@@ -60,17 +64,23 @@ namespace VirtualClient
         /// <summary>
         /// The current experiment ID for the application.
         /// </summary>
-        public static string ExperimentId { get; internal set; }
+        public static IReadOnlyDictionary<string, IConvertible> CommandLineMetadata { get; internal set; }
 
         /// <summary>
-        /// The current platform-specifics for the application.
+        /// Parameters provided to VC on the command line.
         /// </summary>
-        public static PlatformSpecifics PlatformSpecifics { get; internal set; }
+        public static IReadOnlyDictionary<string, IConvertible> CommandLineParameters { get; internal set; }
+
+        /// <summary>
+        /// The set of flushable logging channels. The application must ensure all logging is flushed before
+        /// exiting to avoid data/telemetry loss.
+        /// </summary>
+        public static List<IFlushableChannel> DataChannels { get; } = new List<IFlushableChannel>();
 
         /// <summary>
         /// The name of the Virtual Client application/module.
         /// </summary>
-        public static string ExecutableName { get; internal set; } = Process.GetCurrentProcess().MainModule.FileName;
+        public static string ExecutableName { get; } = Process.GetCurrentProcess().MainModule.FileName;
 
         /// <summary>
         /// A set of one or more tasks (exit) registered to execute before the application
@@ -91,52 +101,9 @@ namespace VirtualClient
         public static bool IsRebootRequested { get; set; }
 
         /// <summary>
-        /// Cleans up any tracked resources.
+        /// The current platform-specifics for the application.
         /// </summary>
-        public static void OnCleanup()
-        {
-            if (VirtualClientRuntime.CleanupTasks.Any())
-            {
-                lock (VirtualClientRuntime.LockObject)
-                {
-                    foreach (var entry in VirtualClientRuntime.CleanupTasks)
-                    {
-                        try
-                        {
-                            entry.Invoke();
-                        }
-                        catch
-                        {
-                            // Best effort here.
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Cleans up any tracked resources.
-        /// </summary>
-        public static void OnExiting()
-        {
-            if (VirtualClientRuntime.ExitTasks.Any())
-            {
-                lock (VirtualClientRuntime.LockObject)
-                {
-                    foreach (var entry in VirtualClientRuntime.ExitTasks)
-                    {
-                        try
-                        {
-                            entry.Invoke();
-                        }
-                        catch
-                        {
-                            // Best effort here.
-                        }
-                    }
-                }
-            }
-        }
+        public static PlatformSpecifics PlatformSpecifics { get; } = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
         /// <summary>
         /// Invokes the <see cref="ReceiveInstructions"/> event to notify subscribers
@@ -211,6 +178,80 @@ namespace VirtualClient
             lock (VirtualClientRuntime.LockObject)
             {
                 VirtualClientRuntime.IsApiOnline = online;
+            }
+        }
+
+        /// <summary>
+        /// Cleans up any tracked resources.
+        /// </summary>
+        internal static void ExecuteCleanupActions()
+        {
+            if (VirtualClientRuntime.CleanupTasks.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (var entry in VirtualClientRuntime.CleanupTasks)
+                    {
+                        try
+                        {
+                            entry.Invoke();
+                        }
+                        catch
+                        {
+                            // Best effort here.
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes any actions before application immediate exit.
+        /// </summary>
+        internal static void ExecuteExitActions()
+        {
+            if (VirtualClientRuntime.ExitTasks.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (var entry in VirtualClientRuntime.ExitTasks)
+                    {
+                        try
+                        {
+                            entry.Invoke();
+                        }
+                        catch
+                        {
+                            // Best effort here.
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes flush actions before application exit.
+        /// </summary>
+        /// <param name="flushTimeout">A timeout to apply to each of the data channel flush operations.</param>
+        internal static void ExecuteFlushActions(TimeSpan flushTimeout)
+        {
+            if (VirtualClientRuntime.FlushableDataChannels.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (IFlushableChannel dataChannel in VirtualClientRuntime.FlushableDataChannels)
+                    {
+                        try
+                        {
+                            dataChannel.Flush(flushTimeout);
+                        }
+                        catch (Exception exc)
+                        {
+                            // Best effort here.
+                            Console.WriteLine($"Data channel flush error: {exc.Message}");
+                        }
+                    }
+                }
             }
         }
     }

@@ -62,8 +62,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
-                                await process.StartAndWaitAsync(cancellationToken, timeout);
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
+                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
@@ -75,7 +75,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     else
                                     {
                                         string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray());
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                         this.CaptureMetrics(
                                             results,
@@ -91,12 +91,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                                 throw;
                             }
                         }
@@ -120,7 +120,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             return $"{this.TestMode} " +
                 $"-i {serverIPAddress} " +
                 $"-p {this.Port} {protocolParam} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"{(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")} " +
                 $"--full-rtt --msg-size {this.MessageSize} " +
                 $"--client_ip {clientIPAddress} " +

@@ -110,7 +110,7 @@ namespace VirtualClient
         /// <summary>
         /// The logger used to capture telemetry.
         /// </summary>
-        public ILogger Logger { get; }
+        public ILogger Logger { get; set; }
 
         /// <summary>
         /// The directory where packages are stored.

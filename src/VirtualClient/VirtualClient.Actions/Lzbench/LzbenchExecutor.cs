@@ -174,10 +174,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", logToFile: true, results: results);
 
-                    LzbenchMetricsParser parser = new LzbenchMetricsParser(results);
+                    LzbenchMetricsParser parser = new LzbenchMetricsParser(results.Value);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
@@ -210,7 +210,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                         await process.StartAndWaitAsync(cancellationToken)
                             .ConfigureAwait(false);

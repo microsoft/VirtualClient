@@ -35,7 +35,8 @@ namespace VirtualClient.Contracts
             IEnumerable<ExecutionProfileElement> dependencies,
             IEnumerable<ExecutionProfileElement> monitors,
             IDictionary<string, IConvertible> metadata,
-            IDictionary<string, IConvertible> parameters)
+            IDictionary<string, IConvertible> parameters,
+            List<IDictionary<string, IConvertible>> parametersOn = null)
         {
             description.ThrowIfNullOrWhiteSpace(nameof(description));
 
@@ -61,6 +62,10 @@ namespace VirtualClient.Contracts
             this.Parameters = parameters != null
                 ? new Dictionary<string, IConvertible>(parameters, StringComparer.OrdinalIgnoreCase)
                 : new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            this.ParametersOn = parametersOn != null
+                ? parametersOn
+                : new List<IDictionary<string, IConvertible>>();
 
             if (this.Actions?.Any() == true)
             {
@@ -90,7 +95,8 @@ namespace VirtualClient.Contracts
                   other?.Dependencies, 
                   other?.Monitors, 
                   other?.Metadata, 
-                  other?.Parameters)
+                  other?.Parameters,
+                  other?.ParametersOn)
         { 
         }
 
@@ -106,7 +112,8 @@ namespace VirtualClient.Contracts
                   other?.Dependencies?.Select(d => new ExecutionProfileElement(d)),
                   other?.Monitors?.Select(m => new ExecutionProfileElement(m)),
                   other?.Metadata,
-                  other?.Parameters)
+                  other?.Parameters,
+                  other?.ParametersOn)
         {
         }
 
@@ -147,6 +154,13 @@ namespace VirtualClient.Contracts
         [JsonProperty(PropertyName = "Parameters", Required = Required.Default, Order = 70)]
         [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
         public IDictionary<string, IConvertible> Parameters { get; }
+
+        /// <summary>
+        /// List of parameter dictionaries that are associated with the profile.
+        /// </summary>
+        [JsonProperty(PropertyName = "ParametersOn", Required = Required.Default, Order = 75)]
+        [JsonConverter(typeof(ParameterDictionaryCollectionJsonConverter))]
+        public List<IDictionary<string, IConvertible>> ParametersOn { get; }
 
         /// <summary>
         /// Workload actions to run as part of the profile execution.

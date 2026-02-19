@@ -60,8 +60,7 @@ namespace VirtualClient.Metadata
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
                 Environment.MachineName,
                 experimentId,
-                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
-                NullLogger.Instance);
+                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture));
 
             // Persisted properties and metadata contracts are applied to the telemetry output
             // by the Virtual Client. The properties within are included in the custom dimensions

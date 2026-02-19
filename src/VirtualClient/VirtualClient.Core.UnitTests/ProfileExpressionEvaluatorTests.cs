@@ -23,8 +23,218 @@ namespace VirtualClient
 
         public void SetupDefaults(PlatformID platform, Architecture architecture = Architecture.X64)
         {
+            // We use 'Unix-style' paths only to avoid issues caused merely by the difference
+            // between forward-slashes vs. back-slashes. ALL slashes are made forward-slashes to 
+            // simplify the challenge.
             this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
+            this.mockFixture.Setup(platform, architecture, useUnixStylePathsOnly: true);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionLogPathReferencesOnUnixSystems()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string logDirectory = this.mockFixture.GetLogsPath();
+            string logFilePath = this.mockFixture.GetLogsPath("anylogs", "file1.log");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{LogPath}", logDirectory },
+                { "{LogDir}", logDirectory },
+                { "--any-path={LogPath}/anylogs/file1.log", $"--any-path={logFilePath}" },
+                { "--any-path={LogDir}/anylogs/file1.log", $"--any-path={logFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionLogPathReferencesOnWindowsSystems()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+            string logDirectory = this.mockFixture.GetLogsPath();
+            string logFilePath = this.mockFixture.GetLogsPath("anylogs", "file1.log");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{LogPath}", logDirectory },
+                { "{LogDir}", logDirectory },
+                { "--any-path={LogPath}/anylogs/file1.log", $"--any-path={logFilePath}" },
+                { "--any-path={LogDir}/anylogs/file1.log", $"--any-path={logFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorLogPathLocationReferenceExpressionsAreNotCaseSensitive()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string logDirectory = this.mockFixture.GetLogsPath();
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{LogPath}", logDirectory },
+                { "{logpath}", logDirectory },
+                { "{logdir}", logDirectory },
+                { "{LOGPATH}", logDirectory },
+                { "{LOGDIR}", logDirectory }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionStatePathReferencesOnUnixSystems()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string stateDirectory = this.mockFixture.GetStatePath();
+            string stateFilePath = this.mockFixture.GetStatePath("anylogs", "file1.log");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{StatePath}", stateDirectory },
+                { "{StateDir}", stateDirectory },
+                { "--any-path={StatePath}/anylogs/file1.log", $"--any-path={stateFilePath}" },
+                { "--any-path={StateDir}/anylogs/file1.log", $"--any-path={stateFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionStatePathReferencesOnWindowsSystems()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+            string stateDirectory = this.mockFixture.GetStatePath();
+            string stateFilePath = this.mockFixture.GetStatePath("anylogs", "file1.log");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{StatePath}", stateDirectory },
+                { "{StateDir}", stateDirectory },
+                { "--any-path={StatePath}/anylogs/file1.log", $"--any-path={stateFilePath}" },
+                { "--any-path={StateDir}/anylogs/file1.log", $"--any-path={stateFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorStatePathLocationReferenceExpressionsAreNotCaseSensitive()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string stateDirectory = this.mockFixture.GetStatePath();
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{StatePath}", stateDirectory },
+                { "{statepath}", stateDirectory },
+                { "{statedir}", stateDirectory },
+                { "{STATEPATH}", stateDirectory },
+                { "{STATEDIR}", stateDirectory }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionTempPathReferencesOnUnixSystems()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string tempDirectory = this.mockFixture.GetTempPath();
+            string tempFilePath = this.mockFixture.GetTempPath("anydir", "temp_file.log");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{TempPath}", tempDirectory },
+                { "{TempDir}", tempDirectory },
+                { "--any-path={TempPath}/anydir/temp_file.log", $"--any-path={tempFilePath}" },
+                { "--any-path={TempDir}/anydir/temp_file.log", $"--any-path={tempFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionTempPathReferencesOnWindowsSystems()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+            string tempDirectory = this.mockFixture.GetTempPath();
+            string tempFilePath = this.mockFixture.GetTempPath("anydir", "temp_file.log");
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{TempPath}", tempDirectory },
+                { "{TempDir}", tempDirectory },
+                { "--any-path={TempPath}/anydir/temp_file.log", $"--any-path={tempFilePath}" },
+                { "--any-path={TempDir}/anydir/temp_file.log", $"--any-path={tempFilePath}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorTempPathLocationReferenceExpressionsAreNotCaseSensitive()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string tempDirectory = this.mockFixture.GetTempPath();
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{TempPath}", tempDirectory },
+                { "{temppath}", tempDirectory },
+                { "{tempdir}", tempDirectory },
+                { "{TEMPPATH}", tempDirectory },
+                { "{TEMPDIR}", tempDirectory }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
         }
 
         [Test]
@@ -39,6 +249,7 @@ namespace VirtualClient
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
                 { "{PackagePath:anyPackage}", packagePath },
+                { "{PackageDir:anyPackage}", packagePath },
                 { "--any-path={PackagePath:anyPackage}", $"--any-path={packagePath}" }
             };
 
@@ -95,6 +306,7 @@ namespace VirtualClient
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
                 { $"{{PackagePath:{packageName}}}", packagePath },
+                { $"{{PackageDir:{packageName}}}", packagePath },
                 { $"--any-path={{PackagePath:{packageName}}}", $"--any-path={packagePath}" }
             };
 
@@ -118,6 +330,7 @@ namespace VirtualClient
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
                 { "{PackagePath:anyPackage}", packagePath },
+                { "{PackageDir:anyPackage}", packagePath },
                 { "--any-path={PackagePath:anyPackage}", $"--any-path={packagePath}" }
             };
 
@@ -171,7 +384,8 @@ namespace VirtualClient
             {
                 { "{PackagePath:anyPackage}", packagePath },
                 { "{packagepath:anyPackage}", packagePath },
-                { "{PACKAGEPATH:anyPackage}", packagePath }
+                { "{PACKAGEPATH:anyPackage}", packagePath },
+                { "{PACKAGEDIR:anyPackage}", packagePath }
             };
 
             foreach (var entry in expressions)
@@ -543,7 +757,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task ProfileExpressionEvaluatorSupportsLogicalCoreCountReferences()
+        public async Task ProfileExpressionEvaluatorSupportsLogicalProcessorCountReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
@@ -558,11 +772,15 @@ namespace VirtualClient
                     expectedLogicalCores.ToString()
                 },
                 {
-                    "--port=1234 --threads={LogicalCoreCount}",
+                    "{LogicalProcessorCount}",
+                    expectedLogicalCores.ToString()
+                },
+                {
+                    "--port=1234 --threads={LogicalProcessorCount}",
                     $"--port=1234 --threads={expectedLogicalCores}"
                 },
                 {
-                    "--port=1234 --threads={LogicalCoreCount} --someFlag --clients={LogicalCoreCount}",
+                    "--port=1234 --threads={LogicalProcessorCount} --someFlag --clients={LogicalProcessorCount}",
                     $"--port=1234 --threads={expectedLogicalCores} --someFlag --clients={expectedLogicalCores}"
                 }
             };
@@ -576,13 +794,13 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task ProfileExpressionEvaluatorSupportsPhysicalCoreCountReferences()
+        public async Task ProfileExpressionEvaluatorSupportsPhysicalProcessorCountReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
-                { "{PhysicalCoreCount}", "4" },
+                { "{PhysicalProcessorCount}", "4" },
                 { "--port=1234 --threads={PhysicalCoreCount}", $"--port=1234 --threads=4" },
                 { "--port=1234 --threads={PhysicalCoreCount} --someFlag --clients={PhysicalCoreCount}", $"--port=1234 --threads=4 --someFlag --clients=4" }
             };
@@ -997,6 +1215,112 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(Architecture.Arm64)]
+        [TestCase(Architecture.X64)]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionArchitecture(Architecture architecture)
+        {
+            this.SetupDefaults(PlatformID.Unix, architecture);
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--architecture={Architecture}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--architecture={architecture.ToString().ToLowerInvariant()}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, "windows")]
+        [TestCase(PlatformID.Unix, "linux")]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionOS(PlatformID platformID, string os)
+        {
+            this.SetupDefaults(platformID);
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--os={OS}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--os={os}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionLogicalCoreCount()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            int expectedLogicalCores = 4;
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--threads={LogicalCoreCount}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--threads={expectedLogicalCores}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionPackagePath()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
+
+            // The package MUST be actually registered with VC.
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--package={PackagePath:anypackage}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--package={packagePath}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "/linux-x64")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "/linux-arm64")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "/win-x64")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "/win-arm64")]
+        public async Task ProfileExpressionEvaluatorSupportsWellKnownExpressionPackagePathPlatform(PlatformID platformID, Architecture architecture, string platform)
+        {
+            this.SetupDefaults(platformID, architecture);
+            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, this.mockFixture.Platform.ToString());
+
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "CommandLine", "--package={PackagePath/Platform:anypackage}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual(
+                $"--package={packagePath}{platform}",
+                parameters["CommandLine"].ToString());
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorParameterSetExpressionsFollowTheCaseSensitivityOfTheParameterDictionary()
         {
             this.SetupDefaults(PlatformID.Unix);
@@ -1183,6 +1507,91 @@ namespace VirtualClient
             Assert.AreEqual("Yes", parameters["Nested"]);
             Assert.AreEqual("Yes", parameters["BUILD_TLS"]);
             Assert.AreEqual(true, parameters["IsTLSEnabled"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsTernaryFunctionReferencesInParameterSets_Scenario_7()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "Benchmarks" , "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intrate\" : \"505 525 541 548 557\")}" },
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+
+            Assert.AreEqual("505 525 541 548 557", parameters["Benchmarks"]);
+        }
+
+
+        [Test]
+
+        public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_1()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                {
+                    "Flags",
+                    "{calculate(\"{SpecProfile}\" == \"fprate\" ? \"-O3 -flto -march=native\" : \"{calculate(\"{SpecProfile}\" == \"intrate\" ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")}\")}"
+                },
+                {
+                    "SpecProfile",
+                    "fprate"
+                }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            Assert.AreEqual("-O3 -flto -march=native", parameters["Flags"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_2()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                {
+                    "Flags",
+                    "{calculate(\"{SpecProfile}\" == \"fprate\" ? \"-O3 -flto -march=native\" : \"{calculate(\"{SpecProfile}\" == \"intrate\" && \"{CpuArchitecture}\" == \"x64\" ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")}\")}"
+                },
+                {
+                    "SpecProfile",
+                    "fprate"
+                },
+                {
+                    "CpuArchitecture",
+                    "{calculate(\"{Platform}\".EndsWith(\"arm64\") ? \"arm64\" : \"x64\")}"
+                }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            Assert.AreEqual("-O3 -flto -march=native", parameters["Flags"]);
+        }
+
+        [Test]
+        [TestCase(Architecture.Arm64, "-O2 -flto -march=armv8.2-a")]
+        [TestCase(Architecture.X64, "-O2 -flto -march=core-avx2")]
+        public async Task ProfileExpressionEvaluatorSupportsNestedTernaryFunctionReferencesInParameterSets_Scenario_3(Architecture architecture, string expectedValue)
+        {
+            this.SetupDefaults(PlatformID.Unix, architecture);
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                {
+                    "Flags",
+                    "{calculate(\"{SpecProfile}\" == \"fprate\" ? \"-O3 -flto -march=native\" : \"{calculate(\"{SpecProfile}\" == \"intrate\" && \"{Architecture}\" == \"x64\" ? \"-O2 -flto -march=core-avx2\" : \"-O2 -flto -march=armv8.2-a\")}\")}"
+                },
+                {
+                    "SpecProfile",
+                    "intrate"
+                }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            Assert.AreEqual(expectedValue, parameters["Flags"]);
         }
 
         [Test]

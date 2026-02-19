@@ -1,0 +1,49 @@
+{
+    "Description": "Default profile scenario containing a workload to run but no explicit monitors.",
+    "Metadata": {
+    },
+    "Parameters": {
+        "Parameter1": false,
+        "Parameter2": "base1",
+        "Parameter3": "conditional1",
+        "Parameter4": "conditionalA"
+    },
+    "ParametersOn": [
+        {
+            "Condition": "{calculate(\"{Parameter2}\" == \"base2\")}",
+            "Parameter3": "conditional2"
+        },
+        {
+            "Condition": "{calculate(\"{Parameter2}\" == \"base3\")}",
+            "Parameter1": true,
+            "Parameter3": "conditional3"
+        },
+        {
+            "Condition": "{calculate(\"{Parameter2}\" == \"base4\")}",
+            "Parameter3": "conditional4"
+        }
+    ],
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload1",
+                "NewFlag": "$.Parameters.Parameter3"
+            }
+        },
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload2"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "TestDependency",
+            "Parameters": {
+                "Scenario": "Dependency1"
+            }
+        }
+    ]
+}

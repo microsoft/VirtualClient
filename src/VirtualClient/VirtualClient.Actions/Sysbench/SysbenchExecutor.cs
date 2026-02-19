@@ -411,7 +411,7 @@ namespace VirtualClient.Actions
 
                 List<Metric> metrics = new List<Metric>();
                 double duration = (process.ExitTime - process.StartTime).TotalMinutes;
-                metrics.Add(new Metric("PopulateDatabaseTime_Minutes ", duration, "minutes", MetricRelativity.LowerIsBetter));
+                metrics.Add(new Metric("PopulateDatabaseDuration", duration, "minutes", MetricRelativity.LowerIsBetter));
 
                 this.Logger.LogMetrics(
                     toolName: "Sysbench",
@@ -562,9 +562,14 @@ namespace VirtualClient.Actions
             public const string TruncateDatabase = nameof(TruncateDatabase);
 
             /// <summary>
-            /// Truncates all tables existing in database
+            /// Runs specified workload.
             /// </summary>
             public const string RunWorkload = nameof(RunWorkload);
+
+            /// <summary>
+            /// Runs sysbench cleanup action.
+            /// </summary>
+            public const string Cleanup = nameof(Cleanup);
         }
     }
 }

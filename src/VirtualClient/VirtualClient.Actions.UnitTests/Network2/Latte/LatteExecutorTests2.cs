@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
             using (TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutInvalid, exception.Reason);
             }
         }
 
@@ -204,7 +204,7 @@ namespace VirtualClient.Actions
             using (TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
+                Assert.AreEqual(ErrorReason.LayoutNotDefined, exception.Reason);
             }
         }
 

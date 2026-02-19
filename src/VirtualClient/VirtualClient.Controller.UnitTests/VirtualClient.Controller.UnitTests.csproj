@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RunCodeAnalysis>false</RunCodeAnalysis>
+        <RunAnalyzers>false</RunAnalyzers>
+        <RootNamespace>VirtualClient.Controller.UnitTests</RootNamespace>
+        <NoWarn>AsyncFixer02;SA1005;SA1120</NoWarn>
+    </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Moq" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+	</ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Controller\VirtualClient.Controller.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

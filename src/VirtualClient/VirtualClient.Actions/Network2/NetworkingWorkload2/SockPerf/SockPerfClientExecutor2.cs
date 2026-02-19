@@ -71,13 +71,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Get test run duration value in seconds.
+        /// Get test run duration value.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration));
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -95,16 +95,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SockPerfClientExecutor2.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(SockPerfClientExecutor2.WarmupTime), TimeSpan.FromSeconds(8));
             }
 
             set
             {
-                this.Parameters[nameof(SockPerfClientExecutor2.WarmupTime)] = value;
+                this.Parameters[nameof(SockPerfClientExecutor2.WarmupTime)] = value.ToString();
             }
         }
 
@@ -120,13 +120,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// gets test delay time values in seconds.
+        /// gets test delay time values.
         /// </summary>
-        public int DelayTime
+        public TimeSpan DelayTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.DelayTime));
+                return this.Parameters.GetTimeSpanValue(nameof(this.DelayTime), TimeSpan.Zero);
             }
         }
 
@@ -285,7 +285,7 @@ namespace VirtualClient.Actions
             // Note:
             // We found that certain of the workloads do not exit when they are supposed to. We enforce an
             // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
+            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime.TotalSeconds + (this.TestDuration.TotalSeconds * 2));
 
             string commandArguments = this.GetCommandLineArguments();
             DateTime startTime = DateTime.UtcNow;
@@ -326,7 +326,7 @@ namespace VirtualClient.Actions
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
@@ -340,7 +340,7 @@ namespace VirtualClient.Actions
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray(), logToFile: true);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true, results: new KeyValuePair<string, string>(this.ResultsPath, results));
                                 }
                             }
                             catch (TimeoutException exc)
@@ -348,12 +348,12 @@ namespace VirtualClient.Actions
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                                 throw;
                             }
                         }
@@ -415,7 +415,7 @@ namespace VirtualClient.Actions
             return $"{this.TestMode} " +
                 $"-i {serverIPAddress} " +
                 $"-p {this.Port} {protocolParam} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"{(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")} " +
                 $"--full-rtt --msg-size {this.MessageSize} " +
                 $"--client_ip {clientIPAddress} " +

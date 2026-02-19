@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
         private const string ReconnectsPerSecond = "reconnects/sec";
         private const string Second = "seconds";
         private const string MilliSecond = "milliseconds";
+        private Dictionary<string, IConvertible> metricMetadata = new Dictionary<string, IConvertible>();
 
         /// <summary>
         /// Constructor for <see cref="SysbenchMetricsParser"/>
@@ -32,29 +33,32 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
+            var match = Regex.Match(this.RawText, @"sysbench\s+([\d]+\.[\d]+\.[\d]+(?:-\w+)?)");
+            string sysbenchversion = match.Success ? match.Groups[1].Value : string.Empty;
+            this.metricMetadata["sysbench_version"] = sysbenchversion;
             this.Preprocess();
             List<Metric> metrics = new List<Metric>();
 
             // Create list of Metrics Info
             List<MetricInfo> metricInfoList = new List<MetricInfo>()
             {
-                new MetricInfo("# read queries", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("# write queries", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("# other queries", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("# transactions", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("transactions/sec", TransactionsPerSecond, MetricRelativity.HigherIsBetter),
-                new MetricInfo("# queries", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("queries/sec", QueriesPerSecond, MetricRelativity.HigherIsBetter),
-                new MetricInfo("# ignored errors", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("ignored errors/sec", IgnoredErrorsPerSecond, MetricRelativity.HigherIsBetter),
-                new MetricInfo("# reconnects", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("reconnects/sec", ReconnectsPerSecond, MetricRelativity.HigherIsBetter),
-                new MetricInfo("elapsed time", Second, MetricRelativity.LowerIsBetter),
-                new MetricInfo("latency min", MilliSecond, MetricRelativity.LowerIsBetter),
-                new MetricInfo("latency avg", MilliSecond, MetricRelativity.LowerIsBetter),
-                new MetricInfo("latency max", MilliSecond, MetricRelativity.LowerIsBetter),
-                new MetricInfo("latency p95", MilliSecond, MetricRelativity.LowerIsBetter),
-                new MetricInfo("latency sum", MilliSecond, MetricRelativity.LowerIsBetter),
+                new MetricInfo("# read queries", string.Empty, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("# write queries", string.Empty, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("# other queries", string.Empty, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("# transactions", string.Empty, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("transactions/sec", TransactionsPerSecond, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("# queries", string.Empty, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("queries/sec", QueriesPerSecond, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("# ignored errors", string.Empty, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("ignored errors/sec", IgnoredErrorsPerSecond, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("# reconnects", string.Empty, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("reconnects/sec", ReconnectsPerSecond, MetricRelativity.HigherIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("elapsed time", Second, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("latency min", MilliSecond, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("latency avg", MilliSecond, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("latency max", MilliSecond, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("latency p95", MilliSecond, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
+                new MetricInfo("latency sum", MilliSecond, MetricRelativity.LowerIsBetter, metadata: this.metricMetadata),
             };
 
             if (!string.IsNullOrEmpty(this.PreprocessedText))
@@ -84,7 +88,7 @@ namespace VirtualClient.Actions
                     {
                         MetricInfo metricInfo = metricInfoList[metricInfoIndex];
                         Match m = mc[mcIndex];
-                        metrics.Add(new Metric($"{metricInfo.Name}", Convert.ToDouble(m.Value), metricInfo.Unit, metricInfo.Relativity));
+                        metrics.Add(new Metric($"{metricInfo.Name}", Convert.ToDouble(m.Value), metricInfo.Unit, metricInfo.Relativity, metadata: metricInfo.Metadata));
                         metricInfoIndex++;
                     }
 
@@ -107,11 +111,12 @@ namespace VirtualClient.Actions
         // helper class that contains Metric Name, Unit, and Relativity
         private class MetricInfo
         {
-            public MetricInfo(string name, string unit, MetricRelativity relativity)
+            public MetricInfo(string name, string unit, MetricRelativity relativity, Dictionary<string, IConvertible> metadata)
             {
                 this.Name = name;
                 this.Unit = unit;
                 this.Relativity = relativity;
+                this.Metadata = metadata;
             }
 
             public string Name { get; set; }
@@ -119,6 +124,8 @@ namespace VirtualClient.Actions
             public string Unit { get; set; }
 
             public MetricRelativity Relativity { get; set; }
+
+            public Dictionary<string, IConvertible> Metadata { get; set; }
         }
     }
 }

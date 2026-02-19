@@ -8,10 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
-        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
-        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="NUnit" />
+        <PackageReference Include="NUnit3TestAdapter" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,13 +25,13 @@
         <Content Include="..\VirtualClient.Main\profiles\MONITORS-DEFAULT.json" Link="profiles\MONITORS-DEFAULT.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\VirtualClient.Main\profiles\MONITORS-NONE.json" Link="profiles\MONITORS-NONE.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
         
         <None Update="profiles\TEST-WORKLOAD-PROFILE-2.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+		<None Update="profiles\TEST-WORKLOAD-PROFILE-3.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
         <None Update="profiles\TEST-WORKLOAD-PROFILE.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

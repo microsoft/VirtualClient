@@ -30,11 +30,39 @@ namespace VirtualClient.Contracts.Extensibility
 
             // Scenario:
             // This test is designed to evaluate parsing logic from an actual file containing
-            // delimited CSV events.
+            // delimited CSV metrics.
             //
             // Note that the results being verified below are defined in the example file below.
             // Any changes to this file can invalidate the test.
             string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedMetricDataEnumeratorTests.Examples, "csv.metrics"));
+
+            using (var enumerator = new DelimitedMetricDataEnumerator(csvContent, DataFormat.Csv))
+            {
+                List<MetricDataPoint> dataPoints = new List<MetricDataPoint>();
+                while (enumerator.MoveNext())
+                {
+                    dataPoints.Add(enumerator.Current);
+                }
+
+                AssertExpectedMetricsParsed(dataPoints);
+            }
+        }
+
+        [Test]
+        public void DelimitedMetricDataEnumeratorParsesExpectedMetricsFromFilesInQuotedCsvFormat()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            // Scenario:
+            // This test is designed to evaluate parsing logic from an actual file containing
+            // delimited CSV metrics where both the columns and the fields are surrounded with quotation
+            // marks.
+            //
+            // e.g.
+            // "Timestamp","ExperimentID","ExecutionSystem","ProfileName","ClientID","SeverityLevel","ToolName",
+            // "2025-07-23T20:34:48.6439102Z","6c83d269-2dff-4fb5-9924-375d84602c5b","Metis","METIS-CPU-CRYPTOGRAPHIC","linux-demo01-client-01","1","OpenSSL"
+
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedMetricDataEnumeratorTests.Examples, "csv_with_quotes.metrics"));
 
             using (var enumerator = new DelimitedMetricDataEnumerator(csvContent, DataFormat.Csv))
             {
@@ -55,7 +83,7 @@ namespace VirtualClient.Contracts.Extensibility
 
             // Scenario:
             // This test is designed to evaluate parsing logic from an actual file containing
-            // delimited JSON events.
+            // delimited JSON metrics.
             //
             // Note that the results being verified below are defined in the example file below.
             // Any changes to this file can invalidate the test.
@@ -80,7 +108,7 @@ namespace VirtualClient.Contracts.Extensibility
 
             // Scenario:
             // This test is designed to evaluate parsing logic from an actual file containing
-            // delimited YAML events.
+            // delimited YAML metrics.
             //
             // Note that the results being verified below are defined in the example file below.
             // Any changes to this file can invalidate the test.
@@ -302,7 +330,7 @@ namespace VirtualClient.Contracts.Extensibility
                 // Part B + C properties
                 Assert.AreEqual("linux-demo01-client-01", dataPoint.ClientId);
                 Assert.AreEqual("6c83d269-2dff-4fb5-9924-375d84602c5b", dataPoint.ExperimentId);
-                Assert.AreEqual("METIS-CPU-CRYPTOGRAPHIC", dataPoint.ExecutionProfile);
+                Assert.AreEqual("METIS-CPU-CRYPTOGRAPHIC", dataPoint.ProfileName);
                 Assert.AreEqual("Cryptographic Operations", dataPoint.MetricCategorization);
                 Assert.AreEqual("SHA256 algorithm operation rate", dataPoint.MetricDescription);
                 Assert.AreEqual("HigherIsBetter", dataPoint.MetricRelativity.ToString());
@@ -310,13 +338,13 @@ namespace VirtualClient.Contracts.Extensibility
                 Assert.AreEqual(0, dataPoint.MetricVerbosity);
                 Assert.AreEqual("Unix", dataPoint.OperatingSystemPlatform);
                 Assert.AreEqual("linux-x64", dataPoint.PlatformArchitecture);
-                Assert.AreEqual("sha256", dataPoint.Scenario);
+                Assert.AreEqual("sha256", dataPoint.ScenarioName);
                 Assert.AreEqual("2025-07-23T20:34:48.6298225Z", dataPoint.ScenarioEndTime.Value.ToString("o"));
                 Assert.AreEqual("2025-07-23T20:24:48.6170306Z", dataPoint.ScenarioStartTime.Value.ToString("o"));
                 Assert.AreEqual("CPU;OpenSSL;Cryptography", dataPoint.Tags);
-                Assert.AreEqual("OpenSSL", dataPoint.Toolset);
-                Assert.AreEqual("3.0.0", dataPoint.ToolsetVersion);
-                Assert.IsTrue(dataPoint.ToolsetResults.StartsWith("version: 3.0.0-beta3-dev"));
+                Assert.AreEqual("OpenSSL", dataPoint.ToolName);
+                Assert.AreEqual("3.0.0", dataPoint.ToolVersion);
+                Assert.IsTrue(dataPoint.ToolResults.StartsWith("version: 3.0.0-beta3-dev"));
 
                 Assert.IsNotNull(dataPoint.Metadata);
                 Assert.IsTrue(dataPoint.Metadata.Count == 4);

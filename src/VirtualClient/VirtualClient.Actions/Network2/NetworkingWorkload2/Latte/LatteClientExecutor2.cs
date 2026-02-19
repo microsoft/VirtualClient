@@ -67,32 +67,32 @@ namespace VirtualClient.Actions
         /// Parameter defines the test duration to use in the execution of the networking workload
         /// toolset tests.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(LatteClientExecutor2.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(LatteClientExecutor2.TestDuration), TimeSpan.FromSeconds(60));
             }
 
             set
             {
-                this.Parameters[nameof(LatteClientExecutor2.TestDuration)] = value;
+                this.Parameters[nameof(LatteClientExecutor2.TestDuration)] = value.ToString();
             }
         }
 
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(LatteClientExecutor2.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(LatteClientExecutor2.WarmupTime), TimeSpan.FromSeconds(8));
             }
 
             set
             {
-                this.Parameters[nameof(LatteClientExecutor2.WarmupTime)] = value;
+                this.Parameters[nameof(LatteClientExecutor2.WarmupTime)] = value.ToString();
             }
         }
 
@@ -256,7 +256,7 @@ namespace VirtualClient.Actions
             // Note:
             // We found that certain of the workloads do not exit when they are supposed to. We enforce an
             // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
+            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime.TotalSeconds + (this.TestDuration.TotalSeconds * 2));
 
             string commandArguments = this.GetCommandLineArguments();
             DateTime startTime = DateTime.UtcNow;
@@ -342,7 +342,7 @@ namespace VirtualClient.Actions
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
@@ -358,12 +358,12 @@ namespace VirtualClient.Actions
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                                 throw;
                             }
                         }

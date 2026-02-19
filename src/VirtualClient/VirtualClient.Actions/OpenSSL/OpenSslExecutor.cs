@@ -260,7 +260,7 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                     {
                         this.SetEnvironmentVariables(process);
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                         try
                         {

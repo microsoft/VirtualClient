@@ -125,9 +125,11 @@ namespace VirtualClient
                 }
             }
 
+            string safeArguments = SensitiveData.ObscureSecrets(commandArguments);
+
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
-                .AddContext(nameof(commandArguments), commandArguments)
+                .AddContext(nameof(commandArguments), safeArguments)
                 .AddContext(nameof(workingDirectory), workingDirectory)
                 .AddContext(nameof(runElevated), runElevated);
 
@@ -145,12 +147,11 @@ namespace VirtualClient
                     process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
-                component.CleanupTasks.Add(() => process.SafeKill());
-                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+                component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
+                component.Logger.LogTraceMessage($"Executing: {command} {safeArguments}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                await process.StartAndWaitAsync(cancellationToken);
             }
 
             return process;
@@ -200,12 +201,12 @@ namespace VirtualClient
         /// <param name="filePath">A paths to the results file to load.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>The contents of the results file.</returns>
-        public static async Task<string> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
+        public static async Task<KeyValuePair<string, string>> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
         {
             component.ThrowIfNull(nameof(component));
             filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
 
-            string results = null;
+            KeyValuePair<string, string> results = default(KeyValuePair<string, string>);
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
@@ -220,7 +221,7 @@ namespace VirtualClient
                     throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
                 }
 
-                results = await fileSystem.File.ReadAllTextAsync(filePath);
+                results = new KeyValuePair<string, string>(filePath, await fileSystem.File.ReadAllTextAsync(filePath));
             }
 
             return results;
@@ -233,12 +234,12 @@ namespace VirtualClient
         /// <param name="filePaths">A set of one or more paths to results files to load.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>The contents of the results files.</returns>
-        public static async Task<IEnumerable<string>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
+        public static async Task<IEnumerable<KeyValuePair<string, string>>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
         {
             component.ThrowIfNull(nameof(component));
             filePaths.ThrowIfNullOrEmpty(nameof(filePaths));
 
-            List<string> results = null;
+            List<KeyValuePair<string, string>> results = null;
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
@@ -248,7 +249,7 @@ namespace VirtualClient
                         ErrorReason.DependencyNotFound);
                 }
 
-                results = new List<string>();
+                results = new List<KeyValuePair<string, string>>();
                 foreach (string filePath in filePaths)
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -258,7 +259,7 @@ namespace VirtualClient
                             throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
                         }
 
-                        results.Add(await fileSystem.File.ReadAllTextAsync(filePath));
+                        results.Add(filePath, await fileSystem.File.ReadAllTextAsync(filePath));
                     }
                 }
             }
@@ -560,7 +561,7 @@ namespace VirtualClient
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
                                         BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
-                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
+                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken, component.Metadata);
 
                                         if (uploadManifest && descriptor.Manifest?.Any() == true)
                                         {

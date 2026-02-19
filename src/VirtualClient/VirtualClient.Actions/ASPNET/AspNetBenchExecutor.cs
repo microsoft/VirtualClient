@@ -227,10 +227,10 @@ namespace VirtualClient.Actions
                 {
                     if (isServer)
                     {
-                        this.killServer = () => process.SafeKill();
+                        this.killServer = () => process.SafeKill(this.Logger);
                     }
 
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                         
                     if (!cancellationToken.IsCancellationRequested)

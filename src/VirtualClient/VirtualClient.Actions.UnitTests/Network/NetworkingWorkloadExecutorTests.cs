@@ -58,7 +58,10 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NetworkingWorkloadStateInstancesAreJsonSerializable()
+        [TestCase(null)]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void NetworkingWorkloadStateInstancesAreJsonSerializable(bool? noSyncEnabled)
         {
             NetworkingWorkloadState state = new NetworkingWorkloadState(
                 "networking",
@@ -70,9 +73,9 @@ namespace VirtualClient.Actions
                 "8K",
                 "8K",
                 256,
-                60,
-                5,
-                5,
+                "00:01:00",
+                "00:00:05",
+                "00:00:05",
                 "Test_Mode_1",
                 64,
                 1234,
@@ -87,6 +90,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                noSyncEnabled,
                 Guid.NewGuid());
 
             SerializationAssert.IsJsonSerializable(state);
@@ -105,9 +109,9 @@ namespace VirtualClient.Actions
                 "8K",
                 "8K",
                 256,
-                60,
-                5,
-                5,
+                "00:01:00",
+                "00:00:05",
+                "00:00:05",  
                 "Test_Mode_1",
                 64,
                 1234,
@@ -122,6 +126,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                false,
                 Guid.NewGuid(),
                 //
                 // With Metadata
@@ -152,9 +157,9 @@ namespace VirtualClient.Actions
                 "8K",
                 "8K",
                 256,
-                60,
-                5,
-                5,
+                "00:01:00",
+                "00:00:05",
+                "00:00:05",
                 "Test_Mode_1",
                 64,
                 1234,
@@ -169,6 +174,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                false,
                 Guid.NewGuid(),
                 //
                 // With Metadata
@@ -250,6 +256,42 @@ namespace VirtualClient.Actions
         {
             TestNetworkingWorkloadExecutor component = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             Mock<object> mockSender = new Mock<object>();
+        }
+
+        [Test]
+        public void NetworkingWorkloadExecutorSupportsIntegerAndTimeSpanTimeFormats()
+        {
+            this.SetupTest(PlatformID.Unix, NetworkingWorkloadTool.NTttcp);
+
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 60;
+            this.mockFixture.Parameters["DelayTime"] = 30;
+
+            TestNetworkingWorkloadExecutor executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";
+            this.mockFixture.Parameters["DelayTime"] = "00:00:30";
+
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = 180;
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.TestDuration;
+
+            this.mockFixture.Parameters["TestDuration"] = "00:03:00";
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.TestDuration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         public class TestNetworkingWorkloadExecutor : NetworkingWorkloadExecutor

@@ -24,7 +24,7 @@ namespace VirtualClient.Contracts.Extensibility
                 MetricCategorization = "Cryptographic Operations",
                 ClientId = Guid.NewGuid().ToString(),
                 MetricDescription = "Total throughput while processing the algorithm.",
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 MetricName = "bandwidth",
@@ -33,15 +33,15 @@ namespace VirtualClient.Contracts.Extensibility
                 OperationParentId = Guid.NewGuid(),
                 PlatformArchitecture = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 MetricRelativity = MetricRelativity.HigherIsBetter,
-                Scenario = "sha256",
+                ScenarioName = "sha256",
                 ScenarioEndTime = DateTime.UtcNow.AddMinutes(-10),
                 ScenarioStartTime = DateTime.UtcNow,
                 SeverityLevel = 2,
                 Tags = "Performance;CPU",
                 Timestamp = DateTime.UtcNow,
-                Toolset = "OpenSSL",
-                ToolsetResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-                ToolsetVersion = "3.0.0",
+                ToolName = "OpenSSL",
+                ToolResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+                ToolVersion = "3.0.0",
                 MetricUnit = "kilobytes/sec",
                 MetricValue = 15234880.42,
                 MetricVerbosity = 0,
@@ -74,7 +74,7 @@ namespace VirtualClient.Contracts.Extensibility
                 MetricCategorization = "Cryptographic Operations",
                 ClientId = Guid.NewGuid().ToString(),
                 MetricDescription = "Total throughput while processing the algorithm.",
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 MetricName = "bandwidth",
@@ -83,15 +83,15 @@ namespace VirtualClient.Contracts.Extensibility
                 OperationParentId = Guid.NewGuid(),
                 PlatformArchitecture = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 MetricRelativity = MetricRelativity.HigherIsBetter,
-                Scenario = "sha256",
+                ScenarioName = "sha256",
                 ScenarioEndTime = DateTime.UtcNow.AddMinutes(-10),
                 ScenarioStartTime = DateTime.UtcNow,
                 SeverityLevel = 2,
                 Tags = "Performance;CPU",
                 Timestamp = DateTime.UtcNow,
-                Toolset = "OpenSSL",
-                ToolsetResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-                ToolsetVersion = "3.0.0",
+                ToolName = "OpenSSL",
+                ToolResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+                ToolVersion = "3.0.0",
                 MetricUnit = "kilobytes/sec",
                 MetricValue = 15234880.42,
                 MetricVerbosity = 0,
@@ -154,7 +154,7 @@ namespace VirtualClient.Contracts.Extensibility
                 MetricCategorization = "Cryptographic Operations",
                 ClientId = Guid.NewGuid().ToString(),
                 MetricDescription = "Total throughput while processing the algorithm.",
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 MetricName = "bandwidth",
@@ -163,15 +163,15 @@ namespace VirtualClient.Contracts.Extensibility
                 OperationParentId = Guid.NewGuid(),
                 PlatformArchitecture = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 MetricRelativity = MetricRelativity.HigherIsBetter,
-                Scenario = "sha256",
+                ScenarioName = "sha256",
                 ScenarioEndTime = DateTime.UtcNow.AddMinutes(-10),
                 ScenarioStartTime = DateTime.UtcNow,
                 SeverityLevel = 2,
                 Tags = "Performance;CPU",
                 Timestamp = DateTime.UtcNow,
-                Toolset = "OpenSSL",
-                ToolsetResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-                ToolsetVersion = "3.0.0",
+                ToolName = "OpenSSL",
+                ToolResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+                ToolVersion = "3.0.0",
                 MetricUnit = "kilobytes/sec",
                 MetricValue = 15234880.42,
                 MetricVerbosity = 0,
@@ -204,7 +204,7 @@ namespace VirtualClient.Contracts.Extensibility
                 MetricCategorization = "Cryptographic Operations",
                 ClientId = Guid.NewGuid().ToString(),
                 MetricDescription = "Total throughput while processing the algorithm.",
-                ExecutionProfile = "ANY-EXECUTION-PROFILE",
+                ProfileName = "ANY-EXECUTION-PROFILE",
                 ExecutionSystem = "Metis",
                 ExperimentId = Guid.NewGuid().ToString(),
                 MetricName = "bandwidth",
@@ -213,15 +213,15 @@ namespace VirtualClient.Contracts.Extensibility
                 OperationParentId = Guid.NewGuid(),
                 PlatformArchitecture = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 MetricRelativity = MetricRelativity.HigherIsBetter,
-                Scenario = "sha256",
+                ScenarioName = "sha256",
                 ScenarioEndTime = DateTime.UtcNow.AddMinutes(-10),
                 ScenarioStartTime = DateTime.UtcNow,
                 SeverityLevel = 2,
                 Tags = "Performance;CPU",
                 Timestamp = DateTime.UtcNow,
-                Toolset = "OpenSSL",
-                ToolsetResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
-                ToolsetVersion = "3.0.0",
+                ToolName = "OpenSSL",
+                ToolResults = "version: 3.0.0-beta3-dev\nbuilt on: Fri Aug 13 03:16:55 2021 UTC\noptions: bn(64,64)\ncompiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG\nCPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb\nsha256         4530442.74 15234880.42",
+                ToolVersion = "3.0.0",
                 MetricUnit = "kilobytes/sec",
                 MetricValue = 15234880.42,
                 MetricVerbosity = 0,
@@ -289,10 +289,11 @@ namespace VirtualClient.Contracts.Extensibility
             Assert.IsTrue(error.Message.Contains("The metric name is required (metricName)."));
             Assert.IsTrue(error.Message.Contains("The metric value is required (metricValue)."));
             Assert.IsTrue(error.Message.Contains("The metric relativity is required (metricRelativity)."));
-            Assert.IsTrue(error.Message.Contains("The scenario is required (scenario)."));
+            Assert.IsTrue(error.Message.Contains("A profile name is required (profileName)."));
+            Assert.IsTrue(error.Message.Contains("The scenario name is required (scenarioName)."));
             Assert.IsTrue(error.Message.Contains("The scenario end time/timestamp is required (scenarioEndTime)."));
             Assert.IsTrue(error.Message.Contains("The scenario start time/timestamp is required (scenarioStartTime)."));
-            Assert.IsTrue(error.Message.Contains("The toolset name is required (toolset)."));
+            Assert.IsTrue(error.Message.Contains("The tool name is required (toolName)."));
 
             dataPoint.AppHost = "host01";
             dataPoint.AppName = "app01";
@@ -300,16 +301,16 @@ namespace VirtualClient.Contracts.Extensibility
             dataPoint.SeverityLevel = 1;
             dataPoint.Timestamp = DateTime.UtcNow;
             dataPoint.ClientId = "client01";
-            dataPoint.ExecutionProfile = "PRE-CHECK";
+            dataPoint.ProfileName = "PRE-CHECK";
             dataPoint.ExperimentId = Guid.NewGuid().ToString();
             dataPoint.MetricName = "metric01";
             dataPoint.MetricRelativity = MetricRelativity.HigherIsBetter;
             dataPoint.MetricValue = 1.234;
             dataPoint.OperatingSystemPlatform = PlatformID.Unix.ToString();
-            dataPoint.Scenario = "scenario01";
+            dataPoint.ScenarioName = "scenario01";
             dataPoint.ScenarioStartTime = DateTime.UtcNow.AddMinutes(-5);
             dataPoint.ScenarioEndTime = DateTime.UtcNow;
-            dataPoint.Toolset = "toolset01";
+            dataPoint.ToolName = "toolset01";
 
             Assert.DoesNotThrow(() => dataPoint.Validate());
         }

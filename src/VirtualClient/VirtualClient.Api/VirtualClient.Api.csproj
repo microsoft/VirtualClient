@@ -10,12 +10,9 @@
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
-        <PackageReference Include="Asp.Versioning.Mvc" Version="$(Asp_Versioning_Mvc_PackageVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(Microsoft_Extensions_DependencyInjection_PackageVersion)" />
-        
-        <!-- Required to address "package downgrade" warnings -->
-        <PackageReference Include="System.Diagnostics.Debug" Version="$(System_Diagnostics_Debug_PackageVersion)" />
+        <PackageReference Include="Asp.Versioning.Mvc" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     </ItemGroup>
 
     <ItemGroup>

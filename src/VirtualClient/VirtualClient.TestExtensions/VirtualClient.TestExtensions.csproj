@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <AssemblyName>VirtualClient.TestExtensions</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <NoWarn>CA2214;CS1591;SA1508</NoWarn>
@@ -10,9 +10,9 @@
 
     <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extensions_Configuration_Json_PackageVersion)" />
-        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
-        <PackageReference Include="System.IO.FileSystem.AccessControl" Version="$(System_IO_FileSystem_AccessControl_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+        <PackageReference Include="NUnit" />
+        <PackageReference Include="System.IO.FileSystem.AccessControl" />
     </ItemGroup>
 
     <ItemGroup>
@@ -24,6 +24,9 @@
     <ItemGroup>
         <None Update="Resources\test-certificate.private">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\test-certificate.public">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

@@ -59,8 +59,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
-                                await process.StartAndWaitAsync(cancellationToken, timeout);
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
+                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
@@ -80,12 +80,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                                 throw;
                             }
                         }

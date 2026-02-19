@@ -95,22 +95,28 @@ namespace VirtualClient.Monitors
         /// <summary>
         /// Executes the monitor to capture performance counters on specified intervals.
         /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            try
-            {
-                await Task.Delay(this.MonitorWarmupPeriod, cancellationToken);
+            // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
+            // logic will block without returning. Monitors are typically expected to be fire-and-forget.
 
-                Task counterDiscoveryTask = this.DiscoverCountersAsync(telemetryContext, cancellationToken);
-                Task counterCaptureTask = this.CaptureCountersAsync(telemetryContext, cancellationToken);
-                Task snapshotTask = this.SnapshotCountersAsync(telemetryContext, cancellationToken);
-
-                await Task.WhenAll(counterDiscoveryTask, counterCaptureTask, snapshotTask);
-            }
-            catch (OperationCanceledException)
+            return Task.Run(async () =>
             {
-                // Expected when a cancellation request occurs.
-            }
+                try
+                {
+                    await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
+
+                    Task counterDiscoveryTask = this.DiscoverCountersAsync(telemetryContext, cancellationToken);
+                    Task counterCaptureTask = this.CaptureCountersAsync(telemetryContext, cancellationToken);
+                    Task snapshotTask = this.SnapshotCountersAsync(telemetryContext, cancellationToken);
+
+                    await Task.WhenAll(counterDiscoveryTask, counterCaptureTask, snapshotTask);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when a cancellation request occurs.
+                }
+            });
         }
 
         /// <summary>
@@ -155,7 +161,7 @@ namespace VirtualClient.Monitors
                     finally
                     {
                         this.semaphore.Release();
-                        await Task.Delay(this.CounterCaptureInterval, cancellationToken);
+                        await this.WaitAsync(this.CounterCaptureInterval, cancellationToken);
                     }
                 }
             });
@@ -193,7 +199,7 @@ namespace VirtualClient.Monitors
                     finally
                     {
                         this.semaphore.Release();
-                        await Task.Delay(this.CounterDiscoveryInterval, cancellationToken);
+                        await this.WaitAsync(this.CounterDiscoveryInterval, cancellationToken);
                     }
                 }
             });

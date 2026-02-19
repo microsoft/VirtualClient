@@ -5,9 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +24,7 @@ namespace VirtualClient.Dependencies
     public class ExecuteCommandMonitor : VirtualClientIntervalBasedMonitor
     {
         private const int MaxOutputLength = 125000;
+        private ProcessManager processManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecuteCommandMonitor"/> class.
@@ -35,6 +34,8 @@ namespace VirtualClient.Dependencies
         public ExecuteCommandMonitor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            this.processManager = dependencies.GetService<ProcessManager>();
+
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
                 this.MaxRetries,
                 (retries) => TimeSpan.FromSeconds(retries + 1));
@@ -49,6 +50,25 @@ namespace VirtualClient.Dependencies
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.Command));
+            }
+        }
+
+        /// <summary>
+        /// Provides a set of environment variables to add to the monitor process executions.
+        /// </summary>
+        public IDictionary<string, IConvertible> EnvironmentVariables
+        {
+            get
+            {
+                IDictionary<string, IConvertible> environmentVariables = null;
+                this.Parameters.TryGetValue(nameof(this.EnvironmentVariables), out IConvertible variables);
+
+                if (variables != null)
+                {
+                    environmentVariables = TextParsingExtensions.ParseDelimitedValues(variables?.ToString());
+                }
+
+                return environmentVariables;
             }
         }
 
@@ -99,6 +119,11 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// A policy that defines how the component will retry when it experiences transient issues.
+        /// </summary>
+        public IAsyncPolicy RetryPolicy { get; set; }
+
+        /// <summary>
         /// Parameter defines the working directory from which the command should be executed. When the
         /// 'PackageName' parameter is defined, this parameter will take precedence. Otherwise, the directory
         /// where the package is installed for the 'PackageName' parameter will be used as the working directory.
@@ -113,11 +138,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// A policy that defines how the component will retry when it experiences transient issues.
-        /// </summary>
-        public IAsyncPolicy RetryPolicy { get; set; }
-
-        /// <summary>
         /// Execute the monitor to run the command on intervals.
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -130,7 +150,7 @@ namespace VirtualClient.Dependencies
                 try
                 {
                     telemetryContext.AddContext("command", SensitiveData.ObscureSecrets(this.Command));
-                    telemetryContext.AddContext("workingDirectory", this.WorkingDirectory);
+                    telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
                     telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
                     await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
@@ -140,19 +160,22 @@ namespace VirtualClient.Dependencies
                     {
                         try
                         {
+                            iterations++;
                             if (this.MonitorStrategy != null)
                             {
-                                switch (this.MonitorStrategy)
+                                if (iterations <= 1)
                                 {
-                                    case VirtualClient.MonitorStrategy.Once:
-                                    case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
-                                        await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
-                                        break;
+                                    switch (this.MonitorStrategy)
+                                    {
+                                        case VirtualClient.MonitorStrategy.Once:
+                                        case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                                            await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                                            break;
+                                    }
                                 }
                             }
                             else
                             {
-                                iterations++;
                                 if (this.IsIterationComplete(iterations))
                                 {
                                     break;
@@ -198,56 +221,42 @@ namespace VirtualClient.Dependencies
 
             if (commandsToExecute?.Any() == true)
             {
+                IDictionary<string, IConvertible> environmentVariables = this.EnvironmentVariables;
                 foreach (string originalCommand in commandsToExecute)
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        string command = originalCommand;
-                        bool commandHasRelativePaths = PlatformSpecifics.RelativePathExpression.IsMatch(command);
-                        string effectiveWorkingDirectory = this.WorkingDirectory;
-
-                        if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+                        if (PlatformSpecifics.TryGetCommandParts(originalCommand, out string effectiveCommand, out string effectiveCommandArguments))
                         {
-                            effectiveWorkingDirectory = PlatformSpecifics.ResolveRelativePaths(effectiveWorkingDirectory)
-                                ?.TrimEnd(new char[] { '\\', '/' });
-                        }
-
-                        if (commandHasRelativePaths)
-                        {
-                            command = PlatformSpecifics.ResolveRelativePaths(command);
-                        }
-
-                        if (PlatformSpecifics.TryGetCommandParts(command, out string effectiveCommand, out string effectiveCommandArguments))
-                        {
-                            if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
-                            {
-                                // There appears to be some kind of bug or unfortunate implementation choice
-                                // in .NET causing a Win32Exception like the following despite a correct command
-                                // name and working directory being defined for the process object. This is a workaround
-                                // to the issue.
-                                //
-                                // System.ComponentModel.Win32Exception:
-                                // 'An error occurred trying to start process 'execute_ipconfig.cmd'
-                                // with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU'.
-                                // The system cannot find the file specified.
-                                Match commandMatch = Regex.Match(effectiveCommand, @"\x22*([\x20\x21\x23-\x7E]+)\x22*", RegexOptions.IgnoreCase);
-                                if (commandMatch.Success && !string.Equals(commandMatch.Value, "sudo", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    string commandText = commandMatch.Groups[1].Value;
-                                    if (!Path.IsPathRooted(commandText))
-                                    {
-                                        effectiveCommand = command.Replace(commandText, this.Combine(effectiveWorkingDirectory, commandText));
-                                    }
-                                }
-                            }
-
                             await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                             {
-                                using (IProcessProxy process = await this.ExecuteCommandAsync(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory, telemetryContext, cancellationToken))
+                                // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
+                                // referencing a binary and setting the working directory.
+                                //
+                                // System.ComponentModel.Win32Exception:
+                                // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
+                                // The system cannot find the file specified.
+                                //
+                                // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
+                                // for this is to add the working directory to the PATH environment variable.
+                                string effectiveWorkingDirectory = this.WorkingDirectory;
+                                if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
                                 {
+                                    this.PlatformSpecifics.SetEnvironmentVariable(
+                                        EnvironmentVariable.PATH,
+                                        effectiveWorkingDirectory,
+                                        EnvironmentVariableTarget.Process,
+                                        append: true);
+                                }
+
+                                using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
+                                {
+                                    this.AddEnvironmentVariables(process, environmentVariables);
+                                    await process.StartAndWaitAsync(cancellationToken);
+
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, this.LogFolderName);
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, toolName: this.LogFolderName, logFileName: this.LogFileName, timestamped: this.LogTimestamped);
                                         process.ThrowIfMonitorFailed();
                                         this.CaptureEventInformation(process, telemetryContext);
                                     }
@@ -306,6 +315,31 @@ namespace VirtualClient.Dependencies
             return isSupported;
         }
 
+        private void AddEnvironmentVariables(IProcessProxy process, IDictionary<string, IConvertible> environmentVariables)
+        {
+            if (environmentVariables?.Any() == true)
+            {
+                foreach (var entry in environmentVariables)
+                {
+                    string variableName = entry.Key.Trim();
+                    string variableValue = entry.Value?.ToString().Trim();
+
+                    if (string.IsNullOrWhiteSpace(variableValue) && process.EnvironmentVariables.ContainsKey(variableName))
+                    {
+                        process.EnvironmentVariables.Remove(variableName);
+                    }
+                    else if (variableValue.StartsWith("+"))
+                    {
+                        this.PlatformSpecifics.SetEnvironmentVariable(process, variableName, variableValue.Substring(1).Trim(), true);
+                    }
+                    else
+                    {
+                        this.PlatformSpecifics.SetEnvironmentVariable(process, variableName, variableValue);
+                    }
+                }
+            }
+        }
+
         private void CaptureEventInformation(IProcessProxy process, EventContext telemetryContext)
         {
             string standardOutput = process.StandardOutput?.ToString();
@@ -320,7 +354,7 @@ namespace VirtualClient.Dependencies
                 standardError = $"{standardError.Substring(0, MaxOutputLength)}...";
             }
 
-            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType) 
+            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType)
                 ? this.MonitorEventType
                 : "system.monitor";
 

@@ -5,30 +5,24 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Logging;
-    using VirtualClient.Monitors;
 
     /// <summary>
-    /// Command executes the operations to bootstrap/install dependencies on the system
-    /// prior to running a Virtual Client profile.
+    /// Command executes the operations to upload files from a directory on the system.
     /// </summary>
-    public class UploadFilesCommand : CommandBase
+    internal class UploadFilesCommand : ExecuteProfileCommand
     {
-        /// <summary>
-        /// The source directory to watch for content upload requests/notifications.
-        /// </summary>
-        public string RequestsDirectory { get; set; }
+        private const string DefaultContentPathTemplate = "{experimentId}/{agentId}";
 
         /// <summary>
-        /// Executes the dependency bootstrap/installation operations.
+        /// The directory to search for files to upload.
+        /// </summary>
+        public string TargetDirectory { get; set; }
+
+        /// <summary>
+        /// Executes the file upload operations on the target directory.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
@@ -36,48 +30,28 @@ namespace VirtualClient
         public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
             int exitCode = 0;
-            ILogger logger = null;
-            EventContext.Persist(Guid.NewGuid());
 
-            try
+            this.Timeout = ProfileTiming.OneIteration();
+            this.Profiles = new List<DependencyProfileReference>
             {
-                IServiceCollection dependencies = this.InitializeDependencies(args);
-                logger = dependencies.GetService<ILogger>();
+                new DependencyProfileReference("UPLOAD-FILES.json")
+            };
 
-                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>(this.Parameters, StringComparer.OrdinalIgnoreCase)
-                {
-                    { nameof(FileUploadMonitor.Scenario), "UploadContent" },
-                };
-
-                if (!string.IsNullOrWhiteSpace(RequestsDirectory))
-                {
-                    parameters[nameof(FileUploadMonitor.RequestsDirectory)] = this.RequestsDirectory;
-                }
-
-                ConsoleLogger.Default.LogMessage($"Uploading Content/Files...", EventContext.Persisted());
-                using (FileUploadMonitor monitor = new FileUploadMonitor(dependencies, parameters))
-                {
-                    await monitor.ExecuteAsync(cancellationTokenSource.Token);
-                }
-            }
-            catch (Exception exc)
+            if (string.IsNullOrWhiteSpace(this.ContentPathTemplate))
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = 1;
+                this.ContentPathTemplate = UploadFilesCommand.DefaultContentPathTemplate;
             }
+
+            if (this.Parameters == null)
+            {
+                this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            this.Parameters["TargetDirectory"] = this.TargetDirectory;
+
+            exitCode = await base.ExecuteAsync(args, cancellationTokenSource);
 
             return exitCode;
-        }
-
-        /// <summary>
-        /// Initializes dependencies required by Virtual Client application operations.
-        /// </summary>
-        protected override IServiceCollection InitializeDependencies(string[] args)
-        {
-            IServiceCollection dependencies = base.InitializeDependencies(args);
-            dependencies.AddSingleton<IFileSystem>(new FileSystem());
-
-            return dependencies;
         }
     }
 }
