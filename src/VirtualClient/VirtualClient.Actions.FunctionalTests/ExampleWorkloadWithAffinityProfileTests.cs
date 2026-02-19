@@ -140,7 +140,7 @@ namespace VirtualClient.Actions
                     };
                     
                     // Simulate process completion when WaitForExitAsync is called
-                    Task originalWait = process.WaitForExitAsync(CancellationToken.None);
+                    process.WaitForExitAsync(CancellationToken.None);
                     process.StandardOutput.Append("{ \"metric1\": 100, \"metric2\": 200 }");
                     hasExited = true;
                 }

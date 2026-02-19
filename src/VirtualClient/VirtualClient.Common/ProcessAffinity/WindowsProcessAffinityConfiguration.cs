@@ -70,21 +70,7 @@ namespace VirtualClient.Common.ProcessAffinity
                         $"Cannot apply CPU affinity. The process proxy type '{process.GetType().Name}' does not support affinity configuration.");
                 }
 
-                // Use reflection to access the protected UnderlyingProcess property
-                System.Reflection.PropertyInfo propertyInfo = typeof(ProcessProxy).GetProperty(
-                    "UnderlyingProcess",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    
-                if (propertyInfo == null)
-                {
-                    throw new NotSupportedException("Unable to access the underlying process for affinity configuration.");
-                }
-
-                System.Diagnostics.Process underlyingProcess = propertyInfo.GetValue(processProxy) as System.Diagnostics.Process;
-                if (underlyingProcess != null)
-                {
-                    underlyingProcess.ProcessorAffinity = this.AffinityMask;
-                }
+                processProxy.SetProcessorAffinity(this.AffinityMask);
             }
             catch (Exception ex) when (!(ex is InvalidOperationException || ex is NotSupportedException))
             {
