@@ -400,7 +400,18 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Produces powershell script parameters using the workload parameters provided.
         /// </summary>
         /// <returns>Powershell script parameters as a string.</returns>
-        protected abstract string GetCommandLineArguments();
+        protected virtual string GetCommandLineArguments()
+        {
+            string command = string.Empty;
+            if (this.Platform == PlatformID.Win32NT && this.IsInClientRole)
+            {
+                command = this.CommandLineWindowsClient;
+            }
+            else if (this.Platform == PlatformID.Win32NT && !this.IsInClientRole)
+            {
+                command = this.CommandLineWindowsServer;
+            }
+        }
 
         /// <summary>
         /// Returns true if results are found in the results file within the polling/timeout
