@@ -77,7 +77,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --password [A-Za-z0-9+/=]+",
             };
 
             int commandNumber = 0;
@@ -122,7 +122,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --password [A-Za-z0-9+/=]+",
             };
 
             int commandNumber = 0;
@@ -173,7 +173,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 40 --recordCount 1000 --threadCount 16 --password [A-Za-z0-9+/=]+",
             };
 
             int commandNumber = 0;
@@ -386,7 +386,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --tableCount 40 --recordCount 1000 --threadCount 16 --password [A-Za-z0-9+/=]+"
             };
 
             int commandNumber = 0;
