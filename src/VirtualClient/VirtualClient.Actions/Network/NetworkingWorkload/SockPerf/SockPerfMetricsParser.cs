@@ -107,15 +107,15 @@ namespace VirtualClient.Actions
             double lowerCI = mean - t;
             double upperCI = mean + t;
 
-            metrics.Add(new Metric("Latency-Min", packetsLatencyValues.Min(), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+            metrics.Add(new Metric("Latency-Min", packetsLatencyValues.Min(), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
             metrics.Add(new Metric("Latency-Max", packetsLatencyValues.Max(), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 5));
             metrics.Add(new Metric("Latency-Avg", packetsLatencyValues.Average(), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 1));
-            metrics.Add(new Metric("Latency-P25", packetsLatencyValues.Percentile(25), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+            metrics.Add(new Metric("Latency-P25", packetsLatencyValues.Percentile(25), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
             metrics.Add(new Metric("Latency-P50", packetsLatencyValues.Percentile(50), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 1));
-            metrics.Add(new Metric("Latency-P75", packetsLatencyValues.Percentile(75), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
-            metrics.Add(new Metric("Latency-P90", packetsLatencyValues.Percentile(90), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+            metrics.Add(new Metric("Latency-P75", packetsLatencyValues.Percentile(75), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
+            metrics.Add(new Metric("Latency-P90", packetsLatencyValues.Percentile(90), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
             metrics.Add(new Metric("Latency-P99", packetsLatencyValues.Percentile(99), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 1));
-            metrics.Add(new Metric("Latency-P99.9", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+            metrics.Add(new Metric("Latency-P99.9", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
             metrics.Add(new Metric("Latency-P99.99", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.0001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 5));
             metrics.Add(new Metric("Latency-P99.999", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.00001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 5));
             double median = Statistics.Median(packetsLatencyValues);

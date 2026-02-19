@@ -191,7 +191,7 @@ namespace VirtualClient.Actions
                         }
                         else
                         {
-                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 2));
                         }
                     }
                 }
@@ -212,7 +212,7 @@ namespace VirtualClient.Actions
                         }
                         else
                         {
-                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 2));
                         }
                     }
                 }
@@ -233,7 +233,7 @@ namespace VirtualClient.Actions
                         }
                         else
                         {
-                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter, verbosity: 2));
                         }
                     }
                 }

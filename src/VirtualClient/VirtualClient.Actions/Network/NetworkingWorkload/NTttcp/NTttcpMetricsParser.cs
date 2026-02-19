@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     {
         private readonly bool isClient;
         private NTttcpResult result;
-        
+
         /// <summary>
         /// Parser for the NTttcp workload
         /// </summary>
@@ -56,9 +56,9 @@ namespace VirtualClient.Actions
                 new Metric("AvgFrameSize", this.result.AverageFrameSize.Value, this.result.AverageFrameSize.Units, MetricRelativity.Undefined, verbosity: 5),
                 new Metric("ThroughputMbps", throughputMetric.Value, throughputMetric.Units, MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("AvgPacketsPerInterrupt", this.result.AveragePacketsPerInterrupt.Value, this.result.AveragePacketsPerInterrupt.Units, MetricRelativity.Undefined, verbosity: 5),
-                new Metric("InterruptsPerSec", this.result.Interrupts.Value, this.result.Interrupts.Units, MetricRelativity.Undefined, verbosity: 3),
+                new Metric("InterruptsPerSec", this.result.Interrupts.Value, this.result.Interrupts.Units, MetricRelativity.Undefined, verbosity: 2),
                 new Metric("PacketsRetransmitted", this.result.PacketsRetransmitted, MetricUnit.Count, MetricRelativity.LowerIsBetter, verbosity: 5),
-                new Metric("Errors", this.result.Errors, MetricUnit.Count, MetricRelativity.LowerIsBetter, verbosity: 3),
+                new Metric("Errors", this.result.Errors, MetricUnit.Count, MetricRelativity.LowerIsBetter, verbosity: 2),
             };
 
             if (this.result.TcpAverageRtt != null)
@@ -133,7 +133,7 @@ namespace VirtualClient.Actions
         /// do not use outside the context of <see cref="NTttcpMetricsParser"/>
         /// </summary>
         public class NTttcpResult
-        { 
+        {
             /// <summary>
             /// A collection of key value pairs passed into the NTttcp workload.
             /// </summary>

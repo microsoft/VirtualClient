@@ -63,7 +63,7 @@
             // set 1 - new connection metrics
             metrics.Add(new Metric(TotalBytesRead, parsedMetrics[TotalBytesRead], MetricUnit.Bytes, MetricRelativity.HigherIsBetter, verbosity: 1));
             metrics.Add(new Metric(NoOfConnections, parsedMetrics[NoOfConnections], MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 1));
-            metrics.Add(new Metric(Duration, parsedMetrics[Duration], MetricUnit.Seconds, MetricRelativity.Undefined, verbosity: 3));
+            metrics.Add(new Metric(Duration, parsedMetrics[Duration], MetricUnit.Seconds, MetricRelativity.Undefined, verbosity: 2));
             metrics.Add(new Metric(BytesperConnection, parsedMetrics[BytesperConnection], MetricUnit.BytesPerConnection, MetricRelativity.HigherIsBetter, verbosity: 1));
             metrics.Add(new Metric(NewConnThroughput, newConnThroughput, MetricUnit.BytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 1));
             metrics.Add(new Metric(NewConnPersec, newConnPerSec, MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 1));
@@ -71,7 +71,7 @@
             // set 2 - reuse connection metrics
             metrics.Add(new Metric(ReuseTotalBytesRead, parsedMetrics[ReuseTotalBytesRead], MetricUnit.Bytes, MetricRelativity.HigherIsBetter, verbosity: 1));
             metrics.Add(new Metric(ReuseNoOfConnections, parsedMetrics[ReuseNoOfConnections], MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 1));
-            metrics.Add(new Metric(ReuseDuration, parsedMetrics[ReuseDuration], MetricUnit.Seconds, MetricRelativity.Undefined, verbosity: 3));
+            metrics.Add(new Metric(ReuseDuration, parsedMetrics[ReuseDuration], MetricUnit.Seconds, MetricRelativity.Undefined, verbosity: 2));
             metrics.Add(new Metric(ReuseBytesperConnection, parsedMetrics[ReuseBytesperConnection], MetricUnit.BytesPerConnection, MetricRelativity.HigherIsBetter, verbosity: 1));
             metrics.Add(new Metric(ReuseConnThroughput, reuseConnThroughput, MetricUnit.BytesPerSecond, MetricRelativity.HigherIsBetter, verbosity: 1));
             metrics.Add(new Metric(ReuseConnPerSec, reuseConnPerSec, MetricUnit.Count, MetricRelativity.HigherIsBetter, verbosity: 1));
@@ -101,10 +101,10 @@
               1696 connections in 0.86s; 1972.09 connections/user sec, bytes read 547808
               1696 connections in 6 real seconds, 323 bytes read per connection
             */
-            
+
             // ignore the first connections and connections per user metric as it is conflicting with 
             // total connections in n seconds
-            
+
             // Initial run
             var match1 = Regex.Match(input, @"(\d+) connections in ([\d.]+)s; ([\d.]+) connections/user sec, bytes read (\d+)");
             if (match1.Success)

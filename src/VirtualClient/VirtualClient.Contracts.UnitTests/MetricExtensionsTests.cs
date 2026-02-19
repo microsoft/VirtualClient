@@ -40,8 +40,8 @@ namespace VirtualClient.Contracts
 
                 new Metric("verbose_test_1", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("verbose_test_2", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 1),
-                new Metric("verbose_test_3", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: 3),
-                new Metric("verbose_test_4", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 3),
+                new Metric("verbose_test_3", 123, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
+                new Metric("verbose_test_4", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
                 new Metric("verbose_test_5", -123, "unit", MetricRelativity.HigherIsBetter, verbosity: 5),
             };
         }
@@ -71,8 +71,8 @@ namespace VirtualClient.Contracts
             IEnumerable<string> filter = new List<string> { "Verbosity:1" };
             CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= 1).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
-            filter = new List<string> { "Verbosity:3" };
-            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= 3).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
+            filter = new List<string> { "Verbosity:2" };
+            CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= 2).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
 
             filter = new List<string> { "Verbosity:5" };
             CollectionAssert.AreEquivalent(this.metrics.Where(m => m.Verbosity <= 5).Select(m => m.Name), this.metrics.FilterBy(filter).Select(m => m.Name));
@@ -186,13 +186,13 @@ namespace VirtualClient.Contracts
         [Test]
         public void FilterByExtensionSupportsAllVerbosityLevels()
         {
-            // Setup metrics with different verbosity levels (1, 3, 5 only)
+            // Setup metrics with different verbosity levels (1, 2, 5 only)
             var metrics = new List<Metric>
             {
                 new Metric("critical_metric_1a", 1, "unit", MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("critical_metric_1b", 2, "unit", MetricRelativity.HigherIsBetter, verbosity: 1),
-                new Metric("detailed_metric_3a", 3, "unit", MetricRelativity.HigherIsBetter, verbosity: 3),
-                new Metric("detailed_metric_3b", 4, "unit", MetricRelativity.HigherIsBetter, verbosity: 3),
+                new Metric("detailed_metric_2a", 3, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
+                new Metric("detailed_metric_2b", 4, "unit", MetricRelativity.HigherIsBetter, verbosity: 2),
                 new Metric("verbose_metric_5a", 5, "unit", MetricRelativity.HigherIsBetter, verbosity: 5),
                 new Metric("verbose_metric_5b", 6, "unit", MetricRelativity.HigherIsBetter, verbosity: 5)
             };
@@ -203,11 +203,11 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(2, result1.Count());
             Assert.IsTrue(result1.All(m => m.Verbosity == 1));
 
-            // Test verbosity:3 - should return level 1 + level 3 metrics
-            var filter3 = new List<string> { "verbosity:3" };
-            var result3 = metrics.FilterBy(filter3);
-            Assert.AreEqual(4, result3.Count());
-            Assert.IsTrue(result3.All(m => m.Verbosity <= 3));
+            // Test verbosity:2 - should return level 1 + level 2 metrics
+            var filter2 = new List<string> { "verbosity:2" };
+            var result2 = metrics.FilterBy(filter2);
+            Assert.AreEqual(4, result2.Count());
+            Assert.IsTrue(result2.All(m => m.Verbosity <= 2));
 
             // Test verbosity:5 - should return all metrics
             var filter5 = new List<string> { "verbosity:5" };
@@ -233,10 +233,31 @@ namespace VirtualClient.Contracts
             var result2 = metrics.FilterBy(invalidFilter2);
             Assert.AreEqual(0, result2.Count());
 
-            // Test verbosity less than 1
-            var invalidFilter3 = new List<string> { "verbosity:0" };
+            // Test verbosity less than 0 (negative)
+            var invalidFilter3 = new List<string> { "verbosity:-1" };
             var result3 = metrics.FilterBy(invalidFilter3);
             Assert.AreEqual(0, result3.Count());
+        }
+
+        [Test]
+        public void FilterByExtensionHandlesBackwardCompatibilityForVerbosityZero()
+        {
+            var metrics = new List<Metric>
+            {
+                new Metric("critical_metric", 1, "unit", MetricRelativity.HigherIsBetter, verbosity: 0),
+                new Metric("standard_metric", 2, "unit", MetricRelativity.HigherIsBetter, verbosity: 1),
+                new Metric("detailed_metric", 3, "unit", MetricRelativity.HigherIsBetter, verbosity: 2)
+            };
+
+            // verbosity:0 should be mapped to verbosity:1 for backward compatibility
+            var filter = new List<string> { "verbosity:0" };
+            var result = metrics.FilterBy(filter);
+
+            // Should include metrics with verbosity 0 and 1 (since 0 maps to 1)
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(result.Any(m => m.Name == "critical_metric"));
+            Assert.IsTrue(result.Any(m => m.Name == "standard_metric"));
+            Assert.IsFalse(result.Any(m => m.Name == "detailed_metric"));
         }
 
         [Test]
@@ -268,7 +289,7 @@ namespace VirtualClient.Contracts
                 new Metric("bandwidth_write", 2, "MB/s", MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("iops_read", 3, "ops/s", MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("iops_write", 4, "ops/s", MetricRelativity.HigherIsBetter, verbosity: 1),
-                new Metric("latency_p99", 5, "ms", MetricRelativity.LowerIsBetter, verbosity: 3)
+                new Metric("latency_p99", 5, "ms", MetricRelativity.LowerIsBetter, verbosity: 5)
             };
 
             // Filter: verbosity <= 1 AND name contains "bandwidth"
@@ -283,18 +304,18 @@ namespace VirtualClient.Contracts
         {
             var metrics = new List<Metric>
             {
-                new Metric("h000_latency", 1, "ms", MetricRelativity.LowerIsBetter, verbosity: 3),
-                new Metric("h001_latency", 2, "ms", MetricRelativity.LowerIsBetter, verbosity: 3),
+                new Metric("h000_latency", 1, "ms", MetricRelativity.LowerIsBetter, verbosity: 5),
+                new Metric("h001_latency", 2, "ms", MetricRelativity.LowerIsBetter, verbosity: 5),
                 new Metric("bandwidth_read", 3, "MB/s", MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("bandwidth_write", 4, "MB/s", MetricRelativity.HigherIsBetter, verbosity: 1),
                 new Metric("iops", 5, "ops/s", MetricRelativity.HigherIsBetter, verbosity: 1)
             };
 
-            // Complex filter: verbosity <= 3, exclude h00* metrics, include only bandwidth or iops
-            var complexFilter = new List<string> { "verbosity:3", "-h00*", "bandwidth|iops" };
+            // Complex filter: verbosity <= 5, exclude h00* metrics, include only bandwidth or iops
+            var complexFilter = new List<string> { "verbosity:5", "-h00*", "bandwidth|iops" };
             var result = metrics.FilterBy(complexFilter);
-            
-            Assert.IsTrue(result.All(m => m.Verbosity <= 3));
+
+            Assert.IsTrue(result.All(m => m.Verbosity <= 5));
             Assert.IsFalse(result.Any(m => m.Name.StartsWith("h00")));
             Assert.IsTrue(result.All(m => m.Name.Contains("bandwidth") || m.Name.Contains("iops")));
         }

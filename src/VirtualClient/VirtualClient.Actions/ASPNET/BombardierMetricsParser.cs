@@ -36,9 +36,9 @@ namespace VirtualClient.Actions
             this.metrics.Add(new Metric("Latency Average", root.Result.Latency.Mean, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 1));
             this.metrics.Add(new Metric("Latency Stddev", root.Result.Latency.Stddev, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 5));
             this.metrics.Add(new Metric("Latency P50", root.Result.Latency.Percentiles.P50, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 1));
-            this.metrics.Add(new Metric("Latency P75", root.Result.Latency.Percentiles.P75, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
-            this.metrics.Add(new Metric("Latency P90", root.Result.Latency.Percentiles.P90, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
-            this.metrics.Add(new Metric("Latency P95", root.Result.Latency.Percentiles.P95, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 3));
+            this.metrics.Add(new Metric("Latency P75", root.Result.Latency.Percentiles.P75, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
+            this.metrics.Add(new Metric("Latency P90", root.Result.Latency.Percentiles.P90, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
+            this.metrics.Add(new Metric("Latency P95", root.Result.Latency.Percentiles.P95, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 2));
             this.metrics.Add(new Metric("Latency P99", root.Result.Latency.Percentiles.P99, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter, verbosity: 1));
 
             this.metrics.Add(new Metric("RequestPerSecond Max", root.Result.Rps.Max, MetricUnit.RequestsPerSec, MetricRelativity.HigherIsBetter, verbosity: 5));

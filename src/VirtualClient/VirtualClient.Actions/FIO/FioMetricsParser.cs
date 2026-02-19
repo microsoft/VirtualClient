@@ -200,9 +200,9 @@ namespace VirtualClient.Actions
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.000000']", "read_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 1);
 
                     // Level 3 - Detailed: Other percentiles
-                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['70.000000']", "read_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 3);
-                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['90.000000']", "read_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 3);
-                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.990000']", "read_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 3);
+                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['70.000000']", "read_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['90.000000']", "read_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.990000']", "read_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
                     // Level 1 - Standard submission latency metrics
                     this.AddMeasurement(metrics, job, $"read.slat_ns.min", "read_submissionlatency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 1);
@@ -263,9 +263,9 @@ namespace VirtualClient.Actions
                     this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['99.000000']", "write_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 1);
 
                     // Level 3 - Detailed: Other percentiles
-                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['70.000000']", "write_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 3);
-                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['90.000000']", "write_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 3);
-                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['99.990000']", "write_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 3);
+                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['70.000000']", "write_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['90.000000']", "write_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
+                    this.AddMeasurement(metrics, job, $"write.clat_ns.percentile.['99.990000']", "write_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
 
                     // Level 1 - Standard submission latency metrics
                     this.AddMeasurement(metrics, job, $"write.slat_ns.min", "write_submissionlatency_min", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 1);

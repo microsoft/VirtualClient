@@ -47,13 +47,16 @@ namespace VirtualClient.Contracts
         /// A filtered set of metrics matching the criteria.
         /// </returns>
         /// <remarks>
-        /// Verbosity levels (only 1, 3, and 5 are currently used; 2 and 4 are reserved):
+        /// Verbosity levels define a convention for organizing metrics by importance:
         /// - 1 (Standard/Critical): Most important metrics - bandwidth, throughput, IOPS, key latency percentiles (p50, p99)
-        /// - 2 (Reserved): Reserved for future expansion
-        /// - 3 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
+        /// - 2 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
+        /// - 3 (Reserved): Reserved for future expansion
         /// - 4 (Reserved): Reserved for future expansion
         /// - 5 (Verbose): All diagnostic/internal metrics - histogram buckets, standard deviations, byte counts, I/O counts
         /// 
+        /// Currently, only levels 1, 2, and 5 are actively used. Levels 3 and 4 are reserved for future use.
+        /// 
+        /// For backward compatibility, verbosity:0 is mapped to verbosity:1.
         /// Filters are composable - verbosity filtering is applied first, then name-based filtering.
         /// </remarks>
         public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<string> filterTerms)
@@ -69,9 +72,15 @@ namespace VirtualClient.Contracts
                 if (!string.IsNullOrEmpty(verbosityFilter))
                 {
                     // Extract the verbosity level from the filter (e.g., "verbosity:3" -> 3)
-                    string[] parts = verbosityFilter.Split(':'); 
-                    if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int maxVerbosity) && maxVerbosity >= 1 && maxVerbosity <= 5)
+                    string[] parts = verbosityFilter.Split(':');
+                    if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int maxVerbosity) && maxVerbosity >= 0 && maxVerbosity <= 5)
                     {
+                        // Backward compatibility: Map old level 0 to new level 1
+                        if (maxVerbosity == 0)
+                        {
+                            maxVerbosity = 1;
+                        }
+
                         // Filter metrics to include only those with verbosity <= maxVerbosity
                         filteredMetrics = filteredMetrics.Where(m => m.Verbosity <= maxVerbosity);
                     }
@@ -124,7 +133,8 @@ namespace VirtualClient.Contracts
                 table.Columns.Add("Value", typeof(double));
                 table.Columns.Add("Unit", typeof(string));
 
-                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == 1).ToList() : metrics;
+                // Support both old (0) and new (1) critical levels for backward compatibility
+                IEnumerable<Metric> metricsToPrint = criticalOnly ? metrics.Where(m => m.Verbosity == 0 || m.Verbosity == 1).ToList() : metrics;
 
                 foreach (Metric metric in metricsToPrint)
                 {

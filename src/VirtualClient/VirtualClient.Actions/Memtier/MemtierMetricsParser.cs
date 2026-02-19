@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         // Sets         4827.17          ---          ---         2.64323         2.83100         3.93500         4.47900         7.45500        29.56700       329.45
         // Waits           0.00          ---          ---             ---             ---             ---             ---             ---             ---          ---
         // Totals      48271.29     43444.12         0.00         2.62213         2.75100         3.90300         4.41500         7.42300        29.31100      4053.46
-        
+
         private static readonly Regex BandwidthExpression = new Regex(@"Bandwidth|Throughput", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex GetsExpression = new Regex(@"(?<=Gets).*(?=\n)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex GetLatencyP80Expression = new Regex(@"(?<=GET)\s+([0-9\.]+)\s+.*80[\.0]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -364,7 +364,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Latency-P90" : $"{metricNamePrefix}-Latency-P90",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
-                        verbosity: 3,
+                        verbosity: 2,
                         description: "The latency for 90% of all requests was at or under this value.")
                 },
                 // Level 3 - Detailed: P95 latency
@@ -374,7 +374,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Latency-P95" : $"{metricNamePrefix}-Latency-P95",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
-                        verbosity: 3,
+                        verbosity: 2,
                         description: "The latency for 95% of all requests was at or under this value.")
                 },
                 // Level 1 - Critical: P99 latency
@@ -394,7 +394,7 @@ namespace VirtualClient.Actions
                         metricNamePrefix == null ? "Latency-P99.9" : $"{metricNamePrefix}-Latency-P99.9",
                         metricUnit: MetricUnit.Milliseconds,
                         relativity: MetricRelativity.LowerIsBetter,
-                        verbosity: 3,
+                        verbosity: 2,
                         description: "The latency for 99.9% of all requests was at or under this value.")
                 },
                 // Level 1 - Critical: Bandwidth
