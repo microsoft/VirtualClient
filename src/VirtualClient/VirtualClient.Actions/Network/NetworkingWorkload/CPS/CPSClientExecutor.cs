@@ -65,12 +65,12 @@ namespace VirtualClient.Actions.NetworkPerformance
             // -c (client mode)
             if (!this.CommandLineWindowsClient.Contains("-c", StringComparison.OrdinalIgnoreCase))
             {
-                this.CommandLineWindowsClient += "-c ";
+                this.CommandLineWindowsClient += " -c";
             }
 
             // -r {Connections}
             // Your reference includes "-c -r {Connections}"
-            if (!this.CommandLineWindowsClient.Contains("-r", StringComparison.OrdinalIgnoreCase) && this.Connections != null)
+            if (!this.CommandLineWindowsClient.Contains("-r", StringComparison.OrdinalIgnoreCase))
             {
                 this.CommandLineWindowsClient += $"-r {this.Connections} ";
             }
@@ -85,7 +85,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
 
             // -i {DisplayInterval}
-            if (!this.CommandLineWindowsClient.Contains("-i", StringComparison.OrdinalIgnoreCase) && this.DisplayInterval != null)
+            if (!this.CommandLineWindowsClient.Contains("-i", StringComparison.OrdinalIgnoreCase))
             {
                 this.CommandLineWindowsClient += $"-i {this.DisplayInterval} ";
             }

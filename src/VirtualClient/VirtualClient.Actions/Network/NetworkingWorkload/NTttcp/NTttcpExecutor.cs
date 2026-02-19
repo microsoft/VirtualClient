@@ -199,70 +199,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Commandline for linux client side.
-        /// </summary>
-        public string CommandLineLinuxClient
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.CommandLineLinuxClient)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Commandline for linux server side.
-        /// </summary>
-        public string CommandLineLinuxServer
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxServer));
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.CommandLineLinuxServer)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Commandline for windows client side.
-        /// </summary>
-        public string CommandLineWindowsClient
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsClient));
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.CommandLineWindowsClient)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Commandline for windows server side.
-        /// </summary>
-        public string CommandLineWindowsServer
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsServer));
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.CommandLineWindowsServer)] = value;
-            }
-        }
-
-        /// <summary>
         /// The retry policy to apply to the startup of the NTttcp workload to handle
         /// transient issues.
         /// </summary>
@@ -320,9 +256,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected override string GetCommandLineArguments()
         {
             string command = null;
-            if (this.Platform == PlatformID.Win32NT)
+            if (this.Platform == PlatformID.Win32NT && this.IsInClientRole)
             {
-                command = this.GetWindowsSpecificCommandLine();
+                command = this.CommandLineWindowsClient;
             }
             else if (this.Platform == PlatformID.Unix)
             {
@@ -600,50 +536,6 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
         }
 
-        private void IntializeWindowsServerCommandline()
-        {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            if (!this.CommandLineWindowsServer.Contains("-r") && !this.CommandLineWindowsServer.Contains("-s"))
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + " -r";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-t") && this.TestDuration != null)
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -t {this.TestDuration.TotalSeconds}";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-l") && this.BufferSizeServer != null)
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -l {this.BufferSizeServer}";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-p"))
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -p {this.Port}";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-xml") && this.ResultsPath != null)
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $" -xml {this.ResultsPath}";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-u") && this.Protocol != null)
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"{(this.Protocol.ToLowerInvariant() == "udp" ? " -u" : string.Empty)} ";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-ns") && this.NoSyncEnabled != null)
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"{(this.NoSyncEnabled == true ? " -ns" : string.Empty)} ";
-            }
-
-            if (!this.CommandLineWindowsServer.Contains("-m"))
-            {
-                this.CommandLineWindowsServer = this.CommandLineWindowsServer + $"-m {this.ThreadCount},*,{serverIPAddress} ";
-            }
-        }
-
         private void IntializeLinuxClientCommandline()
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
@@ -696,12 +588,12 @@ namespace VirtualClient.Actions.NetworkPerformance
 
             if (!this.CommandLineLinuxClient.Contains("-n"))
             {
-                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(( this.ThreadsPerServerPort != null) ? $" -n {this.ThreadsPerServerPort}" : string.Empty)} ";
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{((this.ThreadsPerServerPort != null) ? $" -n {this.ThreadsPerServerPort}" : string.Empty)} ";
             }
 
             if (!this.CommandLineLinuxClient.Contains("-l"))
             {
-                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{(( this.ConnectionsPerThread != null) ? $" -l {this.ConnectionsPerThread}" : string.Empty)} "
+                this.CommandLineLinuxClient = this.CommandLineLinuxClient + $"{((this.ConnectionsPerThread != null) ? $" -l {this.ConnectionsPerThread}" : string.Empty)} ";
             }
 
             if (!this.CommandLineLinuxClient.Contains("-N") && this.NoSyncEnabled != null)
