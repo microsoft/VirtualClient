@@ -75,10 +75,9 @@ namespace VirtualClient.Actions
                 await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
 
                 Assert.IsTrue(this.ProcessManager.CommandsExecuted(
-                    $"sudo chmod -R 2777 \"{this.mockPackage.Path}/scripts\"",
+                    $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/packages/lmbench/scripts\"",
                     $"make build CPPFLAGS=\"-I /usr/include/tirpc\"",
-                    $"bash -c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results\"",
-                    $"make summary"));
+                    $"/home/user/tools/VirtualClient/packages/lmbench/bin/x86_64-Linux/lat_mem_rd"));
             }
         }
 

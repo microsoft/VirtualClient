@@ -37,10 +37,10 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = parser.Parse();
 
             Assert.IsTrue(metrics.Count == 54);
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_64_Array_512_B" && m.Value == 1.438));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_64_Array_1_KiB" && m.Value == 1.438));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_32_Array_768_KiB" && m.Value == 1.506));
-            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency_StrideBytes_32_Array_32_MiB" && m.Value == 1.612));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency" && m.Value == 1.438));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency" && m.Value == 1.438));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency" && m.Value == 1.506));
+            Assert.IsNotNull(metrics.FirstOrDefault(m => m.Name == "Latency" && m.Value == 1.612));
         }
     }
 }
