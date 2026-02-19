@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
                 this.metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
 
                 // Every score in SPECcpu is critical metric.
-                this.metrics.ForEach(m => m.Verbosity = 0);
+                this.metrics.ForEach(m => m.Verbosity = 1);
 
                 return this.metrics;
             }
