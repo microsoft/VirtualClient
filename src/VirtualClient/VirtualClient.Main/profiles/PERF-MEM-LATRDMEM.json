@@ -8,8 +8,8 @@
     },
     "Parameters": {
         "CompilerName": "gcc",
-        "CompilerVersion": "10",
-        "CompilerFlags": "CPPFLAGS=\"-I /usr/include/tirpc\""
+        "CompilerVersion": "13",
+        "CompilerFlags": "CPPFLAGS=\" -O2 -Wall -march=native -I /usr/include/tirpc\""
     },
     "Actions": [
         {
