@@ -393,8 +393,8 @@ Metrics in the Virtual Client are assigned a verbosity level that indicates thei
 | Verbosity Level | Description | Example Metrics |
 |-----------------|-------------|-----------------|
 | 1 (Standard/Critical) | Most important metrics for decision making | bandwidth, throughput, IOPS, p50, p99 |
-| 2 (Reserved) | Reserved for future expansion | N/A |
-| 3 (Detailed) | Additional detailed metrics | p70, p90, p95, p99.9 |
+| 2 (Detailed) | Additional detailed metrics | p70, p90, p95, p99.9 |
+| 3 (Reserved) | Reserved for future expansion | N/A |
 | 4 (Reserved) | Reserved for future expansion | N/A |
 | 5 (Verbose) | All diagnostic/internal metrics | histogram buckets, standard deviations, byte counts, I/O counts |
 
