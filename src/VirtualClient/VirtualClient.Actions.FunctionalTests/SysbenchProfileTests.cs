@@ -489,14 +489,14 @@ namespace VirtualClient.Actions
                             $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_delete --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_insert --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_update_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_update_non_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload select_random_points --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload select_random_ranges --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+"
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_write --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_only --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_delete --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_insert --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_index --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_non_index --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_points --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_ranges --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+"
                         };
                     }
                     else
@@ -515,7 +515,7 @@ namespace VirtualClient.Actions
                             $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --password [A-Za-z0-9+/=]+",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --workload tpcc --threadCount 8 --tableCount 10 --warehouses 100 --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --workload tpcc --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
                         };
                     }
                 }
@@ -529,14 +529,14 @@ namespace VirtualClient.Actions
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_delete --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_insert --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_update_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload oltp_update_non_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload select_random_points --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --workload select_random_ranges --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+"
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_only --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_delete --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_insert --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_index --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_non_index --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_points --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_ranges --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+"
                         };
                     }
                     else
@@ -545,7 +545,7 @@ namespace VirtualClient.Actions
                         {
                             "apt install python3 --yes --quiet",
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --workload tpcc --threadCount 8 --tableCount 10 --warehouses 100 --hostIpAddress 1.2.3.5 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
                         };
                     }
                 }
@@ -572,14 +572,14 @@ namespace VirtualClient.Actions
                             $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --password [A-Za-z0-9+/=]+",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_delete --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_insert --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_update_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_update_non_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload select_random_points --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload select_random_ranges --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+"
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_write --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_only --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_delete --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_insert --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_index --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_non_index --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_points --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_ranges --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+"
                         };
                     }
                     else
@@ -598,7 +598,7 @@ namespace VirtualClient.Actions
                             $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
                             $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --password [A-Za-z0-9+/=]+",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --workload tpcc --threadCount 8 --tableCount 10 --warehouses 100 --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --workload tpcc --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
                         };
                     }
                 }
@@ -612,14 +612,14 @@ namespace VirtualClient.Actions
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_delete --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_insert --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_update_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload oltp_update_non_index --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload select_random_points --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --workload select_random_ranges --threadCount 8 --tableCount 1 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+"
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_read_only --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_delete --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_insert --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_index --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 10 --recordCount 1000 --threadCount 8 --workload oltp_update_non_index --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_points --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --tableCount 1 --recordCount 1000 --threadCount 8 --workload select_random_ranges --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+"
                         };
                     }
                     else
@@ -628,7 +628,7 @@ namespace VirtualClient.Actions
                         {
                             "apt install python3 --yes --quiet",
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --workload tpcc --threadCount 8 --tableCount 10 --warehouses 100 --hostIpAddress 1.2.3.5 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --tableCount 10 --warehouses 100 --threadCount 8 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
                         };
                     }
                 }

@@ -33,7 +33,7 @@
             "Type": "DiskSpdExecutor",
             "Parameters": {
                 "Scenario": "RandomWrite_4k_BlockSize",
-                "MetricScenario": "diskspd_randwrite_{FileSize}_4k_d{ThreadCount}_th{ThreadCount}",
+                "MetricScenario": "diskspd_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount}",
                 "PackageName": "diskspd",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "CommandLine": "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
