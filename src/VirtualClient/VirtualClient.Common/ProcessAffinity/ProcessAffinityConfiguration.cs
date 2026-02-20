@@ -47,6 +47,7 @@ namespace VirtualClient.Common.ProcessAffinity
 
             return platform switch
             {
+                PlatformID.Win32NT => new WindowsProcessAffinityConfiguration(cores),
                 PlatformID.Unix => new LinuxProcessAffinityConfiguration(cores),
                 _ => throw new NotSupportedException($"CPU affinity configuration is not supported on platform '{platform}'.")
             };

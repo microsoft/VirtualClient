@@ -1,0 +1,59 @@
+{
+  "Description": "Example CPU Affinity Workload Profile",
+  "MinimumExecutionInterval": "00:00:05",
+  "Metadata": {
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+  },
+  "Parameters": {
+    "ProfilingEnabled": false,
+    "ProfilingMode": "None",
+    "CoreAffinity": "0-3"
+  },
+  "Actions": [
+    {
+      "Type": "ExampleWorkloadWithAffinityExecutor",
+      "Metadata": {
+        "ExampleMetadata1": "Value1",
+        "ExampleMetadata2": true,
+        "AffinityEnabled": true
+      },
+      "Parameters": {
+        "Scenario": "CPUAffinityScenario",
+        "CommandLine": "Workload --duration=00:00:30",
+        "PackageName": "exampleworkload",
+        "BindToCores": true,
+        "CoreAffinity": "$.Parameters.CoreAffinity",
+        "ProfilingScenario": "CPUAffinityScenario",
+        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+        "ProfilingMode": "$.Parameters.ProfilingMode",
+        "ProfilingPeriod": "00:00:30",
+        "ProfilingWarmUpPeriod": "00:00:05",
+        "Tags": "Test,VC,CPUAffinity"
+      },
+      "ExampleExtensions": {
+        "OpenSource": true,
+        "Contacts": [
+          "virtualclient@microsoft.com"
+        ],
+        "Documentation": {
+          "General": "https://microsoft.github.io/VirtualClient",
+          "Profiles": "https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles",
+          "Usage": "https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line",
+          "CPUAffinity": "https://microsoft.github.io/VirtualClient/docs/guides/cpu-affinity"
+        }
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallExampleWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "exampleworkload.1.1.0.zip",
+        "PackageName": "exampleworkload",
+        "Extract": true
+      }
+    }
+  ]
+}
