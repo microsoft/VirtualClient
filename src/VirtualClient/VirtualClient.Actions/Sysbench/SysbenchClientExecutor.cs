@@ -230,11 +230,7 @@ namespace VirtualClient.Actions
 
         private async Task RunOLTPWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
+            this.sysbenchLoggingArguments = $"{this.BuildSysbenchLoggingOLTPBasicArguments()} --workload {this.Workload} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
@@ -289,7 +285,7 @@ namespace VirtualClient.Actions
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
             int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
+            this.sysbenchLoggingArguments = $"{this.BuildSysbenchLoggingTPCCBasicArguments()} --workload tpcc ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
             string script = $"{this.SysbenchPackagePath}/run-workload.py ";
@@ -338,11 +334,8 @@ namespace VirtualClient.Actions
 
         private async Task PrepareOLTPMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+            this.sysbenchLoggingArguments = this.BuildSysbenchLoggingOLTPBasicArguments();
 
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount}";
             this.sysbenchPrepareArguments = $"{this.sysbenchLoggingArguments} --password {this.SuperUserPassword}";
 
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
