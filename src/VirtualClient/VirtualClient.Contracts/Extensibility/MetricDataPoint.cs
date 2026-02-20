@@ -79,8 +79,9 @@ namespace VirtualClient.Contracts.Extensibility
         /// <summary>
         /// The priority/verbosity of the metric. Recommended Values:
         /// - 1 (Standard/Critical): Most important metrics
-        /// - 3 (Detailed): Additional detailed metrics
+        /// - 2 (Detailed): Additional detailed metrics
         /// - 5 (Verbose): All diagnostic/internal metrics
+        /// Verbosity level 3 is reserved for future expansion and should not be used.
         /// </summary>
         /// <remarks>
         /// Allows the user to ascribe different levels of priority/verbosity to a set of metrics that can 
