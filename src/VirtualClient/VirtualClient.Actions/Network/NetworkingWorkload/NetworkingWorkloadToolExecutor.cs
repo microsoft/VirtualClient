@@ -403,6 +403,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected virtual string GetCommandLineArguments()
         {
             string command = string.Empty;
+             
             if (this.Platform == PlatformID.Win32NT && this.IsInClientRole)
             {
                 command = this.CommandLineWindowsClient;
@@ -411,6 +412,16 @@ namespace VirtualClient.Actions.NetworkPerformance
             {
                 command = this.CommandLineWindowsServer;
             }
+            else if (this.Platform == PlatformID.Unix && this.IsInClientRole)
+            {
+                command = this.CommandLineLinuxClient;
+            }
+            else if (this.Platform == PlatformID.Unix && !this.IsInClientRole)
+            {
+                command = this.CommandLineLinuxServer;
+            }
+
+            return command;
         }
 
         /// <summary>
