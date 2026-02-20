@@ -472,7 +472,7 @@ Multiple filter types can be combined. Verbosity filtering is applied first, fol
 ```
 
 The example above will:
-1. Include only metrics with verbosity ? 3
+1. Include only metrics with verbosity ≤ 3
 2. Exclude metrics matching the pattern "histogram*"
 3. From the remaining metrics, include only those matching "bandwidth", "iops", or "latency"
 
