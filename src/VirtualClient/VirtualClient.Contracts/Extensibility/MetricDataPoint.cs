@@ -77,12 +77,17 @@ namespace VirtualClient.Contracts.Extensibility
         public double? MetricValue;
 
         /// <summary>
-        /// The priority/verbosity of the metric. Recommended Values = 0 (Critical), 1 (Standard), 2 (Informational) etc..
+        /// The priority/verbosity of the metric. Recommended Values:
+        /// - 1 (Standard/Critical): Most important metrics
+        /// - 2 (Detailed): Additional detailed metrics
+        /// - 5 (Verbose): All diagnostic/internal metrics
+        /// Verbosity level 3 is reserved for future expansion and should not be used.
         /// </summary>
         /// <remarks>
         /// Allows the user to ascribe different levels of priority/verbosity to a set of metrics that can 
         /// be used for queries/filtering. Lower values indicate higher priority. For example, metrics considered 
-        /// to be the most critical for decision making would be set with verbosity = 0 (Critical).
+        /// to be the most critical for decision making would be set with verbosity = 1 (Critical).
+        /// For backward compatibility, verbosity = 0 is mapped to verbosity = 1.
         /// </remarks>
         [JsonProperty("metricVerbosity", Required = Required.Default)]
         [YamlMember(Alias = "metricVerbosity", ScalarStyle = ScalarStyle.Plain)]

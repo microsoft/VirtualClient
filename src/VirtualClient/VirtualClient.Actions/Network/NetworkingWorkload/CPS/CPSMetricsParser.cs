@@ -82,24 +82,24 @@ namespace VirtualClient.Actions.NetworkPerformance
             double lowerCI = mean - t;
             double upperCI = mean + t;
 
-            metrics.Add(new Metric("ConnectsPerSec_Min", connectsPerSec.Min()));
-            metrics.Add(new Metric("ConnectsPerSec_Max", connectsPerSec.Max()));
-            metrics.Add(new Metric("ConnectsPerSec_Med", connectsPerSec.Median()));
-            metrics.Add(new Metric("ConnectsPerSec_Avg", connectsPerSec.Average(), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 0));
-            metrics.Add(new Metric("ConnectsPerSec_P25", connectsPerSec.Percentile(25)));
-            metrics.Add(new Metric("ConnectsPerSec_P50", connectsPerSec.Percentile(50)));
-            metrics.Add(new Metric("ConnectsPerSec_P75", connectsPerSec.Percentile(75)));
-            metrics.Add(new Metric("ConnectsPerSec_P90", connectsPerSec.Percentile(90)));
-            metrics.Add(new Metric("ConnectsPerSec_P99", connectsPerSec.Percentile(99)));
-            metrics.Add(new Metric("ConnectsPerSec_P99_9", Statistics.QuantileCustom(connectsPerSec, 1d - 0.001d, QuantileDefinition.R3)));
-            metrics.Add(new Metric("ConnectsPerSec_P99_99", Statistics.QuantileCustom(connectsPerSec, 1d - 0.0001d, QuantileDefinition.R3)));
-            metrics.Add(new Metric("ConnectsPerSec_P99_999", Statistics.QuantileCustom(connectsPerSec, 1d - 0.00001d, QuantileDefinition.R3)));
+            metrics.Add(new Metric("ConnectsPerSec_Min", connectsPerSec.Min(), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_Max", connectsPerSec.Max(), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 5));
+            metrics.Add(new Metric("ConnectsPerSec_Med", connectsPerSec.Median(), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_Avg", connectsPerSec.Average(), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 1));
+            metrics.Add(new Metric("ConnectsPerSec_P25", connectsPerSec.Percentile(25), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_P50", connectsPerSec.Percentile(50), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 1));
+            metrics.Add(new Metric("ConnectsPerSec_P75", connectsPerSec.Percentile(75), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_P90", connectsPerSec.Percentile(90), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_P99", connectsPerSec.Percentile(99), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 1));
+            metrics.Add(new Metric("ConnectsPerSec_P99_9", Statistics.QuantileCustom(connectsPerSec, 1d - 0.001d, QuantileDefinition.R3), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_P99_99", Statistics.QuantileCustom(connectsPerSec, 1d - 0.0001d, QuantileDefinition.R3), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 5));
+            metrics.Add(new Metric("ConnectsPerSec_P99_999", Statistics.QuantileCustom(connectsPerSec, 1d - 0.00001d, QuantileDefinition.R3), MetricUnit.TransactionsPerSec, MetricRelativity.HigherIsBetter, verbosity: 5));
             double median = Statistics.Median(connectsPerSec);
             double[] absoluteDeviations = connectsPerSec.Select(x => Math.Abs(x - median)).ToArray();
-            metrics.Add(new Metric("ConnectsPerSec_Mad", Statistics.Median(absoluteDeviations), MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
-            metrics.Add(new Metric("ConnectsPerSec_StandardErrorMean", sem, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
-            metrics.Add(new Metric("ConnectsPerSec_LowerCI", lowerCI, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
-            metrics.Add(new Metric("ConnectsPerSec_UpperCI", upperCI, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 2));
+            metrics.Add(new Metric("ConnectsPerSec_Mad", Statistics.Median(absoluteDeviations), MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 5));
+            metrics.Add(new Metric("ConnectsPerSec_StandardErrorMean", sem, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 5));
+            metrics.Add(new Metric("ConnectsPerSec_LowerCI", lowerCI, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 5));
+            metrics.Add(new Metric("ConnectsPerSec_UpperCI", upperCI, MetricUnit.TransactionsPerSec, MetricRelativity.LowerIsBetter, verbosity: 5));
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             bool appendResult = true;
             int valueIndex = 0;
-            
+
             // The timestamps and connectionsPerSecond co-relate on the index.
             List<double> timestamps = new List<double>();
             List<double> connectionsPerSec = new List<double>();
