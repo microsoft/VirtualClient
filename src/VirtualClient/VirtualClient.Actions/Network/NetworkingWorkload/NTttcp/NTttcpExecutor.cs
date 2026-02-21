@@ -251,24 +251,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Returns the NTttcp command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
-        {
-            string command = null;
-            if (this.Platform == PlatformID.Win32NT && this.IsInClientRole)
-            {
-                command = this.CommandLineWindowsClient;
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                command = this.GetLinuxSpecificCommandLine();
-            }
-
-            return command;
-        }
-
-        /// <summary>
         /// Gets the Sysctl command output.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>

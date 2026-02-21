@@ -142,17 +142,5 @@ namespace VirtualClient.Actions.NetworkPerformance
 
             this.CommandLineLinuxServer = this.CommandLineLinuxServer.Trim();
         }
-
-        /// <summary>
-        /// Returns the Sockperf server-side command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
-        {
-            // sockperf server -i 10.0.1.1 -p 8201 --tcp
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            string protocolParam = this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
-
-            return $"server -i {serverIPAddress} -p {this.Port} {protocolParam}".Trim();
-        }
     }
 }

@@ -38,6 +38,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
+            this.InitializeWindowsClientCommandline();  
         }
 
         /// <inheritdoc/>
