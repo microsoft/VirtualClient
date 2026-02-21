@@ -28,6 +28,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfClientExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.InitializeLinuxClientCommandline();
         }
 
         /// <summary>
