@@ -104,6 +104,45 @@ namespace VirtualClient.Actions.NetworkPerformance
             });
         }
 
+        private void InitializeLinuxServerCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            
+            this.CommandLineLinuxServer ??= string.Empty;
+
+            if (this.CommandLineLinuxServer.Length > 0 && !char.IsWhiteSpace(this.CommandLineLinuxServer[^1]))
+            {
+                this.CommandLineLinuxServer += " ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("server", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += "server";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("--tcp", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-i", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += $"-i {serverIPAddress} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-p", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-t", StringComparison.OrdinalIgnoreCase) && this.TestDuration != null)
+            {
+                this.CommandLineLinuxServer += $"-t {this.TestDuration.TotalSeconds} ";
+            }
+
+            this.CommandLineLinuxServer = this.CommandLineLinuxServer.Trim();
+        }
+
         /// <summary>
         /// Returns the Sockperf server-side command line arguments.
         /// </summary>

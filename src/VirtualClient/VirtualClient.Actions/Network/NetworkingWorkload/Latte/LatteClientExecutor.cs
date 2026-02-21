@@ -97,18 +97,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Returns the Latte client-side command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
-        {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-
-            return $"-so -c -a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} " +
-            $"-hist -hl 1 -hc 9998 -bl {clientIPAddress}";
-        }
-
-        /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
         protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
@@ -137,6 +125,40 @@ namespace VirtualClient.Actions.NetworkPerformance
                     telemetryContext,
                     results);
             }
+        }
+
+        private void InitializeWindowsClientCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+
+            this.CommandLineWindowsClient ??= string.Empty;
+
+            if (this.CommandLineWindowsClient.Length > 0 && !char.IsWhiteSpace(this.CommandLineWindowsClient[^1]))
+            {
+                this.CommandLineWindowsClient += " ";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("--tcp", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineWindowsClient += this.Protocol.ToLowerInvariant() == "tcp" ? " --tcp" : string.Empty;
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-i", StringComparison.OrdinalIgnoreCase) && this.Iterations != 0)
+            {
+                this.CommandLineWindowsClient += $" -i {this.Iterations} ";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-riopoll", StringComparison.OrdinalIgnoreCase) && this.RioPoll != 0)
+            {
+                this.CommandLineWindowsClient += $" -riopoll {this.RioPoll}";
+            }
+
+            if (this.Protocol != null && !this.CommandLineWindowsClient.Contains($"-{this.Protocol.ToString().ToLowerInvariant()}"))
+            {
+                this.CommandLineWindowsClient += $" -{this.Protocol.ToString().ToLowerInvariant()}";
+            }
+
+            this.CommandLineWindowsClient = this.CommandLineWindowsClient.Trim();
         }
     }
 }

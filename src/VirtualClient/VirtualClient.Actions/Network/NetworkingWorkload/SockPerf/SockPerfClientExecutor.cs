@@ -3,13 +3,14 @@
 
 namespace VirtualClient.Actions.NetworkPerformance
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Org.BouncyCastle.Pqc.Crypto.Lms;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -108,26 +109,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Returns the Sockperf client-side command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
-        {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
-            string protocolParam = this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
-
-            // sockperf under-load -i 10.0.1.1 -p 8201 -t 60 --mps=max --full-rtt --msg-size 64 --client_ip 10.0.1.0
-            return $"{this.TestMode} " +
-                $"-i {serverIPAddress} " +
-                $"-p {this.Port} {protocolParam} " +
-                $"-t {this.TestDuration.TotalSeconds} " +
-                $"{(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")} " +
-                $"--full-rtt --msg-size {this.MessageSize} " +
-                $"--client_ip {clientIPAddress} " +
-                $"--full-log {this.ResultsPath}";
-        }
-
-        /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
         protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
@@ -164,6 +145,66 @@ namespace VirtualClient.Actions.NetworkPerformance
                 await this.SystemManagement.FileSystem.File.DeleteAsync(this.ResultsPath)
                     .ConfigureAwait(false);
             }
+        }
+
+        private void InitializeLinuxClientCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+
+            this.CommandLineLinuxClient ??= string.Empty;
+
+            if (this.CommandLineLinuxClient.Length > 0 && !char.IsWhiteSpace(this.CommandLineLinuxClient[^1]))
+            {
+                this.CommandLineLinuxClient += " ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains(this.TestMode, StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $" {this.TestMode}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("--tcp", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-i", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $"-i {serverIPAddress} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-p", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("-t", StringComparison.OrdinalIgnoreCase) && this.TestDuration != null)
+            {
+                this.CommandLineLinuxClient += $"-t {this.TestDuration.TotalSeconds} ";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("--mps", StringComparison.OrdinalIgnoreCase) && this.MessagesPerSecond != null)
+            {
+                this.CommandLineLinuxClient += $" {(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("--msg-size", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $" --msg-size {this.MessageSize}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("--client_ip", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $" --client_ip  {clientIPAddress}";
+            }
+
+            if (!this.CommandLineLinuxClient.Contains("--full-log", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $" --full-log  {this.ResultsPath}";
+            }
+
+            this.CommandLineLinuxClient = this.CommandLineLinuxClient.Trim();
         }
     }
 }

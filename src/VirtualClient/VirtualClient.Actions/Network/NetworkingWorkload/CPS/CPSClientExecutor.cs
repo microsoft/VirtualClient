@@ -31,21 +31,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-        }
-
-        /// <summary>
-        /// Returns the CPS client-side command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
-        {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-
-            return $"-c -r {this.Connections} " +
-                $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
-                $"-i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
-                $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)} " +
-                $"{this.AdditionalParams}".Trim();
+            this.InitializeWindowsClientCommandline();
+            this.InitializeLinuxClientCommandline();
         }
         
         private void InitializeWindowsClientCommandline()
@@ -123,5 +110,79 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.CommandLineWindowsClient = this.CommandLineWindowsClient.Trim();
         }
 
+        private void InitializeLinuxClientCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+
+            // Ensure base string isn't null.
+            this.CommandLineLinuxClient ??= string.Empty;
+
+            // Normalize: keep a trailing space so appends don't glue together.
+            if (this.CommandLineLinuxClient.Length > 0 && !char.IsWhiteSpace(this.CommandLineLinuxClient[^1]))
+            {
+                this.CommandLineLinuxClient += " ";
+            }
+
+            // -c (client mode)
+            if (!this.CommandLineLinuxClient.Contains("-c", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += " -c";
+            }
+
+            // -r {Connections}
+            // Your reference includes "-c -r {Connections}"
+            if (!this.CommandLineLinuxClient.Contains("-r", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $"-r {this.Connections} ";
+            }
+
+            // Endpoint tuple:
+            // {clientIPAddress},0,{serverIPAddress},{Port},{ConnectionsPerThread},{MaxPendingRequestsPerThread},{ConnectionDuration},{DataTransferMode}
+            // Add it only if we don't already see the server IP (good heuristic to avoid duplication).
+            if (!this.CommandLineLinuxClient.Contains(serverIPAddress, StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient +=
+                    $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} ";
+            }
+
+            // -i {DisplayInterval}
+            if (!this.CommandLineLinuxClient.Contains("-i", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxClient += $"-i {this.DisplayInterval} ";
+            }
+
+            // -wt {WarmupTime.TotalSeconds}
+            if (!this.CommandLineLinuxClient.Contains("-wt", StringComparison.OrdinalIgnoreCase) && this.WarmupTime != null)
+            {
+                this.CommandLineLinuxClient += $"-wt {this.WarmupTime.TotalSeconds} ";
+            }
+
+            // -t {TestDuration.TotalSeconds}
+            if (!this.CommandLineLinuxClient.Contains("-t", StringComparison.OrdinalIgnoreCase) && this.TestDuration != null)
+            {
+                this.CommandLineLinuxClient += $"-t {this.TestDuration.TotalSeconds} ";
+            }
+
+            // Optional: -ds {DelayTime.TotalSeconds} only if DelayTime != 0
+            if (!this.CommandLineLinuxClient.Contains("-ds", StringComparison.OrdinalIgnoreCase) &&
+                this.DelayTime != TimeSpan.Zero)
+            {
+                this.CommandLineLinuxClient += $"-ds {this.DelayTime.TotalSeconds} ";
+            }
+
+            // Additional params (append once)
+            if (!string.IsNullOrWhiteSpace(this.AdditionalParams))
+            {
+                // Optional: prevent double-appending if already present.
+                // You can remove this block if AdditionalParams is expected to be dynamic.
+                if (!this.CommandLineLinuxClient.Contains(this.AdditionalParams, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.CommandLineLinuxClient += $"{this.AdditionalParams} ";
+                }
+            }
+
+            this.CommandLineLinuxClient = this.CommandLineLinuxClient.Trim();
+        }
     }
 }
