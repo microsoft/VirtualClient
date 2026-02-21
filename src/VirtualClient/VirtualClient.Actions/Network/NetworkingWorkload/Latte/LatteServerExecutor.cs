@@ -27,6 +27,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteServerExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.InitializeWindowsServerCommandline();
         }
 
         /// <summary>
