@@ -251,24 +251,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Returns the NTttcp command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
-        {
-            string command = null;
-            if (this.Platform == PlatformID.Win32NT)
-            {
-                command = this.GetWindowsSpecificCommandLine();
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                command = this.GetLinuxSpecificCommandLine();
-            }
-
-            return command;
-        }
-
-        /// <summary>
         /// Gets the Sysctl command output.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
@@ -439,44 +421,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                 await this.SystemManagement.FileSystem.File.DeleteAsync(this.ResultsPath)
                     .ConfigureAwait(false);
             }
-        }
-
-        private string GetWindowsSpecificCommandLine()
-        {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
-                $"-m {this.ThreadCount},*,{serverIPAddress} " +
-                $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
-                $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration.TotalSeconds} " +
-                $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
-                $"-p {this.Port} " +
-                $"-xml {this.ResultsPath} " +
-                $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
-                $"{(this.NoSyncEnabled == true ? "-ns" : string.Empty)} " +
-                $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
-        }
-
-        private string GetLinuxSpecificCommandLine()
-        {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
-                $"-V " +
-                $"-m {this.ThreadCount},*,{serverIPAddress} " +
-                $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
-                $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration.TotalSeconds} " +
-                $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
-                $"-x {this.ResultsPath} " +
-                $"-p {this.Port} " +
-                $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.SenderLastClient == true) ? "-L" : string.Empty)} " +
-                $"{((this.IsInServerRole && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
-                $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
-                $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
         }
     }
 }

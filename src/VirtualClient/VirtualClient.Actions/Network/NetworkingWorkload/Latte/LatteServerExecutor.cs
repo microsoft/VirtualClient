@@ -27,6 +27,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteServerExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.InitializeWindowsServerCommandline();
         }
 
         /// <summary>
@@ -99,14 +100,33 @@ namespace VirtualClient.Actions.NetworkPerformance
             });
         }
 
-        /// <summary>
-        /// Produces powershell script parameters using the workload parameters provided.
-        /// </summary>
-        /// <returns>Powershell script parameters as a string.</returns>
-        protected override string GetCommandLineArguments()
+        private void InitializeWindowsServerCommandline()
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"-a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToLowerInvariant()}";
+
+            this.CommandLineWindowsServer ??= string.Empty;
+
+            if (this.CommandLineWindowsServer.Length > 0 && !char.IsWhiteSpace(this.CommandLineWindowsServer[^1]))
+            {
+                this.CommandLineWindowsServer += " ";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-i", StringComparison.OrdinalIgnoreCase) && this.Iterations != 0)
+            {
+                this.CommandLineWindowsServer += $" -i {this.Iterations} ";
+            }
+
+            if (!this.CommandLineWindowsServer.Contains("-riopoll", StringComparison.OrdinalIgnoreCase) && this.RioPoll != 0)
+            {
+                this.CommandLineWindowsServer += $" -riopoll {this.RioPoll}";
+            }
+
+            if (this.Protocol != null && !this.CommandLineWindowsServer.Contains($"-{this.Protocol.ToString().ToLowerInvariant()}"))
+            {
+                this.CommandLineWindowsServer += $" -{this.Protocol.ToString().ToLowerInvariant()}";
+            }
+
+            this.CommandLineWindowsServer = this.CommandLineWindowsServer.Trim();
         }
     }
 }

@@ -43,6 +43,70 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Commandline for linux client side.
+        /// </summary>
+        public string CommandLineLinuxClient
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineLinuxClient)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Commandline for linux server side.
+        /// </summary>
+        public string CommandLineLinuxServer
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxServer));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineLinuxServer)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Commandline for windows client side.
+        /// </summary>
+        public string CommandLineWindowsClient
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsClient));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineWindowsClient)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Commandline for windows server side.
+        /// </summary>
+        public string CommandLineWindowsServer
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsServer));
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLineWindowsServer)] = value;
+            }
+        }
+
+        /// <summary>
         /// Name of the scenario.
         /// </summary>
         public string Name { get; internal set; }
@@ -336,7 +400,29 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Produces powershell script parameters using the workload parameters provided.
         /// </summary>
         /// <returns>Powershell script parameters as a string.</returns>
-        protected abstract string GetCommandLineArguments();
+        protected virtual string GetCommandLineArguments()
+        {
+            string command = string.Empty;
+             
+            if (this.Platform == PlatformID.Win32NT && this.IsInClientRole)
+            {
+                command = this.CommandLineWindowsClient;
+            }
+            else if (this.Platform == PlatformID.Win32NT && !this.IsInClientRole)
+            {
+                command = this.CommandLineWindowsServer;
+            }
+            else if (this.Platform == PlatformID.Unix && this.IsInClientRole)
+            {
+                command = this.CommandLineLinuxClient;
+            }
+            else if (this.Platform == PlatformID.Unix && !this.IsInClientRole)
+            {
+                command = this.CommandLineLinuxServer;
+            }
+
+            return command;
+        }
 
         /// <summary>
         /// Returns true if results are found in the results file within the polling/timeout
