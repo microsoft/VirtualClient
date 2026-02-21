@@ -37,6 +37,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
+            this.InitializeLinuxServerCommandline();
         }
 
         /// <inheritdoc/>
