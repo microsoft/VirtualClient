@@ -35,7 +35,8 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LMbenchExecutor.PackageName), "lmbench" },
-                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" }
+                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" },
+                { nameof(LMbenchExecutor.Scenario), "Scenario" }
             };
 
             this.ProcessManager.OnProcessCreated = (process) =>
@@ -57,6 +58,26 @@ namespace VirtualClient.Actions
                     $"make build CPPFLAGS=\"-I /usr/include/tirpc\"",
                     $"bash -c \"echo -e '\n\n\n\n\n\n\n\n\n\n\n\n\nnone' | make results\"",
                     $"make summary"));
+            }
+        }
+
+        [Test]
+        public async Task LMbenchExecutorExecutesTheExpectedCommandForLatMemRd()
+        {
+            this.Parameters[nameof(LMbenchExecutor.BinaryName)] = "lat_mem_rd";
+            this.ProcessManager.OnProcessCreated = (process) =>
+            {
+                string lmbenchOutput = System.IO.File.ReadAllText(this.Combine(LMbenchExecutorTests.Examples, "latmemrd_example_results.txt"));
+                process.StandardOutput.Append(lmbenchOutput);
+            };
+            using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))
+            {
+                await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+                Assert.IsTrue(this.ProcessManager.CommandsExecuted(
+                    $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/packages/lmbench/scripts\"",
+                    $"make build CPPFLAGS=\"-I /usr/include/tirpc\"",
+                    $"/home/user/tools/VirtualClient/packages/lmbench/bin/x86_64-Linux/lat_mem_rd"));
             }
         }
 
