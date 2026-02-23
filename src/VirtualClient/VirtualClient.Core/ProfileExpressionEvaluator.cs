@@ -62,6 +62,12 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {StatePath}, {StateDir}
+        private static readonly Regex StatePathExpression = new Regex(
+            @"\{(?:StatePath|StateDir)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {TempPath}, {TempDir}
         private static readonly Regex TempPathExpression = new Regex(
             @"\{(?:TempPath|TempDir)\}",
@@ -145,6 +151,30 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.LogsDirectory);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {StatePath|StateDir}
+            // Resolves to the path to the state folder location (e.g. /home/users/virtualclient/state).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.StatePathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.StateDirectory);
                     }
                 }
 
