@@ -199,7 +199,7 @@ namespace VirtualClient.Actions
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['50.000000']", "read_completionlatency_p50", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 1);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.000000']", "read_completionlatency_p99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 1);
 
-                    // Level 3 - Detailed: Other percentiles
+                    // Level 2 - Detailed: Other percentiles
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['70.000000']", "read_completionlatency_p70", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['90.000000']", "read_completionlatency_p90", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);
                     this.AddMeasurement(metrics, job, $"read.clat_ns.percentile.['99.990000']", "read_completionlatency_p99_99", this.ConversionUnits, MetricRelativity.LowerIsBetter, this.ConversionFactor, verbosity: 2);

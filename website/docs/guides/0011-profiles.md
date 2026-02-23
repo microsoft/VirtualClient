@@ -465,14 +465,14 @@ Multiple filter types can be combined. Verbosity filtering is applied first, fol
             "Scenario": "RandomWrite_4k_BlockSize",
             "PackageName": "fio",
             "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
-            "MetricFilters": "verbosity:3,-histogram*,bandwidth|iops|latency"
+            "MetricFilters": "verbosity:2,-histogram*,bandwidth|iops|latency"
         }
     }
 ]
 ```
 
 The example above will:
-1. Include only metrics with verbosity ? 3
+1. Include only metrics with verbosity ? 2
 2. Exclude metrics matching the pattern "histogram*"
 3. From the remaining metrics, include only those matching "bandwidth", "iops", or "latency"
 

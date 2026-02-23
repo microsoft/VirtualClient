@@ -357,7 +357,7 @@ namespace VirtualClient.Actions
                         verbosity: 1,
                         description: "The latency for 50% of all requests was at or under this value.")
                 },
-                // Level 3 - Detailed: P90 latency
+                // Level 2 - Detailed: P90 latency
                 {
                     "p90Latency",
                     new MetricAggregate(
@@ -367,7 +367,7 @@ namespace VirtualClient.Actions
                         verbosity: 2,
                         description: "The latency for 90% of all requests was at or under this value.")
                 },
-                // Level 3 - Detailed: P95 latency
+                // Level 2 - Detailed: P95 latency
                 {
                     "p95Latency",
                     new MetricAggregate(
@@ -387,7 +387,7 @@ namespace VirtualClient.Actions
                         verbosity: 1,
                         description: "The latency for 99% of all requests was at or under this value.")
                 },
-                // Level 3 - Detailed: P99.9 latency
+                // Level 2 - Detailed: P99.9 latency
                 {
                     "p99.9Latency",
                     new MetricAggregate(
