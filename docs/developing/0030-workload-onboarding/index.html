@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.fe082272.css">
-<script src="/VirtualClient/assets/js/runtime~main.b37dbeaf.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.2cd8cbb4.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.e6e12a6a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -73,6 +73,25 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
 <li><a href="https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Examples/ClientServer" target="_blank" rel="noopener noreferrer">Example Workload Executor</a></li>
 <li><a href="https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Redis" target="_blank" rel="noopener noreferrer">Redis Workload Executor</a></li>
 <li><a href="https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Memcached" target="_blank" rel="noopener noreferrer">Memcached Workload Executor</a></li>
+</ul>
+</li>
+<li>
+<p><strong>CPU Core Affinity (Optional)</strong><br>
+<!-- -->For workloads where CPU core pinning is preferred, Virtual Client provides CPU affinity support.</p>
+<p><strong>Core Specification Formats:</strong></p>
+<ul>
+<li>Individual cores: <code>&quot;0,2,4,6&quot;</code></li>
+<li>Core ranges: <code>&quot;0-7&quot;</code> or <code>&quot;0-3,8-11&quot;</code></li>
+<li>Supports up to 64 cores on Windows (single processor group)</li>
+</ul>
+<p><strong>Platform Differences:</strong></p>
+<ul>
+<li><strong>Linux:</strong> Uses <code>numactl</code> - affinity set before the process starts (zero timing window)</li>
+<li><strong>Windows:</strong> Uses <code>Process.ProcessorAffinity</code> - affinity set immediately after starting the process (~1ms window).</li>
+</ul>
+<p><strong>Reference Implementation:</strong></p>
+<ul>
+<li><a href="https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions/Examples/ExampleWorkloadWithAffinityExecutor.cs" target="_blank" rel="noopener noreferrer">Example Workload with Affinity Executor</a></li>
 </ul>
 </li>
 </ul>
