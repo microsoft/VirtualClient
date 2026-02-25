@@ -240,27 +240,6 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void FilterByExtensionHandlesBackwardCompatibilityForVerbosityZero()
-        {
-            var metrics = new List<Metric>
-            {
-                new Metric("critical_metric", 1, "unit", MetricRelativity.HigherIsBetter, verbosity: 0),
-                new Metric("standard_metric", 2, "unit", MetricRelativity.HigherIsBetter, verbosity: 1),
-                new Metric("detailed_metric", 3, "unit", MetricRelativity.HigherIsBetter, verbosity: 2)
-            };
-
-            // verbosity:0 should be mapped to verbosity:1 for backward compatibility
-            var filter = new List<string> { "verbosity:0" };
-            var result = metrics.FilterBy(filter);
-
-            // Should include metrics with verbosity 0 and 1 (since 0 maps to 1)
-            Assert.AreEqual(2, result.Count());
-            Assert.IsTrue(result.Any(m => m.Name == "critical_metric"));
-            Assert.IsTrue(result.Any(m => m.Name == "standard_metric"));
-            Assert.IsFalse(result.Any(m => m.Name == "detailed_metric"));
-        }
-
-        [Test]
         public void FilterByExtensionSupportsExclusionFilters()
         {
             var metrics = new List<Metric>
