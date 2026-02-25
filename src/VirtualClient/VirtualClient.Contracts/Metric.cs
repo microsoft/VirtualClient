@@ -141,19 +141,19 @@ namespace VirtualClient.Contracts
 
         /// <summary>
         /// Metric verbosity to describe importance/priority of the metric.
-        /// 
+        ///
         /// Verbosity levels define a convention for organizing metrics by importance:
         /// - 1 (Standard/Critical): Most important metrics for decision making - bandwidth, throughput, IOPS, key latency percentiles (p50, p99)
         /// - 2 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
         /// - 3 (Reserved): Reserved for future expansion
         /// - 4 (Reserved): Reserved for future expansion
         /// - 5 (Verbose): All diagnostic/internal metrics - histogram buckets, standard deviations, byte counts, I/O counts
-        /// 
+        ///
         /// Currently, only levels 1, 2, and 5 are actively used. Levels 3 and 4 are reserved for future use.
-        /// 
-        /// Default = 1 (Standard).
+        ///
+        /// Default = 5 (Verbose). Metrics without an explicit verbosity assignment are considered verbose/diagnostic.
         /// </summary>
-        public int Verbosity { get; set; } = 1;
+        public int Verbosity { get; set; } = 5;
 
         /// <summary>
         /// Determines if two objects are equal.
