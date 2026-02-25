@@ -390,13 +390,13 @@ filtering**, and **exclusion filtering**.
 ### Verbosity-Based Filtering
 Metrics in the Virtual Client are assigned a verbosity level that indicates their importance for decision making:
 
-| Verbosity Level | Description | Example Metrics |
-|-----------------|-------------|-----------------|
-| 1 (Standard/Critical) | Most important metrics for decision making | bandwidth, throughput, IOPS, p50, p99 |
-| 2 (Detailed) | Additional detailed metrics | p70, p90, p95, p99.9 |
-| 3 (Reserved) | Reserved for future expansion | N/A |
-| 4 (Reserved) | Reserved for future expansion | N/A |
-| 5 (Verbose) | All diagnostic/internal metrics | histogram buckets, standard deviations, byte counts, I/O counts |
+| Verbosity Level | Description |
+|-----------------|-------------|
+| 1 (Standard/Critical) | Most important metrics for decision making |
+| 2 (Detailed) | Additional detailed metrics |
+| 3 (Reserved) | Reserved for future expansion |
+| 4 (Reserved) | Reserved for future expansion |
+| 5 (Verbose) | All diagnostic/internal metrics |
 
 To filter metrics by verbosity level, use the `verbosity:N` filter format, where N is a value between 1 and 5. This will include all metrics with a verbosity level less than or equal to N.
 
@@ -624,4 +624,3 @@ sequential order as they are defined within the profile. These components begin 
 -----------> Action 2
 -----------> Action 3
 -----------> Action 4
-```
