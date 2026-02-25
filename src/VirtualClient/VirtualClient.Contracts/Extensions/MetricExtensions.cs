@@ -56,7 +56,6 @@ namespace VirtualClient.Contracts
         /// 
         /// Currently, only levels 1, 2, and 5 are actively used. Levels 3 and 4 are reserved for future use.
         /// 
-        /// For backward compatibility, verbosity:0 is mapped to verbosity:1.
         /// Filters are composable - verbosity filtering is applied first, then exclusion filters, then inclusion (name-based) filtering.
         /// </remarks>
         public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<string> filterTerms)
@@ -75,12 +74,6 @@ namespace VirtualClient.Contracts
                     string[] parts = verbosityFilter.Split(':');
                     if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int maxVerbosity) && maxVerbosity >= 0 && maxVerbosity <= 5)
                     {
-                        // Backward compatibility: Map old level 0 to new level 1
-                        if (maxVerbosity == 0)
-                        {
-                            maxVerbosity = 1;
-                        }
-
                         // Filter metrics to include only those with verbosity <= maxVerbosity
                         filteredMetrics = filteredMetrics.Where(m => m.Verbosity <= maxVerbosity);
                     }

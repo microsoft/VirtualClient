@@ -87,7 +87,6 @@ namespace VirtualClient.Contracts.Extensibility
         /// Allows the user to ascribe different levels of priority/verbosity to a set of metrics that can 
         /// be used for queries/filtering. Lower values indicate higher priority. For example, metrics considered 
         /// to be the most critical for decision making would be set with verbosity = 1 (Critical).
-        /// For backward compatibility, verbosity = 0 is mapped to verbosity = 1.
         /// </remarks>
         [JsonProperty("metricVerbosity", Required = Required.Default)]
         [YamlMember(Alias = "metricVerbosity", ScalarStyle = ScalarStyle.Plain)]
