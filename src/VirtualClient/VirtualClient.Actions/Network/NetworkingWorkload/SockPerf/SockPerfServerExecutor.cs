@@ -37,6 +37,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
+            this.InitializeLinuxServerCommandline();
         }
 
         /// <inheritdoc/>
@@ -104,16 +105,43 @@ namespace VirtualClient.Actions.NetworkPerformance
             });
         }
 
-        /// <summary>
-        /// Returns the Sockperf server-side command line arguments.
-        /// </summary>
-        protected override string GetCommandLineArguments()
+        private void InitializeLinuxServerCommandline()
         {
-            // sockperf server -i 10.0.1.1 -p 8201 --tcp
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            string protocolParam = this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
+            
+            this.CommandLineLinuxServer ??= string.Empty;
 
-            return $"server -i {serverIPAddress} -p {this.Port} {protocolParam}".Trim();
+            if (this.CommandLineLinuxServer.Length > 0 && !char.IsWhiteSpace(this.CommandLineLinuxServer[^1]))
+            {
+                this.CommandLineLinuxServer += " ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("server", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += "server";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("--tcp", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += this.Protocol.ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-i", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += $"-i {serverIPAddress} ";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-p", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineLinuxServer += $" -p {this.Port}";
+            }
+
+            if (!this.CommandLineLinuxServer.Contains("-t", StringComparison.OrdinalIgnoreCase) && this.TestDuration != null)
+            {
+                this.CommandLineLinuxServer += $"-t {this.TestDuration.TotalSeconds} ";
+            }
+
+            this.CommandLineLinuxServer = this.CommandLineLinuxServer.Trim();
         }
     }
 }

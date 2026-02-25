@@ -134,6 +134,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string profilingScenario = null,
             string profilingPeriod = null,
             string profilingWarmUpPeriod = null,
+            int? profileIteration = null,
             bool? noSyncEnabled = null,
             Guid? clientRequestId = null,
             IDictionary<string, IConvertible> metadata = null)
@@ -169,6 +170,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.ProfilingScenario)] = profilingScenario;
             this.Properties[nameof(this.ProfilingPeriod)] = profilingPeriod;
             this.Properties[nameof(this.ProfilingWarmUpPeriod)] = profilingWarmUpPeriod;
+            this.Properties[nameof(this.ProfileIteration)] = profileIteration;
             this.Properties[nameof(this.NoSyncEnabled)] = noSyncEnabled;
             this.ClientRequestId = clientRequestId;
 
@@ -484,6 +486,17 @@ namespace VirtualClient.Actions.NetworkPerformance
             protected set
             {
                 this.Properties[nameof(this.ProfilingScenario)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Virtual Client Iteration at which the current profile is executing.
+        /// </summary>
+        public int ProfileIteration
+        {
+            get
+            {
+                return this.Properties.GetValue<int>(nameof(this.ProfileIteration), 0);
             }
         }
 

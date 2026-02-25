@@ -90,6 +90,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                1,
                 noSyncEnabled,
                 Guid.NewGuid());
 
@@ -126,6 +127,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                1,
                 false,
                 Guid.NewGuid(),
                 //
@@ -174,6 +176,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                1,
                 false,
                 Guid.NewGuid(),
                 //
