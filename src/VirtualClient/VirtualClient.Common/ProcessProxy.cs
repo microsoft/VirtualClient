@@ -311,6 +311,19 @@ namespace VirtualClient.Common
         }
 
         /// <summary>
+        /// Sets the processor affinity mask for the underlying process.
+        /// </summary>
+        /// <param name="affinityMask">The processor affinity bitmask.</param>
+        public virtual void SetProcessorAffinity(IntPtr affinityMask)
+        {
+#if WINDOWS 
+            this.UnderlyingProcess.ProcessorAffinity = affinityMask;
+#else
+            throw new PlatformNotSupportedException("Setting processor affinity is only supported on Windows platform.");
+#endif
+        }
+
+        /// <summary>
         /// Writes input/command to standard input.
         /// </summary>
         /// <param name="input">The input/command to send to standard input.</param>

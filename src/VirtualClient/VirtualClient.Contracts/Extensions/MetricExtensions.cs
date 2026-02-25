@@ -57,7 +57,7 @@ namespace VirtualClient.Contracts
         /// Currently, only levels 1, 2, and 5 are actively used. Levels 3 and 4 are reserved for future use.
         /// 
         /// For backward compatibility, verbosity:0 is mapped to verbosity:1.
-        /// Filters are composable - verbosity filtering is applied first, then name-based filtering.
+        /// Filters are composable - verbosity filtering is applied first, then exclusion filters, then inclusion (name-based) filtering.
         /// </remarks>
         public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<string> filterTerms)
         {
