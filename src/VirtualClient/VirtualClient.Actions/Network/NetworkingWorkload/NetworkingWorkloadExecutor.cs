@@ -9,8 +9,11 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Hosting.Server;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
     using Polly;
@@ -28,6 +31,8 @@ namespace VirtualClient.Actions.NetworkPerformance
     {
         private static readonly object LockObject = new object();
         private static Task heartbeatTask;
+        private static Regex layoutServerIPRegex = new Regex(@"\$\.\s*layout\.serverip\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex layoutClientIPRegex = new Regex(@"\$\.\s*layout\.clientip\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // Contains the background running process for the server-side
         // networking workload tool.
@@ -597,6 +602,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             EventContext.PersistentProperties["role"] = this.Role;
 
             this.InitializeApiClients();
+
+            this.InlineLayoutReferences();
         }
 
         /// <summary>
@@ -1132,6 +1139,23 @@ namespace VirtualClient.Actions.NetworkPerformance
             catch
             {
                 // Do not crash the application
+            }
+        }
+
+        private void InlineLayoutReferences()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+
+            foreach (var key in this.Parameters.Keys.ToList())
+            {
+                var original = this.Parameters[key]?.ToString();
+
+                var updated = layoutServerIPRegex.Replace(original, serverIPAddress);
+                updated = layoutClientIPRegex.Replace(updated, clientIPAddress);
+
+                this.Parameters[key] = updated;
+                
             }
         }
 

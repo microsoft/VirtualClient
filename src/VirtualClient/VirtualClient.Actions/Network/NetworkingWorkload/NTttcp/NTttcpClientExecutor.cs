@@ -5,6 +5,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts;
 
