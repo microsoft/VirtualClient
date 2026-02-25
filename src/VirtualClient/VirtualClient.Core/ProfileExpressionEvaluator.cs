@@ -1000,7 +1000,7 @@ namespace VirtualClient
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
                                     // Groups[0] = the full matched text (e.g. {Port})
-                                    // Groups]1] = the capture group (e.g. 1234).
+                                    // Groups[1] = the capture group (e.g. 1234).
                                     if (parameters.TryGetValue(match.Groups[1].Value, out IConvertible value))
                                     {
                                         matchesFound = true;
