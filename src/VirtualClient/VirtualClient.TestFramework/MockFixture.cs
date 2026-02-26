@@ -253,6 +253,11 @@ namespace VirtualClient
         public ProfileTiming Timing { get; set; }
 
         /// <summary>
+        /// Gets the process tracking instance for assertions. Populated after <see cref="TrackProcesses"/> is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
+
+        /// <summary>
         /// Returns the contents of the file at the path defined by the path segments
         /// (e.g. [ "/home/users/examples", "toolset", "example.txt" ])
         /// </summary>
@@ -639,6 +644,35 @@ namespace VirtualClient
                 this.Layout = new EnvironmentLayout(clients);
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">If true, clears any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes matching a command pattern.
+        /// </summary>
+        /// <param name="commandPattern">Regex pattern matching the command.</param>
+        /// <param name="standardOutput">Output to return for matching commands.</param>
+        /// <param name="standardError">Error output (optional).</param>
+        /// <param name="exitCode">Exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
             return this;
         }
 

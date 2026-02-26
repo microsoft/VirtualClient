@@ -203,6 +203,11 @@ namespace VirtualClient
         public ProfileTiming Timing { get; set; }
 
         /// <summary>
+        /// Gets the process tracking instance for assertions. Populated after <see cref="TrackProcesses"/> is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
+
+        /// <summary>
         /// Returns a path that is combined specific to the platform defined for this
         /// fixture.
         /// </summary>
@@ -403,6 +408,35 @@ namespace VirtualClient
         {
             dependency.ThrowIfNull(nameof(dependency));
             return this.PlatformSpecifics.ToPlatformSpecificPath(dependency, platform, architecture);
+        }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">If true, clears any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public DependencyFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes matching a command pattern.
+        /// </summary>
+        /// <param name="commandPattern">Regex pattern matching the command.</param>
+        /// <param name="standardOutput">Output to return for matching commands.</param>
+        /// <param name="standardError">Error output (optional).</param>
+        /// <param name="exitCode">Exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public DependencyFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
+            return this;
         }
 
         private IServiceCollection InitializeDependencies()
