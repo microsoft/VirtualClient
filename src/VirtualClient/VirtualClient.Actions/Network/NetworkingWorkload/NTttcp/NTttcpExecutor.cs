@@ -34,8 +34,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(VirtualClientComponent component)
            : base(component)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -46,8 +47,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -330,7 +332,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (process.IsErrored())
                                 {

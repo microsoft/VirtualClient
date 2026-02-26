@@ -6,9 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows,AwsLinux"
     },
     "Parameters": {
-        "ConfigureNetwork": true,
         "EnableBusyPoll": true,
-        "DisableFirewall": true,
         "NTttcpPort": 5500,
         "NTttcpDuration": "00:01:00",
         "ProfilingEnabled": false,
@@ -223,13 +221,22 @@
             }
         },
         {
-            "Type": "NetworkConfigurationSetup",
+            "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "ConfigureNetwork",
-                "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
+                "Command": "sudo chmod -R 2777 \"{ScriptDir}/network\"&&sudo bash -c \"{ScriptDir}/network/config_network.sh --disable-firewall=true --enable-busy-poll={EnableBusyPoll}\"",
                 "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
-                "DisableFirewall": "$.Parameters.DisableFirewall",
-                "VisualStudioCRuntimePackageName": "visualstudiocruntime"
+                "LogFolderName": "configure_network",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "ConfigureNetwork",
+                "Command": "{ScriptDir}/network/config_network.cmd",
+                "LogFolderName": "configure_network",
+                "SupportedPlatforms": "win-x64,win-arm64"
             }
         },
         {

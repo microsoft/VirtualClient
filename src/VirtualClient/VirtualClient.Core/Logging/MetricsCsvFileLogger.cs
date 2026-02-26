@@ -124,7 +124,27 @@ namespace VirtualClient.Logging
         /// <param name="timeout">Not used.</param>
         public void Flush(TimeSpan? timeout = null)
         {
-            this.FlushBufferAsync().GetAwaiter().GetResult();
+            DateTime flushTimeout = timeout != null
+                ? DateTime.UtcNow.Add(timeout.Value)
+                : DateTime.UtcNow.AddMinutes(2);
+
+            while (DateTime.UtcNow < flushTimeout)
+            {
+                try
+                {
+                    this.FlushBufferAsync().GetAwaiter().GetResult();
+                    Task.Delay(200).GetAwaiter().GetResult();
+
+                    if (this.buffer.Length <= 0)
+                    {
+                        break;
+                    }
+                }
+                catch
+                {
+                    // Best effort
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -320,11 +340,11 @@ namespace VirtualClient.Logging
         {
             if (this.buffer.Length > 0)
             {
-                await this.fileAccessRetryPolicy.ExecuteAsync(async () =>
+                try
                 {
-                    try
+                    await this.semaphore.WaitAsync();
+                    await this.fileAccessRetryPolicy.ExecuteAsync(async () =>
                     {
-                        await this.semaphore.WaitAsync();
                         string latestFilePath = this.filePaths.Last();
 
                         using (FileSystemStream fileStream = this.fileSystem.FileStream.New(latestFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
@@ -351,12 +371,18 @@ namespace VirtualClient.Logging
 
                             this.buffer.Clear();
                         }
-                    }
-                    finally
-                    {
-                        this.semaphore.Release();
-                    }
-                });
+                    });
+                }
+                catch (Exception exc)
+                {
+                    // Best effort. We do not want to crash the application on failures to access
+                    // the CSV file.
+                    Console.WriteLine(exc.Message);
+                }
+                finally
+                {
+                    this.semaphore.Release();
+                }
             }
         }
 
