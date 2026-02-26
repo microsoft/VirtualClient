@@ -180,18 +180,25 @@ The following tables describe the various subcommands that are supported by the 
   \*Note: at least one operation must be specified. Use either `--package` (package bootstrapping) or `--cert-name` with `--key-vault` (certificate bootstrapping), or both.
 
   ``` bash
-  # Basic command line example
-  VirtualClient.exe bootstrap --package=diskspd.2.0.21.zip    // Note: installs package with default VC package store.
+  # Basic command line examples
+ 
+  ## Installs package with default VC package store.
+  VirtualClient.exe bootstrap --package=diskspd.2.0.21.zip
+ 
+  ## Installs package from specified package store.
+  VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --package-store="{BlobStoreConnectionString|SAS URI}" 
 
-  VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --package-store="{BlobStoreConnectionString|SAS URI}" // Note: installs package from specified package store.
+  ## Installs certificate from Key Vault using default authentication.
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}"
 
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" // Note: Installs certificate from Key Vault using default authentication. 
+  ## Installs certificate from Key Vault by retrieving Azure access token for the current user. See get-token command for additional info.
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --tenant-id="{tenantId}" 
 
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --tenant-id="{tenantId}" // Note: Installs certificate from Key Vault by fetching access token for authentication. See get-token command for additional info.
+  ## Installs certificate from Key Vault using provided access token.
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --token="{AccessToken}" 
 
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --token="{AccessToken}" // Note: Installs certificate from Key Vault using provided access token.
-
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --package=diskspd.2.0.21.zip // Note: Installs both a package and a certificate in the same command.
+  ## Installs both certificate and package in the same command.
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --package=diskspd.2.0.21.zip 
 
   # Full command line example
   VirtualClient.exe bootstrap
@@ -215,6 +222,12 @@ The following tables describe the various subcommands that are supported by the 
       --log-dir="C:\Users\User\Logs"
       --log-level=Information
       --log-retention=01.00:00:00
+
+    VirtualClient.exe bootstrap 
+        --cert-name="mycert123" 
+        --key-vault="https://my-key-vault.vault.azure.net" 
+        --tenant-id="7..."
+  
   ```
 
 * ### clean
@@ -422,6 +435,7 @@ The following tables describe the various subcommands that are supported by the 
   | Option                                         | Required | Data Type     | Description |
   |-----------------------------------------------|----------|---------------|-------------|
   | --kv, --keyvault, --key-vault=\<uri\>         | Yes      | uri           | Azure Key Vault URI used as the authentication resource (e.g. `https://myvault.vault.azure.net/`). |
+  | --tenant-Id, --tid=\<tenantId\>               | Yes      | string        | Azure Active Directory tenant ID used for authentication. | 
   | --clean=\<target,target...\>                  | No       | string        | Perform an initial cleanup (logs/packages/state/temp/all). |
   | --c, --client-id=\<id\>                       | No       | string/text   | Identifier to uniquely identify the instance (telemetry correlation). |
   | --e, --experiment-id=\<guid\>                 | No       | guid          | Experiment identifier. |
@@ -430,14 +444,12 @@ The following tables describe the various subcommands that are supported by the 
   | -?, -h, --help                                | No       |               | Show help information. |
   | --version                                     | No       |               | Show application version information. |
 
-* Note: The tenant ID must be included in the Key Vault URI as a query parameter (e.g., `?tid=<tenant-id>`). VC will parse the URI to authenticate and retrieve a token for the current user. 
-
 ```
 Examples: 
 
-VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net/?cid=a5432368-4cf1-4b72-b7f1-443c875f8a01&tid=caa7a00f-0558-4c4a-9613-965683a01f45"
+VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net/?cid=a5432368-4cf1-4b72-b7f1-443c875f8a01&tid=caa7a00f-0558-4c4a-9613-965683a01f45" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45"
 
-VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net/?tid=caa7a00f-0558-4c4a-9613-965683a01f45"
+VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45"
 ```
 
 ## Supported Loggers

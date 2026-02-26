@@ -121,8 +121,7 @@ namespace VirtualClient
 
             Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
             Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
-            Assert.AreEqual(command.Parameters["LogFileName"], "AccessToken.txt");
-            Assert.AreEqual(command.Parameters.Count, 3);
+            Assert.AreEqual(command.Parameters.Count, 2);
 
             Assert.IsFalse(command.Parameters.ContainsKey("AccessToken"));
             Assert.IsFalse(command.Parameters.ContainsKey("TenantId"));
@@ -291,8 +290,7 @@ namespace VirtualClient
             Assert.AreEqual(command.Parameters["Package"], command.PackageName);
             Assert.AreEqual(command.Parameters["RegisterAsName"], "regname");
             Assert.IsFalse(command.Parameters.ContainsKey("TenantId"));
-            Assert.IsTrue(command.Parameters.ContainsKey("LogFileName"));
-            Assert.AreEqual(command.Parameters.Count, 6);
+            Assert.AreEqual(command.Parameters.Count, 5);
         }
 
         [Test]

@@ -81,14 +81,14 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(this.CertificateName))
             {
                 // If Access Token is not provided and Tenant ID is provided, bootstrap will get token using browser-based (or device code flow) authentication to retrieve token.
-                if (string.IsNullOrWhiteSpace(this.AccessToken) && !string.IsNullOrWhiteSpace(this.TenantId))
+                if (!string.IsNullOrWhiteSpace(this.AccessToken))
+                {
+                    this.Parameters["AccessToken"] = this.AccessToken;
+                }
+                else if (!string.IsNullOrWhiteSpace(this.TenantId))
                 {
                     this.SetupAccessToken();
                     dependencyProfiles.Add(new DependencyProfileReference("GET-ACCESS-TOKEN.json"));
-                }
-                else
-                {
-                    this.Parameters["AccessToken"] = this.AccessToken;
                 }
 
                 this.SetupCertificateInstallation();
@@ -142,7 +142,6 @@ namespace VirtualClient
             // Set certificate-related parameters
             this.Parameters["KeyVaultUri"] = this.KeyVault;
             this.Parameters["CertificateName"] = this.CertificateName;
-            this.Parameters["LogFileName"] = "AccessToken.txt";
         }
 
         protected void SetupPackageInstallation()
