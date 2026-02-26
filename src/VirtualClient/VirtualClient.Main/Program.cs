@@ -335,7 +335,7 @@ namespace VirtualClient
 
             Command bootstrapSubcommand = Program.CreateBootstrapSubcommand(settings);
             bootstrapSubcommand.TreatUnmatchedTokensAsErrors = true;
-            bootstrapSubcommand.Handler = CommandHandler.Create<BootstrapPackageCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            bootstrapSubcommand.Handler = CommandHandler.Create<BootstrapCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
             rootCommand.Add(bootstrapSubcommand);
 
             Command cleanSubcommand = Program.CreateCleanSubcommand(settings);
@@ -425,6 +425,9 @@ namespace VirtualClient
                 // --key-vault
                 OptionFactory.CreateKeyVaultOption(required: true),
 
+                // --tenant-id
+                OptionFactory.CreateTenantIdOption(required: true),
+
                 // OPTIONAL
                 // -------------------------------------------------------------------
                 // --clean
@@ -471,6 +474,9 @@ namespace VirtualClient
 
                 // --token
                 OptionFactory.CreateTokenOption(required: false),
+                
+                // --tenant-id
+                OptionFactory.CreateTenantIdOption(required: false),
 
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),

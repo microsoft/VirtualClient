@@ -621,6 +621,7 @@ namespace VirtualClient
         [TestCase("--parameters", "helloWorld=123,,,TenantId=789203498")]
         [TestCase("--pm", "testing")]
         [TestCase("--verbose", null)]
+        [TestCase("", "")]
         public void VirtualClientGetTokenCommandSupportsOnlyExpectedOptions(string option, string value)
         {            
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
@@ -628,7 +629,8 @@ namespace VirtualClient
                 List<string> arguments = new List<string>()
                 {
                     "get-token",
-                    "--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2"
+                    "--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2",
+                    "--tenant-id", "tenant1"
                 };
 
                 arguments.Add(option);

@@ -4,8 +4,7 @@
     "KeyVaultUri": null,
     "CertificateName": null,
     "AccessToken": null,
-    "Package": "Undefined",
-    "RegisterAsName": "Undefined"
+    "LogFileName": "AccessToken.txt"
   },
   "Actions": [
     {
@@ -14,18 +13,10 @@
         "Scenario": "InstallCertificate",
         "KeyVaultUri": "$.Parameters.KeyVaultUri",
         "CertificateName": "$.Parameters.CertificateName",
-        "AccessToken": "$.Parameters.AccessToken"
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallDependencies",
-        "BlobContainer": "packages",
-        "BlobName": "$.Parameters.Package",
-        "PackageName": "$.Parameters.RegisterAsName",
-        "Extract": true
+        "AccessToken": "$.Parameters.AccessToken",
+        "AccessTokenPath": "$.Parameters.LogFileName"
       }
     }
   ]
 }
+  

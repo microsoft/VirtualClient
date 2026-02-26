@@ -637,6 +637,25 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the tenant ID associated with your Microsoft Entra ID
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTenantIdOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--tenant-id", "--tid" })
+            {
+                Name = "TenantId",
+                Description = "The tenant ID associated with your Microsoft Entra ID.",
+                ArgumentHelpName = "tid",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the path to the environment layout file.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>

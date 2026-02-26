@@ -87,14 +87,13 @@ namespace VirtualClient.Dependencies
             this.KeyVaultUri = this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
             this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
 
-            this.TenantId = this.Parameters.GetValue<string>(nameof(this.TenantId));
-            if (string.IsNullOrWhiteSpace(this.TenantId))
+            string tenantId = this.Parameters.GetValue<string>(nameof(this.TenantId));
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                EndpointUtility.TryParseMicrosoftEntraTenantIdReference(new Uri(this.KeyVaultUri), out string tenant);
-                this.TenantId = tenant;
+                EndpointUtility.TryParseMicrosoftEntraTenantIdReference(new Uri(this.KeyVaultUri), out tenantId);
             }
 
-            this.TenantId.ThrowIfNullOrWhiteSpace(nameof(this.TenantId));
+            tenantId.ThrowIfNullOrWhiteSpace(nameof(tenantId));
 
             string accessToken = null;
             if (!cancellationToken.IsCancellationRequested)
@@ -109,7 +108,7 @@ namespace VirtualClient.Dependencies
                     InteractiveBrowserCredential credential = new InteractiveBrowserCredential(
                         new InteractiveBrowserCredentialOptions
                         {
-                            TenantId = this.TenantId
+                            TenantId = tenantId
                         });
 
                     accessToken = await this.AcquireInteractiveTokenAsync(credential, requestContext, cancellationToken);
@@ -120,7 +119,7 @@ namespace VirtualClient.Dependencies
                     // the user with a code and URL to complete authentication from another device.
                     DeviceCodeCredential credential = new DeviceCodeCredential(new DeviceCodeCredentialOptions
                     {
-                        TenantId = this.TenantId,
+                        TenantId = tenantId,
                         DeviceCodeCallback = (codeInfo, token) =>
                         {
                             Console.WriteLine(string.Empty);

@@ -21,6 +21,11 @@ namespace VirtualClient
         protected override bool ShouldInitializeKeyVault => false;
 
         /// <summary>
+        /// The tenant ID associated with your Microsoft Entra ID (formerly Azure Active Directory).
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
         /// Executes the access token acquisition operations using the configured profile.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
@@ -39,7 +44,8 @@ namespace VirtualClient
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            this.Parameters["KeyVaultUri"] = this.KeyVault;    
+            this.Parameters["KeyVaultUri"] = this.KeyVault;
+            this.Parameters["TenantId"] = this.TenantId;
             
             return base.ExecuteAsync(args, cancellationTokenSource);
         }

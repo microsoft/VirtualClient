@@ -16,13 +16,13 @@ namespace VirtualClient
     /// <summary>
     /// Command executes bootstrap operations including package installation and certificate installation.
     /// </summary>
-    internal class BootstrapPackageCommand : ExecuteProfileCommand
+    internal class BootstrapCommand : ExecuteProfileCommand
     {
         /// <summary>
         /// When true, Key Vault will be initialized. This is only needed when using default Azure authentication
         /// (no access token provided).
         /// </summary>
-        protected override bool ShouldInitializeKeyVault => string.IsNullOrWhiteSpace(this.AccessToken);
+        protected override bool ShouldInitializeKeyVault => false;
 
         /// <summary>
         /// The name of the certificate to install from Key Vault.
@@ -47,6 +47,11 @@ namespace VirtualClient
         public string PackageName { get; set; }
 
         /// <summary>
+        /// The tenant ID for the Azure subscription.
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
         /// Executes the bootstrap command.
         /// Supports:
         /// - Package installation from remote store (requires --packages, optionally --package for specific package name)
@@ -55,43 +60,14 @@ namespace VirtualClient
         /// </summary>
         public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
-            // Validate that at least one operation is requested
-            this.ValidateParameters();
-
-            this.Timeout = ProfileTiming.OneIteration();
-            this.Profiles = new List<DependencyProfileReference>
-            {
-                new DependencyProfileReference("BOOTSTRAP-DEPENDENCIES.json")
-            };
-
-            var scenariosToExecute = new List<string>();
-
-            // Scenario 1: Certificate installation only OR Certificate + Package installation
-            if (!string.IsNullOrWhiteSpace(this.CertificateName))
-            {
-                scenariosToExecute.Add("InstallCertificate");
-                this.SetupCertificateInstallation();
-            }
-
-            // Scenario 2: Package installation (can be standalone or after certificate)
-            if (!string.IsNullOrWhiteSpace(this.PackageName))
-            {
-                scenariosToExecute.Add("InstallDependencies");
-                this.SetupPackageInstallation();
-            }
-
-            this.Scenarios = scenariosToExecute;
-            return base.ExecuteAsync(args, cancellationTokenSource);
-        }
-
-        protected void ValidateParameters()
-        {
             if (this.Parameters == null)
             {
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            // At least one operation must be specified
+            this.Timeout = ProfileTiming.OneIteration();
+            List<DependencyProfileReference> dependencyProfiles = new List<DependencyProfileReference>();
+
             if (string.IsNullOrWhiteSpace(this.PackageName) && string.IsNullOrWhiteSpace(this.CertificateName))
             {
                 throw new ArgumentException(
@@ -99,31 +75,83 @@ namespace VirtualClient
                     "or --cert-name for certificate installation.");
             }
 
-            // If certificate installation is requested, KeyVault URI is required
-            if (!string.IsNullOrWhiteSpace(this.CertificateName) && string.IsNullOrWhiteSpace(this.KeyVault))
+            // Scenario 1: Certificate installation only OR Certificate + Package installation
+            if (!string.IsNullOrWhiteSpace(this.CertificateName))
+            {
+                if (string.IsNullOrWhiteSpace(this.AccessToken))
+                {
+                    this.SetupAccessToken();
+                    dependencyProfiles.Add(new DependencyProfileReference("GET-ACCESS-TOKEN.json"));
+                }
+                else
+                {
+                    this.Parameters["AccessToken"] = this.AccessToken;
+                }
+
+                this.SetupCertificateInstallation();
+                dependencyProfiles.Add(new DependencyProfileReference("BOOTSTRAP-CERTIFICATE.json"));
+            }
+
+            // Scenario 2: Package installation (can be standalone or after certificate)
+            if (!string.IsNullOrWhiteSpace(this.PackageName))
+            {
+                this.SetupPackageInstallation();
+                dependencyProfiles.Add(new DependencyProfileReference("BOOTSTRAP-PACKAGE.json"));
+            }
+
+            this.Profiles = dependencyProfiles;
+            return base.ExecuteAsync(args, cancellationTokenSource);
+        }
+
+        protected void SetupAccessToken()
+        {
+            if (string.IsNullOrWhiteSpace(this.KeyVault))
             {
                 throw new ArgumentException(
-                    "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).");
+                    "The Key Vault URI must be provided (--key-vault) when getting access token for certificate installation.");
             }
+
+            if(string.IsNullOrWhiteSpace(this.TenantId))
+            {
+                throw new ArgumentException(
+                    "Tenant ID must be provided (--tenant-id) when getting access token for certificate installation.");
+            }
+
+            this.Parameters["KeyVaultUri"] = this.KeyVault;
+            this.Parameters["TenantId"] = this.TenantId;
+            this.Parameters["LogFileName"] = "AccessToken.txt";
         }
 
         protected void SetupCertificateInstallation()
         {
+            if (string.IsNullOrWhiteSpace(this.CertificateName))
+            {
+                throw new ArgumentException(
+                    "The certificate name must be provided (--cert-name) when installing certificates.");
+            }
+
+            if (string.IsNullOrWhiteSpace(this.KeyVault))
+            {
+                throw new ArgumentException(
+                    "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).");
+            }
+
             // Set certificate-related parameters
             this.Parameters["KeyVaultUri"] = this.KeyVault;
             this.Parameters["CertificateName"] = this.CertificateName;
-
-            if (!string.IsNullOrWhiteSpace(this.AccessToken))
-            {
-                // Token-based authentication - no Key Vault initialization needed
-                this.Parameters["AccessToken"] = this.AccessToken;
-            }
+            this.Parameters["LogFileName"] = "AccessToken.txt";
         }
 
         protected void SetupPackageInstallation()
         {
+            if (string.IsNullOrWhiteSpace(this.PackageName))
+            {
+                throw new ArgumentException(
+                    "The package name must be provided (--package) when installing packages.");
+            }
+
             string registerAsName = this.Name;
-            if (String.IsNullOrWhiteSpace(registerAsName))
+            if (string.IsNullOrWhiteSpace(registerAsName))
             {
                 registerAsName = Path.GetFileNameWithoutExtension(this.PackageName);
             }
