@@ -154,6 +154,7 @@ The following tables describe the various subcommands that are supported by the 
   | --certificateName, --cert-name=\<certificateName\>              | No*      | string/certificate name      | Name of the certificate in Key Vault to bootstrap/install (e.g. `--cert-name="crc-sdk-cert"`). Required when doing **certificate bootstrapping**. |
   | --key-vault, --kv=\<keyVaultUri\>                               | No*      | uri                          | Azure Key Vault URI to source the certificate from (e.g. `https://myvault.vault.azure.net/`). Required when doing **certificate bootstrapping**. |
   | --token, --access-token=\<accessToken\>                         | No       | string                       | Optional access token used to authenticate to Key Vault when installing certificates. If not provided, Virtual Client uses the default Azure credential flow (e.g. Azure CLI, Managed Identity, etc.). |
+  | --tenant-Id, --tid=\<tenantId\>                                 | No       | string                       | Azure Active Directory tenant ID used for authentication. |
   | --c, --client-id=\<id\>                                         | No       | string/text                  | Identifier to uniquely identify the instance (telemetry correlation). |
   | --clean=\<target,target...\>                                    | No       | string                       | Perform an initial cleanup (logs/packages/state/temp/all). |
   | --cs, --content, --content-store=\<connection\>                 | No       | string/connection string/SAS | Storage connection for uploading files/content (e.g. logs). |
@@ -180,13 +181,17 @@ The following tables describe the various subcommands that are supported by the 
 
   ``` bash
   # Basic command line example
-  VirtualClient.exe bootstrap --package=diskspd.2.0.21.zip
+  VirtualClient.exe bootstrap --package=diskspd.2.0.21.zip    // Note: installs package with default VC package store.
 
-  VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --package-store="{BlobStoreConnectionString|SAS URI}"
+  VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --package-store="{BlobStoreConnectionString|SAS URI}" // Note: installs package from specified package store.
 
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" 
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" // Note: Installs certificate from Key Vault using default authentication. 
 
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --token="{AccessToken}"
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --tenant-id="{tenantId}" // Note: Installs certificate from Key Vault by fetching access token for authentication. See get-token command for additional info.
+
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --token="{AccessToken}" // Note: Installs certificate from Key Vault using provided access token.
+
+  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --package=diskspd.2.0.21.zip // Note: Installs both a package and a certificate in the same command.
 
   # Full command line example
   VirtualClient.exe bootstrap

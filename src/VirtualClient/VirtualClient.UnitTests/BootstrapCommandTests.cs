@@ -325,13 +325,41 @@ namespace VirtualClient
         public void ShouldInitializeKeyVault_IsTrue_WhenAccessTokenNotProvided()
         {
             var command = new TestBootstrapCommand { AccessToken = null };
-            Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
+            Assert.IsTrue(command.ShouldInitializeKeyVaultPublic());
+        }
+
+        [Test]
+        public void ShouldInitializeKeyVault_IsTrue_WhenTenantIdIsNotProvided()
+        {
+            var command = new TestBootstrapCommand { TenantId = null };
+            Assert.IsTrue(command.ShouldInitializeKeyVaultPublic());
+        }
+
+        [Test]
+        public void ShouldInitializeKeyVault_IsTrue_WhenTenantIdAndAccessTokenAreNotProvided()
+        {
+            var command = new TestBootstrapCommand { TenantId = " ", AccessToken = " "};
+            Assert.IsTrue(command.ShouldInitializeKeyVaultPublic());
         }
 
         [Test]
         public void ShouldInitializeKeyVault_IsFalse_WhenAccessTokenIsProvided()
         {
             var command = new TestBootstrapCommand { AccessToken = "helloWorld" };
+            Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
+        }
+
+        [Test]
+        public void ShouldInitializeKeyVault_IsFalse_WhenTenantIdIsProvided()
+        {
+            var command = new TestBootstrapCommand { TenantId = "helloWorld" };
+            Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
+        }
+
+        [Test]
+        public void ShouldInitializeKeyVault_IsFalse_WhenTenantIdAndAccessTokenAreProvided()
+        {
+            var command = new TestBootstrapCommand { TenantId = "helloWorld", AccessToken = "helloworld" };
             Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
         }
 

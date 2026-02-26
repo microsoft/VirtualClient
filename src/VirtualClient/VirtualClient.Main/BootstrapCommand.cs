@@ -19,10 +19,12 @@ namespace VirtualClient
     internal class BootstrapCommand : ExecuteProfileCommand
     {
         /// <summary>
-        /// When true, Key Vault will be initialized. This is only needed when using default Azure authentication
-        /// (no access token provided).
+        /// When true, Key Vault will be initialized using default Azure authentication.
+        /// Returns true when both --tenant-id and --access-token are NOT provided (use default authentication).
+        /// Returns false when either is provided (use token authentication).
         /// </summary>
-        protected override bool ShouldInitializeKeyVault => false;
+        protected override bool ShouldInitializeKeyVault => 
+            string.IsNullOrWhiteSpace(this.AccessToken) && string.IsNullOrWhiteSpace(this.TenantId);
 
         /// <summary>
         /// The name of the certificate to install from Key Vault.
@@ -78,7 +80,8 @@ namespace VirtualClient
             // Scenario 1: Certificate installation only OR Certificate + Package installation
             if (!string.IsNullOrWhiteSpace(this.CertificateName))
             {
-                if (string.IsNullOrWhiteSpace(this.AccessToken))
+                // If Access Token is not provided and Tenant ID is provided, bootstrap will get token using browser-based (or device code flow) authentication to retrieve token.
+                if (string.IsNullOrWhiteSpace(this.AccessToken) && !string.IsNullOrWhiteSpace(this.TenantId))
                 {
                     this.SetupAccessToken();
                     dependencyProfiles.Add(new DependencyProfileReference("GET-ACCESS-TOKEN.json"));
