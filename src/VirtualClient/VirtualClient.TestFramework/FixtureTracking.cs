@@ -12,7 +12,8 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Tracks process executions and provides fluent assertions for test validation.
+    /// Provides tracking of process/command executions and assertion methods
+    /// for test validation scenarios.
     /// </summary>
     public class FixtureTracking
     {
@@ -27,12 +28,12 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// List of all commands executed (in order).
+        /// The set of all commands executed (in order).
         /// </summary>
         public IReadOnlyList<CommandExecutionInfo> Commands => this.commands.AsReadOnly();
 
         /// <summary>
-        /// List of all process proxies created. Derived directly from <see cref="Commands"/>.
+        /// The set of all process proxies created (derived from <see cref="Commands"/>).
         /// </summary>
         public IReadOnlyList<IProcessProxy> Processes => this.commands.Select(c => c.Process).ToList().AsReadOnly();
 
@@ -45,10 +46,12 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Asserts that the specified commands were executed (in any order).
+        /// Asserts that the specified commands were executed (in any order). Command patterns
+        /// are evaluated as regular expressions. If the regex is invalid, an exact match comparison
+        /// is used as a fallback.
         /// </summary>
         /// <param name="expectedCommandPatterns">
-        /// Regular expression patterns matching expected commands.
+        /// Regular expression patterns matching the expected commands.
         /// </param>
         public void AssertCommandsExecuted(params string[] expectedCommandPatterns)
         {
@@ -92,10 +95,12 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Asserts that the specified commands were executed in the exact order specified.
+        /// Asserts that the specified commands were executed in the exact order specified. Command
+        /// patterns are evaluated as regular expressions. If the regex is invalid, an exact match
+        /// comparison is used as a fallback.
         /// </summary>
         /// <param name="expectedCommandPatterns">
-        /// Regular expression patterns matching expected commands in order.
+        /// Regular expression patterns matching the expected commands in order.
         /// </param>
         public void AssertCommandsExecutedInOrder(params string[] expectedCommandPatterns)
         {
@@ -148,10 +153,11 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Asserts that a command matching the pattern was executed exactly N times.
+        /// Asserts that a command matching the pattern was executed exactly the expected
+        /// number of times.
         /// </summary>
-        /// <param name="commandPattern">Regular expression pattern for the command.</param>
-        /// <param name="expectedCount">Expected number of executions.</param>
+        /// <param name="commandPattern">A regular expression pattern for the command.</param>
+        /// <param name="expectedCount">The expected number of executions.</param>
         public void AssertCommandExecutedTimes(string commandPattern, int expectedCount)
         {
             commandPattern.ThrowIfNullOrWhiteSpace(nameof(commandPattern));
@@ -179,7 +185,8 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Returns a detailed summary of all tracked commands for debugging.
+        /// Returns a detailed summary of all tracked commands. This is useful for
+        /// debugging test failures.
         /// </summary>
         public string GetDetailedSummary()
         {
@@ -210,7 +217,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Adds a command execution to the tracking list.
+        /// Adds a command execution record to the tracking list.
         /// </summary>
         internal void AddCommand(CommandExecutionInfo commandInfo)
         {
@@ -329,7 +336,7 @@ namespace VirtualClient
 
                 foreach (var match in matches)
                 {
-                    message.AppendLine($"  • {match.FullCommand}");
+                    message.AppendLine($"  - {match.FullCommand}");
                 }
             }
 

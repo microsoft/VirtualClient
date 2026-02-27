@@ -203,7 +203,7 @@ namespace VirtualClient
         public ProfileTiming Timing { get; set; }
 
         /// <summary>
-        /// Gets the process tracking instance for assertions. Populated after <see cref="TrackProcesses"/> is called.
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
         /// </summary>
         public FixtureTracking Tracking => this.ProcessManager.Tracking;
 
@@ -413,7 +413,7 @@ namespace VirtualClient
         /// <summary>
         /// Enables automatic tracking of all process executions.
         /// </summary>
-        /// <param name="reset">If true, clears any previously tracked commands.</param>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
         /// <returns>The fixture instance for method chaining.</returns>
         public DependencyFixture TrackProcesses(bool reset = true)
         {
@@ -422,12 +422,13 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Sets up automatic output for processes matching a command pattern.
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided.
         /// </summary>
-        /// <param name="commandPattern">Regex pattern matching the command.</param>
-        /// <param name="standardOutput">Output to return for matching commands.</param>
-        /// <param name="standardError">Error output (optional).</param>
-        /// <param name="exitCode">Exit code for the process (default: 0).</param>
+        /// <param name="commandPattern">A regex pattern matching the command.</param>
+        /// <param name="standardOutput">The standard output to return for matching commands.</param>
+        /// <param name="standardError">The standard error output (optional).</param>
+        /// <param name="exitCode">The exit code for the process (default: 0).</param>
         /// <returns>The fixture instance for method chaining.</returns>
         public DependencyFixture SetupProcessOutput(
             string commandPattern,

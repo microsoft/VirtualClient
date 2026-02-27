@@ -84,15 +84,15 @@ namespace VirtualClient
         public override PlatformID Platform { get; }
 
         /// <summary>
-        /// Gets the process tracking instance. Only populated after <see cref="TrackProcesses"/> is called.
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
         /// </summary>
         public FixtureTracking Tracking { get; private set; }
 
         /// <summary>
-        /// Enables automatic tracking of all process executions. Wraps <see cref="OnCreateProcess"/> to
-        /// record each execution in a <see cref="FixtureTracking"/> instance.
+        /// Enables automatic tracking of all process executions. This wraps the existing <see cref="OnCreateProcess"/>
+        /// handler to record each execution in a <see cref="FixtureTracking"/> instance.
         /// </summary>
-        /// <param name="reset">If true, clears any previously tracked commands.</param>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
         public InMemoryProcessManager TrackProcesses(bool reset = true)
         {
             if (this.Tracking == null || reset)
@@ -123,12 +123,13 @@ namespace VirtualClient
 
         /// <summary>
         /// Sets up automatic output for processes whose full command line matches
-        /// <paramref name="commandPattern"/>. Wraps any existing <see cref="OnCreateProcess"/> handler.
+        /// the pattern provided. This wraps the existing <see cref="OnCreateProcess"/> handler
+        /// to inject standard output and error into matching processes.
         /// </summary>
-        /// <param name="commandPattern">Regex pattern (or plain substring) matched against the full command.</param>
-        /// <param name="standardOutput">Standard output to inject into matching processes.</param>
-        /// <param name="standardError">Standard error to inject into matching processes (optional).</param>
-        /// <param name="exitCode">Exit code for matching processes (default: 0).</param>
+        /// <param name="commandPattern">A regex pattern (or plain substring) matched against the full command.</param>
+        /// <param name="standardOutput">The standard output to inject into matching processes.</param>
+        /// <param name="standardError">The standard error to inject into matching processes (optional).</param>
+        /// <param name="exitCode">The exit code for matching processes (default: 0).</param>
         public InMemoryProcessManager SetupProcessOutput(
             string commandPattern,
             string standardOutput,

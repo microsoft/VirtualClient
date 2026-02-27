@@ -7,7 +7,7 @@ namespace VirtualClient
     using VirtualClient.Common;
 
     /// <summary>
-    /// Represents information about a command execution captured during testing.
+    /// Represents information about a command/process execution captured during testing.
     /// </summary>
     public class CommandExecutionInfo
     {
@@ -16,9 +16,9 @@ namespace VirtualClient
         /// </summary>
         /// <param name="command">The command/executable that was run.</param>
         /// <param name="arguments">The command-line arguments.</param>
-        /// <param name="workingDirectory">The working directory where the command was executed.</param>
-        /// <param name="process">Reference to the process proxy.</param>
-        /// <param name="executionTime">When the command was executed.</param>
+        /// <param name="workingDirectory">The working directory for the command execution.</param>
+        /// <param name="process">The process proxy associated with the execution.</param>
+        /// <param name="executionTime">The time at which the command was executed.</param>
         public CommandExecutionInfo(
             string command,
             string arguments,
@@ -44,7 +44,7 @@ namespace VirtualClient
         public string Arguments { get; }
 
         /// <summary>
-        /// The working directory where the command was executed.
+        /// The working directory for the command execution.
         /// </summary>
         public string WorkingDirectory { get; }
 
@@ -56,12 +56,12 @@ namespace VirtualClient
             : $"{this.Command} {this.Arguments}";
 
         /// <summary>
-        /// Reference to the process proxy.
+        /// The process proxy associated with the execution.
         /// </summary>
         public IProcessProxy Process { get; }
 
         /// <summary>
-        /// When the command was executed.
+        /// The time at which the command was executed.
         /// </summary>
         public DateTime ExecutionTime { get; }
 
