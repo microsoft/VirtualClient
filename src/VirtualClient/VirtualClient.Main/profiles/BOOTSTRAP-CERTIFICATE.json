@@ -4,7 +4,8 @@
     "KeyVaultUri": null,
     "CertificateName": null,
     "AccessToken": null,
-    "LogFileName": null
+    "LogFileName": null,
+    "CertificateDownloadDir": null
   },
   "Actions": [
     {
@@ -14,9 +15,9 @@
         "KeyVaultUri": "$.Parameters.KeyVaultUri",
         "CertificateName": "$.Parameters.CertificateName",
         "AccessToken": "$.Parameters.AccessToken",
-        "AccessTokenPath": "$.Parameters.LogFileName"
+        "AccessTokenPath": "$.Parameters.LogFileName",
+        "CertificateDownloadDir": "$.Parameters.CertificateDownloadDir"
       }
     }
   ]
 }
-  

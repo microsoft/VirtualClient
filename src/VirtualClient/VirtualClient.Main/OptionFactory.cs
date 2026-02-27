@@ -656,6 +656,25 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the directory to which certificates downloaded from Key Vault can be saved.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCertificateDownloadDirectoryOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--certificateDownloadDir", "--certDownloadDir" })
+            {
+                Name = "CertificateDownloadDir",
+                Description = "Set (optional) directory path which certificates downloaded from Key Vault can be saved.",
+                ArgumentHelpName = "tid",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the path to the environment layout file.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>

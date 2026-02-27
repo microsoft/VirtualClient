@@ -313,7 +313,13 @@ namespace VirtualClient
                 OptionFactory.CreateVerboseFlag(required: false, false),
                 
                 // --token
-                OptionFactory.CreateTokenOption(required: false)
+                OptionFactory.CreateTokenOption(required: false),
+
+                // --CertificateDownloadDir
+                OptionFactory.CreateCertificateDownloadDirectoryOption(required: false),
+                
+                // --tenant-id
+                OptionFactory.CreateTenantIdOption(required: false),
             };
 
             // Single command execution is also supported. Behind the scenes this uses a
@@ -474,6 +480,9 @@ namespace VirtualClient
 
                 // --token
                 OptionFactory.CreateTokenOption(required: false),
+
+                // --CertificateDownloadDir
+                OptionFactory.CreateCertificateDownloadDirectoryOption(required: false),
                 
                 // --tenant-id
                 OptionFactory.CreateTenantIdOption(required: false),

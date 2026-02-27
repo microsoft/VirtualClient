@@ -54,6 +54,14 @@ namespace VirtualClient
         public string TenantId { get; set; }
 
         /// <summary>
+        /// Directory path where downloaded certificates can be stored.
+        /// </summary>
+        /// <remarks>Set this property to a valid directory path to ensure that certificates can be
+        /// downloaded and saved.
+        /// </remarks>
+        public string CertificateDownloadDir { get; set; }
+
+        /// <summary>
         /// Executes the bootstrap command.
         /// Supports:
         /// - Package installation from remote store (requires --packages, optionally --package for specific package name)
@@ -142,6 +150,7 @@ namespace VirtualClient
             // Set certificate-related parameters
             this.Parameters["KeyVaultUri"] = this.KeyVault;
             this.Parameters["CertificateName"] = this.CertificateName;
+            this.Parameters["CertificateDownloadDir"] = this.CertificateDownloadDir;
         }
 
         protected void SetupPackageInstallation()
