@@ -147,10 +147,14 @@ namespace VirtualClient
                     "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).");
             }
 
+            if (!string.IsNullOrWhiteSpace(this.CertificateDownloadDir))
+            {
+                this.Parameters["CertificateDownloadDir"] = this.CertificateDownloadDir;
+            }
+
             // Set certificate-related parameters
             this.Parameters["KeyVaultUri"] = this.KeyVault;
             this.Parameters["CertificateName"] = this.CertificateName;
-            this.Parameters["CertificateDownloadDir"] = this.CertificateDownloadDir;
         }
 
         protected void SetupPackageInstallation()
