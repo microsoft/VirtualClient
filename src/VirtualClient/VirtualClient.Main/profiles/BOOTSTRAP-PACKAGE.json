@@ -1,10 +1,10 @@
 {
-  "Description": "Installs dependencies from the package store. Migrate to use BOOTSTRAP-DEPENDENCIES.json for package-store dependencies.",
+  "Description": "Installs dependencies from a package store.",
   "Parameters": {
     "Package": "Undefined",
     "RegisterAsName": "Undefined"
   },
-  "Dependencies": [
+  "Actions": [
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
