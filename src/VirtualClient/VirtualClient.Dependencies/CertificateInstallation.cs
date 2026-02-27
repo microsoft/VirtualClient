@@ -82,6 +82,17 @@
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public string CertificateDownloadDir
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CertificateDownloadDir), string.Empty);
+            }
+        }
+
+        /// <summary>
         /// Gets the access token used to authenticate with Azure services.
         /// </summary>
         public string AccessToken { get; set; }
@@ -125,6 +136,26 @@
                 else
                 {
                     throw new PlatformNotSupportedException($"The '{nameof(CertificateInstallation)}' component is not supported on platform '{this.Platform}'.");
+                }
+
+                // If a download directory is specified, we will also export the certificate to that location.
+                if (!string.IsNullOrEmpty(this.CertificateDownloadDir))
+                {
+                    string certificateFileName = this.WithPrivateKey 
+                        ? $"{this.CertificateName}.pfx"
+                        : $"{this.CertificateName}.cer";
+
+                    string certificatePath = this.Combine(this.CertificateDownloadDir, certificateFileName);
+
+                    // Delete existing certificate file
+                    if (!this.fileSystem.File.Exists(certificatePath))
+                    {
+                        this.fileSystem.File.Delete(certificatePath);
+                    }
+
+                    // Export the new certificate
+                    await this.fileSystem.File.WriteAllBytesAsync(certificatePath, certificate.Export(X509ContentType.Pfx));
+                    Console.WriteLine($"Certificate exported to {certificatePath}");
                 }
             }
             catch (Exception exc)
