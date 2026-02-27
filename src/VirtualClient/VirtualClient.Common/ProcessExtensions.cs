@@ -16,7 +16,7 @@ namespace VirtualClient.Common
     /// </summary>
     public static class ProcessExtensions
     {
-                /// <summary>
+        /// <summary>
         /// Sets the process for interactive mode (e.g. standard output and input redirected).
         /// </summary>
         /// <param name="process">Represents a process on the system.</param>
@@ -37,69 +37,13 @@ namespace VirtualClient.Common
         /// An absolute timeout to apply for the case that the process does not finish in the amount of time expected. If the
         /// timeout is reached a <see cref="TimeoutException"/> exception will be thrown.
         /// </param>
-        /// <param name="withExitConfirmation">True to confirm an exit code before returning. Default = false.</param>
-        public static async Task StartAndWaitAsync(this IProcessProxy process, CancellationToken cancellationToken, TimeSpan? timeout = null, bool withExitConfirmation = false)
+        public static async Task StartAndWaitAsync(this IProcessProxy process, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             process.ThrowIfNull(nameof(process));
 
             if (process.Start())
             {
                 await process.WaitForExitAsync(cancellationToken, timeout);
-
-                if (withExitConfirmation)
-                {
-                    // There is a race condition-style flaw in the .NET implementation of the
-                    // WaitForExit() method. The race condition allows for the process to exit after
-                    // completion but for a period of time to pass before the kernel completes all finalization
-                    // and cleanup steps (e.g. setting an exit code). To help prevent downstream issues that
-                    // happen when attempting to access properties on the process during this race condition period
-                    // of time, we are adding in an extra check on the process HasExited.
-                    //
-                    // Example of error hit during race condition period of time:
-                    // Process must exit before requested information can be determined.
-                    DateTime exitTime = DateTime.UtcNow.AddMinutes(2);
-                    int exitCode = -1;
-                    bool confirmed = false;
-
-                    while (DateTime.UtcNow < exitTime)
-                    {
-                        try
-                        {
-                            // If the exit code is not available, this line will throw an exception.
-                            exitCode = process.ExitCode;
-                            confirmed = true;
-                            break;
-                        }
-                        catch
-                        {
-                            // Wait, but don't throttle the CPU.
-                            await Task.Delay(1000);
-                        }
-                    }
-
-                    if (!confirmed)
-                    {
-                        try
-                        {
-                            string processName = null;
-                            ProcessExtensions.TryGetValue<string>(
-                                () =>
-                                {
-                                    return $"{Path.GetFileName(process?.StartInfo.FileName)} {process?.StartInfo.Arguments}"?.Trim();
-                                }, 
-                                out processName);
-
-                            int processId = -1;
-                            ProcessExtensions.TryGetValue<int>(() => process.Id, out processId);
-
-                            Console.Error.WriteLine($"Process exit confirmation failed for process '{processName} (id={processId})'.");
-                        }
-                        catch
-                        {
-                            // Do not allow any exceptions to surface from here.
-                        }
-                    }
-                }
             }
         }
 

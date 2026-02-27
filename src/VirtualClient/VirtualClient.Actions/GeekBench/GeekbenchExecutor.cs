@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
                     {
                         try
                         {
-                            await process.StartAndWaitAsync(cancellationToken, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(cancellationToken);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
@@ -261,7 +261,7 @@ namespace VirtualClient.Actions
                     {
                         try
                         {
-                            await process.StartAndWaitAsync(cancellationToken, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(cancellationToken);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {

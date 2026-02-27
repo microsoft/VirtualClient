@@ -405,6 +405,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid script file path.
+        /// </summary>
+        public string GetScriptPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetScriptPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid state file path.
         /// </summary>
         public string GetStatePath(params string[] pathSegments)
