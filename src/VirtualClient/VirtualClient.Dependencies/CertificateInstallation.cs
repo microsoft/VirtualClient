@@ -148,7 +148,7 @@
                     string certificatePath = this.Combine(this.CertificateDownloadDir, certificateFileName);
 
                     // Delete existing certificate file
-                    if (!this.fileSystem.File.Exists(certificatePath))
+                    if (this.fileSystem.File.Exists(certificatePath))
                     {
                         this.fileSystem.File.Delete(certificatePath);
                     }
