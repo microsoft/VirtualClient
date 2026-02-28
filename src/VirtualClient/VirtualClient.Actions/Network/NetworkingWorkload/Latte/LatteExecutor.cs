@@ -20,8 +20,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     [SupportedPlatforms("win-arm64,win-x64")]
     public class LatteExecutor : NetworkingWorkloadToolExecutor
     {
-        private const string OutputFileName = "latte-results.xml";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="LatteExecutor"/> class.
         /// </summary>
@@ -29,8 +27,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteExecutor(VirtualClientComponent component)
            : base(component)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -41,8 +40,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>

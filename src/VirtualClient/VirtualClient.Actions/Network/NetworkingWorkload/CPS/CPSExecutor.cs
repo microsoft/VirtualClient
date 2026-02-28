@@ -5,7 +5,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -22,8 +21,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// </summary>
     public class CPSExecutor : NetworkingWorkloadToolExecutor
     {
-        private IFileSystem fileSystem;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSExecutor"/> class.
         /// </summary>
@@ -31,8 +28,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(VirtualClientComponent component)
            : base(component)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -43,9 +41,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.fileSystem = dependencies.GetService<IFileSystem>();
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -274,7 +272,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
                                 await this.LogProcessDetailsAsync(process, relatedContext, "CPS");
                                 process.ThrowIfWorkloadFailed();
 
