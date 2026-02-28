@@ -97,6 +97,8 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            IDictionary<string, object> compilerMetadata = null;
+
             switch (this.CompilerName.ToLowerInvariant())
             {
                 case Compilers.Gcc:
@@ -115,6 +117,8 @@ namespace VirtualClient.Dependencies
                         {
                             throw new DependencyException("gcc, cc, and gfortran compiler versions do not match", ErrorReason.DependencyInstallationFailed);
                         }
+
+                        compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
                     }
                     else if (this.Platform == PlatformID.Win32NT)
                     {
@@ -123,8 +127,9 @@ namespace VirtualClient.Dependencies
 
                         DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
                         await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken);
-
                         await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken);
+
+                        compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken, cygwinInstallationPath);
                     }
 
                     break;
@@ -141,10 +146,12 @@ namespace VirtualClient.Dependencies
                     throw new NotSupportedException($"Compiler '{this.CompilerName}' is not supported.");
             }
 
-            // The compiler + version installed is an important part of the metadata
-            // contract for VC scenarios.
-            IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
-            MetadataContract.Persist(compilerMetadata, MetadataContract.DependenciesCategory, true);
+            if (compilerMetadata != null)
+            {
+                // The compiler + version installed is an important part of the metadata
+                // contract for VC scenarios.
+                MetadataContract.Persist(compilerMetadata, MetadataContract.DependenciesCategory, true);
+            }
         }
 
         /// <summary>

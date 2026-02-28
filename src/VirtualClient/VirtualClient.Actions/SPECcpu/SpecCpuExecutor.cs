@@ -19,7 +19,6 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts.Metadata;
-    using VirtualClient.Metadata;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -142,6 +141,19 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Copies), Environment.ProcessorCount);
+            }
+        }
+
+        /// <summary>
+        /// True to parse the CSV file results vs. the standard output. The CSV results have finer-grained
+        /// results based on significant figures.
+        /// </summary>
+        public string FeatureFlag
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.FeatureFlag), out IConvertible featureFlag);
+                return featureFlag?.ToString();
             }
         }
 
@@ -340,14 +352,25 @@ namespace VirtualClient.Actions
 
                 // CPU2017.008.intrate.txt
                 string resultsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
-                string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);
+                string[] outputFiles = null;
+                bool useCsv = false;
+
+                if (string.Equals(this.FeatureFlag, "UseCsvResults", StringComparison.OrdinalIgnoreCase))
+                {
+                    outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "CPU2017.*.csv", SearchOption.TopDirectoryOnly);
+                    useCsv = true;
+                }
+                else
+                {
+                    outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);
+                }
 
                 foreach (string file in outputFiles)
                 {
                     KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
                     await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true, results: results);
 
-                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results.Value);
+                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results.Value, csv: useCsv);
                     IList<Metric> metrics = parser.Parse();
                     metrics.LogConsole(this.Scenario, "SPECcpu");
 
@@ -392,7 +415,10 @@ namespace VirtualClient.Actions
                             null,
                             this.Roles?.FirstOrDefault())));
 
-                    await this.UploadFilesAsync(blobManager, this.fileSystem, descriptors, cancellationToken);
+                    foreach (FileUploadDescriptor descriptor in descriptors)
+                    {
+                        await this.RequestFileUploadAsync(descriptor);
+                    }
                 }
             }
         }

@@ -10,9 +10,11 @@ namespace VirtualClient.Metadata
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.CodeAnalysis;
     using Moq;
     using NUnit.Framework;
+    using NUnit.Framework.Internal.Execution;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -30,15 +32,15 @@ namespace VirtualClient.Metadata
 
 
         [Test]
-        public async Task GetInstalledCompilerMetadataExtensionReturnsTheExpectedMetadataContractInformation()
+        public async Task GetInstalledCompilerMetadataExtensionReturnsTheExpectedMetadataContractInformation_UnixSystems()
         {
-            this.SetupFixture(PlatformID.Win32NT);
+            this.SetupFixture(PlatformID.Unix);
             string newLine = Environment.NewLine;
 
-            // Off of a Windows system
+            // Off of a Linux system
             string gccOutput =
-                $"gcc (x86_64-posix-seh, Built by strawberryperl.com project) 10.3.0{newLine}" +
-                $"Copyright (C) 2018 Free Software Foundation, Inc.{newLine}" +
+                $"gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 10.3.0{newLine}" +
+                $"Copyright (C) 2020 Free Software Foundation, Inc.{newLine}" +
                 $"This is free software; see the source for copying conditions.  There is NO{newLine}" +
                 $"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.{newLine}";
 
@@ -51,7 +53,7 @@ namespace VirtualClient.Metadata
 
             // Off of a Linux system
             string gfortranOutput =
-                $"GNU Fortran (Ubuntu 10.5.0-1ubuntu1~20.04) 10.5.1{newLine}" +
+                $"GNU Fortran (Ubuntu 10.5.1-1ubuntu1~20.04) 10.5.1{newLine}" +
                 $"Copyright (C) 2020 Free Software Foundation, Inc.{newLine}" +
                 $"This is free software; see the source for copying conditions.  There is NO{newLine}" +
                 $"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.{newLine}";
@@ -79,6 +81,62 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(metadata.TryGetValue("compilerVersion_cc", out value) && value.ToString() == "10.5.0");
             Assert.IsTrue(metadata.TryGetValue("compilerVersion_gcc", out value) && value.ToString() == "10.3.0");
             Assert.IsTrue(metadata.TryGetValue("compilerVersion_gfortran", out value) && value.ToString() == "10.5.1");
+        }
+
+        [Test]
+        public async Task GetInstalledCompilerMetadataExtensionReturnsTheExpectedMetadataContractInformation_WindowsSystems()
+        {
+            this.SetupFixture(PlatformID.Win32NT);
+            string newLine = Environment.NewLine;
+
+            // Off of a Windows system
+            // e.g. 
+            // C:\tools\cygwin\bin\bash.exe --login -c "cc --version"
+            string ccOutput =
+                "cc (GCC) 13.4.0" +
+                "Copyright(C) 2023 Free Software Foundation, Inc." +
+                "This is free software; see the source for copying conditions.  There is NO" +
+                "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
+
+            // e.g. 
+            // C:\tools\cygwin\bin\bash.exe --login -c "gcc --version"
+            string gccOutput =
+                $"gcc (GCC) 13.4.1{newLine}" +
+                $"Copyright(C) 2023 Free Software Foundation, Inc.{newLine}" +
+                $"This is free software; see the source for copying conditions.  There is NO{newLine}" +
+                $"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
+
+            // e.g. 
+            // C:\tools\cygwin\bin\bash.exe --login -c "gfortran --version"
+            string gfortranOutput =
+                $"GNU Fortran (GCC) 13.4.2{newLine}" +
+                $"Copyright(C) 2023 Free Software Foundation, Inc.{newLine}" +
+                $"This is free software; see the source for copying conditions.  There is NO{newLine}" +
+                $"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.";
+
+            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                if (process.FullCommand().Contains("gcc --version"))
+                {
+                    process.StandardOutput.Append(gccOutput);
+                }
+                else if (process.FullCommand().Contains("cc --version"))
+                {
+                    process.StandardOutput.Append(ccOutput);
+                }
+                else if (process.FullCommand().Contains("gfortran --version"))
+                {
+                    process.StandardOutput.Append(gfortranOutput);
+                }
+            };
+
+            IDictionary<string, object> metadata = await this.mockFixture.SystemManagement.Object.GetInstalledCompilerMetadataAsync(cygwinPath: "C:\\tools\\cygwin");
+            Assert.IsTrue(metadata.Count == 3);
+
+            object value;
+            Assert.IsTrue(metadata.TryGetValue("compilerVersion_cc", out value) && value.ToString() == "13.4.0");
+            Assert.IsTrue(metadata.TryGetValue("compilerVersion_gcc", out value) && value.ToString() == "13.4.1");
+            Assert.IsTrue(metadata.TryGetValue("compilerVersion_gfortran", out value) && value.ToString() == "13.4.2");
         }
 
         [Test]
