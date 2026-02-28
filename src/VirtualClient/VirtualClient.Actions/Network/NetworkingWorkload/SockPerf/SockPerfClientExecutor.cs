@@ -11,7 +11,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -62,8 +61,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
@@ -91,13 +89,15 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill(this.Logger);
                                 throw;
+                            }
+                            finally
+                            {
+                                process.SafeKill(this.Logger);
                             }
                         }
                     });
