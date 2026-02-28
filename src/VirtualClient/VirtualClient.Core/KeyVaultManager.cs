@@ -15,6 +15,7 @@ namespace VirtualClient
     using Azure.Security.KeyVault.Secrets;
     using Polly;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Identity;
 
     /// <summary>
     /// Provides methods for retrieving secrets, keys, and certificates from an Azure Key Vault.
@@ -211,12 +212,16 @@ namespace VirtualClient
             this.StoreDescription.ThrowIfNull(nameof(this.StoreDescription));
             certName.ThrowIfNullOrWhiteSpace(nameof(certName), "The certificate name cannot be null or empty.");
 
-            // Use the keyVaultUri if provided as a parameter, otherwise use the store's EndpointUri
             Uri vaultUri = !string.IsNullOrWhiteSpace(keyVaultUri)
                 ? new Uri(keyVaultUri)
                 : ((DependencyKeyVaultStore)this.StoreDescription).EndpointUri;
 
             CertificateClient client = this.CreateCertificateClient(vaultUri, ((DependencyKeyVaultStore)this.StoreDescription).Credentials);
+
+            var credentials = ((DependencyKeyVaultStore)this.StoreDescription).Credentials;
+
+            CertificateClient certificateClient = this.CreateCertificateClient(vaultUri, credentials);
+            SecretClient secretClient = this.CreateSecretClient(vaultUri, credentials);
 
             try
             {
@@ -225,26 +230,32 @@ namespace VirtualClient
                     // Get the full certificate with private key (PFX) if requested
                     if (retrieveWithPrivateKey)
                     {
-                        X509Certificate2 privateKeyCert = await client
-                            .DownloadCertificateAsync(certName, cancellationToken: cancellationToken)
-                            .ConfigureAwait(false);
+                        KeyVaultSecret secret = await secretClient.GetSecretAsync(certName, cancellationToken: cancellationToken);
 
-                        if (privateKeyCert is null || !privateKeyCert.HasPrivateKey)
+                        if (secret?.Value == null)
                         {
-                            throw new DependencyException("Failed to retrieve certificate content with private key.");
+                            throw new DependencyException($"Secret for certificate '{certName}' not found in vault '{vaultUri}'.");
                         }
 
-                        return privateKeyCert;
+                        byte[] pfxBytes = Convert.FromBase64String(secret.Value);
+
+                        X509Certificate2 pfxCertificate = CertificateLoaderHelper.LoadPkcs12(
+                            pfxBytes,
+                            string.Empty,
+                            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+
+                        if (!pfxCertificate.HasPrivateKey)
+                        {
+                            throw new DependencyException($"Certificate '{certName}' does not contain a private key.");
+                        }
+
+                        return pfxCertificate;
                     }
                     else
                     {
-                        // If private key not needed, load cert from PublicBytes
-                        KeyVaultCertificateWithPolicy cert = await client.GetCertificateAsync(certName, cancellationToken: cancellationToken);
-#if NET9_0_OR_GREATER
-                        return X509CertificateLoader.LoadCertificate(cert.Cer);
-#elif NET8_0_OR_GREATER
-                        return new X509Certificate2(cert.Cer);
-#endif
+                        // Public certificate only
+                        KeyVaultCertificateWithPolicy certBundle = await certificateClient.GetCertificateAsync(certName, cancellationToken: cancellationToken);
+                        return CertificateLoaderHelper.LoadPublic(certBundle.Cer);
                     }
                 }).ConfigureAwait(false);
             }
@@ -266,13 +277,6 @@ namespace VirtualClient
             {
                 throw new DependencyException(
                     $"Failed to get certificate '{certName}' from vault '{vaultUri}': {ex.Message}",
-                    ex,
-                    ErrorReason.HttpNonSuccessResponse);
-            }
-            catch (Exception ex)
-            {
-                throw new DependencyException(
-                    $"Failed to get certificate '{certName}' from vault '{vaultUri}'.",
                     ex,
                     ErrorReason.HttpNonSuccessResponse);
             }
