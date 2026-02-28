@@ -62,7 +62,7 @@
         /// <summary>
         /// Gets the path to the file where the access token is saved.
         /// </summary>
-        public string AccessTokenPath 
+        public string AccessTokenPath
         {
             get
             {
@@ -138,12 +138,16 @@
                     throw new PlatformNotSupportedException($"The '{nameof(CertificateInstallation)}' component is not supported on platform '{this.Platform}'.");
                 }
 
-                // If a download directory is specified, we will also export the certificate to that location.
+                // Export the certificate if requested
                 if (!string.IsNullOrEmpty(this.CertificateDownloadDir))
                 {
-                    string certificateFileName = this.WithPrivateKey 
+                    string certificateFileName = this.WithPrivateKey
                         ? $"{this.CertificateName}.pfx"
                         : $"{this.CertificateName}.cer";
+                    
+                    X509ContentType contentType = this.WithPrivateKey 
+                        ? X509ContentType.Pfx 
+                        : X509ContentType.Cert;
 
                     string certificatePath = this.Combine(this.CertificateDownloadDir, certificateFileName);
 
@@ -153,9 +157,8 @@
                         this.fileSystem.File.Delete(certificatePath);
                     }
 
-                    // Export the new certificate
-                    await this.fileSystem.File.WriteAllBytesAsync(certificatePath, certificate.Export(X509ContentType.Pfx));
-                    Console.WriteLine($"Certificate exported to {certificatePath}");
+                    byte[] certBytes = certificate.Export(contentType, string.Empty);
+                    await this.fileSystem.File.WriteAllBytesAsync(certificatePath, certBytes);
                 }
             }
             catch (Exception exc)
@@ -274,6 +277,23 @@
             {
                 throw new InvalidOperationException($"The Key Vault manager has not been properly initialized. " +
                     $"Either valid --KeyVault or --Token or --TokenPath must be passed in order to set up authentication with Key Vault.");
+            }
+        }
+
+        /// <summary>
+        /// Tries to get certificate data, returning null if an exception occurs.
+        /// </summary>
+        private byte[] TryGetCertData(Func<byte[]> getCertData)
+        {
+            try
+            {
+                return getCertData();
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine(exc.ToString());
+                Console.WriteLine("\n\n\n\n=================================================================================\n");
+                return null;
             }
         }
     }
