@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark\\\"",
                     $"sudo bash -c \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark -h 1.2.3.5 -p 6379 {Regex.Escape(executor.CommandLine)}\\\""
                 );
@@ -135,7 +135,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark\\\"",
                     $"sudo bash -c \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark -h 1.2.3.5 -p 1234 {Regex.Escape(executor.CommandLine)}\\\""
                 );
@@ -170,7 +170,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark\\\"",
                     $"sudo bash -c \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark -h 1.2.3.5 -p 1234 {Regex.Escape(executor.CommandLine)}\\\"",
                     $"sudo bash -c \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark -h 1.2.3.5 -p 5678 {Regex.Escape(executor.CommandLine)}\\\""
@@ -200,7 +200,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark\\\"",
                     $"sudo bash -c \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark -h 1.2.3.5 -p 1234 {Regex.Escape(executor.CommandLine)}\\\"",
                     $"sudo bash -c \\\"{Regex.Escape(this.mockPackage.Path)}/src/redis-benchmark -h 1.2.3.5 -p 5678 {Regex.Escape(executor.CommandLine)}\\\"",

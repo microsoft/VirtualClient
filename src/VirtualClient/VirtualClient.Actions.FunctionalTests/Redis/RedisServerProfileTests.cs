@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
 
-                this.mockFixture.Tracking.AssertCommandsExecutedInOrder(
+                this.mockFixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x.*redis-server",
                     $"sudo bash -c \\\"numactl -C 0.*redis-server --port 6379.*\\\"",
                     $"sudo bash -c \\\"numactl -C 1.*redis-server --port 6380.*\\\"",

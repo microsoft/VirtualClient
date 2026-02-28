@@ -88,7 +88,7 @@ namespace VirtualClient
         [Test]
         public void AssertCommandsExecutedInOrderThrowsWhenNoCommandsWereExecuted()
         {
-            Assert.Throws<InvalidOperationException>(() => this.tracking.AssertCommandsExecutedInOrder("any-command"));
+            Assert.Throws<InvalidOperationException>(() => this.tracking.AssertCommandsExecuted(true, "any-command"));
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace VirtualClient
             this.AddCommand("command1");
             this.AddCommand("command2");
 
-            Assert.Throws<InvalidOperationException>(() => this.tracking.AssertCommandsExecutedInOrder("command2", "command1"));
+            Assert.Throws<InvalidOperationException>(() => this.tracking.AssertCommandsExecuted(true, "command2", "command1"));
         }
 
         [Test]
@@ -107,7 +107,7 @@ namespace VirtualClient
             this.AddCommand("command2");
             this.AddCommand("command3");
 
-            Assert.DoesNotThrow(() => this.tracking.AssertCommandsExecutedInOrder("command1", "command3"));
+            Assert.DoesNotThrow(() => this.tracking.AssertCommandsExecuted(true, "command1", "command3"));
         }
 
         [Test]
@@ -116,7 +116,7 @@ namespace VirtualClient
             this.AddCommand("sudo chmod +x /home/user/workload");
             this.AddCommand("sudo /home/user/workload --port 6379");
 
-            Assert.DoesNotThrow(() => this.tracking.AssertCommandsExecutedInOrder(
+            Assert.DoesNotThrow(() => this.tracking.AssertCommandsExecuted(true,
                 "chmod.*workload",
                 "workload.*--port 6379"));
         }
@@ -127,7 +127,7 @@ namespace VirtualClient
             this.AddCommand("[first");
             this.AddCommand("[second");
 
-            Assert.DoesNotThrow(() => this.tracking.AssertCommandsExecutedInOrder("[first", "[second"));
+            Assert.DoesNotThrow(() => this.tracking.AssertCommandsExecuted(true, "[first", "[second"));
         }
 
         [Test]
@@ -239,7 +239,7 @@ namespace VirtualClient
             this.AddCommand("command1");
 
             InvalidOperationException error = Assert.Throws<InvalidOperationException>(
-                () => this.tracking.AssertCommandsExecutedInOrder("command1", "command2"));
+                () => this.tracking.AssertCommandsExecuted(true, "command1", "command2"));
 
             StringAssert.Contains("Expected Order:", error.Message);
             StringAssert.Contains("Actual Execution Order:", error.Message);

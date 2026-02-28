@@ -93,7 +93,7 @@ namespace VirtualClient.Actions
             using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await executor.ExecuteAsync(CancellationToken.None);
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server\\\"",
                     $"sudo bash -c \\\"numactl -C 0 {Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\\\""
                 );
@@ -118,7 +118,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     // Make redis-server executable
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server\\\"",
                     
@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                this.fixture.Tracking.AssertCommandsExecutedInOrder(
+                this.fixture.Tracking.AssertCommandsExecuted(true,
                     $"sudo chmod \\+x \\\"{Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server\\\"",
                     $"{Regex.Escape(this.mockRedisPackage.Path)}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes"
                 );

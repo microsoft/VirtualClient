@@ -46,109 +46,43 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Asserts that the specified commands were executed (in any order). Command patterns
-        /// are evaluated as regular expressions. If the regex is invalid, an exact match comparison
-        /// is used as a fallback.
+        /// Asserts that the specified commands were executed (in any order). Commands are
+        /// matched using regular expression evaluation. If the expression is not a valid
+        /// regular expression, an exact match (case-insensitive) comparison is used as a fallback.
         /// </summary>
-        /// <param name="expectedCommandPatterns">
-        /// Regular expression patterns matching the expected commands.
+        /// <param name="expectedCommands">
+        /// The expected commands to match. Each entry can be an exact command string or a
+        /// regular expression pattern.
         /// </param>
-        public void AssertCommandsExecuted(params string[] expectedCommandPatterns)
+        public void AssertCommandsExecuted(params string[] expectedCommands)
         {
-            expectedCommandPatterns.ThrowIfNullOrEmpty(nameof(expectedCommandPatterns));
-
-            List<string> notFound = new List<string>();
-            List<CommandExecutionInfo> matchedCommands = new List<CommandExecutionInfo>();
-
-            foreach (string pattern in expectedCommandPatterns)
-            {
-                CommandExecutionInfo match = this.commands.FirstOrDefault(cmd =>
-                {
-                    try
-                    {
-                        return Regex.IsMatch(cmd.FullCommand, pattern, RegexOptions.IgnoreCase)
-                            && !matchedCommands.Contains(cmd);
-                    }
-                    catch
-                    {
-                        // If regex fails, try exact match
-                        return string.Equals(cmd.FullCommand, pattern, StringComparison.OrdinalIgnoreCase)
-                            && !matchedCommands.Contains(cmd);
-                    }
-                });
-
-                if (match == null)
-                {
-                    notFound.Add(pattern);
-                }
-                else
-                {
-                    matchedCommands.Add(match);
-                }
-            }
-
-            if (notFound.Any())
-            {
-                string errorMessage = this.BuildCommandNotFoundErrorMessage(notFound, expectedCommandPatterns);
-                throw new InvalidOperationException(errorMessage);
-            }
+            this.AssertCommandsExecuted(false, expectedCommands);
         }
 
         /// <summary>
-        /// Asserts that the specified commands were executed in the exact order specified. Command
-        /// patterns are evaluated as regular expressions. If the regex is invalid, an exact match
-        /// comparison is used as a fallback.
+        /// Asserts that the specified commands were executed. Commands are matched using
+        /// regular expression evaluation. If the expression is not a valid regular expression,
+        /// an exact match (case-insensitive) comparison is used as a fallback.
         /// </summary>
-        /// <param name="expectedCommandPatterns">
-        /// Regular expression patterns matching the expected commands in order.
+        /// <param name="exactOrder">
+        /// True to require the commands were executed in the exact order specified. False to
+        /// allow matching in any order.
         /// </param>
-        public void AssertCommandsExecutedInOrder(params string[] expectedCommandPatterns)
+        /// <param name="expectedCommands">
+        /// The expected commands to match. Each entry can be an exact command string or a
+        /// regular expression pattern.
+        /// </param>
+        public void AssertCommandsExecuted(bool exactOrder, params string[] expectedCommands)
         {
-            expectedCommandPatterns.ThrowIfNullOrEmpty(nameof(expectedCommandPatterns));
+            expectedCommands.ThrowIfNullOrEmpty(nameof(expectedCommands));
 
-            List<string> notFound = new List<string>();
-            int currentIndex = 0;
-
-            foreach (string pattern in expectedCommandPatterns)
+            if (exactOrder)
             {
-                bool found = false;
-
-                // Search for the pattern starting from currentIndex
-                for (int i = currentIndex; i < this.commands.Count; i++)
-                {
-                    try
-                    {
-                        if (Regex.IsMatch(this.commands[i].FullCommand, pattern, RegexOptions.IgnoreCase))
-                        {
-                            currentIndex = i + 1; // Move past this match
-                            found = true;
-                            break;
-                        }
-                    }
-                    catch
-                    {
-                        // If regex fails, try exact match
-                        if (string.Equals(this.commands[i].FullCommand, pattern, StringComparison.OrdinalIgnoreCase))
-                        {
-                            currentIndex = i + 1;
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!found)
-                {
-                    notFound.Add(pattern);
-                }
+                this.AssertCommandsExecutedInOrder(expectedCommands);
             }
-
-            if (notFound.Any())
+            else
             {
-                string errorMessage = this.BuildOrderedCommandNotFoundErrorMessage(
-                    notFound,
-                    expectedCommandPatterns);
-                throw new InvalidOperationException(errorMessage);
+                this.AssertCommandsExecutedAnyOrder(expectedCommands);
             }
         }
 
@@ -223,6 +157,93 @@ namespace VirtualClient
         {
             commandInfo.ThrowIfNull(nameof(commandInfo));
             this.commands.Add(commandInfo);
+        }
+
+        private void AssertCommandsExecutedAnyOrder(string[] expectedCommands)
+        {
+            List<string> notFound = new List<string>();
+            List<CommandExecutionInfo> matchedCommands = new List<CommandExecutionInfo>();
+
+            foreach (string pattern in expectedCommands)
+            {
+                CommandExecutionInfo match = this.commands.FirstOrDefault(cmd =>
+                {
+                    try
+                    {
+                        return Regex.IsMatch(cmd.FullCommand, pattern, RegexOptions.IgnoreCase)
+                            && !matchedCommands.Contains(cmd);
+                    }
+                    catch
+                    {
+                        // If regex fails, try exact match
+                        return string.Equals(cmd.FullCommand, pattern, StringComparison.OrdinalIgnoreCase)
+                            && !matchedCommands.Contains(cmd);
+                    }
+                });
+
+                if (match == null)
+                {
+                    notFound.Add(pattern);
+                }
+                else
+                {
+                    matchedCommands.Add(match);
+                }
+            }
+
+            if (notFound.Any())
+            {
+                string errorMessage = this.BuildCommandNotFoundErrorMessage(notFound, expectedCommands);
+                throw new InvalidOperationException(errorMessage);
+            }
+        }
+
+        private void AssertCommandsExecutedInOrder(string[] expectedCommands)
+        {
+            List<string> notFound = new List<string>();
+            int currentIndex = 0;
+
+            foreach (string pattern in expectedCommands)
+            {
+                bool found = false;
+
+                // Search for the pattern starting from currentIndex
+                for (int i = currentIndex; i < this.commands.Count; i++)
+                {
+                    try
+                    {
+                        if (Regex.IsMatch(this.commands[i].FullCommand, pattern, RegexOptions.IgnoreCase))
+                        {
+                            currentIndex = i + 1; // Move past this match
+                            found = true;
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // If regex fails, try exact match
+                        if (string.Equals(this.commands[i].FullCommand, pattern, StringComparison.OrdinalIgnoreCase))
+                        {
+                            currentIndex = i + 1;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found)
+                {
+                    notFound.Add(pattern);
+                }
+            }
+
+            if (notFound.Any())
+            {
+                string errorMessage = this.BuildOrderedCommandNotFoundErrorMessage(
+                    notFound,
+                    expectedCommands);
+                throw new InvalidOperationException(errorMessage);
+            }
         }
 
         private string BuildCommandNotFoundErrorMessage(
