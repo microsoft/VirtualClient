@@ -155,6 +155,7 @@ The following tables describe the various subcommands that are supported by the 
   | --key-vault, --kv=\<keyVaultUri\>                               | No*      | uri                          | Azure Key Vault URI to source the certificate from (e.g. `https://myvault.vault.azure.net/`). Required when doing **certificate bootstrapping**. |
   | --token, --access-token=\<accessToken\>                         | No       | string                       | Optional access token used to authenticate to Key Vault when installing certificates. If not provided, Virtual Client uses the default Azure credential flow (e.g. Azure CLI, Managed Identity, etc.). |
   | --tenant-Id, --tid=\<tenantId\>                                 | No       | string                       | Azure Active Directory tenant ID used for authentication. |
+  | --certificateDownloadDir                                        | No       | string                       | Directory path where downloaded certificates can also be stored. |
   | --c, --client-id=\<id\>                                         | No       | string/text                  | Identifier to uniquely identify the instance (telemetry correlation). |
   | --clean=\<target,target...\>                                    | No       | string                       | Perform an initial cleanup (logs/packages/state/temp/all). |
   | --cs, --content, --content-store=\<connection\>                 | No       | string/connection string/SAS | Storage connection for uploading files/content (e.g. logs). |

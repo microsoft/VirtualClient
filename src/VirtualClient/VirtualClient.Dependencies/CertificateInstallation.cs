@@ -151,7 +151,6 @@
 
                     string certificatePath = this.Combine(this.CertificateDownloadDir, certificateFileName);
 
-                    // Delete existing certificate file
                     if (this.fileSystem.File.Exists(certificatePath))
                     {
                         this.fileSystem.File.Delete(certificatePath);
@@ -277,23 +276,6 @@
             {
                 throw new InvalidOperationException($"The Key Vault manager has not been properly initialized. " +
                     $"Either valid --KeyVault or --Token or --TokenPath must be passed in order to set up authentication with Key Vault.");
-            }
-        }
-
-        /// <summary>
-        /// Tries to get certificate data, returning null if an exception occurs.
-        /// </summary>
-        private byte[] TryGetCertData(Func<byte[]> getCertData)
-        {
-            try
-            {
-                return getCertData();
-            }
-            catch (Exception exc)
-            {
-                Console.WriteLine(exc.ToString());
-                Console.WriteLine("\n\n\n\n=================================================================================\n");
-                return null;
             }
         }
     }

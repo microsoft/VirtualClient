@@ -220,8 +220,8 @@ namespace VirtualClient
 
             var credentials = ((DependencyKeyVaultStore)this.StoreDescription).Credentials;
 
-            CertificateClient certificateClient = this.CreateCertificateClient(vaultUri, credentials);
-            SecretClient secretClient = this.CreateSecretClient(vaultUri, credentials);
+            CertificateClient certificateClient = this.CreateCertificateClient(vaultUri, credentials); // For public cert.
+            SecretClient secretClient = this.CreateSecretClient(vaultUri, credentials); // For private cert (PFX)
 
             try
             {
