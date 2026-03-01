@@ -41,6 +41,25 @@ namespace VirtualClient
                 .Setup(c => c.GetSecretAsync("mysecret", null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue(secret, Mock.Of<Response>()));
 
+            this.secretClientMock
+                .Setup(c => c.GetSecretAsync(It.Is<string>(x => x == "mysecret"), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(secret, Mock.Of<Response>()));
+
+            var pfxCertificate = this.GenerateTestCertificateWithPrivateKey();
+            var pfxBytes = pfxCertificate.Export(X509ContentType.Pfx, "");
+            var pfxBase64 = Convert.ToBase64String(pfxBytes);
+            var certSecret = SecretModelFactory.KeyVaultSecret(
+                properties: SecretModelFactory.SecretProperties(
+                    name: "mycert",
+                    version: "v3",
+                    vaultUri: new Uri("https://myvault.vault.azure.net/"),
+                    id: new Uri("https://myvault.vault.azure.net/secrets/mycert/v3")),
+                pfxBase64);
+
+            this.secretClientMock
+                .Setup(c => c.GetSecretAsync(It.Is<string>(s => s == "mycert"), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(certSecret, Mock.Of<Response>()));
+
             // Mock the key
             this.keyClientMock = new Mock<KeyClient>(MockBehavior.Strict, new Uri("https://myvault.vault.azure.net/"), new MockTokenCredential());
             var key = KeyModelFactory.KeyVaultKey(properties: KeyModelFactory.KeyProperties(
@@ -124,10 +143,14 @@ namespace VirtualClient
             if (retrieveWithPrivateKey)
             {
                 Assert.IsTrue(result.HasPrivateKey);
+                Assert.IsNotNull(result.Export(X509ContentType.Pfx, string.Empty)); // Verifies cert is exportable with private key
+                this.secretClientMock.Verify(c => c.GetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             }
             else
             {
                 Assert.IsFalse(result.HasPrivateKey);
+                Assert.IsNotNull(result.Export(X509ContentType.Cert, string.Empty));
+                this.certificateClientMock.Verify(c => c.GetCertificateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             }
         }
 
