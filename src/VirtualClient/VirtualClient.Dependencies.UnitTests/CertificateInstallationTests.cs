@@ -518,6 +518,271 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        [Test]
+        [TestCase(true, "testCert.pfx")]
+        [TestCase(false, "testCert.cer")]
+        public async Task ExecuteAsync_SavesCertificateToDownloadDirectory(bool withPrivateKey, string expectedFileName)
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            string downloadDir = "/tmp/certificates";
+            string expectedPath = this.mockFixture.Combine(downloadDir, expectedFileName);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CertificateInstallation.CertificateName), "testCert" },
+                { nameof(CertificateInstallation.KeyVaultUri), "https://testvault.vault.azure.net/" },
+                { nameof(CertificateInstallation.CertificateDownloadDir), downloadDir },
+                { nameof(CertificateInstallation.WithPrivateKey), withPrivateKey }
+            };
+
+            this.mockFixture.File.Setup(f => f.Exists(expectedPath)).Returns(false);
+            this.mockFixture.File.Setup(f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.KeyVaultManager
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<string>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<IAsyncPolicy>()))
+                    .ReturnsAsync(this.testCertificate);
+
+                component.OnInstallCertificateOnWindows = (cert, token) => Task.CompletedTask;
+
+                await component.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            // Verify the file was written with the correct path
+            this.mockFixture.File.Verify(
+                f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_SavesPrivateCertificateAsPfxFormat()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.SetupPrivateCertificate();
+
+            string downloadDir = "/tmp/certificates";
+            string expectedPath = this.mockFixture.Combine(downloadDir, "testCert.pfx");
+            byte[] capturedBytes = null;
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CertificateInstallation.CertificateName), "testCert" },
+                { nameof(CertificateInstallation.KeyVaultUri), "https://testvault.vault.azure.net/" },
+                { nameof(CertificateInstallation.CertificateDownloadDir), downloadDir },
+                { nameof(CertificateInstallation.WithPrivateKey), true }
+            };
+
+            this.mockFixture.File.Setup(f => f.Exists(expectedPath)).Returns(false);
+            this.mockFixture.File.Setup(f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+                .Callback<string, byte[], CancellationToken>((path, bytes, token) => capturedBytes = bytes)
+                .Returns(Task.CompletedTask);
+
+            using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.KeyVaultManager
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<string>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<IAsyncPolicy>()))
+                    .ReturnsAsync(this.testCertificate);
+
+                component.OnInstallCertificateOnWindows = (cert, token) => Task.CompletedTask;
+
+                await component.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            // Verify the bytes captured are in PFX format
+            Assert.IsNotNull(capturedBytes);
+            byte[] expectedBytes = this.testCertificate.Export(X509ContentType.Pfx, string.Empty);
+            Assert.AreEqual(expectedBytes.Length, capturedBytes.Length);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_SavesPublicCertificateAsCerFormat()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            string downloadDir = "/tmp/certificates";
+            string expectedPath = this.mockFixture.Combine(downloadDir, "testCert.cer");
+            byte[] capturedBytes = null;
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CertificateInstallation.CertificateName), "testCert" },
+                { nameof(CertificateInstallation.KeyVaultUri), "https://testvault.vault.azure.net/" },
+                { nameof(CertificateInstallation.CertificateDownloadDir), downloadDir },
+                { nameof(CertificateInstallation.WithPrivateKey), false }
+            };
+
+            this.mockFixture.File.Setup(f => f.Exists(expectedPath)).Returns(false);
+            this.mockFixture.File.Setup(f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+                .Callback<string, byte[], CancellationToken>((path, bytes, token) => capturedBytes = bytes)
+                .Returns(Task.CompletedTask);
+
+            using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.KeyVaultManager
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<string>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<IAsyncPolicy>()))
+                    .ReturnsAsync(this.testCertificate);
+
+                component.OnInstallCertificateOnWindows = (cert, token) => Task.CompletedTask;
+
+                await component.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            // Verify the bytes captured are in Cert format
+            Assert.IsNotNull(capturedBytes);
+            byte[] expectedBytes = this.testCertificate.Export(X509ContentType.Cert, string.Empty);
+            CollectionAssert.AreEqual(expectedBytes, capturedBytes);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_DeletesExistingCertificateFileBeforeWriting()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            string downloadDir = "/tmp/certificates";
+            string expectedPath = this.mockFixture.Combine(downloadDir, "testCert.pfx");
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CertificateInstallation.CertificateName), "testCert" },
+                { nameof(CertificateInstallation.KeyVaultUri), "https://testvault.vault.azure.net/" },
+                { nameof(CertificateInstallation.CertificateDownloadDir), downloadDir },
+                { nameof(CertificateInstallation.WithPrivateKey), true }
+            };
+
+            // Setup file exists to return true
+            this.mockFixture.File.Setup(f => f.Exists(expectedPath)).Returns(true);
+            this.mockFixture.File.Setup(f => f.Delete(expectedPath));
+            this.mockFixture.File.Setup(f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.KeyVaultManager
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<string>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<IAsyncPolicy>()))
+                    .ReturnsAsync(this.testCertificate);
+
+                component.OnInstallCertificateOnWindows = (cert, token) => Task.CompletedTask;
+
+                await component.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            // Verify the existing file was deleted before writing
+            this.mockFixture.File.Verify(f => f.Delete(expectedPath), Times.Once);
+            this.mockFixture.File.Verify(
+                f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_DoesNotSaveCertificateWhenDownloadDirNotProvided()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CertificateInstallation.CertificateName), "testCert" },
+                { nameof(CertificateInstallation.KeyVaultUri), "https://testvault.vault.azure.net/" },
+                { nameof(CertificateInstallation.WithPrivateKey), true }
+                // CertificateDownloadDir is not provided
+            };
+
+            using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.KeyVaultManager
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<string>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<IAsyncPolicy>()))
+                    .ReturnsAsync(this.testCertificate);
+
+                component.OnInstallCertificateOnWindows = (cert, token) => Task.CompletedTask;
+
+                await component.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            // Verify no file operations were performed
+            this.mockFixture.File.Verify(f => f.Exists(It.IsAny<string>()), Times.Never);
+            this.mockFixture.File.Verify(f => f.Delete(It.IsAny<string>()), Times.Never);
+            this.mockFixture.File.Verify(
+                f => f.WriteAllBytesAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_SavesCertificateOnUnixPlatform()
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+            string downloadDir = "/tmp/certificates";
+            string expectedPath = this.mockFixture.Combine(downloadDir, "testCert.pfx");
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CertificateInstallation.CertificateName), "testCert" },
+                { nameof(CertificateInstallation.KeyVaultUri), "https://testvault.vault.azure.net/" },
+                { nameof(CertificateInstallation.CertificateDownloadDir), downloadDir },
+                { nameof(CertificateInstallation.WithPrivateKey), true }
+            };
+
+            this.mockFixture.File.Setup(f => f.Exists(expectedPath)).Returns(false);
+            this.mockFixture.File.Setup(f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            using (TestCertificateInstallation component = new TestCertificateInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.KeyVaultManager
+                    .Setup(m => m.GetCertificateAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<string>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<IAsyncPolicy>()))
+                    .ReturnsAsync(this.testCertificate);
+
+                component.OnInstallCertificateOnUnix = (cert, token) => Task.CompletedTask;
+
+                await component.ExecuteAsync(EventContext.None, CancellationToken.None);
+            }
+
+            // Verify certificate was saved to download directory even on Unix
+            this.mockFixture.File.Verify(
+                f => f.WriteAllBytesAsync(expectedPath, It.IsAny<byte[]>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        private void SetupPrivateCertificate()
+        {
+            var distinguishedName = new X500DistinguishedName("CN=TestCert");
+
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            this.testCertificate = request.CreateSelfSigned(
+                DateTimeOffset.UtcNow.AddDays(-1),
+                DateTimeOffset.UtcNow.AddYears(1));
+        }
+
         private class TestCertificateInstallation : CertificateInstallation
         {
             public TestCertificateInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
