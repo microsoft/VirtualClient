@@ -665,8 +665,8 @@ namespace VirtualClient
             Option<string> option = new Option<string>(new string[] { "--certificateDownloadDir", "--certDownloadDir" })
             {
                 Name = "CertificateDownloadDir",
-                Description = "Set (optional) directory path which certificates downloaded from Key Vault can be saved.",
-                ArgumentHelpName = "tid",
+                Description = "Defines the directory where certificates downloaded from Key Vault will be saved.",
+                ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
 

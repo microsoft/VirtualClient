@@ -82,7 +82,7 @@
         }
 
         /// <summary>
-        /// 
+        /// Gets the directory where the certificate will be exported. If not provided, the certificate will not be exported to a file.
         /// </summary>
         public string CertificateDownloadDir
         {
