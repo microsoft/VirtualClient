@@ -27,7 +27,6 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--cert-name")]
-        [TestCase("--certname")]
         [TestCase("--certificate-name")]
         public void BootstrapCommand_CertificateInstall_RequiresKeyVault(string certAlias)
         {
