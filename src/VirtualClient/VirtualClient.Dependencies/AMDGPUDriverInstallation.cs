@@ -6,6 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
@@ -199,6 +200,8 @@ namespace VirtualClient.Dependencies
             // is booted. For the purpose of the AMD GPU driver installation, we want to include extra
             // paths in the $PATH environment variable post installation.
             string bashRcPath = $"/home/{this.Username}/.bashrc";
+
+            this.fileSystem.Directory.CreateDirectory(Path.GetDirectoryName(bashRcPath) !);
 
             // We hit a bug where the .bashrc file does not exist on the system. To prevent issues later
             // we are creating the file if it is missing.
