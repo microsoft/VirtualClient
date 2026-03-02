@@ -137,14 +137,14 @@ namespace VirtualClient
                 KeyVault = "https://myvault.vault.azure.net/",
                 AccessToken = "token123",
                 TenantId = "00000000-0000-0000-0000-000000000001",
-                CertificateDownloadDir = "C:\\certs"
+                CertificateInstallationDir = "C:\\certs"
             };
 
             command.SetupCertificateInstallationPublic();
 
             Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
             Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
-            Assert.AreEqual(command.Parameters["CertificateDownloadDir"], command.CertificateDownloadDir);
+            Assert.AreEqual(command.Parameters["CertificateInstallationDir"], command.CertificateInstallationDir);
             Assert.AreEqual(command.Parameters.Count, 3);
         }
 

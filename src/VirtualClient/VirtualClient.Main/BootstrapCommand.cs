@@ -54,12 +54,9 @@ namespace VirtualClient
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Directory path where downloaded certificates can be stored.
+        /// Directory path where certificates can be stored. This is optional, but if not provided, certificates will not be saved to disk.
         /// </summary>
-        /// <remarks>Set this property to a valid directory path to ensure that certificates can be
-        /// downloaded and saved.
-        /// </remarks>
-        public string CertificateDownloadDir { get; set; }
+        public string CertificateInstallationDir { get; set; }
 
         /// <summary>
         /// Executes the bootstrap command.
@@ -147,9 +144,9 @@ namespace VirtualClient
                     "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.CertificateDownloadDir))
+            if (!string.IsNullOrWhiteSpace(this.CertificateInstallationDir))
             {
-                this.Parameters["CertificateDownloadDir"] = this.CertificateDownloadDir;
+                this.Parameters["CertificateInstallationDir"] = this.CertificateInstallationDir;
             }
 
             // Set certificate-related parameters

@@ -311,13 +311,7 @@ namespace VirtualClient
 
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false),
-                
-                // --token
-                OptionFactory.CreateTokenOption(required: false),
-
-                // --CertificateDownloadDir
-                OptionFactory.CreateCertificateDownloadDirectoryOption(required: false),
-                
+                                
                 // --tenant-id
                 OptionFactory.CreateTenantIdOption(required: false),
             };
@@ -481,8 +475,8 @@ namespace VirtualClient
                 // --token
                 OptionFactory.CreateTokenOption(required: false),
 
-                // --CertificateDownloadDir
-                OptionFactory.CreateCertificateDownloadDirectoryOption(required: false),
+                // --cert-installation-dir
+                OptionFactory.CreateCertificateInstallationDirectoryOption(required: false),
                 
                 // --tenant-id
                 OptionFactory.CreateTenantIdOption(required: false),

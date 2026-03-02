@@ -5,7 +5,8 @@
     "CertificateName": null,
     "AccessToken": null,
     "LogFileName": null,
-    "CertificateDownloadDir": null
+    "CertificateInstallationDir": null,
+    "WithPrivateKey": true
   },
   "Actions": [
     {
@@ -16,7 +17,8 @@
         "CertificateName": "$.Parameters.CertificateName",
         "AccessToken": "$.Parameters.AccessToken",
         "AccessTokenPath": "$.Parameters.LogFileName",
-        "CertificateDownloadDir": "$.Parameters.CertificateDownloadDir"
+        "CertificateInstallationDir": "$.Parameters.CertificateInstallationDir",
+        "WithPrivateKey": "$.Parameters.WithPrivateKey"
       }
     }
   ]

@@ -17,6 +17,7 @@
     /// Virtual Client component that installs certificates from Azure Key Vault
     /// into the appropriate certificate store for the operating system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64", true)]
     public class CertificateInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
@@ -84,11 +85,11 @@
         /// <summary>
         /// Gets the directory where the certificate will be exported. If not provided, the certificate will not be exported to a file.
         /// </summary>
-        public string CertificateDownloadDir
+        public string CertificateInstallationDir
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CertificateDownloadDir), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(this.CertificateInstallationDir));
             }
         }
 
@@ -125,39 +126,11 @@
                 IKeyVaultManager keyVault = this.GetKeyVaultManager();
                 X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.CertificateName, cancellationToken, null, this.WithPrivateKey);
 
-                if (this.Platform == PlatformID.Win32NT)
-                {
-                    await this.InstallCertificateOnWindowsAsync(certificate, cancellationToken);
-                }
-                else if (this.Platform == PlatformID.Unix)
-                {
-                    await this.InstallCertificateOnUnixAsync(certificate, cancellationToken);
-                }
-                else
-                {
-                    throw new PlatformNotSupportedException($"The '{nameof(CertificateInstallation)}' component is not supported on platform '{this.Platform}'.");
-                }
+                await this.InstallCertificateOnMachineAsync(certificate, cancellationToken);
 
-                // Export the certificate if requested
-                if (!string.IsNullOrEmpty(this.CertificateDownloadDir))
+                if (!string.IsNullOrWhiteSpace(this.CertificateInstallationDir))
                 {
-                    string certificateFileName = this.WithPrivateKey
-                        ? $"{this.CertificateName}.pfx"
-                        : $"{this.CertificateName}.cer";
-                    
-                    X509ContentType contentType = this.WithPrivateKey 
-                        ? X509ContentType.Pfx 
-                        : X509ContentType.Cert;
-
-                    string certificatePath = this.Combine(this.CertificateDownloadDir, certificateFileName);
-
-                    if (this.fileSystem.File.Exists(certificatePath))
-                    {
-                        this.fileSystem.File.Delete(certificatePath);
-                    }
-
-                    byte[] certBytes = certificate.Export(contentType, string.Empty);
-                    await this.fileSystem.File.WriteAllBytesAsync(certificatePath, certBytes);
+                    await this.InstallCertificateLocallyAsync(certificate, cancellationToken);
                 }
             }
             catch (Exception exc)
@@ -169,9 +142,9 @@
         }
 
         /// <summary>
-        /// Installs the certificate in the appropriate certificate store on a Windows system.
+        /// Installs the certificate in the appropriate certificate store.
         /// </summary>
-        protected virtual Task InstallCertificateOnWindowsAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+        protected virtual Task InstallCertificateOnMachineAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
@@ -183,72 +156,6 @@
                     store.Close();
                 }
             });
-        }
-
-        /// <summary>
-        /// Installs the certificate in the appropriate certificate store on a Unix/Linux system.
-        /// </summary>
-        protected virtual async Task InstallCertificateOnUnixAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
-        {
-            // On Unix/Linux systems, we install the certificate in the default location for the
-            // user as well as in a static location. In the future we will likely use the static location
-            // only.
-            string certificateDirectory = null;
-
-            try
-            {
-                // When "sudo" is used to run the installer, we need to know the logged
-                // in user account. On Linux systems, there is an environment variable 'SUDO_USER'
-                // that defines the logged in user.
-
-                string user = this.GetEnvironmentVariable(EnvironmentVariable.USER);
-                string sudoUser = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
-                certificateDirectory = $"/home/{user}/.dotnet/corefx/cryptography/x509stores/my";
-
-                if (!string.IsNullOrWhiteSpace(sudoUser))
-                {
-                    // The installer is being executed with "sudo" privileges. We want to use the
-                    // logged in user profile vs. "root".
-                    certificateDirectory = $"/home/{sudoUser}/.dotnet/corefx/cryptography/x509stores/my";
-                }
-                else if (user == "root")
-                {
-                    // The installer is being executed from the "root" account on Linux.
-                    certificateDirectory = $"/root/.dotnet/corefx/cryptography/x509stores/my";
-                }
-
-                Console.WriteLine($"Certificate Store = {certificateDirectory}");
-
-                if (!this.fileSystem.Directory.Exists(certificateDirectory))
-                {
-                    this.fileSystem.Directory.CreateDirectory(certificateDirectory);
-                }
-
-                using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadWrite))
-                {
-                    store.Open(OpenFlags.ReadWrite);
-                    store.Add(certificate);
-                    store.Close();
-                }
-
-                await this.fileSystem.File.WriteAllBytesAsync(
-                    this.Combine(certificateDirectory, $"{certificate.Thumbprint}.pfx"),
-                    certificate.Export(X509ContentType.Pfx));
-
-                // Permissions 777 (-rwxrwxrwx)
-                // https://linuxhandbook.com/linux-file-permissions/
-                using (IProcessProxy process = this.processManager.CreateProcess("chmod", $"-R 777 {certificateDirectory}"))
-                {
-                    await process.StartAndWaitAsync(cancellationToken);
-                    process.ThrowIfErrored<DependencyException>();
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-                throw new UnauthorizedAccessException(
-                    $"Access permissions denied for certificate directory '{certificateDirectory}'. Execute the installer with " +
-                    $"sudo/root privileges to install SDK certificates in privileged locations.");
-            }
         }
 
         /// <summary>
@@ -276,6 +183,51 @@
             {
                 throw new InvalidOperationException($"The Key Vault manager has not been properly initialized. " +
                     $"Either valid --KeyVault or --Token or --TokenPath must be passed in order to set up authentication with Key Vault.");
+            }
+        }
+
+        /// <summary>
+        /// Installs the certificate in static location
+        /// </summary>
+        protected async Task InstallCertificateLocallyAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+        {
+            try
+            {
+                string certificateFileName = this.WithPrivateKey
+                    ? $"{this.CertificateName}.pfx"
+                    : $"{this.CertificateName}.cer";
+
+                X509ContentType contentType = this.WithPrivateKey
+                    ? X509ContentType.Pfx
+                    : X509ContentType.Cert;
+
+                byte[] certBytes = certificate.Export(contentType, string.Empty);
+
+                string certificatePath = this.Combine(this.CertificateInstallationDir, certificateFileName);
+
+                if (!this.fileSystem.Directory.Exists(this.CertificateInstallationDir))
+                {
+                    this.fileSystem.Directory.CreateDirectory(this.CertificateInstallationDir);
+                }
+                
+                await this.fileSystem.File.WriteAllBytesAsync(certificatePath, certBytes);
+
+                if (this.Platform == PlatformID.Unix)
+                {
+                    // Permissions 777 (-rwxrwxrwx)
+                    // https://linuxhandbook.com/linux-file-permissions/
+                    using (IProcessProxy process = this.processManager.CreateProcess("chmod", $"-R 777 {this.CertificateInstallationDir}"))
+                    {
+                        await process.StartAndWaitAsync(cancellationToken);
+                        process.ThrowIfErrored<DependencyException>();
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw new UnauthorizedAccessException(
+                    $"Access permissions denied for certificate directory '{this.CertificateInstallationDir}'. Execute the installer with " +
+                    $"admin/sudo/root privileges to install certificates in privileged locations.");
             }
         }
     }
