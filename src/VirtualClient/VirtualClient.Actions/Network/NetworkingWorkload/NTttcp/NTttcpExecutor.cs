@@ -34,8 +34,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(VirtualClientComponent component)
            : base(component)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -46,8 +47,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -86,13 +88,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the duration (in seconds) for running the NTttcp workload.
+        /// Parameter defines the duration for running the NTttcp workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -340,7 +342,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 else
                                 {
                                     string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray());
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                     this.CaptureMetrics(
                                         results,
@@ -449,7 +451,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-p {this.Port} " +
                 $"-xml {this.ResultsPath} " +
@@ -466,7 +468,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-x {this.ResultsPath} " +
                 $"-p {this.Port} " +

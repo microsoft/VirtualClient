@@ -396,10 +396,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true, results: results);
 
-                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
+                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results.Value, accuracyMode: true);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
@@ -422,10 +422,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true, results: results);
 
-                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
+                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results.Value, accuracyMode: false);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(

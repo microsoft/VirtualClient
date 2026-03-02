@@ -708,6 +708,7 @@ namespace VirtualClient.Contracts
 
             try
             {
+                this.CleanupTasks.Clear();
                 PlatformSpecifics.ThrowIfNotSupported(this.Platform);
                 PlatformSpecifics.ThrowIfNotSupported(this.CpuArchitecture);
 
@@ -786,9 +787,8 @@ namespace VirtualClient.Contracts
                         {
                             this.EndTime = DateTime.UtcNow;
                             this.LogSuccessOrFailedMetric(succeeded, scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
+                            await this.CleanupAsync(telemetryContext, cancellationToken);
                         }
-
-                        await this.CleanupAsync(telemetryContext, cancellationToken);
                     });
                 }
             }
@@ -804,31 +804,32 @@ namespace VirtualClient.Contracts
         /// </summary>
         protected virtual Task CleanupAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.CleanupTasks.Any())
+            return Task.Run(() =>
             {
-                try
+                if (this.CleanupTasks.Any())
                 {
-                    foreach (Action cleanupTask in this.CleanupTasks)
+                    try
                     {
-                        try
+                        foreach (Action cleanupTask in this.CleanupTasks)
                         {
-                            cleanupTask.Invoke();
-                        }
-                        catch (Exception exc)
-                        {
-                            // Best effort...but logged
-                            this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
+                            try
+                            {
+                                cleanupTask.Invoke();
+                            }
+                            catch (Exception exc)
+                            {
+                                // Best effort...but logged
+                                this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
+                            }
                         }
                     }
+                    catch (Exception exc)
+                    {
+                        // Best effort...but logged
+                        this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
+                    }
                 }
-                catch (Exception exc)
-                {
-                    // Best effort...but logged
-                    this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
-                }
-            }
-
-            return Task.CompletedTask;
+            });
         }
 
         /// <summary>

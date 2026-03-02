@@ -100,6 +100,7 @@ namespace VirtualClient
                         { "Type", "SAS" },
                         { "Model", "Microsoft Virtual Disk" },
                         { "Index", diskIndex },
+                        { "Size", "1234 GB" },
                         { "Disk ID", $"{{{Guid.NewGuid()}}}" },
                         { "Status", "Online" },
                         { "Path", diskIndex },
@@ -118,6 +119,7 @@ namespace VirtualClient
                     {
                         diskProperties["Boot Disk"] = "Yes";
                         diskProperties["Crashdump Disk"] = "Yes";
+                        diskProperties["Size"] = "123 GB";
                     }
 
                     break;

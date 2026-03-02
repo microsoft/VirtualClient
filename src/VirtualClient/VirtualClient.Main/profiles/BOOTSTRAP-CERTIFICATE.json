@@ -1,0 +1,22 @@
+{
+  "Description": "Installs dependencies from a package store.",
+  "Parameters": {
+    "KeyVaultUri": null,
+    "CertificateName": null,
+    "AccessToken": null,
+    "LogFileName": null
+  },
+  "Actions": [
+    {
+      "Type": "CertificateInstallation",
+      "Parameters": {
+        "Scenario": "InstallCertificate",
+        "KeyVaultUri": "$.Parameters.KeyVaultUri",
+        "CertificateName": "$.Parameters.CertificateName",
+        "AccessToken": "$.Parameters.AccessToken",
+        "AccessTokenPath": "$.Parameters.LogFileName"
+      }
+    }
+  ]
+}
+  

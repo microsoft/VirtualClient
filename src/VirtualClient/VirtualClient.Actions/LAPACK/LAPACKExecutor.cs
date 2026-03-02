@@ -184,10 +184,10 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", results.AsArray(), logToFile: true);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true, results: results);
 
-                LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results);
+                LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results.Value);
                 IList<Metric> metrics = lapackParser.Parse();
 
                 this.Logger.LogMetrics(

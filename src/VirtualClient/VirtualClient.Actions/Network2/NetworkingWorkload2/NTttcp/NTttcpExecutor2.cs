@@ -371,8 +371,8 @@ namespace VirtualClient.Actions
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
-                                    string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray(), logToFile: true);
+                                    KeyValuePair<string, string> results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", logToFile: true, results: results);
                                 }
                             }
                             catch (TimeoutException exc)
@@ -411,12 +411,12 @@ namespace VirtualClient.Actions
 
             if (fileAccess.Exists(this.ResultsPath))
             {
-                string resultsContent = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None);
 
-                if (!string.IsNullOrWhiteSpace(resultsContent))
+                if (!string.IsNullOrWhiteSpace(results.Value))
                 {
                     bool isRoleClient = (this.Role == ClientRole.Client) ? true : false;
-                    MetricsParser parser = new NTttcpMetricsParser2(resultsContent, isRoleClient);
+                    MetricsParser parser = new NTttcpMetricsParser2(results.Value, isRoleClient);
                     IList<Metric> metrics = parser.Parse();
 
                     if (parser.Metadata.Any())

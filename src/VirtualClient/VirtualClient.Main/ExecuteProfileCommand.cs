@@ -189,7 +189,7 @@ namespace VirtualClient
                 EventContext exitingContext = EventContext.Persisted();
 
                 // Allow components to handle any final exit operations.
-                VirtualClientRuntime.OnExiting();
+                VirtualClientRuntime.ExecuteExitActions();
 
                 if (VirtualClientRuntime.IsRebootRequested)
                 {
@@ -211,21 +211,20 @@ namespace VirtualClient
                 }
 
                 Program.LogMessage(logger, $"Flush Telemetry", exitingContext);
-                DependencyFactory.FlushTelemetry(remainingWait);
+                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromSeconds(30));
 
                 Program.LogMessage(logger, $"Flushed", exitingContext);
-                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
+                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromMinutes(1));
 
                 // Allow components to handle any final cleanup operations.
-                VirtualClientRuntime.OnCleanup();
+                VirtualClientRuntime.ExecuteCleanupActions();
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
                 // we suddenly reboot the system.
                 if (VirtualClientRuntime.IsRebootRequested)
                 {
-                    await CommandBase.RebootSystemAsync(dependencies)
-                        .ConfigureAwait(false);
+                    await CommandBase.RebootSystemAsync(dependencies);
                 }
             }
 

@@ -549,6 +549,9 @@ namespace VirtualClient
             IKeyVaultManager keyVaultManager = new KeyVaultManager();
             ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
 
+            // Ensure the core/fundamental directories exist.
+            this.CreateCoreDirectories(platformSpecifics, systemManagement.FileSystem);
+
             // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
             // through the proxy endpoint. All content/files will be uploaded through the proxy endpoint. All telemetry will be uploaded
             // the proxy endpoint (with the exception of file logging which remains as-is). This enables Virtual Client to support disconnected
@@ -583,7 +586,7 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
                 }
 
-                if (this.KeyVault != null)
+                if (this.KeyVault != null && this.ShouldInitializeKeyVault)
                 {
                     DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(DependencyStore.KeyVault, endpoint: this.KeyVault, this.CertificateManager ?? new CertificateManager());
                     keyVaultManager = DependencyFactory.CreateKeyVaultManager(keyVaultStore);
@@ -907,6 +910,29 @@ namespace VirtualClient
             loggingProviders.Add(summaryLoggerProvider);
         }
 
+        private void CreateCoreDirectories(PlatformSpecifics platformSpecifics, IFileSystem fileSystem)
+        {
+            // Core Directories:
+            // - logs
+            // - packages
+            // - temp
+
+            if (!fileSystem.Directory.Exists(platformSpecifics.LogsDirectory))
+            {
+                fileSystem.Directory.CreateDirectory(platformSpecifics.LogsDirectory);
+            }
+
+            if (!fileSystem.Directory.Exists(platformSpecifics.PackagesDirectory))
+            {
+                fileSystem.Directory.CreateDirectory(platformSpecifics.PackagesDirectory);
+            }
+
+            if (!fileSystem.Directory.Exists(platformSpecifics.TempDirectory))
+            {
+                fileSystem.Directory.CreateDirectory(platformSpecifics.TempDirectory);
+            }
+        }
+
         private string EvaluatePathReplacements(string path)
         {
             if (this.pathReplacements == null)
@@ -927,5 +953,11 @@ namespace VirtualClient
 
             return FileContext.ResolvePathTemplate(path, this.pathReplacements);
         }
+
+        /// <summary>
+        /// Determines whether the Key Vault manager should be initialized during dependency setup.
+        /// Can be overridden by derived commands that need to skip Key Vault initialization.
+        /// </summary>
+        protected virtual bool ShouldInitializeKeyVault => true;
     }
 }

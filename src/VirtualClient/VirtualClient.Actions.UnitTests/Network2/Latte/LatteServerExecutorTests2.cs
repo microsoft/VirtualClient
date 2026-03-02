@@ -35,8 +35,8 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters["PackageName"] = "latte";
             this.mockFixture.Parameters["Connections"] = "256";
-            this.mockFixture.Parameters["TestDuration"] = "300";
-            this.mockFixture.Parameters["WarmupTime"] = "300";
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:05:00";
             this.mockFixture.Parameters["Protocol"] = "Tcp";
             this.mockFixture.Parameters["TypeOfInstructions"] = InstructionsType.ClientServerReset;
             this.mockFixture.Parameters["Port"] = 5001;

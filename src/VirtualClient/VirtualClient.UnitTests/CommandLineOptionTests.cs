@@ -139,6 +139,104 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        [Platform("Win")]
+        [TestCase(@"C:\Users\User\Profiles\ANY-PROFILE.json")]
+        [TestCase(@".\Profiles\ANY-PROFILE.json")]
+        [TestCase(@"..\Profiles\ANY-PROFILE.json")]
+        public async Task VirtualClientSupportsLocalPathReferencesForProfiles_Windows_Style_Paths(string pathReference)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string[] args = new string[]
+                {
+                    $"--profile={pathReference}"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    string expectedFullPath = Path.GetFullPath(pathReference);
+
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.IsTrue(cmd.Profiles.ElementAt(0).IsFullPath);
+                    Assert.AreEqual(expectedFullPath, cmd.Profiles.ElementAt(0).ProfileName);
+
+                    return Task.FromResult(1);
+                });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+            }
+        }
+
+        [Test]
+        [Platform("Unix")]
+        [TestCase(@"/home/user/profiles/ANY-PROFILE.json")]
+        [TestCase(@"./profiles/ANY-PROFILE.json")]
+        [TestCase(@"../profiles/ANY-PROFILE.json")]
+        public async Task VirtualClientSupportsLocalPathReferencesForProfiles_Unix_Style_Paths(string pathReference)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string[] args = new string[]
+                {
+                    $"--profile={pathReference}"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    string expectedFullPath = Path.GetFullPath(pathReference);
+
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.IsTrue(cmd.Profiles.ElementAt(0).IsFullPath);
+                    Assert.AreEqual(expectedFullPath, cmd.Profiles.ElementAt(0).ProfileName);
+
+                    return Task.FromResult(1);
+                });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+            }
+        }
+
+        [Test]
+        [TestCase(@"http://anystorage/location/ANY-PROFILE.json")]
+        [TestCase(@"https://anystorage/location/ANY-PROFILE.json")]
+        public async Task VirtualClientSupportsUriPathReferencesForProfiles(string pathReference)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                string[] args = new string[]
+                {
+                    $"--profile={pathReference}"
+                };
+
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
+                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                {
+                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNotNull(cmd.Profiles);
+                    Assert.IsNotEmpty(cmd.Profiles);
+                    Assert.AreEqual("ANY-PROFILE.json", cmd.Profiles.ElementAt(0).ProfileName);
+                    Assert.AreEqual(pathReference, cmd.Profiles.ElementAt(0).ProfileUri.ToString());
+
+                    return Task.FromResult(1);
+                });
+
+                ParseResult parseResult = commandBuilder.Build().Parse(args);
+                parseResult.ThrowOnUsageError();
+                await parseResult.InvokeAsync();
+            }
+        }
+
         [TestCase("--not-a-valid-option", "Option is not supported")]
         [TestCase("--packag", "Option is simply misspelled")]
         public void VirtualClientThrowsWhenAnUnrecognizedOptionIsSuppliedOnTheCommandLine(string option, string value)
@@ -507,6 +605,46 @@ namespace VirtualClient
                     },
                     result.Tokens.Select(t => t.Value));
 
+            }
+        }
+
+        [Test]
+        [TestCase("--agentId", "AgentID")]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--c", "AgentID")]
+        [TestCase("--clean", null)]
+        [TestCase("--clean", "logs")]
+        [TestCase("--clean", "logs,packages,state,temp")]
+        [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--parameters", "helloWorld=123,,,TenantId=789203498")]
+        [TestCase("--pm", "testing")]
+        [TestCase("--verbose", null)]
+        [TestCase("", "")]
+        public void VirtualClientGetTokenCommandSupportsOnlyExpectedOptions(string option, string value)
+        {            
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "get-token",
+                    "--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2",
+                    "--tenant-id", "tenant1"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    Assert.IsFalse(result.Errors.Any());
+                    result.ThrowOnUsageError();
+                }, $"Option '{option}' is not supported.");
             }
         }
 

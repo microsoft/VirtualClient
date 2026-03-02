@@ -173,10 +173,9 @@ namespace VirtualClient.Actions.NetworkPerformance
                 // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
                 TimeSpan workloadTimeout = TimeSpan.FromMinutes(20);
 
-                // 1200 = 20 mins x 60 secs
-                if (state.Definition.WarmupTime + state.Definition.TestDuration > 1200) 
+                if (state.Definition.WarmupTime + state.Definition.TestDuration > TimeSpan.FromMinutes(20)) 
                 {
-                    workloadTimeout = TimeSpan.FromSeconds(state.Definition.WarmupTime + (state.Definition.TestDuration * 3));
+                    workloadTimeout = TimeSpan.FromSeconds(state.Definition.WarmupTime.TotalSeconds + (state.Definition.TestDuration.TotalSeconds * 3));
                 }
 
                 string commandArguments = this.GetCommandLineArguments();

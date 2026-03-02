@@ -152,10 +152,10 @@ namespace VirtualClient.Actions
 
                 try
                 {
-                    string results = await this.LoadResultsAsync(this.stressNgOutputFilePath, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(this.stressNgOutputFilePath, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng", logToFile: true, results: results);
 
-                    StressNgMetricsParser parser = new StressNgMetricsParser(results);
+                    StressNgMetricsParser parser = new StressNgMetricsParser(results.Value);
 
                     this.Logger.LogMetrics(
                         toolName: "StressNg",

@@ -65,8 +65,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 }
                                 else
                                 {
+                                    int processId = -1;
+
                                     try
                                     {
+                                        processId = process.Id;
+
                                         // Wait until the cancellation token is signalled by the client.
                                         await this.WaitAsync(cancellationToken);
                                         process.Close();
@@ -80,9 +84,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     }
                                     finally
                                     {
-                                        // Latte must be explicitly terminated given the current implementation. If it is not,
-                                        // the process will remain running in the background.
-                                        process.SafeKill(this.Logger);
+                                        if (processId > 0)
+                                        {
+                                            // Latte must be explicitly terminated given the current implementation. If it is not,
+                                            // the process will remain running in the background.
+                                            this.SystemManagement.ProcessManager.SafeKill(processId, this.Logger);
+                                        }
                                     }
                                 }
                             }

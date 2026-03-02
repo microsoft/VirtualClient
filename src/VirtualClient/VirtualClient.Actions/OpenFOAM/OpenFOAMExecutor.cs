@@ -316,10 +316,10 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results: results.AsArray(), logToFile: true);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true, results: results);
 
-                OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results);
+                OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results.Value);
                 IList<Metric> metrics = openFOAMResultsParser.Parse();
 
                 this.Logger.LogMetrics(

@@ -83,7 +83,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
             this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.ThreadCount)] = "20";
             this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.ConnectionCount)] = "1000";
-            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "600s";
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "00:05:00";
             this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.RequestPerSec)] = "1000";
             this.mockFixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";
             this.mockFixture.Parameters[nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm";
@@ -159,10 +159,10 @@ namespace VirtualClient.Actions
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1000 >> results.txt\"",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read -R 1000 >> results.txt\"",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/read-user-timeline.lua http://localhost:8080/wrk2-api/user-timeline/read -R 1000 >> results.txt\"",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/social-network/mixed-workload.lua http://localhost:8080 -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/read-user-timeline.lua http://localhost:8080/wrk2-api/user-timeline/read -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/social-network/mixed-workload.lua http://localhost:8080 -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh"
             };
@@ -211,7 +211,7 @@ namespace VirtualClient.Actions
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
             };
@@ -258,7 +258,7 @@ namespace VirtualClient.Actions
                 $"sudo --join-swarm", // mock command but illustrates the idea of the command that should be called
                 $"sudo make clean",
                 $"sudo make",
-                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 600s -L -s ./scripts/hotel-reservation/mixed-workload_type_1.lua http://0.0.0.0:5000 -R 1000 >> results.txt\"",
+                $"sudo bash -c \"./wrk -D exp -t 20 -c 1000 -d 300s -L -s ./scripts/hotel-reservation/mixed-workload_type_1.lua http://0.0.0.0:5000 -R 1000 >> results.txt\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/isSwarmNode.sh"
             };
@@ -279,6 +279,32 @@ namespace VirtualClient.Actions
 
                 CollectionAssert.AreEqual(expectedCommands, actualCommands);
             }
+        }
+
+        [Test]
+        public void DeathStarBenchClientExecutorSupportsIntegerAndTimeSpanDurationFormats()
+        {
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = 300;
+
+            TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.Duration);
+
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "00:05:00";
+
+            executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.Duration);
+
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = 180;
+            executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.Duration;
+
+            this.mockFixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "00:03:00";
+            executor = new TestDeathStarBenchClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.Duration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         private class TestDeathStarBenchClientExecutor : DeathStarBenchClientExecutor

@@ -31,8 +31,6 @@ namespace VirtualClient
     /// </summary>
     public static class DependencyFactory
     {
-        private static List<IFlushableChannel> telemetryChannels = new List<IFlushableChannel>();
-
         /// <summary>
         /// Creates an <see cref="IBlobManager"/> instance that can be used to download blobs/files from a store or
         /// upload blobs/files to a store.
@@ -152,7 +150,7 @@ namespace VirtualClient
 
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
-            DependencyFactory.telemetryChannels.Add(channel);
+            VirtualClientRuntime.DataChannels.Add(channel);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
@@ -585,7 +583,7 @@ namespace VirtualClient
                 };
             }
 
-            DependencyFactory.telemetryChannels.Add(channel);
+            VirtualClientRuntime.DataChannels.Add(channel);
 
             return channel;
         }
@@ -698,17 +696,6 @@ namespace VirtualClient
             }
 
             return new VirtualClientProxyApiClient(builder.Build(), proxyApiUri);
-        }
-
-        /// <summary>
-        /// Flushes buffered telemetry from all channels.
-        /// </summary>
-        /// <param name="timeout">The absolute timeout to flush the telemetry from each individual channel.</param>
-        /// <returns>
-        /// </returns>
-        public static void FlushTelemetry(TimeSpan? timeout = null)
-        {
-            Parallel.ForEach(DependencyFactory.telemetryChannels, channel => channel.Flush(timeout));
         }
 
         /// <summary>

@@ -305,6 +305,37 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase(@"C:\", true)]
+        [TestCase(@"C:\Users", true)]
+        [TestCase(@"C:\Users\User\VirtualClient", true)]
+        [TestCase(@"C:/", true)]
+        [TestCase(@"C:/Users", true)]
+        [TestCase(@"C:/Users/User/VirtualClient", true)]
+        [TestCase(@"\\Server01", false)]
+        [TestCase(@"\\Server01\VirtualClient", false)]
+        [TestCase(@"\Users\User\VirtualClient", false)]
+        public void IsFullyQualifiedPathHandlesExpectedRangeOfPaths_Windows_Scenarios(string path, bool isFullyQualified)
+        {
+            Assert.AreEqual(
+                isFullyQualified, 
+                PlatformSpecifics.IsFullyQualifiedPath(path), 
+                $"Path validation failed: {path}");
+        }
+
+        [Test]
+        [TestCase(@"/", true)]
+        [TestCase(@"/home/user", true)]
+        [TestCase(@"/home/user/virtualclient", true)]
+        [TestCase(@"./virtualclient", false)]
+        public void IsFullyQualifiedPathHandlesExpectedRangeOfPaths_Unix_Scenarios(string path, bool isFullyQualified)
+        {
+            Assert.AreEqual(
+                isFullyQualified,
+                PlatformSpecifics.IsFullyQualifiedPath(path),
+                $"Path validation failed: {path}");
+        }
+
+        [Test]
         [Platform(Include ="Win")]
         public void CanResolveRelativePathsCorrectly()
         {

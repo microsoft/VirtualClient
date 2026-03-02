@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO.Abstractions;
     using System.Linq;
@@ -12,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc.Razor;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -85,6 +87,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Name of the Binary to run for the suite of Benchmarks compiled.
+        /// </summary>
+        public string BinaryName
+        {
+            get
+            {
+               return this.Parameters.GetValue<string>(nameof(this.BinaryName), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Name of the Binary to run for the suite of Benchmarks compiled.
+        /// </summary>
+        public string BinaryCommandLine
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.BinaryCommandLine), string.Empty);
+            }
+        }
+
+        /// <summary>
         /// The compilerFlags that are used for make command in compiling LMbench.
         /// </summary>
         public string CompilerFlags
@@ -119,7 +143,50 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.BuildSourceCodeAsync(telemetryContext, cancellationToken);
-            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+            if (string.IsNullOrEmpty(this.BinaryName))
+            {
+                await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+            }
+            else if (this.BinaryName.Equals("lat_mem_rd", StringComparison.OrdinalIgnoreCase))
+            {
+                string binaryPath = string.Empty; 
+                if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64)
+                {
+                    binaryPath = this.PlatformSpecifics.Combine(this.LMbenchPackage.Path, "bin", "x86_64-Linux");
+                }
+                else if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.Arm64)
+                {
+                    binaryPath = this.PlatformSpecifics.Combine(this.LMbenchPackage.Path, "bin", "aarch64-Linux");
+                }
+                else
+                {
+                    this.Logger.LogNotSupported(this.BinaryName, this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                }
+
+                if (!string.IsNullOrEmpty(binaryPath))
+                {
+                    using (IProcessProxy executeBinary = await this.ExecuteCommandAsync(this.PlatformSpecifics.Combine(binaryPath, this.BinaryName), this.BinaryCommandLine, binaryPath, telemetryContext, cancellationToken))
+                    {
+                        await this.LogProcessDetailsAsync(executeBinary, telemetryContext);
+                        executeBinary.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        LatMemRdMetricsParser latMemRdMetricsParser = new LatMemRdMetricsParser($"{executeBinary.StandardOutput.ToString()}{executeBinary.StandardError.ToString()}");
+                        IList<Metric> metrics = latMemRdMetricsParser.Parse();
+
+                        foreach (Metric metric in metrics)
+                        {
+                            IConvertible arraySize = null, strideSizeInBytes = null;
+                            metric.Metadata.TryGetValue("ArraySize", out arraySize);
+                            metric.Metadata.TryGetValue("StrideSizeInBytes", out strideSizeInBytes);
+                            string scenario = $"StrideSize_{strideSizeInBytes ?? string.Empty}_B_ArraySize_{arraySize ?? string.Empty}";
+                            this.CaptureMetric(metric, executeBinary, telemetryContext, $"LMBench\\{this.BinaryName}", scenario);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                this.Logger.LogMessage($"Unsupported {nameof(this.BinaryName)}: {this.BinaryName}, supported binarienames are : null(for sumarry),lat_rd_mem", telemetryContext);
+            }
         }
 
         /// <summary>
@@ -180,7 +247,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
+        private void CaptureMetric(Metric metric, IProcessProxy process, EventContext telemetryContext, string toolName, string scenarioName)
         {
             this.MetadataContract.AddForScenario(
                 "LMbench",
@@ -189,19 +256,18 @@ namespace VirtualClient.Actions
 
             this.MetadataContract.Apply(telemetryContext);
 
-            LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
-            IList<Metric> metrics = parser.Parse();
-
-            this.Logger.LogMetrics(
-                toolName: "LMbench",
-                scenarioName: "Memory Benchmark",
-                process.StartTime,
-                process.ExitTime,
-                metrics,
-                metricCategorization: null,
-                scenarioArguments: process.FullCommand(),
-                this.Tags,
-                telemetryContext);
+            this.Logger.LogMetric(
+                    toolName: toolName,
+                    scenarioName: scenarioName,
+                    process.StartTime,
+                    process.ExitTime,
+                    metric.Name,
+                    metric.Value,
+                    metric.Unit,
+                    metricCategorization: null,
+                    scenarioArguments: process.FullCommand(),
+                    this.Tags,
+                    telemetryContext);
         }
 
         private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -268,7 +334,14 @@ namespace VirtualClient.Actions
 
                     // The use of the original telemetry context created at the top
                     // is purposeful.
-                    this.CaptureMetrics(process, relatedContext);
+                    LMbenchMetricsParser lmbenchMetricsParser = new LMbenchMetricsParser(process.StandardOutput.ToString());
+                    IList<Metric> metrics = lmbenchMetricsParser.Parse();
+
+                    foreach (Metric metric in metrics)
+                    {
+                        string scenario = "Memory Benchmark";
+                        this.CaptureMetric(metric, process, telemetryContext, $"LMBench", scenario);
+                    }
                 }
             });
         }
