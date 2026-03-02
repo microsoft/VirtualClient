@@ -147,11 +147,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT)]
-        [TestCase(PlatformID.Unix)]
-        public async Task ExecuteAsync_InstallsCertificateOnWindows(PlatformID platform)
+        public async Task ExecuteAsync_InstallsCertificateOnWindows()
         {
-            this.mockFixture.Setup(platform);
+            this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CertificateInstallation.CertificateName), "testCert" },
@@ -287,13 +285,10 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT)]
-        [TestCase(PlatformID.Unix)]
-        public async Task InstallCertificateLocallyAsync_SetsPermissionsOnUnix(PlatformID platform)
+        [TestCase("/etc/certs")]
+        public async Task InstallCertificateLocallyAsync_SetsPermissionsOnUnix(string certificateDirectory)
         {
-            this.mockFixture.Setup(PlatformID.Unix);
-            string certificateDirectory = "/etc/certs";
-            
+            this.mockFixture.Setup(PlatformID.Unix);            
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CertificateInstallation.CertificateName), "testCert" },

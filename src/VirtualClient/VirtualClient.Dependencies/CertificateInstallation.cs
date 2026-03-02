@@ -89,7 +89,7 @@
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CertificateInstallationDir));
+                return this.Parameters.GetValue<string>(nameof(this.CertificateInstallationDir), string.Empty);
             }
         }
 
