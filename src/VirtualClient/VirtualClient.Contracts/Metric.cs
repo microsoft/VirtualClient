@@ -93,6 +93,13 @@ namespace VirtualClient.Contracts
         public static Metric None { get; } = new Metric("n/a", 0);
 
         /// <summary>
+        /// A high-level category in which the metric is associated. For example, in disk I/O
+        /// workloads, it may be useful to categorize the I/O operations as pertaining to local/physically
+        /// attached disks vs. remote/network disks.
+        /// </summary>
+        public string Categorization { get; set; }
+
+        /// <summary>
         /// Name of metric
         /// </summary>
         public string Description { get; set; }
@@ -241,7 +248,7 @@ namespace VirtualClient.Contracts
         public override int GetHashCode()
         {
             StringBuilder hashBuilder = new StringBuilder()
-                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{this.Verbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
+                .Append($"{this.Name},{this.Value},{this.Unit},{this.Categorization},{this.Description},{this.Relativity},{this.Verbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
 
             return hashBuilder.ToString().ToLowerInvariant().GetHashCode(StringComparison.OrdinalIgnoreCase);
         }

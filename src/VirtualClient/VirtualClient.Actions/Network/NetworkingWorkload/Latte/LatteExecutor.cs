@@ -46,17 +46,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// The number of iterations for the network send/receive operations.
-        /// </summary>
-        public int Iterations
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.Iterations), 100100);
-            }
-        }
-
-        /// <summary>
         /// The starting port for the range of ports that will be used for client/server 
         /// network connections.
         /// </summary>
@@ -87,6 +76,17 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 return this.Parameters.GetValue<int>(nameof(this.RioPoll), 100000);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the duration for running the Latte workload.
+        /// </summary>
+        public TimeSpan TestDuration
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 

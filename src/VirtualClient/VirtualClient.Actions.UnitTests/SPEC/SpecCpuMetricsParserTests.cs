@@ -3,8 +3,10 @@
 
 namespace VirtualClient.Actions
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using NUnit.Framework;
     using VirtualClient;
@@ -152,6 +154,52 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpRateResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_base_rate");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_peak_rate");
+                }
+            }
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpRateCsvResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.csv");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_base_rate");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_peak_rate");
+                }
+            }
+        }
+
+        [Test]
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntRateBaseOnlyResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -243,6 +291,52 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpSpeedResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpSpeedExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_base_speed");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_peak_speed");
+                }
+            }
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpSpeedCsvResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpSpeedExample.csv");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_base_speed");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "floating_point_peak_speed");
+                }
+            }
+        }
+
+        [Test]
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntRateResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -311,6 +405,52 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntRateResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_base_rate");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_peak_rate");
+                }
+            }
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntRateCsvResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateExample.csv");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_base_rate");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_peak_rate");
+                }
+            }
+        }
+
+        [Test]
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntSpeedResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -376,6 +516,52 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "SPECcpu-peak-657.xz_s", 25.403967, "score");
             MetricAssert.Exists(metrics, "SPECspeed(R)2017_int_base", 12.279658, "score");
             MetricAssert.Exists(metrics, "SPECspeed(R)2017_int_peak", 12.293316, "score");
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntSpeedResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntSpeedExample.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_base_speed");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_peak_speed");
+                }
+            }
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntSpeedCsvResults()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntSpeedExample.csv");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name.Contains("base"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_base_speed");
+                }
+                else if (metric.Name.Contains("peak"))
+                {
+                    Assert.IsTrue(metric.Metadata.TryGetValue("workload", out IConvertible workload) && workload.ToString() == "integer_peak_speed");
+                }
+            }
         }
 
         [Test]

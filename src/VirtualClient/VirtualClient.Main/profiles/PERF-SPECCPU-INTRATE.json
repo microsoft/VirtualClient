@@ -16,8 +16,9 @@
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
         "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intrate\" : \"505 525 541 548 557\")}",
-        "BaseOptimizingFlags": "-g -O3 -march=native -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march=native -flto -frecord-gcc-switches"
+        "BaseOptimizingFlags": "-g -O3 -march={MachineArch} -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-g -Ofast -march={MachineArch} -flto -frecord-gcc-switches",
+        "MachineArch": "{calculation(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")}"
     },
     "Actions": [
         {
