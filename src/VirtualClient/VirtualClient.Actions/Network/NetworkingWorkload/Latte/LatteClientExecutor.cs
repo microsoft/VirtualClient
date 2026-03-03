@@ -41,10 +41,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -55,7 +53,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
-                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
                             int processId = -1;
 
@@ -98,8 +96,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                         }
                     });
                 }
-
-                return process;
             });
         }
 
@@ -111,8 +107,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
-            return $"-so -c -a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} " +
-            $"-hist -hl 1 -hc 9998 -bl {clientIPAddress}";
+            return $"-so -c -a {serverIPAddress}:{this.Port} -t {this.TestDuration.TotalSeconds} -rio -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} -hist -hl 1 -hc 9998 -bl {clientIPAddress}";
         }
 
         /// <summary>
