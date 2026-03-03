@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
                 $"sudo gcc -dumpversion",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
-                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
+                $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
             };
 
             int processCount = 0;
@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
                 $"sudo gcc -dumpversion",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
-                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable 549.fotonik3d_r\""
+                $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable 549.fotonik3d_r\""
             };
 
             int processCount = 0;
@@ -245,7 +245,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 int coreCount = Environment.ProcessorCount;
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --reportable fprate\"")
+                if (arguments == $"runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --reportable fprate\"")
                 {
                     commandCalled = true;
                 }
@@ -283,7 +283,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intspeed\"")
+                if (arguments == $"runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intspeed\"")
                 {
                     commandCalled = true;
                 }
@@ -321,7 +321,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 1 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed\"")
+                if (arguments == $"runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 1 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed\"")
                 {
                     commandCalled = true;
                 }

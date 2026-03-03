@@ -41,10 +41,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -57,7 +55,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         await this.DeleteResultsFileAsync();
 
-                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
                             try
                             {
@@ -102,8 +100,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                         }
                     });
                 }
-
-                return process;
             });
         }
 

@@ -206,6 +206,16 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
+                "Scenario": "InstallSystemConfigScriptPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.0.0.zip",
+                "PackageName": "system_config",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
                 "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
                 "BlobName": "networking.3.1.0.zip",
@@ -224,9 +234,10 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "ConfigureNetwork",
-                "Command": "sudo chmod -R 2777 \"{ScriptDir}/network\"&&sudo bash -c \"{ScriptDir}/network/config_network.sh --disable-firewall=true --enable-busy-poll={EnableBusyPoll}\"",
+                "Command": "sudo chmod -R 2777 \"{ScriptPackage}\"&&sudo bash -c \"{ScriptPackage}/config_network.sh --disable-firewall=true --enable-busy-poll={EnableBusyPoll}\"",
                 "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
                 "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
                 "SupportedPlatforms": "linux-x64,linux-arm64"
             }
         },
@@ -234,8 +245,9 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "ConfigureNetwork",
-                "Command": "{ScriptDir}/network/config_network.cmd",
+                "Command": "{ScriptPackage}/config_network.cmd",
                 "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
                 "SupportedPlatforms": "win-x64,win-arm64"
             }
         },
